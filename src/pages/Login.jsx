@@ -53,12 +53,20 @@ const Login = ({ setIsAuthenticated }) => {
       navigate("/dashboard");
 
     } catch (error) {
-      const errorMsg =
-        error.response?.data?.message ||
-        error.message ||
-        "Invalid Credentials";
+      // axios network error doesn't include response
+      let errorMsg;
+      if (error.message === "Network Error") {
+        errorMsg =
+          "Unable to reach server. Please make sure the backend is running at http://localhost:5000.";
+      } else {
+        errorMsg =
+          error.response?.data?.message ||
+          error.message ||
+          "Invalid Credentials";
+      }
 
       alert(errorMsg);
+      console.error("Login error:", error);
     }
   };
 

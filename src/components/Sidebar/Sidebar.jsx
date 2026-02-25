@@ -93,12 +93,15 @@ const Sidebar = () => {
       shadow-2xl rounded-r-3xl
     "
     >
-      {/* Logo */}
-      <div className="flex items-center gap-3 p-6">
-        <FaBuilding className="text-2xl " />
-        <h2 className="text-xl font-bold">Hotel</h2>
-      </div>
-
+  <div className="flex items-center gap-3 p-6 border-b border-pink-700 bg-[#36374d]">
+  <div className="w-11 h-11 rounded-xl bg-slate-800 flex items-center justify-center">
+    <FaBuilding className="w-200 h-20 rounded-full bg-gray-800 flex items-center justify-center text-blue-400" />
+  </div>
+  <h2 className="text-2xl font-bold text-white">
+          Maa 
+       Baglamukhi Resort 
+  </h2>
+</div>
       {/* Menu */}
       <nav className="flex-1 px-4 space-y-2 overflow-y-auto font-bold">
         {menuItems.map((item) => {
@@ -127,20 +130,20 @@ const Sidebar = () => {
       </nav>
 
 
-    {/* Profile */}
-    <div className="p-6 border-t border-gray-700 bg-black/80">
-      <div className="flex items-center gap-3">
-        <div className="w-20 h-20 rounded-full bg-gray-800 flex items-center justify-center text-white">
-          👤
-        </div>
-        <div>
-          <p className="text-lg font-bold text-white">kailash</p>
-          <p className="text-base font-bold text-gray-300">Admin</p>
+      {/* Profile */}
+      <div className="p-6 border-t border-gray-700 bg-[#36374d]">
+        <div className="flex items-center gap-3">
+          <div className="w-20 h-20 rounded-full bg-gray-800 flex items-center justify-center text-white">
+            👤
+          </div>
+          <div>
+            <p className="text-lg font-bold text-white">{userName}</p>
+            <p className="text-base font-bold text-gray-300">{role.charAt(0).toUpperCase() + role.slice(1)}</p>
 
+          </div>
         </div>
       </div>
     </div>
-  </div>
 );
 };
 
