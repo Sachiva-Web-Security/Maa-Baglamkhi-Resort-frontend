@@ -1,12 +1,19 @@
 import React, { useState } from "react";
-import { FaRupeeSign, FaPlus, FaBell, FaBarcode } from "react-icons/fa";
+import { FaRupeeSign, FaPlus, FaBell, FaSearch, FaEdit, FaTrash } from "react-icons/fa";
 import CategoryInventory from "./CategoryInventory";
 import CategoryCard from "./CategoryCard";
 
-const defaultCategories = [];
+// 🔹 Default categories
+const defaultCategories = [
+  "Raw Ingredients",
+  "Housekeeping",
+  "Beverages",
+];
 
+// 🔹 Initial items (WITH ID)
 const initialItems = [
   {
+    id: 1,
     name: "Tomatoes",
     category: "Raw Ingredients",
     stock: 25,
@@ -16,6 +23,7 @@ const initialItems = [
     branch: "Main",
   },
   {
+    id: 2,
     name: "Milk",
     category: "Raw Ingredients",
     stock: 5,
@@ -25,6 +33,7 @@ const initialItems = [
     branch: "Main",
   },
   {
+    id: 3,
     name: "Rice",
     category: "Raw Ingredients",
     stock: 0,
@@ -37,32 +46,58 @@ const initialItems = [
 
 export default function InventoryDashboard() {
   const [items, setItems] = useState(initialItems);
-  const [activeCategory, setActiveCategory] = useState("Raw Ingredients");
-  const [showModal, setShowModal] = useState(false);
-  const [showCategoryModal, setShowCategoryModal] = useState(false);
-  const [branch, setBranch] = useState("All");
-  const [activeView, setActiveView] = useState("dashboard");
-  const [selectedCategory, setSelectedCategory] = useState(null);
   const [categories, setCategories] = useState(defaultCategories);
+  const [activeView, setActiveView] = useState("dashboard");
+
+  const [showItemModal, setShowItemModal] = useState(false);
+  const [showEditItemModal, setShowEditItemModal] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
 
+  // filter / search state
+  const [filterCategory, setFilterCategory] = useState("All");
+  const [expiryFilter, setExpiryFilter] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // 🔹 Alerts (overall counts)
+  const today = new Date();
   const lowStockItems = items.filter((i) => i.stock > 0 && i.stock < 10);
   const outOfStock = items.filter((i) => i.stock === 0);
+  const expiringSoon = items.filter((i) => {
+    const diff = (new Date(i.expiry) - today) / (1000 * 60 * 60 * 24);
+    return diff > 0 && diff <= 7;
+  });
 
-  const totalValue = items.reduce((sum, i) => {
-    const price = Number(i.price) || 0;
-    return sum + (price > 0 ? i.stock * price : 0);
-  }, 0);
-
-  const filtered = items.filter(
-    (i) =>
-      i.category === activeCategory && (branch === "All" || i.branch === branch)
+  const totalValue = items.reduce(
+    (sum, i) => sum + i.stock * (Number(i.price) || 0),
+    0
   );
 
+  // 🔹 Expiry alerts (for listing expired items)
+  const expiryAlerts = items.filter((i) => new Date(i.expiry) <= today);
+
+  // filtered items for display in table
+  const displayedItems = items.filter((i) => {
+    const categoryMatch =
+      filterCategory === "All" || i.category === filterCategory;
+    let expiryMatch = true;
+    const diff = (new Date(i.expiry) - today) / (1000 * 60 * 60 * 24);
+    if (expiryFilter === "Expired") expiryMatch = new Date(i.expiry) <= today;
+    else if (expiryFilter === "Expiring Soon") expiryMatch = diff > 0 && diff <= 7;
+    const searchMatch =
+      searchQuery === "" ||
+      i.name.toLowerCase().includes(searchQuery.toLowerCase());
+    return categoryMatch && expiryMatch && searchMatch;
+  });
+
+  // 🔹 Add item
   const addItem = (e) => {
     e.preventDefault();
     const form = e.target;
+
     const newItem = {
+      id: Date.now(),
       name: form.name.value,
       category: form.category.value,
       stock: Number(form.stock.value),
@@ -71,125 +106,250 @@ export default function InventoryDashboard() {
       expiry: form.expiry.value,
       branch: form.branch.value,
     };
+
     setItems([...items, newItem]);
-    setShowModal(false);
+    setShowItemModal(false);
     form.reset();
   };
 
-  const handleAddItemFromCategory = (newItem) => {
-    setItems([...items, newItem]);
+  // 🔹 Add item from category page
+  const handleAddItemFromCategory = (item) => {
+    setItems([...items, item]);
   };
 
-  const handleUpdateItem = (index, updatedItem) => {
-    const newItems = [...items];
-    newItems[index] = updatedItem;
-    setItems(newItems);
+  // 🔹 click edit icon in table
+  const handleEditClick = (item) => {
+    setEditingItem(item);
+    setShowEditItemModal(true);
   };
 
-  const handleDeleteItem = (index) => {
-    const newItems = items.filter((_, i) => i !== index);
-    setItems(newItems);
+  // 🔹 save changes from edit modal
+  const saveEditedItem = (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const updated = {
+      ...editingItem,
+      name: form.name.value,
+      category: form.category.value,
+      stock: Number(form.stock.value),
+      unit: form.unit.value,
+      price: Number(form.price.value),
+      expiry: form.expiry.value,
+      branch: form.branch.value,
+    };
+    handleUpdateItem(editingItem.id, updated);
+    setShowEditItemModal(false);
+    setEditingItem(null);
   };
 
+  // 🔹 Update item (ID based)
+  const handleUpdateItem = (id, updatedItem) => {
+    setItems(items.map((i) => (i.id === id ? updatedItem : i)));
+  };
+
+  // 🔹 Delete item (ID based)
+  const handleDeleteItem = (id) => {
+    setItems(items.filter((i) => i.id !== id));
+  };
+
+  // 🔹 Category navigation
   const handleCategoryClick = (category) => {
-    setSelectedCategory(category);
     setActiveView(category);
   };
 
   const handleBackToDashboard = () => {
     setActiveView("dashboard");
-    setSelectedCategory(null);
   };
 
+  // 🔹 Add category
   const handleAddNewCategory = (e) => {
     e.preventDefault();
-    if (newCategoryName.trim() && !categories.includes(newCategoryName)) {
+    if (newCategoryName && !categories.includes(newCategoryName)) {
       setCategories([...categories, newCategoryName]);
       setNewCategoryName("");
       setShowCategoryModal(false);
     }
   };
 
-  const handleDeleteCategory = (categoryToDelete) => {
-    setCategories(categories.filter((c) => c !== categoryToDelete));
-    setItems(items.filter((i) => i.category !== categoryToDelete));
+  // 🔹 Delete category
+  const handleDeleteCategory = (category) => {
+    setCategories(categories.filter((c) => c !== category));
+    setItems(items.filter((i) => i.category !== category));
   };
 
-  const today = new Date();
-  const expiryAlerts = items.filter((i) => new Date(i.expiry) <= today);
-  
-
-  // For custom categories, use generic CategoryInventory component
-  if (activeView && !["dashboard"].includes(activeView)) {
-    return <CategoryInventory categoryName={activeView} items={items} onBack={handleBackToDashboard} onAddItem={handleAddItemFromCategory} onUpdateItem={handleUpdateItem} onDeleteItem={handleDeleteItem} />;
+  // 🔹 Category view
+  if (activeView !== "dashboard") {
+    return (
+      <CategoryInventory
+        categoryName={activeView}
+        items={items}
+        onBack={handleBackToDashboard}
+        onAddItem={handleAddItemFromCategory}
+        onUpdateItem={handleUpdateItem}
+        onDeleteItem={handleDeleteItem}
+      />
+    );
   }
 
-  // Dashboard view
+  // 🔹 Dashboard view
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-100 p-6">
+    <div className="min-h-screen p-6 bg-gradient-to-br from-[#071226] via-[#081827] to-[#041019] text-gray-100">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-4">
+      <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">Inventory Dashboard</h1>
-          <p className="text-gray-500 text-sm">Manage restaurant inventory with alerts & cost tracking</p>
+          <h1 className="text-3xl font-bold text-white">Inventory Dashboard</h1>
+          <p className="text-sm text-gray-300">Hotel inventory overview</p>
         </div>
 
-        <div className="flex gap-3 items-center">
+        <div className="flex gap-3">
           <button
             onClick={() => setShowCategoryModal(true)}
-            className="bg-green-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-green-700"
+            className="bg-gradient-to-r from-[#60a5fa] to-[#10b981] text-black px-4 py-2 rounded"
           >
-            <FaPlus /> Add Category
+            <FaPlus /> Category
           </button>
           <button
-            onClick={() => setShowModal(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+            onClick={() => setShowItemModal(true)}
+            className="bg-blue-500 text-white px-4 py-2 rounded"
           >
-            <FaPlus /> Add Item
+            <FaPlus /> Item
           </button>
         </div>
       </div>
 
       {/* Alerts */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-yellow-100 p-4 rounded-xl flex items-center gap-3">
-          <FaBell /> Low Stock: {lowStockItems.length}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="bg-[#2b1210] p-4 rounded-xl flex gap-2 items-center border border-white/5">
+          <FaBell className="text-yellow-300"/> <span className="ml-1">Low Stock: <span className="font-bold text-white">{lowStockItems.length}</span></span>
         </div>
-        <div className="bg-red-100 p-4 rounded-xl flex items-center gap-3">
-          <FaBell /> Out of Stock: {outOfStock.length}
+        <div className="bg-[#2b1210] p-4 rounded-xl flex gap-2 items-center border border-white/5">
+          <FaBell className="text-red-400"/> <span className="ml-1">Out of Stock: <span className="font-bold text-white">{outOfStock.length}</span></span>
         </div>
-        <div className="bg-green-100 p-4 rounded-xl flex items-center gap-3">
-          <FaRupeeSign /> Total Value: ₹{totalValue}
+        <div className="bg-[#102233] p-4 rounded-xl flex gap-2 items-center border border-white/5">
+          <FaBell className="text-sky-300"/> <span className="ml-1">Expiring Soon: <span className="font-bold text-white">{expiringSoon.length}</span></span>
+        </div>
+        <div className="bg-[#122b1f] p-4 rounded-xl flex gap-2 items-center border border-white/5">
+          <FaRupeeSign className="text-emerald-300"/> <span className="ml-1">₹ <span className="font-bold text-white">{totalValue.toLocaleString()}</span></span>
         </div>
       </div>
 
-      {/* Expiry Alerts */}
+      {/* Filters + search */}
+      <div className="bg-[#071826] p-4 rounded-xl mb-6 flex flex-col md:flex-row items-center gap-4 border border-white/5">
+        <select
+          value={filterCategory}
+          onChange={(e) => setFilterCategory(e.target.value)}
+          className="border border-white/10 bg-transparent text-white px-3 py-2 rounded w-full md:w-auto"
+        >
+          <option>All</option>
+          {categories.map((c) => (
+            <option key={c}>{c}</option>
+          ))}
+        </select>
+        <select
+          value={expiryFilter}
+          onChange={(e) => setExpiryFilter(e.target.value)}
+          className="border border-white/10 bg-transparent text-white px-3 py-2 rounded w-full md:w-auto"
+        >
+          <option>All</option>
+          <option>Expired</option>
+          <option>Expiring Soon</option>
+        </select>
+        <div className="relative w-full md:w-auto flex-1">
+          <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border border-white/10 bg-transparent rounded text-white"
+          />
+        </div>
+      </div>
+
+      {/* Table of items */}
+      <div className="bg-[#071826] rounded-xl shadow overflow-x-auto mb-6 border border-white/5">
+        <table className="w-full text-sm">
+          <thead className="bg-white/5">
+            <tr>
+              <th className="p-3 text-left text-gray-300">Item Name</th>
+              <th className="p-3 text-left text-gray-300">Category</th>
+              <th className="p-3 text-left text-gray-300">Quantity</th>
+              <th className="p-3 text-left text-gray-300">Unit</th>
+              <th className="p-3 text-left text-gray-300">Expiry</th>
+              <th className="p-3 text-left text-gray-300">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {displayedItems.length === 0 ? (
+              <tr>
+                <td colSpan="6" className="p-4 text-center text-gray-400">
+                  No items found
+                </td>
+              </tr>
+            ) : (
+              displayedItems.map((item) => (
+                <tr
+                  key={item.id}
+                  className="border-t border-white/5 hover:bg-white/5"
+                >
+                  <td className="p-3 text-white">{item.name}</td>
+                  <td className="p-3 text-gray-300">{item.category}</td>
+                  <td className="p-3 text-white">{item.stock}</td>
+                  <td className="p-3 text-gray-300">{item.unit}</td>
+                  <td className="p-3 text-gray-300">{item.expiry}</td>
+                  <td className="p-3 flex gap-2">
+                    <button
+                      onClick={() => handleEditClick(item)}
+                      className="text-sky-300"
+                    >
+                      <FaEdit />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteItem(item.id)}
+                      className="text-rose-400"
+                    >
+                      <FaTrash />
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Expiry alerts */}
       {expiryAlerts.length > 0 && (
-        <div className="bg-red-50 border border-red-200 p-4 rounded-xl mb-6">
-          <h3 className="font-semibold text-red-600">Expiry Alerts</h3>
-          {expiryAlerts.map((item, i) => (
-            <p key={i} className="text-sm text-red-500">
-              {item.name} expired on {item.expiry}
+        <div className="bg-[#2b1111] p-4 rounded-xl mb-6 border border-red-700/20">
+          <h3 className="font-semibold text-red-400">Expiry Alerts</h3>
+          {expiryAlerts.map((i) => (
+            <p key={i.id} className="text-sm text-gray-300">
+              {i.name} expired on {i.expiry}
             </p>
           ))}
         </div>
       )}
 
-      {/* Category Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Categories */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {categories.map((category) => {
-          const categoryItems = items.filter((i) => i.category === category);
-          const categoryValue = categoryItems.reduce((sum, i) => sum + i.stock * i.price, 0);
-          const isDefault = defaultCategories.includes(category);
+          const categoryItems = items.filter(
+            (i) => i.category === category
+          );
+          const total = categoryItems.reduce(
+            (sum, i) => sum + i.stock * i.price,
+            0
+          );
+
           return (
             <CategoryCard
               key={category}
               category={category}
               itemCount={categoryItems.length}
-              totalValue={categoryValue}
+              totalValue={total}
               onClick={() => handleCategoryClick(category)}
               onDeleteCategory={handleDeleteCategory}
-              isDefault={isDefault}
+              isDefault={defaultCategories.includes(category)}
             />
           );
         })}
@@ -197,32 +357,23 @@ export default function InventoryDashboard() {
 
       {/* Add Category Modal */}
       {showCategoryModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
           <form
             onSubmit={handleAddNewCategory}
-            className="bg-white p-6 rounded-xl w-96 space-y-3"
+            className="bg-[#071826] p-6 rounded-xl w-96 border border-white/5 text-white"
           >
-            <h2 className="text-lg font-semibold">Add New Category</h2>
+            <h2 className="font-semibold mb-3 text-white">Add Category</h2>
             <input
-              type="text"
-              placeholder="Category Name"
               value={newCategoryName}
               onChange={(e) => setNewCategoryName(e.target.value)}
-              className="border p-2 w-full rounded"
+              className="border border-white/10 bg-transparent p-2 w-full mb-3 text-white"
               required
             />
             <div className="flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setShowCategoryModal(false);
-                  setNewCategoryName("");
-                }}
-                className="px-3 py-1 border rounded hover:bg-gray-100"
-              >
+              <button type="button" onClick={() => setShowCategoryModal(false)} className="text-gray-300">
                 Cancel
               </button>
-              <button className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700">
+              <button className="bg-emerald-500 text-black px-3 py-1 rounded">
                 Add
               </button>
             </div>
@@ -231,30 +382,104 @@ export default function InventoryDashboard() {
       )}
 
       {/* Add Item Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+      {showItemModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
           <form
             onSubmit={addItem}
-            className="bg-white p-6 rounded-xl w-96 space-y-3"
+            className="bg-[#071826] p-6 rounded-xl w-96 border border-white/5 text-white"
           >
-            <h2 className="text-lg font-semibold">Add Item</h2>
-            <input name="name" placeholder="Item Name" className="border p-2 w-full" required />
-            <select name="category" className="border p-2 w-full">
+            <h2 className="font-semibold mb-3 text-white">Add Item</h2>
+            <input name="name" placeholder="Item name" className="border border-white/10 bg-transparent p-2 w-full mb-2 text-white" />
+            <select name="category" className="border border-white/10 bg-transparent p-2 w-full mb-2 text-white">
               {categories.map((c) => (
-                <option key={c}>{c}</option>
+                <option key={c} className="bg-[#071826]">{c}</option>
               ))}
             </select>
-            <input name="stock" type="number" placeholder="Stock" className="border p-2 w-full" required />
-            <input name="unit" placeholder="Unit" className="border p-2 w-full" required />
-            <input name="price" type="number" placeholder="Price" className="border p-2 w-full" required />
-            <input name="expiry" type="date" className="border p-2 w-full" required />
-            <select name="branch" className="border p-2 w-full">
-              <option>Main</option>
-              <option>Branch 2</option>
+            <input name="stock" type="number" className="border border-white/10 bg-transparent p-2 w-full mb-2 text-white" />
+            <input name="unit" className="border border-white/10 bg-transparent p-2 w-full mb-2 text-white" />
+            <input name="price" type="number" className="border border-white/10 bg-transparent p-2 w-full mb-2 text-white" />
+            <input name="expiry" type="date" className="border border-white/10 bg-transparent p-2 w-full mb-2 text-white" />
+            <select name="branch" className="border border-white/10 bg-transparent p-2 w-full mb-3 text-white">
+              <option className="bg-[#071826]">Main</option>
+              <option className="bg-[#071826]">Branch 2</option>
             </select>
             <div className="flex justify-end gap-2">
-              <button type="button" onClick={() => setShowModal(false)} className="px-3 py-1 border rounded">Cancel</button>
-              <button className="bg-blue-600 text-white px-3 py-1 rounded">Save</button>
+              <button type="button" onClick={() => setShowItemModal(false)} className="text-gray-300">
+                Cancel
+              </button>
+              <button className="bg-blue-500 text-white px-3 py-1 rounded">
+                Save
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Edit Item Modal */}
+      {showEditItemModal && editingItem && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
+          <form
+            onSubmit={saveEditedItem}
+            className="bg-[#071826] p-6 rounded-xl w-96 border border-white/5 text-white"
+          >
+            <h2 className="font-semibold mb-3 text-white">Edit Item</h2>
+            <input
+              name="name"
+              placeholder="Item name"
+              defaultValue={editingItem.name}
+              className="border border-white/10 bg-transparent p-2 w-full mb-2 text-white"
+            />
+            <select
+              name="category"
+              defaultValue={editingItem.category}
+              className="border border-white/10 bg-transparent p-2 w-full mb-2 text-white"
+            >
+              {categories.map((c) => (
+                <option key={c} className="bg-[#071826]">{c}</option>
+              ))}
+            </select>
+            <input
+              name="stock"
+              type="number"
+              defaultValue={editingItem.stock}
+              className="border border-white/10 bg-transparent p-2 w-full mb-2 text-white"
+            />
+            <input
+              name="unit"
+              defaultValue={editingItem.unit}
+              className="border border-white/10 bg-transparent p-2 w-full mb-2 text-white"
+            />
+            <input
+              name="price"
+              type="number"
+              defaultValue={editingItem.price}
+              className="border border-white/10 bg-transparent p-2 w-full mb-2 text-white"
+            />
+            <input
+              name="expiry"
+              type="date"
+              defaultValue={editingItem.expiry}
+              className="border border-white/10 bg-transparent p-2 w-full mb-2 text-white"
+            />
+            <select
+              name="branch"
+              defaultValue={editingItem.branch}
+              className="border border-white/10 bg-transparent p-2 w-full mb-3 text-white"
+            >
+              <option className="bg-[#071826]">Main</option>
+              <option className="bg-[#071826]">Branch 2</option>
+            </select>
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowEditItemModal(false)}
+                className="text-gray-300"
+              >
+                Cancel
+              </button>
+              <button className="bg-blue-500 text-white px-3 py-1 rounded">
+                Save
+              </button>
             </div>
           </form>
         </div>

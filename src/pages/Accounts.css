@@ -1,6 +1,7 @@
+/* Dark theme for Accounts page */
 .accounts-page {
   padding: 100px 30px 30px;
-  background-color: #f3f4f6;
+  background: linear-gradient(180deg, #061226 0%, #071226 40%, #041019 100%);
   min-height: 100vh;
 }
 
@@ -8,7 +9,7 @@
   font-size: 24px;
   font-weight: 800;
   margin: 0 0 24px 0;
-  color: #111827;
+  color: #e6eef8;
 }
 
 .accounts-actions {
@@ -57,23 +58,24 @@
 }
 
 .accounts-table-card {
-  background: #ffffff;
+  background: rgba(255,255,255,0.02);
   border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 6px 18px rgba(2,6,23,0.6);
   overflow: hidden;
   margin-bottom: 22px;
+  border: 1px solid rgba(255,255,255,0.04);
 }
 
 .accounts-table-card__header {
   padding: 16px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
 }
 
 .accounts-table-card__title {
   margin: 0;
   font-size: 16px;
   font-weight: 800;
-  color: #111827;
+  color: #e6eef8;
 }
 
 .accounts-table-wrap {
@@ -87,14 +89,14 @@
 }
 
 .accounts-thead {
-  background: #f3f4f6;
+  background: rgba(255,255,255,0.03);
 }
 
 .accounts-th {
   padding: 12px;
   font-size: 13px;
   font-weight: 800;
-  color: #374151;
+  color: #cbd5e1;
 }
 
 .accounts-reports-grid {
@@ -108,17 +110,17 @@
   justify-content: space-between;
   gap: 12px;
   padding: 10px 0;
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid rgba(255,255,255,0.02);
 }
 
 .accounts-view__label {
-  color: #6b7280;
+  color: #9ca3af;
   font-weight: 800;
   font-size: 13px;
 }
 
 .accounts-view__value {
-  color: #111827;
+  color: #e6eef8;
   font-weight: 700;
   font-size: 13px;
   text-align: right;
@@ -132,14 +134,14 @@
 
 .accounts-audit__text {
   margin: 0 0 10px 0;
-  color: #374151;
+  color: #cbd5e1;
   font-size: 14px;
 }
 
 .accounts-audit__list {
   margin: 0;
   padding-left: 18px;
-  color: #111827;
+  color: #e6eef8;
   font-size: 14px;
 }
 

@@ -47,13 +47,13 @@ const Setting = () => {
   };
 
   return (
-    <div className="flex w-full min-h-[calc(100vh-70px)] pt-0">
+    <div className="flex w-full min-h-[calc(100vh-70px)] pt-0 bg-gradient-to-br from-[#071226] via-[#081827] to-[#041019] text-gray-100">
       <SettingsSidebar active={active} setActive={setActive} />
       <div className="flex-1 overflow-auto">
         <div className="p-6">
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900">{titles[active] || "Settings"}</h1>
-            <p className="text-sm text-gray-500 mt-2">Manage your hotel settings and integrations</p>
+            <h1 className="text-3xl font-bold text-white">{titles[active] || "Settings"}</h1>
+            <p className="text-sm text-gray-300 mt-2">Manage your hotel settings and integrations</p>
 
             <div className="mt-4 flex flex-wrap gap-2">
               {[
@@ -66,7 +66,7 @@ const Setting = () => {
                   key={item.id}
                   onClick={() => setActive(item.id)}
                   className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                    active === item.id ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300'
+                    active === item.id ? 'bg-gradient-to-r from-[#60a5fa] to-[#10b981] text-black shadow-md' : 'bg-transparent text-gray-300 border border-white/5 hover:border-white/10'
                   }`}
                 >
                   {item.label}

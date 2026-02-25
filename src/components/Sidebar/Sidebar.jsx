@@ -88,19 +88,19 @@ const Sidebar = () => {
       fixed top-[70px] left-0
       w-[250px] h-[calc(100vh-70px)]
       flex flex-col justify-between
-      text-white
-      bg-gradient-to-b from-indigo-400 via-blue-400 to-purple-400
+      text-gray-800
+      bg-white
       shadow-2xl rounded-r-3xl
     "
     >
       {/* Logo */}
       <div className="flex items-center gap-3 p-6">
-        <FaBuilding className="text-2xl" />
+        <FaBuilding className="text-2xl " />
         <h2 className="text-xl font-bold">Hotel</h2>
       </div>
 
       {/* Menu */}
-      <nav className="flex-1 px-4 space-y-2 overflow-y-auto">
+      <nav className="flex-1 px-4 space-y-2 overflow-y-auto font-bold">
         {menuItems.map((item) => {
           const Icon = item.icon;
 
@@ -115,41 +115,33 @@ const Sidebar = () => {
                 ${
                   isActive(item.path)
                     ? 'bg-white/20 backdrop-blur-md shadow-lg'
-                    : 'hover:bg-white/10'
+                    : 'hover:bg-blue-300 hover:shadow-md'
                 }
               `}
             >
               <Icon className="text-lg" />
-              <span className="text-sm font-medium">{item.name}</span>
+              <span className="text-base font-bold">{item.name}</span>
             </div>
           );
         })}
       </nav>
 
-      {/* Profile */}
-      <div className="p-6 border-t border-white/20">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-white/30 flex items-center justify-center overflow-hidden">
-            {avatarUrl ? (
-              <img
-                src={avatarUrl}
-                alt="Profile"
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              "👤"
-            )}
-          </div>
-          <div>
-            <p className="text-sm font-semibold">{userName}</p>
-            <p className="text-xs opacity-70">
-              {role ? role.charAt(0).toUpperCase() + role.slice(1) : "Role"}
-            </p>
-          </div>
+
+    {/* Profile */}
+    <div className="p-6 border-t border-gray-700 bg-black/80">
+      <div className="flex items-center gap-3">
+        <div className="w-20 h-20 rounded-full bg-gray-800 flex items-center justify-center text-white">
+          👤
+        </div>
+        <div>
+          <p className="text-lg font-bold text-white">kailash</p>
+          <p className="text-base font-bold text-gray-300">Admin</p>
+
         </div>
       </div>
     </div>
-  );
+  </div>
+);
 };
 
 export default Sidebar;

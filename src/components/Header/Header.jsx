@@ -19,10 +19,10 @@ const Header = ({ setIsAuthenticated }) => {
 
   return (
     <header className="fixed top-0 left-0 right-0 h-[70px] 
-    bg-gradient-to-r from-rose-400 via-pink-400 to-fuchsia-400 
-    shadow-md flex items-center justify-between px-6 z-50 text-white">
+bg-slate-900
+shadow-md flex items-center justify-between px-6 z-50 text-white backdrop-blur-md">
 
-      <h1 className="text-lg font-semibold">
+      <h1 className="text-xl font-bold">
         Maa Baglamukhi Resort
       </h1>
 
