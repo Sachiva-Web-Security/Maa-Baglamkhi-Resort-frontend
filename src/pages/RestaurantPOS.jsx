@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import API from "../api";
 import TableCard from '../components/Restaurant/TableCard';
 import MenuItem from '../components/Restaurant/MenuItem';
 import OrderSummary from '../components/Restaurant/OrderSummary';
@@ -95,7 +96,7 @@ const RestaurantPOS = () => {
     return subtotal + gst;
   };
 
-  const handleGenerateBill = ({ paymentMethod, totalAmount }) => {
+  const handleGenerateBill = async ({ paymentMethod, totalAmount }) => {
     if (!selectedTable) {
       alert('Please select a table');
       return;
@@ -111,11 +112,17 @@ const RestaurantPOS = () => {
       timestamp: new Date().toLocaleString(),
     };
 
-    alert(`Bill Generated!\n\nTable: ${billData.table}\nTotal: ₹${billData.total.toFixed(2)}\nPayment: ${paymentMethod}\n\n${billData.timestamp}`);
-    
-    // Clear order and mark table as available
-    setOrderItems([]);
-    // In a real app, you'd update the table status
+    try {
+      await API.post("/restaurant/bill", billData);
+
+      alert(`Bill Generated!\n\nTable: ${billData.table}\nTotal: ₹${billData.total.toFixed(2)}\nPayment: ${paymentMethod}\n\n${billData.timestamp}`);
+      
+      // Clear order
+      setOrderItems([]);
+    } catch (err) {
+      console.error("Error saving restaurant bill", err);
+      alert("Error saving bill to server");
+    }
   };
 
   const handleTransferToRoom = ({ paymentMethod, totalAmount, table }) => {

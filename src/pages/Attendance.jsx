@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import AttendanceRow from "../components/Attendance/AttendanceRow";
 import FiltersSection from "../components/Attendance/FiltersSection";
 import SummaryCard from "../components/Attendance/SummaryCard";
 import Modal from "../components/Hotel/Modal";
 import AttendanceForm from "../components/Attendance/AttendanceForm";
+import API from "../api";
 
 const Attendance = () => {
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
@@ -12,28 +13,19 @@ const Attendance = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showManualEntryModal, setShowManualEntryModal] = useState(false);
 
-  const [employees, setEmployees] = useState([
-    {
-      id: 1,
-      name: "Rahul Sharma",
-      role: "Receptionist",
-      department: "Reception",
-      checkIn: "09:05",
-      checkOut: null,
-      status: "Present",
-      method: "Biometric",
-    },
-    {
-      id: 2,
-      name: "Ankit Verma",
-      role: "Manager",
-      department: "Management",
-      checkIn: null,
-      checkOut: null,
-      status: "Absent",
-      method: "Manual",
-    },
-  ]);
+  const [employees, setEmployees] = useState([]);
+
+  useEffect(() => {
+    const fetchAttendance = async () => {
+      try {
+        const res = await API.get("/attendance", { params: { date } });
+        setEmployees(res.data || []);
+      } catch (err) {
+        console.error("Error loading attendance", err);
+      }
+    };
+    fetchAttendance();
+  }, [date]);
 
   const filteredEmployees = employees.filter((emp) => {
     const matchesDepartment =
@@ -55,6 +47,26 @@ const Attendance = () => {
   ).length;
 
   const handleAddManualEntry = () => setShowManualEntryModal(true);
+
+  const handleManualSubmit = async (data) => {
+    try {
+      const payload = {
+        ...data,
+        date,
+      };
+      const res = await API.post("/attendance", payload);
+      const newId = res.data?.id || Date.now();
+      setEmployees((prev) => [
+        { id: newId, ...payload },
+        ...prev,
+      ]);
+      setShowManualEntryModal(false);
+      alert("Attendance saved");
+    } catch (err) {
+      console.error("Error saving attendance", err);
+      alert("Error saving attendance");
+    }
+  };
 
   return (
     <div className="min-h-screen p-6 text-white bg-gradient-to-br from-[#0f172a] via-[#020617] to-black">
@@ -110,7 +122,7 @@ const Attendance = () => {
         onClose={() => setShowManualEntryModal(false)}
         title="Add Manual Entry"
       >
-        <AttendanceForm />
+        <AttendanceForm onSubmit={handleManualSubmit} />
       </Modal>
     </div>
   );

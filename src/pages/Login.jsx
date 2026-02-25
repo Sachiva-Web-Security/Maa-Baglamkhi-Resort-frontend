@@ -29,8 +29,8 @@ const Login = ({ setIsAuthenticated }) => {
     }
 
     try {
-      // ✅ Updated API Endpoint
-      const res = await API.post("/login", {
+      // ✅ Correct backend endpoint: /api/auth/login
+      const res = await API.post("/auth/login", {
         email: formData.username,
         password: formData.password,
       });

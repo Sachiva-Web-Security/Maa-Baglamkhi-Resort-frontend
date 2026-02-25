@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import SummaryCard from '../components/Accounts/SummaryCard';
 import RecordRow from '../components/Accounts/RecordRow';
 import ReportCard from '../components/Accounts/ReportCard';
@@ -6,29 +6,13 @@ import Modal from '../components/Hotel/Modal';
 import TransactionForm from '../components/Accounts/forms/TransactionForm';
 import InvoiceForm from '../components/Accounts/forms/InvoiceForm';
 import './Accounts.css';
+import API from "../api";
 
 const formatINR = (amount) =>
   new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
 
 const Accounts = () => {
-  const [records, setRecords] = useState([
-    {
-      id: 1,
-      date: '16 Feb 2026',
-      type: 'Income',
-      description: 'Room Booking - 102',
-      amount: 5000,
-      paymentMode: 'UPI',
-    },
-    {
-      id: 2,
-      date: '16 Feb 2026',
-      type: 'Expense',
-      description: 'Kitchen Inventory Purchase',
-      amount: 2500,
-      paymentMode: 'Cash',
-    },
-  ]);
+  const [records, setRecords] = useState([]);
 
   const [modals, setModals] = useState({
     addIncome: false,
@@ -58,40 +42,79 @@ const Accounts = () => {
     ]);
   };
 
-  const handleAddIncome = (data) => {
-    addRecord({
-      date: data.date,
-      type: 'Income',
-      description: data.description,
-      amount: data.amount,
-      paymentMode: data.paymentMode,
-    });
-    closeModal('addIncome');
-    alert('Income added');
+  useEffect(() => {
+    const fetchRecords = async () => {
+      try {
+        const res = await API.get("/accounts/transactions");
+        setRecords(res.data || []);
+      } catch (err) {
+        console.error("Error loading accounts records", err);
+      }
+    };
+    fetchRecords();
+  }, []);
+
+  const handleAddIncome = async (data) => {
+    try {
+      const res = await API.post("/accounts/income", data);
+      addRecord({
+        id: res.data?.id,
+        date: data.date,
+        type: 'Income',
+        description: data.description,
+        amount: data.amount,
+        paymentMode: data.paymentMode,
+      });
+      closeModal('addIncome');
+      alert('Income added');
+    } catch (err) {
+      console.error("Error adding income", err);
+      alert("Error adding income");
+    }
   };
 
-  const handleAddExpense = (data) => {
-    addRecord({
-      date: data.date,
-      type: 'Expense',
-      description: data.description,
-      amount: data.amount,
-      paymentMode: data.paymentMode,
-    });
-    closeModal('addExpense');
-    alert('Expense added');
+  const handleAddExpense = async (data) => {
+    try {
+      const res = await API.post("/accounts/expense", data);
+      addRecord({
+        id: res.data?.id,
+        date: data.date,
+        type: 'Expense',
+        description: data.description,
+        amount: data.amount,
+        paymentMode: data.paymentMode,
+      });
+      closeModal('addExpense');
+      alert('Expense added');
+    } catch (err) {
+      console.error("Error adding expense", err);
+      alert("Error adding expense");
+    }
   };
 
-  const handleGenerateInvoice = (invoice) => {
-    addRecord({
-      date: invoice.date,
-      type: 'Income',
-      description: `Invoice ${invoice.invoiceNo} - ${invoice.customerName}${invoice.description ? ` (${invoice.description})` : ''}`,
-      amount: invoice.amount,
-      paymentMode: invoice.paymentMode,
-    });
-    closeModal('invoice');
-    alert(`Invoice generated: ${invoice.invoiceNo}`);
+  const handleGenerateInvoice = async (invoice) => {
+    // Treat invoice as income
+    try {
+      const res = await API.post("/accounts/income", {
+        date: invoice.date,
+        description: `Invoice ${invoice.invoiceNo} - ${invoice.customerName}${invoice.description ? ` (${invoice.description})` : ''}`,
+        amount: invoice.amount,
+        paymentMode: invoice.paymentMode,
+      });
+      addRecord({
+        id: res.data?.id,
+        date: invoice.date,
+        type: 'Income',
+        description: `Invoice ${invoice.invoiceNo} - ${invoice.customerName}${invoice.description ? ` (${invoice.description})` : ''}`,
+        amount: invoice.amount,
+        paymentMode: invoice.paymentMode,
+      });
+      closeModal('invoice');
+      alert(`Invoice generated: ${invoice.invoiceNo}`);
+    } catch (err) {
+      console.error("Error generating invoice", err);
+      alert("Error generating invoice");
+    }
   };
 
   const handleView = (record) => {

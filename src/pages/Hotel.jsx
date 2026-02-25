@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import API from "../api";
 import SummaryCard from '../components/Hotel/SummaryCard';
 import RoomCard from '../components/Hotel/RoomCard';
 import BookingRow from '../components/Hotel/BookingRow';
@@ -7,26 +8,8 @@ import BookingForm from '../components/Hotel/BookingForm';
 import './Hotel.css';
 
 const Hotel = () => {
-  const [rooms, setRooms] = useState([
-    { number: '101', status: 'Available', guest: null, checkIn: null, checkOut: null },
-    { number: '102', status: 'Occupied', guest: 'Rahul Sharma', checkIn: '16 Feb 2026', checkOut: '18 Feb 2026' },
-    { number: '103', status: 'Cleaning', guest: null, checkIn: null, checkOut: null },
-    { number: '104', status: 'Available', guest: null, checkIn: null, checkOut: null },
-    { number: '105', status: 'Occupied', guest: 'Priya Patel', checkIn: '15 Feb 2026', checkOut: '20 Feb 2026' },
-    { number: '106', status: 'Available', guest: null, checkIn: null, checkOut: null },
-    { number: '107', status: 'Occupied', guest: 'Amit Kumar', checkIn: '17 Feb 2026', checkOut: '19 Feb 2026' },
-    { number: '108', status: 'Cleaning', guest: null, checkIn: null, checkOut: null },
-    { number: '109', status: 'Available', guest: null, checkIn: null, checkOut: null },
-    { number: '110', status: 'Occupied', guest: 'Sneha Reddy', checkIn: '16 Feb 2026', checkOut: '21 Feb 2026' },
-    { number: '111', status: 'Available', guest: null, checkIn: null, checkOut: null },
-    { number: '112', status: 'Occupied', guest: 'Vikram Singh', checkIn: '18 Feb 2026', checkOut: '22 Feb 2026' },
-  ]);
-
-  const [bookings, setBookings] = useState([
-    { id: 1, guestName: 'Rahul Sharma', room: '102', checkIn: '16 Feb 2026', checkOut: '18 Feb 2026', status: 'Occupied' },
-    { id: 2, guestName: 'Priya Patel', room: '105', checkIn: '15 Feb 2026', checkOut: '20 Feb 2026', status: 'Occupied' },
-    { id: 3, guestName: 'Amit Kumar', room: '107', checkIn: '17 Feb 2026', checkOut: '19 Feb 2026', status: 'Occupied' },
-  ]);
+  const [rooms, setRooms] = useState([]);
+  const [bookings, setBookings] = useState([]);
 
   const [modals, setModals] = useState({
     newBooking: false,
@@ -39,6 +22,21 @@ const Hotel = () => {
 
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [selectedRoom, setSelectedRoom] = useState(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await API.get("/hotel");
+        setRooms(res.data.rooms || []);
+        setBookings(res.data.bookings || []);
+      } catch (err) {
+        console.error("Error loading hotel data", err);
+        alert("Error loading hotel data from server");
+      }
+    };
+
+    fetchData();
+  }, []);
 
   // Calculate summary statistics
   const totalRooms = rooms.length;
@@ -56,27 +54,48 @@ const Hotel = () => {
     setSelectedRoom(null);
   };
 
-  const handleNewBooking = (formData) => {
-    const newBooking = {
-      id: bookings.length + 1,
+  const handleNewBooking = async (formData) => {
+    const payload = {
       guestName: formData.guestName,
       room: formData.room,
       checkIn: formData.checkIn,
       checkOut: formData.checkOut,
-      status: 'Occupied',
     };
 
-    setBookings(prev => [...prev, newBooking]);
-    
-    // Update room status
-    setRooms(prev => prev.map(room => 
-      room.number === formData.room 
-        ? { ...room, status: 'Occupied', guest: formData.guestName, checkIn: formData.checkIn, checkOut: formData.checkOut }
-        : room
-    ));
+    try {
+      const res = await API.post("/hotel/book", payload);
 
-    alert(`Booking created for ${formData.guestName} in Room ${formData.room}`);
-    closeModal('newBooking');
+      const newBooking = {
+        id: res.data.bookingId,
+        guestName: formData.guestName,
+        room: formData.room,
+        checkIn: formData.checkIn,
+        checkOut: formData.checkOut,
+        status: "Occupied",
+      };
+
+      setBookings((prev) => [newBooking, ...prev]);
+
+      setRooms((prev) =>
+        prev.map((room) =>
+          room.number === formData.room
+            ? {
+                ...room,
+                status: "Occupied",
+                guest: formData.guestName,
+                checkIn: formData.checkIn,
+                checkOut: formData.checkOut,
+              }
+            : room
+        )
+      );
+
+      alert(`Booking created for ${formData.guestName} in Room ${formData.room}`);
+      closeModal("newBooking");
+    } catch (err) {
+      console.error("Error creating booking", err);
+      alert("Error creating booking");
+    }
   };
 
   const handleExpressCheckIn = (formData) => {
@@ -84,16 +103,37 @@ const Hotel = () => {
     closeModal('expressCheckIn');
   };
 
-  const handleCheckOut = (booking) => {
-    if (window.confirm(`Check out ${booking.guestName} from Room ${booking.room}?`)) {
-      setBookings(prev => prev.filter(b => b.id !== booking.id));
-      setRooms(prev => prev.map(room => 
-        room.number === booking.room 
-          ? { ...room, status: 'Cleaning', guest: null, checkIn: null, checkOut: null }
-          : room
-      ));
+  const handleCheckOut = async (booking) => {
+    if (!window.confirm(`Check out ${booking.guestName} from Room ${booking.room}?`)) {
+      return;
+    }
+
+    try {
+      await API.post("/hotel/checkout", {
+        id: booking.id,
+        room: booking.room,
+      });
+
+      setBookings((prev) => prev.filter((b) => b.id !== booking.id));
+      setRooms((prev) =>
+        prev.map((room) =>
+          room.number === booking.room
+            ? {
+                ...room,
+                status: "Cleaning",
+                guest: null,
+                checkIn: null,
+                checkOut: null,
+              }
+            : room
+        )
+      );
+
       alert(`${booking.guestName} checked out successfully`);
-      closeModal('checkOut');
+      closeModal("checkOut");
+    } catch (err) {
+      console.error("Error during checkout", err);
+      alert("Error during checkout");
     }
   };
 

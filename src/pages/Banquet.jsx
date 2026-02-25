@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import BanquetStepper from '../components/Banquet/BanquetStepper';
 import BanquetHallCard from '../components/Banquet/BanquetHallCard';
 import BanquetBookingRow from '../components/Banquet/BanquetBookingRow';
 import BanquetBill from '../components/Banquet/BanquetBill';
 import Modal from '../components/Hotel/Modal';
+import API from "../api";
 
 const formatINR = (amount) =>
   new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
@@ -42,7 +43,7 @@ function hoursBetween(start, end) {
 }
 
 const Banquet = () => {
-  const [halls] = useState(initialHalls);
+  const [halls, setHalls] = useState(initialHalls);
   const [activeStep, setActiveStep] = useState(0);
 
   const [wizard, setWizard] = useState({
@@ -61,30 +62,12 @@ const Banquet = () => {
     gstPercent: 5,
   });
 
-  const [bookings, setBookings] = useState([
-    {
-      id: 1,
-      hallId: 'crystal',
-      hallName: 'Crystal Hall',
-      customerName: 'Rohit Verma',
-      phone: '98xxxxxx12',
-      eventType: 'Engagement',
-      guests: 180,
-      menuPackageId: 'premium',
-      decorationFee: 20000,
-      notes: '',
-      date: '2026-02-22',
-      startTime: '19:00',
-      endTime: '23:00',
-      status: 'Confirmed',
-      invoiceNo: '',
-    },
-  ]);
+  const [bookings, setBookings] = useState([]);
 
   const [modals, setModals] = useState({ viewBill: false });
   const [selectedBooking, setSelectedBooking] = useState(null);
 
-  const selectedHall = useMemo(() => halls.find((h) => h.id === wizard.hallId) || null, [halls, wizard.hallId]);
+  const selectedHall = useMemo(() => halls.find((h) => h.code === wizard.hallId || h.id === wizard.hallId) || null, [halls, wizard.hallId]);
   const selectedPackage = useMemo(
     () => menuPackages.find((p) => p.id === wizard.menuPackageId) || menuPackages[0],
     [wizard.menuPackageId],
@@ -150,45 +133,108 @@ const Banquet = () => {
 
   const goBack = () => setActiveStep((s) => Math.max(0, s - 1));
 
-  const handleConfirmBooking = () => {
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await API.get("/banquet");
+        if (res.data?.halls) {
+          setHalls(
+            res.data.halls.map((h) => ({
+              id: h.code || h.id,
+              code: h.code,
+              name: h.name,
+              capacity: h.capacity,
+              ratePerHour: h.ratePerHour,
+              status: h.status,
+            }))
+          );
+        }
+        if (res.data?.bookings) {
+          setBookings(res.data.bookings);
+        }
+      } catch (err) {
+        console.error("Error loading banquet data", err);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const handleConfirmBooking = async () => {
     if (!selectedHall) return;
-    const newId = Date.now();
-    const hallName = selectedHall.name;
-    setBookings((prev) => [
-      {
-        id: newId,
-        hallId: selectedHall.id,
-        hallName,
-        customerName: wizard.customerName,
-        phone: wizard.phone,
-        eventType: wizard.eventType,
-        guests: Number(wizard.guests) || 0,
-        menuPackageId: wizard.menuPackageId,
-        decorationFee: Number(wizard.decorationFee) || 0,
-        notes: wizard.notes,
-        date: wizard.date,
-        startTime: wizard.startTime,
-        endTime: wizard.endTime,
-        status: 'Confirmed',
-        invoiceNo: '',
-      },
-      ...prev,
-    ]);
-    setActiveStep(4);
-    alert(`Booking Confirmed for ${wizard.customerName} (${hallName})`);
+
+    const payload = {
+      hallId: selectedHall.id || selectedHall.code,
+      customerName: wizard.customerName,
+      phone: wizard.phone,
+      eventType: wizard.eventType,
+      guests: Number(wizard.guests) || 0,
+      menuPackageId: wizard.menuPackageId,
+      decorationFee: Number(wizard.decorationFee) || 0,
+      notes: wizard.notes,
+      date: wizard.date,
+      startTime: wizard.startTime,
+      endTime: wizard.endTime,
+      discount: wizard.discount,
+      gstPercent: wizard.gstPercent,
+    };
+
+    try {
+      const res = await API.post("/banquet", payload);
+      const newId = res.data?.id || Date.now();
+      const hallName = selectedHall.name;
+      setBookings((prev) => [
+        {
+          id: newId,
+          hallId: selectedHall.id || selectedHall.code,
+          hallName,
+          customerName: wizard.customerName,
+          phone: wizard.phone,
+          eventType: wizard.eventType,
+          guests: Number(wizard.guests) || 0,
+          menuPackageId: wizard.menuPackageId,
+          decorationFee: Number(wizard.decorationFee) || 0,
+          notes: wizard.notes,
+          date: wizard.date,
+          startTime: wizard.startTime,
+          endTime: wizard.endTime,
+          status: 'Confirmed',
+          invoiceNo: '',
+        },
+        ...prev,
+      ]);
+      setActiveStep(4);
+      alert(`Booking Confirmed for ${wizard.customerName} (${hallName})`);
+    } catch (err) {
+      console.error("Error creating banquet booking", err);
+      alert("Error creating booking");
+    }
   };
 
-  const markCompleted = (booking) => {
-    setBookings((prev) => prev.map((b) => (b.id === booking.id ? { ...b, status: 'Completed' } : b)));
-    alert(`Event marked completed: ${booking.hallName}`);
+  const markCompleted = async (booking) => {
+    try {
+      await API.put(`/banquet/${booking.id}/complete`);
+      setBookings((prev) => prev.map((b) => (b.id === booking.id ? { ...b, status: 'Completed' } : b)));
+      alert(`Event marked completed: ${booking.hallName}`);
+    } catch (err) {
+      console.error("Error marking completed", err);
+      alert("Error marking completed");
+    }
   };
 
-  const generateBill = (booking) => {
-    const invoiceNo = booking.invoiceNo || `BNQ-${String(booking.id).slice(-6)}`;
-    const updated = { ...booking, invoiceNo, status: booking.status === 'Billed' ? 'Billed' : 'Billed' };
-    setBookings((prev) => prev.map((b) => (b.id === booking.id ? updated : b)));
-    setSelectedBooking(updated);
-    openModal('viewBill');
+  const generateBill = async (booking) => {
+    try {
+      const res = await API.put(`/banquet/${booking.id}/bill`, {
+        invoiceNo: booking.invoiceNo,
+      });
+      const invoiceNo = res.data?.invoiceNo || booking.invoiceNo;
+      const updated = { ...booking, invoiceNo, status: 'Billed' };
+      setBookings((prev) => prev.map((b) => (b.id === booking.id ? updated : b)));
+      setSelectedBooking(updated);
+      openModal('viewBill');
+    } catch (err) {
+      console.error("Error billing booking", err);
+      alert("Error generating bill");
+    }
   };
 
   const hallStats = useMemo(() => {
@@ -254,8 +300,8 @@ const Banquet = () => {
                   <BanquetHallCard
                     key={hall.id}
                     hall={hall}
-                    selected={wizard.hallId === hall.id}
-                    onSelect={() => setWizard((prev) => ({ ...prev, hallId: hall.id }))}
+                    selected={wizard.hallId === (hall.code || hall.id)}
+                    onSelect={() => setWizard((prev) => ({ ...prev, hallId: hall.code || hall.id }))}
                   />
                 ))}
               </div>

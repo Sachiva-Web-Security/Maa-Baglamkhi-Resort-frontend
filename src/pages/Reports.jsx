@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { FaSearch, FaDownload, FaPrint, FaSyncAlt } from 'react-icons/fa';
 import ReportTypeSelector from '../components/Reports/ReportTypeSelector';
 import ReportFilters from '../components/Reports/ReportFilters';
 import ReportTable from '../components/Reports/ReportTable';
 import ReportCharts from '../components/Reports/ReportCharts';
+import API from "../api";
 
 const REPORT_TYPES = [
   { id: 'room', label: 'Room' },
@@ -114,6 +115,7 @@ function makeMockData(type) {
 const Reports = () => {
   const [reportType, setReportType] = useState('room');
   const [query, setQuery] = useState('');
+  const [summary, setSummary] = useState(null);
 
   const [filters, setFilters] = useState({
     dateFrom: '',
@@ -145,6 +147,18 @@ const Reports = () => {
       status: true,
     };
   }, [reportType]);
+
+  useEffect(() => {
+    const fetchSummary = async () => {
+      try {
+        const res = await API.get("/reports/summary");
+        setSummary(res.data);
+      } catch (err) {
+        console.error("Error loading report summary", err);
+      }
+    };
+    fetchSummary();
+  }, []);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -185,6 +199,16 @@ const Reports = () => {
       <div className="mb-5">
         <h1 className="text-2xl font-extrabold text-gray-900 mb-1">Reports</h1>
         <div className="text-sm text-gray-500">Home / Reports</div>
+        {summary && (
+          <div className="mt-2 text-xs text-gray-600 font-semibold">
+            Rooms: <span className="font-bold">{summary.totalRooms}</span> ·
+            Hotel bookings: <span className="font-bold">{summary.hotelBookings}</span> ·
+            Restaurant bills: <span className="font-bold">{summary.restaurantBills}</span> ·
+            Accounts txns: <span className="font-bold">{summary.accountsTransactions}</span> ·
+            Banquet bookings: <span className="font-bold">{summary.banquetBookings}</span> ·
+            Attendance rows: <span className="font-bold">{summary.attendanceRecords}</span>
+          </div>
+        )}
       </div>
 
       <div className="bg-gradient-to-b from-[#0f1a2b] to-[#0b1622] rounded-xl shadow-lg border border-white/5 p-4 mb-4">
