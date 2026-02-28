@@ -195,9 +195,9 @@ const Reports = () => {
   const printReport = () => window.print();
 
   return (
-    <div className="min-h-screen pt-[100px] px-[30px] pb-[30px] bg-gradient-to-br from-[#071226] via-[#081827] to-[#041019] text-gray-100">
-      <div className="mb-5">
-        <h1 className="text-2xl font-extrabold text-gray-900 mb-1">Reports</h1>
+    <div className="min-h-screen w-280 pt-[10px] px-[30px] pb-[30px] bg-gradient-to-br from-[#071226] via-[#081827] to-[#041019] text-gray-100 ">
+      <div className="mb-6">
+        <h1 className="text-2xl font-extrabold text-white mb-1">Reports</h1>
         <div className="text-sm text-gray-500">Home / Reports</div>
         {summary && (
           <div className="mt-2 text-xs text-gray-600 font-semibold">
@@ -211,7 +211,7 @@ const Reports = () => {
         )}
       </div>
 
-      <div className="bg-gradient-to-b from-[#0f1a2b] to-[#0b1622] rounded-xl shadow-lg border border-white/5 p-4 mb-4">
+      <div className="bg-gradient-to-b from-[#0f1a2b] to-[#0b1622] rounded-xl shadow-lg border border-white/5 p-7 mb-4">
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(280px,1fr)_auto] gap-3 items-center">
           <ReportTypeSelector value={reportType} onChange={setReportType} types={REPORT_TYPES} />
 

@@ -96,7 +96,7 @@ export default function CategoryInventory({
   return (
     <div
       className="
-        min-h-screen p-6
+        min-h-screen p-6 
         bg-gradient-to-br from-blue-50 via-white to-indigo-100
         dark:from-gray-900 dark:via-gray-800 dark:to-gray-900
         text-gray-800 dark:text-white

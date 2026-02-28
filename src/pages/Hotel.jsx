@@ -235,21 +235,21 @@ const Hotel = () => {
 
   return (
     
-     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-200 p-6">
+     <div className="min-h-screen w-280 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-200 p-6">
       {/* Page Title */}
-      <h1 className="text-amber-50 font-bold mb-10 w-full">Hotel Management</h1>
+      <h1 className="text-amber-50 text-2xl font-bold mb-10 w-full pl-110">Hotel Management</h1>
 
       {/* Top Action Buttons */}
       <div className="action-buttons justify-between ">
       <button 
-  className="h-12 w-60 bg-gradient-to-r from-purple-600 to-blue-400 
+  className="h-12 w-60 bg-slate-700 hover:bg-slate-600
              text-white rounded-full"
   onClick={() => openModal('newBooking')}
 >
   + New Booking
 </button>
         <button 
-          className="h-12 w-60 bg-gradient-to-r from-green-100 to-pink-500 
+          className="h-12 w-60 bg-slate-700 hover:bg-slate-600
              text-white rounded-full"
           onClick={() => openModal('expressCheckIn')}
         >
@@ -257,7 +257,7 @@ const Hotel = () => {
         </button>
 
         <button 
-          className="h-12 w-60 bg-gradient-to-r from-yellow-100 to-pink-500 
+          className="h-12 w-60 bg-slate-700 hover:bg-slate-600
              text-white rounded-full"
           onClick={() => {
             if (bookings.length > 0) {
@@ -272,7 +272,7 @@ const Hotel = () => {
         </button>
 
         <button 
-          className="h-12 w-60 bg-gradient-to-r from-red-300 to-pink-600 
+          className="h-12 w-60 bg-slate-700 hover:bg-slate-600
              text-white rounded-full"
           onClick={() => openModal('nightAudit')}
         >
@@ -281,7 +281,7 @@ const Hotel = () => {
       </div>
 
       {/* Summary Cards */}
-      <div className="summary-cards">
+      <div className="summary-cards bg-slate-900">
         <SummaryCard 
           label="Total Rooms" 
           value={totalRooms}
@@ -334,7 +334,7 @@ const Hotel = () => {
                 border border-white/20
                 rounded-2xl
                 shadow-2xl
-                p-6
+                p-6 h-38 ht-96 -mt-4
                 transition duration-300">
 
   <h2 className="text-2xl font-semibold text-white mb-6">

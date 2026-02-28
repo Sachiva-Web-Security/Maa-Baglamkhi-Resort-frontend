@@ -2,13 +2,14 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api";
 import bgImage from "../assets/bg.jpg";
-
+ 
 const Login = ({ setIsAuthenticated }) => {
   const [formData, setFormData] = useState({
     username: "",
     password: "",
     role: "Admin",
   });
+
 
   const navigate = useNavigate();
 
@@ -47,11 +48,9 @@ const Login = ({ setIsAuthenticated }) => {
       if (setIsAuthenticated) {
         setIsAuthenticated(true);
       }
-
-      alert("✅ Login Successful");
-
-      navigate("/dashboard");
-
+     // Direct navigate with state
+     navigate("/dashboard", { state: { loginSuccess: true } });
+    
     } catch (error) {
       // axios network error doesn't include response
       let errorMsg;
@@ -71,13 +70,15 @@ const Login = ({ setIsAuthenticated }) => {
   };
 
   return (
+   
+  
     <div
-      className="min-h-screen flex items-center justify-center font-[Poppins] bg-cover bg-center"
+      className={`min-h-screen flex items-center justify-center font-[Poppins] bg-cover bg-center `}
       style={{
         backgroundImage: `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url(${bgImage})`,
       }}
     >
-      <div className="w-[380px] p-10 rounded-2xl bg-white/20 backdrop-blur-xl shadow-2xl border border-white/30">
+      <div className="w-[380px] p-10 rounded-2xl bg-black/20 backdrop-blur-xl shadow-2xl border border-white/30">
 
         {/* Header */}
         <div className="text-center mb-8 text-white">
@@ -133,6 +134,7 @@ const Login = ({ setIsAuthenticated }) => {
         </form>
       </div>
     </div>
+    
   );
 };
 

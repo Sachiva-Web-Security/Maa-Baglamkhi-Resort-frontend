@@ -22,10 +22,9 @@ import CreateUser from "./components/Createuser/CreateUser";
 
 
 
-
 function Layout({ children, setIsAuthenticated }) {
   return (
-    <div>
+    <div className='flex bg-slate-900'>
 
       {/* Header */}
       <Header setIsAuthenticated={setIsAuthenticated} />
@@ -34,7 +33,7 @@ function Layout({ children, setIsAuthenticated }) {
       <Sidebar />
 
       {/* Main Content */}
-      <div className="ml-[250px] mt-[70px] p-6">
+      <div className="ml-[250px] mt-[70px] pl-">
         {children}
       </div>
 
@@ -56,6 +55,8 @@ function App() {
 
   return (
     <Router>
+
+      
       <Routes>
 
       <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />

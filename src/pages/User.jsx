@@ -47,14 +47,14 @@ const User = () => {
   });
 
   return (
-    <div className="min-h-screen p-6 bg-gradient-to-br from-indigo-100 via-blue-100 to-purple-100">
+    <div className="   min-h-screen w-280 p-6 bg-slate-900">
       
       <div className="flex justify-between mb-6">
-        <h1 className="text-2xl font-bold">User Management</h1>
+        <h1 className="text-2xl text-white text-align-center  pl-100 font-bold">User Management</h1>
 
         <button
           onClick={() => navigate("/create-user")}
-          className="flex items-center gap-2 bg-indigo-500 text-white px-4 py-2 rounded-xl"
+          className="flex items-center gap-2  bg-indigo-500 text-white px-4 py-2 rounded-xl"
         >
           <FaUserPlus />
           Add User
@@ -81,7 +81,7 @@ const User = () => {
       </div>
 
       {/* Cards */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 pl-100">
         {filteredUsers.map((user, index) => {
           const displayName =
             user.name || user.fullName || user.username || "Unknown User";
@@ -101,7 +101,7 @@ const User = () => {
           return (
             <div
               key={user.id || user._id || index}
-              className="bg-white p-5 rounded-2xl shadow-lg"
+              className="bg-white p-4 rounded-2xl shadow-lg"
             >
               <div className="flex items-center gap-4 mb-4">
                 <div className="w-12 h-12 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold overflow-hidden">

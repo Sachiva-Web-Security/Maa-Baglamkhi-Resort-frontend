@@ -133,8 +133,8 @@ const Accounts = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-slate-100 p-8">
-      <h1 className="accounts-title">Accounts & Finance</h1>
+    <div className="min-h-screen w-280 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-slate-100 p-8">
+      <h1 className="accounts-title pl-100">Accounts & Finance</h1>
 
       {/* Top Action Buttons */}
       <div className="accounts-actions">

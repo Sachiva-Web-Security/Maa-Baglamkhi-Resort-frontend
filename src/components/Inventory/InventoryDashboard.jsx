@@ -193,7 +193,7 @@ export default function InventoryDashboard() {
 
   // 🔹 Dashboard view
   return (
-    <div className="min-h-screen p-6 bg-gradient-to-br from-[#071226] via-[#081827] to-[#041019] text-gray-100">
+    <div className="min-h-screen w-280 p-6 bg-gradient-to-br from-[#071226] via-[#081827] to-[#041019] text-gray-100">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>

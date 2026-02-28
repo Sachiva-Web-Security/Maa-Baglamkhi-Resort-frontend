@@ -5,7 +5,12 @@ import {
   FaCheckCircle,
 } from "react-icons/fa";
 
-import { useNavigate } from "react-router-dom";
+
+import { useNavigate, useLocation } from "react-router-dom";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { useEffect, useState } from "react";
+import "./Dashboard.css"; 
 
 import MetricCard from "../components/Dashboard/MetricCard/MetricCard";
 import MonthlyRevenueChart from "../components/Dashboard/Charts/MonthlyRevenueChart";
@@ -15,6 +20,26 @@ import HomePage from "../components/HomePage/HomePage";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+   const location = useLocation();
+
+   // ✅ Blur state
+  const [blurBg, setBlurBg] = useState(false);
+
+  // ✅ Show toast after login
+  useEffect(() => {
+    if (location.state?.loginSuccess) {
+      setBlurBg(true);
+
+      toast.success("✅ Login Successful", {
+        position: "top-center",
+        autoClose: 0,
+      });
+
+      setTimeout(() => {
+        setBlurBg(false);
+      }, 500);
+    }
+  }, [location]);
 
   const metrics = [
     {
@@ -48,7 +73,11 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0f172a] p-6 space-y-6">
+     <>
+      {/* ✅ Toast Container */}
+      <ToastContainer theme="dark" />
+
+    <div className={`min-h-screen bg-slate-900 space-y-20 ${blurBg ? "blur-bg" : ""}`}>
 
       {/* ===== TOP METRICS ===== */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -65,7 +94,7 @@ const Dashboard = () => {
       </div>
 
       {/* ===== MAIN CHART ===== */}
-      <div className="bg-[#1e293b] rounded-2xl p-6 shadow-lg">
+      <div className="">
         <h2 className="text-white font-semibold mb-4">
           Reservation Statistic
         </h2>
@@ -75,22 +104,24 @@ const Dashboard = () => {
       {/* ===== SMALL CHARTS ===== */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-        <div className="bg-[#1e293b] rounded-2xl p-6 shadow-lg">
+        <div  className="bg-slate-900 ">
           <RoomOccupancyChart />
         </div>
 
-        <div className="bg-[#1e293b] rounded-2xl p-6 shadow-lg">
+        <div >
           <FoodSalesChart />
         </div>
 
       </div>
 
       {/* ===== HOME PAGE FULL WIDTH (BOTTOM) ===== */}
-      <div className="bg-[#1e293b] rounded-2xl p-6 shadow-lg">
+      <div className="">
         <HomePage />
       </div>
 
     </div>
+
+    </>
   );
 };
 

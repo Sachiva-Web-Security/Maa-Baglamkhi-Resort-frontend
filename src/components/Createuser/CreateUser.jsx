@@ -42,10 +42,10 @@ const CreateUser = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6">
-      <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-lg">
+    <div className="min-h-screen  flex items-center justify-center pl-70">
+      <div className="bg-slate-850 border-5 border-white/30 rounded-x3 p-10 rounded-2xl shadow-xl w-full max-w-lg ">
 
-        <h2 className="text-2xl font-bold mb-6">Create New User</h2>
+        <h2 className="text-2xl text-white font-bold mb-6">Create New User</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
 
@@ -56,7 +56,7 @@ const CreateUser = () => {
             required
             value={form.name}
             onChange={handleChange}
-            className="w-full p-3 border rounded-xl"
+            className="w-full p-3 text-white border rounded-xl"
           />
 
           <input
@@ -66,7 +66,7 @@ const CreateUser = () => {
             required
             value={form.email}
             onChange={handleChange}
-            className="w-full p-3 border rounded-xl"
+            className="w-full p-3 text-white border rounded-xl"
           />
 
           <input
@@ -76,14 +76,14 @@ const CreateUser = () => {
             required
             value={form.password}
             onChange={handleChange}
-            className="w-full p-3 border rounded-xl"
+            className="w-full p-3 text-white border rounded-xl"
           />
 
           <select
             name="role"
             value={form.role}
             onChange={handleChange}
-            className="w-full p-3 border rounded-xl"
+            className="w-full p-3 text-white border rounded-xl"
           >
             <option>Admin</option>
             <option>Manager</option>
