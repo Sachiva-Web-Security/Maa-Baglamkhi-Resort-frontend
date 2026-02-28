@@ -19,12 +19,14 @@ import Setting from "./pages/Setting";
 import Profile from "./pages/Profile";
 import User from './pages/User';
 import CreateUser from "./components/Createuser/CreateUser";
+import Assignment from './pages/Assignments';
+import Kitchen from './pages/Kitchen';
 
 
 
 function Layout({ children, setIsAuthenticated }) {
   return (
-    <div className='flex bg-slate-900'>
+    <div>
 
       {/* Header */}
       <Header setIsAuthenticated={setIsAuthenticated} />
@@ -33,7 +35,7 @@ function Layout({ children, setIsAuthenticated }) {
       <Sidebar />
 
       {/* Main Content */}
-      <div className="ml-[250px] mt-[70px] pl-">
+      <div className="ml-[250px] mt-[70px] p-6">
         {children}
       </div>
 
@@ -55,8 +57,6 @@ function App() {
 
   return (
     <Router>
-
-      
       <Routes>
 
       <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
@@ -187,6 +187,28 @@ function App() {
           </ProtectedRoute>
         }
       />
+      {/* Assignment: admin + receptionist */}
+<Route
+  path="/assignments"
+  element={
+    <ProtectedRoute allowedRoles={["admin", "receptionist", "housekeeping"]}>
+      <Layout setIsAuthenticated={setIsAuthenticated}>
+        <Assignment />
+      </Layout>
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/kitchen"
+  element={
+    <ProtectedRoute allowedRoles={["admin", "receptionist", "housekeeping"]}>
+      <Layout setIsAuthenticated={setIsAuthenticated}>
+        <Kitchen />
+      </Layout>
+    </ProtectedRoute>
+  }
+/>
+
 
       {/* Housekeeping: admin + housekeeping + manager */}
       <Route

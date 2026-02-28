@@ -11,17 +11,9 @@ export default function CategoryCard({ category, itemCount, totalValue, onClick,
 
   return (
     <div
-  onClick={onClick}
-  className="
-    bg-gradient-to-br from-blue-50 to-blue-100 
-    dark:from-gray-800 dark:to-gray-700
-    border border-blue-200 dark:border-gray-700
-    rounded-lg p-4 cursor-pointer 
-    hover:shadow-lg hover:scale-105 
-    transition-all duration-300 relative group
-    text-gray-800 dark:text-white
-  "
->
+      onClick={onClick}
+      className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-4 cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-300 relative group"
+    >
       {/* Delete Button - Only show for custom categories */}
       {!isDefault && (
         <button

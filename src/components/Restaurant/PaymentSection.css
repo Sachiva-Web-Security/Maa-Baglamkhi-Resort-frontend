@@ -1,12 +1,57 @@
-.payment-section { margin-top:16px; padding-top:16px; border-top:1px solid rgba(255,255,255,0.04) }
+.payment-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+}
 
-.payment-method-select { border:1px solid rgba(255,255,255,0.06); padding:10px; width:100%; border-radius:8px; font-size:14px; margin-bottom:12px; background:transparent; color:#e6eef6 }
-.payment-method-select:focus { outline:none; border-color: rgba(96,165,250,0.14); box-shadow:0 8px 20px rgba(96,165,250,0.06) }
+.payment-method-select {
+  border: 1px solid #d1d5db;
+  padding: 10px;
+  width: 100%;
+  border-radius: 6px;
+  font-size: 14px;
+  margin-bottom: 12px;
+  background: white;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
 
-.payment-btn { width:100%; padding:12px; border-radius:8px; border:none; color:#042022; font-size:14px; font-weight:700; cursor:pointer; margin-bottom:8px; transition:transform 0.08s, box-shadow 0.12s }
-.payment-btn:hover{ transform:translateY(-2px) }
+.payment-method-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
 
-.payment-btn-green { background: linear-gradient(90deg,#34d399,#10b981); color:#042022 }
-.payment-btn-blue { background: linear-gradient(90deg,#60a5fa,#2563eb); color:#042022 }
-.payment-btn-yellow { background: linear-gradient(90deg,#fbbf24,#f59e0b); color:#042022 }
+.payment-btn {
+  width: 100%;
+  padding: 12px;
+  border-radius: 6px;
+  border: none;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  margin-bottom: 8px;
+  transition: opacity 0.2s, transform 0.1s;
+}
+
+.payment-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.payment-btn:active {
+  transform: translateY(0);
+}
+
+.payment-btn-green {
+  background-color: #16a34a;
+}
+
+.payment-btn-blue {
+  background-color: #2563eb;
+}
+
+.payment-btn-yellow {
+  background-color: #ca8a04;
+}
 

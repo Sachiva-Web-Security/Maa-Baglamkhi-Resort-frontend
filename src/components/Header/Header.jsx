@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import {FaBuilding } from "react-icons/fa";
-  
+
 const Header = ({ setIsAuthenticated }) => {
   const navigate = useNavigate();
   const userName = localStorage.getItem("name") || "User";
@@ -20,15 +19,12 @@ const Header = ({ setIsAuthenticated }) => {
 
   return (
     <header className="fixed top-0 left-0 right-0 h-[70px] 
-bg-slate-900
-shadow-md flex items-center justify-between px-6 z-50 text-white backdrop-blur-md">
+    bg-gradient-to-r from-rose-400 via-pink-400 to-fuchsia-400 
+    shadow-md flex items-center justify-between px-6 z-50 text-white">
 
-     <h1 className="flex items-center gap-2 text-l font-semi-bold">
-  <div className="-ml-2 w-8 h-8 flex items-center justify-center rounded-lg bg-blue-600 text-white">
-    <FaBuilding />
-  </div>
-  Maa Baglamukhi Resort
-</h1> 
+      <h1 className="text-lg font-semibold">
+        Maa Baglamukhi Resort
+      </h1>
 
       <div className="flex items-center gap-4">
         <span className="text-sm font-medium">

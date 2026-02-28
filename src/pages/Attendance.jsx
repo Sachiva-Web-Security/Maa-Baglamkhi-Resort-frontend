@@ -69,10 +69,9 @@ const Attendance = () => {
   };
 
   return (
-    <div className="min-h-screen w-280  bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      
+    <div className="min-h-screen p-6 text-white bg-gradient-to-br from-[#0f172a] via-[#020617] to-black">
 
-      <h1 className="text-2xl text-white font-bold mb-6 pl-100 pt-10">Attendance Management</h1>
+      <h1 className="text-2xl font-semibold mb-6">Attendance Management</h1>
 
       <FiltersSection
         date={date}
@@ -87,7 +86,7 @@ const Attendance = () => {
       />
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 my-6 pl-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 my-6">
         <SummaryCard label="Total Staff" value={totalStaff} />
         <SummaryCard label="Present" value={presentStaff} color="green" />
         <SummaryCard label="Absent" value={absentStaff} color="red" />
@@ -99,7 +98,7 @@ const Attendance = () => {
       <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4 shadow-lg">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-gray-300 border-b border-white/10 ">
+            <tr className="text-gray-300 border-b border-white/10">
               <th className="p-3 text-left">Employee</th>
               <th className="p-3 text-left">Role</th>
               <th className="p-3 text-left">Check In</th>
