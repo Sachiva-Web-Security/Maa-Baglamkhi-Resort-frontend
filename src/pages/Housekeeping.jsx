@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FaSearch, FaFilePdf, FaChevronUp, FaTimes, FaExclamationCircle, FaBroom, FaCheck, FaBed } from 'react-icons/fa';
+import { FaSearch, FaFilePdf, FaChevronUp, FaTimes, FaExclamationCircle } from 'react-icons/fa';
 import HousekeepingRow from '../components/Housekeeping/HousekeepingRow';
 
 const initialData = [
@@ -184,28 +184,17 @@ function Housekeeping() {
     return matchesSearch && matchesHousekeeper && matchesRoomType;
   });
 
-  // summary counts based on filtered data
-  const roomsToClean = filteredData.filter(item =>
-    item.status.toLowerCase().includes('dirty')
-  ).length;
-  const roomsInspected = filteredData.filter(item =>
-    item.status.toLowerCase().includes('inspected')
-  ).length;
-  const occupiedRooms = filteredData.filter(item =>
-    item.status.toLowerCase().includes('occupied')
-  ).length;
-
   return (
-    <div className="min-h-screen pt-[100px] px-[30px] pb-[30px] bg-gradient-to-br from-[#071226] via-[#081827] to-[#041019] text-gray-100">
+    <div className="min-h-screen bg-gray-100 pt-[100px] px-[30px] pb-[30px]">
       {/* Header */}
       <div className="mb-5">
-        <h1 className="text-2xl font-semibold text-white mb-1">Housekeeping</h1>
-        <div className="text-sm text-gray-300">Home / Housekeeping</div>
+        <h1 className="text-2xl font-semibold text-gray-800 mb-1">Housekeeping</h1>
+        <div className="text-sm text-gray-500">Home / Housekeeping</div>
       </div>
 
       {/* Top Control Bar */}
-      <div className="bg-gradient-to-b from-[#0f1a2b] to-[#0b1622] rounded-lg shadow-lg border border-white/5 p-4 mb-4">
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(240px,1fr)_auto_260px_auto] gap-3 items-center">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(320px,1fr)_260px_auto] gap-3 items-center">
           {/* Search Bar */}
           <div className="relative w-full">
             <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -214,18 +203,8 @@ function Housekeeping() {
               placeholder="Search rooms..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-teal-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-400 bg-transparent text-gray-100"
+              className="w-full pl-10 pr-4 py-2 border border-teal-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-200 bg-white"
             />
-          </div>
-
-          {/* Hide Columns Shortcut */}
-          <div className="flex justify-center lg:justify-start">
-            <button
-              onClick={() => setShowColumns(!showColumns)}
-              className="px-4 py-2 bg-transparent border border-white/10 text-white rounded-lg text-sm font-medium hover:bg-white/5 transition-colors"
-            >
-              {showColumns ? 'Hide Columns' : 'Show Columns'}
-            </button>
           </div>
 
           {/* Housekeeper Filter */}
@@ -233,17 +212,17 @@ function Housekeeping() {
             <select
               value={housekeeperFilter}
               onChange={(e) => setHousekeeperFilter(e.target.value)}
-              className="w-full px-4 py-2 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-900 bg-transparent text-white"
+              className="w-full px-4 py-2 border border-teal-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-200 bg-white"
             >
-              <option className="bg-[#071826]">All Housekeeper</option>
-              <option className="bg-[#071826]">John Doe</option>
-              <option className="bg-[#071826]">Jane Smith</option>
+              <option>All Housekeeper</option>
+              <option>John Doe</option>
+              <option>Jane Smith</option>
             </select>
           </div>
 
           {/* Export PDF Button */}
           <div className="flex lg:justify-end">
-            <button className="w-full lg:w-auto flex items-center justify-center gap-2 px-5 py-2 bg-gradient-to-r from-[#10b981] to-[#06b6d4] text-white rounded-lg hover:opacity-95 transition">
+            <button className="w-full lg:w-auto flex items-center justify-center gap-2 px-5 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors">
               <FaFilePdf />
               <span className="text-sm font-medium">Export PDF</span>
             </button>
@@ -252,69 +231,45 @@ function Housekeeping() {
 
         <div className="mt-3 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
           <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-300">Selected: {selectedCount}</span>
+            <span className="text-sm text-gray-600">Selected: {selectedCount}</span>
+            <button
+              onClick={() => setShowColumns(!showColumns)}
+              className="text-teal-600 hover:text-teal-700 text-sm font-medium flex items-center gap-1"
+            >
+              <FaChevronUp className={showColumns ? '' : 'rotate-180'} />
+              {showColumns ? 'Hide' : 'Show'} Columns
+            </button>
           </div>
 
           {/* Room Type Tabs */}
-          <div className="inline-flex rounded-lg border border-white/5 overflow-hidden w-full md:w-auto bg-transparent">
+          <div className="inline-flex rounded-lg border border-gray-300 overflow-hidden w-full md:w-auto">
             <button
               onClick={() => setRoomTypeTab('Accommodation Rooms')}
               className={`flex-1 md:flex-none px-4 py-2 text-sm font-medium transition-colors ${
                 roomTypeTab === 'Accommodation Rooms'
-                  ? 'bg-white/5 text-white'
-                  : 'bg-transparent text-gray-300 hover:bg-white/5'
+                  ? 'bg-gray-200 text-gray-800'
+                  : 'bg-white text-gray-600 hover:bg-gray-50'
               }`}
             >
               Accommodation Rooms
             </button>
             <button
               onClick={() => setRoomTypeTab('Event Rooms')}
-              className={`flex-1 md:flex-none px-4 py-2 text-sm font-medium transition-colors border-l border-white/5 ${
+              className={`flex-1 md:flex-none px-4 py-2 text-sm font-medium transition-colors border-l border-gray-300 ${
                 roomTypeTab === 'Event Rooms'
-                  ? 'bg-white/5 text-white'
-                  : 'bg-transparent text-gray-300 hover:bg-white/5'
+                  ? 'bg-gray-200 text-gray-800'
+                  : 'bg-white text-gray-600 hover:bg-gray-50'
               }`}
             >
               Event Rooms
             </button>
           </div>
         </div>
-
-        {/* Summary Cards */}
-        <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="flex items-center gap-3 p-4 rounded-lg bg-[#2b1210] border border-white/5">
-            <div className="p-2 bg-orange-500 text-white rounded-full">
-              <FaBroom />
-            </div>
-            <div>
-              <div className="text-sm text-orange-300">Rooms to Clean</div>
-              <div className="text-xl font-semibold text-white">{roomsToClean}</div>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 p-4 rounded-lg bg-[#102214] border border-white/5">
-            <div className="p-2 bg-green-500 text-white rounded-full">
-              <FaCheck />
-            </div>
-            <div>
-              <div className="text-sm text-emerald-300">Rooms Inspected</div>
-              <div className="text-xl font-semibold text-white">{roomsInspected}</div>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 p-4 rounded-lg bg-[#21102a] border border-white/5">
-            <div className="p-2 bg-purple-500 text-white rounded-full">
-              <FaBed />
-            </div>
-            <div>
-              <div className="text-sm text-purple-300">Occupied Rooms</div>
-              <div className="text-xl font-semibold text-white">{occupiedRooms}</div>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Column Customization Bar */}
       {showColumns && (
-        <div className="mb-4 bg-[#071826] rounded-lg shadow-sm border border-white/5 p-3 flex items-center gap-2 flex-wrap text-white">
+        <div className="mb-4 bg-white rounded-lg shadow-sm border border-gray-200 p-3 flex items-center gap-2 flex-wrap">
           <div className="px-3 py-1 bg-teal-500 text-white rounded-full text-sm font-medium">
             Columns
           </div>
@@ -323,8 +278,8 @@ function Housekeeping() {
               key={column.key}
               className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm ${
                 visibleColumns.includes(column.key)
-                  ? 'bg-white/5 text-white'
-                  : 'bg-transparent text-gray-300 border border-white/5'
+                  ? 'bg-gray-200 text-gray-700'
+                  : 'bg-gray-100 text-gray-400'
               }`}
             >
               {column.required && <span className="text-teal-500">*</span>}
@@ -343,13 +298,13 @@ function Housekeeping() {
       )}
 
       {/* Table */}
-      <div className="bg-[#071826] rounded-lg shadow-md overflow-hidden border border-white/5">
+      <div className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
-            <thead className="bg-white/5 text-gray-300 text-xs uppercase">
+            <thead className="bg-teal-50 text-gray-700 text-xs uppercase">
               <tr>
                 {visibleColumns.includes('type') && (
-                  <th className="px-4 py-3 font-semibold border-r border-white/5 text-gray-300">
+                  <th className="px-4 py-3 font-semibold border-r border-gray-200">
                     <div className="flex items-center gap-2">
                       <input
                         type="checkbox"

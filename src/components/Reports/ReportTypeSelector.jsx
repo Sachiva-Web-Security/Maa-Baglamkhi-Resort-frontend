@@ -1,20 +1,23 @@
 const ReportTypeSelector = ({ value, onChange, types }) => {
   return (
     <div className="flex flex-wrap gap-2">
-      {types.map((t) => (
-        <button
-          key={t.id}
-          type="button"
-          onClick={() => onChange(t.id)}
-          className={`px-4 py-2 rounded-lg font-extrabold text-sm border transition-colors ${
-            t.id === value
-              ? 'bg-white/10 text-white ring-1 ring-white/10'
-              : 'bg-white/3 text-gray-300 hover:bg-white/5'
-          }`}
-        >
-          {t.label}
-        </button>
-      ))}
+      {types.map((t) => {
+        const active = t.id === value;
+        return (
+          <button
+            key={t.id}
+            type="button"
+            onClick={() => onChange(t.id)}
+            className={`px-4 py-2 rounded-lg font-extrabold text-sm border transition-colors ${
+              active
+                ? 'bg-teal-500 text-white border-teal-600'
+                : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+            }`}
+          >
+            {t.label}
+          </button>
+        );
+      })}
     </div>
   );
 };
