@@ -1,16 +1,32 @@
+import { useEffect, useState } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
+import API from "../../../api";
 
 const RoomOccupancyChart = () => {
-  const data = [
+  const [data, setData] = useState([
     { name: "Occupied", value: 85 },
     { name: "Available", value: 28 },
     { name: "Cleaning", value: 7 },
-  ];
+  ]);
 
-  const COLORS = ["#6366f1", "#22c55e", "#f59e0b"];
+  useEffect(() => {
+    const fetchCharts = async () => {
+      try {
+        const res = await API.get("/dashboard/charts");
+        if (res.data && res.data.roomOccupancy) {
+          setData(res.data.roomOccupancy);
+        }
+      } catch (err) {
+        console.error("Error fetching room occupancy chart data:", err);
+      }
+    };
+    fetchCharts();
+  }, []);
+
+  const COLORS = ["#6366f1", "#22c55e", "#f59e0b", "#eab308", "#ef4444"];
 
   const total = data.reduce((acc, item) => acc + item.value, 0);
-  const percentage = Math.round((data[0].value / total) * 100);
+  const percentage = total > 0 && data.length > 0 ? Math.round((data[0].value / total) * 100) : 0;
 
   return (
     <div className="bg-white  shadow-lg  flex items-center justify-between">

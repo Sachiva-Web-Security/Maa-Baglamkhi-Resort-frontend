@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import './BookingForm.css';
 
-const BookingForm = ({ onSubmit, onCancel, initialData = {} }) => {
+const BookingForm = ({ onSubmit, onCancel, initialData = {}, availableRooms = [] }) => {
   const [formData, setFormData] = useState({
     guestName: initialData.guestName || '',
     room: initialData.room || '',
@@ -43,15 +43,33 @@ const BookingForm = ({ onSubmit, onCancel, initialData = {} }) => {
 
       <div className="form-group">
         <label htmlFor="room">Room Number *</label>
-        <input
-          type="text"
-          id="room"
-          name="room"
-          value={formData.room}
-          onChange={handleChange}
-          required
-          placeholder="Enter room number"
-        />
+        {availableRooms.length > 0 ? (
+          <select
+            id="room"
+            name="room"
+            value={String(formData.room)} // Cast to string
+            onChange={handleChange}
+            required
+          >
+            <option value="" disabled>Select a room</option>
+            {availableRooms.map(r => (
+              <option key={r.number || r} value={String(r.number || r)}>
+                Room {r.number || r}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <input
+            type="text"
+            id="room"
+            name="room"
+            value={formData.room}
+            onChange={handleChange}
+            required
+            placeholder="Enter room number"
+            disabled={true}
+          />
+        )}
       </div>
 
       <div className="form-row">

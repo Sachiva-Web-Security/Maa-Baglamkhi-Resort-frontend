@@ -59,20 +59,18 @@ const ReportTable = ({ reportType, rows, loading }) => {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-      <div className="p-4 border-b border-gray-200 flex items-baseline justify-between gap-3">
-        <h2 className="text-base font-extrabold text-gray-900">Report Table</h2>
-        <div className="text-xs text-gray-600 font-semibold">
-          {loading ? 'Loading...' : `${rows.length} row(s)`}
-        </div>
+    <div className="bg-[#071826] rounded-xl shadow-sm border border-white/5 overflow-hidden">
+      <div className="p-4 border-b border-white/5 flex items-baseline justify-between gap-3">
+        <h2 className="text-base font-extrabold text-white">Report Table</h2>
+        <div className="text-xs text-gray-300 font-semibold">{loading ? 'Loading...' : `${rows.length} row(s)`}</div>
       </div>
 
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
-          <thead className="bg-teal-50 text-gray-700 text-xs uppercase">
+          <thead className="bg-white/5 text-gray-300 text-xs uppercase">
             <tr>
               {columns.map((c) => (
-                <th key={c.key} className="px-4 py-3 font-extrabold border-r border-gray-200 last:border-r-0">
+                <th key={c.key} className="px-4 py-3 font-extrabold border-r border-white/5 last:border-r-0">
                   {c.label}
                 </th>
               ))}
@@ -80,10 +78,10 @@ const ReportTable = ({ reportType, rows, loading }) => {
           </thead>
           <tbody>
             {rows.map((r) => (
-              <tr key={r.id} className="border-t border-gray-200 hover:bg-gray-50">
+              <tr key={r.id} className="border-t border-white/5 hover:bg-white/5">
                 {columns.map((c) => (
-                  <td key={c.key} className="px-4 py-3 text-sm text-gray-700 border-r border-gray-100 last:border-r-0">
-                    <span className={c.key === 'amount' || c.key === 'revenue' ? 'font-extrabold text-gray-900' : ''}>
+                  <td key={c.key} className="px-4 py-3 text-sm text-gray-300 border-r border-white/10 last:border-r-0">
+                    <span className={c.key === 'amount' || c.key === 'revenue' ? 'font-extrabold text-white' : ''}>
                       {formatCell(c.key, r[c.key])}
                     </span>
                   </td>
@@ -92,7 +90,7 @@ const ReportTable = ({ reportType, rows, loading }) => {
             ))}
             {!rows.length && !loading ? (
               <tr>
-                <td colSpan={columns.length} className="px-4 py-8 text-center text-sm text-gray-500 font-semibold">
+                <td colSpan={columns.length} className="px-4 py-8 text-center text-sm text-gray-400 font-semibold">
                   No data for current filters.
                 </td>
               </tr>

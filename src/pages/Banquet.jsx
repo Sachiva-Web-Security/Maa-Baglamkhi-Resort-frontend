@@ -246,8 +246,8 @@ const Banquet = () => {
   }, [halls.length, bookings]);
 
   return (
-    <div className="min-h-screen bg-gray-100 pt-[100px] px-[30px] pb-[30px]">
-      <h1 className="text-2xl font-extrabold text-gray-900 mb-5">Banquet Management</h1>
+    <div className="min-h-screen bg-gradient-to-br from-[#071226] via-[#081827] to-[#041019] pt-[100px] px-[30px] pb-[30px] text-gray-100">
+      <h1 className="text-2xl font-extrabold text-white mb-5">Banquet Management</h1>
 
       <div className="flex flex-wrap gap-3 mb-5">
         <button
@@ -265,36 +265,36 @@ const Banquet = () => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
-        <div className="bg-white rounded-xl shadow-sm p-4">
-          <div className="text-gray-600 font-extrabold text-xs mb-2">Total Halls</div>
-          <div className="text-gray-900 font-black text-xl">{hallStats.total}</div>
+        <div className="bg-[#071826] rounded-xl shadow p-4 border border-white/5">
+          <div className="text-gray-300 font-extrabold text-xs mb-2">Total Halls</div>
+          <div className="text-white font-black text-xl">{hallStats.total}</div>
         </div>
-        <div className="bg-green-100 rounded-xl shadow-sm p-4">
-          <div className="text-gray-600 font-extrabold text-xs mb-2">Upcoming Events</div>
-          <div className="text-green-600 font-black text-xl">{hallStats.upcoming}</div>
+        <div className="bg-[#06281e] rounded-xl shadow p-4 border border-white/5">
+          <div className="text-gray-300 font-extrabold text-xs mb-2">Upcoming Events</div>
+          <div className="text-emerald-300 font-black text-xl">{hallStats.upcoming}</div>
         </div>
-        <div className="bg-yellow-100 rounded-xl shadow-sm p-4">
-          <div className="text-gray-600 font-extrabold text-xs mb-2">Completed</div>
-          <div className="text-yellow-700 font-black text-xl">{hallStats.completed}</div>
+        <div className="bg-[#2b2310] rounded-xl shadow p-4 border border-white/5">
+          <div className="text-gray-300 font-extrabold text-xs mb-2">Completed</div>
+          <div className="text-yellow-300 font-black text-xl">{hallStats.completed}</div>
         </div>
-        <div className="bg-purple-100 rounded-xl shadow-sm p-4">
-          <div className="text-gray-600 font-extrabold text-xs mb-2">Billed</div>
-          <div className="text-purple-600 font-black text-xl">{hallStats.billed}</div>
+        <div className="bg-[#21102a] rounded-xl shadow p-4 border border-white/5">
+          <div className="text-gray-300 font-extrabold text-xs mb-2">Billed</div>
+          <div className="text-purple-300 font-black text-xl">{hallStats.billed}</div>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden mb-5">
-        <div className="p-4 border-b border-gray-200">
-          <h2 className="text-base font-black text-gray-900">Booking Flow</h2>
-          <div className="text-gray-600 text-xs font-semibold mt-1.5">Select Hall → Details → Date/Time → Confirm → Completed → Bill</div>
+      <div className="bg-[#071826] rounded-xl shadow overflow-hidden mb-5 border border-white/5">
+        <div className="p-4 border-b border-white/5">
+          <h2 className="text-base font-black text-white">Booking Flow</h2>
+          <div className="text-gray-300 text-xs font-semibold mt-1.5">Select Hall → Details → Date/Time → Confirm → Completed → Bill</div>
         </div>
 
         <BanquetStepper steps={steps} activeStep={activeStep} />
 
         <div className="p-4">
           {activeStep === 0 && (
-            <div>
-              <h3 className="text-sm font-black text-gray-900 mb-3">Select Banquet Hall</h3>
+              <div>
+              <h3 className="text-sm font-black text-white mb-3">Select Banquet Hall</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 {halls.map((hall) => (
                   <BanquetHallCard
@@ -311,27 +311,27 @@ const Banquet = () => {
           {activeStep === 1 && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-black text-gray-700">Customer Name</label>
+                <label className="text-xs font-black text-gray-300">Customer Name</label>
                 <input
-                  className="border border-gray-300 rounded-lg px-3 py-2.5 font-bold text-gray-900 focus:outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                  className="border border-white/10 bg-transparent rounded-lg px-3 py-2.5 font-bold text-white focus:outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-900"
                   value={wizard.customerName}
                   onChange={(e) => setWizard((p) => ({ ...p, customerName: e.target.value }))}
                   placeholder="Enter customer name"
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-black text-gray-700">Phone</label>
+                <label className="text-xs font-black text-gray-300">Phone</label>
                 <input
-                  className="border border-gray-300 rounded-lg px-3 py-2.5 font-bold text-gray-900 focus:outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                  className="border border-white/10 bg-transparent rounded-lg px-3 py-2.5 font-bold text-white focus:outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-900"
                   value={wizard.phone}
                   onChange={(e) => setWizard((p) => ({ ...p, phone: e.target.value }))}
                   placeholder="Enter phone number"
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-black text-gray-700">Event Type</label>
+                <label className="text-xs font-black text-gray-300">Event Type</label>
                 <select
-                  className="border border-gray-300 rounded-lg px-3 py-2.5 font-bold text-gray-900 focus:outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                  className="border border-white/10 bg-transparent rounded-lg px-3 py-2.5 font-bold text-white focus:outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-900"
                   value={wizard.eventType}
                   onChange={(e) => setWizard((p) => ({ ...p, eventType: e.target.value }))}
                 >
@@ -344,19 +344,19 @@ const Banquet = () => {
                 </select>
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-black text-gray-700">Guests</label>
+                <label className="text-xs font-black text-gray-300">Guests</label>
                 <input
                   type="number"
-                  className="border border-gray-300 rounded-lg px-3 py-2.5 font-bold text-gray-900 focus:outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                  className="border border-white/10 bg-transparent rounded-lg px-3 py-2.5 font-bold text-white focus:outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-900"
                   value={wizard.guests}
                   onChange={(e) => setWizard((p) => ({ ...p, guests: e.target.value }))}
                   min={1}
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-black text-gray-700">Menu Package</label>
+                <label className="text-xs font-black text-gray-300">Menu Package</label>
                 <select
-                  className="border border-gray-300 rounded-lg px-3 py-2.5 font-bold text-gray-900 focus:outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                  className="border border-white/10 bg-transparent rounded-lg px-3 py-2.5 font-bold text-white focus:outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-900"
                   value={wizard.menuPackageId}
                   onChange={(e) => setWizard((p) => ({ ...p, menuPackageId: e.target.value }))}
                 >
@@ -368,19 +368,19 @@ const Banquet = () => {
                 </select>
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-black text-gray-700">Decoration Fee</label>
+                <label className="text-xs font-black text-gray-300">Decoration Fee</label>
                 <input
                   type="number"
-                  className="border border-gray-300 rounded-lg px-3 py-2.5 font-bold text-gray-900 focus:outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                  className="border border-white/10 bg-transparent rounded-lg px-3 py-2.5 font-bold text-white focus:outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-900"
                   value={wizard.decorationFee}
                   onChange={(e) => setWizard((p) => ({ ...p, decorationFee: e.target.value }))}
                   min={0}
                 />
               </div>
               <div className="flex flex-col gap-1.5 md:col-span-2">
-                <label className="text-xs font-black text-gray-700">Notes</label>
+                <label className="text-xs font-black text-gray-300">Notes</label>
                 <textarea
-                  className="border border-gray-300 rounded-lg px-3 py-2.5 font-bold text-gray-900 min-h-[90px] focus:outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100 resize-y"
+                  className="border border-white/10 bg-transparent rounded-lg px-3 py-2.5 font-bold text-white min-h-[90px] focus:outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-900 resize-y"
                   value={wizard.notes}
                   onChange={(e) => setWizard((p) => ({ ...p, notes: e.target.value }))}
                   placeholder="Any special instructions..."
@@ -392,10 +392,10 @@ const Banquet = () => {
           {activeStep === 2 && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-black text-gray-700">Event Date</label>
+                <label className="text-xs font-black text-gray-300">Event Date</label>
                 <input
                   type="date"
-                  className="border border-gray-300 rounded-lg px-3 py-2.5 font-bold text-gray-900 focus:outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                  className="border border-white/10 bg-transparent rounded-lg px-3 py-2.5 font-bold text-white focus:outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-900"
                   value={wizard.date}
                   onChange={(e) => setWizard((p) => ({ ...p, date: e.target.value }))}
                 />
@@ -418,9 +418,9 @@ const Banquet = () => {
                   onChange={(e) => setWizard((p) => ({ ...p, endTime: e.target.value }))}
                 />
               </div>
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-black text-gray-700">Duration</label>
-                <div className="bg-gray-100 border border-gray-200 rounded-lg px-3 py-2.5 font-extrabold text-gray-900">
+                <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-black text-gray-300">Duration</label>
+                <div className="bg-transparent border border-white/10 rounded-lg px-3 py-2.5 font-extrabold text-white">
                   {wizardHours > 0 ? `${wizardHours} hour(s)` : 'Select valid times'}
                 </div>
               </div>

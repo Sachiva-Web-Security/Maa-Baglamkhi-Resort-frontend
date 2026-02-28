@@ -1,11 +1,11 @@
 .accounts-row {
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid rgba(255,255,255,0.03);
 }
 
 .accounts-td {
   padding: 12px;
   font-size: 14px;
-  color: #111827;
+  color: #e6eef8;
   vertical-align: middle;
 }
 

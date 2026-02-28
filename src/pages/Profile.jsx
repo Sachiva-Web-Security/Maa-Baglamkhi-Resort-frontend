@@ -6,7 +6,7 @@ const Profile = () => {
   const [role, setRole] = useState(localStorage.getItem("role") || "");
   const [email] = useState(localStorage.getItem("email") || "");
   const [avatarUrl, setAvatarUrl] = useState(
-    localStorage.getItem("avatarUrl") || ""
+    localStorage.getItem("avatarUrl") || "",
   );
   const [avatarFile, setAvatarFile] = useState(null);
   const [cameraStream, setCameraStream] = useState(null);
@@ -53,7 +53,9 @@ const Profile = () => {
     try {
       setCameraError("");
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        setCameraError("Camera support available nahi hai (browser permission).");
+        setCameraError(
+          "Camera support available nahi hai (browser permission).",
+        );
         return;
       }
 
@@ -129,7 +131,7 @@ const Profile = () => {
 
       let urlFromServer = res.data?.avatarUrl || res.data?.url || avatarUrl;
 
-      // Ensure full URL (http://localhost:5000 + /uploads/..)
+      // Ensure full URL (http://localhost:5001 + /uploads/..)
       if (urlFromServer && !urlFromServer.startsWith("http")) {
         const apiBase = API.defaults.baseURL || "";
         const serverBase = apiBase.replace(/\/api\/?$/, "");
@@ -199,8 +201,8 @@ const Profile = () => {
       : "Role";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-6">
-      <div className="w-full max-w-4xl bg-white/10 backdrop-blur-2xl border border-white/20 rounded-3xl shadow-2xl grid md:grid-cols-2 gap-8 p-8">
+    <div className="w-full h-full min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900  flex items-start justify-center p-6">
+      <div className="w-full max-w-5xl bg-white/10 backdrop-blur-2xl border border-white/20 rounded-3xl shadow-2xl grid md:grid-cols-2 gap-8 p-8 mt-6">
         {/* Left: avatar + basic info */}
         <div className="flex flex-col items-center text-center space-y-6">
           <div className="relative">
@@ -222,10 +224,7 @@ const Profile = () => {
             <p className="text-sm text-indigo-100">{prettyRole}</p>
           </div>
 
-          <form
-            onSubmit={handleAvatarUpload}
-            className="w-full space-y-3 mt-2"
-          >
+          <form onSubmit={handleAvatarUpload} className="w-full space-y-3 mt-2">
             {/* File from system */}
             <input
               type="file"
@@ -361,4 +360,3 @@ const Profile = () => {
 };
 
 export default Profile;
-

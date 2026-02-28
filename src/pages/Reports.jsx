@@ -45,72 +45,7 @@ function downloadText(filename, content) {
   URL.revokeObjectURL(url);
 }
 
-function makeMockData(type) {
-  const baseDate = new Date();
-  const daysAgo = (n) => {
-    const d = new Date(baseDate);
-    d.setDate(d.getDate() - n);
-    return d.toISOString().slice(0, 10);
-  };
-
-  if (type === 'room') {
-    return Array.from({ length: 24 }).map((_, idx) => ({
-      id: idx + 1,
-      date: daysAgo(idx % 10),
-      roomType: ROOM_TYPES[idx % ROOM_TYPES.length],
-      status: ['Occupied', 'Available', 'Cleaning'][idx % 3],
-      rooms: 5 + (idx % 7),
-      revenue: 4500 * (1 + (idx % 4)),
-      paymentMode: PAYMENT_MODES[idx % PAYMENT_MODES.length],
-    }));
-  }
-
-  if (type === 'banquet') {
-    return Array.from({ length: 18 }).map((_, idx) => ({
-      id: idx + 1,
-      date: daysAgo(idx % 12),
-      hall: HALLS[idx % HALLS.length],
-      status: ['Confirmed', 'Completed', 'Billed'][idx % 3],
-      eventType: ['Wedding', 'Reception', 'Corporate', 'Birthday'][idx % 4],
-      guests: 100 + (idx % 8) * 25,
-      amount: 45000 + (idx % 6) * 12000,
-      paymentMode: PAYMENT_MODES[idx % PAYMENT_MODES.length],
-    }));
-  }
-
-  if (type === 'restaurant') {
-    return Array.from({ length: 21 }).map((_, idx) => ({
-      id: idx + 1,
-      date: daysAgo(idx % 7),
-      status: ['Completed', 'Pending'][idx % 2],
-      orders: 25 + (idx % 10),
-      amount: 12000 + (idx % 9) * 2500,
-      paymentMode: PAYMENT_MODES[idx % PAYMENT_MODES.length],
-    }));
-  }
-
-  if (type === 'housekeeping') {
-    return Array.from({ length: 20 }).map((_, idx) => ({
-      id: idx + 1,
-      date: daysAgo(idx % 10),
-      roomType: ROOM_TYPES[idx % ROOM_TYPES.length],
-      status: ['Vacant Dirty', 'Vacant Clean', 'Occupied Dirty', 'Occupied Clean'][idx % 4],
-      assignee: ['John Doe', 'Jane Smith', 'No Housekeeper'][idx % 3],
-      rooms: 3 + (idx % 6),
-    }));
-  }
-
-  // accounts
-  return Array.from({ length: 20 }).map((_, idx) => ({
-    id: idx + 1,
-    date: daysAgo(idx % 12),
-    type: idx % 3 === 0 ? 'Expense' : 'Income',
-    description: idx % 3 === 0 ? 'Purchase / Vendor Payment' : 'Sales / Booking Payment',
-    amount: 2500 + (idx % 9) * 1800,
-    paymentMode: PAYMENT_MODES[idx % PAYMENT_MODES.length],
-    status: 'Completed',
-  }));
-}
+// makeMockData removed
 
 const Reports = () => {
   const [reportType, setReportType] = useState('room');
@@ -127,7 +62,7 @@ const Reports = () => {
   });
 
   const [loading, setLoading] = useState(false);
-  const [data, setData] = useState(() => makeMockData('room'));
+  const [data, setData] = useState([]);
   const [lastFetchedAt, setLastFetchedAt] = useState(null);
 
   const options = useMemo(() => {
@@ -177,14 +112,29 @@ const Reports = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Demo fetch: simulate latency
-      await new Promise((r) => setTimeout(r, 600));
-      setData(makeMockData(reportType));
+      const res = await API.get("/reports/data", {
+        params: {
+          type: reportType,
+          dateFrom: filters.dateFrom,
+          dateTo: filters.dateTo,
+          status: filters.status,
+          hall: filters.hall,
+          roomType: filters.roomType,
+          paymentMode: filters.paymentMode
+        }
+      });
+      setData(res.data || []);
       setLastFetchedAt(new Date());
+    } catch (err) {
+      console.error("Error fetching report data", err);
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchData();
+  }, [reportType]); // Automatically fetch when report type changes
 
   const exportCSV = () => {
     const csv = toCSV(filtered);
@@ -195,9 +145,9 @@ const Reports = () => {
   const printReport = () => window.print();
 
   return (
-    <div className="min-h-screen bg-gray-100 pt-[100px] px-[30px] pb-[30px]">
-      <div className="mb-5">
-        <h1 className="text-2xl font-extrabold text-gray-900 mb-1">Reports</h1>
+    <div className="min-h-screen w-280 pt-[10px] px-[30px] pb-[30px] bg-gradient-to-br from-[#071226] via-[#081827] to-[#041019] text-gray-100 ">
+      <div className="mb-6">
+        <h1 className="text-2xl font-extrabold text-white mb-1">Reports</h1>
         <div className="text-sm text-gray-500">Home / Reports</div>
         {summary && (
           <div className="mt-2 text-xs text-gray-600 font-semibold">
@@ -211,7 +161,7 @@ const Reports = () => {
         )}
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
+      <div className="bg-gradient-to-b from-[#0f1a2b] to-[#0b1622] rounded-xl shadow-lg border border-white/5 p-7 mb-4">
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(280px,1fr)_auto] gap-3 items-center">
           <ReportTypeSelector value={reportType} onChange={setReportType} types={REPORT_TYPES} />
 
@@ -248,7 +198,7 @@ const Reports = () => {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search in report..."
-              className="w-full pl-10 pr-4 py-2 border border-teal-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-200 bg-white font-semibold"
+              className="w-full pl-10 pr-4 py-2 border border-teal-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-400 bg-transparent text-gray-100 font-semibold"
             />
           </div>
 
@@ -273,9 +223,9 @@ const Reports = () => {
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-4">
         <ReportCharts reportType={reportType} rows={filtered} />
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-          <h2 className="text-base font-extrabold text-gray-900 mb-1">Report Summary</h2>
-          <div className="text-xs text-gray-600 font-semibold mb-3">
+        <div className="bg-gradient-to-b from-[#0f1a2b] to-[#0b1622] rounded-xl shadow-lg border border-white/5 p-4">
+          <h2 className="text-base font-extrabold text-white mb-1">Report Summary</h2>
+          <div className="text-xs text-gray-300 font-semibold mb-3">
             Quick totals based on current filters (demo).
           </div>
           <SummaryPanel reportType={reportType} rows={filtered} />
@@ -332,9 +282,9 @@ const SummaryPanel = ({ reportType, rows }) => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
       {cards.map((c) => (
-        <div key={c.label} className="bg-gray-50 border border-gray-200 rounded-xl p-3">
-          <div className="text-xs text-gray-600 font-extrabold">{c.label}</div>
-          <div className="mt-1 text-lg text-gray-900 font-black">{c.value}</div>
+        <div key={c.label} className="bg-transparent border border-white/5 rounded-xl p-3">
+          <div className="text-xs text-gray-300 font-extrabold">{c.label}</div>
+          <div className="mt-1 text-lg text-white font-black">{c.value}</div>
         </div>
       ))}
     </div>

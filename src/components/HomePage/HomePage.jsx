@@ -7,19 +7,19 @@ const HomePage = () => {
   return (
     <div className="space-y-6">
 
-      <div className="bg-[#1e293b] rounded-2xl p-4 shadow-lg">
+      <div >
         <HeroSection />
       </div>
 
-      <div className="bg-[#1e293b] rounded-2xl p-4 shadow-lg">
+      <div >
         <ProductTabs />
       </div>
 
-      <div className="bg-[#1e293b] rounded-2xl p-4 shadow-lg">
+      <div >
         <WhySection />
       </div>
 
-      <div className="bg-[#1e293b] rounded-2xl p-4 shadow-lg">
+      <div >
         <States />
       </div>
 

@@ -6,18 +6,18 @@ const MenuItem = ({ item, onAddToOrder }) => {
   };
 
   return (
-    <div 
+    <div
       className="menu-item "
       onClick={handleClick}
     >
       {item.image && (
         <div className="menu-item-image-container  ">
-          <img 
-            src={item.image} 
+          <img
+            src={item.image}
             alt={item.name}
             className="menu-item-image"
             onError={(e) => {
-              e.target.src = 'https://via.placeholder.com/200x150?text=' + encodeURIComponent(item.name);
+              e.target.src = 'https://placehold.co/200x150?text=' + encodeURIComponent(item.name);
             }}
           />
         </div>

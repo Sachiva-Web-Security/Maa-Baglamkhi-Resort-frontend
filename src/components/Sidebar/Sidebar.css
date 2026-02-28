@@ -1,8 +1,8 @@
 .sidebar {
   width: 250px;
   height: 100vh;
-  background: linear-gradient(180deg, #1e3a8a 0%, #1e40af 100%);
-  color: white;
+  background: black; /* solid white background */
+  color: #333333; /* dark text for readability */
   display: flex;
   flex-direction: column;
   position: fixed;
@@ -20,14 +20,14 @@
 }
 
 .sidebar-logo {
-  font-size: 24px;
+  font-size: 50px;
   color: #60a5fa;
 }
 
 .sidebar-header h2 {
   margin: 0;
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 20px;
+  font-weight: 700;
 }
 
 .sidebar-nav {
@@ -43,12 +43,12 @@
   padding: 14px 20px;
   cursor: pointer;
   transition: all 0.3s ease;
-  color: rgba(255, 255, 255, 0.8);
+  color: #333333;
 }
 
 .nav-item:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: white;
+  background-color: rgba(0, 0, 0, 0.05);
+  color: #000000;
 }
 
 .nav-item.active {
@@ -63,8 +63,8 @@
 }
 
 .nav-text {
-  font-size: 15px;
-  font-weight: 500;
+  font-size: 18px; /* increased for better readability */
+  font-weight: 1000;
 }
 
 .sidebar-footer {
@@ -83,6 +83,6 @@
 }
 
 .footer-icon:hover {
-  color: white;
+  color: black;
 }
 
