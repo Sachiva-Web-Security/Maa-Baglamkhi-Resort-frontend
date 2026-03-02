@@ -322,31 +322,27 @@ const Hotel = () => {
   };
 
   return (
-
-    <div className="min-h-screen w-280 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-200 p-6">
+    <div className="min-h-screen w-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-200 p-6">
       {/* Page Title */}
-      <h1 className="text-amber-50 text-2xl font-bold mb-10 w-full pl-110">Hotel Management</h1>
+      <h1 className="text-amber-50 text-2xl font-bold mb-10 w-full text-center">Hotel Management</h1>
 
       {/* Top Action Buttons */}
-      <div className="action-buttons justify-between ">
+      <div className="flex flex-wrap gap-4 mb-10 justify-center">
         <button
-          className="h-12 w-60 bg-slate-700 hover:bg-slate-600
-             text-white rounded-full"
+          className="h-12 w-60 bg-slate-700 hover:bg-slate-600 text-white rounded-full transition shadow-lg"
           onClick={() => openModal('newBooking')}
         >
           + New Booking
         </button>
         <button
-          className="h-12 w-60 bg-slate-700 hover:bg-slate-600
-             text-white rounded-full"
+          className="h-12 w-60 bg-slate-700 hover:bg-slate-600 text-white rounded-full transition shadow-lg"
           onClick={() => openModal('expressCheckIn')}
         >
           Express Check-In
         </button>
 
         <button
-          className="h-12 w-60 bg-slate-700 hover:bg-slate-600
-             text-white rounded-full"
+          className="h-12 w-60 bg-slate-700 hover:bg-slate-600 text-white rounded-full transition shadow-lg"
           onClick={() => {
             if (bookings.length > 0) {
               setSelectedBooking(bookings[0]);
@@ -360,30 +356,28 @@ const Hotel = () => {
         </button>
 
         <button
-          className="h-12 w-60 bg-slate-700 hover:bg-slate-600
-             text-white rounded-full"
+          className="h-12 w-60 bg-slate-700 hover:bg-slate-600 text-white rounded-full transition shadow-lg"
           onClick={() => openModal('nightAudit')}
         >
           Night Audit
         </button>
 
         <button
-          className="h-12 w-60 bg-blue-600 hover:bg-blue-500 text-white rounded-full ml-2"
+          className="h-12 w-60 bg-blue-600 hover:bg-blue-500 text-white rounded-full transition shadow-lg"
           onClick={() => { setSelectedBooking(null); openModal('extend'); }}
         >
           Extend
         </button>
 
         <button
-          className="h-12 w-60 bg-yellow-600 hover:bg-yellow-500 text-white rounded-full ml-2"
+          className="h-12 w-60 bg-yellow-600 hover:bg-yellow-500 text-white rounded-full transition shadow-lg"
           onClick={() => { setSelectedBooking(null); openModal('shiftRoom'); }}
         >
           Shift Room
         </button>
 
         <button
-          className="h-12 w-60 bg-green-600 hover:bg-green-500
-             text-white rounded-full ml-4"
+          className="h-12 w-60 bg-green-600 hover:bg-green-500 text-white rounded-full transition shadow-lg"
           onClick={() => openModal('addRoom')}
         >
           + Add New Room
@@ -391,7 +385,7 @@ const Hotel = () => {
       </div>
 
       {/* Summary Cards */}
-      <div className="summary-cards bg-slate-900">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
         <SummaryCard
           label="Total Rooms"
           value={totalRooms}
@@ -422,15 +416,11 @@ const Hotel = () => {
 
 
       {/* Booking Table */}
-
-      <div className="w-full max-w-6xl bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl p-6 transition duration-300">
-
-        <h2 className="text-xl font-semibold text-white mb-4">Active Bookings</h2>
-
+      <div className="w-full max-w-7xl mx-auto bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-6 transition duration-300">
+        <h2 className="text-xl font-semibold text-white mb-6">Active Bookings</h2>
         <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
-
-            <thead className="border-b border-white/20 text-gray-400 text-xs uppercase tracking-wider">
+          <table className="min-w-full text-sm text-gray-200">
+            <thead className="border-b border-white/10 text-gray-400 text-xs uppercase tracking-wider">
               <tr>
                 <th className="px-4 py-3 text-left whitespace-nowrap">Guest Name</th>
                 <th className="px-4 py-3 text-left whitespace-nowrap">Room</th>
@@ -440,8 +430,7 @@ const Hotel = () => {
                 <th className="px-4 py-3 text-left whitespace-nowrap min-w-[300px]">Action</th>
               </tr>
             </thead>
-
-            <tbody className="divide-y divide-white/10">
+            <tbody className="divide-y divide-white/5">
               {bookings.map((booking) => (
                 <BookingRow
                   key={booking.id}
@@ -452,8 +441,12 @@ const Hotel = () => {
                   onBillGenerated={handleBillGenerated}
                 />
               ))}
+              {bookings.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-4 py-10 text-center text-gray-500 italic">No active bookings found.</td>
+                </tr>
+              )}
             </tbody>
-
           </table>
         </div>
       </div>
@@ -484,7 +477,6 @@ const Hotel = () => {
         />
       </Modal>
 
-      {/* ─── Check-Out Modal ─── */}
       <Modal isOpen={modals.checkOut} onClose={() => closeModal('checkOut')} title="Check-Out">
         <CheckOutPanel
           bookings={bookings}
@@ -493,7 +485,6 @@ const Hotel = () => {
         />
       </Modal>
 
-      {/* ─── Night Audit Modal ─── */}
       <Modal isOpen={modals.nightAudit} onClose={() => closeModal('nightAudit')} title="Night Audit">
         <div className="space-y-4">
           <p className="text-gray-600 text-sm">Process all check-ins and check-outs for today and generate a daily summary.</p>
@@ -518,7 +509,6 @@ const Hotel = () => {
         </div>
       </Modal>
 
-      {/* ─── Extend Booking Modal ─── */}
       <Modal isOpen={modals.extend} onClose={() => closeModal('extend')} title="Extend Booking">
         <ExtendPanel
           bookings={bookings}
@@ -528,7 +518,6 @@ const Hotel = () => {
         />
       </Modal>
 
-      {/* ─── Shift Room Modal ─── */}
       <Modal isOpen={modals.shiftRoom} onClose={() => closeModal('shiftRoom')} title="Shift Room">
         <ShiftPanel
           bookings={bookings}
@@ -539,11 +528,17 @@ const Hotel = () => {
         />
       </Modal>
 
-      {/* ─── Add New Room Modal ─── */}
-
-      <Modal isOpen={modals.addRoom} onClose={() => closeModal('addRoom')} title="Add New Room">
-        <form onSubmit={(e) => { e.preventDefault(); handleAddNewRoom({ roomNumber: e.target.roomNumber.value }); }} className="space-y-4">
-          <div>
+      <Modal
+        isOpen={modals.addRoom}
+        onClose={() => closeModal('addRoom')}
+        title="Add New Room"
+      >
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          const formData = new FormData(e.target);
+          handleAddNewRoom({ roomNumber: formData.get('roomNumber') });
+        }} className="space-y-4">
+          <div className="form-group mb-4">
             <label className="block text-sm font-semibold text-gray-700 mb-1">Room Number *</label>
             <input
               type="text"
@@ -557,9 +552,13 @@ const Hotel = () => {
           <div className="bg-gray-50 rounded-lg p-3 text-sm text-gray-600">
             📊 Currently <strong>{totalRooms}</strong> rooms — Available: <strong>{availableRooms}</strong>, Occupied: <strong>{occupiedRooms}</strong>, Cleaning: <strong>{cleaningRooms}</strong>
           </div>
-          <div className="flex justify-end gap-3 pt-1">
-            <button type="button" className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200" onClick={() => closeModal('addRoom')}>Cancel</button>
-            <button type="submit" className="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700">Add Room</button>
+          <div className="flex justify-end gap-3 pt-4 border-t">
+            <button type="button" className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200" onClick={() => closeModal('addRoom')}>
+              Cancel
+            </button>
+            <button type="submit" className="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition">
+              Add Room
+            </button>
           </div>
         </form>
       </Modal>
@@ -645,7 +644,7 @@ const CheckOutPanel = ({ bookings, onConfirm, onCancel }) => {
   );
 };
 
-/** Extend Panel: search by room number, shows current booking, only new checkout needed */
+/** Extend Panel: search by room number */
 const ExtendPanel = ({ bookings, selectedBooking, onSubmit, onCancel }) => {
   const [search, setSearch] = React.useState(selectedBooking ? String(selectedBooking.room) : '');
   const [newCheckOut, setNewCheckOut] = React.useState('');
@@ -665,14 +664,12 @@ const ExtendPanel = ({ bookings, selectedBooking, onSubmit, onCancel }) => {
     });
   };
 
-  // Set selectedBooking room pre-filled
   React.useEffect(() => {
     if (selectedBooking) setSearch(String(selectedBooking.room));
   }, [selectedBooking]);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {/* Summary: Total rooms */}
       <div className="bg-indigo-50 rounded-lg px-4 py-2 text-xs text-indigo-700 font-medium">
         {bookings.filter(b => b.status !== 'CheckedOut').length} active booking(s) found
       </div>
@@ -730,7 +727,7 @@ const ExtendPanel = ({ bookings, selectedBooking, onSubmit, onCancel }) => {
   );
 };
 
-/** Shift Panel: search by room number, finds booking, then uses BookingForm to choose new room */
+/** Shift Panel: search by room number */
 const ShiftPanel = ({ bookings, rooms, selectedBooking, onSubmit, onCancel }) => {
   const [search, setSearch] = React.useState(selectedBooking ? String(selectedBooking.room) : '');
   const found = search
@@ -772,7 +769,7 @@ const ShiftPanel = ({ bookings, rooms, selectedBooking, onSubmit, onCancel }) =>
 
       {found && (
         <div className="space-y-4">
-          <div className="bg-gray-50 border rounded-xl p-4 space-y-2">
+          <div className="bg-gray-50 border rounded-xl p-4 space-y-2 text-gray-800">
             <p className="text-xs font-semibold text-gray-500 uppercase">Current Booking — Room {found.room}</p>
             <div className="grid grid-cols-2 gap-2 text-sm">
               <InfoRow label="Guest" value={found.guestName} />
@@ -806,4 +803,3 @@ const ShiftPanel = ({ bookings, rooms, selectedBooking, onSubmit, onCancel }) =>
 };
 
 export default Hotel;
-

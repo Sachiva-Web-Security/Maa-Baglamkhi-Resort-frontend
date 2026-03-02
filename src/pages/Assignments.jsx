@@ -128,9 +128,9 @@ const Assignment = () => {
     <div className="p-6">
 
       {/* HEADER */}
-      <div className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white p-6 rounded-2xl shadow-lg mb-6">
-        <h2 className="text-2xl font-bold">Task Assignment</h2>
-        <p className="text-sm opacity-90">
+      <div className="bg-slate-800 from-indigo-500 to-purple-500 text-white p-6 rounded-2xl shadow-lg mb-6">
+        <h2 className="text-2xl font-Extrabold pl-100">Task Assignment</h2>
+        <p className="text-sm opacity-90 pl-100">
           Assign tasks to staff members and track completion
         </p>
       </div>
@@ -152,16 +152,16 @@ const Assignment = () => {
       </div>
 
       {role !== "housekeeping" && (
-        <div className="bg-white rounded-2xl shadow-md p-6 mb-8">
+        <div className="bg-slate-800 rounded-2xl shadow-md p-6 mb-8">
           <h3 className="text-lg font-semibold mb-4">Assign New Task</h3>
 
-          <form onSubmit={handleSubmit} className="grid md:grid-cols-4 gap-4">
+          <form onSubmit={handleSubmit} className="grid md:grid-cols-4 gap-4 text-white ">
 
             <select
               name="staff_name"
               value={form.staff_name}
               onChange={handleChange}
-              className="border rounded-lg p-2 focus:ring-2 focus:ring-indigo-400"
+              className="border rounded-lg p-2 focus:ring-2 focus:ring-indigo-400 bg-slate-700"
               required
             >
               <option value="">Select Staff</option>
@@ -181,7 +181,7 @@ const Assignment = () => {
               placeholder="Room Number"
               value={form.room_number}
               onChange={handleChange}
-              className="border rounded-lg p-2"
+              className="border rounded-lg p-2 bg-slate-700"
               required
             />
 
@@ -191,7 +191,7 @@ const Assignment = () => {
               placeholder="Task"
               value={form.task}
               onChange={handleChange}
-              className="border rounded-lg p-2"
+              className="border rounded-lg p-2 bg-slate-700"
               required
             />
 
@@ -207,13 +207,13 @@ const Assignment = () => {
       )}
 
       {/* TABLE CARD */}
-      <div className="bg-white rounded-2xl shadow-md p-6">
+      <div className="bg-slate-800 rounded-2xl shadow-md p-6">
         <h3 className="text-lg font-semibold mb-4">Assigned Tasks</h3>
 
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
+        <div className="overflow-x-auto ">
+          <table className="w-full border-collapse ">
             <thead>
-              <tr className="bg-gray-100 text-left">
+              <tr className="bg-blue-900 text-left text-white rounded-lg ">
                 <th className="p-3">Staff</th>
                 <th className="p-3">Room</th>
                 <th className="p-3">Task</th>
@@ -227,7 +227,7 @@ const Assignment = () => {
               {assignments.map((a) => (
                 <tr
                   key={a.id}
-                  className="border-b hover:bg-gray-50 transition"
+                  className="border-b hover:bg-gray-50 transition "
                 >
                   <td className="p-3 font-medium">{a.staff_name}</td>
                   <td className="p-3">{a.room_number}</td>

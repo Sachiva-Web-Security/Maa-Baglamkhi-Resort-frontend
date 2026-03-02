@@ -6,9 +6,7 @@ import API from '../../api';
 // Safely converts any date value to YYYY-MM-DD without timezone offset shifts
 const toDateInput = (val) => {
   if (!val) return "";
-  // If it's already YYYY-MM-DD format, return as-is
   if (typeof val === "string" && /^\d{4}-\d{2}-\d{2}$/.test(val)) return val;
-  // For ISO strings or Date objects, parse as local date
   const d = new Date(val);
   if (isNaN(d)) return "";
   const yyyy = d.getFullYear();
@@ -23,12 +21,11 @@ const BookingRow = ({ booking, onExtend, onShiftRoom, onCheckOut, onBillGenerate
   const [showBillView, setShowBillView] = useState(false);
   const [savedInvoice, setSavedInvoice] = useState(null);
 
-  // Fetch existing invoice when we know bill was generated
   useEffect(() => {
     if (booking.billGenerated && booking.id) {
       API.get(`/invoices/by-booking/${booking.id}`)
         .then(res => setSavedInvoice(res.data))
-        .catch(() => { }); // silently fail if not found
+        .catch(() => { });
     }
   }, [booking.billGenerated, booking.id]);
 
@@ -65,7 +62,7 @@ const BookingRow = ({ booking, onExtend, onShiftRoom, onCheckOut, onBillGenerate
   const handleInvoiceSuccess = (invoiceData) => {
     setSavedInvoice(invoiceData);
     setShowInvoice(false);
-    setShowBillView(true); // auto-open bill view after save
+    setShowBillView(true);
     if (onBillGenerated) onBillGenerated(booking.id);
   };
 
@@ -85,22 +82,37 @@ const BookingRow = ({ booking, onExtend, onShiftRoom, onCheckOut, onBillGenerate
 
   return (
     <>
-      <tr className="border-b border-white/10 hover:bg-white/5 transition duration-150">
-        <td className="px-4 py-3 font-semibold text-white text-sm whitespace-nowrap">{booking.guestName}</td>
-        <td className="px-4 py-3 text-gray-300 text-sm whitespace-nowrap">Rm {booking.room}</td>
-        <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{fmtDate(booking.checkIn)}</td>
-        <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{fmtDate(booking.checkOut)}</td>
-        <td className="px-4 py-3 whitespace-nowrap">
-          <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${booking.status === "Occupied" ? "bg-emerald-500/20 text-emerald-400" :
+      <tr className="hover:bg-white/5 transition duration-200 border-b border-white/10 shadow-sm">
+        <td className="px-4 py-4 font-semibold text-white">
+          {booking.guestName}
+        </td>
+
+        <td className="px-4 py-4">
+          <span className="bg-white/10 text-gray-200 px-3 py-1 rounded-full text-sm font-medium border border-white/10">
+            Room {booking.room}
+          </span>
+        </td>
+
+        <td className="px-4 py-4 text-gray-300">
+          {fmtDate(booking.checkIn)}
+        </td>
+
+        <td className="px-4 py-4 text-gray-300">
+          {fmtDate(booking.checkOut)}
+        </td>
+
+        <td className="px-4 py-4">
+          <span className={`px-3 py-1 rounded-full text-sm font-semibold shadow-sm ${
+            booking.status === "Occupied" ? "bg-emerald-500/20 text-emerald-400" :
             booking.status === "CheckedOut" ? "bg-gray-500/20 text-gray-400" :
-              "bg-blue-500/20 text-blue-400"
-            }`}>
+            "bg-blue-500/20 text-blue-400"
+          }`}>
             {booking.status}
           </span>
         </td>
-        <td className="px-4 py-3">
-          <div className="flex gap-1.5 items-center flex-nowrap">
 
+        <td className="px-4 py-4">
+          <div className="flex gap-2 flex-wrap items-center">
             {!isBillGenerated ? (
               <Btn onClick={handleGenerateBill} color="from-purple-500 to-indigo-600">Generate Bill</Btn>
             ) : (
@@ -111,7 +123,7 @@ const BookingRow = ({ booking, onExtend, onShiftRoom, onCheckOut, onBillGenerate
             )}
 
             <Btn onClick={() => onExtend(booking)} color="from-blue-500 to-indigo-500">Extend</Btn>
-            <Btn onClick={() => onShiftRoom(booking)} color="from-yellow-400 to-orange-400">Shift</Btn>
+            <Btn onClick={() => onShiftRoom(booking)} color="from-yellow-400 to-orange-500">Shift</Btn>
             <Btn onClick={() => onCheckOut(booking)} color="from-red-500 to-pink-500">Check-Out</Btn>
           </div>
         </td>
@@ -173,7 +185,7 @@ const Btn = ({ children, onClick, color, title }) => (
   <button
     onClick={onClick}
     title={title}
-    className={`px-2.5 py-1 text-xs font-semibold rounded-full bg-gradient-to-r ${color} text-white shadow hover:scale-105 transition-transform duration-150 whitespace-nowrap`}
+    className={`px-3 py-1 text-xs font-semibold rounded-full bg-gradient-to-r ${color} text-white shadow-md hover:scale-105 transition transform duration-200 whitespace-nowrap`}
   >
     {children}
   </button>
