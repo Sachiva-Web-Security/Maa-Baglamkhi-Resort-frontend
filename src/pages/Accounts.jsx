@@ -91,32 +91,29 @@ const Accounts = () => {
       alert("Error adding expense");
     }
   };
+const handleGenerateInvoice = async (invoice) => {
+  try {
+    // 🔥 Save invoice in invoices table
+    const res = await API.post("/invoices/create", invoice);
 
-  const handleGenerateInvoice = async (invoice) => {
-    // Treat invoice as income
-    try {
-      const res = await API.post("/accounts/income", {
-        date: invoice.date,
-        description: `Invoice ${invoice.invoiceNo} - ${invoice.customerName}${invoice.description ? ` (${invoice.description})` : ''}`,
-        amount: invoice.amount,
-        paymentMode: invoice.paymentMode,
-      });
-      addRecord({
-        id: res.data?.id,
-        date: invoice.date,
-        type: 'Income',
-        description: `Invoice ${invoice.invoiceNo} - ${invoice.customerName}${invoice.description ? ` (${invoice.description})` : ''}`,
-        amount: invoice.amount,
-        paymentMode: invoice.paymentMode,
-      });
-      closeModal('invoice');
-      alert(`Invoice generated: ${invoice.invoiceNo}`);
-    } catch (err) {
-      console.error("Error generating invoice", err);
-      alert("Error generating invoice");
-    }
-  };
+    // 🔥 ALSO treat it as income entry
+    addRecord({
+      id: res.data?.id || Date.now(),
+      date: invoice.date,
+      type: "Income",
+      description: `Invoice ${invoice.invoiceNo} - ${invoice.customerName}`,
+      amount: invoice.amount,
+      paymentMode: invoice.paymentMode,
+    });
 
+    alert("Invoice generated successfully");
+    closeModal("invoice");
+  } catch (err) {
+    console.error("Error generating invoice", err);
+    alert("Error generating invoice");
+  }
+};
+ 
   const handleView = (record) => {
     setSelectedRecord(record);
     openModal('view');

@@ -23,6 +23,7 @@ import Kitchen from './pages/Kitchen';
 
 
 
+
 function Layout({ children, setIsAuthenticated }) {
   return (
     <div className='flex bg-slate-900'>

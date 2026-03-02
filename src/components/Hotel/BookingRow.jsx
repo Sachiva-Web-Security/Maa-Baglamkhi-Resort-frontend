@@ -28,6 +28,19 @@ const BookingRow = ({ booking, onExtend, onShiftRoom, onCheckOut }) => {
 
       <td className="px-4 py-4">
         <div className="flex gap-2 flex-wrap">
+            
+ <button
+            className="px-3 py-1 text-sm rounded-full 
+                       bg-gradient-to-r from-purple-500 to-indigo-600 
+                       text-white shadow-md hover:scale-105 
+                       transition transform duration-200"
+            
+          >
+            View Bill
+          </button>
+
+
+
 
           <button
             className="px-3 py-1 text-sm rounded-full 
