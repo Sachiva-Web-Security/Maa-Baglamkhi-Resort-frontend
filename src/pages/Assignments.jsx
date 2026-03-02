@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import API from "../api";
 
 const Assignment = () => {
   const [form, setForm] = useState({
@@ -13,14 +13,12 @@ const Assignment = () => {
   const [stats, setstats] = useState({});
   const [editId, setEditId] = useState(null);
 
-
-  const API = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
   const role = localStorage.getItem("role");
 
   // ================= LOAD USERS =================
   const loadUsers = async () => {
     try {
-      const res = await axios.get(`${API}/users`);
+      const res = await API.get("/users");
       setUsers(res.data);
     } catch (err) {
       console.log(err);
@@ -28,36 +26,31 @@ const Assignment = () => {
   };
 
   // ================= LOAD ASSIGNMENTS =================
-  // ================= LOAD ASSIGNMENTS =================
   const loadAssignments = async () => {
     try {
-      const res = await axios.get(
-        `${API}/assignments?role=${localStorage.getItem("role")}&name=${localStorage.getItem("name")}`
+      const res = await API.get(
+        `/assignments?role=${localStorage.getItem("role")}&name=${localStorage.getItem("name")}`
       );
       setAssignments(res.data);
     } catch (err) {
       console.log(err);
     }
   };
+
   // Load stats
   const loadStats = async () => {
     try {
-      const res = await axios.get(`${API}/assignments/stats`);
+      const res = await API.get("/assignments/stats");
       setstats(res.data);
-
     } catch (err) {
       console.log(err);
     }
-  }
-
-
-
+  };
 
   useEffect(() => {
     loadUsers();
     loadAssignments();
     loadStats();
-
   }, []);
 
   // ================= HANDLE CHANGE =================
@@ -71,10 +64,10 @@ const Assignment = () => {
 
     try {
       if (editId) {
-        await axios.put(`${API}/assignments/edit/${editId}`, form);
+        await API.put(`/assignments/edit/${editId}`, form);
         setEditId(null);
       } else {
-        await axios.post(`${API}/assignments`, {
+        await API.post("/assignments", {
           ...form,
           assigned_by: localStorage.getItem("name"),
         });
@@ -97,7 +90,7 @@ const Assignment = () => {
   // ================= MARK COMPLETE =================
   const markComplete = async (id) => {
     try {
-      await axios.put(`${API}/assignments/${id}`, {
+      await API.put(`/assignments/${id}`, {
         status: "Completed",
       });
 
@@ -111,7 +104,7 @@ const Assignment = () => {
   // ================= DELETE =================
   const deleteTask = async (id) => {
     try {
-      await axios.delete(`${API}/assignments/${id}`);
+      await API.delete(`/assignments/${id}`);
       loadAssignments();
       loadStats();
     } catch (err) {

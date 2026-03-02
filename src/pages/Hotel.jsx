@@ -61,6 +61,8 @@ const Hotel = () => {
       room: formData.room,
       checkIn: formData.checkIn,
       checkOut: formData.checkOut,
+      pricePerDay: formData.pricePerDay || null,
+      phone: formData.phone || null,
     };
 
     try {
@@ -72,7 +74,10 @@ const Hotel = () => {
         room: formData.room,
         checkIn: formData.checkIn,
         checkOut: formData.checkOut,
+        pricePerDay: formData.pricePerDay || "",
+        phone: formData.phone || "",
         status: "Occupied",
+        billGenerated: 0,
       };
 
       setBookings((prev) => [newBooking, ...prev]);
@@ -142,6 +147,15 @@ const Hotel = () => {
     if (window.confirm('Run Night Audit? This will process all check-ins and check-outs for today.')) {
       try {
         await API.post("/hotel/night-audit");
+
+        // Refresh all data
+        const [roomsRes, bookingsRes] = await Promise.all([
+          API.get("/hotel/rooms"),
+          API.get("/hotel/bookings")
+        ]);
+        setRooms(roomsRes.data);
+        setBookings(bookingsRes.data);
+
         alert('Night Audit completed successfully!');
         closeModal('nightAudit');
       } catch (err) {
@@ -186,27 +200,25 @@ const Hotel = () => {
   };
 
   const handleExtendSubmit = async (formData) => {
+    const bookingId = formData.bookingId;
+    const guestName = formData.guestName;
+    const room = formData.room;
     try {
       await API.post("/hotel/extend", {
-        id: selectedBooking.id,
+        id: bookingId,
         checkOut: formData.checkOut,
       });
 
       // Optimistic update
       setBookings(prev => prev.map(b =>
-        b.id === selectedBooking.id
-          ? { ...b, checkOut: formData.checkOut }
-          : b
+        b.id === bookingId ? { ...b, checkOut: formData.checkOut } : b
+      ));
+      setRooms(prev => prev.map(r =>
+        r.number === room ? { ...r, checkOut: formData.checkOut } : r
       ));
 
-      setRooms(prev => prev.map(room =>
-        room.number === selectedBooking.room
-          ? { ...room, checkOut: formData.checkOut }
-          : room
-      ));
-
-      alert(`Booking extended for ${selectedBooking.guestName}`);
       closeModal('extend');
+      alert(`Booking extended for ${guestName}`);
     } catch (err) {
       console.error("Error extending booking", err);
       alert("Error extending booking");
@@ -219,37 +231,36 @@ const Hotel = () => {
   };
 
   const handleShiftRoomSubmit = async (formData) => {
+    const { bookingId, newRoom, guestName, oldRoom, checkIn, checkOut } = formData;
     try {
       await API.post("/hotel/shift", {
-        id: selectedBooking.id,
-        oldRoom: selectedBooking.room,
-        newRoom: formData.room,
-        guestName: selectedBooking.guestName,
-        checkIn: selectedBooking.checkIn,
-        checkOut: selectedBooking.checkOut,
+        id: bookingId,
+        oldRoom: oldRoom,
+        newRoom: newRoom,
+        guestName: guestName,
+        checkIn: checkIn,
+        checkOut: checkOut,
       });
 
-      // Optimistic Update
-      setRooms(prev => prev.map(room =>
-        room.number === selectedBooking.room
-          ? { ...room, status: 'Cleaning', guest: null, checkIn: null, checkOut: null }
-          : room
-      ));
+      // Update bookings
+      setBookings((prev) =>
+        prev.map((b) => (b.id === bookingId ? { ...b, room: newRoom } : b))
+      );
 
-      setRooms(prev => prev.map(room =>
-        room.number === formData.room
-          ? { ...room, status: 'Occupied', guest: selectedBooking.guestName, checkIn: selectedBooking.checkIn, checkOut: selectedBooking.checkOut }
-          : room
-      ));
+      // Update room statuses
+      setRooms((prev) =>
+        prev.map((r) => {
+          if (r.number === oldRoom) return { ...r, status: "Cleaning", guest: null, checkIn: null, checkOut: null };
+          if (r.number === newRoom) {
+            const booking = bookings.find(b => b.id === bookingId);
+            return { ...r, status: "Occupied", guest: guestName, checkIn: booking?.checkIn, checkOut: booking?.checkOut };
+          }
+          return r;
+        })
+      );
 
-      setBookings(prev => prev.map(b =>
-        b.id === selectedBooking.id
-          ? { ...b, room: formData.room }
-          : b
-      ));
-
-      alert(`${selectedBooking.guestName} shifted to Room ${formData.room}`);
-      closeModal('shiftRoom');
+      alert(`Room shifted for ${guestName} to Room ${newRoom}`);
+      closeModal("shiftRoom");
     } catch (err) {
       console.error("Error shifting room", err);
       alert("Error shifting room");
@@ -304,6 +315,12 @@ const Hotel = () => {
     }
   };
 
+  const handleBillGenerated = (bookingId) => {
+    setBookings(prev => prev.map(b =>
+      b.id === bookingId ? { ...b, billGenerated: 1 } : b
+    ));
+  };
+
   return (
 
     <div className="min-h-screen w-280 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-200 p-6">
@@ -351,6 +368,20 @@ const Hotel = () => {
         </button>
 
         <button
+          className="h-12 w-60 bg-blue-600 hover:bg-blue-500 text-white rounded-full ml-2"
+          onClick={() => { setSelectedBooking(null); openModal('extend'); }}
+        >
+          Extend
+        </button>
+
+        <button
+          className="h-12 w-60 bg-yellow-600 hover:bg-yellow-500 text-white rounded-full ml-2"
+          onClick={() => { setSelectedBooking(null); openModal('shiftRoom'); }}
+        >
+          Shift Room
+        </button>
+
+        <button
           className="h-12 w-60 bg-green-600 hover:bg-green-500
              text-white rounded-full ml-4"
           onClick={() => openModal('addRoom')}
@@ -389,52 +420,28 @@ const Hotel = () => {
         />
       </div>
 
-      {/* Room Grid */}
-      <h2 className="section-title">Room Status</h2>
-
-      <div className="room-grid">
-        {rooms.map((room) => (
-          <RoomCard
-            key={room.number}
-            room={room}
-            onRoomClick={handleRoomClick}
-            onCheckIn={handleRoomCheckIn}
-            onCheckOut={handleRoomCheckOut}
-            onMarkCleaning={handleMarkCleaning}
-            onMarkAvailable={handleMarkAvailable}
-          />
-        ))}
-      </div>
 
       {/* Booking Table */}
-      <div className="w-full max-w-6xl
-                bg-white/10
-                backdrop-blur-xl
-                border border-white/20
-                rounded-2xl
-                shadow-2xl
-                p-6 h-38 ht-96 -mt-4
-                transition duration-300">
 
-        <h2 className="text-2xl font-semibold text-white mb-6">
-          Active Bookings
-        </h2>
+      <div className="w-full max-w-6xl bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl p-6 transition duration-300">
+
+        <h2 className="text-xl font-semibold text-white mb-4">Active Bookings</h2>
 
         <div className="overflow-x-auto">
-          <table className="min-w-full text-sm text-gray-200">
+          <table className="min-w-full text-sm">
 
-            <thead className="border-b border-white/20 text-gray-300 uppercase">
+            <thead className="border-b border-white/20 text-gray-400 text-xs uppercase tracking-wider">
               <tr>
-                <th className="px-4 py-3 text-left">Guest Name</th>
-                <th className="px-4 py-3 text-left">Room</th>
-                <th className="px-4 py-3 text-left">Check-In</th>
-                <th className="px-4 py-3 text-left">Check-Out</th>
-                <th className="px-4 py-3 text-left">Status</th>
-                <th className="px-4 py-3 text-left">Action</th>
+                <th className="px-4 py-3 text-left whitespace-nowrap">Guest Name</th>
+                <th className="px-4 py-3 text-left whitespace-nowrap">Room</th>
+                <th className="px-4 py-3 text-left whitespace-nowrap">Check-In</th>
+                <th className="px-4 py-3 text-left whitespace-nowrap">Check-Out</th>
+                <th className="px-4 py-3 text-left whitespace-nowrap">Status</th>
+                <th className="px-4 py-3 text-left whitespace-nowrap min-w-[300px]">Action</th>
               </tr>
             </thead>
 
-            <tbody className="divide-y divide-white/10 gradiendt-to-r from-green-300">
+            <tbody className="divide-y divide-white/10">
               {bookings.map((booking) => (
                 <BookingRow
                   key={booking.id}
@@ -442,6 +449,7 @@ const Hotel = () => {
                   onExtend={handleExtend}
                   onShiftRoom={handleShiftRoom}
                   onCheckOut={handleCheckOut}
+                  onBillGenerated={handleBillGenerated}
                 />
               ))}
             </tbody>
@@ -472,127 +480,86 @@ const Hotel = () => {
           onSubmit={handleExpressCheckIn}
           onCancel={() => closeModal('expressCheckIn')}
           initialData={selectedRoom ? { room: selectedRoom.number } : {}}
-          availableRooms={rooms.filter(r => r.status === 'Available' || r.status === 'Cleaning')}
+          availableRooms={rooms.filter(r => r.status === 'Available')}
         />
       </Modal>
 
-      <Modal
-        isOpen={modals.checkOut}
-        onClose={() => closeModal('checkOut')}
-        title="Check-Out"
-      >
-        {selectedBooking && (
-          <div>
-            <p>Guest: <strong>{selectedBooking.guestName}</strong></p>
-            <p>Room: <strong>{selectedBooking.room}</strong></p>
-            <p>Check-In: <strong>{selectedBooking.checkIn}</strong></p>
-            <p>Check-Out: <strong>{selectedBooking.checkOut}</strong></p>
-            <div className="form-actions" style={{ marginTop: '20px' }}>
-              <button className="btn-cancel" onClick={() => closeModal('checkOut')}>
-                Cancel
-              </button>
-              <button
-                className="btn-submit"
-                onClick={() => handleCheckOut(selectedBooking)}
-              >
-                Confirm Check-Out
-              </button>
-            </div>
-          </div>
-        )}
+      {/* ─── Check-Out Modal ─── */}
+      <Modal isOpen={modals.checkOut} onClose={() => closeModal('checkOut')} title="Check-Out">
+        <CheckOutPanel
+          bookings={bookings}
+          onConfirm={handleCheckOut}
+          onCancel={() => closeModal('checkOut')}
+        />
       </Modal>
 
-      <Modal
-        isOpen={modals.nightAudit}
-        onClose={() => closeModal('nightAudit')}
-        title="Night Audit"
-      >
-        <div>
-          <p>This will process all check-ins and check-outs for today.</p>
-          <p><strong>Summary:</strong></p>
-          <ul>
-            <li>Total Rooms: {totalRooms}</li>
-            <li>Occupied: {occupiedRooms}</li>
-            <li>Available: {availableRooms}</li>
-            <li>Cleaning: {cleaningRooms}</li>
-          </ul>
-          <div className="form-actions" style={{ marginTop: '20px' }}>
-            <button className="btn-cancel" onClick={() => closeModal('nightAudit')}>
-              Cancel
-            </button>
-            <button className="btn-submit" onClick={handleNightAudit}>
-              Run Night Audit
-            </button>
+      {/* ─── Night Audit Modal ─── */}
+      <Modal isOpen={modals.nightAudit} onClose={() => closeModal('nightAudit')} title="Night Audit">
+        <div className="space-y-4">
+          <p className="text-gray-600 text-sm">Process all check-ins and check-outs for today and generate a daily summary.</p>
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { label: "Total Rooms", value: totalRooms, color: "bg-indigo-50 text-indigo-700" },
+              { label: "Occupied", value: occupiedRooms, color: "bg-red-50 text-red-600" },
+              { label: "Available", value: availableRooms, color: "bg-green-50 text-green-600" },
+              { label: "Cleaning", value: cleaningRooms, color: "bg-yellow-50 text-yellow-600" },
+            ].map(({ label, value, color }) => (
+              <div key={label} className={`rounded-xl p-4 ${color} text-center`}>
+                <p className="text-2xl font-bold">{value}</p>
+                <p className="text-xs font-medium mt-1">{label}</p>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-gray-500">Active Bookings: <strong>{bookings.filter(b => b.status === 'Occupied').length}</strong></p>
+          <div className="flex justify-end gap-3 pt-2">
+            <button className="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200" onClick={() => closeModal('nightAudit')}>Cancel</button>
+            <button className="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 font-semibold" onClick={handleNightAudit}>Run Night Audit</button>
           </div>
         </div>
       </Modal>
 
-      <Modal
-        isOpen={modals.extend}
-        onClose={() => closeModal('extend')}
-        title="Extend Booking"
-      >
-        {selectedBooking && (
-          <BookingForm
-            onSubmit={handleExtendSubmit}
-            onCancel={() => closeModal('extend')}
-            initialData={{
-              guestName: selectedBooking.guestName,
-              room: selectedBooking.room,
-              checkIn: selectedBooking.checkIn,
-              checkOut: selectedBooking.checkOut,
-            }}
-          />
-        )}
+      {/* ─── Extend Booking Modal ─── */}
+      <Modal isOpen={modals.extend} onClose={() => closeModal('extend')} title="Extend Booking">
+        <ExtendPanel
+          bookings={bookings}
+          selectedBooking={selectedBooking}
+          onSubmit={handleExtendSubmit}
+          onCancel={() => closeModal('extend')}
+        />
       </Modal>
 
-      <Modal
-        isOpen={modals.shiftRoom}
-        onClose={() => closeModal('shiftRoom')}
-        title="Shift Room"
-      >
-        {selectedBooking && (
-          <BookingForm
-            onSubmit={handleShiftRoomSubmit}
-            onCancel={() => closeModal('shiftRoom')}
-            initialData={{
-              guestName: selectedBooking.guestName,
-              room: selectedBooking.room,
-              checkIn: selectedBooking.checkIn,
-              checkOut: selectedBooking.checkOut,
-            }}
-            availableRooms={rooms.filter(r => r.status === 'Available' || r.status === 'Cleaning')}
-          />
-        )}
+      {/* ─── Shift Room Modal ─── */}
+      <Modal isOpen={modals.shiftRoom} onClose={() => closeModal('shiftRoom')} title="Shift Room">
+        <ShiftPanel
+          bookings={bookings}
+          rooms={rooms}
+          selectedBooking={selectedBooking}
+          onSubmit={handleShiftRoomSubmit}
+          onCancel={() => closeModal('shiftRoom')}
+        />
       </Modal>
 
-      <Modal
-        isOpen={modals.addRoom}
-        onClose={() => closeModal('addRoom')}
-        title="Add New Room"
-      >
-        <form onSubmit={(e) => {
-          e.preventDefault();
-          const formData = new FormData(e.target);
-          handleAddNewRoom({ roomNumber: formData.get('roomNumber') });
-        }}>
-          <div className="form-group mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Room Number:</label>
+      {/* ─── Add New Room Modal ─── */}
+
+      <Modal isOpen={modals.addRoom} onClose={() => closeModal('addRoom')} title="Add New Room">
+        <form onSubmit={(e) => { e.preventDefault(); handleAddNewRoom({ roomNumber: e.target.roomNumber.value }); }} className="space-y-4">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Room Number *</label>
             <input
               type="text"
               name="roomNumber"
               required
-              className="w-full px-3 py-2 border rounded-md"
-              placeholder="e.g. 101"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-gray-800"
+              placeholder="e.g. 201"
             />
+            <p className="text-xs text-gray-400 mt-1">Enter a unique room number. Room will be set as Available.</p>
           </div>
-          <div className="flex justify-end gap-2 mt-4">
-            <button type="button" className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300" onClick={() => closeModal('addRoom')}>
-              Cancel
-            </button>
-            <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-              Add Room
-            </button>
+          <div className="bg-gray-50 rounded-lg p-3 text-sm text-gray-600">
+            📊 Currently <strong>{totalRooms}</strong> rooms — Available: <strong>{availableRooms}</strong>, Occupied: <strong>{occupiedRooms}</strong>, Cleaning: <strong>{cleaningRooms}</strong>
+          </div>
+          <div className="flex justify-end gap-3 pt-1">
+            <button type="button" className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200" onClick={() => closeModal('addRoom')}>Cancel</button>
+            <button type="submit" className="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700">Add Room</button>
           </div>
         </form>
       </Modal>
@@ -600,4 +567,243 @@ const Hotel = () => {
   );
 };
 
+// ─── Helper Sub-Components ─────────────────────────────────────────────────
+
+const InfoRow = ({ label, value }) => (
+  <div>
+    <span className="text-gray-400 text-xs">{label}: </span>
+    <span className="text-gray-800 font-medium text-xs">{value || '—'}</span>
+  </div>
+);
+
+/** Check-Out Panel: search by room number */
+const CheckOutPanel = ({ bookings, onConfirm, onCancel }) => {
+  const [search, setSearch] = React.useState('');
+  const occupied = bookings.filter(b => b.status === 'Occupied' || b.status !== 'CheckedOut');
+  const found = search
+    ? occupied.find(b => String(b.room) === String(search.trim()))
+    : null;
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-1">Search by Room Number</label>
+        <input
+          type="text"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 outline-none text-gray-800"
+          placeholder="e.g. 101"
+          autoFocus
+        />
+      </div>
+
+      {search && !found && (
+        <p className="text-red-500 text-sm">No active booking found for Room {search}.</p>
+      )}
+
+      {found && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4 space-y-2">
+          <p className="text-sm font-semibold text-red-700">Confirm Check-Out</p>
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <InfoRow label="Guest" value={found.guestName} />
+            <InfoRow label="Room" value={`Room ${found.room}`} />
+            <InfoRow label="Check-In" value={found.checkIn} />
+            <InfoRow label="Check-Out" value={found.checkOut} />
+            <InfoRow label="Status" value={found.status} />
+          </div>
+          <div className="flex justify-end gap-3 pt-2">
+            <button type="button" className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200" onClick={onCancel}>Cancel</button>
+            <button
+              type="button"
+              className="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700"
+              onClick={() => onConfirm(found)}
+            >
+              Confirm Check-Out
+            </button>
+          </div>
+        </div>
+      )}
+
+      {!search && (
+        <div className="space-y-2 max-h-60 overflow-y-auto">
+          <p className="text-xs text-gray-500 font-semibold uppercase">Active Bookings</p>
+          {occupied.map(b => (
+            <button
+              key={b.id}
+              onClick={() => setSearch(String(b.room))}
+              className="w-full text-left px-4 py-3 bg-gray-50 hover:bg-red-50 border rounded-lg transition text-sm"
+            >
+              <span className="font-semibold text-gray-800">Rm {b.room}</span>
+              <span className="text-gray-500 ml-3">{b.guestName}</span>
+              <span className={`ml-3 text-xs px-2 py-0.5 rounded-full ${b.status === 'Occupied' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600'}`}>{b.status}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+/** Extend Panel: search by room number, shows current booking, only new checkout needed */
+const ExtendPanel = ({ bookings, selectedBooking, onSubmit, onCancel }) => {
+  const [search, setSearch] = React.useState(selectedBooking ? String(selectedBooking.room) : '');
+  const [newCheckOut, setNewCheckOut] = React.useState('');
+
+  const found = search
+    ? bookings.find(b => String(b.room) === String(search.trim()) && b.status !== 'CheckedOut')
+    : selectedBooking || null;
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!found || !newCheckOut) return;
+    onSubmit({
+      bookingId: found.id,
+      guestName: found.guestName,
+      room: found.room,
+      checkOut: newCheckOut
+    });
+  };
+
+  // Set selectedBooking room pre-filled
+  React.useEffect(() => {
+    if (selectedBooking) setSearch(String(selectedBooking.room));
+  }, [selectedBooking]);
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Summary: Total rooms */}
+      <div className="bg-indigo-50 rounded-lg px-4 py-2 text-xs text-indigo-700 font-medium">
+        {bookings.filter(b => b.status !== 'CheckedOut').length} active booking(s) found
+      </div>
+
+      <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-1">Search by Room Number</label>
+        <input
+          type="text"
+          value={search}
+          onChange={e => { setSearch(e.target.value); setNewCheckOut(''); }}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-gray-800"
+          placeholder="e.g. 101"
+        />
+      </div>
+
+      {search && !found && (
+        <p className="text-red-500 text-sm">No active booking for Room {search}.</p>
+      )}
+
+      {found && (
+        <div className="space-y-4">
+          <div className="bg-gray-50 border rounded-xl p-4 space-y-2">
+            <p className="text-xs font-semibold text-gray-500 uppercase">Current Booking — Room {found.room}</p>
+            <div className="grid grid-cols-2 gap-2">
+              <InfoRow label="Guest" value={found.guestName} />
+              <InfoRow label="Phone" value={found.phone || '—'} />
+              <InfoRow label="Check-In" value={found.checkIn} />
+              <InfoRow label="Current Check-Out" value={found.checkOut} />
+              <InfoRow label="Status" value={found.status} />
+              <InfoRow label="Price/Day" value={found.pricePerDay ? `₹${found.pricePerDay}` : '—'} />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">New Check-Out Date *</label>
+            <input
+              type="date"
+              value={newCheckOut}
+              min={found.checkOut}
+              onChange={e => setNewCheckOut(e.target.value)}
+              required
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-gray-800"
+            />
+          </div>
+
+          <div className="flex justify-end gap-3 pt-1">
+            <button type="button" className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200" onClick={onCancel}>Cancel</button>
+            <button type="submit" disabled={!newCheckOut} className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50">
+              Update Check-Out
+            </button>
+          </div>
+        </div>
+      )}
+    </form>
+  );
+};
+
+/** Shift Panel: search by room number, finds booking, then uses BookingForm to choose new room */
+const ShiftPanel = ({ bookings, rooms, selectedBooking, onSubmit, onCancel }) => {
+  const [search, setSearch] = React.useState(selectedBooking ? String(selectedBooking.room) : '');
+  const found = search
+    ? bookings.find(b => String(b.room) === String(search.trim()) && b.status !== 'CheckedOut')
+    : selectedBooking || null;
+
+  const handleShiftSubmit = (formData) => {
+    onSubmit({
+      bookingId: found.id,
+      newRoom: formData.room,
+      guestName: found.guestName,
+      oldRoom: found.room,
+      checkIn: found.checkIn,
+      checkOut: found.checkOut
+    });
+  };
+
+  React.useEffect(() => {
+    if (selectedBooking) setSearch(String(selectedBooking.room));
+  }, [selectedBooking]);
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-1">Search Booking by Room Number</label>
+        <input
+          type="text"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 outline-none text-gray-800"
+          placeholder="e.g. 101"
+          autoFocus
+        />
+      </div>
+
+      {search && !found && (
+        <p className="text-red-500 text-sm">No active booking for Room {search}.</p>
+      )}
+
+      {found && (
+        <div className="space-y-4">
+          <div className="bg-gray-50 border rounded-xl p-4 space-y-2">
+            <p className="text-xs font-semibold text-gray-500 uppercase">Current Booking — Room {found.room}</p>
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <InfoRow label="Guest" value={found.guestName} />
+              <InfoRow label="Phone" value={found.phone || '—'} />
+              <InfoRow label="Check-In" value={found.checkIn} />
+              <InfoRow label="Check-Out" value={found.checkOut} />
+            </div>
+          </div>
+
+          <div className="pt-2">
+            <p className="text-xs font-semibold text-gray-500 uppercase mb-3 text-yellow-700">Select New Room</p>
+            <BookingForm
+              onSubmit={handleShiftSubmit}
+              onCancel={onCancel}
+              initialData={{
+                guestName: found.guestName,
+                room: found.room,
+                checkIn: found.checkIn,
+                checkOut: found.checkOut,
+                phone: found.phone || '',
+                pricePerDay: found.pricePerDay || ''
+              }}
+              availableRooms={rooms.filter(r => r.status === 'Available')}
+              shiftMode
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export default Hotel;
+

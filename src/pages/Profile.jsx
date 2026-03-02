@@ -131,7 +131,7 @@ const Profile = () => {
 
       let urlFromServer = res.data?.avatarUrl || res.data?.url || avatarUrl;
 
-      // Ensure full URL (http://localhost:5001 + /uploads/..)
+      // Ensure full URL (http://localhost:5002 + /uploads/..)
       if (urlFromServer && !urlFromServer.startsWith("http")) {
         const apiBase = API.defaults.baseURL || "";
         const serverBase = apiBase.replace(/\/api\/?$/, "");

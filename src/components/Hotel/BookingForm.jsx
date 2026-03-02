@@ -8,6 +8,7 @@ const BookingForm = ({ onSubmit, onCancel, initialData = {}, availableRooms = []
     checkIn: initialData.checkIn || '',
     checkOut: initialData.checkOut || '',
     phone: initialData.phone || '',
+    pricePerDay: initialData.pricePerDay || '',
     email: initialData.email || '',
     guests: initialData.guests || '1',
     specialRequests: initialData.specialRequests || '',
@@ -124,17 +125,33 @@ const BookingForm = ({ onSubmit, onCancel, initialData = {}, availableRooms = []
         </div>
       </div>
 
-      <div className="form-group">
-        <label htmlFor="guests">Number of Guests</label>
-        <input
-          type="number"
-          id="guests"
-          name="guests"
-          value={formData.guests}
-          onChange={handleChange}
-          min="1"
-          placeholder="Enter number of guests"
-        />
+      <div className="form-row">
+        <div className="form-group">
+          <label htmlFor="pricePerDay">Price Per Day (₹) *</label>
+          <input
+            type="number"
+            id="pricePerDay"
+            name="pricePerDay"
+            value={formData.pricePerDay}
+            onChange={handleChange}
+            required
+            min="0"
+            placeholder="e.g. 2000"
+          />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="guests">Number of Guests</label>
+          <input
+            type="number"
+            id="guests"
+            name="guests"
+            value={formData.guests}
+            onChange={handleChange}
+            min="1"
+            placeholder="Enter number of guests"
+          />
+        </div>
       </div>
 
       <div className="form-group">
