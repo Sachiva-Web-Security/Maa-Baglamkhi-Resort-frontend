@@ -1,8 +1,8 @@
 const BookingRow = ({ booking, onExtend, onShiftRoom, onCheckOut }) => {
   return (
-    <tr className="bg-white hover:bg-indigo-50 transition duration-200 shadow-sm rounded-xl">
+    <tr className=" pt-20 hover:bg-indigo-50 transition duration-200 shadow-sm rounded-xl pt-20">
 
-      <td className="px-4 py-4 font-semibold text-gray-800">
+      <td className="px-4 py-4 font-semibold text-gray-800 text-white">
         {booking.guestName}
       </td>
 
@@ -12,11 +12,11 @@ const BookingRow = ({ booking, onExtend, onShiftRoom, onCheckOut }) => {
         </span>
       </td>
 
-      <td className="px-4 py-4 text-gray-600">
+      <td className="px-4 py-4 text-gray-600 text-white">
         {booking.checkIn}
       </td>
 
-      <td className="px-4 py-4 text-gray-600">
+      <td className="px-4 py-4 text-gray-600 text-white">
         {booking.checkOut}
       </td>
 

@@ -407,23 +407,12 @@ const Hotel = () => {
       </div>
 
       {/* Booking Table */}
-      <div className="w-full max-w-6xl
-                bg-white/10
-                backdrop-blur-xl
-                border border-white/20
-                rounded-2xl
-                shadow-2xl
-                p-6 h-38 ht-96 -mt-4
-                transition duration-300">
+      
 
-        <h2 className="text-2xl font-semibold text-white mb-6">
-          Active Bookings
-        </h2>
+        <div className="overflow-x-auto   ">
+          <table className="min-w-full text-sm text-gray-200  from-slate-800 to-slate-900 mt-5  ">
 
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm text-gray-200">
-
-            <thead className="border-b border-white/20 text-gray-300 uppercase">
+            <thead className="border-b border-white/20 text-gray-300 uppercase ">
               <tr>
                 <th className="px-4 py-3 text-left">Guest Name</th>
                 <th className="px-4 py-3 text-left">Room</th>
@@ -448,7 +437,7 @@ const Hotel = () => {
 
           </table>
         </div>
-      </div>
+      
 
       {/* Modals */}
       <Modal
@@ -576,7 +565,7 @@ const Hotel = () => {
           const formData = new FormData(e.target);
           handleAddNewRoom({ roomNumber: formData.get('roomNumber') });
         }}>
-          <div className="form-group mb-4">
+          <div className="form-group mb-4  ">
             <label className="block text-sm font-medium text-gray-700 mb-1">Room Number:</label>
             <input
               type="text"
@@ -586,7 +575,7 @@ const Hotel = () => {
               placeholder="e.g. 101"
             />
           </div>
-          <div className="flex justify-end gap-2 mt-4">
+          <div className="flex justify-end gap-2 mt-4 ">
             <button type="button" className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300" onClick={() => closeModal('addRoom')}>
               Cancel
             </button>
