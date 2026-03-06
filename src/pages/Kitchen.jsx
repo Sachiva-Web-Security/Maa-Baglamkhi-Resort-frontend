@@ -39,11 +39,11 @@ const markReady = async(id)=>{
 
 return (
 
-<div className=" min-h-screen w-290  bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 pl-0.3">
+<div className=" min-h-screen w-290 overflow-x-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 ">
 
 {/* HEADER */}
 
-<div className="bg-slate-1000 w-full pl-110 text-white p-4 rounded-2xl shadow-lg mb-6 ">
+<div className="bg-slate-1000  w-full pl-110 text-white p-4 rounded-2xl shadow-lg mb-6 ">
 <h2 className="text-2xl font-bold ">Kitchen Orders</h2>
 <p className="text-sm opacity-90">
 Manage restaurant food orders

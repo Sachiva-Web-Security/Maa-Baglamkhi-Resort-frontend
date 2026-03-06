@@ -28,7 +28,7 @@ const BookingForm = ({ onSubmit, onCancel, initialData = {}, availableRooms = []
   };
 
   return (
-    <form className="booking-form " onSubmit={handleSubmit}>
+    <form className="booking-form bg-slate-750" onSubmit={handleSubmit}>
       <div className="form-group">
         <label htmlFor="guestName">Guest Name *</label>
         <input
