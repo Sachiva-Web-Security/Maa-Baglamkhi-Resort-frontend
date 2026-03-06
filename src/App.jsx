@@ -20,22 +20,25 @@ import User from './pages/User';
 import CreateUser from "./components/Createuser/CreateUser";
 import Assignment from './pages/Assignments';
 import Kitchen from './pages/Kitchen';
+import { RestaurantProvider } from "./Context/RestaurantContext";
+
+import TablePage from "./components/Restaurant/TablePage";
+import MenuPage from "./components/Restaurant/MenuPage";
+import Payment from "./components/Restaurant/Payment";
 
 
-
-
+/* ============================
+   Layout Component
+============================ */
 function Layout({ children, setIsAuthenticated }) {
   return (
-    <div className='flex bg-slate-900'>
+    <div className='flex bg-slate-900 min-h-screen'>
 
-      {/* Header */}
       <Header setIsAuthenticated={setIsAuthenticated} />
-
-      {/* Sidebar */}
       <Sidebar />
 
-      {/* Main Content */}
-      <div className="ml-[250px] mt-[70px] pl-">
+      {/* ✅ FIXED: pl- removed and proper padding added */}
+      <div className="ml-[250px] mt-[70px] p-4 w-full">
         {children}
       </div>
 
@@ -43,7 +46,12 @@ function Layout({ children, setIsAuthenticated }) {
   );
 }
 
+
+/* ============================
+   Main App Component
+============================ */
 function App() {
+
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -57,15 +65,18 @@ function App() {
 
   return (
     <Router>
-
-
       <Routes>
 
-        <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
+        {/* ================= LOGIN ================= */}
+        <Route
+          path="/login"
+          element={<Login setIsAuthenticated={setIsAuthenticated} />}
+        />
 
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
-        {/* Dashboard: sabhi logged-in roles ke liye open */}
+
+        {/* ================= DASHBOARD ================= */}
         <Route
           path="/dashboard"
           element={
@@ -77,7 +88,8 @@ function App() {
           }
         />
 
-        {/* Profile: sabhi logged-in users */}
+
+        {/* ================= PROFILE ================= */}
         <Route
           path="/profile"
           element={
@@ -90,7 +102,7 @@ function App() {
         />
 
 
-        {/* Attendance: admin + manager + staff + waiter + receptionist */}
+        {/* ================= ATTENDANCE ================= */}
         <Route
           path="/attendance"
           element={
@@ -110,7 +122,8 @@ function App() {
           }
         />
 
-        {/* Hotel: admin + manager + receptionist */}
+
+        {/* ================= HOTEL ================= */}
         <Route
           path="/hotel"
           element={
@@ -123,28 +136,11 @@ function App() {
         />
 
 
-
-        {/* Restaurant POS: admin + manager + waiter + kitchen */}
-        <Route
-          path="/restaurant"
-          element={
-            <ProtectedRoute
-              allowedRoles={["admin", "manager", "waiter", "kitchen"]}
-            >
-              <Layout setIsAuthenticated={setIsAuthenticated}>
-                <RestaurantPOS />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Accounts: admin + manager + accountant */}
+        {/* ================= ACCOUNTS ================= */}
         <Route
           path="/accounts"
           element={
-            <ProtectedRoute
-              allowedRoles={["admin", "manager", "accountant"]}
-            >
+            <ProtectedRoute allowedRoles={["admin", "manager", "accountant"]}>
               <Layout setIsAuthenticated={setIsAuthenticated}>
                 <Accounts />
               </Layout>
@@ -152,13 +148,31 @@ function App() {
           }
         />
 
-        {/* Inventory: admin + manager + kitchen */}
+
+        {/* ================= RESTAURANT POS (Nested Routing) ================= */}
+        <Route
+          path="/restaurant"
+          element={
+            <ProtectedRoute allowedRoles={["admin", "manager", "waiter", "kitchen"]}>
+              <Layout setIsAuthenticated={setIsAuthenticated}>
+                <RestaurantProvider>
+                  <RestaurantPOS />
+                </RestaurantProvider>
+              </Layout>
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<TablePage />} />
+          <Route path="menu/:id" element={<MenuPage />} />
+          <Route path="payment" element={<Payment />} />
+        </Route>
+
+
+        {/* ================= INVENTORY ================= */}
         <Route
           path="/inventory"
           element={
-            <ProtectedRoute
-              allowedRoles={["admin", "manager", "kitchen"]}
-            >
+            <ProtectedRoute allowedRoles={["admin", "manager", "kitchen"]}>
               <Layout setIsAuthenticated={setIsAuthenticated}>
                 <InventoryDashboard />
               </Layout>
@@ -166,7 +180,8 @@ function App() {
           }
         />
 
-        {/* User management: sirf admin */}
+
+        {/* ================= USER ================= */}
         <Route
           path="/user"
           element={
@@ -178,7 +193,7 @@ function App() {
           }
         />
 
-        {/* Create user: sirf admin */}
+
         <Route
           path="/create-user"
           element={
@@ -190,13 +205,12 @@ function App() {
           }
         />
 
-        {/* Housekeeping: admin + housekeeping + manager */}
+
+        {/* ================= HOUSEKEEPING ================= */}
         <Route
           path="/housekeeping"
           element={
-            <ProtectedRoute
-              allowedRoles={["admin", "housekeeping", "manager"]}
-            >
+            <ProtectedRoute allowedRoles={["admin", "housekeeping", "manager"]}>
               <Layout setIsAuthenticated={setIsAuthenticated}>
                 <Housekeeping />
               </Layout>
@@ -204,13 +218,12 @@ function App() {
           }
         />
 
-        {/* Banquet: admin + manager + receptionist */}
+
+        {/* ================= BANQUET ================= */}
         <Route
           path="/banquet"
           element={
-            <ProtectedRoute
-              allowedRoles={["admin", "manager", "receptionist"]}
-            >
+            <ProtectedRoute allowedRoles={["admin", "manager", "receptionist"]}>
               <Layout setIsAuthenticated={setIsAuthenticated}>
                 <Banquet />
               </Layout>
@@ -218,13 +231,12 @@ function App() {
           }
         />
 
-        {/* Reports: admin + manager + accountant */}
+
+        {/* ================= REPORTS ================= */}
         <Route
           path="/reports"
           element={
-            <ProtectedRoute
-              allowedRoles={["admin", "manager", "accountant"]}
-            >
+            <ProtectedRoute allowedRoles={["admin", "manager", "accountant"]}>
               <Layout setIsAuthenticated={setIsAuthenticated}>
                 <Reports />
               </Layout>
@@ -232,13 +244,12 @@ function App() {
           }
         />
 
-        {/* Assignments: admin + manager + housekeeping + staff */}
+
+        {/* ================= ASSIGNMENTS ================= */}
         <Route
           path="/assignments"
           element={
-            <ProtectedRoute
-              allowedRoles={["admin", "manager", "housekeeping", "staff"]}
-            >
+            <ProtectedRoute allowedRoles={["admin", "manager", "housekeeping", "staff"]}>
               <Layout setIsAuthenticated={setIsAuthenticated}>
                 <Assignment />
               </Layout>
@@ -246,7 +257,8 @@ function App() {
           }
         />
 
-        {/* Kitchen: admin + manager + kitchen */}
+
+        {/* ================= KITCHEN ================= */}
         <Route
           path="/kitchen"
           element={
@@ -257,8 +269,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-
-
 
       </Routes>
     </Router>
