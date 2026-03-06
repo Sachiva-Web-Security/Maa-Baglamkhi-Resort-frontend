@@ -147,8 +147,20 @@ const Sidebar = () => {
       {/* Profile */}
       <div className="p-3 border-t border-gray-700 bg-slate-900">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-white">
-            👤
+          <div className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-white overflow-hidden">
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt="Avatar"
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  // fallback if saved URL is no longer valid
+                  e.currentTarget.style.display = "none";
+                }}
+              />
+            ) : (
+              (userName || "U").charAt(0).toUpperCase()
+            )}
           </div>
           <div>
             <p className="text-lg font-bold text-white">{userName}</p>

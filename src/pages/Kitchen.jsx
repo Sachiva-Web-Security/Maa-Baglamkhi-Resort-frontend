@@ -5,11 +5,6 @@ const Kitchen = () => {
 
 const [orders,setOrders] = useState([]);
 
-useEffect(()=>{
-  fetchOrders();
-},[]);
-
-
 // ================= FETCH ORDERS =================
 const fetchOrders = async ()=>{
   try{
@@ -19,6 +14,10 @@ const fetchOrders = async ()=>{
     console.log(err);
   }
 }
+
+useEffect(()=>{
+  fetchOrders();
+},[]);
 
 
 // ================= MARK READY =================

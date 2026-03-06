@@ -248,14 +248,28 @@ const Assignment = () => {
                   <td className="p-3">{a.assigned_by}</td>
 
                   <td className="p-3">
-                    {a.status !== "Completed" && (
+                    <div className="flex flex-wrap gap-2">
+                      {a.status !== "Completed" && (
+                        <button
+                          onClick={() => markComplete(a.id)}
+                          className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-lg text-sm"
+                        >
+                          Complete
+                        </button>
+                      )}
                       <button
-                        onClick={() => markComplete(a.id)}
-                        className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-lg text-sm"
+                        onClick={() => editTask(a)}
+                        className="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded-lg text-sm"
                       >
-                        Complete
+                        Edit
                       </button>
-                    )}
+                      <button
+                        onClick={() => deleteTask(a.id)}
+                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

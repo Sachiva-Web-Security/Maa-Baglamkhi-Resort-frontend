@@ -206,7 +206,101 @@ export default function CategoryInventory({
         </table>
       </div>
 
-      {/* Add & Edit modals SAME as before – already correct */}
+      {/* Add Modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-gray-800 p-6 shadow-2xl">
+            <h3 className="text-xl font-bold mb-4">Add Item</h3>
+            <form onSubmit={addItem} className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <input name="name" placeholder="Item name" required className="border rounded-lg px-3 py-2 dark:bg-gray-900" />
+              <input name="stock" type="number" placeholder="Stock" required className="border rounded-lg px-3 py-2 dark:bg-gray-900" />
+              <input name="unit" placeholder="Unit (kg/pcs)" required className="border rounded-lg px-3 py-2 dark:bg-gray-900" />
+              <input name="price" type="number" placeholder="Price" required className="border rounded-lg px-3 py-2 dark:bg-gray-900" />
+              <input name="expiry" type="date" className="border rounded-lg px-3 py-2 dark:bg-gray-900" />
+              <select name="branch" className="border rounded-lg px-3 py-2 dark:bg-gray-900">
+                <option>Main</option>
+                <option>Branch 2</option>
+              </select>
+              <div className="md:col-span-2 flex justify-end gap-2 pt-2">
+                <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700">
+                  Cancel
+                </button>
+                <button type="submit" className="px-4 py-2 rounded-lg bg-blue-600 text-white">
+                  Add
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {showEditModal && editingItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-gray-800 p-6 shadow-2xl">
+            <h3 className="text-xl font-bold mb-4">Edit Item</h3>
+            <form onSubmit={handleUpdateItem} className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <input
+                value={editingItem.name || ""}
+                onChange={(e) => handleEditChange("name", e.target.value)}
+                placeholder="Item name"
+                required
+                className="border rounded-lg px-3 py-2 dark:bg-gray-900"
+              />
+              <input
+                type="number"
+                value={editingItem.stock ?? 0}
+                onChange={(e) => handleEditChange("stock", e.target.value)}
+                placeholder="Stock"
+                required
+                className="border rounded-lg px-3 py-2 dark:bg-gray-900"
+              />
+              <input
+                value={editingItem.unit || ""}
+                onChange={(e) => handleEditChange("unit", e.target.value)}
+                placeholder="Unit"
+                required
+                className="border rounded-lg px-3 py-2 dark:bg-gray-900"
+              />
+              <input
+                type="number"
+                value={editingItem.price ?? 0}
+                onChange={(e) => handleEditChange("price", e.target.value)}
+                placeholder="Price"
+                required
+                className="border rounded-lg px-3 py-2 dark:bg-gray-900"
+              />
+              <input
+                type="date"
+                value={editingItem.expiry || ""}
+                onChange={(e) => handleEditChange("expiry", e.target.value)}
+                className="border rounded-lg px-3 py-2 dark:bg-gray-900"
+              />
+              <input
+                value={editingItem.branch || ""}
+                onChange={(e) => handleEditChange("branch", e.target.value)}
+                placeholder="Branch"
+                className="border rounded-lg px-3 py-2 dark:bg-gray-900"
+              />
+              <div className="md:col-span-2 flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setEditingItem(null);
+                  }}
+                  className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700"
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="px-4 py-2 rounded-lg bg-indigo-600 text-white">
+                  Update
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

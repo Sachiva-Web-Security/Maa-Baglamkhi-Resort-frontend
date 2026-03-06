@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
-import API from "../api";
+import API, { getBackendBaseURL } from "../api";
 
 const Profile = () => {
   const [name, setName] = useState(localStorage.getItem("name") || "");
   const [role, setRole] = useState(localStorage.getItem("role") || "");
-  const [email] = useState(localStorage.getItem("email") || "");
+  const [email, setEmail] = useState(localStorage.getItem("email") || "");
   const [avatarUrl, setAvatarUrl] = useState(
     localStorage.getItem("avatarUrl") || "",
   );
@@ -16,22 +16,39 @@ const Profile = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const [loadingProfile, setLoadingProfile] = useState(false);
+  const [loadingProfile, setLoadingProfile] = useState(true);
   const [loadingAvatar, setLoadingAvatar] = useState(false);
   const [loadingPassword, setLoadingPassword] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
+  // Load profile from backend on mount and sync to state + localStorage
   useEffect(() => {
-    // Har baar Profile page khulte hi latest avatar localStorage se le lo
-    const storedAvatar = localStorage.getItem("avatarUrl");
-    if (storedAvatar) {
-      setAvatarUrl(storedAvatar);
-    }
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const res = await API.get("/users/me");
+        const d = res.data;
+        if (cancelled) return;
+        if (d.name) { setName(d.name); localStorage.setItem("name", d.name); }
+        if (d.role) { setRole(d.role); localStorage.setItem("role", (d.role || "").toLowerCase()); }
+        if (d.email) { setEmail(d.email); localStorage.setItem("email", d.email); }
+        if (d.avatarUrl) {
+          const full = d.avatarUrl.startsWith("http") ? d.avatarUrl : `${getBackendBaseURL()}${d.avatarUrl}`;
+          setAvatarUrl(full);
+          localStorage.setItem("avatarUrl", full);
+        }
+      } catch (err) {
+        if (!cancelled) setError(err.response?.data?.message || "Could not load profile.");
+      } finally {
+        if (!cancelled) setLoadingProfile(false);
+      }
+    };
+    load();
+    return () => { cancelled = true; };
+  }, []);
 
-    setLoadingProfile(false);
-
-    // Cleanup: component unmount hone par camera band kar do
+  useEffect(() => {
     return () => {
       if (cameraStream) {
         cameraStream.getTracks().forEach((t) => t.stop());
@@ -69,7 +86,7 @@ const Profile = () => {
         video.srcObject = stream;
         video.play();
       }
-    } catch (err) {
+    } catch {
       setCameraError("Camera open nahi ho pa rahi. Permission allow karein.");
     }
   };
@@ -131,11 +148,9 @@ const Profile = () => {
 
       let urlFromServer = res.data?.avatarUrl || res.data?.url || avatarUrl;
 
-      // Ensure full URL (http://localhost:5002 + /uploads/..)
+      // Ensure full URL for img src (e.g. http://localhost:5002/uploads/...)
       if (urlFromServer && !urlFromServer.startsWith("http")) {
-        const apiBase = API.defaults.baseURL || "";
-        const serverBase = apiBase.replace(/\/api\/?$/, "");
-        urlFromServer = `${serverBase}${urlFromServer}`;
+        urlFromServer = `${getBackendBaseURL()}${urlFromServer.startsWith("/") ? "" : "/"}${urlFromServer}`;
       }
 
       if (urlFromServer) {
@@ -222,13 +237,16 @@ const Profile = () => {
           <div>
             <h2 className="text-2xl font-bold text-white">{name || "User"}</h2>
             <p className="text-sm text-indigo-100">{prettyRole}</p>
+            {email && (
+              <p className="text-xs text-indigo-100/80 mt-1">{email}</p>
+            )}
           </div>
 
           <form onSubmit={handleAvatarUpload} className="w-full space-y-3 mt-2">
             {/* File from system */}
             <input
               type="file"
-              accept="image/*"
+              accept="image/png,image/jpeg,image/webp"
               onChange={handleAvatarChange}
               className="w-full text-sm text-indigo-100 file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-500 file:text-white hover:file:bg-indigo-600"
             />

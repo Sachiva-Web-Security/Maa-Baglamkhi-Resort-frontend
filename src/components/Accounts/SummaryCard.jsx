@@ -4,7 +4,6 @@ const SummaryCard = ({
   label,
   value,
   valueColor = "default",
-  bg = "default",
   onClick,
 }) => {
   const valueColorClasses = {

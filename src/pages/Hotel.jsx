@@ -267,54 +267,6 @@ const Hotel = () => {
     }
   };
 
-  const handleRoomClick = (room) => {
-    setSelectedRoom(room);
-  };
-
-  const handleRoomCheckIn = (room) => {
-    setSelectedRoom(room);
-    openModal('expressCheckIn');
-  };
-
-  const handleRoomCheckOut = (room) => {
-    const booking = bookings.find(b => b.room === room.number);
-    if (booking) {
-      handleCheckOut(booking);
-    }
-  };
-
-  const handleMarkCleaning = async (room) => {
-    try {
-      await API.put(`/hotel/room/${room.number}/status`, { status: 'Cleaning' });
-      setRooms(prev => prev.map(r =>
-        r.number === room.number
-          ? { ...r, status: 'Cleaning', guest: null, checkIn: null, checkOut: null }
-          : r
-      ));
-
-      setBookings(prev => prev.filter(b => b.room !== room.number));
-      alert(`Room ${room.number} marked for cleaning`);
-    } catch (err) {
-      console.error("Error setting room to cleaning", err);
-      alert("Error marking room for cleaning");
-    }
-  };
-
-  const handleMarkAvailable = async (room) => {
-    try {
-      await API.put(`/hotel/room/${room.number}/status`, { status: 'Available' });
-      setRooms(prev => prev.map(r =>
-        r.number === room.number
-          ? { ...r, status: 'Available' }
-          : r
-      ));
-      alert(`Room ${room.number} is now available`);
-    } catch (err) {
-      console.error("Error setting room to available", err);
-      alert("Error marking room as available");
-    }
-  };
-
   const handleBillGenerated = (bookingId) => {
     setBookings(prev => prev.map(b =>
       b.id === bookingId ? { ...b, billGenerated: 1 } : b

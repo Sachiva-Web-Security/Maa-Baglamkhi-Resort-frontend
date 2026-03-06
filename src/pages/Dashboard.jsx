@@ -17,6 +17,7 @@ import MonthlyRevenueChart from "../components/Dashboard/Charts/MonthlyRevenueCh
 import RoomOccupancyChart from "../components/Dashboard/Charts/RoomOccupancyChart";
 import FoodSalesChart from "../components/Dashboard/Charts/FoodSalesChart";
 import HomePage from "../components/HomePage/HomePage";
+import API from "../api";
 
 const Dashboard = () => {
   const navigate = useNavigate();
