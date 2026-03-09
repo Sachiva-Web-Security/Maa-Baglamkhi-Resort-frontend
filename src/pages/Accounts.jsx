@@ -1,15 +1,19 @@
-import { useEffect, useMemo, useState } from 'react';
-import SummaryCard from '../components/Accounts/SummaryCard';
-import RecordRow from '../components/Accounts/RecordRow';
-import ReportCard from '../components/Accounts/ReportCard';
-import Modal from '../components/Hotel/Modal';
-import TransactionForm from '../components/Accounts/forms/TransactionForm';
-import InvoiceForm from '../components/Accounts/forms/InvoiceForm';
-import './Accounts.css';
+import { useEffect, useMemo, useState } from "react";
+import SummaryCard from "../components/Accounts/SummaryCard";
+import RecordRow from "../components/Accounts/RecordRow";
+import ReportCard from "../components/Accounts/ReportCard";
+import Modal from "../components/Hotel/Modal";
+import TransactionForm from "../components/Accounts/forms/TransactionForm";
+import InvoiceForm from "../components/Accounts/forms/InvoiceForm";
+import "./Accounts.css";
 import API from "../api";
 
 const formatINR = (amount) =>
-  new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
+  new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0,
+  }).format(amount);
 
 const Accounts = () => {
   const [records, setRecords] = useState([]);
@@ -25,21 +29,23 @@ const Accounts = () => {
   const [selectedRecord, setSelectedRecord] = useState(null);
 
   const totals = useMemo(() => {
-    const income = records.filter((r) => r.type === 'Income').reduce((sum, r) => sum + r.amount, 0);
-    const expense = records.filter((r) => r.type === 'Expense').reduce((sum, r) => sum + r.amount, 0);
+    const income = records
+      .filter((r) => r.type === "Income")
+      .reduce((sum, r) => sum + r.amount, 0);
+    const expense = records
+      .filter((r) => r.type === "Expense")
+      .reduce((sum, r) => sum + r.amount, 0);
     const net = income - expense;
     const gstPayable = Math.round(income * 0.05);
     return { income, expense, net, gstPayable };
   }, [records]);
 
   const openModal = (name) => setModals((prev) => ({ ...prev, [name]: true }));
-  const closeModal = (name) => setModals((prev) => ({ ...prev, [name]: false }));
+  const closeModal = (name) =>
+    setModals((prev) => ({ ...prev, [name]: false }));
 
   const addRecord = (record) => {
-    setRecords((prev) => [
-      { id: Date.now(), ...record },
-      ...prev,
-    ]);
+    setRecords((prev) => [{ id: Date.now(), ...record }, ...prev]);
   };
 
   useEffect(() => {
@@ -60,13 +66,13 @@ const Accounts = () => {
       addRecord({
         id: res.data?.id,
         date: data.date,
-        type: 'Income',
+        type: "Income",
         description: data.description,
         amount: data.amount,
         paymentMode: data.paymentMode,
       });
-      closeModal('addIncome');
-      alert('Income added');
+      closeModal("addIncome");
+      alert("Income added");
     } catch (err) {
       console.error("Error adding income", err);
       alert("Error adding income");
@@ -79,44 +85,44 @@ const Accounts = () => {
       addRecord({
         id: res.data?.id,
         date: data.date,
-        type: 'Expense',
+        type: "Expense",
         description: data.description,
         amount: data.amount,
         paymentMode: data.paymentMode,
       });
-      closeModal('addExpense');
-      alert('Expense added');
+      closeModal("addExpense");
+      alert("Expense added");
     } catch (err) {
       console.error("Error adding expense", err);
       alert("Error adding expense");
     }
   };
-const handleGenerateInvoice = async (invoice) => {
-  try {
-    // 🔥 Save invoice in invoices table
-    const res = await API.post("/invoices/create", invoice);
+  const handleGenerateInvoice = async (invoice) => {
+    try {
+      // 🔥 Save invoice in invoices table
+      const res = await API.post("/invoices/create", invoice);
 
-    // 🔥 ALSO treat it as income entry
-    addRecord({
-      id: res.data?.id || Date.now(),
-      date: invoice.date,
-      type: "Income",
-      description: `Invoice ${invoice.invoiceNo} - ${invoice.customerName}`,
-      amount: invoice.amount,
-      paymentMode: invoice.paymentMode,
-    });
+      // 🔥 ALSO treat it as income entry
+      addRecord({
+        id: res.data?.id || Date.now(),
+        date: invoice.date,
+        type: "Income",
+        description: `Invoice ${invoice.invoiceNo} - ${invoice.customerName}`,
+        amount: invoice.amount,
+        paymentMode: invoice.paymentMode,
+      });
 
-    alert("Invoice generated successfully");
-    closeModal("invoice");
-  } catch (err) {
-    console.error("Error generating invoice", err);
-    alert("Error generating invoice");
-  }
-};
- 
+      alert("Invoice generated successfully");
+      closeModal("invoice");
+    } catch (err) {
+      console.error("Error generating invoice", err);
+      alert("Error generating invoice");
+    }
+  };
+
   const handleView = (record) => {
     setSelectedRecord(record);
-    openModal('view');
+    openModal("view");
   };
 
   const handleNightAudit = () => {
@@ -126,25 +132,37 @@ const handleGenerateInvoice = async (invoice) => {
         totals.expense,
       )}\nNet Profit: ${formatINR(totals.net)}\nGST Payable: ${formatINR(totals.gstPayable)}`,
     );
-    closeModal('audit');
+    closeModal("audit");
   };
 
   return (
-    <div className="min-h-screen w-280 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-slate-100 p-8">
-      <h1 className="accounts-title pl-100">Accounts & Finance</h1>
+    <div className="min-h-screen w-full bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-slate-100 p-4 sm:p-6 lg:p-8">
+      <h1 className="accounts-title">Accounts & Finance</h1>
 
       {/* Top Action Buttons */}
       <div className="accounts-actions">
-        <button className="accounts-action-btn bg-gradient-to-r from-pink-400 to-blue-600" onClick={() => openModal('addIncome')}>
+        <button
+          className="accounts-action-btn bg-gradient-to-r from-pink-400 to-blue-600"
+          onClick={() => openModal("addIncome")}
+        >
           + Add Income
         </button>
-        <button className="accounts-action-btn bg-gradient-to-r from-yellow-400 to-orange-500" onClick={() => openModal('addExpense')}>
+        <button
+          className="accounts-action-btn bg-gradient-to-r from-yellow-400 to-orange-500"
+          onClick={() => openModal("addExpense")}
+        >
           + Add Expense
         </button>
-        <button className="accounts-action-btn bg-gradient-to-r from-blue-400 to-cyan-500" onClick={() => openModal('invoice')}>
+        <button
+          className="accounts-action-btn bg-gradient-to-r from-blue-400 to-cyan-500"
+          onClick={() => openModal("invoice")}
+        >
           Generate Invoice
         </button>
-        <button className="accounts-action-btn bg-gradient-to-r from-purple-400 to-indigo-500" onClick={() => openModal('audit')}>
+        <button
+          className="accounts-action-btn bg-gradient-to-r from-purple-400 to-indigo-500"
+          onClick={() => openModal("audit")}
+        >
           Night Audit
         </button>
       </div>
@@ -184,7 +202,9 @@ const handleGenerateInvoice = async (invoice) => {
       {/* Income & Expense Table */}
       <div className="accounts-table-card">
         <div className="accounts-table-card__header">
-          <h2 className="accounts-table-card__title">Income & Expense Records</h2>
+          <h2 className="accounts-table-card__title">
+            Income & Expense Records
+          </h2>
         </div>
 
         <div className="accounts-table-wrap">
@@ -214,61 +234,101 @@ const handleGenerateInvoice = async (invoice) => {
           variant="blue"
           title="Profit & Loss Report"
           subtitle="View monthly P&L summary"
-          onClick={() => alert('Profit & Loss Report (demo)')}
+          onClick={() => alert("Profit & Loss Report (demo)")}
         />
         <ReportCard
           variant="green"
           title="GST Report"
           subtitle="Download GST statement"
-          onClick={() => alert('GST Report (demo)')}
+          onClick={() => alert("GST Report (demo)")}
         />
         <ReportCard
           variant="purple"
           title="Cash Collection Report"
           subtitle="Daily cashier summary"
-          onClick={() => alert('Cash Collection Report (demo)')}
+          onClick={() => alert("Cash Collection Report (demo)")}
         />
       </div>
 
       {/* Modals */}
-      <Modal isOpen={modals.addIncome} onClose={() => closeModal('addIncome')} title="Add Income">
-        <TransactionForm type="Income" onSubmit={handleAddIncome} onCancel={() => closeModal('addIncome')} />
+      <Modal
+        isOpen={modals.addIncome}
+        onClose={() => closeModal("addIncome")}
+        title="Add Income"
+      >
+        <TransactionForm
+          type="Income"
+          onSubmit={handleAddIncome}
+          onCancel={() => closeModal("addIncome")}
+        />
       </Modal>
 
-      <Modal isOpen={modals.addExpense} onClose={() => closeModal('addExpense')} title="Add Expense">
-        <TransactionForm type="Expense" onSubmit={handleAddExpense} onCancel={() => closeModal('addExpense')} />
+      <Modal
+        isOpen={modals.addExpense}
+        onClose={() => closeModal("addExpense")}
+        title="Add Expense"
+      >
+        <TransactionForm
+          type="Expense"
+          onSubmit={handleAddExpense}
+          onCancel={() => closeModal("addExpense")}
+        />
       </Modal>
 
-      <Modal isOpen={modals.invoice} onClose={() => closeModal('invoice')} title="Generate Invoice">
-        <InvoiceForm onSubmit={handleGenerateInvoice} onCancel={() => closeModal('invoice')} />
+      <Modal
+        isOpen={modals.invoice}
+        onClose={() => closeModal("invoice")}
+        title="Generate Invoice"
+      >
+        <InvoiceForm
+          onSubmit={handleGenerateInvoice}
+          onCancel={() => closeModal("invoice")}
+        />
       </Modal>
 
-      <Modal isOpen={modals.view} onClose={() => closeModal('view')} title="Record Details">
+      <Modal
+        isOpen={modals.view}
+        onClose={() => closeModal("view")}
+        title="Record Details"
+      >
         {selectedRecord ? (
           <div className="accounts-view">
             <div className="accounts-view__row">
               <span className="accounts-view__label">Date</span>
-              <span className="accounts-view__value">{selectedRecord.date}</span>
+              <span className="accounts-view__value">
+                {selectedRecord.date}
+              </span>
             </div>
             <div className="accounts-view__row">
               <span className="accounts-view__label">Type</span>
-              <span className="accounts-view__value">{selectedRecord.type}</span>
+              <span className="accounts-view__value">
+                {selectedRecord.type}
+              </span>
             </div>
             <div className="accounts-view__row">
               <span className="accounts-view__label">Description</span>
-              <span className="accounts-view__value">{selectedRecord.description}</span>
+              <span className="accounts-view__value">
+                {selectedRecord.description}
+              </span>
             </div>
             <div className="accounts-view__row">
               <span className="accounts-view__label">Amount</span>
-              <span className="accounts-view__value">{formatINR(selectedRecord.amount)}</span>
+              <span className="accounts-view__value">
+                {formatINR(selectedRecord.amount)}
+              </span>
             </div>
             <div className="accounts-view__row">
               <span className="accounts-view__label">Payment Mode</span>
-              <span className="accounts-view__value">{selectedRecord.paymentMode}</span>
+              <span className="accounts-view__value">
+                {selectedRecord.paymentMode}
+              </span>
             </div>
 
             <div className="accounts-view__actions">
-              <button className="accounts-btn accounts-btn--ghost" onClick={() => closeModal('view')}>
+              <button
+                className="accounts-btn accounts-btn--ghost"
+                onClick={() => closeModal("view")}
+              >
                 Close
               </button>
             </div>
@@ -276,9 +336,15 @@ const handleGenerateInvoice = async (invoice) => {
         ) : null}
       </Modal>
 
-      <Modal isOpen={modals.audit} onClose={() => closeModal('audit')} title="Night Audit">
+      <Modal
+        isOpen={modals.audit}
+        onClose={() => closeModal("audit")}
+        title="Night Audit"
+      >
         <div className="accounts-audit">
-          <p className="accounts-audit__text">This will summarize today’s income/expense totals (demo).</p>
+          <p className="accounts-audit__text">
+            This will summarize today’s income/expense totals (demo).
+          </p>
           <ul className="accounts-audit__list">
             <li>
               <strong>Total Income:</strong> {formatINR(totals.income)}
@@ -295,10 +361,16 @@ const handleGenerateInvoice = async (invoice) => {
           </ul>
 
           <div className="accounts-audit__actions">
-            <button className="accounts-btn accounts-btn--ghost" onClick={() => closeModal('audit')}>
+            <button
+              className="accounts-btn accounts-btn--ghost"
+              onClick={() => closeModal("audit")}
+            >
               Cancel
             </button>
-            <button className="accounts-btn accounts-btn--primary" onClick={handleNightAudit}>
+            <button
+              className="accounts-btn accounts-btn--primary"
+              onClick={handleNightAudit}
+            >
               Run Night Audit
             </button>
           </div>
@@ -309,4 +381,3 @@ const handleGenerateInvoice = async (invoice) => {
 };
 
 export default Accounts;
-

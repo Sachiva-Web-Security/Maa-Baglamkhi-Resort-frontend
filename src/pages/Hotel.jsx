@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import API from "../api";
-import SummaryCard from '../components/Hotel/SummaryCard';
-import RoomCard from '../components/Hotel/RoomCard';
-import BookingRow from '../components/Hotel/BookingRow';
-import Modal from '../components/Hotel/Modal';
-import BookingForm from '../components/Hotel/BookingForm';
-import './Hotel.css';
+import SummaryCard from "../components/Hotel/SummaryCard";
+import RoomCard from "../components/Hotel/RoomCard";
+import BookingRow from "../components/Hotel/BookingRow";
+import Modal from "../components/Hotel/Modal";
+import BookingForm from "../components/Hotel/BookingForm";
+import "./Hotel.css";
 
 const Hotel = () => {
   const [rooms, setRooms] = useState([]);
@@ -41,16 +41,16 @@ const Hotel = () => {
 
   // Calculate summary statistics
   const totalRooms = rooms.length;
-  const availableRooms = rooms.filter(r => r.status === 'Available').length;
-  const occupiedRooms = rooms.filter(r => r.status === 'Occupied').length;
-  const cleaningRooms = rooms.filter(r => r.status === 'Cleaning').length;
+  const availableRooms = rooms.filter((r) => r.status === "Available").length;
+  const occupiedRooms = rooms.filter((r) => r.status === "Occupied").length;
+  const cleaningRooms = rooms.filter((r) => r.status === "Cleaning").length;
 
   const openModal = (modalName) => {
-    setModals(prev => ({ ...prev, [modalName]: true }));
+    setModals((prev) => ({ ...prev, [modalName]: true }));
   };
 
   const closeModal = (modalName) => {
-    setModals(prev => ({ ...prev, [modalName]: false }));
+    setModals((prev) => ({ ...prev, [modalName]: false }));
     setSelectedBooking(null);
     setSelectedRoom(null);
   };
@@ -86,17 +86,19 @@ const Hotel = () => {
         prev.map((room) =>
           room.number === formData.room
             ? {
-              ...room,
-              status: "Occupied",
-              guest: formData.guestName,
-              checkIn: formData.checkIn,
-              checkOut: formData.checkOut,
-            }
-            : room
-        )
+                ...room,
+                status: "Occupied",
+                guest: formData.guestName,
+                checkIn: formData.checkIn,
+                checkOut: formData.checkOut,
+              }
+            : room,
+        ),
       );
 
-      alert(`Booking created for ${formData.guestName} in Room ${formData.room}`);
+      alert(
+        `Booking created for ${formData.guestName} in Room ${formData.room}`,
+      );
       closeModal("newBooking");
     } catch (err) {
       console.error("Error creating booking", err);
@@ -106,11 +108,15 @@ const Hotel = () => {
 
   const handleExpressCheckIn = (formData) => {
     handleNewBooking(formData);
-    closeModal('expressCheckIn');
+    closeModal("expressCheckIn");
   };
 
   const handleCheckOut = async (booking) => {
-    if (!window.confirm(`Check out ${booking.guestName} from Room ${booking.room}?`)) {
+    if (
+      !window.confirm(
+        `Check out ${booking.guestName} from Room ${booking.room}?`,
+      )
+    ) {
       return;
     }
 
@@ -125,14 +131,14 @@ const Hotel = () => {
         prev.map((room) =>
           room.number === booking.room
             ? {
-              ...room,
-              status: "Cleaning",
-              guest: null,
-              checkIn: null,
-              checkOut: null,
-            }
-            : room
-        )
+                ...room,
+                status: "Cleaning",
+                guest: null,
+                checkIn: null,
+                checkOut: null,
+              }
+            : room,
+        ),
       );
 
       alert(`${booking.guestName} checked out successfully`);
@@ -144,20 +150,24 @@ const Hotel = () => {
   };
 
   const handleNightAudit = async () => {
-    if (window.confirm('Run Night Audit? This will process all check-ins and check-outs for today.')) {
+    if (
+      window.confirm(
+        "Run Night Audit? This will process all check-ins and check-outs for today.",
+      )
+    ) {
       try {
         await API.post("/hotel/night-audit");
 
         // Refresh all data
         const [roomsRes, bookingsRes] = await Promise.all([
           API.get("/hotel/rooms"),
-          API.get("/hotel/bookings")
+          API.get("/hotel/bookings"),
         ]);
         setRooms(roomsRes.data);
         setBookings(bookingsRes.data);
 
-        alert('Night Audit completed successfully!');
-        closeModal('nightAudit');
+        alert("Night Audit completed successfully!");
+        closeModal("nightAudit");
       } catch (err) {
         console.error("Error running night audit", err);
         alert("Error during night audit");
@@ -169,7 +179,9 @@ const Hotel = () => {
     try {
       if (!formData.roomNumber) return alert("Please enter a room number");
 
-      const res = await API.post("/hotel/room", { roomNumber: formData.roomNumber });
+      const res = await API.post("/hotel/room", {
+        roomNumber: formData.roomNumber,
+      });
 
       const newRoom = {
         id: res.data.id || Date.now(),
@@ -177,13 +189,17 @@ const Hotel = () => {
         status: "Available",
         guest: null,
         checkIn: null,
-        checkOut: null
+        checkOut: null,
       };
 
-      setRooms(prev => [...prev, newRoom].sort((a, b) => String(a.number).localeCompare(String(b.number))));
+      setRooms((prev) =>
+        [...prev, newRoom].sort((a, b) =>
+          String(a.number).localeCompare(String(b.number)),
+        ),
+      );
 
       alert(`Room ${formData.roomNumber} added successfully!`);
-      closeModal('addRoom');
+      closeModal("addRoom");
     } catch (err) {
       console.error("Error adding room", err);
       if (err.response?.data?.message) {
@@ -196,7 +212,7 @@ const Hotel = () => {
 
   const handleExtend = (booking) => {
     setSelectedBooking(booking);
-    openModal('extend');
+    openModal("extend");
   };
 
   const handleExtendSubmit = async (formData) => {
@@ -210,14 +226,18 @@ const Hotel = () => {
       });
 
       // Optimistic update
-      setBookings(prev => prev.map(b =>
-        b.id === bookingId ? { ...b, checkOut: formData.checkOut } : b
-      ));
-      setRooms(prev => prev.map(r =>
-        r.number === room ? { ...r, checkOut: formData.checkOut } : r
-      ));
+      setBookings((prev) =>
+        prev.map((b) =>
+          b.id === bookingId ? { ...b, checkOut: formData.checkOut } : b,
+        ),
+      );
+      setRooms((prev) =>
+        prev.map((r) =>
+          r.number === room ? { ...r, checkOut: formData.checkOut } : r,
+        ),
+      );
 
-      closeModal('extend');
+      closeModal("extend");
       alert(`Booking extended for ${guestName}`);
     } catch (err) {
       console.error("Error extending booking", err);
@@ -227,11 +247,12 @@ const Hotel = () => {
 
   const handleShiftRoom = (booking) => {
     setSelectedBooking(booking);
-    openModal('shiftRoom');
+    openModal("shiftRoom");
   };
 
   const handleShiftRoomSubmit = async (formData) => {
-    const { bookingId, newRoom, guestName, oldRoom, checkIn, checkOut } = formData;
+    const { bookingId, newRoom, guestName, oldRoom, checkIn, checkOut } =
+      formData;
     try {
       await API.post("/hotel/shift", {
         id: bookingId,
@@ -244,19 +265,32 @@ const Hotel = () => {
 
       // Update bookings
       setBookings((prev) =>
-        prev.map((b) => (b.id === bookingId ? { ...b, room: newRoom } : b))
+        prev.map((b) => (b.id === bookingId ? { ...b, room: newRoom } : b)),
       );
 
       // Update room statuses
       setRooms((prev) =>
         prev.map((r) => {
-          if (r.number === oldRoom) return { ...r, status: "Cleaning", guest: null, checkIn: null, checkOut: null };
+          if (r.number === oldRoom)
+            return {
+              ...r,
+              status: "Cleaning",
+              guest: null,
+              checkIn: null,
+              checkOut: null,
+            };
           if (r.number === newRoom) {
-            const booking = bookings.find(b => b.id === bookingId);
-            return { ...r, status: "Occupied", guest: guestName, checkIn: booking?.checkIn, checkOut: booking?.checkOut };
+            const booking = bookings.find((b) => b.id === bookingId);
+            return {
+              ...r,
+              status: "Occupied",
+              guest: guestName,
+              checkIn: booking?.checkIn,
+              checkOut: booking?.checkOut,
+            };
           }
           return r;
-        })
+        }),
       );
 
       alert(`Room shifted for ${guestName} to Room ${newRoom}`);
@@ -273,11 +307,11 @@ const Hotel = () => {
 
   const handleRoomCheckIn = (room) => {
     setSelectedRoom(room);
-    openModal('expressCheckIn');
+    openModal("expressCheckIn");
   };
 
   const handleRoomCheckOut = (room) => {
-    const booking = bookings.find(b => b.room === room.number);
+    const booking = bookings.find((b) => b.room === room.number);
     if (booking) {
       handleCheckOut(booking);
     }
@@ -285,14 +319,24 @@ const Hotel = () => {
 
   const handleMarkCleaning = async (room) => {
     try {
-      await API.put(`/hotel/room/${room.number}/status`, { status: 'Cleaning' });
-      setRooms(prev => prev.map(r =>
-        r.number === room.number
-          ? { ...r, status: 'Cleaning', guest: null, checkIn: null, checkOut: null }
-          : r
-      ));
+      await API.put(`/hotel/room/${room.number}/status`, {
+        status: "Cleaning",
+      });
+      setRooms((prev) =>
+        prev.map((r) =>
+          r.number === room.number
+            ? {
+                ...r,
+                status: "Cleaning",
+                guest: null,
+                checkIn: null,
+                checkOut: null,
+              }
+            : r,
+        ),
+      );
 
-      setBookings(prev => prev.filter(b => b.room !== room.number));
+      setBookings((prev) => prev.filter((b) => b.room !== room.number));
       alert(`Room ${room.number} marked for cleaning`);
     } catch (err) {
       console.error("Error setting room to cleaning", err);
@@ -302,12 +346,14 @@ const Hotel = () => {
 
   const handleMarkAvailable = async (room) => {
     try {
-      await API.put(`/hotel/room/${room.number}/status`, { status: 'Available' });
-      setRooms(prev => prev.map(r =>
-        r.number === room.number
-          ? { ...r, status: 'Available' }
-          : r
-      ));
+      await API.put(`/hotel/room/${room.number}/status`, {
+        status: "Available",
+      });
+      setRooms((prev) =>
+        prev.map((r) =>
+          r.number === room.number ? { ...r, status: "Available" } : r,
+        ),
+      );
       alert(`Room ${room.number} is now available`);
     } catch (err) {
       console.error("Error setting room to available", err);
@@ -316,39 +362,41 @@ const Hotel = () => {
   };
 
   const handleBillGenerated = (bookingId) => {
-    setBookings(prev => prev.map(b =>
-      b.id === bookingId ? { ...b, billGenerated: 1 } : b
-    ));
+    setBookings((prev) =>
+      prev.map((b) => (b.id === bookingId ? { ...b, billGenerated: 1 } : b)),
+    );
   };
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-200 p-6">
+    <div className="min-h-screen w-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-200 p-4 sm:p-6 lg:p-8 overflow-x-hidden">
       {/* Page Title */}
-      <h1 className="text-amber-50 text-2xl font-bold mb-10 w-full text-center">Hotel Management</h1>
+      <h1 className="text-amber-50 text-xl sm:text-2xl md:text-3xl font-bold mb-8  text-center">
+        Hotel Management
+      </h1>
 
       {/* Top Action Buttons */}
-      <div className="flex flex-wrap gap-4 mb-10 justify-center">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-6 sm:mb-10">
         <button
-          className="h-12 w-60 bg-slate-700 hover:bg-slate-600 text-white rounded-full transition shadow-lg"
-          onClick={() => openModal('newBooking')}
+          className="h-10 sm:h-12 w-full bg-slate-700 hover:bg-blue-600 text-white rounded-full transition shadow-lg text-sm sm:text-base"
+          onClick={() => openModal("newBooking")}
         >
           + New Booking
         </button>
         <button
-          className="h-12 w-60 bg-slate-700 hover:bg-slate-600 text-white rounded-full transition shadow-lg"
-          onClick={() => openModal('expressCheckIn')}
+          className="h-10 sm:h-12 w-full bg-slate-700 hover:bg-blue-600 text-white rounded-full transition shadow-lg text-sm sm:text-base"
+          onClick={() => openModal("expressCheckIn")}
         >
           Express Check-In
         </button>
 
         <button
-          className="h-12 w-60 bg-slate-700 hover:bg-slate-600 text-white rounded-full transition shadow-lg"
+          className="h-10 sm:h-12 w-full bg-slate-700 hover:bg-blue-600 text-white rounded-full transition shadow-lg text-sm sm:text-base"
           onClick={() => {
             if (bookings.length > 0) {
               setSelectedBooking(bookings[0]);
-              openModal('checkOut');
+              openModal("checkOut");
             } else {
-              alert('No active bookings to check out');
+              alert("No active bookings to check out");
             }
           }}
         >
@@ -356,36 +404,42 @@ const Hotel = () => {
         </button>
 
         <button
-          className="h-12 w-60 bg-slate-700 hover:bg-slate-600 text-white rounded-full transition shadow-lg"
-          onClick={() => openModal('nightAudit')}
+          className="h-10 sm:h-12 w-full bg-slate-700 hover:bg-blue-600 text-white rounded-full transition shadow-lg text-sm sm:text-base"
+          onClick={() => openModal("nightAudit")}
         >
           Night Audit
         </button>
 
         <button
-          className="h-12 w-60 bg-blue-600 hover:bg-blue-500 text-white rounded-full transition shadow-lg"
-          onClick={() => { setSelectedBooking(null); openModal('extend'); }}
+          className="h-10 sm:h-12 w-full bg-slate-600 hover:bg-blue-500 text-white rounded-full transition shadow-lg text-sm sm:text-base"
+          onClick={() => {
+            setSelectedBooking(null);
+            openModal("extend");
+          }}
         >
           Extend
         </button>
 
         <button
-          className="h-12 w-60 bg-yellow-600 hover:bg-yellow-500 text-white rounded-full transition shadow-lg"
-          onClick={() => { setSelectedBooking(null); openModal('shiftRoom'); }}
+          className="h-10 sm:h-12 w-full bg-slate-600 hover:bg-blue-500 text-white rounded-full transition shadow-lg text-sm sm:text-base"
+          onClick={() => {
+            setSelectedBooking(null);
+            openModal("shiftRoom");
+          }}
         >
           Shift Room
         </button>
 
         <button
-          className="h-12 w-60 bg-green-600 hover:bg-green-500 text-white rounded-full transition shadow-lg"
-          onClick={() => openModal('addRoom')}
+          className="h-10 sm:h-12 w-full bg-slate-600 hover:bg-blue-500 text-white rounded-full transition shadow-lg text-sm sm:text-base"
+          onClick={() => openModal("addRoom")}
         >
           + Add New Room
         </button>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-10">
         <SummaryCard
           label="Total Rooms"
           value={totalRooms}
@@ -414,20 +468,33 @@ const Hotel = () => {
         />
       </div>
 
-
       {/* Booking Table */}
-      <div className="w-full max-w-7xl mx-auto bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-6 transition duration-300">
-        <h2 className="text-xl font-semibold text-white mb-6">Active Bookings</h2>
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm text-gray-200">
+      <div className="w-full max-w-7xl mx-auto bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-4 sm:p-6 transition duration-300">
+        <h2 className="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6">
+          Active Bookings
+        </h2>
+        <div className="overflow-x-hidden">
+          <table className="w-full text-xs sm:text-sm text-gray-200">
             <thead className="border-b border-white/10 text-gray-400 text-xs uppercase tracking-wider">
               <tr>
-                <th className="px-4 py-3 text-left whitespace-nowrap">Guest Name</th>
-                <th className="px-4 py-3 text-left whitespace-nowrap">Room</th>
-                <th className="px-4 py-3 text-left whitespace-nowrap">Check-In</th>
-                <th className="px-4 py-3 text-left whitespace-nowrap">Check-Out</th>
-                <th className="px-4 py-3 text-left whitespace-nowrap">Status</th>
-                <th className="px-4 py-3 text-left whitespace-nowrap min-w-[300px]">Action</th>
+                <th className="px-2 sm:px-4 py-2 sm:py-3 text-left whitespace-nowrap ">
+                  Guest Name
+                </th>
+                <th className="px-2 sm:px-4 py-2 sm:py-3 text-left whitespace-nowrap">
+                  Room
+                </th>
+                <th className="px-2 sm:px-4 py-2 sm:py-3 text-left whitespace-nowrap">
+                  Check-In
+                </th>
+                <th className="px-2 sm:px-4 py-2 sm:py-3 text-left whitespace-nowrap hidden sm:table-cell">
+                  Check-Out
+                </th>
+                <th className="px-2 sm:px-4 py-2 sm:py-3 text-left whitespace-nowrap hidden sm:table-cell">
+                  Status
+                </th>
+                <th className="px-2 sm:px-4 py-2 sm:py-3 text-left whitespace-nowrap min-w-[180px] sm:min-w-[220px]">
+                  Action
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
@@ -443,7 +510,12 @@ const Hotel = () => {
               ))}
               {bookings.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-10 text-center text-gray-500 italic">No active bookings found.</td>
+                  <td
+                    colSpan={6}
+                    className="px-4 py-10 text-center text-gray-500 italic"
+                  >
+                    No active bookings found.
+                  </td>
                 </tr>
               )}
             </tbody>
@@ -454,92 +526,152 @@ const Hotel = () => {
       {/* Modals */}
       <Modal
         isOpen={modals.newBooking}
-        onClose={() => closeModal('newBooking')}
+        onClose={() => closeModal("newBooking")}
         title="New Booking"
       >
         <BookingForm
           onSubmit={handleNewBooking}
-          onCancel={() => closeModal('newBooking')}
-          availableRooms={rooms.filter(r => r.status === 'Available' || r.status === 'Cleaning')}
+          onCancel={() => closeModal("newBooking")}
+          availableRooms={rooms.filter(
+            (r) => r.status === "Available" || r.status === "Cleaning",
+          )}
         />
       </Modal>
 
       <Modal
         isOpen={modals.expressCheckIn}
-        onClose={() => closeModal('expressCheckIn')}
+        onClose={() => closeModal("expressCheckIn")}
         title="Express Check-In"
       >
         <BookingForm
           onSubmit={handleExpressCheckIn}
-          onCancel={() => closeModal('expressCheckIn')}
+          onCancel={() => closeModal("expressCheckIn")}
           initialData={selectedRoom ? { room: selectedRoom.number } : {}}
-          availableRooms={rooms.filter(r => r.status === 'Available')}
+          availableRooms={rooms.filter((r) => r.status === "Available")}
         />
       </Modal>
 
-      <Modal isOpen={modals.checkOut} onClose={() => closeModal('checkOut')} title="Check-Out">
+      <Modal
+        isOpen={modals.checkOut}
+        onClose={() => closeModal("checkOut")}
+        title="Check-Out"
+      >
         <CheckOutPanel
           bookings={bookings}
           onConfirm={handleCheckOut}
-          onCancel={() => closeModal('checkOut')}
+          onCancel={() => closeModal("checkOut")}
         />
       </Modal>
 
-      <Modal isOpen={modals.nightAudit} onClose={() => closeModal('nightAudit')} title="Night Audit">
+      <Modal
+        isOpen={modals.nightAudit}
+        onClose={() => closeModal("nightAudit")}
+        title="Night Audit"
+      >
         <div className="space-y-4">
-          <p className="text-gray-600 text-sm">Process all check-ins and check-outs for today and generate a daily summary.</p>
+          <p className="text-gray-600 text-sm">
+            Process all check-ins and check-outs for today and generate a daily
+            summary.
+          </p>
           <div className="grid grid-cols-2 gap-3">
             {[
-              { label: "Total Rooms", value: totalRooms, color: "bg-indigo-50 text-indigo-700" },
-              { label: "Occupied", value: occupiedRooms, color: "bg-red-50 text-red-600" },
-              { label: "Available", value: availableRooms, color: "bg-green-50 text-green-600" },
-              { label: "Cleaning", value: cleaningRooms, color: "bg-yellow-50 text-yellow-600" },
+              {
+                label: "Total Rooms",
+                value: totalRooms,
+                color: "bg-indigo-50 text-indigo-700",
+              },
+              {
+                label: "Occupied",
+                value: occupiedRooms,
+                color: "bg-red-50 text-red-600",
+              },
+              {
+                label: "Available",
+                value: availableRooms,
+                color: "bg-green-50 text-green-600",
+              },
+              {
+                label: "Cleaning",
+                value: cleaningRooms,
+                color: "bg-yellow-50 text-yellow-600",
+              },
             ].map(({ label, value, color }) => (
-              <div key={label} className={`rounded-xl p-4 ${color} text-center`}>
+              <div
+                key={label}
+                className={`rounded-xl p-4 ${color} text-center`}
+              >
                 <p className="text-2xl font-bold">{value}</p>
                 <p className="text-xs font-medium mt-1">{label}</p>
               </div>
             ))}
           </div>
-          <p className="text-xs text-gray-500">Active Bookings: <strong>{bookings.filter(b => b.status === 'Occupied').length}</strong></p>
+          <p className="text-xs text-gray-500">
+            Active Bookings:{" "}
+            <strong>
+              {bookings.filter((b) => b.status === "Occupied").length}
+            </strong>
+          </p>
           <div className="flex justify-end gap-3 pt-2">
-            <button className="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200" onClick={() => closeModal('nightAudit')}>Cancel</button>
-            <button className="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 font-semibold" onClick={handleNightAudit}>Run Night Audit</button>
+            <button
+              className="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200"
+              onClick={() => closeModal("nightAudit")}
+            >
+              Cancel
+            </button>
+            <button
+              className="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 font-semibold"
+              onClick={handleNightAudit}
+            >
+              Run Night Audit
+            </button>
           </div>
         </div>
       </Modal>
 
-      <Modal isOpen={modals.extend} onClose={() => closeModal('extend')} title="Extend Booking">
+      <Modal
+        isOpen={modals.extend}
+        onClose={() => closeModal("extend")}
+        title="Extend Booking"
+      >
         <ExtendPanel
           bookings={bookings}
           selectedBooking={selectedBooking}
           onSubmit={handleExtendSubmit}
-          onCancel={() => closeModal('extend')}
+          onCancel={() => closeModal("extend")}
         />
       </Modal>
 
-      <Modal isOpen={modals.shiftRoom} onClose={() => closeModal('shiftRoom')} title="Shift Room">
+      <Modal
+        isOpen={modals.shiftRoom}
+        onClose={() => closeModal("shiftRoom")}
+        title="Shift Room"
+      >
         <ShiftPanel
           bookings={bookings}
           rooms={rooms}
           selectedBooking={selectedBooking}
           onSubmit={handleShiftRoomSubmit}
-          onCancel={() => closeModal('shiftRoom')}
+          onCancel={() => closeModal("shiftRoom")}
         />
       </Modal>
 
       <Modal
         isOpen={modals.addRoom}
-        onClose={() => closeModal('addRoom')}
+        onClose={() => closeModal("addRoom")}
         title="Add New Room"
       >
-        <form onSubmit={(e) => {
-          e.preventDefault();
-          const formData = new FormData(e.target);
-          handleAddNewRoom({ roomNumber: formData.get('roomNumber') });
-        }} className="space-y-4">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            handleAddNewRoom({ roomNumber: formData.get("roomNumber") });
+          }}
+          className="space-y-4"
+        >
           <div className="form-group mb-4">
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Room Number *</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Room Number *
+            </label>
             <input
               type="text"
               name="roomNumber"
@@ -547,16 +679,28 @@ const Hotel = () => {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-gray-800"
               placeholder="e.g. 201"
             />
-            <p className="text-xs text-gray-400 mt-1">Enter a unique room number. Room will be set as Available.</p>
+            <p className="text-xs text-gray-400 mt-1">
+              Enter a unique room number. Room will be set as Available.
+            </p>
           </div>
           <div className="bg-gray-50 rounded-lg p-3 text-sm text-gray-600">
-            📊 Currently <strong>{totalRooms}</strong> rooms — Available: <strong>{availableRooms}</strong>, Occupied: <strong>{occupiedRooms}</strong>, Cleaning: <strong>{cleaningRooms}</strong>
+            📊 Currently <strong>{totalRooms}</strong> rooms — Available:{" "}
+            <strong>{availableRooms}</strong>, Occupied:{" "}
+            <strong>{occupiedRooms}</strong>, Cleaning:{" "}
+            <strong>{cleaningRooms}</strong>
           </div>
           <div className="flex justify-end gap-3 pt-4 border-t">
-            <button type="button" className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200" onClick={() => closeModal('addRoom')}>
+            <button
+              type="button"
+              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+              onClick={() => closeModal("addRoom")}
+            >
               Cancel
             </button>
-            <button type="submit" className="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition">
+            <button
+              type="submit"
+              className="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition"
+            >
               Add Room
             </button>
           </div>
@@ -571,26 +715,30 @@ const Hotel = () => {
 const InfoRow = ({ label, value }) => (
   <div>
     <span className="text-gray-400 text-xs">{label}: </span>
-    <span className="text-gray-800 font-medium text-xs">{value || '—'}</span>
+    <span className="text-gray-800 font-medium text-xs">{value || "—"}</span>
   </div>
 );
 
 /** Check-Out Panel: search by room number */
 const CheckOutPanel = ({ bookings, onConfirm, onCancel }) => {
-  const [search, setSearch] = React.useState('');
-  const occupied = bookings.filter(b => b.status === 'Occupied' || b.status !== 'CheckedOut');
+  const [search, setSearch] = React.useState("");
+  const occupied = bookings.filter(
+    (b) => b.status === "Occupied" || b.status !== "CheckedOut",
+  );
   const found = search
-    ? occupied.find(b => String(b.room) === String(search.trim()))
+    ? occupied.find((b) => String(b.room) === String(search.trim()))
     : null;
 
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-1">Search by Room Number</label>
+        <label className="block text-sm font-semibold text-gray-700 mb-1">
+          Search by Room Number
+        </label>
         <input
           type="text"
           value={search}
-          onChange={e => setSearch(e.target.value)}
+          onChange={(e) => setSearch(e.target.value)}
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 outline-none text-gray-800"
           placeholder="e.g. 101"
           autoFocus
@@ -598,12 +746,16 @@ const CheckOutPanel = ({ bookings, onConfirm, onCancel }) => {
       </div>
 
       {search && !found && (
-        <p className="text-red-500 text-sm">No active booking found for Room {search}.</p>
+        <p className="text-red-500 text-sm">
+          No active booking found for Room {search}.
+        </p>
       )}
 
       {found && (
         <div className="bg-red-50 border border-red-200 rounded-xl p-4 space-y-2">
-          <p className="text-sm font-semibold text-red-700">Confirm Check-Out</p>
+          <p className="text-sm font-semibold text-red-700">
+            Confirm Check-Out
+          </p>
           <div className="grid grid-cols-2 gap-2 text-sm">
             <InfoRow label="Guest" value={found.guestName} />
             <InfoRow label="Room" value={`Room ${found.room}`} />
@@ -612,7 +764,13 @@ const CheckOutPanel = ({ bookings, onConfirm, onCancel }) => {
             <InfoRow label="Status" value={found.status} />
           </div>
           <div className="flex justify-end gap-3 pt-2">
-            <button type="button" className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200" onClick={onCancel}>Cancel</button>
+            <button
+              type="button"
+              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+              onClick={onCancel}
+            >
+              Cancel
+            </button>
             <button
               type="button"
               className="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700"
@@ -626,8 +784,10 @@ const CheckOutPanel = ({ bookings, onConfirm, onCancel }) => {
 
       {!search && (
         <div className="space-y-2 max-h-60 overflow-y-auto">
-          <p className="text-xs text-gray-500 font-semibold uppercase">Active Bookings</p>
-          {occupied.map(b => (
+          <p className="text-xs text-gray-500 font-semibold uppercase">
+            Active Bookings
+          </p>
+          {occupied.map((b) => (
             <button
               key={b.id}
               onClick={() => setSearch(String(b.room))}
@@ -635,7 +795,11 @@ const CheckOutPanel = ({ bookings, onConfirm, onCancel }) => {
             >
               <span className="font-semibold text-gray-800">Rm {b.room}</span>
               <span className="text-gray-500 ml-3">{b.guestName}</span>
-              <span className={`ml-3 text-xs px-2 py-0.5 rounded-full ${b.status === 'Occupied' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600'}`}>{b.status}</span>
+              <span
+                className={`ml-3 text-xs px-2 py-0.5 rounded-full ${b.status === "Occupied" ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-600"}`}
+              >
+                {b.status}
+              </span>
             </button>
           ))}
         </div>
@@ -646,11 +810,16 @@ const CheckOutPanel = ({ bookings, onConfirm, onCancel }) => {
 
 /** Extend Panel: search by room number */
 const ExtendPanel = ({ bookings, selectedBooking, onSubmit, onCancel }) => {
-  const [search, setSearch] = React.useState(selectedBooking ? String(selectedBooking.room) : '');
-  const [newCheckOut, setNewCheckOut] = React.useState('');
+  const [search, setSearch] = React.useState(
+    selectedBooking ? String(selectedBooking.room) : "",
+  );
+  const [newCheckOut, setNewCheckOut] = React.useState("");
 
   const found = search
-    ? bookings.find(b => String(b.room) === String(search.trim()) && b.status !== 'CheckedOut')
+    ? bookings.find(
+        (b) =>
+          String(b.room) === String(search.trim()) && b.status !== "CheckedOut",
+      )
     : selectedBooking || null;
 
   const handleSubmit = (e) => {
@@ -660,7 +829,7 @@ const ExtendPanel = ({ bookings, selectedBooking, onSubmit, onCancel }) => {
       bookingId: found.id,
       guestName: found.guestName,
       room: found.room,
-      checkOut: newCheckOut
+      checkOut: newCheckOut,
     });
   };
 
@@ -671,53 +840,78 @@ const ExtendPanel = ({ bookings, selectedBooking, onSubmit, onCancel }) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="bg-indigo-50 rounded-lg px-4 py-2 text-xs text-indigo-700 font-medium">
-        {bookings.filter(b => b.status !== 'CheckedOut').length} active booking(s) found
+        {bookings.filter((b) => b.status !== "CheckedOut").length} active
+        booking(s) found
       </div>
 
       <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-1">Search by Room Number</label>
+        <label className="block text-sm font-semibold text-gray-700 mb-1">
+          Search by Room Number
+        </label>
         <input
           type="text"
           value={search}
-          onChange={e => { setSearch(e.target.value); setNewCheckOut(''); }}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setNewCheckOut("");
+          }}
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-gray-800"
           placeholder="e.g. 101"
         />
       </div>
 
       {search && !found && (
-        <p className="text-red-500 text-sm">No active booking for Room {search}.</p>
+        <p className="text-red-500 text-sm">
+          No active booking for Room {search}.
+        </p>
       )}
 
       {found && (
         <div className="space-y-4">
           <div className="bg-gray-50 border rounded-xl p-4 space-y-2">
-            <p className="text-xs font-semibold text-gray-500 uppercase">Current Booking — Room {found.room}</p>
+            <p className="text-xs font-semibold text-gray-500 uppercase">
+              Current Booking — Room {found.room}
+            </p>
             <div className="grid grid-cols-2 gap-2">
               <InfoRow label="Guest" value={found.guestName} />
-              <InfoRow label="Phone" value={found.phone || '—'} />
+              <InfoRow label="Phone" value={found.phone || "—"} />
               <InfoRow label="Check-In" value={found.checkIn} />
               <InfoRow label="Current Check-Out" value={found.checkOut} />
               <InfoRow label="Status" value={found.status} />
-              <InfoRow label="Price/Day" value={found.pricePerDay ? `₹${found.pricePerDay}` : '—'} />
+              <InfoRow
+                label="Price/Day"
+                value={found.pricePerDay ? `₹${found.pricePerDay}` : "—"}
+              />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">New Check-Out Date *</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              New Check-Out Date *
+            </label>
             <input
               type="date"
               value={newCheckOut}
               min={found.checkOut}
-              onChange={e => setNewCheckOut(e.target.value)}
+              onChange={(e) => setNewCheckOut(e.target.value)}
               required
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-gray-800"
             />
           </div>
 
           <div className="flex justify-end gap-3 pt-1">
-            <button type="button" className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200" onClick={onCancel}>Cancel</button>
-            <button type="submit" disabled={!newCheckOut} className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50">
+            <button
+              type="button"
+              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+              onClick={onCancel}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={!newCheckOut}
+              className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            >
               Update Check-Out
             </button>
           </div>
@@ -728,10 +922,21 @@ const ExtendPanel = ({ bookings, selectedBooking, onSubmit, onCancel }) => {
 };
 
 /** Shift Panel: search by room number */
-const ShiftPanel = ({ bookings, rooms, selectedBooking, onSubmit, onCancel }) => {
-  const [search, setSearch] = React.useState(selectedBooking ? String(selectedBooking.room) : '');
+const ShiftPanel = ({
+  bookings,
+  rooms,
+  selectedBooking,
+  onSubmit,
+  onCancel,
+}) => {
+  const [search, setSearch] = React.useState(
+    selectedBooking ? String(selectedBooking.room) : "",
+  );
   const found = search
-    ? bookings.find(b => String(b.room) === String(search.trim()) && b.status !== 'CheckedOut')
+    ? bookings.find(
+        (b) =>
+          String(b.room) === String(search.trim()) && b.status !== "CheckedOut",
+      )
     : selectedBooking || null;
 
   const handleShiftSubmit = (formData) => {
@@ -741,7 +946,7 @@ const ShiftPanel = ({ bookings, rooms, selectedBooking, onSubmit, onCancel }) =>
       guestName: found.guestName,
       oldRoom: found.room,
       checkIn: found.checkIn,
-      checkOut: found.checkOut
+      checkOut: found.checkOut,
     });
   };
 
@@ -752,11 +957,13 @@ const ShiftPanel = ({ bookings, rooms, selectedBooking, onSubmit, onCancel }) =>
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-1">Search Booking by Room Number</label>
+        <label className="block text-sm font-semibold text-gray-700 mb-1">
+          Search Booking by Room Number
+        </label>
         <input
           type="text"
           value={search}
-          onChange={e => setSearch(e.target.value)}
+          onChange={(e) => setSearch(e.target.value)}
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 outline-none text-gray-800"
           placeholder="e.g. 101"
           autoFocus
@@ -764,23 +971,29 @@ const ShiftPanel = ({ bookings, rooms, selectedBooking, onSubmit, onCancel }) =>
       </div>
 
       {search && !found && (
-        <p className="text-red-500 text-sm">No active booking for Room {search}.</p>
+        <p className="text-red-500 text-sm">
+          No active booking for Room {search}.
+        </p>
       )}
 
       {found && (
         <div className="space-y-4">
           <div className="bg-gray-50 border rounded-xl p-4 space-y-2 text-gray-800">
-            <p className="text-xs font-semibold text-gray-500 uppercase">Current Booking — Room {found.room}</p>
+            <p className="text-xs font-semibold text-gray-500 uppercase">
+              Current Booking — Room {found.room}
+            </p>
             <div className="grid grid-cols-2 gap-2 text-sm">
               <InfoRow label="Guest" value={found.guestName} />
-              <InfoRow label="Phone" value={found.phone || '—'} />
+              <InfoRow label="Phone" value={found.phone || "—"} />
               <InfoRow label="Check-In" value={found.checkIn} />
               <InfoRow label="Check-Out" value={found.checkOut} />
             </div>
           </div>
 
           <div className="pt-2">
-            <p className="text-xs font-semibold text-gray-500 uppercase mb-3 text-yellow-700">Select New Room</p>
+            <p className="text-xs font-semibold text-gray-500 uppercase mb-3 text-yellow-700">
+              Select New Room
+            </p>
             <BookingForm
               onSubmit={handleShiftSubmit}
               onCancel={onCancel}
@@ -789,10 +1002,10 @@ const ShiftPanel = ({ bookings, rooms, selectedBooking, onSubmit, onCancel }) =>
                 room: found.room,
                 checkIn: found.checkIn,
                 checkOut: found.checkOut,
-                phone: found.phone || '',
-                pricePerDay: found.pricePerDay || ''
+                phone: found.phone || "",
+                pricePerDay: found.pricePerDay || "",
               }}
-              availableRooms={rooms.filter(r => r.status === 'Available')}
+              availableRooms={rooms.filter((r) => r.status === "Available")}
               shiftMode
             />
           </div>

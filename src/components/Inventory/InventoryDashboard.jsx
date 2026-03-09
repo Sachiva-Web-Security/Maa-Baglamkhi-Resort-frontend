@@ -1,14 +1,17 @@
 import React, { useState } from "react";
-import { FaRupeeSign, FaPlus, FaBell, FaSearch, FaEdit, FaTrash } from "react-icons/fa";
+import {
+  FaRupeeSign,
+  FaPlus,
+  FaBell,
+  FaSearch,
+  FaEdit,
+  FaTrash,
+} from "react-icons/fa";
 import CategoryInventory from "./CategoryInventory";
 import CategoryCard from "./CategoryCard";
 
 // 🔹 Default categories
-const defaultCategories = [
-  "Raw Ingredients",
-  "Housekeeping",
-  "Beverages",
-];
+const defaultCategories = ["Raw Ingredients", "Housekeeping", "Beverages"];
 
 // 🔹 Initial items (WITH ID)
 const initialItems = [
@@ -71,7 +74,7 @@ export default function InventoryDashboard() {
 
   const totalValue = items.reduce(
     (sum, i) => sum + i.stock * (Number(i.price) || 0),
-    0
+    0,
   );
 
   // 🔹 Expiry alerts (for listing expired items)
@@ -84,7 +87,8 @@ export default function InventoryDashboard() {
     let expiryMatch = true;
     const diff = (new Date(i.expiry) - today) / (1000 * 60 * 60 * 24);
     if (expiryFilter === "Expired") expiryMatch = new Date(i.expiry) <= today;
-    else if (expiryFilter === "Expiring Soon") expiryMatch = diff > 0 && diff <= 7;
+    else if (expiryFilter === "Expiring Soon")
+      expiryMatch = diff > 0 && diff <= 7;
     const searchMatch =
       searchQuery === "" ||
       i.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -193,7 +197,7 @@ export default function InventoryDashboard() {
 
   // 🔹 Dashboard view
   return (
-    <div className="min-h-screen w-280 p-6 bg-gradient-to-br from-[#071226] via-[#081827] to-[#041019] text-gray-100">
+    <div className="min-h-screen w-full bg-gradient-to-br from-[#071226] via-[#081827] to-[#041019] text-gray-100 p-4 sm:p-6 lg:p-8">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
@@ -220,16 +224,34 @@ export default function InventoryDashboard() {
       {/* Alerts */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-[#2b1210] p-4 rounded-xl flex gap-2 items-center border border-white/5">
-          <FaBell className="text-yellow-300"/> <span className="ml-1">Low Stock: <span className="font-bold text-white">{lowStockItems.length}</span></span>
+          <FaBell className="text-yellow-300" />{" "}
+          <span className="ml-1">
+            Low Stock:{" "}
+            <span className="font-bold text-white">{lowStockItems.length}</span>
+          </span>
         </div>
         <div className="bg-[#2b1210] p-4 rounded-xl flex gap-2 items-center border border-white/5">
-          <FaBell className="text-red-400"/> <span className="ml-1">Out of Stock: <span className="font-bold text-white">{outOfStock.length}</span></span>
+          <FaBell className="text-red-400" />{" "}
+          <span className="ml-1">
+            Out of Stock:{" "}
+            <span className="font-bold text-white">{outOfStock.length}</span>
+          </span>
         </div>
         <div className="bg-[#102233] p-4 rounded-xl flex gap-2 items-center border border-white/5">
-          <FaBell className="text-sky-300"/> <span className="ml-1">Expiring Soon: <span className="font-bold text-white">{expiringSoon.length}</span></span>
+          <FaBell className="text-sky-300" />{" "}
+          <span className="ml-1">
+            Expiring Soon:{" "}
+            <span className="font-bold text-white">{expiringSoon.length}</span>
+          </span>
         </div>
         <div className="bg-[#122b1f] p-4 rounded-xl flex gap-2 items-center border border-white/5">
-          <FaRupeeSign className="text-emerald-300"/> <span className="ml-1">₹ <span className="font-bold text-white">{totalValue.toLocaleString()}</span></span>
+          <FaRupeeSign className="text-emerald-300" />{" "}
+          <span className="ml-1">
+            ₹{" "}
+            <span className="font-bold text-white">
+              {totalValue.toLocaleString()}
+            </span>
+          </span>
         </div>
       </div>
 
@@ -333,12 +355,10 @@ export default function InventoryDashboard() {
       {/* Categories */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {categories.map((category) => {
-          const categoryItems = items.filter(
-            (i) => i.category === category
-          );
+          const categoryItems = items.filter((i) => i.category === category);
           const total = categoryItems.reduce(
             (sum, i) => sum + i.stock * i.price,
-            0
+            0,
           );
 
           return (
@@ -370,7 +390,11 @@ export default function InventoryDashboard() {
               required
             />
             <div className="flex justify-end gap-2">
-              <button type="button" onClick={() => setShowCategoryModal(false)} className="text-gray-300">
+              <button
+                type="button"
+                onClick={() => setShowCategoryModal(false)}
+                className="text-gray-300"
+              >
                 Cancel
               </button>
               <button className="bg-emerald-500 text-black px-3 py-1 rounded">
@@ -389,22 +413,53 @@ export default function InventoryDashboard() {
             className="bg-[#071826] p-6 rounded-xl w-96 border border-white/5 text-white"
           >
             <h2 className="font-semibold mb-3 text-white">Add Item</h2>
-            <input name="name" placeholder="Item name" className="border border-white/10 bg-transparent p-2 w-full mb-2 text-white" />
-            <select name="category" className="border border-white/10 bg-transparent p-2 w-full mb-2 text-white">
+            <input
+              name="name"
+              placeholder="Item name"
+              className="border border-white/10 bg-transparent p-2 w-full mb-2 text-white"
+            />
+            <select
+              name="category"
+              className="border border-white/10 bg-transparent p-2 w-full mb-2 text-white"
+            >
               {categories.map((c) => (
-                <option key={c} className="bg-[#071826]">{c}</option>
+                <option key={c} className="bg-[#071826]">
+                  {c}
+                </option>
               ))}
             </select>
-            <input name="stock" type="number" className="border border-white/10 bg-transparent p-2 w-full mb-2 text-white" />
-            <input name="unit" className="border border-white/10 bg-transparent p-2 w-full mb-2 text-white" />
-            <input name="price" type="number" className="border border-white/10 bg-transparent p-2 w-full mb-2 text-white" />
-            <input name="expiry" type="date" className="border border-white/10 bg-transparent p-2 w-full mb-2 text-white" />
-            <select name="branch" className="border border-white/10 bg-transparent p-2 w-full mb-3 text-white">
+            <input
+              name="stock"
+              type="number"
+              className="border border-white/10 bg-transparent p-2 w-full mb-2 text-white"
+            />
+            <input
+              name="unit"
+              className="border border-white/10 bg-transparent p-2 w-full mb-2 text-white"
+            />
+            <input
+              name="price"
+              type="number"
+              className="border border-white/10 bg-transparent p-2 w-full mb-2 text-white"
+            />
+            <input
+              name="expiry"
+              type="date"
+              className="border border-white/10 bg-transparent p-2 w-full mb-2 text-white"
+            />
+            <select
+              name="branch"
+              className="border border-white/10 bg-transparent p-2 w-full mb-3 text-white"
+            >
               <option className="bg-[#071826]">Main</option>
               <option className="bg-[#071826]">Branch 2</option>
             </select>
             <div className="flex justify-end gap-2">
-              <button type="button" onClick={() => setShowItemModal(false)} className="text-gray-300">
+              <button
+                type="button"
+                onClick={() => setShowItemModal(false)}
+                className="text-gray-300"
+              >
                 Cancel
               </button>
               <button className="bg-blue-500 text-white px-3 py-1 rounded">
@@ -435,7 +490,9 @@ export default function InventoryDashboard() {
               className="border border-white/10 bg-transparent p-2 w-full mb-2 text-white"
             >
               {categories.map((c) => (
-                <option key={c} className="bg-[#071826]">{c}</option>
+                <option key={c} className="bg-[#071826]">
+                  {c}
+                </option>
               ))}
             </select>
             <input

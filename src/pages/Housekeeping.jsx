@@ -1,206 +1,219 @@
-import React, { useState } from 'react';
-import { FaSearch, FaFilePdf, FaChevronUp, FaTimes, FaExclamationCircle, FaBroom, FaCheck, FaBed } from 'react-icons/fa';
-import HousekeepingRow from '../components/Housekeeping/HousekeepingRow';
+import React, { useState } from "react";
+import {
+  FaSearch,
+  FaFilePdf,
+  FaChevronUp,
+  FaTimes,
+  FaExclamationCircle,
+  FaBroom,
+  FaCheck,
+  FaBed,
+} from "react-icons/fa";
+import HousekeepingRow from "../components/Housekeeping/HousekeepingRow";
 
 const initialData = [
   {
     id: 1,
     selected: false,
-    type: 'Accommodation',
-    roomNo: '100',
-    building: '',
-    floor: '',
-    section: '',
-    guestStatus: '',
-    roomType: 'Executive King Room',
-    status: 'Vacant Dirty',
-    assignee: 'No Housekeeper',
-    layout: '',
-    articles: '',
-    services: '',
+    type: "Accommodation",
+    roomNo: "100",
+    building: "",
+    floor: "",
+    section: "",
+    guestStatus: "",
+    roomType: "Executive King Room",
+    status: "Vacant Dirty",
+    assignee: "No Housekeeper",
+    layout: "",
+    articles: "",
+    services: "",
     notes: false,
   },
   {
     id: 2,
     selected: false,
-    type: 'Accommodation',
-    roomNo: '3',
-    building: '',
-    floor: '',
-    section: '',
-    guestStatus: '',
-    roomType: 'King Room with seaview',
-    status: 'Vacant Clean Inspected',
-    assignee: 'No Housekeeper',
-    layout: '',
-    articles: '',
-    services: '',
+    type: "Accommodation",
+    roomNo: "3",
+    building: "",
+    floor: "",
+    section: "",
+    guestStatus: "",
+    roomType: "King Room with seaview",
+    status: "Vacant Clean Inspected",
+    assignee: "No Housekeeper",
+    layout: "",
+    articles: "",
+    services: "",
     notes: false,
   },
   {
     id: 3,
     selected: false,
-    type: 'Accommodation',
-    roomNo: '4',
-    building: '',
-    floor: '',
-    section: '',
-    guestStatus: 'Arrives today',
-    roomType: 'Suite',
-    status: 'Occupied Dirty',
-    assignee: 'No Housekeeper',
-    layout: '',
-    articles: '',
-    services: '',
+    type: "Accommodation",
+    roomNo: "4",
+    building: "",
+    floor: "",
+    section: "",
+    guestStatus: "Arrives today",
+    roomType: "Suite",
+    status: "Occupied Dirty",
+    assignee: "No Housekeeper",
+    layout: "",
+    articles: "",
+    services: "",
     notes: true,
   },
   {
     id: 4,
     selected: false,
-    type: 'Accommodation',
-    roomNo: '5',
-    building: '',
-    floor: '',
-    section: '',
-    guestStatus: '',
-    roomType: 'Executive King Room',
-    status: 'Vacant Dirty',
-    assignee: 'No Housekeeper',
-    layout: '',
-    articles: '',
-    services: '',
+    type: "Accommodation",
+    roomNo: "5",
+    building: "",
+    floor: "",
+    section: "",
+    guestStatus: "",
+    roomType: "Executive King Room",
+    status: "Vacant Dirty",
+    assignee: "No Housekeeper",
+    layout: "",
+    articles: "",
+    services: "",
     notes: false,
   },
   {
     id: 5,
     selected: false,
-    type: 'Accommodation',
-    roomNo: '6',
-    building: '',
-    floor: '',
-    section: '',
-    guestStatus: 'Arrives today',
-    roomType: 'Standard Room',
-    status: 'Occupied Clean',
-    assignee: 'No Housekeeper',
-    layout: '',
-    articles: '',
-    services: '',
+    type: "Accommodation",
+    roomNo: "6",
+    building: "",
+    floor: "",
+    section: "",
+    guestStatus: "Arrives today",
+    roomType: "Standard Room",
+    status: "Occupied Clean",
+    assignee: "No Housekeeper",
+    layout: "",
+    articles: "",
+    services: "",
     notes: true,
   },
   {
     id: 6,
     selected: false,
-    type: 'Accommodation',
-    roomNo: '7',
-    building: '',
-    floor: '',
-    section: '',
-    guestStatus: '',
-    roomType: 'Standard Room',
-    status: 'Vacant Dirty',
-    assignee: 'No Housekeeper',
-    layout: '',
-    articles: '',
-    services: '',
+    type: "Accommodation",
+    roomNo: "7",
+    building: "",
+    floor: "",
+    section: "",
+    guestStatus: "",
+    roomType: "Standard Room",
+    status: "Vacant Dirty",
+    assignee: "No Housekeeper",
+    layout: "",
+    articles: "",
+    services: "",
     notes: false,
   },
 ];
 
 const allColumns = [
-  { key: 'type', label: 'Type', required: true },
-  { key: 'roomNo', label: 'Room No. / Name', required: true },
-  { key: 'building', label: 'Building', required: false },
-  { key: 'floor', label: 'Floor', required: false },
-  { key: 'section', label: 'Section', required: false },
-  { key: 'guestStatus', label: 'Guest Status', required: false },
-  { key: 'roomType', label: 'Room Type', required: false },
-  { key: 'status', label: 'Status', required: false },
-  { key: 'assignee', label: 'Assignee', required: false },
-  { key: 'layout', label: 'Layout', required: false },
-  { key: 'articles', label: 'Articles', required: false },
-  { key: 'services', label: 'Services', required: false },
-  { key: 'notes', label: 'Notes', required: false },
+  { key: "type", label: "Type", required: true },
+  { key: "roomNo", label: "Room No. / Name", required: true },
+  { key: "building", label: "Building", required: false },
+  { key: "floor", label: "Floor", required: false },
+  { key: "section", label: "Section", required: false },
+  { key: "guestStatus", label: "Guest Status", required: false },
+  { key: "roomType", label: "Room Type", required: false },
+  { key: "status", label: "Status", required: false },
+  { key: "assignee", label: "Assignee", required: false },
+  { key: "layout", label: "Layout", required: false },
+  { key: "articles", label: "Articles", required: false },
+  { key: "services", label: "Services", required: false },
+  { key: "notes", label: "Notes", required: false },
 ];
 
 function Housekeeping() {
   const [data, setData] = useState(initialData);
   const [selectAll, setSelectAll] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [housekeeperFilter, setHousekeeperFilter] = useState('All Housekeeper');
-  const [roomTypeTab, setRoomTypeTab] = useState('Accommodation Rooms');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [housekeeperFilter, setHousekeeperFilter] = useState("All Housekeeper");
+  const [roomTypeTab, setRoomTypeTab] = useState("Accommodation Rooms");
   const [showColumns, setShowColumns] = useState(true);
   const [visibleColumns, setVisibleColumns] = useState(
-    allColumns.map(col => col.key)
+    allColumns.map((col) => col.key),
   );
 
-  const selectedCount = data.filter(item => item.selected).length;
+  const selectedCount = data.filter((item) => item.selected).length;
 
   const handleSelectChange = (id, checked) => {
-    setData(prev =>
-      prev.map(item => (item.id === id ? { ...item, selected: checked } : item))
+    setData((prev) =>
+      prev.map((item) =>
+        item.id === id ? { ...item, selected: checked } : item,
+      ),
     );
   };
 
-  const handleSelectAll = checked => {
+  const handleSelectAll = (checked) => {
     setSelectAll(checked);
-    setData(prev => prev.map(item => ({ ...item, selected: checked })));
+    setData((prev) => prev.map((item) => ({ ...item, selected: checked })));
   };
 
   const handleStatusChange = (id, status) => {
-    setData(prev =>
-      prev.map(item => (item.id === id ? { ...item, status } : item))
+    setData((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, status } : item)),
     );
   };
 
   const handleAssigneeChange = (id, assignee) => {
-    setData(prev =>
-      prev.map(item => (item.id === id ? { ...item, assignee } : item))
+    setData((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, assignee } : item)),
     );
   };
 
   const toggleColumn = (columnKey) => {
-    const column = allColumns.find(col => col.key === columnKey);
+    const column = allColumns.find((col) => col.key === columnKey);
     if (column && column.required) return; // Don't allow hiding required columns
-    
-    setVisibleColumns(prev =>
+
+    setVisibleColumns((prev) =>
       prev.includes(columnKey)
-        ? prev.filter(key => key !== columnKey)
-        : [...prev, columnKey]
+        ? prev.filter((key) => key !== columnKey)
+        : [...prev, columnKey],
     );
   };
 
-  const filteredData = data.filter(item => {
-    const matchesSearch = searchQuery === '' || 
+  const filteredData = data.filter((item) => {
+    const matchesSearch =
+      searchQuery === "" ||
       item.roomNo.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.roomType.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesHousekeeper = housekeeperFilter === 'All Housekeeper' || 
+
+    const matchesHousekeeper =
+      housekeeperFilter === "All Housekeeper" ||
       item.assignee === housekeeperFilter;
-    
-    const matchesRoomType = roomTypeTab === 'Accommodation Rooms' || 
-      roomTypeTab === 'Event Rooms';
-    
+
+    const matchesRoomType =
+      roomTypeTab === "Accommodation Rooms" || roomTypeTab === "Event Rooms";
+
     return matchesSearch && matchesHousekeeper && matchesRoomType;
   });
 
   // summary counts based on filtered data
-  const roomsToClean = filteredData.filter(item =>
-    item.status.toLowerCase().includes('dirty')
+  const roomsToClean = filteredData.filter((item) =>
+    item.status.toLowerCase().includes("dirty"),
   ).length;
-  const roomsInspected = filteredData.filter(item =>
-    item.status.toLowerCase().includes('inspected')
+  const roomsInspected = filteredData.filter((item) =>
+    item.status.toLowerCase().includes("inspected"),
   ).length;
-  const occupiedRooms = filteredData.filter(item =>
-    item.status.toLowerCase().includes('occupied')
+  const occupiedRooms = filteredData.filter((item) =>
+    item.status.toLowerCase().includes("occupied"),
   ).length;
 
   return (
-    <div className="min-h-screen w-280 pt-[100px] px-[30px] pb-[30px] bg-gradient-to-br from-[#071226] via-[#081827] to-[#041019] text-gray-100">
+    <div className="min-h-screen w-full bg-gradient-to-br from-[#071226] via-[#081827] to-[#041019] text-gray-100 p-4 sm:p-6 lg:p-8">
       {/* Header */}
       <div className="mb-5">
-        <h1 className="text-2xl pl-100 font-semibold text-white mb-1">Housekeeping</h1>
-        <div className="text-sm pl-100 text-gray-300">Home / Housekeeping</div>
+        <h1 className="text-2xl font-semibold text-white mb-1">Housekeeping</h1>
+        <div className="text-sm text-gray-300">Home / Housekeeping</div>
       </div>
 
       {/* Top Control Bar */}
@@ -224,7 +237,7 @@ function Housekeeping() {
               onClick={() => setShowColumns(!showColumns)}
               className="px-4 py-2 bg-transparent border border-white/10 text-white rounded-lg text-sm font-medium hover:bg-white/5 transition-colors"
             >
-              {showColumns ? 'Hide Columns' : 'Show Columns'}
+              {showColumns ? "Hide Columns" : "Show Columns"}
             </button>
           </div>
 
@@ -252,27 +265,29 @@ function Housekeeping() {
 
         <div className="mt-3 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
           <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-300">Selected: {selectedCount}</span>
+            <span className="text-sm text-gray-300">
+              Selected: {selectedCount}
+            </span>
           </div>
 
           {/* Room Type Tabs */}
           <div className="inline-flex rounded-lg border border-white/5 overflow-hidden w-full md:w-auto bg-transparent">
             <button
-              onClick={() => setRoomTypeTab('Accommodation Rooms')}
+              onClick={() => setRoomTypeTab("Accommodation Rooms")}
               className={`flex-1 md:flex-none px-4 py-2 text-sm font-medium transition-colors ${
-                roomTypeTab === 'Accommodation Rooms'
-                  ? 'bg-white/5 text-white'
-                  : 'bg-transparent text-gray-300 hover:bg-white/5'
+                roomTypeTab === "Accommodation Rooms"
+                  ? "bg-white/5 text-white"
+                  : "bg-transparent text-gray-300 hover:bg-white/5"
               }`}
             >
               Accommodation Rooms
             </button>
             <button
-              onClick={() => setRoomTypeTab('Event Rooms')}
+              onClick={() => setRoomTypeTab("Event Rooms")}
               className={`flex-1 md:flex-none px-4 py-2 text-sm font-medium transition-colors border-l border-white/5 ${
-                roomTypeTab === 'Event Rooms'
-                  ? 'bg-white/5 text-white'
-                  : 'bg-transparent text-gray-300 hover:bg-white/5'
+                roomTypeTab === "Event Rooms"
+                  ? "bg-white/5 text-white"
+                  : "bg-transparent text-gray-300 hover:bg-white/5"
               }`}
             >
               Event Rooms
@@ -288,7 +303,9 @@ function Housekeeping() {
             </div>
             <div>
               <div className="text-sm text-orange-300">Rooms to Clean</div>
-              <div className="text-xl font-semibold text-white">{roomsToClean}</div>
+              <div className="text-xl font-semibold text-white">
+                {roomsToClean}
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-3 p-4 rounded-lg bg-[#102214] border border-white/5">
@@ -297,7 +314,9 @@ function Housekeeping() {
             </div>
             <div>
               <div className="text-sm text-emerald-300">Rooms Inspected</div>
-              <div className="text-xl font-semibold text-white">{roomsInspected}</div>
+              <div className="text-xl font-semibold text-white">
+                {roomsInspected}
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-3 p-4 rounded-lg bg-[#21102a] border border-white/5">
@@ -306,7 +325,9 @@ function Housekeeping() {
             </div>
             <div>
               <div className="text-sm text-purple-300">Occupied Rooms</div>
-              <div className="text-xl font-semibold text-white">{occupiedRooms}</div>
+              <div className="text-xl font-semibold text-white">
+                {occupiedRooms}
+              </div>
             </div>
           </div>
         </div>
@@ -323,8 +344,8 @@ function Housekeeping() {
               key={column.key}
               className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm ${
                 visibleColumns.includes(column.key)
-                  ? 'bg-white/5 text-white'
-                  : 'bg-transparent text-gray-300 border border-white/5'
+                  ? "bg-white/5 text-white"
+                  : "bg-transparent text-gray-300 border border-white/5"
               }`}
             >
               {column.required && <span className="text-teal-500">*</span>}
@@ -348,7 +369,7 @@ function Housekeeping() {
           <table className="w-full text-left">
             <thead className="bg-white/5 text-gray-300 text-xs uppercase">
               <tr>
-                {visibleColumns.includes('type') && (
+                {visibleColumns.includes("type") && (
                   <th className="px-4 py-3 font-semibold border-r border-white/5 text-gray-300">
                     <div className="flex items-center gap-2">
                       <input
@@ -361,46 +382,68 @@ function Housekeeping() {
                     </div>
                   </th>
                 )}
-                {visibleColumns.includes('roomNo') && (
-                  <th className="px-4 py-3 font-semibold border-r border-gray-200">Room No. / Name</th>
+                {visibleColumns.includes("roomNo") && (
+                  <th className="px-4 py-3 font-semibold border-r border-gray-200">
+                    Room No. / Name
+                  </th>
                 )}
-                {visibleColumns.includes('building') && (
-                  <th className="px-4 py-3 font-semibold border-r border-gray-200">Building</th>
+                {visibleColumns.includes("building") && (
+                  <th className="px-4 py-3 font-semibold border-r border-gray-200">
+                    Building
+                  </th>
                 )}
-                {visibleColumns.includes('floor') && (
-                  <th className="px-4 py-3 font-semibold border-r border-gray-200">Floor</th>
+                {visibleColumns.includes("floor") && (
+                  <th className="px-4 py-3 font-semibold border-r border-gray-200">
+                    Floor
+                  </th>
                 )}
-                {visibleColumns.includes('section') && (
-                  <th className="px-4 py-3 font-semibold border-r border-gray-200">Section</th>
+                {visibleColumns.includes("section") && (
+                  <th className="px-4 py-3 font-semibold border-r border-gray-200">
+                    Section
+                  </th>
                 )}
-                {visibleColumns.includes('guestStatus') && (
-                  <th className="px-4 py-3 font-semibold border-r border-gray-200">Guest Status</th>
+                {visibleColumns.includes("guestStatus") && (
+                  <th className="px-4 py-3 font-semibold border-r border-gray-200">
+                    Guest Status
+                  </th>
                 )}
-                {visibleColumns.includes('roomType') && (
-                  <th className="px-4 py-3 font-semibold border-r border-gray-200">Room Type</th>
+                {visibleColumns.includes("roomType") && (
+                  <th className="px-4 py-3 font-semibold border-r border-gray-200">
+                    Room Type
+                  </th>
                 )}
-                {visibleColumns.includes('status') && (
-                  <th className="px-4 py-3 font-semibold border-r border-gray-200">Status</th>
+                {visibleColumns.includes("status") && (
+                  <th className="px-4 py-3 font-semibold border-r border-gray-200">
+                    Status
+                  </th>
                 )}
-                {visibleColumns.includes('assignee') && (
-                  <th className="px-4 py-3 font-semibold border-r border-gray-200">Assignee</th>
+                {visibleColumns.includes("assignee") && (
+                  <th className="px-4 py-3 font-semibold border-r border-gray-200">
+                    Assignee
+                  </th>
                 )}
-                {visibleColumns.includes('layout') && (
-                  <th className="px-4 py-3 font-semibold border-r border-gray-200">Layout</th>
+                {visibleColumns.includes("layout") && (
+                  <th className="px-4 py-3 font-semibold border-r border-gray-200">
+                    Layout
+                  </th>
                 )}
-                {visibleColumns.includes('articles') && (
-                  <th className="px-4 py-3 font-semibold border-r border-gray-200">Articles</th>
+                {visibleColumns.includes("articles") && (
+                  <th className="px-4 py-3 font-semibold border-r border-gray-200">
+                    Articles
+                  </th>
                 )}
-                {visibleColumns.includes('services') && (
-                  <th className="px-4 py-3 font-semibold border-r border-gray-200">Services</th>
+                {visibleColumns.includes("services") && (
+                  <th className="px-4 py-3 font-semibold border-r border-gray-200">
+                    Services
+                  </th>
                 )}
-                {visibleColumns.includes('notes') && (
+                {visibleColumns.includes("notes") && (
                   <th className="px-4 py-3 font-semibold">Notes</th>
                 )}
               </tr>
             </thead>
             <tbody>
-              {filteredData.map(item => (
+              {filteredData.map((item) => (
                 <HousekeepingRow
                   key={item.id}
                   item={item}

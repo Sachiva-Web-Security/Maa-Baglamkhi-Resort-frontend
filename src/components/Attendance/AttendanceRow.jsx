@@ -13,12 +13,12 @@ const AttendanceRow = ({ employee }) => {
 
   return (
     <tr className="border-b border-white/10 hover:bg-white/5 transition">
-      <td className="p-3">{employee.name}</td>
-      <td className="p-3">{employee.role}</td>
-      <td className="p-3">{employee.checkIn || "—"}</td>
-      <td className="p-3">{employee.checkOut || "—"}</td>
+      <td className="p-2 sm:p-3">{employee.name}</td>
+      <td className="p-2 sm:p-3 hidden md:table-cell">{employee.role}</td>
+      <td className="p-2 sm:p-3">{employee.checkIn || "—"}</td>
+      <td className="p-2 sm:p-3 hidden sm:table-cell">{employee.checkOut || "—"}</td>
 
-      <td className="p-3">
+      <td className="p-2 sm:p-3">
         <span
           className={`px-2 py-1 rounded-md text-xs ${
             statusColors[employee.status]
@@ -28,7 +28,7 @@ const AttendanceRow = ({ employee }) => {
         </span>
       </td>
 
-      <td className="p-3">
+      <td className="p-2 sm:p-3 hidden lg:table-cell">
         <span
           className={`px-2 py-1 rounded-md text-xs ${
             methodColors[employee.method]
@@ -38,13 +38,15 @@ const AttendanceRow = ({ employee }) => {
         </span>
       </td>
 
-      <td className="p-3 flex gap-2">
-        <button className="bg-green-600 px-3 py-1 rounded-md text-xs">
-          Check In
-        </button>
-        <button className="bg-red-600 px-3 py-1 rounded-md text-xs">
-          Check Out
-        </button>
+      <td className="p-2 sm:p-3">
+        <div className="flex flex-col sm:flex-row gap-1">
+          <button className="bg-green-600 px-2 sm:px-3 py-1 rounded-md text-xs whitespace-nowrap">
+            Check In
+          </button>
+          <button className="bg-red-600 px-2 sm:px-3 py-1 rounded-md text-xs whitespace-nowrap">
+            Check Out
+          </button>
+        </div>
       </td>
     </tr>
   );

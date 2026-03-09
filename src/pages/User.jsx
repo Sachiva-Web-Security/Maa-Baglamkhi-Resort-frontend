@@ -21,8 +21,7 @@ const User = () => {
           ? res.data
           : res.data.users || [];
 
-        const localUsers =
-          JSON.parse(localStorage.getItem("users")) || [];
+        const localUsers = JSON.parse(localStorage.getItem("users")) || [];
 
         // Simple merge (backend + localStorage)
         setUsers([...apiData, ...localUsers]);
@@ -31,8 +30,7 @@ const User = () => {
         setError("Users load nahi ho pa rahe. Backend check karein.");
 
         // Backend fail ho to kam se kam localStorage se dikha do
-        const localUsers =
-          JSON.parse(localStorage.getItem("users")) || [];
+        const localUsers = JSON.parse(localStorage.getItem("users")) || [];
         setUsers(localUsers);
       }
     };
@@ -41,16 +39,16 @@ const User = () => {
   }, []);
 
   const filteredUsers = users.filter((u) => {
-    const name =
-      (u.name || u.fullName || u.username || "").toString().toLowerCase();
+    const name = (u.name || u.fullName || u.username || "")
+      .toString()
+      .toLowerCase();
     return name.includes(search.toLowerCase());
   });
 
   return (
-    <div className="   min-h-screen w-280 p-6 bg-slate-900">
-      
+    <div className="min-h-screen w-full bg-slate-900 text-white p-4 sm:p-6 lg:p-8">
       <div className="flex justify-between mb-6">
-        <h1 className="text-2xl text-white text-align-center  pl-100 font-bold">User Management</h1>
+        <h1 className="text-2xl font-bold">User Management</h1>
 
         <button
           onClick={() => navigate("/create-user")}
@@ -62,11 +60,7 @@ const User = () => {
       </div>
 
       {/* Error */}
-      {error && (
-        <p className="mb-4 text-sm text-red-600">
-          {error}
-        </p>
-      )}
+      {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
 
       {/* Search */}
       <div className="relative mb-6">
@@ -81,7 +75,7 @@ const User = () => {
       </div>
 
       {/* Cards */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 pl-100">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredUsers.map((user, index) => {
           const displayName =
             user.name || user.fullName || user.username || "Unknown User";
@@ -131,9 +125,7 @@ const User = () => {
       </div>
 
       {users.length === 0 && (
-        <p className="text-center mt-10 text-gray-500">
-          No users created yet
-        </p>
+        <p className="text-center mt-10 text-gray-500">No users created yet</p>
       )}
     </div>
   );

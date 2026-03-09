@@ -29,7 +29,7 @@ const Assignment = () => {
   const loadAssignments = async () => {
     try {
       const res = await API.get(
-        `/assignments?role=${localStorage.getItem("role")}&name=${localStorage.getItem("name")}`
+        `/assignments?role=${localStorage.getItem("role")}&name=${localStorage.getItem("name")}`,
       );
       setAssignments(res.data);
     } catch (err) {
@@ -96,7 +96,6 @@ const Assignment = () => {
 
       loadAssignments();
       loadStats();
-
     } catch (err) {
       console.log(err);
     }
@@ -122,30 +121,27 @@ const Assignment = () => {
     setEditId(task.id);
   };
 
-
-
   return (
-    <div className="p-6">
-
+    <div className="min-h-screen w-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-200 p-4 sm:p-6 lg:p-8">
       {/* HEADER */}
       <div className="bg-slate-800 from-indigo-500 to-purple-500 text-white p-6 rounded-2xl shadow-lg mb-6">
-        <h2 className="text-2xl font-Extrabold pl-100">Task Assignment</h2>
-        <p className="text-sm opacity-90 pl-100">
+        <h2 className="text-2xl pl-100 font-Extrabold">Task Assignment</h2>
+        <p className="text-sm  pl-100 opacity-90">
           Assign tasks to staff members and track completion
         </p>
       </div>
 
       {/*stats */}
       <div className="grid md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-blue-100 p-4 rounded-xl shadow">
+        <div className="bg-slate-800 p-4 rounded-xl shadow">
           <h4 className="font-semibold">Total Tasks</h4>
           <p className="text-2xl font-bold">{stats.total || 0}</p>
         </div>
-        <div className="bg-green-100 p-4 rounded-xl shadow">
+        <div className="bg-slate-800 p-4 rounded-xl shadow">
           <h4 className="font-semibold">Completed</h4>
           <p className="text-2xl font-bold">{stats.completed || 0}</p>
         </div>
-        <div className="bg-yellow-100 p-4 rounded-xl shadow">
+        <div className="bg-slate-800 p-4 rounded-xl shadow">
           <h4 className="font-semibold">Pending</h4>
           <p className="text-2xl font-bold">{stats.pending || 0}</p>
         </div>
@@ -155,8 +151,10 @@ const Assignment = () => {
         <div className="bg-slate-800 rounded-2xl shadow-md p-6 mb-8">
           <h3 className="text-lg font-semibold mb-4">Assign New Task</h3>
 
-          <form onSubmit={handleSubmit} className="grid md:grid-cols-4 gap-4 text-white ">
-
+          <form
+            onSubmit={handleSubmit}
+            className="grid md:grid-cols-4 gap-4 text-white "
+          >
             <select
               name="staff_name"
               value={form.staff_name}
@@ -201,25 +199,28 @@ const Assignment = () => {
             >
               {editId ? "Update Task" : "Assign Task"}
             </button>
-
           </form>
         </div>
       )}
 
       {/* TABLE CARD */}
-      <div className="bg-slate-800 rounded-2xl shadow-md p-6">
+      <div className="bg-slate-800 rounded-2xl shadow-md p-4 sm:p-6">
         <h3 className="text-lg font-semibold mb-4">Assigned Tasks</h3>
 
-        <div className="overflow-x-auto ">
-          <table className="w-full border-collapse ">
+        <div className="overflow-x-hidden">
+          <table className="w-full border-collapse">
             <thead>
-              <tr className="bg-blue-900 text-left text-white rounded-lg ">
-                <th className="p-3">Staff</th>
-                <th className="p-3">Room</th>
-                <th className="p-3">Task</th>
-                <th className="p-3">Status</th>
-                <th className="p-3">Assigned By</th>
-                <th className="p-3">Action</th>
+              <tr className="bg-blue-900 text-left text-white rounded-lg">
+                <th className="px-2 sm:px-3 py-2 sm:py-3">Staff</th>
+                <th className="px-2 sm:px-3 py-2 sm:py-3">Room</th>
+                <th className="px-2 sm:px-3 py-2 sm:py-3">Task</th>
+                <th className="px-2 sm:px-3 py-2 sm:py-3 hidden sm:table-cell">
+                  Status
+                </th>
+                <th className="px-2 sm:px-3 py-2 sm:py-3 hidden md:table-cell">
+                  Assigned By
+                </th>
+                <th className="px-2 sm:px-3 py-2 sm:py-3">Action</th>
               </tr>
             </thead>
 
@@ -227,27 +228,32 @@ const Assignment = () => {
               {assignments.map((a) => (
                 <tr
                   key={a.id}
-                  className="border-b hover:bg-gray-50 transition "
+                  className="border-b hover:bg-blue-500 transition"
                 >
-                  <td className="p-3 font-medium">{a.staff_name}</td>
-                  <td className="p-3">{a.room_number}</td>
-                  <td className="p-3">{a.task}</td>
+                  <td className="px-2 sm:px-3 py-2 sm:py-3 font-medium">
+                    {a.staff_name}
+                  </td>
+                  <td className="px-2 sm:px-3 py-2 sm:py-3">{a.room_number}</td>
+                  <td className="px-2 sm:px-3 py-2 sm:py-3">{a.task}</td>
 
-                  <td className="p-3">
+                  <td className="px-2 sm:px-3 py-2 sm:py-3 hidden sm:table-cell">
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-semibold
-                        ${a.status === "Completed"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-yellow-100 text-yellow-700"
+                        ${
+                          a.status === "Completed"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-yellow-100 text-yellow-700"
                         }`}
                     >
                       {a.status}
                     </span>
                   </td>
 
-                  <td className="p-3">{a.assigned_by}</td>
+                  <td className="px-2 sm:px-3 py-2 sm:py-3 hidden md:table-cell">
+                    {a.assigned_by}
+                  </td>
 
-                  <td className="p-3">
+                  <td className="px-2 sm:px-3 py-2 sm:py-3">
                     {a.status !== "Completed" && (
                       <button
                         onClick={() => markComplete(a.id)}
@@ -271,7 +277,6 @@ const Assignment = () => {
           </table>
         </div>
       </div>
-
     </div>
   );
 };

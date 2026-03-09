@@ -34,7 +34,7 @@ const CreateUser = () => {
       };
       localStorage.setItem("users", JSON.stringify([...existing, localUser]));
 
-      navigate("/user");   // dashboard
+      navigate("/user"); // dashboard
     } catch (error) {
       console.log(error);
       alert("Error creating user");
@@ -42,13 +42,11 @@ const CreateUser = () => {
   };
 
   return (
-    <div className="min-h-screen  flex items-center justify-center pl-70">
-      <div className="bg-slate-850 border-5 border-white/30 rounded-x3 p-10 rounded-2xl shadow-xl w-full max-w-lg ">
-
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4 sm:p-6 lg:p-8">
+      <div className="bg-slate-850 border border-white/30 p-6 sm:p-10 rounded-2xl shadow-xl w-full max-w-lg">
         <h2 className="text-2xl text-white font-bold mb-6">Create New User</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-
           <input
             type="text"
             name="name"
@@ -93,7 +91,6 @@ const CreateUser = () => {
             <option>Accountant</option>
             <option>waiter</option>
             <option>kitchen</option>
-            
           </select>
 
           <button
@@ -102,7 +99,6 @@ const CreateUser = () => {
           >
             Create User
           </button>
-
         </form>
       </div>
     </div>

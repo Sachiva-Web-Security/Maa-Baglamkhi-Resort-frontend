@@ -96,10 +96,10 @@ const Dashboard = () => {
       {/* ✅ Toast Container */}
       <ToastContainer theme="dark" />
 
-      <div className={`min-h-screen bg-slate-900 space-y-20 ${blurBg ? "blur-bg" : ""}`}>
+      <div className={`min-h-screen bg-slate-900 p-4 sm:p-6 lg:p-8 space-y-20 ${blurBg ? "blur-bg" : ""}`}>
 
         {/* ===== TOP METRICS ===== */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-6">
           {metrics.map((metric, index) => (
             <MetricCard
               key={index}

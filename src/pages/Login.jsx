@@ -74,7 +74,7 @@ const Login = ({ setIsAuthenticated }) => {
         backgroundImage: `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url(${bgImage})`,
       }}
     >
-      <div className="w-[380px] p-10 rounded-2xl bg-black/20 backdrop-blur-xl shadow-2xl border border-white/30">
+      <div className="w-[90%] sm:w-[380px] p-6 sm:p-10 rounded-2xl bg-black/20 backdrop-blur-xl shadow-2xl border border-white/30">
 
         {/* Header */}
         <div className="text-center mb-8 text-white">

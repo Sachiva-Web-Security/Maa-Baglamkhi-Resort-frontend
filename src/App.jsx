@@ -31,21 +31,33 @@ import Payment from "./components/Restaurant/Payment";
    Layout Component
 ============================ */
 function Layout({ children, setIsAuthenticated }) {
+
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   return (
-    <div className='flex bg-slate-900 min-h-screen'>
+    <div className="flex bg-slate-900 min-h-screen">
 
-      <Header setIsAuthenticated={setIsAuthenticated} />
-      <Sidebar />
+      {/* Sidebar */}
+      <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
-      {/* ✅ FIXED: pl- removed and proper padding added */}
-      <div className="ml-[250px] mt-[70px] p-4 w-full">
-        {children}
+      {/* Main Content */}
+      <div className="flex-1">
+
+        {/* Header */}
+        <Header
+         // setIsAuthenticated={setIsAuthenticated}
+          setSidebarOpen={setSidebarOpen}
+        />
+
+        <div className="mt-[70px] p-4 md:ml-[250px]">
+          {children}
+        </div>
+
       </div>
 
     </div>
   );
 }
-
 
 /* ============================
    Main App Component
