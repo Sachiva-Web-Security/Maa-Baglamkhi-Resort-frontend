@@ -4,9 +4,10 @@ import { RestaurantContext } from "../../Context/RestaurantContext";
 const OrderSummaryPage = () => {
     const { orderItems, removeItemFromOrder, clearOrder } = useContext(RestaurantContext);
 
-    const subtotal = orderItems.reduce((acc, item) => acc + item.price, 0);
+    const subtotal = orderItems.reduce((acc, item) => acc + Number(item.price), 0);
     const gst = subtotal * 0.05;
     const total = subtotal + gst;
+
 
     if (orderItems.length === 0) {
         return (

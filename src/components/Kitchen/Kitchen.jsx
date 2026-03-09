@@ -7,7 +7,7 @@ const Kitchen = () => {
 
     const fetchOrders = async () => {
         try {
-            const response = await axios.get("http://localhost:5010/api/orders");
+            const response = await axios.get("http://localhost:5002/api/orders");
             setOrders(response.data);
             setLoading(false);
         } catch (error) {
@@ -24,7 +24,7 @@ const Kitchen = () => {
 
     const handleGenerateBill = async (orderId) => {
         try {
-            await axios.post(`http://localhost:5010/api/bills/${orderId}`);
+            await axios.post(`http://localhost:5002/api/bills/${orderId}`);
             alert("Bill Generated Successfully!");
             fetchOrders(); // Refresh to see updated status
         } catch (error) {

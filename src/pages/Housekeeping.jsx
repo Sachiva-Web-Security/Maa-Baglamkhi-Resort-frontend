@@ -1,4 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { housekeepingService } from '../services/housekeepingService';
+import { userService } from '../services/userService';
+import { hotelService } from '../services/hotelService';
 import { FaSearch, FaFilePdf, FaChevronUp, FaTimes, FaExclamationCircle, FaBroom, FaCheck, FaBed } from 'react-icons/fa';
 import HousekeepingRow from '../components/Housekeeping/HousekeepingRow';
 
@@ -124,7 +127,10 @@ const allColumns = [
 ];
 
 function Housekeeping() {
-  const [data, setData] = useState(initialData);
+  const [data, setData] = useState([]);
+  const [housekeepers, setHousekeepers] = useState([]);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newRoomNo, setNewRoomNo] = useState('');
   const [selectAll, setSelectAll] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [housekeeperFilter, setHousekeeperFilter] = useState('All Housekeeper');
@@ -133,6 +139,94 @@ function Housekeeping() {
   const [visibleColumns, setVisibleColumns] = useState(
     allColumns.map(col => col.key)
   );
+
+  useEffect(() => {
+    fetchRooms();
+    fetchHousekeepers();
+  }, []);
+
+  const handleAddRoom = async () => {
+    if (!newRoomNo.trim()) return;
+    try {
+      await housekeepingService.createRoom({
+        roomNumber: newRoomNo,
+        status: 'Vacant Dirty',
+        assignee: 'No Housekeeper'
+      });
+      setShowAddModal(false);
+      setNewRoomNo('');
+      fetchRooms();
+    } catch (error) {
+      console.error("Error creating room", error);
+    }
+  };
+
+  const fetchHousekeepers = async () => {
+    try {
+      const users = await userService.getAllUsers();
+      // Filter for users with role 'housekeeping' if the role exists, else grab all names to be safe.
+      // Assumes the role column might be 'housekeeping' or similar. 
+      // If roles aren't strictly used, just map the names.
+      const hkUsers = users.filter(u => u.role && u.role.toLowerCase().includes('housekeeping'));
+
+      // Fallback: If no users have the 'housekeeping' role, we just provide all users as an option
+      const finalHousekeepers = hkUsers.length > 0 ? hkUsers : users;
+
+      setHousekeepers(finalHousekeepers.map(u => u.name));
+    } catch (error) {
+      console.error("Error fetching housekeepers", error);
+    }
+  };
+
+  const fetchRooms = async () => {
+    try {
+      // Fetch both housekeeping rooms and hotel status
+      const [rooms, hotelData] = await Promise.all([
+        housekeepingService.getAllRooms(),
+        hotelService.getRoomsAndBookings()
+      ]);
+      
+      const hotelRooms = hotelData.rooms || [];
+      const today = new Date().toISOString().split('T')[0];
+
+      const mappedRooms = rooms.map(room => {
+        // Find matching hotel room
+        const hRoom = hotelRooms.find(r => String(r.number) === String(room.roomNo));
+        
+        let guestStatus = '';
+        if (hRoom && hRoom.status === 'Occupied') {
+          if (hRoom.checkOut === today) {
+            guestStatus = 'Departs today';
+          } else if (hRoom.checkIn === today) {
+            guestStatus = 'Arrives today';
+          } else {
+            guestStatus = 'Occupied';
+          }
+        }
+
+        return {
+          id: room.id,
+          selected: false,
+          type: 'Accommodation',
+          roomNo: room.roomNo || 'N/A',
+          building: '-',
+          floor: '-',
+          section: '-',
+          guestStatus: guestStatus || '-',
+          roomType: 'Standard Room',
+          status: room.status || 'Vacant Dirty',
+          assignee: room.assignee || 'No Housekeeper',
+          layout: '',
+          articles: '',
+          services: '',
+          notes: false,
+        };
+      });
+      setData(mappedRooms);
+    } catch (error) {
+      console.error("Error fetching rooms", error);
+    }
+  };
 
   const selectedCount = data.filter(item => item.selected).length;
 
@@ -147,22 +241,46 @@ function Housekeeping() {
     setData(prev => prev.map(item => ({ ...item, selected: checked })));
   };
 
-  const handleStatusChange = (id, status) => {
-    setData(prev =>
-      prev.map(item => (item.id === id ? { ...item, status } : item))
-    );
+  const handleStatusChange = async (id, status) => {
+    try {
+      await housekeepingService.updateRoomStatus(id, status);
+      setData(prev =>
+        prev.map(item => (item.id === id ? { ...item, status } : item))
+      );
+    } catch (error) {
+      console.error("Error updating status", error);
+    }
   };
 
-  const handleAssigneeChange = (id, assignee) => {
-    setData(prev =>
-      prev.map(item => (item.id === id ? { ...item, assignee } : item))
-    );
+  const handleAssigneeChange = async (id, assignee) => {
+    try {
+      await housekeepingService.updateRoomAssignee(id, assignee);
+      setData(prev =>
+        prev.map(item => (item.id === id ? { ...item, assignee } : item))
+      );
+    } catch (error) {
+      console.error("Error updating assignee", error);
+    }
   };
+
+  const housekeeperStatuses = useMemo(() => {
+    const statuses = {};
+    housekeepers.forEach(hk => {
+      const hasUncompleted = data.some(room =>
+        room.assignee === hk &&
+        !room.status.toLowerCase().includes('clean') &&
+        room.status !== 'Out of Service'
+      );
+      statuses[hk] = hasUncompleted ? 'BUSY' : 'AVAILABLE';
+    });
+    return statuses;
+  }, [data, housekeepers]);
+
 
   const toggleColumn = (columnKey) => {
     const column = allColumns.find(col => col.key === columnKey);
     if (column && column.required) return; // Don't allow hiding required columns
-    
+
     setVisibleColumns(prev =>
       prev.includes(columnKey)
         ? prev.filter(key => key !== columnKey)
@@ -171,16 +289,16 @@ function Housekeeping() {
   };
 
   const filteredData = data.filter(item => {
-    const matchesSearch = searchQuery === '' || 
+    const matchesSearch = searchQuery === '' ||
       item.roomNo.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.roomType.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesHousekeeper = housekeeperFilter === 'All Housekeeper' || 
+
+    const matchesHousekeeper = housekeeperFilter === 'All Housekeeper' ||
       item.assignee === housekeeperFilter;
-    
-    const matchesRoomType = roomTypeTab === 'Accommodation Rooms' || 
+
+    const matchesRoomType = roomTypeTab === 'Accommodation Rooms' ||
       roomTypeTab === 'Event Rooms';
-    
+
     return matchesSearch && matchesHousekeeper && matchesRoomType;
   });
 
@@ -235,14 +353,21 @@ function Housekeeping() {
               onChange={(e) => setHousekeeperFilter(e.target.value)}
               className="w-full px-4 py-2 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-900 bg-transparent text-white"
             >
-              <option className="bg-[#071826]">All Housekeeper</option>
-              <option className="bg-[#071826]">John Doe</option>
-              <option className="bg-[#071826]">Jane Smith</option>
+              <option className="bg-[#071826]" value="All Housekeeper">All Housekeeper</option>
+              {housekeepers.map(hk => (
+                <option key={hk} className="bg-[#071826]" value={hk}>{hk}</option>
+              ))}
             </select>
           </div>
 
           {/* Export PDF Button */}
-          <div className="flex lg:justify-end">
+          <div className="flex lg:justify-end gap-2 mt-3 lg:mt-0">
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="w-full lg:w-auto flex items-center justify-center gap-2 px-5 py-2 bg-gradient-to-r from-teal-500 to-teal-700 text-white rounded-lg hover:opacity-95 transition"
+            >
+              <span className="text-sm font-medium">+ Add Room</span>
+            </button>
             <button className="w-full lg:w-auto flex items-center justify-center gap-2 px-5 py-2 bg-gradient-to-r from-[#10b981] to-[#06b6d4] text-white rounded-lg hover:opacity-95 transition">
               <FaFilePdf />
               <span className="text-sm font-medium">Export PDF</span>
@@ -259,21 +384,19 @@ function Housekeeping() {
           <div className="inline-flex rounded-lg border border-white/5 overflow-hidden w-full md:w-auto bg-transparent">
             <button
               onClick={() => setRoomTypeTab('Accommodation Rooms')}
-              className={`flex-1 md:flex-none px-4 py-2 text-sm font-medium transition-colors ${
-                roomTypeTab === 'Accommodation Rooms'
+              className={`flex-1 md:flex-none px-4 py-2 text-sm font-medium transition-colors ${roomTypeTab === 'Accommodation Rooms'
                   ? 'bg-white/5 text-white'
                   : 'bg-transparent text-gray-300 hover:bg-white/5'
-              }`}
+                }`}
             >
               Accommodation Rooms
             </button>
             <button
               onClick={() => setRoomTypeTab('Event Rooms')}
-              className={`flex-1 md:flex-none px-4 py-2 text-sm font-medium transition-colors border-l border-white/5 ${
-                roomTypeTab === 'Event Rooms'
+              className={`flex-1 md:flex-none px-4 py-2 text-sm font-medium transition-colors border-l border-white/5 ${roomTypeTab === 'Event Rooms'
                   ? 'bg-white/5 text-white'
                   : 'bg-transparent text-gray-300 hover:bg-white/5'
-              }`}
+                }`}
             >
               Event Rooms
             </button>
@@ -321,18 +444,17 @@ function Housekeeping() {
           {allColumns.map((column) => (
             <div
               key={column.key}
-              className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm ${
-                visibleColumns.includes(column.key)
+              onClick={() => toggleColumn(column.key)}
+              className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm cursor-pointer transition-opacity hover:opacity-80 ${visibleColumns.includes(column.key)
                   ? 'bg-white/5 text-white'
                   : 'bg-transparent text-gray-300 border border-white/5'
-              }`}
+                }`}
             >
               {column.required && <span className="text-teal-500">*</span>}
               <span>{column.label}</span>
-              {!column.required && (
+              {!column.required && visibleColumns.includes(column.key) && (
                 <button
-                  onClick={() => toggleColumn(column.key)}
-                  className="ml-1 hover:text-red-500"
+                  className="ml-1 text-gray-400 hover:text-red-500"
                 >
                   <FaTimes className="w-3 h-3" />
                 </button>
@@ -408,12 +530,57 @@ function Housekeeping() {
                   onSelectChange={handleSelectChange}
                   onStatusChange={handleStatusChange}
                   onAssigneeChange={handleAssigneeChange}
+                  housekeeperStatuses={housekeeperStatuses}
+                  assigneeOptions={['No Housekeeper', ...housekeepers]}
                 />
               ))}
             </tbody>
           </table>
         </div>
       </div>
+
+      {/* Add Room Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+          <div className="bg-[#0b1622] border border-white/10 rounded-xl p-6 w-full max-w-md shadow-2xl">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-white">Add New Room</h2>
+              <button
+                onClick={() => setShowAddModal(false)}
+                className="text-gray-400 hover:text-white transition"
+              >
+                <FaTimes />
+              </button>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm text-gray-400 mb-1">Room No. / Name</label>
+              <input
+                type="text"
+                value={newRoomNo}
+                onChange={(e) => setNewRoomNo(e.target.value)}
+                className="w-full px-4 py-2 border border-white/10 rounded-lg bg-[#071226] text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                placeholder="e.g. 101"
+              />
+            </div>
+
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => setShowAddModal(false)}
+                className="px-4 py-2 rounded-lg border border-white/10 text-gray-300 hover:bg-white/5 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddRoom}
+                className="px-4 py-2 bg-gradient-to-r from-teal-500 to-teal-700 hover:opacity-90 text-white rounded-lg transition font-medium"
+              >
+                Add Room
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

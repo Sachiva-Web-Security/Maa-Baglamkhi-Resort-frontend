@@ -3,9 +3,14 @@ import { useParams, useNavigate } from "react-router-dom";
 import { RestaurantContext } from "../../Context/RestaurantContext";
 import AddMenuItemModal from "./AddMenuItemModal";
 import OrderSummaryPage from "./OrderSummaryPage";
-
+import { useEffect } from "react";
 const MenuPage = () => {
     const { id } = useParams();
+    const { setSelectedTable } = useContext(RestaurantContext);
+
+useEffect(() => {
+    setSelectedTable(id);
+}, [id]);
     const navigate = useNavigate();
     const { menuItems, addItemToOrder, addMenuItem } = useContext(RestaurantContext);
     const [selectedCategory, setSelectedCategory] = useState("All");

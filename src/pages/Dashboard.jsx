@@ -11,7 +11,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useEffect, useState } from "react";
 import "./Dashboard.css";
-
+import TopBar from "../components/Dashboard/TOPBAR/Topbar";
 import MetricCard from "../components/Dashboard/MetricCard/MetricCard";
 import MonthlyRevenueChart from "../components/Dashboard/Charts/MonthlyRevenueChart";
 import RoomOccupancyChart from "../components/Dashboard/Charts/RoomOccupancyChart";
@@ -98,7 +98,7 @@ const Dashboard = () => {
       <ToastContainer theme="dark" />
 
       <div className={`min-h-screen bg-slate-900 space-y-20 ${blurBg ? "blur-bg" : ""}`}>
-
+        <TopBar />
         {/* ===== TOP METRICS ===== */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {metrics.map((metric, index) => (
