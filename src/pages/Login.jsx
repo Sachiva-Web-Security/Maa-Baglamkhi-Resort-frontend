@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import API from "../api";
 import bgImage from "../assets/bg.jpg";
 
@@ -54,7 +54,8 @@ const Login = ({ setIsAuthenticated }) => {
     } catch (error) {
       let errorMsg;
       if (error.message === "Network Error") {
-        errorMsg = `Unable to reach server. Please make sure the backend is running at ${import.meta.env.VITE_BACKEND_URL || "http://localhost:5001"}.`;
+        const base = (import.meta.env.VITE_API_URL || "http://localhost:5002/api").replace(/\/api\/?$/, "") || "http://localhost:5002";
+        errorMsg = `Unable to reach server. Please make sure the backend is running at ${base}.`;
       } else {
         errorMsg = error.response?.data?.message || "Invalid Credentials";
       }
@@ -127,6 +128,12 @@ const Login = ({ setIsAuthenticated }) => {
             Login
           </button>
 
+          <p className="text-center text-white/90 text-sm mt-4">
+            No account?{" "}
+            <Link to="/register" className="text-purple-300 font-semibold hover:underline">
+              Create one
+            </Link>
+          </p>
         </form>
       </div>
     </div>

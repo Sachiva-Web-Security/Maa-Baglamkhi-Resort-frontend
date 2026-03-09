@@ -1,10 +1,9 @@
 import React, { useState } from "react";
-//import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import API from "../../api";
 
 const CreateUser = () => {
-  //const navigate = useNavigate();
-  const [showCreateUser, setShowCreateUser] = useState(false);
+  const navigate = useNavigate();
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -34,7 +33,9 @@ const CreateUser = () => {
       };
       localStorage.setItem("users", JSON.stringify([...existing, localUser]));
 
-      navigate("/user"); // dashboard
+
+      navigate("/user");
+
     } catch (error) {
       console.log(error);
       alert("Error creating user");

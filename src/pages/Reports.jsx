@@ -1,9 +1,11 @@
+
 import { useEffect, useMemo, useState } from "react";
 import { FaSearch, FaDownload, FaPrint, FaSyncAlt } from "react-icons/fa";
 import ReportTypeSelector from "../components/Reports/ReportTypeSelector";
 import ReportFilters from "../components/Reports/ReportFilters";
 import ReportTable from "../components/Reports/ReportTable";
 import ReportCharts from "../components/Reports/ReportCharts";
+
 import API from "../api";
 
 const REPORT_TYPES = [
@@ -147,7 +149,7 @@ const Reports = () => {
     });
   }, [data, filters, query]);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const res = await API.get("/reports/data", {
@@ -168,11 +170,19 @@ const Reports = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [
+    reportType,
+    filters.dateFrom,
+    filters.dateTo,
+    filters.status,
+    filters.hall,
+    filters.roomType,
+    filters.paymentMode,
+  ]);
 
   useEffect(() => {
     fetchData();
-  }, [reportType]); // Automatically fetch when report type changes
+  }, [fetchData]); // Automatically fetch when report type/filters change
 
   const exportCSV = () => {
     const csv = toCSV(filtered);
@@ -292,10 +302,11 @@ const Reports = () => {
 };
 
 const SummaryPanel = ({ reportType, rows }) => {
-  const sum = (key) => rows.reduce((acc, r) => acc + (Number(r[key]) || 0), 0);
-
   const cards = useMemo(() => {
-    if (reportType === "banquet") {
+
+    const sum = (key) => rows.reduce((acc, r) => acc + (Number(r[key]) || 0), 0);
+    if (reportType === 'banquet') {
+
       return [
         { label: "Total Events", value: rows.length },
         { label: "Total Guests", value: sum("guests") },

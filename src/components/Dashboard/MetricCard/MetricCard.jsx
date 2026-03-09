@@ -1,4 +1,5 @@
 const MetricCard = ({ title, value, icon: Icon, gradient, onClick }) => {
+  const iconEl = Icon ? <Icon size={26} /> : null;
   return (
     <div
       onClick={onClick}
@@ -17,7 +18,7 @@ const MetricCard = ({ title, value, icon: Icon, gradient, onClick }) => {
         </div>
 
         <div className="bg-white/20 p-3 rounded-xl">
-          <Icon size={26} />
+          {iconEl}
         </div>
       </div>
     </div>

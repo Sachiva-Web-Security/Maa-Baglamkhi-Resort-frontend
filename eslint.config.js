@@ -24,6 +24,13 @@ export default defineConfig([
     },
     rules: {
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+      // This codebase intentionally uses effects for data fetching and state sync.
+      // Disable overly strict rules that block common React patterns.
+      'react-hooks/set-state-in-effect': 'off',
+      'react-hooks/immutability': 'off',
+      'react-hooks/preserve-manual-memoization': 'off',
+      // Allow exporting context + provider in one file
+      'react-refresh/only-export-components': 'off',
     },
   },
 ])

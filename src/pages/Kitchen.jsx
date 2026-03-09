@@ -5,6 +5,31 @@ const Kitchen = () => {
   const [orders, setOrders] = useState([]);
 
   useEffect(() => {
+const [orders,setOrders] = useState([]);
+
+// ================= FETCH ORDERS =================
+const fetchOrders = async ()=>{
+  try{
+    const res = await API.get("/kitchen/orders");
+    setOrders(res.data);
+  }catch(err){
+    console.log(err);
+  }
+}
+
+useEffect(()=>{
+  fetchOrders();
+},[]);
+
+
+// ================= MARK READY =================
+const markReady = async(id)=>{
+  try{
+
+    await API.put(`/kitchen/orders/${id}`,{
+      status:"Ready"
+    });
+
     fetchOrders();
   }, []);
 

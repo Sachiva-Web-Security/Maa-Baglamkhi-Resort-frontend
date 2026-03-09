@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 import Sidebar from './components/Sidebar/Sidebar';
 import Header from './components/Header/Header';
@@ -13,6 +13,7 @@ import Housekeeping from './pages/Housekeeping';
 import Banquet from './pages/Banquet';
 import Reports from './pages/Reports';
 import Login from './pages/Login';
+import Register from './pages/Register';
 import ProtectedRoute from './components/ProtectedRoute';
 import InventoryDashboard from './components/Inventory/InventoryDashboard';
 import Profile from "./pages/Profile";
@@ -64,16 +65,10 @@ function Layout({ children, setIsAuthenticated }) {
 ============================ */
 function App() {
 
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const authStatus = localStorage.getItem('isAuthenticated') === 'true';
-    setIsAuthenticated(authStatus);
-    setLoading(false);
-  }, []);
-
-  if (loading) return <div>Loading...</div>;
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    // Prefer token as source of truth
+    return Boolean(localStorage.getItem("token"));
+  });
 
   return (
     <Router>
@@ -82,7 +77,17 @@ function App() {
         {/* ================= LOGIN ================= */}
         <Route
           path="/login"
-          element={<Login setIsAuthenticated={setIsAuthenticated} />}
+          element={
+            isAuthenticated ? (
+              <Navigate to="/dashboard" replace />
+            ) : (
+              <Login setIsAuthenticated={setIsAuthenticated} />
+            )
+          }
+        />
+        <Route
+          path="/register"
+          element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Register />}
         />
 
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
