@@ -5,7 +5,7 @@ import RoomCard from "../components/Hotel/RoomCard";
 import BookingRow from "../components/Hotel/BookingRow";
 import Modal from "../components/Hotel/Modal";
 import BookingForm from "../components/Hotel/BookingForm";
-import "./Hotel.css";
+// import "./Hotel.css";
 
 const Hotel = () => {
   const [rooms, setRooms] = useState([]);
@@ -375,7 +375,7 @@ const Hotel = () => {
       </h1>
 
       {/* Top Action Buttons */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-6 sm:mb-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-6 sm:mb-10 w-full">
         <button
           className="h-10 sm:h-12 w-full bg-slate-700 hover:bg-blue-600 text-white rounded-full transition shadow-lg text-sm sm:text-base"
           onClick={() => openModal("newBooking")}
@@ -469,12 +469,12 @@ const Hotel = () => {
       </div>
 
       {/* Booking Table */}
-      <div className="w-full max-w-7xl mx-auto bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-4 sm:p-6 transition duration-300">
+      <div className="  bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-4 sm:p-6 transition duration-300">
         <h2 className="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6">
           Active Bookings
         </h2>
-        <div className="overflow-x-hidden">
-          <table className="w-full text-xs sm:text-sm text-gray-200">
+        <div className=" overflow-x-auto">
+          <table className="min-w-[700px] w-full text-xs sm:text-sm text-gray-200">
             <thead className="border-b border-white/10 text-gray-400 text-xs uppercase tracking-wider">
               <tr>
                 <th className="px-2 sm:px-4 py-2 sm:py-3 text-left whitespace-nowrap ">

@@ -1,9 +1,7 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import API from "../../api";
 
-const CreateUser = () => {
-  const navigate = useNavigate();
+const CreateUser = ({ onClose, onUserCreated }) => {
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -23,7 +21,6 @@ const CreateUser = () => {
 
       alert(res.data.message);
 
-      // LocalStorage me bhi safe user store karein (password ke bina)
       const existing = JSON.parse(localStorage.getItem("users")) || [];
       const localUser = {
         id: Date.now(),
@@ -31,11 +28,16 @@ const CreateUser = () => {
         email: form.email,
         role: form.role,
       };
+
       localStorage.setItem("users", JSON.stringify([...existing, localUser]));
 
+      if (onUserCreated) {
+        onUserCreated(localUser);
+      }
 
-      navigate("/user");
-
+      if (onClose) {
+        onClose();
+      }
     } catch (error) {
       console.log(error);
       alert("Error creating user");
@@ -43,8 +45,15 @@ const CreateUser = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4 sm:p-6 lg:p-8">
-      <div className="bg-slate-850 border border-white/30 p-6 sm:p-10 rounded-2xl shadow-xl w-full max-w-lg">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+      <div className="bg-slate-900 border border-white/20 p-6 sm:p-10 rounded-2xl shadow-xl w-full max-w-lg relative">
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-4 text-white text-2xl"
+        >
+          ×
+        </button>
+
         <h2 className="text-2xl text-white font-bold mb-6">Create New User</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -55,7 +64,7 @@ const CreateUser = () => {
             required
             value={form.name}
             onChange={handleChange}
-            className="w-full p-3 text-white border rounded-xl"
+            className="w-full p-3 text-white bg-slate-800 border border-white/20 rounded-xl outline-none"
           />
 
           <input
@@ -65,7 +74,7 @@ const CreateUser = () => {
             required
             value={form.email}
             onChange={handleChange}
-            className="w-full p-3 text-white border rounded-xl"
+            className="w-full p-3 text-white bg-slate-800 border border-white/20 rounded-xl outline-none"
           />
 
           <input
@@ -75,23 +84,23 @@ const CreateUser = () => {
             required
             value={form.password}
             onChange={handleChange}
-            className="w-full p-3 text-white border rounded-xl"
+            className="w-full p-3 text-white bg-slate-800 border border-white/20 rounded-xl outline-none"
           />
 
           <select
             name="role"
             value={form.role}
             onChange={handleChange}
-            className="w-full p-3 text-white border rounded-xl"
+            className="w-full p-3 text-white bg-slate-800 border border-white/20 rounded-xl outline-none"
           >
-            <option>Admin</option>
-            <option>Manager</option>
-            <option>Staff</option>
-            <option>Receptionist</option>
-            <option>Housekeeping</option>
-            <option>Accountant</option>
-            <option>waiter</option>
-            <option>kitchen</option>
+            <option value="Admin">Admin</option>
+            <option value="Manager">Manager</option>
+            <option value="Staff">Staff</option>
+            <option value="Receptionist">Receptionist</option>
+            <option value="Housekeeping">Housekeeping</option>
+            <option value="Accountant">Accountant</option>
+            <option value="Waiter">Waiter</option>
+            <option value="Kitchen">Kitchen</option>
           </select>
 
           <button

@@ -10,7 +10,6 @@ const Login = ({ setIsAuthenticated }) => {
     role: "Admin",
   });
 
-
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -44,17 +43,21 @@ const Login = ({ setIsAuthenticated }) => {
       localStorage.setItem("name", user.name);
       localStorage.setItem("email", user.email);
       localStorage.setItem("isAuthenticated", "true");
+      localStorage.setItem("freshLogin", "true"); // ✅ Flag for loader
 
       if (setIsAuthenticated) {
         setIsAuthenticated(true);
       }
-      // Direct navigate with state
-      navigate("/dashboard", { state: { loginSuccess: true } });
-
+      // Navigate to dashboard; loader is controlled via freshLogin flag
+      navigate("/dashboard", { replace: true });
     } catch (error) {
       let errorMsg;
       if (error.message === "Network Error") {
-        const base = (import.meta.env.VITE_API_URL || "http://localhost:5002/api").replace(/\/api\/?$/, "") || "http://localhost:5002";
+        const base =
+          (import.meta.env.VITE_API_URL || "http://localhost:5002/api").replace(
+            /\/api\/?$/,
+            "",
+          ) || "http://localhost:5002";
         errorMsg = `Unable to reach server. Please make sure the backend is running at ${base}.`;
       } else {
         errorMsg = error.response?.data?.message || "Invalid Credentials";
@@ -67,8 +70,6 @@ const Login = ({ setIsAuthenticated }) => {
   };
 
   return (
-
-
     <div
       className={`min-h-screen flex items-center justify-center font-[Poppins] bg-cover bg-center `}
       style={{
@@ -76,18 +77,14 @@ const Login = ({ setIsAuthenticated }) => {
       }}
     >
       <div className="w-[90%] sm:w-[380px] p-6 sm:p-10 rounded-2xl bg-black/20 backdrop-blur-xl shadow-2xl border border-white/30">
-
         {/* Header */}
         <div className="text-center mb-8 text-white">
           <div className="text-xl font-bold mb-2">LOGO</div>
-          <h1 className="text-2xl font-semibold">
-            Maa Baglamukhi Resort
-          </h1>
+          <h1 className="text-2xl font-semibold">Maa Baglamukhi Resort</h1>
         </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
-
           {/* Email */}
           <div className="text-left">
             <label className="text-sm text-white font-semibold">
@@ -106,9 +103,7 @@ const Login = ({ setIsAuthenticated }) => {
 
           {/* Password */}
           <div className="text-left">
-            <label className="text-sm text-white font-semibold">
-              Password
-            </label>
+            <label className="text-sm text-white font-semibold">Password</label>
             <input
               type="password"
               name="password"
@@ -130,14 +125,16 @@ const Login = ({ setIsAuthenticated }) => {
 
           <p className="text-center text-white/90 text-sm mt-4">
             No account?{" "}
-            <Link to="/register" className="text-purple-300 font-semibold hover:underline">
+            <Link
+              to="/register"
+              className="text-purple-300 font-semibold hover:underline"
+            >
               Create one
             </Link>
           </p>
         </form>
       </div>
     </div>
-
   );
 };
 

@@ -4,35 +4,6 @@ import API from "../api";
 const Kitchen = () => {
   const [orders, setOrders] = useState([]);
 
-  useEffect(() => {
-const [orders,setOrders] = useState([]);
-
-// ================= FETCH ORDERS =================
-const fetchOrders = async ()=>{
-  try{
-    const res = await API.get("/kitchen/orders");
-    setOrders(res.data);
-  }catch(err){
-    console.log(err);
-  }
-}
-
-useEffect(()=>{
-  fetchOrders();
-},[]);
-
-
-// ================= MARK READY =================
-const markReady = async(id)=>{
-  try{
-
-    await API.put(`/kitchen/orders/${id}`,{
-      status:"Ready"
-    });
-
-    fetchOrders();
-  }, []);
-
   // ================= FETCH ORDERS =================
   const fetchOrders = async () => {
     try {
@@ -42,6 +13,10 @@ const markReady = async(id)=>{
       console.log(err);
     }
   };
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
 
   // ================= MARK READY =================
   const markReady = async (id) => {
@@ -57,10 +32,10 @@ const markReady = async(id)=>{
   };
 
   return (
-    <div className="min-h-screen w-full overflow-x-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen  overflow-x-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4 sm:p-6 lg:p-8">
       {/* HEADER */}
 
-      <div className="bg-slate-1000 w-full text-white p-4 rounded-2xl shadow-lg mb-6">
+      <div className="bg-slate-900 w-full text-white p-4 sm:p-6 rounded-2xl shadow-lg mb-6">
         <h2 className="text-2xl font-bold ">Kitchen Orders</h2>
         <p className="text-sm opacity-90">Manage restaurant food orders</p>
       </div>
@@ -70,8 +45,8 @@ const markReady = async(id)=>{
       <div className="bg-slate-850 rounded-2xl shadow-md p-6">
         <h3 className="text-lg font-extrabold mb-4">Kitchen Orders</h3>
 
-        <div className="overflow-x-auto ">
-          <table className="w-full border-collapse ">
+        <div className="w-full overflow-x-auto rounded-xl">
+          <table className="min-w-full w-full border-collapse text-xs sm:text-sm">
             <thead>
               <tr className="bg-slate-900 text-white text-left ">
                 <th className="p-3">Waiter</th>

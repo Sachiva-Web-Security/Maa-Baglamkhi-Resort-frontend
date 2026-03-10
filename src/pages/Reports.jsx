@@ -1,5 +1,4 @@
-
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { FaSearch, FaDownload, FaPrint, FaSyncAlt } from "react-icons/fa";
 import ReportTypeSelector from "../components/Reports/ReportTypeSelector";
 import ReportFilters from "../components/Reports/ReportFilters";
@@ -303,10 +302,9 @@ const Reports = () => {
 
 const SummaryPanel = ({ reportType, rows }) => {
   const cards = useMemo(() => {
-
-    const sum = (key) => rows.reduce((acc, r) => acc + (Number(r[key]) || 0), 0);
-    if (reportType === 'banquet') {
-
+    const sum = (key) =>
+      rows.reduce((acc, r) => acc + (Number(r[key]) || 0), 0);
+    if (reportType === "banquet") {
       return [
         { label: "Total Events", value: rows.length },
         { label: "Total Guests", value: sum("guests") },
