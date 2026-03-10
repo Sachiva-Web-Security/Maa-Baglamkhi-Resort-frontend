@@ -47,7 +47,7 @@ function Layout({ children, setIsAuthenticated }) {
       <div className="flex flex-col overflow-hidden h-screen md:ml-[250px]">
         {/* Header */}
         <Header
-          // setIsAuthenticated={setIsAuthenticated}
+          setIsAuthenticated={setIsAuthenticated}
           setSidebarOpen={setSidebarOpen}
         />
 

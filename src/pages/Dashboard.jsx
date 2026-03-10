@@ -36,10 +36,7 @@ const Dashboard = () => {
 
     setBlurBg(true);
 
-    toast.success("Login Successful", {
-      position: "top-center",
-      autoClose: 2000,
-    });
+    
 
     const blurTimer = setTimeout(() => {
       setBlurBg(false);
@@ -48,7 +45,7 @@ const Dashboard = () => {
     const loaderTimer = setTimeout(() => {
       setLoading(false);
       localStorage.removeItem("freshLogin");
-    }, 2000);
+    }, 1000);
 
     return () => {
       clearTimeout(blurTimer);
