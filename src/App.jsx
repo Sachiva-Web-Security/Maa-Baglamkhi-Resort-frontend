@@ -1,48 +1,60 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useState } from 'react';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import { useState } from "react";
 
-import Sidebar from './components/Sidebar/Sidebar';
-import Header from './components/Header/Header';
+import Sidebar from "./components/Sidebar/Sidebar";
+import Header from "./components/Header/Header";
 
-import Dashboard from './pages/Dashboard';
-import Attendance from './pages/Attendance';
-import Hotel from './pages/Hotel';
-import RestaurantPOS from './pages/RestaurantPOS';
-import Accounts from './pages/Accounts';
-import Housekeeping from './pages/Housekeeping';
-import Banquet from './pages/Banquet';
-import Reports from './pages/Reports';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import ProtectedRoute from './components/ProtectedRoute';
-import InventoryDashboard from './components/Inventory/InventoryDashboard';
+import Dashboard from "./pages/Dashboard";
+import Attendance from "./pages/Attendance";
+import Hotel from "./pages/Hotel";
+import RestaurantPOS from "./pages/RestaurantPOS";
+import Accounts from "./pages/Accounts";
+import Housekeeping from "./pages/Housekeeping";
+import Banquet from "./pages/Banquet";
+import Reports from "./pages/Reports";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import ProtectedRoute from "./components/ProtectedRoute";
+import InventoryDashboard from "./components/Inventory/InventoryDashboard";
 import Profile from "./pages/Profile";
-import User from './pages/User';
+import User from "./pages/User";
 import CreateUser from "./components/Createuser/CreateUser";
-import Assignment from './pages/Assignments';
-import Kitchen from './pages/Kitchen';
+import Assignment from "./pages/Assignments";
+import Kitchen from "./pages/Kitchen";
 import { RestaurantProvider } from "./Context/RestaurantContext";
 
 import TablePage from "./components/Restaurant/TablePage";
 import MenuPage from "./components/Restaurant/MenuPage";
 import Payment from "./components/Restaurant/Payment";
 
-
 /* ============================
    Layout Component
 ============================ */
 function Layout({ children, setIsAuthenticated }) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   return (
-    <div className='flex bg-slate-900 min-h-screen'>
+    <div className="bg-slate-900 min-h-screen overflow-hidden w-screen">
+      {/* Sidebar */}
+      <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
-      <Header setIsAuthenticated={setIsAuthenticated} />
-      <Sidebar />
+      {/* Main Content */}
+      <div className="flex flex-col overflow-hidden h-screen md:ml-[250px]">
+        {/* Header */}
+        <Header
+          setIsAuthenticated={setIsAuthenticated}
+          setSidebarOpen={setSidebarOpen}
+        />
 
-      {/* ✅ FIXED: pl- removed and proper padding added */}
-      <div className="ml-[250px] mt-[70px] p-4 w-full">
-        {children}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden mt-[70px] w-full">
+          <div className="p-4 sm:p-6 lg:p-8 w-full max-w-full">{children}</div>
+        </div>
       </div>
-
     </div>
   );
 }
@@ -52,7 +64,6 @@ function Layout({ children, setIsAuthenticated }) {
    Main App Component
 ============================ */
 function App() {
-
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     // Prefer token as source of truth
     return Boolean(localStorage.getItem("token"));
@@ -61,7 +72,6 @@ function App() {
   return (
     <Router>
       <Routes>
-
         {/* ================= LOGIN ================= */}
         <Route
           path="/login"
@@ -75,11 +85,16 @@ function App() {
         />
         <Route
           path="/register"
-          element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Register />}
+          element={
+            isAuthenticated ? (
+              <Navigate to="/dashboard" replace />
+            ) : (
+              <Register />
+            )
+          }
         />
 
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
-
 
         {/* ================= DASHBOARD ================= */}
         <Route
@@ -93,7 +108,6 @@ function App() {
           }
         />
 
-
         {/* ================= PROFILE ================= */}
         <Route
           path="/profile"
@@ -105,7 +119,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-
 
         {/* ================= ATTENDANCE ================= */}
         <Route
@@ -127,7 +140,6 @@ function App() {
           }
         />
 
-
         {/* ================= HOTEL ================= */}
         <Route
           path="/hotel"
@@ -139,7 +151,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-
 
         {/* ================= ACCOUNTS ================= */}
         <Route
@@ -153,12 +164,13 @@ function App() {
           }
         />
 
-
         {/* ================= RESTAURANT POS (Nested Routing) ================= */}
         <Route
           path="/restaurant"
           element={
-            <ProtectedRoute allowedRoles={["admin", "manager", "waiter", "kitchen"]}>
+            <ProtectedRoute
+              allowedRoles={["admin", "manager", "waiter", "kitchen"]}
+            >
               <Layout setIsAuthenticated={setIsAuthenticated}>
                 <RestaurantProvider>
                   <RestaurantPOS />
@@ -172,7 +184,6 @@ function App() {
           <Route path="payment" element={<Payment />} />
         </Route>
 
-
         {/* ================= INVENTORY ================= */}
         <Route
           path="/inventory"
@@ -184,7 +195,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-
 
         {/* ================= USER ================= */}
         <Route
@@ -198,7 +208,6 @@ function App() {
           }
         />
 
-
         <Route
           path="/create-user"
           element={
@@ -209,7 +218,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-
 
         {/* ================= HOUSEKEEPING ================= */}
         <Route
@@ -223,7 +231,6 @@ function App() {
           }
         />
 
-
         {/* ================= BANQUET ================= */}
         <Route
           path="/banquet"
@@ -235,7 +242,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-
 
         {/* ================= REPORTS ================= */}
         <Route
@@ -249,19 +255,19 @@ function App() {
           }
         />
 
-
         {/* ================= ASSIGNMENTS ================= */}
         <Route
           path="/assignments"
           element={
-            <ProtectedRoute allowedRoles={["admin", "manager", "housekeeping", "staff"]}>
+            <ProtectedRoute
+              allowedRoles={["admin", "manager", "housekeeping", "staff"]}
+            >
               <Layout setIsAuthenticated={setIsAuthenticated}>
                 <Assignment />
               </Layout>
             </ProtectedRoute>
           }
         />
-
 
         {/* ================= KITCHEN ================= */}
         <Route
@@ -274,7 +280,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-
       </Routes>
     </Router>
   );

@@ -1,17 +1,9 @@
-import {
-  FaBed,
-  FaKey,
-  FaRupeeSign,
-  FaCheckCircle,
-} from "react-icons/fa";
-
-
-import { useNavigate, useLocation } from "react-router-dom";
+import { FaBed, FaKey, FaRupeeSign, FaCheckCircle } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useEffect, useState } from "react";
-import "./Dashboard.css";
-import TopBar from "../components/Dashboard/TOPBAR/Topbar";
+
 import MetricCard from "../components/Dashboard/MetricCard/MetricCard";
 import MonthlyRevenueChart from "../components/Dashboard/Charts/MonthlyRevenueChart";
 import RoomOccupancyChart from "../components/Dashboard/Charts/RoomOccupancyChart";
@@ -21,44 +13,77 @@ import API from "../api";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const location = useLocation();
 
-  // ✅ Blur state
+  const [loading, setLoading] = useState(
+    localStorage.getItem("freshLogin") === "true"
+  );
   const [blurBg, setBlurBg] = useState(false);
-
-  // ✅ Show toast after login
-  useEffect(() => {
-    if (location.state?.loginSuccess) {
-      setBlurBg(true);
-
-      toast.success("✅ Login Successful", {
-        position: "top-center",
-        autoClose: 0,
-      });
-
-      setTimeout(() => {
-        setBlurBg(false);
-      }, 500);
-    }
-  }, [location]);
 
   const [apiMetrics, setApiMetrics] = useState({
     totalRooms: 0,
     occupiedRooms: 0,
     todayRevenue: 0,
-    todayCheckins: 0
+    todayCheckins: 0,
   });
 
   useEffect(() => {
+    const freshLoginFlag = localStorage.getItem("freshLogin");
+
+    if (freshLoginFlag !== "true") {
+      setLoading(false);
+      return;
+    }
+
+    setBlurBg(true);
+
+    toast.success("Login Successful", {
+      position: "top-center",
+      autoClose: 2000,
+    });
+
+    const blurTimer = setTimeout(() => {
+      setBlurBg(false);
+    }, 500);
+
+    const loaderTimer = setTimeout(() => {
+      setLoading(false);
+      localStorage.removeItem("freshLogin");
+    }, 2000);
+
+    return () => {
+      clearTimeout(blurTimer);
+      clearTimeout(loaderTimer);
+    };
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+
     const fetchMetrics = async () => {
       try {
         const res = await API.get("/dashboard/metrics");
-        setApiMetrics(res.data);
+        if (isMounted) {
+          setApiMetrics({
+            totalRooms: res.data.totalRooms || 0,
+            occupiedRooms: res.data.occupiedRooms || 0,
+            todayRevenue: res.data.todayRevenue || 0,
+            todayCheckins: res.data.todayCheckins || 0,
+          });
+        }
       } catch (err) {
-        console.error("Error fetching dashboard metrics:", err);
+        if (isMounted) {
+          toast.error("Failed to load metrics", {
+            position: "bottom-right",
+          });
+        }
       }
     };
+
     fetchMetrics();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const metrics = [
@@ -94,13 +119,25 @@ const Dashboard = () => {
 
   return (
     <>
-      {/* ✅ Toast Container */}
       <ToastContainer theme="dark" />
 
-      <div className={`min-h-screen bg-slate-900 space-y-20 ${blurBg ? "blur-bg" : ""}`}>
-        <TopBar />
-        {/* ===== TOP METRICS ===== */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      {loading && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
+            <p className="text-lg font-semibold text-white">
+              Loading Dashboard...
+            </p>
+          </div>
+        </div>
+      )}
+
+      <div
+        className={`w-full min-h-screen overflow-x-hidden bg-slate-900 p-4 sm:p-6 lg:p-8 space-y-20 transition-all duration-300 ${
+          blurBg ? "blur-[6px]" : ""
+        }`}
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
           {metrics.map((metric, index) => (
             <MetricCard
               key={index}
@@ -113,34 +150,29 @@ const Dashboard = () => {
           ))}
         </div>
 
-        {/* ===== MAIN CHART ===== */}
-        <div className="">
+        <div className="w-full">
           <h2 className="text-white font-semibold mb-4">
             Reservation Statistic
           </h2>
-          <MonthlyRevenueChart />
+          <div className="w-full h-96">
+            <MonthlyRevenueChart />
+          </div>
         </div>
 
-        {/* ===== SMALL CHARTS ===== */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-          <div className="bg-slate-900 ">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+          <div className="w-full h-80 bg-slate-900">
             <RoomOccupancyChart />
           </div>
 
-          <div >
+          <div className="w-full h-80">
             <FoodSalesChart />
           </div>
-
         </div>
 
-        {/* ===== HOME PAGE FULL WIDTH (BOTTOM) ===== */}
-        <div className="">
+        <div>
           <HomePage />
         </div>
-
       </div>
-
     </>
   );
 };

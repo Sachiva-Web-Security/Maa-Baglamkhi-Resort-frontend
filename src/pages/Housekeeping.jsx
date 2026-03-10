@@ -306,7 +306,7 @@ function Housekeeping() {
   ).length;
 
   return (
-    <div className="min-h-screen w-280 pt-[100px] px-[30px] pb-[30px] bg-gradient-to-br from-[#071226] via-[#081827] to-[#041019] text-gray-100">
+    <div className="min-h-screen w-full overflow-x-hidden bg-gradient-to-br from-[#071226] via-[#081827] to-[#041019] text-gray-100 p-4 sm:p-6 lg:p-8">
       {/* Header */}
       <div className="mb-5">
         <h1 className="text-2xl pl-100 font-semibold text-white mb-1">Housekeeping</h1>

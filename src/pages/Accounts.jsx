@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
-import SummaryCard from '../components/Accounts/SummaryCard';
-import RecordRow from '../components/Accounts/RecordRow';
-import ReportCard from '../components/Accounts/ReportCard';
-import Modal from '../components/Hotel/Modal';
-import TransactionForm from '../components/Accounts/forms/TransactionForm';
-import InvoiceForm from '../components/Accounts/forms/InvoiceForm';
+import { useEffect, useMemo, useState } from "react";
+import SummaryCard from "../components/Accounts/SummaryCard";
+import RecordRow from "../components/Accounts/RecordRow";
+import ReportCard from "../components/Accounts/ReportCard";
+import Modal from "../components/Hotel/Modal";
+import TransactionForm from "../components/Accounts/forms/TransactionForm";
+import InvoiceForm from "../components/Accounts/forms/InvoiceForm";
 import './Accounts.css';
 import API from "../api";
 
@@ -176,28 +176,31 @@ const Accounts = () => {
   };
 
   return (
-    <div className="min-h-screen w-280 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-slate-100 p-8">
-      <h1 className="accounts-title pl-100">Accounts & Finance</h1>
+    <div className="min-h-screen w-full bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-slate-100 p-4 sm:p-6 lg:p-8 overflow-x-hidden">
+      <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-6 sm:mb-8 text-slate-50">
+        Accounts & Finance
+      </h1>
 
-      <div className="accounts-actions">
+      {/* Top Action Buttons */}
+      <div className="flex flex-wrap gap-2 sm:gap-3 mb-6 sm:mb-8">
         <button
-          className="accounts-action-btn bg-gradient-to-r from-pink-400 to-blue-600"
-          onClick={() => openModal('addIncome')}
+          className="flex-1 min-w-max px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg font-semibold text-sm sm:text-base bg-gradient-to-r from-pink-400 to-blue-600 text-white hover:opacity-90 transition"
+          onClick={() => openModal("addIncome")}
         >
           + Add Income
         </button>
 
         <button
-          className="accounts-action-btn bg-gradient-to-r from-yellow-400 to-orange-500"
-          onClick={() => openModal('addExpense')}
+          className="flex-1 min-w-max px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg font-semibold text-sm sm:text-base bg-gradient-to-r from-yellow-400 to-orange-500 text-white hover:opacity-90 transition"
+          onClick={() => openModal("addExpense")}
         >
           + Add Expense
         </button>
 
         {/*
         <button
-          className="accounts-action-btn bg-gradient-to-r from-blue-400 to-cyan-500"
-          onClick={() => openModal('invoice')}
+          className="flex-1 min-w-max px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg font-semibold text-sm sm:text-base bg-gradient-to-r from-blue-400 to-cyan-500 text-white hover:opacity-90 transition"
+          onClick={() => openModal("invoice")}
         >
           Generate Invoice
         </button>
@@ -205,15 +208,16 @@ const Accounts = () => {
 
         {/*
         <button
-          className="accounts-action-btn bg-gradient-to-r from-purple-400 to-indigo-500"
-          onClick={() => openModal('audit')}
+          className="flex-1 min-w-max px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg font-semibold text-sm sm:text-base bg-gradient-to-r from-purple-400 to-indigo-500 text-white hover:opacity-90 transition"
+          onClick={() => openModal("audit")}
         >
           Night Audit
         </button>
         */}
       </div>
 
-      <div className="accounts-summary-grid">
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8 sm:mb-10">
         <SummaryCard
           label="Total Income"
           value={formatINR(totals.income)}
@@ -243,42 +247,49 @@ const Accounts = () => {
         />
       </div>
 
-      <div className="accounts-table-card">
-        <div className="accounts-table-card__header">
-          <h2 className="accounts-table-card__title">Income & Expense Records</h2>
+      {/* Income & Expense Table */}
+      <div className="bg-slate-800/40 border border-slate-700/50 rounded-xl shadow-lg mb-8 sm:mb-10 overflow-hidden">
+        <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-slate-700/30">
+          <h2 className="text-lg sm:text-xl font-bold text-slate-100">
+            Income & Expense Records
+          </h2>
         </div>
 
-        <div className="accounts-table-wrap">
-          <table className="accounts-table">
-            <thead className="accounts-thead">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[600px] text-xs sm:text-sm text-slate-200">
+            <thead className="bg-slate-900/50 border-b border-slate-700/30">
               <tr>
-                <th className="accounts-th">Date</th>
-                <th className="accounts-th">Type</th>
-                <th className="accounts-th">Description</th>
-                <th className="accounts-th">Amount</th>
-                <th className="accounts-th">Payment Mode</th>
-                <th className="accounts-th">Action</th>
+                <th className="px-3 sm:px-4 py-2.5 sm:py-3 text-left font-semibold text-slate-300">
+                  Date
+                </th>
+                <th className="px-3 sm:px-4 py-2.5 sm:py-3 text-left font-semibold text-slate-300">
+                  Type
+                </th>
+                <th className="px-3 sm:px-4 py-2.5 sm:py-3 text-left font-semibold text-slate-300">
+                  Description
+                </th>
+                <th className="px-3 sm:px-4 py-2.5 sm:py-3 text-left font-semibold text-slate-300">
+                  Amount
+                </th>
+                <th className="px-3 sm:px-4 py-2.5 sm:py-3 text-left font-semibold text-slate-300 hidden sm:table-cell">
+                  Payment Mode
+                </th>
+                <th className="px-3 sm:px-4 py-2.5 sm:py-3 text-left font-semibold text-slate-300">
+                  Action
+                </th>
               </tr>
             </thead>
-
-            <tbody>
-              {records.length > 0 ? (
-                records.map((r) => (
-                  <RecordRow key={r.id} record={r} onView={handleView} />
-                ))
-              ) : (
-                <tr>
-                  <td className="accounts-td text-center" colSpan="6">
-                    No records found
-                  </td>
-                </tr>
-              )}
+            <tbody className="divide-y divide-slate-700/20">
+              {records.map((r) => (
+                <RecordRow key={r.id} record={r} onView={handleView} />
+              ))}
             </tbody>
           </table>
         </div>
       </div>
 
-      <div className="accounts-reports-grid">
+      {/* Reports Section */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         <ReportCard
           variant="blue"
           title="Profit & Loss Report"
@@ -342,38 +353,46 @@ const Accounts = () => {
         title="Record Details"
       >
         {selectedRecord ? (
-          <div className="accounts-view">
-            <div className="accounts-view__row">
-              <span className="accounts-view__label">Date</span>
-              <span className="accounts-view__value">{selectedRecord.date}</span>
+          <div className="space-y-4">
+            <div className="flex justify-between gap-3 pb-3 border-b border-slate-600/30">
+              <span className="text-slate-400 text-sm font-medium">Date</span>
+              <span className="text-slate-100 text-sm font-semibold">
+                {selectedRecord.date}
+              </span>
             </div>
-
-            <div className="accounts-view__row">
-              <span className="accounts-view__label">Type</span>
-              <span className="accounts-view__value">{selectedRecord.type}</span>
+            <div className="flex justify-between gap-3 pb-3 border-b border-slate-600/30">
+              <span className="text-slate-400 text-sm font-medium">Type</span>
+              <span className="text-slate-100 text-sm font-semibold">
+                {selectedRecord.type}
+              </span>
             </div>
-
-            <div className="accounts-view__row">
-              <span className="accounts-view__label">Description</span>
-              <span className="accounts-view__value">{selectedRecord.description}</span>
+            <div className="flex justify-between gap-3 pb-3 border-b border-slate-600/30">
+              <span className="text-slate-400 text-sm font-medium">
+                Description
+              </span>
+              <span className="text-slate-100 text-sm font-semibold">
+                {selectedRecord.description}
+              </span>
             </div>
-
-            <div className="accounts-view__row">
-              <span className="accounts-view__label">Amount</span>
-              <span className="accounts-view__value">
+            <div className="flex justify-between gap-3 pb-3 border-b border-slate-600/30">
+              <span className="text-slate-400 text-sm font-medium">Amount</span>
+              <span className="text-slate-100 text-sm font-semibold">
                 {formatINR(selectedRecord.amount)}
               </span>
             </div>
-
-            <div className="accounts-view__row">
-              <span className="accounts-view__label">Payment Mode</span>
-              <span className="accounts-view__value">{selectedRecord.paymentMode}</span>
+            <div className="flex justify-between gap-3 pb-3">
+              <span className="text-slate-400 text-sm font-medium">
+                Payment Mode
+              </span>
+              <span className="text-slate-100 text-sm font-semibold">
+                {selectedRecord.paymentMode}
+              </span>
             </div>
 
-            <div className="accounts-view__actions">
+            <div className="flex justify-end gap-2 mt-6 pt-4 border-t border-slate-600/30">
               <button
-                className="accounts-btn accounts-btn--ghost"
-                onClick={() => closeModal('view')}
+                className="px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-100 text-sm font-medium transition"
+                onClick={() => closeModal("view")}
               >
                 Close
               </button>
@@ -387,12 +406,11 @@ const Accounts = () => {
         onClose={() => closeModal('audit')}
         title="Night Audit"
       >
-        <div className="accounts-audit">
-          <p className="accounts-audit__text">
-            This will summarize today’s income/expense totals (demo).
+        <div className="space-y-3">
+          <p className="text-slate-300 text-sm">
+            This will summarize today's income/expense totals (demo).
           </p>
-
-          <ul className="accounts-audit__list">
+          <ul className="ml-4 space-y-2 text-slate-100 text-sm list-disc">
             <li>
               <strong>Total Income:</strong> {formatINR(totals.income)}
             </li>
@@ -407,16 +425,16 @@ const Accounts = () => {
             </li>
           </ul>
 
-          <div className="accounts-audit__actions">
+          <div className="flex justify-end gap-2 mt-6 pt-4 border-t border-slate-600/30">
             <button
-              className="accounts-btn accounts-btn--ghost"
-              onClick={() => closeModal('audit')}
+              className="px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-100 text-sm font-medium transition"
+              onClick={() => closeModal("audit")}
             >
               Cancel
             </button>
 
             <button
-              className="accounts-btn accounts-btn--primary"
+              className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition"
               onClick={handleNightAudit}
             >
               Run Night Audit

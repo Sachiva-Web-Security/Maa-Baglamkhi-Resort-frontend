@@ -26,14 +26,16 @@ const RoomOccupancyChart = () => {
   const COLORS = ["#6366f1", "#22c55e", "#f59e0b", "#eab308", "#ef4444"];
 
   const total = data.reduce((acc, item) => acc + item.value, 0);
-  const percentage = total > 0 && data.length > 0 ? Math.round((data[0].value / total) * 100) : 0;
+  const percentage =
+    total > 0 && data.length > 0
+      ? Math.round((data[0].value / total) * 100)
+      : 0;
 
   return (
-    <div className="bg-white  shadow-lg  flex items-center justify-between">
-
+    <div className="bg-white shadow-lg flex items-center justify-between">
       {/* Chart */}
-      <div className="w-screen h-48 relative">
-        <ResponsiveContainer>
+      <div className="w-full h-48 relative">
+        <ResponsiveContainer width="100%" height={200}>
           <PieChart>
             <Pie
               data={data}
@@ -51,9 +53,7 @@ const RoomOccupancyChart = () => {
 
         {/* Center Text */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <h2 className="text-xl font-bold text-gray-700">
-            {percentage}%
-          </h2>
+          <h2 className="text-xl font-bold text-gray-700">{percentage}%</h2>
           <p className="text-xs text-gray-400 ">Occupied</p>
         </div>
       </div>
@@ -70,7 +70,6 @@ const RoomOccupancyChart = () => {
           </div>
         ))}
       </div>
-
     </div>
   );
 };

@@ -24,7 +24,11 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    if (!formData.name?.trim() || !formData.email?.trim() || !formData.password) {
+    if (
+      !formData.name?.trim() ||
+      !formData.email?.trim() ||
+      !formData.password
+    ) {
       setError("Name, email and password are required.");
       return;
     }
@@ -48,7 +52,8 @@ const Register = () => {
       alert("Account created. You can now log in.");
       navigate("/login");
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || "Registration failed.";
+      const msg =
+        err.response?.data?.message || err.message || "Registration failed.";
       setError(msg);
     } finally {
       setLoading(false);
@@ -62,7 +67,7 @@ const Register = () => {
         backgroundImage: `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url(${bgImage})`,
       }}
     >
-      <div className="w-[380px] p-10 rounded-2xl bg-black/20 backdrop-blur-xl shadow-2xl border border-white/30">
+      <div className="w-[90%] sm:w-[380px] p-6 sm:p-10 rounded-2xl bg-black/20 backdrop-blur-xl shadow-2xl border border-white/30">
         <div className="text-center mb-6 text-white">
           <div className="text-xl font-bold mb-2">LOGO</div>
           <h1 className="text-2xl font-semibold">Maa Baglamukhi Resort</h1>
@@ -117,7 +122,9 @@ const Register = () => {
           </div>
 
           <div className="text-left">
-            <label className="text-sm text-white font-semibold">Confirm Password</label>
+            <label className="text-sm text-white font-semibold">
+              Confirm Password
+            </label>
             <input
               type="password"
               name="confirmPassword"
@@ -159,7 +166,10 @@ const Register = () => {
 
         <p className="text-center text-white/90 text-sm mt-4">
           Already have an account?{" "}
-          <Link to="/login" className="text-purple-300 font-semibold hover:underline">
+          <Link
+            to="/login"
+            className="text-purple-300 font-semibold hover:underline"
+          >
             Log in
           </Link>
         </p>

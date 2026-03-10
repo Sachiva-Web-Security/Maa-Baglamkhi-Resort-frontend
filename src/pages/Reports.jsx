@@ -1,35 +1,38 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { FaSearch, FaDownload, FaPrint, FaSyncAlt } from 'react-icons/fa';
-import ReportTypeSelector from '../components/Reports/ReportTypeSelector';
-import ReportFilters from '../components/Reports/ReportFilters';
-import ReportTable from '../components/Reports/ReportTable';
-import ReportCharts from '../components/Reports/ReportCharts';
-import API from '../api';
+import { useEffect, useMemo, useState, useCallback } from "react";
+import { FaSearch, FaDownload, FaPrint, FaSyncAlt } from "react-icons/fa";
+import ReportTypeSelector from "../components/Reports/ReportTypeSelector";
+import ReportFilters from "../components/Reports/ReportFilters";
+import ReportTable from "../components/Reports/ReportTable";
+import ReportCharts from "../components/Reports/ReportCharts";
+
+import API from "../api";
 
 const REPORT_TYPES = [
-  { id: 'all-bills', label: 'All Bills' },
-  { id: 'room', label: 'Room' },
-  { id: 'banquet', label: 'Banquet' },
-  { id: 'restaurant', label: 'Restaurant' },
-  { id: 'housekeeping', label: 'Housekeeping' },
-  { id: 'accounts', label: 'Accounts' },
+  { id: "room", label: "Room" },
+  { id: "banquet", label: "Banquet" },
+  { id: "restaurant", label: "Restaurant" },
+  { id: "housekeeping", label: "Housekeeping" },
+  { id: "accounts", label: "Accounts" },
 ];
 
-const PAYMENT_MODES = ['Cash', 'Card', 'UPI', 'Bank Transfer', 'N/A'];
-const ROOM_TYPES = ['Standard', 'Deluxe', 'Suite', 'Executive'];
-const STATUSES = [
-  'All',
-  'Pending',
-  'Confirmed',
-  'Completed',
-  'Billed',
-  'Paid',
-  'Posted',
-  'Vacant Dirty',
-  'Vacant Clean',
-  'Occupied',
+const PAYMENT_MODES = ["Cash", "Card", "UPI", "Bank Transfer"];
+const ROOM_TYPES = ["Standard", "Deluxe", "Suite", "Executive"];
+const HALLS = [
+  "Grand Ballroom",
+  "Garden Banquet",
+  "Crystal Hall",
+  "Board Room",
 ];
-const LIVE_REFRESH_MS = 15000;
+const STATUSES = [
+  "All",
+  "Pending",
+  "Confirmed",
+  "Completed",
+  "Billed",
+  "Vacant Dirty",
+  "Vacant Clean",
+  "Occupied",
+];
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
@@ -41,34 +44,39 @@ function inDateRange(dateISO, fromISO, toISO) {
 }
 
 function toCSV(rows) {
-  if (!rows.length) return '';
+  if (!rows.length) return "";
   const headers = Object.keys(rows[0]);
-  const escape = (v) => `"${String(v ?? '').replaceAll('"', '""')}"`;
-  return [headers.join(','), ...rows.map((r) => headers.map((h) => escape(r[h])).join(','))].join('\n');
+  const escape = (v) => `"${String(v ?? "").replaceAll('"', '""')}"`;
+  return [
+    headers.join(","),
+    ...rows.map((r) => headers.map((h) => escape(r[h])).join(",")),
+  ].join("\n");
 }
 
 function downloadText(filename, content) {
-  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = url;
   a.download = filename;
   a.click();
   URL.revokeObjectURL(url);
 }
 
+// makeMockData removed
+
 const Reports = () => {
-  const [reportType, setReportType] = useState('all-bills');
-  const [query, setQuery] = useState('');
+  const [reportType, setReportType] = useState("room");
+  const [query, setQuery] = useState("");
   const [summary, setSummary] = useState(null);
 
   const [filters, setFilters] = useState({
-    dateFrom: '',
+    dateFrom: "",
     dateTo: todayISO(),
-    status: 'All',
-    hall: 'All',
-    roomType: 'All',
-    paymentMode: 'All',
+    status: "All",
+    hall: "All",
+    roomType: "All",
+    paymentMode: "All",
   });
 
   const [loading, setLoading] = useState(false);
@@ -76,21 +84,23 @@ const Reports = () => {
   const [lastFetchedAt, setLastFetchedAt] = useState(null);
 
   const options = useMemo(() => {
-    const hallsFromRows = Array.from(new Set(data.map((r) => r.hall).filter(Boolean)));
-    const roomTypesFromRows = Array.from(new Set(data.map((r) => r.roomType).filter(Boolean)));
     return {
       statuses: STATUSES,
-      halls: ['All', ...hallsFromRows],
-      roomTypes: ['All', ...ROOM_TYPES, ...roomTypesFromRows],
-      paymentModes: ['All', ...PAYMENT_MODES],
+      halls: ["All", ...HALLS],
+      roomTypes: ["All", ...ROOM_TYPES],
+      paymentModes: ["All", ...PAYMENT_MODES],
     };
-  }, [data]);
+  }, []);
 
   const visibleFilters = useMemo(() => {
     return {
-      hall: reportType === 'banquet',
-      roomType: reportType === 'room' || reportType === 'housekeeping',
-      paymentMode: reportType === 'accounts' || reportType === 'restaurant' || reportType === 'all-bills',
+      hall: reportType === "banquet",
+      roomType: reportType === "room" || reportType === "housekeeping",
+      paymentMode:
+        reportType === "accounts" ||
+        reportType === "restaurant" ||
+        reportType === "banquet" ||
+        reportType === "room",
       status: true,
     };
   }, [reportType]);
@@ -98,10 +108,10 @@ const Reports = () => {
   useEffect(() => {
     const fetchSummary = async () => {
       try {
-        const res = await API.get('/reports/summary');
+        const res = await API.get("/reports/summary");
         setSummary(res.data);
       } catch (err) {
-        console.error('Error loading report summary', err);
+        console.error("Error loading report summary", err);
       }
     };
     fetchSummary();
@@ -110,13 +120,30 @@ const Reports = () => {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return data.filter((row) => {
-      if (!inDateRange(row.date, filters.dateFrom, filters.dateTo)) return false;
-      if (filters.status !== 'All' && row.status && row.status !== filters.status) return false;
-      if (filters.hall !== 'All' && row.hall && row.hall !== filters.hall) return false;
-      if (filters.roomType !== 'All' && row.roomType && row.roomType !== filters.roomType) return false;
-      if (filters.paymentMode !== 'All' && row.paymentMode && row.paymentMode !== filters.paymentMode) return false;
+      if (!inDateRange(row.date, filters.dateFrom, filters.dateTo))
+        return false;
+      if (
+        filters.status !== "All" &&
+        row.status &&
+        row.status !== filters.status
+      )
+        return false;
+      if (filters.hall !== "All" && row.hall && row.hall !== filters.hall)
+        return false;
+      if (
+        filters.roomType !== "All" &&
+        row.roomType &&
+        row.roomType !== filters.roomType
+      )
+        return false;
+      if (
+        filters.paymentMode !== "All" &&
+        row.paymentMode &&
+        row.paymentMode !== filters.paymentMode
+      )
+        return false;
       if (!q) return true;
-      const hay = Object.values(row).join(' ').toLowerCase();
+      const hay = Object.values(row).join(" ").toLowerCase();
       return hay.includes(q);
     });
   }, [data, filters, query]);
@@ -124,7 +151,7 @@ const Reports = () => {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await API.get('/reports/data', {
+      const res = await API.get("/reports/data", {
         params: {
           type: reportType,
           dateFrom: filters.dateFrom,
@@ -138,51 +165,61 @@ const Reports = () => {
       setData(res.data || []);
       setLastFetchedAt(new Date());
     } catch (err) {
-      console.error('Error fetching report data', err);
+      console.error("Error fetching report data", err);
     } finally {
       setLoading(false);
     }
-  }, [reportType, filters.dateFrom, filters.dateTo, filters.status, filters.hall, filters.roomType, filters.paymentMode]);
+  }, [
+    reportType,
+    filters.dateFrom,
+    filters.dateTo,
+    filters.status,
+    filters.hall,
+    filters.roomType,
+    filters.paymentMode,
+  ]);
 
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
-
-  useEffect(() => {
-    const timerId = setInterval(() => {
-      fetchData();
-    }, LIVE_REFRESH_MS);
-    return () => clearInterval(timerId);
-  }, [fetchData]);
+  }, [fetchData]); // Automatically fetch when report type/filters change
 
   const exportCSV = () => {
     const csv = toCSV(filtered);
-    if (!csv) return alert('No rows to export');
+    if (!csv) return alert("No rows to export");
     downloadText(`report-${reportType}.csv`, csv);
   };
 
   const printReport = () => window.print();
 
   return (
-    <div className="min-h-screen w-280 pt-[10px] px-[30px] pb-[30px] bg-gradient-to-br from-[#071226] via-[#081827] to-[#041019] text-gray-100 ">
+    <div className="min-h-screen w-full bg-gradient-to-br from-[#071226] via-[#081827] to-[#041019] text-gray-100 p-4 sm:p-6 lg:p-8">
       <div className="mb-6">
         <h1 className="text-2xl font-extrabold text-white mb-1">Reports</h1>
         <div className="text-sm text-gray-500">Home / Reports</div>
         {summary && (
           <div className="mt-2 text-xs text-gray-600 font-semibold">
-            Rooms: <span className="font-bold">{summary.totalRooms}</span> -
-            Hotel bookings: <span className="font-bold">{summary.hotelBookings}</span> -
-            Restaurant bills: <span className="font-bold">{summary.restaurantBills}</span> -
-            Accounts txns: <span className="font-bold">{summary.accountsTransactions}</span> -
-            Banquet bookings: <span className="font-bold">{summary.banquetBookings}</span> -
-            Attendance rows: <span className="font-bold">{summary.attendanceRecords}</span>
+            Rooms: <span className="font-bold">{summary.totalRooms}</span> ·
+            Hotel bookings:{" "}
+            <span className="font-bold">{summary.hotelBookings}</span> ·
+            Restaurant bills:{" "}
+            <span className="font-bold">{summary.restaurantBills}</span> ·
+            Accounts txns:{" "}
+            <span className="font-bold">{summary.accountsTransactions}</span> ·
+            Banquet bookings:{" "}
+            <span className="font-bold">{summary.banquetBookings}</span> ·
+            Attendance rows:{" "}
+            <span className="font-bold">{summary.attendanceRecords}</span>
           </div>
         )}
       </div>
 
       <div className="bg-gradient-to-b from-[#0f1a2b] to-[#0b1622] rounded-xl shadow-lg border border-white/5 p-7 mb-4">
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(280px,1fr)_auto] gap-3 items-center">
-          <ReportTypeSelector value={reportType} onChange={setReportType} types={REPORT_TYPES} />
+          <ReportTypeSelector
+            value={reportType}
+            onChange={setReportType}
+            types={REPORT_TYPES}
+          />
 
           <div className="flex flex-wrap gap-2 justify-start lg:justify-end">
             <button
@@ -191,7 +228,7 @@ const Reports = () => {
               disabled={loading}
             >
               <FaSyncAlt />
-              {loading ? 'Fetching...' : 'Fetch Data'}
+              {loading ? "Fetching..." : "Fetch Data"}
             </button>
             <button
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg font-extrabold text-white bg-green-600 hover:bg-green-700 transition-colors"
@@ -222,27 +259,38 @@ const Reports = () => {
           </div>
 
           <div className="text-xs text-gray-500 font-semibold">
-            Rows: <span className="font-extrabold text-gray-700">{filtered.length}</span>
-            <span className="ml-3">
-              Live refresh: <span className="font-extrabold text-teal-500">ON ({Math.floor(LIVE_REFRESH_MS / 1000)}s)</span>
+            Rows:{" "}
+            <span className="font-extrabold text-gray-700">
+              {filtered.length}
             </span>
             {lastFetchedAt ? (
               <span className="ml-3">
-                Last fetched:{' '}
-                <span className="font-extrabold text-gray-700">{lastFetchedAt.toLocaleString()}</span>
+                Last fetched:{" "}
+                <span className="font-extrabold text-gray-700">
+                  {lastFetchedAt.toLocaleString()}
+                </span>
               </span>
             ) : null}
           </div>
         </div>
       </div>
 
-      <ReportFilters value={filters} onChange={setFilters} visible={visibleFilters} options={options} />
+      <ReportFilters
+        value={filters}
+        onChange={setFilters}
+        visible={visibleFilters}
+        options={options}
+      />
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-4">
         <ReportCharts reportType={reportType} rows={filtered} />
         <div className="bg-gradient-to-b from-[#0f1a2b] to-[#0b1622] rounded-xl shadow-lg border border-white/5 p-4">
-          <h2 className="text-base font-extrabold text-white mb-1">Report Summary</h2>
-          <div className="text-xs text-gray-300 font-semibold mb-3">Quick totals based on current filters.</div>
+          <h2 className="text-base font-extrabold text-white mb-1">
+            Report Summary
+          </h2>
+          <div className="text-xs text-gray-300 font-semibold mb-3">
+            Quick totals based on current filters (demo).
+          </div>
           <SummaryPanel reportType={reportType} rows={filtered} />
         </div>
       </div>
@@ -254,63 +302,69 @@ const Reports = () => {
 
 const SummaryPanel = ({ reportType, rows }) => {
   const cards = useMemo(() => {
-    const sum = (key) => rows.reduce((acc, r) => acc + (Number(r[key]) || 0), 0);
-
-    if (reportType === 'all-bills') {
-      const income = rows.filter((r) => r.type !== 'Expense').reduce((a, r) => a + (Number(r.amount) || 0), 0);
-      const expense = rows.filter((r) => r.type === 'Expense').reduce((a, r) => a + (Number(r.amount) || 0), 0);
+    const sum = (key) =>
+      rows.reduce((acc, r) => acc + (Number(r[key]) || 0), 0);
+    if (reportType === "banquet") {
       return [
-        { label: 'Total Bills', value: rows.length },
-        { label: 'Gross', value: `Rs ${income.toLocaleString('en-IN')}` },
-        { label: 'Net', value: `Rs ${(income - expense).toLocaleString('en-IN')}` },
+        { label: "Total Events", value: rows.length },
+        { label: "Total Guests", value: sum("guests") },
+        {
+          label: "Total Amount",
+          value: `₹${sum("amount").toLocaleString("en-IN")}`,
+        },
       ];
     }
-
-    if (reportType === 'banquet') {
+    if (reportType === "restaurant") {
       return [
-        { label: 'Total Events', value: rows.length },
-        { label: 'Total Guests', value: sum('guests') },
-        { label: 'Total Amount', value: `Rs ${sum('amount').toLocaleString('en-IN')}` },
+        { label: "Total Days", value: new Set(rows.map((r) => r.date)).size },
+        { label: "Total Orders", value: sum("orders") },
+        {
+          label: "Total Sales",
+          value: `₹${sum("amount").toLocaleString("en-IN")}`,
+        },
       ];
     }
-
-    if (reportType === 'restaurant') {
+    if (reportType === "housekeeping") {
       return [
-        { label: 'Total Days', value: new Set(rows.map((r) => r.date)).size },
-        { label: 'Total Orders', value: sum('orders') || rows.length },
-        { label: 'Total Sales', value: `Rs ${sum('amount').toLocaleString('en-IN')}` },
+        { label: "Total Rows", value: rows.length },
+        { label: "Rooms Count", value: sum("rooms") },
+        {
+          label: "Assignees",
+          value: new Set(rows.map((r) => r.assignee)).size,
+        },
       ];
     }
-
-    if (reportType === 'housekeeping') {
+    if (reportType === "accounts") {
+      const income = rows
+        .filter((r) => r.type === "Income")
+        .reduce((a, r) => a + (Number(r.amount) || 0), 0);
+      const expense = rows
+        .filter((r) => r.type === "Expense")
+        .reduce((a, r) => a + (Number(r.amount) || 0), 0);
       return [
-        { label: 'Total Rows', value: rows.length },
-        { label: 'Rooms Count', value: sum('rooms') },
-        { label: 'Assignees', value: new Set(rows.map((r) => r.assignee).filter(Boolean)).size },
+        { label: "Income", value: `₹${income.toLocaleString("en-IN")}` },
+        { label: "Expense", value: `₹${expense.toLocaleString("en-IN")}` },
+        {
+          label: "Net",
+          value: `₹${(income - expense).toLocaleString("en-IN")}`,
+        },
       ];
     }
-
-    if (reportType === 'accounts') {
-      const income = rows.filter((r) => r.type === 'Income').reduce((a, r) => a + (Number(r.amount) || 0), 0);
-      const expense = rows.filter((r) => r.type === 'Expense').reduce((a, r) => a + (Number(r.amount) || 0), 0);
-      return [
-        { label: 'Income', value: `Rs ${income.toLocaleString('en-IN')}` },
-        { label: 'Expense', value: `Rs ${expense.toLocaleString('en-IN')}` },
-        { label: 'Net', value: `Rs ${(income - expense).toLocaleString('en-IN')}` },
-      ];
-    }
-
+    // room
     return [
-      { label: 'Total Rows', value: rows.length },
-      { label: 'Total Rooms', value: sum('rooms') },
-      { label: 'Revenue', value: `Rs ${sum('revenue').toLocaleString('en-IN')}` },
+      { label: "Total Rows", value: rows.length },
+      { label: "Total Rooms", value: sum("rooms") },
+      { label: "Revenue", value: `₹${sum("revenue").toLocaleString("en-IN")}` },
     ];
   }, [reportType, rows]);
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
       {cards.map((c) => (
-        <div key={c.label} className="bg-transparent border border-white/5 rounded-xl p-3">
+        <div
+          key={c.label}
+          className="bg-transparent border border-white/5 rounded-xl p-3"
+        >
           <div className="text-xs text-gray-300 font-extrabold">{c.label}</div>
           <div className="mt-1 text-lg text-white font-black">{c.value}</div>
         </div>

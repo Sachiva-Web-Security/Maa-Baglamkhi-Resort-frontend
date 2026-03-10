@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import API from "../api";
-import SummaryCard from '../components/Hotel/SummaryCard';
-import RoomCard from '../components/Hotel/RoomCard';
-import BookingRow from '../components/Hotel/BookingRow';
-import Modal from '../components/Hotel/Modal';
-import BookingForm from '../components/Hotel/BookingForm';
-import './Hotel.css';
+import SummaryCard from "../components/Hotel/SummaryCard";
+import RoomCard from "../components/Hotel/RoomCard";
+import BookingRow from "../components/Hotel/BookingRow";
+import Modal from "../components/Hotel/Modal";
+import BookingForm from "../components/Hotel/BookingForm";
+// import "./Hotel.css";
 
 const Hotel = () => {
   const [rooms, setRooms] = useState([]);
@@ -279,7 +279,7 @@ const Hotel = () => {
       <h1 className="text-amber-50 text-2xl font-bold mb-10 w-full text-center">Hotel Management</h1>
 
       {/* Top Action Buttons */}
-      <div className="flex flex-wrap gap-4 mb-10 justify-center">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-6 sm:mb-10 w-full">
         <button
           className="h-12 w-60 bg-slate-700 hover:bg-slate-600 text-white rounded-full transition shadow-lg"
           onClick={() => openModal('newBooking')}
@@ -368,10 +368,12 @@ const Hotel = () => {
 
 
       {/* Booking Table */}
-      <div className="w-full max-w-7xl mx-auto bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-6 transition duration-300">
-        <h2 className="text-xl font-semibold text-white mb-6">Active Bookings</h2>
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm text-gray-200">
+      <div className="  bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-4 sm:p-6 transition duration-300">
+        <h2 className="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6">
+          Active Bookings
+        </h2>
+        <div className=" overflow-x-auto">
+          <table className="min-w-[700px] w-full text-xs sm:text-sm text-gray-200">
             <thead className="border-b border-white/10 text-gray-400 text-xs uppercase tracking-wider">
               <tr>
                 <th className="px-4 py-3 text-left whitespace-nowrap">Guest Name</th>
