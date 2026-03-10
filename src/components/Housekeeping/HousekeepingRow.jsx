@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaExclamationCircle } from 'react-icons/fa';
+import { FaExclamationCircle, FaCheck, FaBed } from 'react-icons/fa';
 
 function HousekeepingRow({ item, visibleColumns, onSelectChange, onStatusChange, onAssigneeChange, housekeeperStatuses = {}, assigneeOptions = [] }) {
   const statusOptions = [

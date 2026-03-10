@@ -57,10 +57,27 @@ const groupByDateSum = (rows, valueKey) => {
 };
 
 const ReportCharts = ({ reportType, rows }) => {
+  if (reportType === 'all-bills') {
+    const data = groupSum(rows, 'source', 'amount');
+    return (
+      <Card title="All Bills by Source" subtitle="Live billed amount grouped by module">
+        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+          <BarChart data={data}>
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+            <XAxis dataKey="name" stroke="#94a3b8" tick={{ fontSize: 12 }} />
+            <YAxis stroke="#94a3b8" tick={{ fontSize: 12 }} />
+            <Tooltip />
+            <Bar dataKey="value" fill="#14b8a6" radius={[8, 8, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </Card>
+    );
+  }
+
   if (reportType === 'banquet') {
     const data = groupSum(rows, 'hall', 'amount');
     return (
-      <Card title="Banquet Revenue by Hall" subtitle="Total amount grouped by hall (demo)">
+      <Card title="Banquet Revenue by Hall" subtitle="Total amount grouped by hall">
         <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
           <BarChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
@@ -77,7 +94,7 @@ const ReportCharts = ({ reportType, rows }) => {
   if (reportType === 'restaurant') {
     const data = groupByDateSum(rows, 'amount');
     return (
-      <Card title="Restaurant Sales Trend" subtitle="Sales by date (demo)">
+      <Card title="Restaurant Sales Trend" subtitle="Sales by date">
         <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
           <LineChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
@@ -94,7 +111,7 @@ const ReportCharts = ({ reportType, rows }) => {
   if (reportType === 'housekeeping') {
     const data = groupCount(rows, 'status');
     return (
-      <Card title="Housekeeping Status" subtitle="Count by status (demo)">
+      <Card title="Housekeeping Status" subtitle="Count by status">
         <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
           <BarChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
@@ -117,7 +134,7 @@ const ReportCharts = ({ reportType, rows }) => {
       { name: 'Net', value: income - expense },
     ];
     return (
-      <Card title="Accounts Overview" subtitle="Income vs Expense (demo)">
+      <Card title="Accounts Overview" subtitle="Income vs Expense">
         <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
           <BarChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
@@ -134,7 +151,7 @@ const ReportCharts = ({ reportType, rows }) => {
   // room (default): occupancy by status (pie)
   const data = groupCount(rows, 'status');
   return (
-    <Card title="Room Status Mix" subtitle="Count by status (demo)">
+    <Card title="Room Status Mix" subtitle="Count by status">
       <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} aspect={1}>
         <PieChart>
           <Pie data={data} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={110} paddingAngle={4}>

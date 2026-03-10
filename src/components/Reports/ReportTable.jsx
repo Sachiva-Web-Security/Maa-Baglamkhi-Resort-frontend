@@ -1,5 +1,18 @@
 const ReportTable = ({ reportType, rows, loading }) => {
   const columns = (() => {
+    if (reportType === 'all-bills') {
+      return [
+        { key: 'date', label: 'Date' },
+        { key: 'source', label: 'Source' },
+        { key: 'billNo', label: 'Bill No' },
+        { key: 'description', label: 'Description' },
+        { key: 'type', label: 'Type' },
+        { key: 'status', label: 'Status' },
+        { key: 'paymentMode', label: 'Payment Mode' },
+        { key: 'amount', label: 'Amount' },
+      ];
+    }
+
     if (reportType === 'banquet') {
       return [
         { key: 'date', label: 'Date' },
@@ -11,6 +24,7 @@ const ReportTable = ({ reportType, rows, loading }) => {
         { key: 'amount', label: 'Amount' },
       ];
     }
+
     if (reportType === 'restaurant') {
       return [
         { key: 'date', label: 'Date' },
@@ -20,6 +34,7 @@ const ReportTable = ({ reportType, rows, loading }) => {
         { key: 'amount', label: 'Amount' },
       ];
     }
+
     if (reportType === 'housekeeping') {
       return [
         { key: 'date', label: 'Date' },
@@ -29,6 +44,7 @@ const ReportTable = ({ reportType, rows, loading }) => {
         { key: 'rooms', label: 'Rooms' },
       ];
     }
+
     if (reportType === 'accounts') {
       return [
         { key: 'date', label: 'Date' },
@@ -39,7 +55,7 @@ const ReportTable = ({ reportType, rows, loading }) => {
         { key: 'status', label: 'Status' },
       ];
     }
-    // room
+
     return [
       { key: 'date', label: 'Date' },
       { key: 'roomType', label: 'Room Type' },
@@ -53,7 +69,7 @@ const ReportTable = ({ reportType, rows, loading }) => {
   const formatCell = (key, value) => {
     if (key === 'amount' || key === 'revenue') {
       const n = Number(value) || 0;
-      return `₹${n.toLocaleString('en-IN')}`;
+      return `Rs ${n.toLocaleString('en-IN')}`;
     }
     return value ?? '-';
   };
@@ -77,8 +93,8 @@ const ReportTable = ({ reportType, rows, loading }) => {
             </tr>
           </thead>
           <tbody>
-            {rows.map((r) => (
-              <tr key={r.id} className="border-t border-white/5 hover:bg-white/5">
+            {rows.map((r, idx) => (
+              <tr key={r.id || `${reportType}-${idx}`} className="border-t border-white/5 hover:bg-white/5">
                 {columns.map((c) => (
                   <td key={c.key} className="px-4 py-3 text-sm text-gray-300 border-r border-white/10 last:border-r-0">
                     <span className={c.key === 'amount' || c.key === 'revenue' ? 'font-extrabold text-white' : ''}>
@@ -103,5 +119,3 @@ const ReportTable = ({ reportType, rows, loading }) => {
 };
 
 export default ReportTable;
-
-

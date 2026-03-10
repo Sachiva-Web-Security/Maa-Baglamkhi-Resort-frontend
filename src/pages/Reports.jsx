@@ -4,9 +4,10 @@ import ReportTypeSelector from '../components/Reports/ReportTypeSelector';
 import ReportFilters from '../components/Reports/ReportFilters';
 import ReportTable from '../components/Reports/ReportTable';
 import ReportCharts from '../components/Reports/ReportCharts';
-import API from "../api";
+import API from '../api';
 
 const REPORT_TYPES = [
+  { id: 'all-bills', label: 'All Bills' },
   { id: 'room', label: 'Room' },
   { id: 'banquet', label: 'Banquet' },
   { id: 'restaurant', label: 'Restaurant' },
@@ -14,10 +15,21 @@ const REPORT_TYPES = [
   { id: 'accounts', label: 'Accounts' },
 ];
 
-const PAYMENT_MODES = ['Cash', 'Card', 'UPI', 'Bank Transfer'];
+const PAYMENT_MODES = ['Cash', 'Card', 'UPI', 'Bank Transfer', 'N/A'];
 const ROOM_TYPES = ['Standard', 'Deluxe', 'Suite', 'Executive'];
-const HALLS = ['Grand Ballroom', 'Garden Banquet', 'Crystal Hall', 'Board Room'];
-const STATUSES = ['All', 'Pending', 'Confirmed', 'Completed', 'Billed', 'Vacant Dirty', 'Vacant Clean', 'Occupied'];
+const STATUSES = [
+  'All',
+  'Pending',
+  'Confirmed',
+  'Completed',
+  'Billed',
+  'Paid',
+  'Posted',
+  'Vacant Dirty',
+  'Vacant Clean',
+  'Occupied',
+];
+const LIVE_REFRESH_MS = 15000;
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
@@ -45,10 +57,8 @@ function downloadText(filename, content) {
   URL.revokeObjectURL(url);
 }
 
-// makeMockData removed
-
 const Reports = () => {
-  const [reportType, setReportType] = useState('room');
+  const [reportType, setReportType] = useState('all-bills');
   const [query, setQuery] = useState('');
   const [summary, setSummary] = useState(null);
 
@@ -66,19 +76,21 @@ const Reports = () => {
   const [lastFetchedAt, setLastFetchedAt] = useState(null);
 
   const options = useMemo(() => {
+    const hallsFromRows = Array.from(new Set(data.map((r) => r.hall).filter(Boolean)));
+    const roomTypesFromRows = Array.from(new Set(data.map((r) => r.roomType).filter(Boolean)));
     return {
       statuses: STATUSES,
-      halls: ['All', ...HALLS],
-      roomTypes: ['All', ...ROOM_TYPES],
+      halls: ['All', ...hallsFromRows],
+      roomTypes: ['All', ...ROOM_TYPES, ...roomTypesFromRows],
       paymentModes: ['All', ...PAYMENT_MODES],
     };
-  }, []);
+  }, [data]);
 
   const visibleFilters = useMemo(() => {
     return {
       hall: reportType === 'banquet',
       roomType: reportType === 'room' || reportType === 'housekeeping',
-      paymentMode: reportType === 'accounts' || reportType === 'restaurant' || reportType === 'banquet' || reportType === 'room',
+      paymentMode: reportType === 'accounts' || reportType === 'restaurant' || reportType === 'all-bills',
       status: true,
     };
   }, [reportType]);
@@ -86,10 +98,10 @@ const Reports = () => {
   useEffect(() => {
     const fetchSummary = async () => {
       try {
-        const res = await API.get("/reports/summary");
+        const res = await API.get('/reports/summary');
         setSummary(res.data);
       } catch (err) {
-        console.error("Error loading report summary", err);
+        console.error('Error loading report summary', err);
       }
     };
     fetchSummary();
@@ -112,7 +124,7 @@ const Reports = () => {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await API.get("/reports/data", {
+      const res = await API.get('/reports/data', {
         params: {
           type: reportType,
           dateFrom: filters.dateFrom,
@@ -120,29 +132,28 @@ const Reports = () => {
           status: filters.status,
           hall: filters.hall,
           roomType: filters.roomType,
-          paymentMode: filters.paymentMode
-        }
+          paymentMode: filters.paymentMode,
+        },
       });
       setData(res.data || []);
       setLastFetchedAt(new Date());
     } catch (err) {
-      console.error("Error fetching report data", err);
+      console.error('Error fetching report data', err);
     } finally {
       setLoading(false);
     }
-  }, [
-    reportType,
-    filters.dateFrom,
-    filters.dateTo,
-    filters.status,
-    filters.hall,
-    filters.roomType,
-    filters.paymentMode,
-  ]);
+  }, [reportType, filters.dateFrom, filters.dateTo, filters.status, filters.hall, filters.roomType, filters.paymentMode]);
 
   useEffect(() => {
     fetchData();
-  }, [fetchData]); // Automatically fetch when report type/filters change
+  }, [fetchData]);
+
+  useEffect(() => {
+    const timerId = setInterval(() => {
+      fetchData();
+    }, LIVE_REFRESH_MS);
+    return () => clearInterval(timerId);
+  }, [fetchData]);
 
   const exportCSV = () => {
     const csv = toCSV(filtered);
@@ -159,11 +170,11 @@ const Reports = () => {
         <div className="text-sm text-gray-500">Home / Reports</div>
         {summary && (
           <div className="mt-2 text-xs text-gray-600 font-semibold">
-            Rooms: <span className="font-bold">{summary.totalRooms}</span> ·
-            Hotel bookings: <span className="font-bold">{summary.hotelBookings}</span> ·
-            Restaurant bills: <span className="font-bold">{summary.restaurantBills}</span> ·
-            Accounts txns: <span className="font-bold">{summary.accountsTransactions}</span> ·
-            Banquet bookings: <span className="font-bold">{summary.banquetBookings}</span> ·
+            Rooms: <span className="font-bold">{summary.totalRooms}</span> -
+            Hotel bookings: <span className="font-bold">{summary.hotelBookings}</span> -
+            Restaurant bills: <span className="font-bold">{summary.restaurantBills}</span> -
+            Accounts txns: <span className="font-bold">{summary.accountsTransactions}</span> -
+            Banquet bookings: <span className="font-bold">{summary.banquetBookings}</span> -
             Attendance rows: <span className="font-bold">{summary.attendanceRecords}</span>
           </div>
         )}
@@ -212,6 +223,9 @@ const Reports = () => {
 
           <div className="text-xs text-gray-500 font-semibold">
             Rows: <span className="font-extrabold text-gray-700">{filtered.length}</span>
+            <span className="ml-3">
+              Live refresh: <span className="font-extrabold text-teal-500">ON ({Math.floor(LIVE_REFRESH_MS / 1000)}s)</span>
+            </span>
             {lastFetchedAt ? (
               <span className="ml-3">
                 Last fetched:{' '}
@@ -222,20 +236,13 @@ const Reports = () => {
         </div>
       </div>
 
-      <ReportFilters
-        value={filters}
-        onChange={setFilters}
-        visible={visibleFilters}
-        options={options}
-      />
+      <ReportFilters value={filters} onChange={setFilters} visible={visibleFilters} options={options} />
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-4">
         <ReportCharts reportType={reportType} rows={filtered} />
         <div className="bg-gradient-to-b from-[#0f1a2b] to-[#0b1622] rounded-xl shadow-lg border border-white/5 p-4">
           <h2 className="text-base font-extrabold text-white mb-1">Report Summary</h2>
-          <div className="text-xs text-gray-300 font-semibold mb-3">
-            Quick totals based on current filters (demo).
-          </div>
+          <div className="text-xs text-gray-300 font-semibold mb-3">Quick totals based on current filters.</div>
           <SummaryPanel reportType={reportType} rows={filtered} />
         </div>
       </div>
@@ -248,41 +255,55 @@ const Reports = () => {
 const SummaryPanel = ({ reportType, rows }) => {
   const cards = useMemo(() => {
     const sum = (key) => rows.reduce((acc, r) => acc + (Number(r[key]) || 0), 0);
+
+    if (reportType === 'all-bills') {
+      const income = rows.filter((r) => r.type !== 'Expense').reduce((a, r) => a + (Number(r.amount) || 0), 0);
+      const expense = rows.filter((r) => r.type === 'Expense').reduce((a, r) => a + (Number(r.amount) || 0), 0);
+      return [
+        { label: 'Total Bills', value: rows.length },
+        { label: 'Gross', value: `Rs ${income.toLocaleString('en-IN')}` },
+        { label: 'Net', value: `Rs ${(income - expense).toLocaleString('en-IN')}` },
+      ];
+    }
+
     if (reportType === 'banquet') {
       return [
         { label: 'Total Events', value: rows.length },
         { label: 'Total Guests', value: sum('guests') },
-        { label: 'Total Amount', value: `₹${sum('amount').toLocaleString('en-IN')}` },
+        { label: 'Total Amount', value: `Rs ${sum('amount').toLocaleString('en-IN')}` },
       ];
     }
+
     if (reportType === 'restaurant') {
       return [
         { label: 'Total Days', value: new Set(rows.map((r) => r.date)).size },
-        { label: 'Total Orders', value: sum('orders') },
-        { label: 'Total Sales', value: `₹${sum('amount').toLocaleString('en-IN')}` },
+        { label: 'Total Orders', value: sum('orders') || rows.length },
+        { label: 'Total Sales', value: `Rs ${sum('amount').toLocaleString('en-IN')}` },
       ];
     }
+
     if (reportType === 'housekeeping') {
       return [
         { label: 'Total Rows', value: rows.length },
         { label: 'Rooms Count', value: sum('rooms') },
-        { label: 'Assignees', value: new Set(rows.map((r) => r.assignee)).size },
+        { label: 'Assignees', value: new Set(rows.map((r) => r.assignee).filter(Boolean)).size },
       ];
     }
+
     if (reportType === 'accounts') {
       const income = rows.filter((r) => r.type === 'Income').reduce((a, r) => a + (Number(r.amount) || 0), 0);
       const expense = rows.filter((r) => r.type === 'Expense').reduce((a, r) => a + (Number(r.amount) || 0), 0);
       return [
-        { label: 'Income', value: `₹${income.toLocaleString('en-IN')}` },
-        { label: 'Expense', value: `₹${expense.toLocaleString('en-IN')}` },
-        { label: 'Net', value: `₹${(income - expense).toLocaleString('en-IN')}` },
+        { label: 'Income', value: `Rs ${income.toLocaleString('en-IN')}` },
+        { label: 'Expense', value: `Rs ${expense.toLocaleString('en-IN')}` },
+        { label: 'Net', value: `Rs ${(income - expense).toLocaleString('en-IN')}` },
       ];
     }
-    // room
+
     return [
       { label: 'Total Rows', value: rows.length },
       { label: 'Total Rooms', value: sum('rooms') },
-      { label: 'Revenue', value: `₹${sum('revenue').toLocaleString('en-IN')}` },
+      { label: 'Revenue', value: `Rs ${sum('revenue').toLocaleString('en-IN')}` },
     ];
   }, [reportType, rows]);
 
@@ -299,5 +320,3 @@ const SummaryPanel = ({ reportType, rows }) => {
 };
 
 export default Reports;
-
-

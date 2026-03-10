@@ -126,6 +126,8 @@ const allColumns = [
   { key: 'notes', label: 'Notes', required: false },
 ];
 
+const todayISO = () => new Date().toISOString().slice(0, 10);
+
 function Housekeeping() {
   const [data, setData] = useState([]);
   const [housekeepers, setHousekeepers] = useState([]);
@@ -145,19 +147,23 @@ function Housekeeping() {
     fetchHousekeepers();
   }, []);
 
+  useEffect(() => {
+    const timer = setInterval(fetchRooms, 15000);
+    return () => clearInterval(timer);
+  }, []);
+
   const handleAddRoom = async () => {
     if (!newRoomNo.trim()) return;
     try {
-      await housekeepingService.createRoom({
-        roomNumber: newRoomNo,
-        status: 'Vacant Dirty',
-        assignee: 'No Housekeeper'
-      });
+      await hotelService.addRoom(newRoomNo.trim());
       setShowAddModal(false);
       setNewRoomNo('');
       fetchRooms();
     } catch (error) {
       console.error("Error creating room", error);
+      if (error?.response?.data?.message) {
+        alert(error.response.data.message);
+      }
     }
   };
 
@@ -180,32 +186,18 @@ function Housekeeping() {
 
   const fetchRooms = async () => {
     try {
-      // Fetch both housekeeping rooms and hotel status
-      const [rooms, hotelData] = await Promise.all([
-        housekeepingService.getAllRooms(),
-        hotelService.getRoomsAndBookings()
-      ]);
-      
-      const hotelRooms = hotelData.rooms || [];
-      const today = new Date().toISOString().split('T')[0];
+      const rooms = await housekeepingService.getAllRooms();
+      const today = todayISO();
 
       const mappedRooms = rooms.map(room => {
-        // Find matching hotel room
-        const hRoom = hotelRooms.find(r => String(r.number) === String(room.roomNo));
-        
-        let guestStatus = '';
-        if (hRoom && hRoom.status === 'Occupied') {
-          if (hRoom.checkOut === today) {
-            guestStatus = 'Departs today';
-          } else if (hRoom.checkIn === today) {
-            guestStatus = 'Arrives today';
-          } else {
-            guestStatus = 'Occupied';
-          }
+        let guestStatus = '-';
+        if (String(room.hotelStatus || '').toLowerCase() === 'occupied') {
+          if (room.checkOut === today) guestStatus = 'Departs today';
+          else if (room.checkIn === today) guestStatus = 'Arrives today';
+          else guestStatus = 'Occupied';
         }
-
         return {
-          id: room.id,
+          id: room.id || room.roomNo,
           selected: false,
           type: 'Accommodation',
           roomNo: room.roomNo || 'N/A',
@@ -213,7 +205,7 @@ function Housekeeping() {
           floor: '-',
           section: '-',
           guestStatus: guestStatus || '-',
-          roomType: 'Standard Room',
+          roomType: String(room.hotelStatus || '').toLowerCase() === 'occupied' ? 'Occupied Room' : 'Available Room',
           status: room.status || 'Vacant Dirty',
           assignee: room.assignee || 'No Housekeeper',
           layout: '',

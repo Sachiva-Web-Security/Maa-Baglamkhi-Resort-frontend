@@ -3,7 +3,7 @@ import React, { useState } from "react";
 const AddMenuItemModal = ({ isOpen, onClose, onAdd }) => {
     const [name, setName] = useState("");
     const [price, setPrice] = useState("");
-    const [category, setCategory] = useState("Main Course");
+    const [category, setCategory] = useState("Fast Food");
 
     if (!isOpen) return null;
 
@@ -13,37 +13,25 @@ const AddMenuItemModal = ({ isOpen, onClose, onAdd }) => {
         if (!name.trim() || !price) return;
 
         try {
-            const res = await fetch("http://localhost:5002/api/restaurant/menu", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    name: name,
-                    price: price,
-                    category: category,
-                }),
-            });
-
-            const data = await res.json();
-
-            console.log("Menu item saved:", data);
-
-            // frontend state update
-            onAdd(name, price, category);
+            await onAdd(name, Number(price), category);
 
             setName("");
             setPrice("");
-            setCategory("Main Course");
+            setCategory("Fast Food");
 
             onClose();
 
         } catch (error) {
             console.error("Error adding menu item:", error);
+            alert(
+                error?.response?.data?.detail ||
+                error?.response?.data?.message ||
+                "Dish save failed. Please try again."
+            );
         }
     };
 
-    const categories = ["Starters", "Main Course", "Beverages", "Desserts", "Others"];
+    const categories = ["Fast Food", "Curry", "Sabji", "Roti", "Sweets", "Beverages", "Rice", "South Indian", "Others"];
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">

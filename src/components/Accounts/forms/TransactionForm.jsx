@@ -18,15 +18,19 @@ const TransactionForm = ({ type, onSubmit, onCancel, initialData = {} }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
     const amountNumber = Number(form.amount);
+
     if (!form.description.trim()) {
       alert('Please enter description');
       return;
     }
+
     if (!Number.isFinite(amountNumber) || amountNumber <= 0) {
       alert('Please enter a valid amount');
       return;
     }
+
     onSubmit({
       type,
       date: form.date,
@@ -43,6 +47,7 @@ const TransactionForm = ({ type, onSubmit, onCancel, initialData = {} }) => {
           <label className="accounts-form__label">Type</label>
           <input className="accounts-form__input" value={type} disabled />
         </div>
+
         <div className="accounts-form__field">
           <label className="accounts-form__label" htmlFor="date">
             Date
@@ -92,6 +97,7 @@ const TransactionForm = ({ type, onSubmit, onCancel, initialData = {} }) => {
             required
           />
         </div>
+
         <div className="accounts-form__field">
           <label className="accounts-form__label" htmlFor="paymentMode">
             Payment Mode
@@ -112,10 +118,18 @@ const TransactionForm = ({ type, onSubmit, onCancel, initialData = {} }) => {
       </div>
 
       <div className="accounts-form__actions">
-        <button type="button" className="accounts-btn accounts-btn--ghost" onClick={onCancel}>
+        <button
+          type="button"
+          className="accounts-btn accounts-btn--ghost"
+          onClick={onCancel}
+        >
           Cancel
         </button>
-        <button type="submit" className="accounts-btn accounts-btn--primary">
+
+        <button
+          type="submit"
+          className="accounts-btn accounts-btn--primary"
+        >
           Save
         </button>
       </div>
@@ -124,4 +138,3 @@ const TransactionForm = ({ type, onSubmit, onCancel, initialData = {} }) => {
 };
 
 export default TransactionForm;
-
