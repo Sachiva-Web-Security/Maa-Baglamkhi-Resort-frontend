@@ -57,6 +57,7 @@ const CreateUser = ({ onClose, onUserCreated }) => {
         <h2 className="text-2xl text-white font-bold mb-6">Create New User</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+
           <input
             type="text"
             name="name"
@@ -109,6 +110,7 @@ const CreateUser = ({ onClose, onUserCreated }) => {
           >
             Create User
           </button>
+
         </form>
       </div>
     </div>

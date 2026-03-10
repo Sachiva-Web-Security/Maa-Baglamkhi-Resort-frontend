@@ -59,6 +59,7 @@ function Layout({ children, setIsAuthenticated }) {
   );
 }
 
+
 /* ============================
    Main App Component
 ============================ */

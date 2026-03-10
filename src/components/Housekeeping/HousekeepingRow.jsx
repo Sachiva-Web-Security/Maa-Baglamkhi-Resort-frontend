@@ -1,20 +1,13 @@
 import React from 'react';
-import { FaExclamationCircle } from 'react-icons/fa';
+import { FaExclamationCircle, FaCheck, FaBed } from 'react-icons/fa';
 
-function HousekeepingRow({ item, visibleColumns, onSelectChange, onStatusChange, onAssigneeChange }) {
+function HousekeepingRow({ item, visibleColumns, onSelectChange, onStatusChange, onAssigneeChange, housekeeperStatuses = {}, assigneeOptions = [] }) {
   const statusOptions = [
     'Vacant Dirty',
     'Vacant Clean Inspected',
     'Occupied Dirty',
     'Occupied Clean',
     'Out of Service',
-  ];
-
-  const assigneeOptions = [
-    'No Housekeeper',
-    'John Doe',
-    'Jane Smith',
-    'Mike Johnson',
   ];
 
   const getStatusTextClass = (status) => {
@@ -41,50 +34,58 @@ function HousekeepingRow({ item, visibleColumns, onSelectChange, onStatusChange,
           </div>
         </td>
       )}
-      
+
       {visibleColumns.includes('roomNo') && (
         <td className="px-4 py-3 border-r border-white/5">
           <span className="text-sm text-white">{item.roomNo}</span>
         </td>
       )}
-      
+
       {visibleColumns.includes('building') && (
         <td className="px-4 py-3 border-r border-white/5">
           <span className="text-sm text-gray-300">{item.building || '-'}</span>
         </td>
       )}
-      
+
       {visibleColumns.includes('floor') && (
         <td className="px-4 py-3 border-r border-white/5">
           <span className="text-sm text-gray-300">{item.floor || '-'}</span>
         </td>
       )}
-      
+
       {visibleColumns.includes('section') && (
         <td className="px-4 py-3 border-r border-white/5">
           <span className="text-sm text-gray-300">{item.section || '-'}</span>
         </td>
       )}
-      
+
       {visibleColumns.includes('guestStatus') && (
         <td className="px-4 py-3 border-r border-white/5">
-          {item.guestStatus ? (
-            <div className="flex items-center gap-1 text-sm text-amber-300">
-              <FaExclamationCircle className="w-4 h-4" />
+          {item.guestStatus && item.guestStatus !== '-' ? (
+            <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold w-fit ${
+              item.guestStatus === 'Arrives today' 
+                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                : item.guestStatus === 'Departs today'
+                ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+            }`}>
+              {item.guestStatus === 'Arrives today' ? <FaCheck className="w-3 h-3" /> : null}
+              {item.guestStatus === 'Departs today' ? <FaExclamationCircle className="w-3 h-3" /> : null}
+              {item.guestStatus === 'Occupied' ? <FaBed className="w-3 h-3" /> : null}
               <span>{item.guestStatus}</span>
             </div>
           ) : (
-            <span className="text-sm text-gray-300">-</span>
+            <span className="text-sm text-gray-500">-</span>
           )}
         </td>
       )}
-      
+
       {visibleColumns.includes('roomType') && (
         <td className="px-4 py-3 border-r border-white/5">
           <span className="text-sm text-white">{item.roomType}</span>
         </td>
       )}
-      
+
       {visibleColumns.includes('status') && (
         <td className="px-4 py-3 border-r border-white/5">
           <select
@@ -100,41 +101,49 @@ function HousekeepingRow({ item, visibleColumns, onSelectChange, onStatusChange,
           </select>
         </td>
       )}
-      
+
       {visibleColumns.includes('assignee') && (
         <td className="px-4 py-3 border-r border-white/5">
           <select
             value={item.assignee}
             onChange={(e) => onAssigneeChange(item.id, e.target.value)}
-            className="w-full min-w-[160px] px-3 py-2 border border-white/10 rounded-lg bg-transparent text-sm text-white focus:outline-none focus:ring-2 focus:ring-teal-900"
+            className="w-full min-w-[210px] px-3 py-2 border border-white/10 rounded-lg bg-[#071826] text-sm text-white focus:outline-none focus:ring-2 focus:ring-teal-900"
           >
-            {assigneeOptions.map((opt) => (
-              <option key={opt} value={opt}>
-                {opt}
-              </option>
-            ))}
+            {assigneeOptions.map((opt) => {
+              // Add BUSY/AVAILABLE tag if applicable
+              let label = opt;
+              if (opt !== 'No Housekeeper' && housekeeperStatuses[opt]) {
+                label = `${opt} - ${housekeeperStatuses[opt]}`;
+              }
+
+              return (
+                <option key={opt} value={opt} className={housekeeperStatuses[opt] === 'BUSY' ? 'text-rose-400' : 'text-emerald-400'}>
+                  {label}
+                </option>
+              );
+            })}
           </select>
         </td>
       )}
-      
+
       {visibleColumns.includes('layout') && (
         <td className="px-4 py-3 border-r border-white/5">
           <span className="text-sm text-gray-300">{item.layout || '-'}</span>
         </td>
       )}
-      
+
       {visibleColumns.includes('articles') && (
         <td className="px-4 py-3 border-r border-white/5">
           <span className="text-sm text-gray-300">{item.articles || '-'}</span>
         </td>
       )}
-      
+
       {visibleColumns.includes('services') && (
         <td className="px-4 py-3 border-r border-white/5">
           <span className="text-sm text-gray-300">{item.services || '-'}</span>
         </td>
       )}
-      
+
       {visibleColumns.includes('notes') && (
         <td className="px-4 py-3">
           {item.notes ? (

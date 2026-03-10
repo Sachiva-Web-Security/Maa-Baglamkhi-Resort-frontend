@@ -4,12 +4,15 @@ import TableCard from "./TableCard";
 import AddTableModal from "./AddTableModal";
 
 const TablePage = () => {
-    const { tables, addItem } = useContext(RestaurantContext);
+    const { tables, addTable, getTableStatus } = useContext(RestaurantContext);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    const handleAddTable = (tableNumber) => {
-        addItem(tableNumber, "table");
+    const handleAddTable = async (tableNumber) => {
+        await addTable(tableNumber);
     };
+
+    const availableCount = tables.filter((t) => getTableStatus(t.name) === "Available").length;
+    const occupiedCount = tables.filter((t) => getTableStatus(t.name) === "Occupied").length;
 
     return (
         <div className="p-6 bg-slate-900 min-h-screen">
@@ -22,6 +25,14 @@ const TablePage = () => {
                     <p className="text-slate-400 mt-1">
                         Manage your restaurant tables and orders
                     </p>
+                    <div className="flex gap-2 mt-3">
+                        <span className="text-xs font-bold px-2.5 py-1 rounded-full border border-emerald-400/30 bg-emerald-500/20 text-emerald-300">
+                            Available: {availableCount}
+                        </span>
+                        <span className="text-xs font-bold px-2.5 py-1 rounded-full border border-rose-400/30 bg-rose-500/20 text-rose-300">
+                            Occupied: {occupiedCount}
+                        </span>
+                    </div>
                 </div>
 
                 <button

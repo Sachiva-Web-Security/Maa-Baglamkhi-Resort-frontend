@@ -5,17 +5,24 @@ import ReportCard from "../components/Accounts/ReportCard";
 import Modal from "../components/Hotel/Modal";
 import TransactionForm from "../components/Accounts/forms/TransactionForm";
 import InvoiceForm from "../components/Accounts/forms/InvoiceForm";
+import './Accounts.css';
 import API from "../api";
 
 const formatINR = (amount) =>
-  new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
+  new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
     maximumFractionDigits: 0,
-  }).format(amount);
+  }).format(Number(amount) || 0);
 
 const Accounts = () => {
   const [records, setRecords] = useState([]);
+  const [totals, setTotals] = useState({
+    income: 0,
+    expense: 0,
+    net: 0,
+    gstPayable: 0,
+  });
 
   const [modals, setModals] = useState({
     addIncome: false,
@@ -27,51 +34,70 @@ const Accounts = () => {
 
   const [selectedRecord, setSelectedRecord] = useState(null);
 
-  const totals = useMemo(() => {
-    const income = records
-      .filter((r) => r.type === "Income")
-      .reduce((sum, r) => sum + r.amount, 0);
-    const expense = records
-      .filter((r) => r.type === "Expense")
-      .reduce((sum, r) => sum + r.amount, 0);
-    const net = income - expense;
-    const gstPayable = Math.round(income * 0.05);
-    return { income, expense, net, gstPayable };
-  }, [records]);
+  const openModal = (name) =>
+    setModals((prev) => ({ ...prev, [name]: true }));
 
-  const openModal = (name) => setModals((prev) => ({ ...prev, [name]: true }));
   const closeModal = (name) =>
     setModals((prev) => ({ ...prev, [name]: false }));
 
   const addRecord = (record) => {
-    setRecords((prev) => [{ id: Date.now(), ...record }, ...prev]);
+    setRecords((prev) => [
+      {
+        ...record,
+        id: record.id || Date.now(),
+      },
+      ...prev,
+    ]);
+  };
+
+  const fetchRecords = async () => {
+    try {
+      const res = await API.get("/accounts/transactions");
+      setRecords(res.data || []);
+    } catch (err) {
+      console.error("Error loading accounts records", err);
+    }
+  };
+
+  const fetchSummary = async () => {
+    try {
+      const res = await API.get("/accounts/summary");
+      setTotals({
+        income: Number(res.data?.income) || 0,
+        expense: Number(res.data?.expense) || 0,
+        net: Number(res.data?.net) || 0,
+        gstPayable: Number(res.data?.gstPayable) || 0,
+      });
+    } catch (err) {
+      console.error("Error loading accounts summary", err);
+    }
   };
 
   useEffect(() => {
-    const fetchRecords = async () => {
-      try {
-        const res = await API.get("/accounts/transactions");
-        setRecords(res.data || []);
-      } catch (err) {
-        console.error("Error loading accounts records", err);
-      }
-    };
     fetchRecords();
+    fetchSummary();
   }, []);
 
   const handleAddIncome = async (data) => {
     try {
       const res = await API.post("/accounts/income", data);
+
       addRecord({
         id: res.data?.id,
-        date: data.date,
-        type: "Income",
+        date: new Date(data.date).toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        }),
+        type: 'Income',
         description: data.description,
-        amount: data.amount,
+        amount: Number(data.amount),
         paymentMode: data.paymentMode,
       });
-      closeModal("addIncome");
-      alert("Income added");
+
+      await fetchSummary();
+      closeModal('addIncome');
+      alert('Income added');
     } catch (err) {
       console.error("Error adding income", err);
       alert("Error adding income");
@@ -81,35 +107,47 @@ const Accounts = () => {
   const handleAddExpense = async (data) => {
     try {
       const res = await API.post("/accounts/expense", data);
+
       addRecord({
         id: res.data?.id,
-        date: data.date,
-        type: "Expense",
+        date: new Date(data.date).toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        }),
+        type: 'Expense',
         description: data.description,
-        amount: data.amount,
+        amount: Number(data.amount),
         paymentMode: data.paymentMode,
       });
-      closeModal("addExpense");
-      alert("Expense added");
+
+      await fetchSummary();
+      closeModal('addExpense');
+      alert('Expense added');
     } catch (err) {
       console.error("Error adding expense", err);
       alert("Error adding expense");
     }
   };
+
   const handleGenerateInvoice = async (invoice) => {
     try {
-      // 🔥 Save invoice in invoices table
       const res = await API.post("/invoices/create", invoice);
 
-      // 🔥 ALSO treat it as income entry
       addRecord({
         id: res.data?.id || Date.now(),
-        date: invoice.date,
+        date: new Date(invoice.date).toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        }),
         type: "Income",
         description: `Invoice ${invoice.invoiceNo} - ${invoice.customerName}`,
-        amount: invoice.amount,
+        amount: Number(invoice.amount || invoice.finalTotal || 0),
         paymentMode: invoice.paymentMode,
       });
+
+      await fetchSummary();
 
       alert("Invoice generated successfully");
       closeModal("invoice");
@@ -121,17 +159,20 @@ const Accounts = () => {
 
   const handleView = (record) => {
     setSelectedRecord(record);
-    openModal("view");
+    openModal('view');
   };
 
   const handleNightAudit = () => {
-    // In real app: generate day-end report + persist to backend
     alert(
-      `Night Audit Completed\n\nTotal Income: ${formatINR(totals.income)}\nTotal Expense: ${formatINR(
-        totals.expense,
-      )}\nNet Profit: ${formatINR(totals.net)}\nGST Payable: ${formatINR(totals.gstPayable)}`,
+      `Night Audit Completed\n\nTotal Income: ${formatINR(
+        totals.income
+      )}\nTotal Expense: ${formatINR(
+        totals.expense
+      )}\nNet Profit: ${formatINR(
+        totals.net
+      )}\nGST Payable: ${formatINR(totals.gstPayable)}`
     );
-    closeModal("audit");
+    closeModal('audit');
   };
 
   return (
@@ -148,24 +189,31 @@ const Accounts = () => {
         >
           + Add Income
         </button>
+
         <button
           className="flex-1 min-w-max px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg font-semibold text-sm sm:text-base bg-gradient-to-r from-yellow-400 to-orange-500 text-white hover:opacity-90 transition"
           onClick={() => openModal("addExpense")}
         >
           + Add Expense
         </button>
+
+        {/*
         <button
           className="flex-1 min-w-max px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg font-semibold text-sm sm:text-base bg-gradient-to-r from-blue-400 to-cyan-500 text-white hover:opacity-90 transition"
           onClick={() => openModal("invoice")}
         >
           Generate Invoice
         </button>
+        */}
+
+        {/*
         <button
           className="flex-1 min-w-max px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg font-semibold text-sm sm:text-base bg-gradient-to-r from-purple-400 to-indigo-500 text-white hover:opacity-90 transition"
           onClick={() => openModal("audit")}
         >
           Night Audit
         </button>
+        */}
       </div>
 
       {/* Summary Cards */}
@@ -174,28 +222,27 @@ const Accounts = () => {
           label="Total Income"
           value={formatINR(totals.income)}
           valueColor="green"
-          bg="default"
           onClick={() => alert(`Total Income: ${formatINR(totals.income)}`)}
         />
+
         <SummaryCard
           label="Total Expense"
           value={formatINR(totals.expense)}
           valueColor="red"
-          bg="default"
           onClick={() => alert(`Total Expense: ${formatINR(totals.expense)}`)}
         />
+
         <SummaryCard
           label="Net Profit"
           value={formatINR(totals.net)}
           valueColor="blue"
-          bg="default"
           onClick={() => alert(`Net Profit: ${formatINR(totals.net)}`)}
         />
+
         <SummaryCard
           label="GST Payable"
           value={formatINR(totals.gstPayable)}
           valueColor="purple"
-          bg="default"
           onClick={() => alert(`GST Payable: ${formatINR(totals.gstPayable)}`)}
         />
       </div>
@@ -247,61 +294,62 @@ const Accounts = () => {
           variant="blue"
           title="Profit & Loss Report"
           subtitle="View monthly P&L summary"
-          onClick={() => alert("Profit & Loss Report (demo)")}
+          onClick={() => alert('Profit & Loss Report (demo)')}
         />
+
         <ReportCard
           variant="green"
           title="GST Report"
           subtitle="Download GST statement"
-          onClick={() => alert("GST Report (demo)")}
+          onClick={() => alert('GST Report (demo)')}
         />
+
         <ReportCard
           variant="purple"
           title="Cash Collection Report"
           subtitle="Daily cashier summary"
-          onClick={() => alert("Cash Collection Report (demo)")}
+          onClick={() => alert('Cash Collection Report (demo)')}
         />
       </div>
 
-      {/* Modals */}
       <Modal
         isOpen={modals.addIncome}
-        onClose={() => closeModal("addIncome")}
+        onClose={() => closeModal('addIncome')}
         title="Add Income"
       >
         <TransactionForm
           type="Income"
           onSubmit={handleAddIncome}
-          onCancel={() => closeModal("addIncome")}
+          onCancel={() => closeModal('addIncome')}
         />
       </Modal>
 
       <Modal
         isOpen={modals.addExpense}
-        onClose={() => closeModal("addExpense")}
+        onClose={() => closeModal('addExpense')}
         title="Add Expense"
       >
         <TransactionForm
           type="Expense"
           onSubmit={handleAddExpense}
-          onCancel={() => closeModal("addExpense")}
+          onCancel={() => closeModal('addExpense')}
         />
       </Modal>
 
       <Modal
         isOpen={modals.invoice}
-        onClose={() => closeModal("invoice")}
+        onClose={() => closeModal('invoice')}
         title="Generate Invoice"
       >
         <InvoiceForm
           onSubmit={handleGenerateInvoice}
-          onCancel={() => closeModal("invoice")}
+          onCancel={() => closeModal('invoice')}
         />
       </Modal>
 
       <Modal
         isOpen={modals.view}
-        onClose={() => closeModal("view")}
+        onClose={() => closeModal('view')}
         title="Record Details"
       >
         {selectedRecord ? (
@@ -355,7 +403,7 @@ const Accounts = () => {
 
       <Modal
         isOpen={modals.audit}
-        onClose={() => closeModal("audit")}
+        onClose={() => closeModal('audit')}
         title="Night Audit"
       >
         <div className="space-y-3">
@@ -384,6 +432,7 @@ const Accounts = () => {
             >
               Cancel
             </button>
+
             <button
               className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition"
               onClick={handleNightAudit}

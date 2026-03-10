@@ -29,7 +29,7 @@ const Assignment = () => {
   const loadAssignments = async () => {
     try {
       const res = await API.get(
-        `/assignments?role=${localStorage.getItem("role")}&name=${localStorage.getItem("name")}`,
+        `/assignments?role=${localStorage.getItem("role")}&name=${localStorage.getItem("name")}`
       );
       setAssignments(res.data);
     } catch (err) {
@@ -96,6 +96,7 @@ const Assignment = () => {
 
       loadAssignments();
       loadStats();
+
     } catch (err) {
       console.log(err);
     }
@@ -120,6 +121,8 @@ const Assignment = () => {
     });
     setEditId(task.id);
   };
+
+
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-200 p-4 sm:p-6 lg:p-8 overflow-x-hidden">
@@ -203,6 +206,7 @@ const Assignment = () => {
             >
               {editId ? "Update Task" : "Assign Task"}
             </button>
+
           </form>
         </div>
       )}
@@ -236,13 +240,11 @@ const Assignment = () => {
                   key={a.id}
                   className="border-b hover:bg-blue-500 transition text-xs sm:text-sm"
                 >
-                  <td className="px-2 sm:px-3 py-2 sm:py-3 font-medium">
-                    {a.staff_name}
-                  </td>
-                  <td className="px-2 sm:px-3 py-2 sm:py-3">{a.room_number}</td>
-                  <td className="px-2 sm:px-3 py-2 sm:py-3">{a.task}</td>
+                  <td className="p-3 font-medium">{a.staff_name}</td>
+                  <td className="p-3">{a.room_number}</td>
+                  <td className="p-3">{a.task}</td>
 
-                  <td className="px-2 sm:px-3 py-2 sm:py-3 hidden sm:table-cell">
+                  <td className="p-3">
                     <span
                       className={`px-2 sm:px-3 py-1 rounded-full text-xs font-semibold
                         ${
@@ -269,7 +271,6 @@ const Assignment = () => {
                           Complete
                         </button>
                       )}
-
                       <button
                         onClick={() => editTask(a)}
                         className="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded-lg text-sm"
@@ -298,6 +299,7 @@ const Assignment = () => {
           </table>
         </div>
       </div>
+
     </div>
   );
 };

@@ -20,7 +20,8 @@ const User = () => {
           ? res.data
           : res.data.users || [];
 
-        const localUsers = JSON.parse(localStorage.getItem("users")) || [];
+        const localUsers =
+          JSON.parse(localStorage.getItem("users")) || [];
 
         const mergedUsers = [...apiData];
 
@@ -72,9 +73,10 @@ const User = () => {
   });
 
   return (
-    <div className="min-h-screen w-full bg-slate-900 text-white p-4 sm:p-6 lg:p-8">
+    <div className="   min-h-screen w-280 p-6 bg-slate-900">
+      
       <div className="flex justify-between mb-6">
-        <h1 className="text-2xl font-bold">User Management</h1>
+        <h1 className="text-2xl text-white text-align-center  pl-100 font-bold">User Management</h1>
 
         <button
           onClick={() => setShowCreateModal(true)}

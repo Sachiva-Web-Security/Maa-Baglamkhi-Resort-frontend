@@ -16,7 +16,7 @@ import {
   FaTasks
 } from "react-icons/fa";
 
-const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
+const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -85,32 +85,20 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
     { id: 99, name: "My Profile", icon: FaUser, path: "/profile" },
     ...roleMenus,
   ];
-const handleNavClick = (path) => {
-  navigate(path);
-  if (setSidebarOpen) {
-    setSidebarOpen(false);
-  }
-};
+
+  const handleNavClick = (path) => navigate(path);
   const isActive = (path) => location.pathname === path;
 
   return (
-    <>
-  {sidebarOpen && (
     <div
-      className="fixed inset-0 bg-black/50 z-30 md:hidden"
-      onClick={() => setSidebarOpen(false)}
-    />
-  )}
-    <div
-      className={`fixed top-[70px] left-0
+      className="
+      fixed top-[70px] left-0
       w-[250px] h-[calc(100vh-70px)]
       flex flex-col justify-between
       text-gray-800
       bg-slate-900
       shadow-2xl rounded-r-3xl
-  transform transition-transform duration-300 z-40
-  ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
-  md:translate-x-0`}
+    "
     >
       <style>
         {`
@@ -183,7 +171,6 @@ const handleNavClick = (path) => {
         </div>
       </div>
     </div>
-    </>
   );
 };
 

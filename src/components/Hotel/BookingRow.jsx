@@ -83,25 +83,25 @@ const BookingRow = ({ booking, onExtend, onShiftRoom, onCheckOut, onBillGenerate
   return (
     <>
       <tr className="hover:bg-white/5 transition duration-200 border-b border-white/10 shadow-sm">
-        <td className="px-2 sm:px-4 py-2 sm:py-4 font-semibold text-white">
+        <td className="px-4 py-4 font-semibold text-white">
           {booking.guestName}
         </td>
 
-        <td className="px-2 sm:px-4 py-2 sm:py-4">
+        <td className="px-4 py-4">
           <span className="bg-white/10 text-gray-200 px-3 py-1 rounded-full text-sm font-medium border border-white/10">
             Room {booking.room}
           </span>
         </td>
 
-        <td className="px-2 sm:px-4 py-2 sm:py-4 text-gray-300">
+        <td className="px-4 py-4 text-gray-300">
           {fmtDate(booking.checkIn)}
         </td>
 
-        <td className="px-2 sm:px-4 py-2 sm:py-4 text-gray-300 hidden sm:table-cell">
+        <td className="px-4 py-4 text-gray-300">
           {fmtDate(booking.checkOut)}
         </td>
 
-        <td className="px-2 sm:px-4 py-2 sm:py-4 hidden sm:table-cell">
+        <td className="px-4 py-4">
           <span className={`px-3 py-1 rounded-full text-sm font-semibold shadow-sm ${
             booking.status === "Occupied" ? "bg-emerald-500/20 text-emerald-400" :
             booking.status === "CheckedOut" ? "bg-gray-500/20 text-gray-400" :
@@ -111,8 +111,8 @@ const BookingRow = ({ booking, onExtend, onShiftRoom, onCheckOut, onBillGenerate
           </span>
         </td>
 
-        <td className="px-2 sm:px-4 py-2 sm:py-4">
-          <div className="flex gap-1 sm:gap-2 flex-wrap items-center">
+        <td className="px-4 py-4">
+          <div className="flex gap-2 flex-wrap items-center">
             {!isBillGenerated ? (
               <Btn onClick={handleGenerateBill} color="from-purple-500 to-indigo-600">Generate Bill</Btn>
             ) : (

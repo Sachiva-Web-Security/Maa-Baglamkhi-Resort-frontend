@@ -25,30 +25,32 @@ const Kitchen = () => {
         status: "Ready",
       });
 
-      fetchOrders();
+      fetchOrders(); // refresh orders
     } catch (err) {
       console.log(err);
     }
   };
 
   return (
-    <div className="min-h-screen  overflow-x-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4 sm:p-6 lg:p-8">
-      {/* HEADER */}
+    <div className="min-h-screen overflow-x-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4 sm:p-6 lg:p-8">
 
-      <div className="bg-slate-900 w-full text-white p-4 sm:p-6 rounded-2xl shadow-lg mb-6">
-        <h2 className="text-2xl font-bold ">Kitchen Orders</h2>
+      {/* HEADER */}
+      <div className="bg-slate-900 text-white p-4 sm:p-6 rounded-2xl shadow-lg mb-6">
+        <h2 className="text-2xl font-bold">Kitchen Orders</h2>
         <p className="text-sm opacity-90">Manage restaurant food orders</p>
       </div>
 
-      {/* TABLE */}
+      {/* TABLE CARD */}
+      <div className="bg-slate-800 rounded-2xl shadow-md p-6 text-white">
 
-      <div className="bg-slate-850 rounded-2xl shadow-md p-6">
-        <h3 className="text-lg font-extrabold mb-4">Kitchen Orders</h3>
+        <h3 className="text-lg font-bold mb-4">Kitchen Orders</h3>
 
-        <div className="w-full overflow-x-auto rounded-xl">
-          <table className="min-w-full w-full border-collapse text-xs sm:text-sm">
+        <div className="overflow-x-auto">
+
+          <table className="w-full border-collapse text-sm">
+
             <thead>
-              <tr className="bg-slate-900 text-white text-left ">
+              <tr className="bg-slate-900 text-left">
                 <th className="p-3">Waiter</th>
                 <th className="p-3">Table</th>
                 <th className="p-3">Item</th>
@@ -58,12 +60,14 @@ const Kitchen = () => {
             </thead>
 
             <tbody>
+
               {orders.map((o) => (
                 <tr
                   key={o.id}
-                  className=" group border-b transition-all duration-200 hover:bg-blue-900 hover:text-white"
+                  className="border-b hover:bg-blue-900 transition-all"
                 >
-                  <td className="p-3 ">{o.waiter_name}</td>
+                  <td className="p-3">{o.waiter_name}</td>
+
                   <td className="p-3">{o.table_number}</td>
 
                   <td className="p-3">
@@ -77,11 +81,11 @@ const Kitchen = () => {
                   <td className="p-3">
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-semibold
-${
-  o.status === "Ready"
-    ? "bg-green-100 text-green-700"
-    : "bg-yellow-100 text-yellow-700"
-}`}
+                      ${
+                        o.status === "Ready"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-yellow-100 text-yellow-700"
+                      }`}
                     >
                       {o.status}
                     </span>
@@ -91,7 +95,7 @@ ${
                     {o.status !== "Ready" && (
                       <button
                         onClick={() => markReady(o.id)}
-                        className="bg-blue-500 hover:bg-green-600 text-blue px-3 py-1 rounded-lg text-sm"
+                        className="bg-blue-500 hover:bg-green-600 text-white px-3 py-1 rounded-lg text-sm"
                       >
                         Ready
                       </button>
@@ -102,13 +106,16 @@ ${
 
               {orders.length === 0 && (
                 <tr>
-                  <td colSpan="5" className="text-center p-4 text-gray-500">
+                  <td colSpan="5" className="text-center p-4 text-gray-400">
                     No orders yet
                   </td>
                 </tr>
               )}
+
             </tbody>
+
           </table>
+
         </div>
       </div>
     </div>

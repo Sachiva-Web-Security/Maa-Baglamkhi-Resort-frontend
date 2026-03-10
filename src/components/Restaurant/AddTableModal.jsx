@@ -5,12 +5,20 @@ const AddTableModal = ({ isOpen, onClose, onAdd }) => {
 
     if (!isOpen) return null;
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (!tableNumber.trim()) return;
-        onAdd(tableNumber);
-        setTableNumber("");
-        onClose();
+        try {
+            await onAdd(tableNumber.trim());
+            setTableNumber("");
+            onClose();
+        } catch (err) {
+            const msg =
+                err?.response?.data?.message ||
+                err?.response?.data?.error?.sqlMessage ||
+                "Failed to add table";
+            alert(msg);
+        }
     };
 
     return (

@@ -1,53 +1,53 @@
 import React from "react";
 import { FaBox, FaArrowRight, FaTrash } from "react-icons/fa";
 
-export default function CategoryCard({ category, itemCount, totalValue, onClick, onDeleteCategory, isDefault }) {
-  const handleDelete = (e) => {
-    e.stopPropagation();
-    if (window.confirm(`Delete category "${category}" and all its items?`)) {
-      onDeleteCategory(category);
-    }
-  };
+export default function CategoryCard({
+  category,
+  itemCount,
+  totalValue,
+  onClick,
+  onDeleteCategory,
+  isDefault
+}) {
 
   return (
     <div
-  onClick={onClick}
-  className="
-    bg-gradient-to-br from-blue-50 to-blue-100 
-    dark:from-gray-800 dark:to-gray-700
-    border border-blue-200 dark:border-gray-700
-    rounded-lg p-4 cursor-pointer 
-    hover:shadow-lg hover:scale-105 
-    transition-all duration-300 relative group
-    text-gray-800 dark:text-white
-  "
->
-      {/* Delete Button - Only show for custom categories */}
+      onClick={onClick}
+      className="bg-gray-800 p-4 rounded cursor-pointer hover:bg-gray-700 relative"
+    >
+
       {!isDefault && (
         <button
-          onClick={handleDelete}
-          className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-red-600"
-          title="Delete category"
+          onClick={(e)=>{
+            e.stopPropagation();
+            onDeleteCategory(category)
+          }}
+          className="absolute top-2 right-2 text-red-400"
         >
-          <FaTrash size={16} />
+          <FaTrash/>
         </button>
       )}
 
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="bg-blue-600 text-white p-3 rounded-lg">
-            <FaBox size={24} />
-          </div>
+      <div className="flex justify-between items-center">
+
+        <div className="flex gap-3 items-center">
+
+          <FaBox/>
+
           <div>
-            <h3 className="font-semibold text-gray-800">{category}</h3>
-            <p className="text-sm text-gray-500">{itemCount} items</p>
+            <h3>{category}</h3>
+            <p>{itemCount} items</p>
           </div>
+
         </div>
-        <div className="flex flex-col items-end gap-2">
-          <p className="text-lg font-bold text-blue-600">₹{totalValue}</p>
-          <FaArrowRight className="text-blue-400" />
+
+        <div className="text-right">
+          <p>₹{totalValue}</p>
+          <FaArrowRight/>
         </div>
+
       </div>
+
     </div>
   );
 }

@@ -42,7 +42,9 @@ const Attendance = () => {
   const presentStaff = employees.filter((e) => e.status === "Present").length;
   const absentStaff = employees.filter((e) => e.status === "Absent").length;
   const lateStaff = employees.filter((e) => e.status === "Late").length;
-  const onLeaveStaff = employees.filter((e) => e.status === "On Leave").length;
+  const onLeaveStaff = employees.filter(
+    (e) => e.status === "On Leave"
+  ).length;
 
   const handleAddManualEntry = () => setShowManualEntryModal(true);
 
@@ -54,7 +56,10 @@ const Attendance = () => {
       };
       const res = await API.post("/attendance", payload);
       const newId = res.data?.id || Date.now();
-      setEmployees((prev) => [{ id: newId, ...payload }, ...prev]);
+      setEmployees((prev) => [
+        { id: newId, ...payload },
+        ...prev,
+      ]);
       setShowManualEntryModal(false);
       alert("Attendance saved");
     } catch (err) {
@@ -64,10 +69,10 @@ const Attendance = () => {
   };
 
   return (
-    <div className="min-h-screen w-full px-4 md:px-8 lg:px-10 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-x-hidden">
-      <h1 className=" text-xl md:text-2xl lg:text-3xl text-white font-bold mb-6  pt-6">
-        Attendance Management
-      </h1>
+    <div className="min-h-screen w-280  bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      
+
+      <h1 className="text-2xl text-white font-bold mb-6 pl-100 pt-10">Attendance Management</h1>
 
       <FiltersSection
         date={date}
@@ -82,7 +87,7 @@ const Attendance = () => {
       />
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-3 md:gap-4 my-6 ">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 my-6 pl-4">
         <SummaryCard label="Total Staff" value={totalStaff} />
         <SummaryCard label="Present" value={presentStaff} color="green" />
         <SummaryCard label="Absent" value={absentStaff} color="red" />
@@ -91,23 +96,17 @@ const Attendance = () => {
       </div>
 
       {/* Table */}
-      <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-2 sm:p-4 shadow-lg overflow-x-auto">
-        <table className="w-full text-xs sm:text-sm">
+      <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4 shadow-lg">
+        <table className="w-full text-sm">
           <thead>
             <tr className="text-gray-300 border-b border-white/10 ">
-              <th className="p-2 sm:p-3 text-left">Employee</th>
-              <th className="p-2 sm:p-3 text-left hidden md:table-cell">
-                Role
-              </th>
-              <th className="p-2 sm:p-3 text-left">Check In</th>
-              <th className="p-2 sm:p-3 text-left hidden sm:table-cell">
-                Check Out
-              </th>
-              <th className="p-2 sm:p-3 text-left">Status</th>
-              <th className="p-2 sm:p-3 text-left hidden lg:table-cell">
-                Method
-              </th>
-              <th className="p-2 sm:p-3 text-left">Action</th>
+              <th className="p-3 text-left">Employee</th>
+              <th className="p-3 text-left">Role</th>
+              <th className="p-3 text-left">Check In</th>
+              <th className="p-3 text-left">Check Out</th>
+              <th className="p-3 text-left">Status</th>
+              <th className="p-3 text-left">Method</th>
+              <th className="p-3 text-left">Action</th>
             </tr>
           </thead>
 

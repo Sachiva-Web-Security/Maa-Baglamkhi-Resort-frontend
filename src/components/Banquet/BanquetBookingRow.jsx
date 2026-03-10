@@ -1,4 +1,4 @@
-const BanquetBookingRow = ({ booking, onComplete, onGenerateBill, onView }) => {
+const BanquetBookingRow = ({ booking, onComplete, onGenerateBill, onView, onEdit }) => {
   const getStatusBadge = (status) => {
     const baseClasses = 'px-3 py-1 rounded-full text-xs font-bold';
     switch (status) {
@@ -25,8 +25,10 @@ const BanquetBookingRow = ({ booking, onComplete, onGenerateBill, onView }) => {
       <td className="px-4 py-3">
         <span className={getStatusBadge(booking.status)}>{booking.status}</span>
       </td>
+
       <td className="px-4 py-3">
         <div className="flex gap-2 flex-wrap">
+
           {booking.status === 'Confirmed' && (
             <button
               onClick={onComplete}
@@ -35,6 +37,7 @@ const BanquetBookingRow = ({ booking, onComplete, onGenerateBill, onView }) => {
               Mark Completed
             </button>
           )}
+
           {(booking.status === 'Completed' || booking.status === 'Confirmed') && (
             <button
               onClick={onGenerateBill}
@@ -43,6 +46,7 @@ const BanquetBookingRow = ({ booking, onComplete, onGenerateBill, onView }) => {
               Generate Bill
             </button>
           )}
+
           {booking.invoiceNo && (
             <button
               onClick={onView}
@@ -51,11 +55,22 @@ const BanquetBookingRow = ({ booking, onComplete, onGenerateBill, onView }) => {
               View Bill
             </button>
           )}
+
+          {/* NEW EDIT BUTTON */}
+          {booking.status === 'Confirmed' && (
+            <button
+              onClick={onEdit}
+              className="px-3 py-1 bg-purple-700 text-white text-xs font-bold rounded-lg hover:bg-purple-600 transition-colors"
+            >
+              Edit Date
+            </button>
+          )}
+
         </div>
       </td>
+
     </tr>
   );
 };
 
 export default BanquetBookingRow;
-
