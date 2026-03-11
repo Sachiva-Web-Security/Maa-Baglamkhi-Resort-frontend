@@ -13,10 +13,10 @@ import {
   FaCog,
   FaUser,
   FaFire,
-  FaTasks
+  FaTasks,
 } from "react-icons/fa";
 
-const Sidebar = () => {
+const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -86,91 +86,109 @@ const Sidebar = () => {
     ...roleMenus,
   ];
 
-  const handleNavClick = (path) => navigate(path);
+  const handleNavClick = (path) => {
+    navigate(path);
+    // Close sidebar on mobile after navigation
+    if (setSidebarOpen) {
+      setSidebarOpen(false);
+    }
+  };
   const isActive = (path) => location.pathname === path;
 
   return (
-    <div
-      className="
+    <>
+      {/* Mobile overlay backdrop */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 top-[70px] bg-black/50 z-30 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        ></div>
+      )}
+
+      {/* Sidebar */}
+      <div
+        className={`
       fixed top-[70px] left-0
       w-[250px] h-[calc(100vh-70px)]
       flex flex-col justify-between
       text-gray-800
       bg-slate-900
       shadow-2xl rounded-r-3xl
-    "
-    >
-      <style>
-        {`
-.sidebar-scroll::-webkit-scrollbar {
-  width: 6px;
-}
+      z-40
+      transition-transform duration-300 ease-in-out
+      md:translate-x-0
+      ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+    `}
+      >
+        <style>{`
+        .sidebar-scroll::-webkit-scrollbar {
+          width: 6px;
+        }
+        .sidebar-scroll::-webkit-scrollbar-track {
+          background: #0f172a;
+        }
+        .sidebar-scroll::-webkit-scrollbar-thumb {
+          background: #192034;
+          border-radius: 10px;
+        }
+        .sidebar-scroll::-webkit-scrollbar-thumb:hover {
+          background: #1d4ed8;
+        }
+      `}</style>
+        {/* Menu */}
+        <nav className="flex-1 px-4 space-y-2 overflow-y-auto font-bold sidebar-scroll">
+          {menuItems.map((item) => {
+            const Icon = item.icon;
 
-.sidebar-scroll::-webkit-scrollbar-track {
-  background: #0f172a; /* same as bg-slate-900 */
-}
-
-.sidebar-scroll::-webkit-scrollbar-thumb {
-  background: #192034;
-  border-radius: 10px;
-}
-
-.sidebar-scroll::-webkit-scrollbar-thumb:hover {
-  background: #1d4ed8;
-}
-`}
-      </style>
-      {/* Menu */}
-      <nav className="flex-1 px-4 space-y-2 overflow-y-auto font-bold sidebar-scroll">
-        {menuItems.map((item) => {
-          const Icon = item.icon;
-
-          return (
-            <div
-              key={item.id}
-              onClick={() => handleNavClick(item.path)}
-              className={`
+            return (
+              <div
+                key={item.id}
+                onClick={() => handleNavClick(item.path)}
+                className={`
             flex items-center gap-3
            px-4 py-3 rounded-xl
           cursor-pointer transition-all duration-300
           hover:bg-blue-600 hover:text-white hover:shadow-md
       ${isActive(item.path) ? "bg-blue-600 text-white shadow-md" : ""}
    `}
-            >
-              <Icon className="text-lg text-white" />
-              <span className="text-base font-bold text-white">{item.name}</span>
-            </div>
-          );
-        })}
-      </nav>
+              >
+                <Icon className="text-lg text-white" />
+                <span className="text-base font-bold text-white">
+                  {item.name}
+                </span>
+              </div>
+            );
+          })}
+        </nav>
 
-      {/* Profile */}
-      <div className="p-3 border-t border-gray-700 bg-slate-900">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-white overflow-hidden">
-            {avatarUrl ? (
-              <img
-                src={avatarUrl}
-                alt="Avatar"
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  // fallback if saved URL is no longer valid
-                  e.currentTarget.style.display = "none";
-                }}
-              />
-            ) : (
-              (userName || "U").charAt(0).toUpperCase()
-            )}
-          </div>
-          <div>
-            <p className="text-lg font-bold text-white">{userName}</p>
-            <p className="text-base font-bold text-gray-300">
-              {role.charAt(0).toUpperCase() + role.slice(1)}
-            </p>
+        {/* Profile */}
+        <div className="p-3 border-t border-gray-700 bg-slate-900">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-white overflow-hidden">
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt="Avatar"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    // fallback if saved URL is no longer valid
+                    e.currentTarget.style.display = "none";
+                  }}
+                />
+              ) : (
+                (userName || "U").charAt(0).toUpperCase()
+              )}
+            </div>
+            <div>
+              <p className="text-lg font-bold text-white">{userName}</p>
+              <p className="text-base font-bold text-gray-300">
+                {role.charAt(0).toUpperCase() + role.slice(1)}
+              </p>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

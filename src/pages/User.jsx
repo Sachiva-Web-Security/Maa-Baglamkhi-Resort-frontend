@@ -20,8 +20,7 @@ const User = () => {
           ? res.data
           : res.data.users || [];
 
-        const localUsers =
-          JSON.parse(localStorage.getItem("users")) || [];
+        const localUsers = JSON.parse(localStorage.getItem("users")) || [];
 
         const mergedUsers = [...apiData];
 
@@ -73,14 +72,13 @@ const User = () => {
   });
 
   return (
-    <div className="   min-h-screen w-280 p-6 bg-slate-900">
-      
-      <div className="flex justify-between mb-6">
-        <h1 className="text-2xl text-white text-align-center  pl-100 font-bold">User Management</h1>
+    <div className="min-h-screen w-full p-4 sm:p-6 bg-slate-900">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <h1 className="text-2xl text-white font-bold">User Management</h1>
 
         <button
           onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 bg-indigo-500 text-white px-4 py-2 rounded-xl"
+          className="flex items-center gap-2 bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-xl transition-colors"
         >
           <FaUserPlus />
           Add User
@@ -100,7 +98,8 @@ const User = () => {
         />
       </div>
 
-      <div className="overflow-x-auto rounded-2xl border border-white/10">
+      {/* Desktop View - Full Table */}
+      <div className="hidden md:block overflow-x-auto rounded-2xl border border-white/10">
         <table className="w-full text-left bg-slate-800 rounded-2xl overflow-hidden">
           <thead className="bg-slate-700 text-white">
             <tr>
@@ -133,7 +132,7 @@ const User = () => {
                     key={user.id || user._id || index}
                     className="border-t border-white/10 hover:bg-slate-700/40"
                   >
-                    <td className="px-4 py-4">{index + 1}</td>
+                    <td className="px-4 py-4 text-white/100">{index + 1}</td>
 
                     <td className="px-4 py-4">
                       <div className="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold overflow-hidden">
@@ -149,8 +148,8 @@ const User = () => {
                       </div>
                     </td>
 
-                    <td className="px-4 py-4">{displayName}</td>
-                    <td className="px-4 py-4 text-gray-300">{email}</td>
+                    <td className="px-4 py-4 text-white/100">{displayName}</td>
+                    <td className="px-4 py-4 text-white/100">{email}</td>
                     <td className="px-4 py-4">
                       <span className="px-3 py-1 rounded-full text-xs bg-green-100 text-green-700">
                         {role}
@@ -168,6 +167,61 @@ const User = () => {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile View - Card Layout */}
+      <div className="md:hidden space-y-3">
+        {filteredUsers.length > 0 ? (
+          filteredUsers.map((user, index) => {
+            const displayName =
+              user.name || user.fullName || user.username || "Unknown User";
+            const email = user.email || user.username || "N/A";
+            const role = user.role || user.userRole || "N/A";
+            const initial = displayName.toString().charAt(0).toUpperCase();
+
+            const backendAvatar = user.avatar || user.avatarUrl || "";
+
+            const avatarSrc =
+              (email && email === loggedInEmail && loggedInAvatar) ||
+              backendAvatar ||
+              "";
+
+            return (
+              <div
+                key={user.id || user._id || index}
+                className="bg-slate-800 border border-white/10 rounded-xl p-4"
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-12 h-12 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold overflow-hidden flex-shrink-0">
+                    {avatarSrc ? (
+                      <img
+                        src={avatarSrc}
+                        alt={displayName}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      initial || "?"
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white font-semibold truncate">
+                      {displayName}
+                    </p>
+                    <p className="text-gray-400 text-sm truncate">{email}</p>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-300 text-xs">#{index + 1}</span>
+                  <span className="px-3 py-1 rounded-full text-xs bg-green-100 text-green-700">
+                    {role}
+                  </span>
+                </div>
+              </div>
+            );
+          })
+        ) : (
+          <div className="text-center py-8 text-gray-400">No users found</div>
+        )}
       </div>
 
       {showCreateModal && (
