@@ -4,7 +4,7 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import Sidebar from "./components/Sidebar/Sidebar";
 import Header from "./components/Header/Header";
@@ -36,22 +36,49 @@ import Payment from "./components/Restaurant/Payment";
    Layout Component
 ============================ */
 function Layout({ children, setIsAuthenticated }) {
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const sidebarWidth = sidebarOpen ? 250 : 88;
+
+  useEffect(() => {
+    const handleResize = () => {
+      const mobileView = window.innerWidth < 768;
+      setIsMobile(mobileView);
+      setSidebarOpen((current) => {
+        if (mobileView) {
+          return false;
+        }
+
+        return current;
+      });
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   return (
-    <div className="bg-slate-900 min-h-screen overflow-hidden w-screen">
+    <div className=" bg-[radial-gradient(circle_at_top_left,rgba(45,212,191,0.16),transparent_28%),radial-gradient(circle_at_top_right,rgba(249,115,22,0.18),transparent_24%),linear-gradient(180deg,#f8fafc_0%,#eef6f7_38%,#f8fafc_100%)] min-h-screen overflow-hidden w-screen">
       {/* Sidebar */}
-      <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+      <Sidebar
+        isMobile={isMobile}
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+      />
 
       {/* Main Content */}
-      <div className="flex flex-col overflow-hidden h-screen md:ml-[250px]">
+      <div
+        className="flex flex-col overflow-hidden h-screen transition-[margin,width] duration-300 ease-in-out"
+        style={{
+          marginLeft: `${sidebarWidth}px`,
+          width: `calc(100vw - ${sidebarWidth}px)`,
+        }}
+      >
         {/* Header */}
-        <Header
-          setIsAuthenticated={setIsAuthenticated}
-          setSidebarOpen={setSidebarOpen}
-        />
+        <Header setIsAuthenticated={setIsAuthenticated} />
 
-        <div className="flex-1 overflow-y-auto overflow-x-hidden mt-[70px] w-full">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden mt-[70px] w-full min-w-0">
           <div className="p-4 sm:p-6 lg:p-8 w-full max-w-full">{children}</div>
         </div>
       </div>

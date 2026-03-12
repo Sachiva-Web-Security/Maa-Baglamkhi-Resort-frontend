@@ -216,12 +216,37 @@ const Profile = () => {
       : "Role";
 
   return (
-    <div className="w-full h-full min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900  flex items-start justify-center p-6">
-      <div className="w-full max-w-5xl bg-white/10 backdrop-blur-2xl border border-white/20 rounded-3xl shadow-2xl grid md:grid-cols-2 gap-8 p-8 mt-6">
+    <div className="resort-page">
+      <div className="resort-shell">
+        <section className="resort-hero">
+          <div className="resort-hero-content lg:flex-row lg:items-end lg:justify-between">
+            <div className="space-y-3">
+              <p className="resort-eyebrow">Personal Workspace</p>
+              <h1 className="resort-title">Profile and security settings</h1>
+              <p className="resort-subtitle">
+                Update your profile picture and password from a cleaner responsive
+                screen designed for both mobile and desktop.
+              </p>
+            </div>
+            <div className="resort-stat-grid">
+              <div className="resort-stat">
+                <span className="resort-stat-label">Current Role</span>
+                <span className="resort-stat-value text-[1.1rem]">{prettyRole}</span>
+              </div>
+              <div className="resort-stat">
+                <span className="resort-stat-label">Email</span>
+                <span className="resort-stat-value text-[0.95rem]">{email || "Not set"}</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div className="w-full max-w-6xl rounded-[2rem] border border-white/15 bg-white/[0.08] p-4 shadow-[0_24px_60px_rgba(2,8,23,0.22)] backdrop-blur-2xl md:p-8">
+          <div className="grid gap-8 md:grid-cols-2">
         {/* Left: avatar + basic info */}
-        <div className="flex flex-col items-center text-center space-y-6">
+        <div className="flex flex-col items-center rounded-[1.75rem] border border-white/10 bg-slate-950/35 p-6 text-center space-y-6">
           <div className="relative">
-            <div className="w-32 h-32 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-4xl text-white shadow-lg overflow-hidden">
+            <div className="w-32 h-32 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-4xl text-white shadow-lg overflow-hidden">
               {avatarUrl ? (
                 <img
                   src={avatarUrl}
@@ -236,9 +261,9 @@ const Profile = () => {
 
           <div>
             <h2 className="text-2xl font-bold text-white">{name || "User"}</h2>
-            <p className="text-sm text-indigo-100">{prettyRole}</p>
+            <p className="text-sm text-cyan-100">{prettyRole}</p>
             {email && (
-              <p className="text-xs text-indigo-100/80 mt-1">{email}</p>
+              <p className="text-xs text-slate-300 mt-1">{email}</p>
             )}
           </div>
 
@@ -256,7 +281,7 @@ const Profile = () => {
               <button
                 type="button"
                 onClick={handleStartCamera}
-                className="w-full py-2 rounded-full bg-slate-800 text-white text-xs font-semibold hover:bg-slate-700 transition"
+              className="w-full py-2 rounded-full bg-slate-800 text-white text-xs font-semibold hover:bg-slate-700 transition"
               >
                 Open Camera
               </button>
@@ -276,7 +301,7 @@ const Profile = () => {
                   <button
                     type="button"
                     onClick={handleCaptureFromCamera}
-                    className="w-full py-2 rounded-full bg-purple-500 text-white text-xs font-semibold hover:bg-purple-600 transition"
+                    className="w-full py-2 rounded-full bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition"
                   >
                     Capture Photo
                   </button>
@@ -287,7 +312,7 @@ const Profile = () => {
             <button
               type="submit"
               disabled={loadingAvatar || !avatarFile}
-              className="w-full py-2 rounded-full bg-indigo-500 text-white font-semibold text-sm hover:bg-indigo-600 disabled:opacity-60 disabled:hover:bg-indigo-500 transition"
+              className="w-full py-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold text-sm hover:from-cyan-600 hover:to-blue-700 disabled:opacity-60 disabled:hover:from-cyan-500 transition"
             >
               {loadingAvatar ? "Uploading..." : "Update Profile Picture"}
             </button>
@@ -295,7 +320,7 @@ const Profile = () => {
         </div>
 
         {/* Right: password change */}
-        <div className="bg-slate-900/60 rounded-2xl p-6 flex flex-col justify-center space-y-4">
+        <div className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6 flex flex-col justify-center space-y-4">
           <h3 className="text-xl font-semibold text-white mb-2">
             Change Password
           </h3>
@@ -360,7 +385,7 @@ const Profile = () => {
             <button
               type="submit"
               disabled={loadingPassword}
-              className="w-full py-2.5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold text-sm hover:from-indigo-600 hover:to-purple-600 disabled:opacity-60 transition"
+              className="w-full py-2.5 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold text-sm hover:from-cyan-600 hover:to-blue-700 disabled:opacity-60 transition"
             >
               {loadingPassword ? "Updating..." : "Update Password"}
             </button>
@@ -371,6 +396,8 @@ const Profile = () => {
               Profile details load ho rahe hain...
             </p>
           )}
+        </div>
+          </div>
         </div>
       </div>
     </div>

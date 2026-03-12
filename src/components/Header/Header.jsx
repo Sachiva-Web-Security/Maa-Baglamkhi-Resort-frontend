@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
-import { FaBuilding, FaBars } from "react-icons/fa";
+import { FaBuilding } from "react-icons/fa";
 
-const Header = ({ setIsAuthenticated, setSidebarOpen }) => {
+const Header = ({ setIsAuthenticated }) => {
   const navigate = useNavigate();
   const userName = localStorage.getItem("name") || "User";
 
@@ -26,14 +26,6 @@ shadow-md flex items-center justify-between px-6 z-50 text-white backdrop-blur-m
     >
       {/* LEFT SIDE - Mobile Menu Button + Logo */}
       <div className="flex items-center gap-3">
-        {/* Hamburger Menu Button - Mobile Only */}
-        <button
-          className="md:hidden text-xl hover:text-blue-400 transition-colors"
-          onClick={() => setSidebarOpen && setSidebarOpen((prev) => !prev)}
-        >
-          <FaBars />
-        </button>
-
         <h1 className="flex items-center gap-2 text-l font-semi-bold">
           <div className="-ml-2 w-8 h-8 flex items-center justify-center rounded-lg bg-blue-600 text-white">
             <FaBuilding />
@@ -45,7 +37,9 @@ shadow-md flex items-center justify-between px-6 z-50 text-white backdrop-blur-m
       {/* RIGHT SIDE - User Info + Logout */}
 
       <div className="flex items-center gap-4">
-        <span className="text-sm font-medium">Welcome, {userName}</span>
+        <span className="hidden sm:inline text-sm font-medium">
+          Welcome, {userName}
+        </span>
 
         <button
           onClick={handleLogout}

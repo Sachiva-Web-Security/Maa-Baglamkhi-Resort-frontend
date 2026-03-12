@@ -44,11 +44,11 @@ const Circle = ({ percent, color, label }) => {
 
 const States = () => {
   return (
-    <div className="min-h-screen bg-[#0f172a] flex items-center justify-center p-6">
-      <div className="bg-[#1e1b2e] rounded-2xl shadow-xl p-8 w-full max-w-2xl flex flex-col md:flex-row justify-around items-center gap-8">
+    <div className="min-h-screen bg-[white] flex items-center justify-center p-6 rounded-2xl">
+      <div className="bg-gray-300 rounded-2xl shadow-xl p-8 w-full max-w-2xl flex flex-col md:flex-row justify-around items-center gap-8">
 
-        <Circle percent={70} color="#3b82f6" label="Check In" />
-        <Circle percent={30} color="#f59e0b" label="Check Out" />
+        <Circle percent={70} color="#3b82f6"  label={<span className="text-black">Check Out</span>}/>
+        <Circle percent={30} color="#f59e0b" label={<span className="text-black">Check Out</span>} />
 
       </div>
     </div>

@@ -72,34 +72,65 @@ const User = () => {
   });
 
   return (
-    <div className="min-h-screen w-full p-4 sm:p-6 bg-slate-900">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <h1 className="text-2xl text-white font-bold">User Management</h1>
+    <div className="resort-page">
+      <div className="resort-shell">
+        <section className="resort-hero">
+          <div className="resort-hero-content lg:flex-row lg:items-end lg:justify-between">
+            <div className="space-y-3">
+              <p className="resort-eyebrow">Team Directory</p>
+              <h1 className="resort-title">User management made simpler</h1>
+              <p className="resort-subtitle">
+                Browse staff accounts, roles, and profile images in a cleaner
+                responsive directory with quick onboarding access.
+              </p>
+            </div>
+            <div className="resort-stat-grid">
+              <div className="resort-stat">
+                <span className="resort-stat-label">Total Users</span>
+                <span className="resort-stat-value">{users.length}</span>
+              </div>
+              <div className="resort-stat">
+                <span className="resort-stat-label">Visible Users</span>
+                <span className="resort-stat-value">{filteredUsers.length}</span>
+              </div>
+            </div>
+          </div>
+        </section>
 
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-xl transition-colors"
-        >
-          <FaUserPlus />
-          Add User
-        </button>
-      </div>
+        <section className="resort-panel">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="resort-panel-title">Search and manage staff</h2>
+              <p className="resort-panel-copy">
+                Quickly search by name, email, or role and create new users when needed.
+              </p>
+            </div>
+
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="resort-button inline-flex items-center justify-center gap-2"
+            >
+              <FaUserPlus />
+              Add User
+            </button>
+          </div>
+        </section>
 
       {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
 
-      <div className="relative mb-6">
+      <div className="relative">
         <FaSearch className="absolute left-3 top-3 text-gray-400" />
         <input
           type="text"
           placeholder="Search users..."
-          className="w-full pl-10 pr-4 py-2 rounded-xl border bg-slate-800 text-white"
+          className="resort-search"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
       </div>
 
       {/* Desktop View - Full Table */}
-      <div className="hidden md:block overflow-x-auto rounded-2xl border border-white/10">
+      <div className="resort-table-shell hidden md:block overflow-x-auto">
         <table className="w-full text-left bg-slate-800 rounded-2xl overflow-hidden">
           <thead className="bg-slate-700 text-white">
             <tr>
@@ -189,7 +220,7 @@ const User = () => {
             return (
               <div
                 key={user.id || user._id || index}
-                className="bg-slate-800 border border-white/10 rounded-xl p-4"
+                className="rounded-2xl border border-white/10 bg-white/[0.06] p-4 shadow-[0_14px_30px_rgba(15,23,42,0.2)] backdrop-blur-md"
               >
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-12 h-12 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold overflow-hidden flex-shrink-0">
@@ -230,6 +261,7 @@ const User = () => {
           onUserCreated={handleUserCreated}
         />
       )}
+      </div>
     </div>
   );
 };

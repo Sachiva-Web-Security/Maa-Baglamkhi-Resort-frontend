@@ -69,53 +69,104 @@ const Attendance = () => {
   };
 
   return (
-    <div className="min-h-screen w-280  bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      
+    <div className="resort-page">
+      <div className="resort-shell">
+        <section className="resort-hero">
+          <div className="resort-hero-content lg:flex-row lg:items-end lg:justify-between">
+            <div className="space-y-3">
+              <p className="resort-eyebrow">Workforce Snapshot</p>
+              <h1 className="resort-title">Attendance management made cleaner</h1>
+              <p className="resort-subtitle">
+                Track staff presence, late arrivals, and leave patterns from one
+                responsive workspace built for both front desk and mobile use.
+              </p>
+            </div>
+            <div className="resort-stat-grid">
+              <div className="resort-stat">
+                <span className="resort-stat-label">Date</span>
+                <span className="resort-stat-value text-[1.2rem]">{date}</span>
+              </div>
+              <div className="resort-stat">
+                <span className="resort-stat-label">Departments</span>
+                <span className="resort-stat-value">{department === "All Departments" ? "All" : "1"}</span>
+              </div>
+              <div className="resort-stat">
+                <span className="resort-stat-label">Visible Staff</span>
+                <span className="resort-stat-value">{filteredEmployees.length}</span>
+              </div>
+            </div>
+          </div>
+        </section>
 
-      <h1 className="text-2xl text-white font-bold mb-6 pl-100 pt-10">Attendance Management</h1>
+        <section className="resort-panel">
+          <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2 className="resort-panel-title">Shift filters</h2>
+              <p className="resort-panel-copy">
+                Narrow the list by date, role, and department, then add manual
+                entries when needed.
+              </p>
+            </div>
+          </div>
+          <FiltersSection
+            date={date}
+            department={department}
+            role={role}
+            searchQuery={searchQuery}
+            onDateChange={setDate}
+            onDepartmentChange={setDepartment}
+            onRoleChange={setRole}
+            onSearchChange={setSearchQuery}
+            onAddManualEntry={handleAddManualEntry}
+          />
+        </section>
 
-      <FiltersSection
-        date={date}
-        department={department}
-        role={role}
-        searchQuery={searchQuery}
-        onDateChange={setDate}
-        onDepartmentChange={setDepartment}
-        onRoleChange={setRole}
-        onSearchChange={setSearchQuery}
-        onAddManualEntry={handleAddManualEntry}
-      />
+        <section className="resort-grid">
+          <SummaryCard label="Total Staff" value={totalStaff} />
+          <SummaryCard label="Present" value={presentStaff} color="green" />
+          <SummaryCard label="Absent" value={absentStaff} color="red" />
+          <SummaryCard label="Late" value={lateStaff} color="yellow" />
+          <SummaryCard label="On Leave" value={onLeaveStaff} color="blue" />
+        </section>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 my-6 pl-4">
-        <SummaryCard label="Total Staff" value={totalStaff} />
-        <SummaryCard label="Present" value={presentStaff} color="green" />
-        <SummaryCard label="Absent" value={absentStaff} color="red" />
-        <SummaryCard label="Late" value={lateStaff} color="yellow" />
-        <SummaryCard label="On Leave" value={onLeaveStaff} color="blue" />
-      </div>
+        <section className="resort-table-shell">
+          <div className="flex flex-col gap-2 border-b border-white/10 px-4 py-4 sm:px-6">
+            <h2 className="resort-panel-title">Daily attendance log</h2>
+            <p className="resort-panel-copy">
+              Responsive staff table with clear statuses and quick action access.
+            </p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[760px] text-sm">
+              <thead>
+                <tr className="text-gray-300 border-b border-white/10 ">
+                  <th className="p-3 text-left">Employee</th>
+                  <th className="p-3 text-left">Role</th>
+                  <th className="p-3 text-left">Check In</th>
+                  <th className="p-3 text-left">Check Out</th>
+                  <th className="p-3 text-left">Status</th>
+                  <th className="p-3 text-left">Method</th>
+                  <th className="p-3 text-left">Action</th>
+                </tr>
+              </thead>
 
-      {/* Table */}
-      <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4 shadow-lg">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-gray-300 border-b border-white/10 ">
-              <th className="p-3 text-left">Employee</th>
-              <th className="p-3 text-left">Role</th>
-              <th className="p-3 text-left">Check In</th>
-              <th className="p-3 text-left">Check Out</th>
-              <th className="p-3 text-left">Status</th>
-              <th className="p-3 text-left">Method</th>
-              <th className="p-3 text-left">Action</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {filteredEmployees.map((employee) => (
-              <AttendanceRow key={employee.id} employee={employee} />
-            ))}
-          </tbody>
-        </table>
+              <tbody>
+                {filteredEmployees.map((employee) => (
+                  <AttendanceRow key={employee.id} employee={employee} />
+                ))}
+                {filteredEmployees.length === 0 && (
+                  <tr>
+                    <td colSpan={7} className="p-6">
+                      <div className="resort-empty">
+                        No attendance records match the current filters.
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
       </div>
 
       <Modal

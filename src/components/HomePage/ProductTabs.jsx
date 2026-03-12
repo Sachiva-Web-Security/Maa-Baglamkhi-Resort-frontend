@@ -50,11 +50,11 @@ const ReviewCard = ({
 
 const ProductTabs = () => {
   return (
-    <div className="min-h-screen bg-[#0f172a] flex items-center justify-center p-6">
-      <div className="bg-[#1e1b2e] w-full max-w-3xl rounded-2xl p-6 shadow-xl">
+    <div className="min-h-screen bg-[white] flex items-center justify-center p-6 rounded-xl ">
+      <div className="bg-[white] w-full max-w-3xl rounded-2xl p-6 shadow-xl">
 
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-white text-lg font-semibold">
+          <h2 className="text-black text-lg font-semibold">
             Latest Customer Review
           </h2>
 

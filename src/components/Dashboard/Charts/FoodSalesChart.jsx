@@ -40,20 +40,30 @@ const FoodSalesChart = () => {
   }, []);
 
   return (
-    <ResponsiveContainer width="100%" height={200}>
-      <LineChart data={data}>
-        <XAxis dataKey="day" />
-        <YAxis />
-        <Tooltip />
+    <div className="w-full">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-300">
+        Dining Trend
+      </p>
+      <h3 className="mt-2 text-base font-bold text-slate-900">
+        Food sales this week
+      </h3>
+      <div className="mt-4 h-[190px] w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={data}>
+            <XAxis dataKey="day" tick={{ fontSize: 11, fill: "#64748b" }} />
+            <YAxis tick={{ fontSize: 11, fill: "#64748b" }} />
+            <Tooltip />
 
-        <Line
-          type="monotone"
-          dataKey="sales"
-          stroke="#06b6d4"
-          strokeWidth={3}
-        />
-      </LineChart>
-    </ResponsiveContainer>
+            <Line
+              type="monotone"
+              dataKey="sales"
+              stroke="#06b6d4"
+              strokeWidth={3}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
   );
 };
 

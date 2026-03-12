@@ -274,27 +274,59 @@ const Hotel = () => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-200 p-6">
-      {/* Page Title */}
-      <h1 className="text-amber-50 text-2xl font-bold mb-10 w-full text-center">Hotel Management</h1>
+    <div className="resort-page">
+      <div className="resort-shell">
+        <section className="resort-hero">
+          <div className="resort-hero-content lg:flex-row lg:items-end lg:justify-between">
+            <div className="space-y-3">
+              <p className="resort-eyebrow">Front Office Board</p>
+              <h1 className="resort-title">Hotel operations at a glance</h1>
+              <p className="resort-subtitle">
+                Manage room inventory, bookings, checkout flow, and room shifts
+                from a cleaner responsive command center.
+              </p>
+            </div>
+            <div className="resort-stat-grid">
+              <div className="resort-stat">
+                <span className="resort-stat-label">Total Rooms</span>
+                <span className="resort-stat-value">{totalRooms}</span>
+              </div>
+              <div className="resort-stat">
+                <span className="resort-stat-label">Occupied</span>
+                <span className="resort-stat-value">{occupiedRooms}</span>
+              </div>
+              <div className="resort-stat">
+                <span className="resort-stat-label">Available</span>
+                <span className="resort-stat-value">{availableRooms}</span>
+              </div>
+            </div>
+          </div>
+        </section>
 
-      {/* Top Action Buttons */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-6 sm:mb-10 w-full">
+        <section className="resort-panel">
+          <div className="mb-5">
+            <h2 className="resort-panel-title">Quick operations</h2>
+            <p className="resort-panel-copy">
+              Common front-desk actions are grouped here for faster booking and
+              room movement workflows.
+            </p>
+          </div>
+          <div className="resort-actions">
         <button
-          className="h-12 w-60 bg-slate-700 hover:bg-slate-600 text-white rounded-full transition shadow-lg"
+          className="resort-button resort-button-soft"
           onClick={() => openModal('newBooking')}
         >
           + New Booking
         </button>
         <button
-          className="h-12 w-60 bg-slate-700 hover:bg-slate-600 text-white rounded-full transition shadow-lg"
+          className="resort-button resort-button-soft"
           onClick={() => openModal('expressCheckIn')}
         >
           Express Check-In
         </button>
 
         <button
-          className="h-12 w-60 bg-slate-700 hover:bg-slate-600 text-white rounded-full transition shadow-lg"
+          className="resort-button resort-button-soft"
           onClick={() => {
             if (bookings.length > 0) {
               setSelectedBooking(bookings[0]);
@@ -308,36 +340,36 @@ const Hotel = () => {
         </button>
 
         <button
-          className="h-12 w-60 bg-slate-700 hover:bg-slate-600 text-white rounded-full transition shadow-lg"
+          className="resort-button resort-button-soft"
           onClick={() => openModal('nightAudit')}
         >
           Night Audit
         </button>
 
         <button
-          className="h-12 w-60 bg-blue-600 hover:bg-blue-500 text-white rounded-full transition shadow-lg"
+          className="resort-button"
           onClick={() => { setSelectedBooking(null); openModal('extend'); }}
         >
           Extend
         </button>
 
         <button
-          className="h-12 w-60 bg-yellow-600 hover:bg-yellow-500 text-white rounded-full transition shadow-lg"
+          className="resort-button bg-[linear-gradient(135deg,rgba(217,119,6,0.95),rgba(245,158,11,0.92))]"
           onClick={() => { setSelectedBooking(null); openModal('shiftRoom'); }}
         >
           Shift Room
         </button>
 
         <button
-          className="h-12 w-60 bg-green-600 hover:bg-green-500 text-white rounded-full transition shadow-lg"
+          className="resort-button bg-[linear-gradient(135deg,rgba(5,150,105,0.96),rgba(16,185,129,0.92))]"
           onClick={() => openModal('addRoom')}
         >
           + Add New Room
         </button>
-      </div>
+          </div>
+        </section>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+        <section className="resort-grid">
         <SummaryCard
           label="Total Rooms"
           value={totalRooms}
@@ -364,15 +396,17 @@ const Hotel = () => {
           bgColor="yellow"
           onClick={() => alert(`Rooms in Cleaning: ${cleaningRooms}`)}
         />
-      </div>
+        </section>
 
 
-      {/* Booking Table */}
-      <div className="  bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-4 sm:p-6 transition duration-300">
-        <h2 className="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6">
-          Active Bookings
-        </h2>
-        <div className=" overflow-x-auto">
+        <section className="resort-table-shell">
+          <div className="flex flex-col gap-2 border-b border-white/10 px-4 py-4 sm:px-6">
+            <h2 className="resort-panel-title">Active bookings</h2>
+            <p className="resort-panel-copy">
+              Track live stays, billing status, and guest actions in one place.
+            </p>
+          </div>
+          <div className="overflow-x-auto px-4 py-4 sm:px-6">
           <table className="min-w-[700px] w-full text-xs sm:text-sm text-gray-200">
             <thead className="border-b border-white/10 text-gray-400 text-xs uppercase tracking-wider">
               <tr>
@@ -402,11 +436,11 @@ const Hotel = () => {
               )}
             </tbody>
           </table>
-        </div>
-      </div>
+          </div>
+        </section>
 
-      {/* Modals */}
-      <Modal
+        {/* Modals */}
+        <Modal
         isOpen={modals.newBooking}
         onClose={() => closeModal('newBooking')}
         title="New Booking"
@@ -516,6 +550,7 @@ const Hotel = () => {
           </div>
         </form>
       </Modal>
+      </div>
     </div>
   );
 };

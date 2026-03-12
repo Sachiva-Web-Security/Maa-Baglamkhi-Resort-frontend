@@ -176,22 +176,53 @@ const Accounts = () => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-slate-100 p-4 sm:p-6 lg:p-8 overflow-x-hidden">
-      <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-6 sm:mb-8 text-slate-50">
-        Accounts & Finance
-      </h1>
+    <div className="resort-page overflow-x-hidden">
+      <div className="resort-shell">
+        <section className="resort-hero">
+          <div className="resort-hero-content lg:flex-row lg:items-end lg:justify-between">
+            <div className="space-y-3">
+              <p className="resort-eyebrow">Finance Overview</p>
+              <h1 className="resort-title">Accounts and cash flow center</h1>
+              <p className="resort-subtitle">
+                Keep income, expense, GST, and report actions in a cleaner
+                finance workspace that adapts well across phone and desktop.
+              </p>
+            </div>
+            <div className="resort-stat-grid">
+              <div className="resort-stat">
+                <span className="resort-stat-label">Income</span>
+                <span className="resort-stat-value text-[1.25rem]">{formatINR(totals.income)}</span>
+              </div>
+              <div className="resort-stat">
+                <span className="resort-stat-label">Expense</span>
+                <span className="resort-stat-value text-[1.25rem]">{formatINR(totals.expense)}</span>
+              </div>
+              <div className="resort-stat">
+                <span className="resort-stat-label">Net</span>
+                <span className="resort-stat-value text-[1.25rem]">{formatINR(totals.net)}</span>
+              </div>
+            </div>
+          </div>
+        </section>
 
-      {/* Top Action Buttons */}
-      <div className="flex flex-wrap gap-2 sm:gap-3 mb-6 sm:mb-8">
+        <section className="resort-panel">
+          <div className="mb-5">
+            <h2 className="resort-panel-title">Quick finance actions</h2>
+            <p className="resort-panel-copy">
+              Create transactions fast and keep finance tasks user-friendly for
+              both desktop operators and tablet use.
+            </p>
+          </div>
+          <div className="resort-actions">
         <button
-          className="flex-1 min-w-max px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg font-semibold text-sm sm:text-base bg-gradient-to-r from-pink-400 to-blue-600 text-white hover:opacity-90 transition"
+          className="resort-button"
           onClick={() => openModal("addIncome")}
         >
           + Add Income
         </button>
 
         <button
-          className="flex-1 min-w-max px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg font-semibold text-sm sm:text-base bg-gradient-to-r from-yellow-400 to-orange-500 text-white hover:opacity-90 transition"
+          className="resort-button bg-[linear-gradient(135deg,rgba(217,119,6,0.95),rgba(249,115,22,0.92))]"
           onClick={() => openModal("addExpense")}
         >
           + Add Expense
@@ -214,10 +245,10 @@ const Accounts = () => {
           Night Audit
         </button>
         */}
-      </div>
+          </div>
+        </section>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8 sm:mb-10">
+        <section className="resort-grid">
         <SummaryCard
           label="Total Income"
           value={formatINR(totals.income)}
@@ -245,14 +276,16 @@ const Accounts = () => {
           valueColor="purple"
           onClick={() => alert(`GST Payable: ${formatINR(totals.gstPayable)}`)}
         />
-      </div>
+        </section>
 
-      {/* Income & Expense Table */}
-      <div className="bg-slate-800/40 border border-slate-700/50 rounded-xl shadow-lg mb-8 sm:mb-10 overflow-hidden">
+        <section className="resort-table-shell">
         <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-slate-700/30">
-          <h2 className="text-lg sm:text-xl font-bold text-slate-100">
+          <h2 className="resort-panel-title">
             Income & Expense Records
           </h2>
+          <p className="resort-panel-copy mt-1">
+            Browse transaction history with mobile-friendly scrolling and clear actions.
+          </p>
         </div>
 
         <div className="overflow-x-auto">
@@ -286,10 +319,9 @@ const Accounts = () => {
             </tbody>
           </table>
         </div>
-      </div>
+        </section>
 
-      {/* Reports Section */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        <section className="resort-grid">
         <ReportCard
           variant="blue"
           title="Profit & Loss Report"
@@ -310,9 +342,9 @@ const Accounts = () => {
           subtitle="Daily cashier summary"
           onClick={() => alert('Cash Collection Report (demo)')}
         />
-      </div>
+        </section>
 
-      <Modal
+        <Modal
         isOpen={modals.addIncome}
         onClose={() => closeModal('addIncome')}
         title="Add Income"
@@ -442,6 +474,7 @@ const Accounts = () => {
           </div>
         </div>
       </Modal>
+      </div>
     </div>
   );
 };

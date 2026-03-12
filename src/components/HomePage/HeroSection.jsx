@@ -98,13 +98,13 @@ const HeroSection = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0f172a] flex items-center justify-center p-4">
-      <div className="bg-[#1e1b2e] w-full max-w-3xl rounded-2xl p-6 shadow-2xl">
+    <div className="min-h-screen bg-[white] flex items-center justify-center p-4 rounded-xl">
+      <div className="bg-[white] w-full max-w-3xl rounded-2xl p-6 shadow-2xl ronded-2xl">
 
         <div className="flex justify-between items-center mb-6 gap-3">
           <button
             onClick={() => changeMonth(-1)}
-            className="text-gray-400 text-xl hover:text-white"
+            className="text-black-400 text-xl hover:text-white"
           >
             ❮
           </button>
@@ -113,7 +113,7 @@ const HeroSection = () => {
             <select
               value={currentDate.getMonth()}
               onChange={(e) => changeMonthDropdown(Number(e.target.value))}
-              className="bg-[#2a2740] text-white px-3 py-1 rounded-lg"
+              className="bg-gray-300 text-black px-3 py-1 rounded-lg"
             >
               {months.map((m, i) => (
                 <option key={m} value={i}>
@@ -125,7 +125,7 @@ const HeroSection = () => {
             <select
               value={currentDate.getFullYear()}
               onChange={(e) => changeYearDropdown(Number(e.target.value))}
-              className="bg-[#2a2740] text-white px-3 py-1 rounded-lg"
+              className="bg-gray-300 text-black px-3 py-1 rounded-lg"
             >
               {years.map((y) => (
                 <option key={y} value={y}>
