@@ -1,13 +1,19 @@
-import React from 'react';
+import React from "react";
 
 const Payment = () => {
-    return (
-        <div style={{ padding: '20px', border: '1px solid #ccc', borderRadius: '8px', marginBottom: '20px' }}>
-            <h3>Payment</h3>
-            {/* Placeholder for payment processing logic */}
-            <p>Payment options and processing will go here.</p>
-        </div>
-    );
+  return (
+
+    <div>
+
+      <h2 className="text-2xl font-bold">
+        Payment
+      </h2>
+
+      <p>Payment system coming soon...</p>
+
+    </div>
+
+  );
 };
 
 export default Payment;

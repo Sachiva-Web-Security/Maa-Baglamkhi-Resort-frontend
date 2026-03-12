@@ -11,7 +11,7 @@ import Header from "./components/Header/Header";
 
 import Dashboard from "./pages/Dashboard";
 import Attendance from "./pages/Attendance";
-import Hotel from "./pages/Hotel";
+
 import RestaurantPOS from "./pages/RestaurantPOS";
 import Accounts from "./pages/Accounts";
 import Housekeeping from "./pages/Housekeeping";
@@ -27,7 +27,7 @@ import CreateUser from "./components/Createuser/CreateUser";
 import Assignment from "./pages/Assignments";
 import Kitchen from "./pages/Kitchen";
 import { RestaurantProvider } from "./Context/RestaurantContext";
-
+import Hotel from "./pages/Hotel";
 import TablePage from "./components/Restaurant/TablePage";
 import MenuPage from "./components/Restaurant/MenuPage";
 import Payment from "./components/Restaurant/Payment";
@@ -141,16 +141,17 @@ function App() {
         />
 
         {/* ================= HOTEL ================= */}
-        <Route
-          path="/hotel"
-          element={
-            <ProtectedRoute allowedRoles={["admin", "manager", "receptionist"]}>
-              <Layout setIsAuthenticated={setIsAuthenticated}>
-                <Hotel />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
+        {/* ================= HOTEL ================= */}
+<Route
+  path="/hotel/*"
+  element={
+    <ProtectedRoute allowedRoles={["admin","manager","receptionist"]}>
+      <Layout setIsAuthenticated={setIsAuthenticated}>
+        <Hotel />
+      </Layout>
+    </ProtectedRoute>
+  }
+/>
 
         {/* ================= ACCOUNTS ================= */}
         <Route
