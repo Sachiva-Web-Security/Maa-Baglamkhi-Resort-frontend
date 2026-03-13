@@ -1,74 +1,165 @@
 import React, { useContext, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { RestaurantContext } from "../../Context/RestaurantContext";
-import TableCard from "./TableCard";
-import AddTableModal from "./AddTableModal";
 
 const TablePage = () => {
-    const { tables, addTable, getTableStatus } = useContext(RestaurantContext);
-    const [isModalOpen, setIsModalOpen] = useState(false);
 
-    const handleAddTable = async (tableNumber) => {
-        await addTable(tableNumber);
-    };
+  const { tables } = useContext(RestaurantContext);
+  const navigate = useNavigate();
 
-    const availableCount = tables.filter((t) => getTableStatus(t.name) === "Available").length;
-    const occupiedCount = tables.filter((t) => getTableStatus(t.name) === "Occupied").length;
+  const getColor = (status) => {
+    if (status === "running") return "bg-green-200";
+    if (status === "due") return "bg-red-200";
+    return "bg-gray-100";
+  };
 
-    return (
-        <div className="p-6 bg-slate-900 min-h-screen">
-            {/* Header Section */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-                <div>
-                    <h2 className="text-3xl font-extrabold text-white tracking-tight">
-                        Restaurant Tables
-                    </h2>
-                    <p className="text-slate-400 mt-1">
-                        Manage your restaurant tables and orders
-                    </p>
-                    <div className="flex gap-2 mt-3">
-                        <span className="text-xs font-bold px-2.5 py-1 rounded-full border border-emerald-400/30 bg-emerald-500/20 text-emerald-300">
-                            Available: {availableCount}
-                        </span>
-                        <span className="text-xs font-bold px-2.5 py-1 rounded-full border border-rose-400/30 bg-rose-500/20 text-rose-300">
-                            Occupied: {occupiedCount}
-                        </span>
-                    </div>
-                </div>
+  return (
+    <div className="space-y-6">
 
-                <button
-                    onClick={() => setIsModalOpen(true)}
-                    className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-2xl font-bold shadow-lg shadow-indigo-600/20 transition-all flex items-center justify-center gap-2 group transform active:scale-95"
-                >
-                    <span className="text-xl group-hover:rotate-90 transition-transform duration-300">
-                        ➕
-                    </span>
-                    Add New Table
-                </button>
+      {/* Title */}
+      <h2 className="text-xl font-bold">
+        Restaurant Dashboard
+      </h2>
+
+      {/* Top Summary */}
+      <div className="grid grid-cols-2 gap-4">
+
+        <div className="bg-blue-100 rounded p-4">
+          <h3 className="font-semibold mb-2">Table</h3>
+
+          <div className="flex justify-between">
+            <span>Running Tables</span>
+            <span>
+              {tables.filter((t) => t.status === "running").length}
+            </span>
+          </div>
+
+          <div className="flex justify-between">
+            <span>Blank Tables</span>
+            <span>
+              {tables.filter((t) => t.status === "blank").length}
+            </span>
+          </div>
+
+        </div>
+
+        <div className="bg-yellow-200 rounded p-4">
+
+          <h3 className="font-semibold mb-2">
+            Room
+          </h3>
+
+          <div className="flex justify-between">
+            <span>Invoice Pending</span>
+            <span>
+              {tables.filter((t) => t.status === "due").length}
+            </span>
+          </div>
+
+        </div>
+
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-4 border-b pb-2 text-sm">
+
+        <button className="font-semibold text-blue-600">
+          All Tables
+        </button>
+
+        <button>In Room Dining</button>
+        <button>Foods of Heaven</button>
+        <button>POOL SIDE CAFE</button>
+        <button>Restaurant</button>
+        <button>House keeping</button>
+        <button>pvt</button>
+
+      </div>
+
+      {/* Table Grid */}
+
+      <div className="grid grid-cols-6 gap-4">
+
+        {tables.map((table, i) => (
+
+          <div
+            key={i}
+            onClick={() => navigate(`/restaurant/menu/${table.name}`)}
+            className={`p-3 rounded border cursor-pointer ${getColor(table.status)}`}
+          >
+
+            <div className="font-semibold mb-2 text-center">
+              {table.name}
             </div>
 
-            {/* Grid Section */}
-            {tables.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 bg-slate-800/30 border-2 border-dashed border-slate-700 rounded-3xl">
-                    <div className="text-6xl mb-4">🍽️</div>
-                    <p className="text-slate-400 text-lg font-medium">No Tables Added Yet</p>
-                    <p className="text-slate-500 text-sm mt-1">Click the button above to add your first table</p>
-                </div>
-            ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
-                    {tables.map((table) => (
-                        <TableCard key={table.id} table={table} />
-                    ))}
-                </div>
+            {table.status === "due" && (
+              <div className="text-xs text-center mb-2">
+                Due : ₹{table.amount}
+              </div>
             )}
 
-            {/* Modal */}
-            <AddTableModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                onAdd={handleAddTable}
-            />
-        </div>
-    );
+            {/* Buttons */}
+
+            <div className="flex flex-wrap gap-1 justify-center text-xs">
+
+              <button
+                className="bg-teal-500 text-white px-2 py-1 rounded"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/restaurant/token/${table.name}`);
+                }}
+              >
+                + Token
+              </button>
+
+              <button className="bg-purple-500 text-white px-2 py-1 rounded">
+                + NC Token
+              </button>
+
+              {table.status === "running" && (
+                <>
+                  <button className="bg-blue-500 text-white px-2 py-1 rounded">
+                    Token Items
+                  </button>
+
+                  <button className="bg-red-500 text-white px-2 py-1 rounded">
+                    Create Invoice
+                  </button>
+                </>
+              )}
+
+              {table.status === "due" && (
+                <>
+                  <button className="bg-yellow-500 text-white px-2 py-1 rounded">
+                    Print
+                  </button>
+
+                  <button
+                    className="bg-green-500 text-white px-2 py-1 rounded"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/restaurant/payment`);
+                    }}
+                  >
+                    Payment
+                  </button>
+
+                  <button className="bg-gray-500 text-white px-2 py-1 rounded">
+                    Transfer
+                  </button>
+                </>
+              )}
+
+            </div>
+
+          </div>
+
+        ))}
+
+      </div>
+
+    </div>
+  );
 };
 
 export default TablePage;
