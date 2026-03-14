@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 
 import Sidebar from "./components/Sidebar/Sidebar";
 import Header from "./components/Header/Header";
-
+import TokenItemsPage from "./components/Restaurant/TokenItempage";
 import Dashboard from "./pages/Dashboard";
 import Attendance from "./pages/Attendance";
 import Hotel from "./pages/Hotel";
@@ -170,15 +170,15 @@ function App() {
 
         {/* ================= HOTEL ================= */}
         <Route
-          path="/hotel"
-          element={
-            <ProtectedRoute allowedRoles={["admin", "manager", "receptionist"]}>
-              <Layout setIsAuthenticated={setIsAuthenticated}>
-                <Hotel />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
+  path="/hotel/*"
+  element={
+    <ProtectedRoute allowedRoles={["admin", "manager", "receptionist"]}>
+      <Layout setIsAuthenticated={setIsAuthenticated}>
+        <Hotel />
+      </Layout>
+    </ProtectedRoute>
+  }
+/>
 
         {/* ================= ACCOUNTS ================= */}
         <Route
@@ -211,9 +211,12 @@ function App() {
 <Route path="token/:table" element={<TokenPage />} />
 
 <Route path="menu/:table" element={<MenuPage />} />
-<Route path="Edit-token" element={<EditToken />} />
+
+<Route path="edit-token/:table" element={<EditToken />} />
+
 <Route path="payment" element={<Payment />} />
 
+<Route path="token-items/:table" element={<TokenItemsPage />} />
 </Route>
 
         {/* ================= INVENTORY ================= */}

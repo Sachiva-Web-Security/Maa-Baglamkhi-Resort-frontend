@@ -1,11 +1,51 @@
-import React, { useContext, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { RestaurantContext } from "../../Context/RestaurantContext";
 
 const TablePage = () => {
 
-  const { tables } = useContext(RestaurantContext);
   const navigate = useNavigate();
+
+  const [tables, setTables] = useState(() => {
+    const saved = localStorage.getItem("restaurantTables");
+    return saved ? JSON.parse(saved) : [
+      { name: "201", status: "blank" },
+      { name: "105", status: "blank" },
+      { name: "103", status: "blank" },
+      { name: "101", status: "blank" },
+      { name: "102", status: "blank" },
+    ];
+  });
+
+  const [tableNo, setTableNo] = useState("");
+
+  // save to localStorage whenever tables change
+  useEffect(() => {
+    localStorage.setItem("restaurantTables", JSON.stringify(tables));
+  }, [tables]);
+
+  const addTable = () => {
+
+    if (!tableNo.trim()) return;
+
+    const exists = tables.find(t => t.name === tableNo);
+
+    if (exists) {
+      alert("Table already exists");
+      return;
+    }
+
+    const newTable = {
+      name: tableNo,
+      status: "blank",
+    };
+
+    setTables([...tables, newTable]);
+    setTableNo("");
+  };
+
+  const runningTables = tables.filter(t => t.status === "running").length;
+  const blankTables = tables.filter(t => t.status === "blank").length;
+  const pendingInvoice = tables.filter(t => t.status === "due").length;
 
   const getColor = (status) => {
     if (status === "running") return "bg-green-200";
@@ -16,29 +56,46 @@ const TablePage = () => {
   return (
     <div className="space-y-6">
 
-      {/* Title */}
       <h2 className="text-xl font-bold">
         Restaurant Dashboard
       </h2>
 
-      {/* Top Summary */}
+      {/* ADD TABLE */}
+
+      <div className="flex gap-3">
+
+        <input
+          value={tableNo}
+          onChange={(e) => setTableNo(e.target.value)}
+          placeholder="Enter Table No"
+          className="border p-2 rounded"
+        />
+
+        <button
+          onClick={addTable}
+          className="bg-blue-500 text-white px-4 py-2 rounded"
+        >
+          Add Table
+        </button>
+
+      </div>
+
+      {/* SUMMARY */}
+
       <div className="grid grid-cols-2 gap-4">
 
         <div className="bg-blue-100 rounded p-4">
+
           <h3 className="font-semibold mb-2">Table</h3>
 
           <div className="flex justify-between">
             <span>Running Tables</span>
-            <span>
-              {tables.filter((t) => t.status === "running").length}
-            </span>
+            <span>{runningTables}</span>
           </div>
 
           <div className="flex justify-between">
             <span>Blank Tables</span>
-            <span>
-              {tables.filter((t) => t.status === "blank").length}
-            </span>
+            <span>{blankTables}</span>
           </div>
 
         </div>
@@ -51,32 +108,14 @@ const TablePage = () => {
 
           <div className="flex justify-between">
             <span>Invoice Pending</span>
-            <span>
-              {tables.filter((t) => t.status === "due").length}
-            </span>
+            <span>{pendingInvoice}</span>
           </div>
 
         </div>
 
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-4 border-b pb-2 text-sm">
-
-        <button className="font-semibold text-blue-600">
-          All Tables
-        </button>
-
-        <button>In Room Dining</button>
-        <button>Foods of Heaven</button>
-        <button>POOL SIDE CAFE</button>
-        <button>Restaurant</button>
-        <button>House keeping</button>
-        <button>pvt</button>
-
-      </div>
-
-      {/* Table Grid */}
+      {/* TABLE GRID */}
 
       <div className="grid grid-cols-6 gap-4">
 
@@ -84,71 +123,36 @@ const TablePage = () => {
 
           <div
             key={i}
-            onClick={() => navigate(`/restaurant/menu/${table.name}`)}
-            className={`p-3 rounded border cursor-pointer ${getColor(table.status)}`}
+            className={`p-3 rounded border ${getColor(table.status)}`}
           >
 
             <div className="font-semibold mb-2 text-center">
               {table.name}
             </div>
 
-            {table.status === "due" && (
-              <div className="text-xs text-center mb-2">
-                Due : ₹{table.amount}
-              </div>
-            )}
-
-            {/* Buttons */}
-
-            <div className="flex flex-wrap gap-1 justify-center text-xs">
+            <div className="flex flex-col gap-2">
 
               <button
-                className="bg-teal-500 text-white px-2 py-1 rounded"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigate(`/restaurant/token/${table.name}`);
-                }}
+                className="bg-teal-500 text-white px-2 py-1 rounded text-xs"
+                onClick={() => navigate(`/restaurant/token/${table.name}`)}
               >
                 + Token
               </button>
 
-              <button className="bg-purple-500 text-white px-2 py-1 rounded">
+              <button
+                className="bg-purple-500 text-white px-2 py-1 rounded text-xs"
+              >
                 + NC Token
               </button>
 
-              {table.status === "running" && (
-                <>
-                  <button className="bg-blue-500 text-white px-2 py-1 rounded">
-                    Token Items
-                  </button>
-
-                  <button className="bg-red-500 text-white px-2 py-1 rounded">
-                    Create Invoice
-                  </button>
-                </>
-              )}
-
-              {table.status === "due" && (
-                <>
-                  <button className="bg-yellow-500 text-white px-2 py-1 rounded">
-                    Print
-                  </button>
-
-                  <button
-                    className="bg-green-500 text-white px-2 py-1 rounded"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/restaurant/payment`);
-                    }}
+                <button
+                 className="bg-orange-500 text-white px-2 py-1 rounded text-xs"
+                  onClick={() => navigate(`/restaurant/token-items/${table.name}`)}
                   >
-                    Payment
-                  </button>
+                     Token Items
+  </button>
 
-                  <button className="bg-gray-500 text-white px-2 py-1 rounded">
-                    Transfer
-                  </button>
-                </>
-              )}
+
 
             </div>
 

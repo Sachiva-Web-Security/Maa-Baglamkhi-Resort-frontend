@@ -20,8 +20,7 @@ const BookingSteps = () => {
           key={index}
           to={step.path}
           className={({ isActive }) =>
-            `px-4 py-2 rounded-md text-sm font-medium transition
-            ${
+            `px-4 py-2 rounded-md text-sm font-medium transition ${
               isActive
                 ? "bg-blue-600 text-white"
                 : "bg-gray-200 text-gray-700 hover:bg-gray-300"

@@ -1,10 +1,19 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 const TokenPage = () => {
 
   const navigate = useNavigate();
   const { table } = useParams();
+
+  const [items, setItems] = useState([]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem(`token-${table}`);
+    if (saved) {
+      setItems(JSON.parse(saved));
+    }
+  }, [table]);
 
   return (
 
@@ -111,9 +120,36 @@ const TokenPage = () => {
 
           </div>
 
-          <div className="text-gray-400 text-sm mt-3">
-            No items added yet
-          </div>
+          {items.length === 0 ? (
+
+            <div className="text-gray-400 text-sm mt-3">
+              No items added yet
+            </div>
+
+          ) : (
+
+            items.map((item) => (
+
+              <div
+                key={item.id}
+                className="grid grid-cols-5 text-sm mt-2"
+              >
+
+                <div>{item.name}</div>
+
+                <div>{item.qty}</div>
+
+                <div>₹ {item.rate}</div>
+
+                <div>₹ {item.qty * item.rate}</div>
+
+                <div>-</div>
+
+              </div>
+
+            ))
+
+          )}
 
         </div>
 
