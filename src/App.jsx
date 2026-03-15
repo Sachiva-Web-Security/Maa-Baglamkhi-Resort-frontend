@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 
 import Sidebar from "./components/Sidebar/Sidebar";
 import Header from "./components/Header/Header";
-
+import TokenItemsPage from "./components/Restaurant/TokenItempage";
 import Dashboard from "./pages/Dashboard";
 import Attendance from "./pages/Attendance";
 import Hotel from "./pages/Hotel";
@@ -31,7 +31,8 @@ import { RestaurantProvider } from "./Context/RestaurantContext";
 import TablePage from "./components/Restaurant/TablePage";
 import MenuPage from "./components/Restaurant/MenuPage";
 import Payment from "./components/Restaurant/Payment";
-
+import TokenPage from "./components/Restaurant/TokenPage";
+import EditToken from "./components/Restaurant/EditToken";
 /* ============================
    Layout Component
 ============================ */
@@ -169,15 +170,15 @@ function App() {
 
         {/* ================= HOTEL ================= */}
         <Route
-          path="/hotel"
-          element={
-            <ProtectedRoute allowedRoles={["admin", "manager", "receptionist"]}>
-              <Layout setIsAuthenticated={setIsAuthenticated}>
-                <Hotel />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
+  path="/hotel/*"
+  element={
+    <ProtectedRoute allowedRoles={["admin", "manager", "receptionist"]}>
+      <Layout setIsAuthenticated={setIsAuthenticated}>
+        <Hotel />
+      </Layout>
+    </ProtectedRoute>
+  }
+/>
 
         {/* ================= ACCOUNTS ================= */}
         <Route
@@ -192,24 +193,31 @@ function App() {
         />
 
         {/* ================= RESTAURANT POS (Nested Routing) ================= */}
-        <Route
-          path="/restaurant"
-          element={
-            <ProtectedRoute
-              allowedRoles={["admin", "manager", "waiter", "kitchen"]}
-            >
-              <Layout setIsAuthenticated={setIsAuthenticated}>
-                <RestaurantProvider>
-                  <RestaurantPOS />
-                </RestaurantProvider>
-              </Layout>
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<TablePage />} />
-          <Route path="menu/:id" element={<MenuPage />} />
-          <Route path="payment" element={<Payment />} />
-        </Route>
+       <Route
+ path="/restaurant"
+ element={
+   <ProtectedRoute allowedRoles={["admin","manager","waiter","kitchen"]}>
+     <Layout setIsAuthenticated={setIsAuthenticated}>
+       <RestaurantProvider>
+         <RestaurantPOS />
+       </RestaurantProvider>
+     </Layout>
+   </ProtectedRoute>
+ }
+>
+
+<Route index element={<TablePage />} />
+
+<Route path="token/:table" element={<TokenPage />} />
+
+<Route path="menu/:table" element={<MenuPage />} />
+
+<Route path="edit-token/:table" element={<EditToken />} />
+
+<Route path="payment" element={<Payment />} />
+
+<Route path="token-items/:table" element={<TokenItemsPage />} />
+</Route>
 
         {/* ================= INVENTORY ================= */}
         <Route

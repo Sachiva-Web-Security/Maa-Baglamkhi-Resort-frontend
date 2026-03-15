@@ -1,74 +1,190 @@
-import React, { useContext, useState } from "react";
+import React, { useState, useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import { RestaurantContext } from "../../Context/RestaurantContext";
-import TableCard from "./TableCard";
-import AddTableModal from "./AddTableModal";
 
 const TablePage = () => {
-    const { tables, addTable, getTableStatus } = useContext(RestaurantContext);
-    const [isModalOpen, setIsModalOpen] = useState(false);
 
-    const handleAddTable = async (tableNumber) => {
-        await addTable(tableNumber);
-    };
+  const navigate = useNavigate();
 
-    const availableCount = tables.filter((t) => getTableStatus(t.name) === "Available").length;
-    const occupiedCount = tables.filter((t) => getTableStatus(t.name) === "Occupied").length;
+  const { tables, addTable, getTableStatus, setSelectedTable } = useContext(RestaurantContext);
 
-    return (
-        <div className="p-6 bg-slate-900 min-h-screen">
-            {/* Header Section */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-                <div>
-                    <h2 className="text-3xl font-extrabold text-white tracking-tight">
-                        Restaurant Tables
-                    </h2>
-                    <p className="text-slate-400 mt-1">
-                        Manage your restaurant tables and orders
-                    </p>
-                    <div className="flex gap-2 mt-3">
-                        <span className="text-xs font-bold px-2.5 py-1 rounded-full border border-emerald-400/30 bg-emerald-500/20 text-emerald-300">
-                            Available: {availableCount}
-                        </span>
-                        <span className="text-xs font-bold px-2.5 py-1 rounded-full border border-rose-400/30 bg-rose-500/20 text-rose-300">
-                            Occupied: {occupiedCount}
-                        </span>
-                    </div>
-                </div>
+  const [tableNo, setTableNo] = useState("");
+
+  const handleAddTable = async () => {
+
+    if (!tableNo.trim()) return;
+
+    try {
+
+      await addTable(tableNo);
+
+      setTableNo("");
+
+    } catch (err) {
+
+      alert(err.message);
+
+    }
+
+  };
+
+  const runningTables = tables.filter(
+    t => getTableStatus(t.name) === "Occupied"
+  ).length;
+
+  const blankTables = tables.filter(
+    t => getTableStatus(t.name) === "Available"
+  ).length;
+
+  const pendingInvoice = 0;
+
+  const getColor = (status) => {
+
+    if (status === "Occupied") return "bg-green-200";
+
+    if (status === "Due") return "bg-red-200";
+
+    return "bg-gray-100";
+
+  };
+
+  return (
+
+    <div className="space-y-6">
+
+      <h2 className="text-xl font-bold">
+        Restaurant Dashboard
+      </h2>
+
+      {/* ADD TABLE */}
+
+      <div className="flex gap-3">
+
+        <input
+          value={tableNo}
+          onChange={(e) => setTableNo(e.target.value)}
+          placeholder="Enter Table No"
+          className="border p-2 rounded"
+        />
+
+        <button
+          onClick={handleAddTable}
+          className="bg-blue-500 text-white px-4 py-2 rounded"
+        >
+          Add Table
+        </button>
+
+      </div>
+
+      {/* SUMMARY */}
+
+      <div className="grid grid-cols-2 gap-4">
+
+        <div className="bg-blue-100 rounded p-4">
+
+          <h3 className="font-semibold mb-2">Table</h3>
+
+          <div className="flex justify-between">
+            <span>Running Tables</span>
+            <span>{runningTables}</span>
+          </div>
+
+          <div className="flex justify-between">
+            <span>Blank Tables</span>
+            <span>{blankTables}</span>
+          </div>
+
+        </div>
+
+        <div className="bg-yellow-200 rounded p-4">
+
+          <h3 className="font-semibold mb-2">
+            Room
+          </h3>
+
+          <div className="flex justify-between">
+            <span>Invoice Pending</span>
+            <span>{pendingInvoice}</span>
+          </div>
+
+        </div>
+
+      </div>
+
+      {/* TABLE GRID */}
+
+      <div className="grid grid-cols-6 gap-4">
+
+        {tables.map((table, i) => {
+
+          const status = getTableStatus(table.name);
+
+          return (
+
+            <div
+              key={i}
+              className={`p-3 rounded border ${getColor(status)}`}
+            >
+
+              <div className="font-semibold mb-2 text-center">
+                Table {table.name}
+              </div>
+
+              {/* STATUS BADGE */}
+              <div className="text-center mb-2">
+                <span
+                  className={`px-2 py-1 rounded text-xs font-bold ${
+                    status === "Occupied"
+                      ? "bg-red-500 text-white"
+                      : "bg-green-500 text-white"
+                  }`}
+                >
+                  {status}
+                </span>
+              </div>
+
+              <div className="flex flex-col gap-2">
 
                 <button
-                    onClick={() => setIsModalOpen(true)}
-                    className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-2xl font-bold shadow-lg shadow-indigo-600/20 transition-all flex items-center justify-center gap-2 group transform active:scale-95"
+                  className="bg-teal-500 text-white px-2 py-1 rounded text-xs"
+                  onClick={() => {
+                    setSelectedTable(table.name);
+                    navigate(`/restaurant/token/${table.name}`);
+                  }}
                 >
-                    <span className="text-xl group-hover:rotate-90 transition-transform duration-300">
-                        ➕
-                    </span>
-                    Add New Table
+                  + Token
                 </button>
+
+                <button
+                  className="bg-purple-500 text-white px-2 py-1 rounded text-xs"
+                >
+                  + NC Token
+                </button>
+
+                <button
+                  className="bg-orange-500 text-white px-2 py-1 rounded text-xs"
+                  onClick={() => {
+                    setSelectedTable(table.name);
+                    navigate(`/restaurant/token-items/${table.name}`);
+                  }}
+                >
+                  Token Items
+                </button>
+
+              </div>
+
             </div>
 
-            {/* Grid Section */}
-            {tables.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 bg-slate-800/30 border-2 border-dashed border-slate-700 rounded-3xl">
-                    <div className="text-6xl mb-4">🍽️</div>
-                    <p className="text-slate-400 text-lg font-medium">No Tables Added Yet</p>
-                    <p className="text-slate-500 text-sm mt-1">Click the button above to add your first table</p>
-                </div>
-            ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
-                    {tables.map((table) => (
-                        <TableCard key={table.id} table={table} />
-                    ))}
-                </div>
-            )}
+          );
 
-            {/* Modal */}
-            <AddTableModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                onAdd={handleAddTable}
-            />
-        </div>
-    );
+        })}
+
+      </div>
+
+    </div>
+
+  );
+
 };
 
 export default TablePage;
