@@ -2,6 +2,50 @@ import React, { useContext, useState, useMemo, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { RestaurantContext } from "../../Context/RestaurantContext";
 
+/* ===============================
+   SEND ORDER TO KITCHEN
+================================ */
+
+const sendToKitchen = (table, items) => {
+
+  const orders =
+    JSON.parse(localStorage.getItem("kitchenOrders")) || [];
+
+  // format items for kitchen display
+  const formattedItems = items.map((item) => ({
+    item_name: item.name,
+    quantity: item.qty,
+    price: item.rate,
+    total: item.total
+  }));
+
+  const newOrder = {
+    id: Date.now(),
+    waiter_name: localStorage.getItem("name") || "Waiter",
+    table_no: table,
+    items: formattedItems,
+    status: "Pending",
+    created_at: new Date().toISOString(),
+    time: new Date().toLocaleTimeString()
+  };
+
+  orders.push(newOrder);
+
+  localStorage.setItem(
+    "kitchenOrders",
+    JSON.stringify(orders)
+  );
+
+  // kitchen screen refresh
+  window.dispatchEvent(new Event("kitchenUpdated"));
+
+};
+
+
+/* ===============================
+   MENU PAGE
+================================ */
+
 const MenuPage = () => {
 
   const navigate = useNavigate();
@@ -23,17 +67,28 @@ const MenuPage = () => {
     tax: 5
   });
 
-  // reset category when menu updates
+  /* ===============================
+     RESET CATEGORY WHEN MENU CHANGE
+  =============================== */
+
   useEffect(() => {
     setSelectedCategory("All");
   }, [menuItems]);
 
-  // categories
+
+  /* ===============================
+     CATEGORY LIST
+  =============================== */
+
   const categories = useMemo(() => {
     return ["All", ...new Set(menuItems.map((i) => i.category || "Other"))];
   }, [menuItems]);
 
-  // filter menu
+
+  /* ===============================
+     FILTER MENU ITEMS
+  =============================== */
+
   const filteredItems = useMemo(() => {
 
     if (selectedCategory === "All") return menuItems;
@@ -44,7 +99,11 @@ const MenuPage = () => {
 
   }, [menuItems, selectedCategory]);
 
-  // qty change
+
+  /* ===============================
+     QTY CHANGE
+  =============================== */
+
   const handleQtyChange = (id, value) => {
 
     setQty(prev => ({
@@ -54,7 +113,11 @@ const MenuPage = () => {
 
   };
 
-  // add item to order
+
+  /* ===============================
+     ADD ITEM TO ORDER
+  =============================== */
+
   const handleAdd = (item) => {
 
     const quantity = Number(qty[item.id] || 0);
@@ -82,12 +145,20 @@ const MenuPage = () => {
 
   };
 
-  // bill calculation
+
+  /* ===============================
+     BILL CALCULATION
+  =============================== */
+
   const subtotal = order.reduce((sum, item) => sum + item.amount, 0);
   const taxTotal = order.reduce((sum, item) => sum + item.taxAmount, 0);
   const grandTotal = subtotal + taxTotal;
 
-  // submit
+
+  /* ===============================
+     SUBMIT ORDER
+  =============================== */
+
   const handleSubmit = () => {
 
     if (order.length === 0) {
@@ -95,18 +166,39 @@ const MenuPage = () => {
       return;
     }
 
-   navigate(`/restaurant/edit-token/${table}`, {
-  state: { items: order }
-});
+    // SAVE TOKEN
+    localStorage.setItem(`token-${table}`, JSON.stringify(order));
+
+    // SEND ORDER TO KITCHEN
+    sendToKitchen(table, order);
+
+    // DASHBOARD REFRESH
+    window.dispatchEvent(new Event("tokenUpdated"));
+
+    navigate(`/restaurant/edit-token/${table}`, {
+      state: { items: order }
+    });
+
+    // clear local order
+    setOrder([]);
 
   };
+
+
+  /* ===============================
+     CANCEL ORDER
+  =============================== */
 
   const handleCancel = () => {
     setOrder([]);
     navigate("/restaurant");
   };
 
-  // add new menu item
+
+  /* ===============================
+     ADD NEW MENU ITEM
+  =============================== */
+
   const handleAddMenuItem = async () => {
 
     if (!newItem.name || !newItem.price) {
@@ -116,12 +208,12 @@ const MenuPage = () => {
 
     try {
 
-     await addMenuItem(
-  newItem.name,
-  newItem.price,
-  newItem.category,
-  table
-);
+      await addMenuItem(
+        newItem.name,
+        newItem.price,
+        newItem.category,
+        table
+      );
 
       setNewItem({
         name: "",
@@ -138,6 +230,11 @@ const MenuPage = () => {
     }
 
   };
+
+
+  /* ===============================
+     UI
+  =============================== */
 
   return (
 
@@ -160,9 +257,11 @@ const MenuPage = () => {
 
         </div>
 
+
         <div className="flex flex-1 overflow-hidden">
 
-          {/* MENU TABLE */}
+
+          {/* ================= MENU TABLE ================= */}
 
           <div className="w-2/3 border-r overflow-auto">
 
@@ -238,11 +337,12 @@ const MenuPage = () => {
 
           </div>
 
-          {/* RIGHT SIDE */}
+
+          {/* ================= RIGHT SIDE ================= */}
 
           <div className="w-1/3 flex flex-col">
 
-            {/* categories */}
+            {/* CATEGORY */}
 
             <div className="p-3 border-b overflow-auto">
 
@@ -272,7 +372,8 @@ const MenuPage = () => {
 
             </div>
 
-            {/* BILL */}
+
+            {/* ================= BILL ================= */}
 
             <div className="p-3 flex-1 overflow-auto">
 
@@ -321,7 +422,8 @@ const MenuPage = () => {
 
         </div>
 
-        {/* FOOTER */}
+
+        {/* ================= FOOTER ================= */}
 
         <div className="flex justify-end gap-3 p-3 border-t">
 
@@ -343,7 +445,8 @@ const MenuPage = () => {
 
       </div>
 
-      {/* ADD ITEM MODAL */}
+
+      {/* ================= ADD ITEM MODAL ================= */}
 
       {showAddMenu && (
 

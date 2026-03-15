@@ -199,15 +199,19 @@ const handlePrint = () => {
 
   const handleInvoice = () => {
 
-    navigate("/restaurant/payment", {
-      state: {
-        items,
-        total
-      }
-    });
-
+  const invoiceData = {
+    table,
+    items,
+    total,
+    date: new Date().toLocaleString(),
+    id: Date.now()
   };
 
+  navigate("/restaurant/payment", {
+    state: invoiceData
+  });
+
+};
   return (
 
     <div className="bg-gray-100 min-h-screen p-6">

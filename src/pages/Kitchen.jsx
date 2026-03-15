@@ -1,125 +1,208 @@
-import React, { useEffect, useState } from "react";
-import API from "../api";
+import React, { useEffect, useState, useRef } from "react";
 
 const Kitchen = () => {
+
   const [orders, setOrders] = useState([]);
 
-  // ================= FETCH ORDERS =================
-  const fetchOrders = async () => {
-    try {
-      const res = await API.get("/kitchen/orders");
-      setOrders(res.data);
-    } catch (err) {
-      console.log(err);
+
+  const orderSound = useRef(null);
+  const soundCount = useRef(0);
+  const prevOrderCount = useRef(0);
+
+  const getLocalOrders = () => {
+    return JSON.parse(localStorage.getItem("kitchenOrders")) || [];
+  };
+
+  const getOrderTime = (time) => {
+
+    if(!time) return "0:00";
+
+    const diff = Math.floor((clock - new Date(time)) / 1000);
+
+    const minutes = Math.floor(diff / 60);
+    const seconds = diff % 60;
+
+    return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
+
+  };
+
+  const fetchOrders = () => {
+
+    const localOrders = getLocalOrders();
+
+    if (localOrders.length > prevOrderCount.current) {
+
+      if (soundCount.current < 2 && orderSound.current) {
+
+        orderSound.current.currentTime = 0;
+        orderSound.current.play().catch(()=>{});
+
+        soundCount.current++;
+
+      }
+
     }
+
+    prevOrderCount.current = localOrders.length;
+
+    setOrders(localOrders);
+
   };
 
   useEffect(() => {
+
+    orderSound.current = new Audio("/order.mp3");
+
     fetchOrders();
+
+    const interval = setInterval(fetchOrders, 2000);
+
+    window.addEventListener("kitchenUpdated", fetchOrders);
+
+    return () => {
+
+      clearInterval(interval);
+      window.removeEventListener("kitchenUpdated", fetchOrders);
+
+    };
+
   }, []);
 
-  // ================= MARK READY =================
-  const markReady = async (id) => {
-    try {
-      await API.put(`/kitchen/orders/${id}`, {
-        status: "Ready",
-      });
+  
 
-      fetchOrders(); // refresh orders
-    } catch (err) {
-      console.log(err);
-    }
+  const markReady = (id) => {
+
+    const localOrders = getLocalOrders();
+
+    const updated = localOrders.map((o)=>
+      o.id === id ? {...o,status:"Ready"} : o
+    );
+
+    localStorage.setItem(
+      "kitchenOrders",
+      JSON.stringify(updated)
+    );
+
+    fetchOrders();
+
+  };
+
+  const printBill = (order) => {
+
+    const total = order.items.reduce(
+      (sum,item)=>sum + item.price * item.quantity,
+      0
+    );
+
+    const printWindow = window.open();
+
+    const itemsHTML = order.items.map(item=>`
+      <tr>
+        <td>${item.item_name}</td>
+        <td>${item.quantity}</td>
+        <td>₹${item.price}</td>
+        <td>₹${item.price * item.quantity}</td>
+      </tr>
+    `).join("");
+
+    printWindow.document.write(`
+      <h2>Restaurant Bill</h2>
+      <p>Table: ${order.table_no}</p>
+      <table border="1" style="width:100%">
+        <tr>
+          <th>Item</th>
+          <th>Qty</th>
+          <th>Price</th>
+          <th>Total</th>
+        </tr>
+        ${itemsHTML}
+      </table>
+      <h3>Total: ₹${total}</h3>
+    `);
+
+    printWindow.print();
+
+    const localOrders = getLocalOrders();
+
+    const updatedOrders =
+      localOrders.filter(o => o.id !== order.id);
+
+    localStorage.setItem(
+      "kitchenOrders",
+      JSON.stringify(updatedOrders)
+    );
+
+    localStorage.removeItem(`token-${order.table_no}`);
+
+    fetchOrders();
+
   };
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4 sm:p-6 lg:p-8">
 
-      {/* HEADER */}
-      <div className="bg-slate-900 text-white p-4 sm:p-6 rounded-2xl shadow-lg mb-6">
-        <h2 className="text-2xl font-bold">Kitchen Orders</h2>
-        <p className="text-sm opacity-90">Manage restaurant food orders</p>
-      </div>
+    <div className="min-h-screen bg-slate-900 p-6 text-white">
 
-      {/* TABLE CARD */}
-      <div className="bg-slate-800 rounded-2xl shadow-md p-6 text-white">
+      <h2 className="text-2xl font-bold mb-6">
+        Kitchen Orders
+      </h2>
 
-        <h3 className="text-lg font-bold mb-4">Kitchen Orders</h3>
+      <div className="grid md:grid-cols-3 gap-4">
 
-        <div className="overflow-x-auto">
+        {orders.map((order)=>(
 
-          <table className="w-full border-collapse text-sm">
+          <div
+            key={order.id}
+            className="p-4 bg-slate-800 rounded-lg shadow"
+          >
 
-            <thead>
-              <tr className="bg-slate-900 text-left">
-                <th className="p-3">Waiter</th>
-                <th className="p-3">Table</th>
-                <th className="p-3">Item</th>
-                <th className="p-3">Status</th>
-                <th className="p-3">Action</th>
-              </tr>
-            </thead>
+            <h3 className="text-xl font-bold">
+              Table {order.table_no}
+            </h3>
 
-            <tbody>
+            
 
-              {orders.map((o) => (
-                <tr
-                  key={o.id}
-                  className="border-b hover:bg-blue-900 transition-all"
-                >
-                  <td className="p-3">{o.waiter_name}</td>
+            <div className="mt-2">
 
-                  <td className="p-3">{o.table_number}</td>
-
-                  <td className="p-3">
-                    {o.items?.map((item, i) => (
-                      <div key={i}>
-                        {item.name} x {item.quantity}
-                      </div>
-                    ))}
-                  </td>
-
-                  <td className="p-3">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold
-                      ${
-                        o.status === "Ready"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-yellow-100 text-yellow-700"
-                      }`}
-                    >
-                      {o.status}
-                    </span>
-                  </td>
-
-                  <td className="p-3">
-                    {o.status !== "Ready" && (
-                      <button
-                        onClick={() => markReady(o.id)}
-                        className="bg-blue-500 hover:bg-green-600 text-white px-3 py-1 rounded-lg text-sm"
-                      >
-                        Ready
-                      </button>
-                    )}
-                  </td>
-                </tr>
+              {order.items?.map((item,i)=>(
+                <div key={i}>
+                  {item.item_name} x {item.quantity}
+                </div>
               ))}
 
-              {orders.length === 0 && (
-                <tr>
-                  <td colSpan="5" className="text-center p-4 text-gray-400">
-                    No orders yet
-                  </td>
-                </tr>
+            </div>
+
+            <div className="flex gap-2 mt-3">
+
+              {order.status !== "Ready" && (
+
+                <button
+                  onClick={()=>markReady(order.id)}
+                  className="bg-green-600 px-3 py-1 rounded"
+                >
+                  Ready
+                </button>
+
               )}
 
-            </tbody>
+              <button
+                onClick={()=>printBill(order)}
+                className="bg-purple-600 px-3 py-1 rounded"
+              >
+                Print
+              </button>
 
-          </table>
+            </div>
 
-        </div>
+          </div>
+
+        ))}
+
       </div>
+
     </div>
+
   );
+
 };
 
 export default Kitchen;

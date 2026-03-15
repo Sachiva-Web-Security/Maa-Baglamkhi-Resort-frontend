@@ -1,59 +1,55 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
+import { RestaurantContext } from "../../Context/RestaurantContext";
 
 const TablePage = () => {
 
   const navigate = useNavigate();
 
-  const [tables, setTables] = useState(() => {
-    const saved = localStorage.getItem("restaurantTables");
-    return saved ? JSON.parse(saved) : [
-      { name: "201", status: "blank" },
-      { name: "105", status: "blank" },
-      { name: "103", status: "blank" },
-      { name: "101", status: "blank" },
-      { name: "102", status: "blank" },
-    ];
-  });
+  const { tables, addTable, getTableStatus, setSelectedTable } = useContext(RestaurantContext);
 
   const [tableNo, setTableNo] = useState("");
 
-  // save to localStorage whenever tables change
-  useEffect(() => {
-    localStorage.setItem("restaurantTables", JSON.stringify(tables));
-  }, [tables]);
-
-  const addTable = () => {
+  const handleAddTable = async () => {
 
     if (!tableNo.trim()) return;
 
-    const exists = tables.find(t => t.name === tableNo);
+    try {
 
-    if (exists) {
-      alert("Table already exists");
-      return;
+      await addTable(tableNo);
+
+      setTableNo("");
+
+    } catch (err) {
+
+      alert(err.message);
+
     }
 
-    const newTable = {
-      name: tableNo,
-      status: "blank",
-    };
-
-    setTables([...tables, newTable]);
-    setTableNo("");
   };
 
-  const runningTables = tables.filter(t => t.status === "running").length;
-  const blankTables = tables.filter(t => t.status === "blank").length;
-  const pendingInvoice = tables.filter(t => t.status === "due").length;
+  const runningTables = tables.filter(
+    t => getTableStatus(t.name) === "Occupied"
+  ).length;
+
+  const blankTables = tables.filter(
+    t => getTableStatus(t.name) === "Available"
+  ).length;
+
+  const pendingInvoice = 0;
 
   const getColor = (status) => {
-    if (status === "running") return "bg-green-200";
-    if (status === "due") return "bg-red-200";
+
+    if (status === "Occupied") return "bg-green-200";
+
+    if (status === "Due") return "bg-red-200";
+
     return "bg-gray-100";
+
   };
 
   return (
+
     <div className="space-y-6">
 
       <h2 className="text-xl font-bold">
@@ -72,7 +68,7 @@ const TablePage = () => {
         />
 
         <button
-          onClick={addTable}
+          onClick={handleAddTable}
           className="bg-blue-500 text-white px-4 py-2 rounded"
         >
           Add Table
@@ -119,51 +115,76 @@ const TablePage = () => {
 
       <div className="grid grid-cols-6 gap-4">
 
-        {tables.map((table, i) => (
+        {tables.map((table, i) => {
 
-          <div
-            key={i}
-            className={`p-3 rounded border ${getColor(table.status)}`}
-          >
+          const status = getTableStatus(table.name);
 
-            <div className="font-semibold mb-2 text-center">
-              {table.name}
-            </div>
+          return (
 
-            <div className="flex flex-col gap-2">
+            <div
+              key={i}
+              className={`p-3 rounded border ${getColor(status)}`}
+            >
 
-              <button
-                className="bg-teal-500 text-white px-2 py-1 rounded text-xs"
-                onClick={() => navigate(`/restaurant/token/${table.name}`)}
-              >
-                + Token
-              </button>
+              <div className="font-semibold mb-2 text-center">
+                Table {table.name}
+              </div>
 
-              <button
-                className="bg-purple-500 text-white px-2 py-1 rounded text-xs"
-              >
-                + NC Token
-              </button>
+              {/* STATUS BADGE */}
+              <div className="text-center mb-2">
+                <span
+                  className={`px-2 py-1 rounded text-xs font-bold ${
+                    status === "Occupied"
+                      ? "bg-red-500 text-white"
+                      : "bg-green-500 text-white"
+                  }`}
+                >
+                  {status}
+                </span>
+              </div>
+
+              <div className="flex flex-col gap-2">
 
                 <button
-                 className="bg-orange-500 text-white px-2 py-1 rounded text-xs"
-                  onClick={() => navigate(`/restaurant/token-items/${table.name}`)}
-                  >
-                     Token Items
-  </button>
+                  className="bg-teal-500 text-white px-2 py-1 rounded text-xs"
+                  onClick={() => {
+                    setSelectedTable(table.name);
+                    navigate(`/restaurant/token/${table.name}`);
+                  }}
+                >
+                  + Token
+                </button>
 
+                <button
+                  className="bg-purple-500 text-white px-2 py-1 rounded text-xs"
+                >
+                  + NC Token
+                </button>
 
+                <button
+                  className="bg-orange-500 text-white px-2 py-1 rounded text-xs"
+                  onClick={() => {
+                    setSelectedTable(table.name);
+                    navigate(`/restaurant/token-items/${table.name}`);
+                  }}
+                >
+                  Token Items
+                </button>
+
+              </div>
 
             </div>
 
-          </div>
+          );
 
-        ))}
+        })}
 
       </div>
 
     </div>
+
   );
+
 };
 
 export default TablePage;
