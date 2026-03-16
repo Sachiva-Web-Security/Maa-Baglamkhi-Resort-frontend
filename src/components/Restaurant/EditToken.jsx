@@ -1,29 +1,30 @@
 import React, { useState, useMemo, useRef } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useEffect } from "react";
+
 const EditToken = () => {
-const { table } = useParams();
+
+  const { table } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
 
   const printRef = useRef();
 
   const [items, setItems] = useState(() => {
-  const saved = localStorage.getItem(`token-${table}`);
-  if (saved) return JSON.parse(saved);
-  return location.state?.items || [];
-});
-useEffect(() => {
-  if (location.state?.items) {
-    setItems(location.state.items);
-  }
-}, [location.state]);
+    const saved = localStorage.getItem(`token-${table}`);
+    if (saved) return JSON.parse(saved);
+    return location.state?.items || [];
+  });
 
-useEffect(() => {
-  localStorage.setItem(`token-${table}`, JSON.stringify(items));
-}, [items, table]);
+  useEffect(() => {
+    if (location.state?.items) {
+      setItems(location.state.items);
+    }
+  }, [location.state]);
 
+  useEffect(() => {
+    localStorage.setItem(`token-${table}`, JSON.stringify(items));
+  }, [items, table]);
 
   const deleteItem = (id) => {
     setItems(items.filter((item) => item.id !== id));
@@ -52,134 +53,113 @@ useEffect(() => {
   const total = subtotal + tax;
 
   // PRINT FUNCTION
-const handlePrint = () => {
 
-  const date = new Date().toLocaleString();
+  const handlePrint = () => {
 
-  const rows = items.map((item) => `
+    const date = new Date().toLocaleString();
+
+    const rows = items.map((item) => `
       <tr>
         <td>${item.name}</td>
         <td style="text-align:center">${item.qty}</td>
         <td style="text-align:right">${item.rate}</td>
         <td style="text-align:right">${(item.qty * item.rate).toFixed(2)}</td>
       </tr>
-  `).join("");
+    `).join("");
 
-  const printHTML = `
-  <html>
-  <head>
-  <title>Invoice</title>
+    const printHTML = `
+    <html>
+    <head>
+    <title>Invoice</title>
 
-  <style>
+    <style>
+    body{
+      font-family: monospace;
+      width:300px;
+      margin:auto;
+    }
+    .center{ text-align:center; }
+    hr{ border-top:1px dashed black; }
+    table{ width:100%; font-size:12px; }
+    td{ padding:3px 0; }
+    .right{ text-align:right; }
+    </style>
 
-  body{
-    font-family: monospace;
-    width:300px;
-    margin:auto;
-  }
+    </head>
 
-  .center{
-    text-align:center;
-  }
+    <body>
 
-  hr{
-    border-top:1px dashed black;
-  }
+    <div class="center">
+    <h3>MAA BAGLAMUKHI RESORT</h3>
+    <div>HOTEL & RESTAURANT</div>
+    <div>BANDRA EAST, MUMBAI</div>
+    </div>
 
-  table{
-    width:100%;
-    font-size:12px;
-  }
+    <hr/>
 
-  td{
-    padding:3px 0;
-  }
+    <div>Invoice No : BM5242504003</div>
+    <div>Date : ${date}</div>
+    <div>Table : ${table}</div>
 
-  .right{
-    text-align:right;
-  }
+    <hr/>
 
-  </style>
+    <table>
 
-  </head>
+    <tr>
+    <td><b>ITEM</b></td>
+    <td align="center"><b>QTY</b></td>
+    <td align="right"><b>RATE</b></td>
+    <td align="right"><b>AMT</b></td>
+    </tr>
 
-  <body>
+    ${rows}
 
-  <div class="center">
+    </table>
 
-  <h3>MAA BAGLAMUKHI RESORT</h3>
+    <hr/>
 
-  <div>HOTEL & RESTAURANT</div>
-  <div>BANDRA EAST, MUMBAI</div>
+    <table>
 
-  </div>
+    <tr>
+    <td>Sub Total</td>
+    <td class="right">₹${subtotal.toFixed(2)}</td>
+    </tr>
 
-  <hr/>
+    <tr>
+    <td>CGST 2.5%</td>
+    <td class="right">₹${(subtotal*0.025).toFixed(2)}</td>
+    </tr>
 
-  <div>Invoice No : BM5242504003</div>
-  <div>Date : ${date}</div>
-  <div>Table : ${table}</div>
+    <tr>
+    <td>SGST 2.5%</td>
+    <td class="right">₹${(subtotal*0.025).toFixed(2)}</td>
+    </tr>
 
-  <hr/>
+    <tr>
+    <td><b>TOTAL</b></td>
+    <td class="right"><b>₹${total.toFixed(2)}</b></td>
+    </tr>
 
-  <table>
+    </table>
 
-  <tr>
-  <td><b>ITEM</b></td>
-  <td align="center"><b>QTY</b></td>
-  <td align="right"><b>RATE</b></td>
-  <td align="right"><b>AMT</b></td>
-  </tr>
+    <hr/>
 
-  ${rows}
+    <div class="center">
+    THANK YOU FOR VISIT
+    </div>
 
-  </table>
+    </body>
+    </html>
+    `;
 
-  <hr/>
+    const win = window.open("", "", "width=400,height=600");
 
-  <table>
+    win.document.write(printHTML);
+    win.document.close();
+    win.print();
 
-  <tr>
-  <td>Sub Total</td>
-  <td class="right">₹${subtotal.toFixed(2)}</td>
-  </tr>
+  };
 
-  <tr>
-  <td>CGST 2.5%</td>
-  <td class="right">₹${(subtotal*0.025).toFixed(2)}</td>
-  </tr>
-
-  <tr>
-  <td>SGST 2.5%</td>
-  <td class="right">₹${(subtotal*0.025).toFixed(2)}</td>
-  </tr>
-
-  <tr>
-  <td><b>TOTAL</b></td>
-  <td class="right"><b>₹${total.toFixed(2)}</b></td>
-  </tr>
-
-  </table>
-
-  <hr/>
-
-  <div class="center">
-  THANK YOU FOR VISIT
-  </div>
-
-  </body>
-  </html>
-  `;
-
-  const win = window.open("", "", "width=400,height=600");
-
-  win.document.write(printHTML);
-
-  win.document.close();
-
-  win.print();
-
-};
   // UPDATE FUNCTION
 
   const handleUpdate = () => {
@@ -199,19 +179,29 @@ const handlePrint = () => {
 
   const handleInvoice = () => {
 
-  const invoiceData = {
-    table,
-    items,
-    total,
-    date: new Date().toLocaleString(),
-    id: Date.now()
+    const invoiceData = {
+      table,
+      items,
+      total,
+
+      // ✅ FIXED DATE FORMAT
+      date: new Date().toISOString(),
+
+      id: Date.now()
+    };
+
+    // ✅ payment refresh safe
+    localStorage.setItem(
+      "currentInvoice",
+      JSON.stringify(invoiceData)
+    );
+
+    navigate("/restaurant/payment", {
+      state: invoiceData
+    });
+
   };
 
-  navigate("/restaurant/payment", {
-    state: invoiceData
-  });
-
-};
   return (
 
     <div className="bg-gray-100 min-h-screen p-6">
@@ -249,18 +239,17 @@ const handlePrint = () => {
         <div className="flex gap-2 mb-4">
 
           <button
-           onClick={() =>
-navigate(`/restaurant/menu/${table}`, {
-  state: { existingItems: items }
-})
-}
+            onClick={() =>
+              navigate(`/restaurant/menu/${table}`, {
+                state: { existingItems: items }
+              })
+            }
             className="bg-red-500 text-white px-4 py-2 rounded text-sm"
           >
             Menu Card
           </button>
 
         </div>
-
 
         {/* Table Header */}
         <div className="grid grid-cols-6 font-semibold text-sm border-b pb-2">
@@ -274,8 +263,8 @@ navigate(`/restaurant/menu/${table}`, {
 
         </div>
 
-
         {/* Item Rows */}
+
         {items.map((item) => (
 
           <div
@@ -283,7 +272,6 @@ navigate(`/restaurant/menu/${table}`, {
             className="grid grid-cols-6 items-center py-2 border-b text-sm gap-2"
           >
 
-            {/* Item Name */}
             <input
               value={item.name}
               className="border p-1 rounded"
@@ -292,7 +280,6 @@ navigate(`/restaurant/menu/${table}`, {
               }
             />
 
-            {/* Quantity */}
             <input
               type="number"
               value={item.qty}
@@ -302,7 +289,6 @@ navigate(`/restaurant/menu/${table}`, {
               }
             />
 
-            {/* Rate */}
             <input
               type="number"
               value={item.rate}
@@ -312,19 +298,16 @@ navigate(`/restaurant/menu/${table}`, {
               }
             />
 
-            {/* Amount */}
             <div>
               ₹ {Number(item.qty) * Number(item.rate)}
             </div>
 
-            {/* Notes */}
             <input
               type="text"
               placeholder="Notes"
               className="border p-1 rounded"
             />
 
-            {/* Delete Button */}
             <button
               onClick={() => deleteItem(item.id)}
               className="bg-red-500 text-white px-2 py-1 rounded"
@@ -335,7 +318,6 @@ navigate(`/restaurant/menu/${table}`, {
           </div>
 
         ))}
-
 
         {/* SUMMARY */}
 
@@ -358,9 +340,7 @@ navigate(`/restaurant/menu/${table}`, {
 
         </div>
 
-
       </div>
-
 
       {/* Bottom Buttons */}
 
@@ -393,41 +373,6 @@ navigate(`/restaurant/menu/${table}`, {
         >
           Back to Dashboard
         </button>
-
-      </div>
-
-
-      {/* Reason Section */}
-
-      <div className="mt-6 text-sm">
-
-        <div className="font-semibold mb-2">
-          Reason for Edit
-        </div>
-
-        <div className="grid grid-cols-2 gap-2">
-
-          <label>
-            <input type="checkbox" /> Guest Cancelled for Quality
-          </label>
-
-          <label>
-            <input type="checkbox" /> High Price
-          </label>
-
-          <label>
-            <input type="checkbox" /> Fly in Food
-          </label>
-
-          <label>
-            <input type="checkbox" /> Change in Order
-          </label>
-
-          <label>
-            <input type="checkbox" /> Food Service Delayed
-          </label>
-
-        </div>
 
       </div>
 

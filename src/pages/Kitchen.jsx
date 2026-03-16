@@ -159,7 +159,7 @@ const Kitchen = () => {
               Table {order.table_no}
             </h3>
 
-            
+
 
             <div className="mt-2">
 

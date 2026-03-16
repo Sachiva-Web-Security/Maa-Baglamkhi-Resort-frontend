@@ -6,13 +6,16 @@ const Payment = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const invoice = location.state;
+  // 🔹 invoice read from navigation OR localStorage
+  const invoice =
+    location.state ||
+    JSON.parse(localStorage.getItem("currentInvoice"));
 
   if (!invoice) {
     return <div>No Invoice Data</div>;
   }
 
-  // 🔹 PRINT FUNCTION (same EditToken wala)
+  // 🔹 PRINT FUNCTION
   const handlePrint = () => {
 
     const rows = invoice.items.map((item) => `
@@ -135,9 +138,12 @@ const Payment = () => {
       JSON.stringify(savedInvoices)
     );
 
+    // 🔹 remove temporary invoice
+    localStorage.removeItem("currentInvoice");
+
     alert("Payment Successful!");
 
-    handlePrint(); // payment ke baad print
+    handlePrint();
 
     navigate("/restaurant");
   };
