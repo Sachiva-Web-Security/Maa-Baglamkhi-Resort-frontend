@@ -5,7 +5,10 @@ import {
   Navigate,
 } from "react-router-dom";
 import { useEffect, useState } from "react";
-
+import DailyfoodReport from "./components/Restaurant/DailyfoodReport";
+import Daywisefood from "./components/Restaurant/Daywisefood";
+import SettlementReport from "./components/Restaurant/SettlementReport";
+import ItemConsumption from "./components/Restaurant/ItemConsumption";
 import Sidebar from "./components/Sidebar/Sidebar";
 import Header from "./components/Header/Header";
 import TokenItemsPage from "./components/Restaurant/TokenItempage";
@@ -17,6 +20,21 @@ import Accounts from "./pages/Accounts";
 import Housekeeping from "./pages/Housekeeping";
 import Banquet from "./pages/Banquet";
 import Reports from "./pages/Reports";
+
+
+
+
+/* ADD THESE */
+import SalesReport from "./pages/reports/SalesReport";
+import IncomeExpenditure from "./pages/reports/IncomeExpenditure";
+import DaywiseCollection from "./pages/reports/DaywiseCollection";
+import CollectionReport from "./pages/reports/CollectionReport";
+import AuditReport from "./pages/reports/AuditReport";
+
+
+
+
+
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -192,8 +210,72 @@ function App() {
           }
         />
 
+
+
+{/* ================= ACCOUNTS REPORTS ================= */}
+
+<Route
+  path="/accounts/audit-report"
+  element={
+    <ProtectedRoute allowedRoles={["admin","manager","accountant"]}>
+      <Layout setIsAuthenticated={setIsAuthenticated}>
+        <AuditReport />
+      </Layout>
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/accounts/income-expenditure"
+  element={
+    <ProtectedRoute allowedRoles={["admin","manager","accountant"]}>
+      <Layout setIsAuthenticated={setIsAuthenticated}>
+        <IncomeExpenditure />
+      </Layout>
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/accounts/sales-report"
+  element={
+    <ProtectedRoute allowedRoles={["admin","manager","accountant"]}>
+      <Layout setIsAuthenticated={setIsAuthenticated}>
+        <SalesReport />
+      </Layout>
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/accounts/collection-report"
+  element={
+    <ProtectedRoute allowedRoles={["admin","manager","accountant"]}>
+      <Layout setIsAuthenticated={setIsAuthenticated}>
+        <CollectionReport />
+      </Layout>
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/accounts/daywise-collection"
+  element={
+    <ProtectedRoute allowedRoles={["admin","manager","accountant"]}>
+      <Layout setIsAuthenticated={setIsAuthenticated}>
+        <DaywiseCollection />
+      </Layout>
+    </ProtectedRoute>
+  }
+/>
+
+
+
+
+
+
         {/* ================= RESTAURANT POS (Nested Routing) ================= */}
-       <Route
+     <Route
  path="/restaurant"
  element={
    <ProtectedRoute allowedRoles={["admin","manager","waiter","kitchen"]}>
@@ -217,6 +299,17 @@ function App() {
 <Route path="payment" element={<Payment />} />
 
 <Route path="token-items/:table" element={<TokenItemsPage />} />
+
+{/* ===== REPORT ROUTES ===== */}
+
+<Route path="daily-room-food" element={<DailyfoodReport />} />
+
+<Route path="daywise-food" element={<Daywisefood />} />
+
+<Route path="transfer-token" element={<SettlementReport />} />
+
+<Route path="item-consumption" element={<ItemConsumption />} />
+
 </Route>
 
         {/* ================= INVENTORY ================= */}

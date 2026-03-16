@@ -14,30 +14,60 @@ const RestaurantPOS = () => {
           Restaurant POS
         </div>
 
-        <ul className="p-2 space-y-2 text-sm">
+       <ul className="p-2 space-y-2 text-sm">
 
-          <li
-            className="cursor-pointer hover:bg-gray-200 p-2 rounded"
-            onClick={() => navigate("/restaurant")}
-          >
-            Dashboard
-          </li>
+<li
+className="cursor-pointer hover:bg-gray-200 p-2 rounded"
+onClick={() => navigate("/restaurant")}
+>
+Dashboard
+</li>
 
-          <li
-            className="cursor-pointer hover:bg-gray-200 p-2 rounded"
-            onClick={() => navigate("/restaurant")}
-          >
-            Tables
-          </li>
+<li
+className="cursor-pointer hover:bg-gray-200 p-2 rounded"
+onClick={() => navigate("/restaurant")}
+>
+Tables
+</li>
 
-          <li
-            className="cursor-pointer hover:bg-gray-200 p-2 rounded"
-            onClick={() => navigate("/restaurant/payment")}
-          >
-            Payment
-          </li>
+<li
+className="cursor-pointer hover:bg-gray-200 p-2 rounded"
+onClick={() => navigate("/restaurant/payment")}
+>
+Payment
+</li>
 
-        </ul>
+<hr/>
+
+<li
+className="cursor-pointer hover:bg-gray-200 p-2 rounded"
+onClick={() => navigate("/restaurant/item-consumption")}
+>
+Item Consumption
+</li>
+
+<li
+className="cursor-pointer hover:bg-gray-200 p-2 rounded"
+onClick={() => navigate("/restaurant/daily-room-food")}
+>
+Daily Roomwise Food Report
+</li>
+
+<li
+className="cursor-pointer hover:bg-gray-200 p-2 rounded"
+onClick={() => navigate("/restaurant/daywise-food")}
+>
+Daywise Food Report
+</li>
+
+<li
+className="cursor-pointer hover:bg-gray-200 p-2 rounded"
+onClick={() => navigate("/restaurant/transfer-token")}
+>
+Transfer Restaurant Token
+</li>
+
+</ul>
 
       </div>
 
