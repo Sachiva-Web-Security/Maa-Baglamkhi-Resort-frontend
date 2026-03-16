@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { matchPath, useNavigate, useLocation } from "react-router-dom";
 import {
   FaHome,
   FaUserCheck,
@@ -109,18 +109,26 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen }) => {
   ];
 
   const handleNavClick = (path) => {
-    if (!sidebarOpen) {
-      setSidebarOpen(true);
+    navigate(path);
+
+    if (isMobile) {
+      setSidebarOpen(false);
       return;
     }
 
-    navigate(path);
-
-    if (setSidebarOpen) {
-      setSidebarOpen(false);
+    if (!sidebarOpen && setSidebarOpen) {
+      setSidebarOpen(true);
     }
   };
-  const isActive = (path) => location.pathname === path;
+  const isActive = (path) => {
+    if (location.pathname === path) {
+      return true;
+    }
+
+    return Boolean(
+      matchPath({ path: `${path}/*`, end: false }, location.pathname),
+    );
+  };
   const showLabels = sidebarOpen;
 
   return (
@@ -242,10 +250,10 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen }) => {
           }
       ${
         highlighted
-          ? "border-blue-400/60 bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-[0_14px_28px_rgba(37,99,235,0.35)]"
+          ? "border-blue-400/60 bg-blue-600 text-white shadow-[0_14px_28px_rgba(37,99,235,0.3)]"
           : "border-transparent bg-white/[0.03] text-slate-200 hover:border-blue-400/40 hover:bg-blue-600 hover:text-white hover:shadow-[0_14px_28px_rgba(37,99,235,0.25)] active:border-blue-400/40 active:bg-blue-600 active:text-white active:shadow-[0_14px_28px_rgba(37,99,235,0.25)] focus-visible:border-blue-400/40 focus-visible:bg-blue-600 focus-visible:text-white focus-visible:shadow-[0_14px_28px_rgba(37,99,235,0.25)]"
       }
-      ${hovered && !active ? "border-blue-400/40 bg-blue-600 text-white shadow-[0_14px_28px_rgba(37,99,235,0.25)] scale-[1.01]" : ""}
+      ${hovered && !active ? "border-blue-400/40 bg-blue-600 text-white shadow-[0_14px_28px_rgba(37,99,235,0.3)] scale-[1.01]" : ""}
    `}
                 title={!showLabels ? item.name : undefined}
               >
