@@ -1,358 +1,213 @@
-import React, { useState, useMemo, useRef } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import API from "../../api";
 
 const EditToken = () => {
-
   const { table } = useParams();
   const navigate = useNavigate();
-  const location = useLocation();
 
-  const printRef = useRef();
-
-  const [items, setItems] = useState(() => {
-    const saved = localStorage.getItem(`token-${table}`);
-    if (saved) return JSON.parse(saved);
-    return location.state?.items || [];
-  });
+  const [tokenId, setTokenId] = useState(null);
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (location.state?.items) {
-      setItems(location.state.items);
-    }
-  }, [location.state]);
+    const loadTokenItems = async () => {
+      try {
+        setLoading(true);
 
-  useEffect(() => {
-    localStorage.setItem(`token-${table}`, JSON.stringify(items));
-  }, [items, table]);
+        const tokenRes = await API.get(`/token/table/${table}`);
+        const activeTokenId = tokenRes.data?.id || null;
+        setTokenId(activeTokenId);
 
-  const deleteItem = (id) => {
-    setItems(items.filter((item) => item.id !== id));
-  };
+        if (!activeTokenId) {
+          setItems([]);
+          return;
+        }
+
+        const itemsRes = await API.get(`/token/items/${activeTokenId}`);
+        setItems(itemsRes.data || []);
+      } catch (error) {
+        console.log("Error loading edit token:", error);
+        setItems([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadTokenItems();
+  }, [table]);
 
   const handleChange = (id, field, value) => {
-
-    setItems(
-      items.map((item) =>
-        item.id === id ? { ...item, [field]: value } : item
-      )
+    setItems((current) =>
+      current.map((item) => (item.id === id ? { ...item, [field]: value } : item)),
     );
-
   };
 
-  // SUMMARY CALCULATION
+  const deleteItem = async (id) => {
+    try {
+      await API.delete(`/token/item/${id}`);
+      setItems((current) => current.filter((item) => item.id !== id));
+    } catch (error) {
+      alert(error.response?.data?.message || "Item delete nahi ho paaya.");
+    }
+  };
 
-  const subtotal = useMemo(() => {
-    return items.reduce(
-      (sum, item) => sum + Number(item.qty) * Number(item.rate),
-      0
-    );
-  }, [items]);
+  const subtotal = useMemo(
+    () =>
+      items.reduce(
+        (sum, item) => sum + Number(item.qty || 0) * Number(item.rate || 0),
+        0,
+      ),
+    [items],
+  );
 
   const tax = subtotal * 0.05;
   const total = subtotal + tax;
 
-  // PRINT FUNCTION
-
-  const handlePrint = () => {
-
-    const date = new Date().toLocaleString();
-
-    const rows = items.map((item) => `
-      <tr>
-        <td>${item.name}</td>
-        <td style="text-align:center">${item.qty}</td>
-        <td style="text-align:right">${item.rate}</td>
-        <td style="text-align:right">${(item.qty * item.rate).toFixed(2)}</td>
-      </tr>
-    `).join("");
-
-    const printHTML = `
-    <html>
-    <head>
-    <title>Invoice</title>
-
-    <style>
-    body{
-      font-family: monospace;
-      width:300px;
-      margin:auto;
-    }
-    .center{ text-align:center; }
-    hr{ border-top:1px dashed black; }
-    table{ width:100%; font-size:12px; }
-    td{ padding:3px 0; }
-    .right{ text-align:right; }
-    </style>
-
-    </head>
-
-    <body>
-
-    <div class="center">
-    <h3>MAA BAGLAMUKHI RESORT</h3>
-    <div>HOTEL & RESTAURANT</div>
-    <div>BANDRA EAST, MUMBAI</div>
-    </div>
-
-    <hr/>
-
-    <div>Invoice No : BM5242504003</div>
-    <div>Date : ${date}</div>
-    <div>Table : ${table}</div>
-
-    <hr/>
-
-    <table>
-
-    <tr>
-    <td><b>ITEM</b></td>
-    <td align="center"><b>QTY</b></td>
-    <td align="right"><b>RATE</b></td>
-    <td align="right"><b>AMT</b></td>
-    </tr>
-
-    ${rows}
-
-    </table>
-
-    <hr/>
-
-    <table>
-
-    <tr>
-    <td>Sub Total</td>
-    <td class="right">₹${subtotal.toFixed(2)}</td>
-    </tr>
-
-    <tr>
-    <td>CGST 2.5%</td>
-    <td class="right">₹${(subtotal*0.025).toFixed(2)}</td>
-    </tr>
-
-    <tr>
-    <td>SGST 2.5%</td>
-    <td class="right">₹${(subtotal*0.025).toFixed(2)}</td>
-    </tr>
-
-    <tr>
-    <td><b>TOTAL</b></td>
-    <td class="right"><b>₹${total.toFixed(2)}</b></td>
-    </tr>
-
-    </table>
-
-    <hr/>
-
-    <div class="center">
-    THANK YOU FOR VISIT
-    </div>
-
-    </body>
-    </html>
-    `;
-
-    const win = window.open("", "", "width=400,height=600");
-
-    win.document.write(printHTML);
-    win.document.close();
-    win.print();
-
-  };
-
-  // UPDATE FUNCTION
-
-  const handleUpdate = () => {
-
-    if(items.length === 0){
+  const handleUpdate = async () => {
+    if (!items.length) {
       alert("No items to update");
       return;
     }
 
-    console.log("Updated Items:", items);
+    try {
+      await Promise.all(
+        items.map((item) =>
+          API.put("/token/item", {
+            id: item.id,
+            qty: Number(item.qty),
+            rate: Number(item.rate),
+          }),
+        ),
+      );
 
-    alert("Token Updated Successfully");
-
+      alert("Token updated successfully");
+    } catch (error) {
+      alert(error.response?.data?.message || "Token update nahi ho paaya.");
+    }
   };
-
-  // CREATE INVOICE
 
   const handleInvoice = () => {
-
     const invoiceData = {
       table,
-      items,
+      tokenId,
+      items: items.map((item) => ({
+        id: item.id,
+        name: item.item_name,
+        qty: Number(item.qty),
+        rate: Number(item.rate),
+      })),
+      subtotal,
+      gst: tax,
       total,
-
-      // ✅ FIXED DATE FORMAT
       date: new Date().toISOString(),
-
-      id: Date.now()
     };
 
-    // ✅ payment refresh safe
-    localStorage.setItem(
-      "currentInvoice",
-      JSON.stringify(invoiceData)
-    );
-
-    navigate("/restaurant/payment", {
-      state: invoiceData
-    });
-
+    localStorage.setItem("currentInvoice", JSON.stringify(invoiceData));
+    navigate("/restaurant/payment", { state: invoiceData });
   };
 
+  if (loading) {
+    return <div className="bg-gray-100 min-h-screen p-6">Loading token...</div>;
+  }
+
   return (
-
     <div className="bg-gray-100 min-h-screen p-6">
+      <div className="text-sm text-gray-500 mb-3">Home &gt; Restaurant Tokens</div>
 
-      {/* Breadcrumb */}
-      <div className="text-sm text-gray-500 mb-3">
-        Home &gt; Restaurant Tokens
-      </div>
+      <div className="bg-blue-700 text-white px-4 py-2 rounded-t">Edit Token</div>
 
-      {/* Header */}
-      <div className="bg-blue-700 text-white px-4 py-2 rounded-t">
-        Edit Token
-      </div>
-
-      <div className="bg-white border p-5" ref={printRef}>
-
-        {/* Token Details */}
+      <div className="bg-white border p-5">
         <div className="bg-gray-100 p-4 rounded mb-4 grid grid-cols-3 text-sm">
-
           <div>
-            <strong>Token Code:</strong> BM5242501189
+            <strong>Token Code:</strong> {tokenId || "Not Created"}
           </div>
 
           <div>
-           <strong>Token Reference:</strong> Table / Table-{table}
+            <strong>Token Reference:</strong> Table / Table-{table}
           </div>
 
           <div>
-            <strong>Waiter:</strong> Souvick
+            <strong>Waiter:</strong> {localStorage.getItem("name") || "Waiter"}
           </div>
-
         </div>
 
-        {/* Buttons */}
         <div className="flex gap-2 mb-4">
-
           <button
-            onClick={() =>
-              navigate(`/restaurant/menu/${table}`, {
-                state: { existingItems: items }
-              })
-            }
+            onClick={() => navigate(`/restaurant/menu/${table}`)}
             className="bg-red-500 text-white px-4 py-2 rounded text-sm"
           >
             Menu Card
           </button>
-
         </div>
 
-        {/* Table Header */}
-        <div className="grid grid-cols-6 font-semibold text-sm border-b pb-2">
-
+        <div className="grid grid-cols-5 font-semibold text-sm border-b pb-2">
           <div>Item</div>
           <div>Quantity</div>
           <div>Rate</div>
           <div>Amount</div>
-          <div>Notes</div>
           <div></div>
-
         </div>
 
-        {/* Item Rows */}
-
         {items.map((item) => (
-
           <div
             key={item.id}
-            className="grid grid-cols-6 items-center py-2 border-b text-sm gap-2"
+            className="grid grid-cols-5 items-center py-2 border-b text-sm gap-2"
           >
-
             <input
-              value={item.name}
-              className="border p-1 rounded"
-              onChange={(e) =>
-                handleChange(item.id, "name", e.target.value)
-              }
+              value={item.item_name}
+              readOnly
+              className="border p-1 rounded bg-gray-50"
             />
 
             <input
               type="number"
               value={item.qty}
-              className="border p-1 w-16 rounded"
-              onChange={(e) =>
-                handleChange(item.id, "qty", e.target.value)
-              }
+              className="border p-1 w-20 rounded"
+              onChange={(event) => handleChange(item.id, "qty", event.target.value)}
             />
 
             <input
               type="number"
               value={item.rate}
-              className="border p-1 w-20 rounded"
-              onChange={(e) =>
-                handleChange(item.id, "rate", e.target.value)
-              }
+              className="border p-1 w-24 rounded"
+              onChange={(event) => handleChange(item.id, "rate", event.target.value)}
             />
 
-            <div>
-              ₹ {Number(item.qty) * Number(item.rate)}
-            </div>
-
-            <input
-              type="text"
-              placeholder="Notes"
-              className="border p-1 rounded"
-            />
+            <div>Rs. {Number(item.qty) * Number(item.rate)}</div>
 
             <button
               onClick={() => deleteItem(item.id)}
               className="bg-red-500 text-white px-2 py-1 rounded"
             >
-              🗑
+              Delete
             </button>
-
           </div>
-
         ))}
 
-        {/* SUMMARY */}
+        {!items.length && (
+          <div className="py-6 text-sm text-gray-400">No token items found.</div>
+        )}
 
         <div className="mt-6 border-t pt-4">
-
           <div className="flex justify-between text-sm">
             <span>Subtotal</span>
-            <span>₹ {subtotal.toFixed(2)}</span>
+            <span>Rs. {subtotal.toFixed(2)}</span>
           </div>
 
           <div className="flex justify-between text-sm">
             <span>Tax (5%)</span>
-            <span>₹ {tax.toFixed(2)}</span>
+            <span>Rs. {tax.toFixed(2)}</span>
           </div>
 
           <div className="flex justify-between font-bold text-lg">
             <span>Total</span>
-            <span>₹ {total.toFixed(2)}</span>
+            <span>Rs. {total.toFixed(2)}</span>
           </div>
-
         </div>
-
       </div>
 
-      {/* Bottom Buttons */}
-
       <div className="flex gap-3 mt-6">
-
-        <button
-          onClick={handlePrint}
-          className="bg-yellow-500 text-white px-4 py-2 rounded"
-        >
-          Print Token
-        </button>
-
         <button
           onClick={handleUpdate}
           className="bg-green-600 text-white px-4 py-2 rounded"
@@ -373,13 +228,9 @@ const EditToken = () => {
         >
           Back to Dashboard
         </button>
-
       </div>
-
     </div>
-
   );
-
 };
 
 export default EditToken;

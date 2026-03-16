@@ -1,46 +1,7 @@
 import React, { useContext, useState, useMemo, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { RestaurantContext } from "../../Context/RestaurantContext";
-
-/* ===============================
-   SEND ORDER TO KITCHEN
-================================ */
-
-const sendToKitchen = (table, items) => {
-
-  const orders =
-    JSON.parse(localStorage.getItem("kitchenOrders")) || [];
-
-  // format items for kitchen display
-  const formattedItems = items.map((item) => ({
-    item_name: item.name,
-    quantity: item.qty,
-    price: item.rate,
-    total: item.total
-  }));
-
-  const newOrder = {
-    id: Date.now(),
-    waiter_name: localStorage.getItem("name") || "Waiter",
-    table_no: table,
-    items: formattedItems,
-    status: "Pending",
-    created_at: new Date().toISOString(),
-    time: new Date().toLocaleTimeString()
-  };
-
-  orders.push(newOrder);
-
-  localStorage.setItem(
-    "kitchenOrders",
-    JSON.stringify(orders)
-  );
-
-  // kitchen screen refresh
-  window.dispatchEvent(new Event("kitchenUpdated"));
-
-};
-
+import API from "../../api";
 
 /* ===============================
    MENU PAGE
@@ -159,28 +120,66 @@ const MenuPage = () => {
      SUBMIT ORDER
   =============================== */
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
 
     if (order.length === 0) {
       alert("Please add items");
       return;
     }
 
-    // SAVE TOKEN
-    localStorage.setItem(`token-${table}`, JSON.stringify(order));
+    try {
+      let tokenId = null;
 
-    // SEND ORDER TO KITCHEN
-    sendToKitchen(table, order);
+      const tokenRes = await API.get(`/token/table/${table}`);
+      if (tokenRes.data?.id) {
+        tokenId = tokenRes.data.id;
+      } else {
+        const createRes = await API.post("/token/create", {
+          tableNumber: String(table),
+          waiter: localStorage.getItem("name") || "Waiter",
+        });
+        tokenId = createRes.data?.tokenId;
+      }
 
-    // DASHBOARD REFRESH
-    window.dispatchEvent(new Event("tokenUpdated"));
+      await Promise.all(
+        order.map(async (item) => {
+          await API.post("/restaurant/order/add", {
+            tableNumber: String(table),
+            item: {
+              name: item.name,
+              price: Number(item.rate),
+              quantity: Number(item.qty),
+            },
+          });
 
-    navigate(`/restaurant/edit-token/${table}`, {
-      state: { items: order }
-    });
+          await API.post("/token/item", {
+            tokenId,
+            name: item.name,
+            qty: Number(item.qty),
+            rate: Number(item.rate),
+          });
+        }),
+      );
 
-    // clear local order
-    setOrder([]);
+      await API.post("/kitchen/order", {
+        table: String(table),
+        waiter: localStorage.getItem("name") || "Waiter",
+        items: order.map((item) => ({
+          name: item.name,
+          quantity: Number(item.qty),
+          price: Number(item.rate),
+        })),
+      });
+      window.dispatchEvent(new Event("tokenUpdated"));
+
+      navigate(`/restaurant/edit-token/${table}`);
+      setOrder([]);
+    } catch (error) {
+      console.log(error);
+      alert(
+        error.response?.data?.message || "Order backend se save nahi ho paaya.",
+      );
+    }
 
   };
 

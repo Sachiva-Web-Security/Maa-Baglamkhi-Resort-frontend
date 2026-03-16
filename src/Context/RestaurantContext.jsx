@@ -6,7 +6,6 @@ export const RestaurantContext = createContext();
 const LOCAL_KEY_PREFIX = "restaurant_menu_table_";
 
 export const RestaurantProvider = ({ children }) => {
-
   const [tables, setTables] = useState([]);
   const [menuItems, setMenuItems] = useState([]);
   const [ordersByTable, setOrdersByTable] = useState({});
@@ -15,12 +14,13 @@ export const RestaurantProvider = ({ children }) => {
 
   const getLocalMenuKey = useCallback(
     (tableNo) => `${LOCAL_KEY_PREFIX}${String(tableNo)}`,
-    []
+    [],
   );
 
   const readLocalTableMenu = useCallback(
     (tableNo) => {
       if (!tableNo || typeof window === "undefined") return [];
+
       try {
         const raw = localStorage.getItem(getLocalMenuKey(tableNo));
         const parsed = raw ? JSON.parse(raw) : [];
@@ -29,32 +29,40 @@ export const RestaurantProvider = ({ children }) => {
         return [];
       }
     },
-    [getLocalMenuKey]
+    [getLocalMenuKey],
   );
 
   const writeLocalTableMenu = useCallback(
     (tableNo, rows) => {
       if (!tableNo || typeof window === "undefined") return;
+
       try {
-        localStorage.setItem(
-          getLocalMenuKey(tableNo),
-          JSON.stringify(rows || [])
-        );
-      } catch {}
+        localStorage.setItem(getLocalMenuKey(tableNo), JSON.stringify(rows || []));
+      } catch {
+        // Ignore local fallback cache failures.
+      }
     },
-    [getLocalMenuKey]
+    [getLocalMenuKey],
   );
 
-  // LOAD TABLES
-  const loadTables = useCallback(async () => {
+  const fetchActiveTokenByTable = useCallback(async (tableNo) => {
+    if (!tableNo) return null;
 
     try {
+      const res = await API.get(`/token/table/${tableNo}`);
+      return res.data?.id ? res.data : null;
+    } catch {
+      return null;
+    }
+  }, []);
 
+  const loadTables = useCallback(async () => {
+    try {
       const res = await API.get("/restaurant/tables");
 
-      const rows = (res.data || []).map((t) => ({
-        id: t.id,
-        name: String(t.number),
+      const rows = (res.data || []).map((table) => ({
+        id: table.id,
+        name: String(table.number),
       }));
 
       setTables(rows);
@@ -62,89 +70,72 @@ export const RestaurantProvider = ({ children }) => {
       const statuses = {};
 
       await Promise.all(
-        rows.map(async (t) => {
-
+        rows.map(async (table) => {
           let occupied = false;
 
-          // 🔹 backend order check
           try {
-            const orderRes = await API.get(`/restaurant/order/${t.name}`);
-            if (orderRes.data) {
+            const orderRes = await API.get(`/restaurant/order/${table.name}`);
+            if (orderRes.data?.id) {
               occupied = true;
             }
-          } catch {}
+          } catch {
+            // Order may not exist yet for this table.
+          }
 
-          // 🔹 token localStorage check
-          try {
-            const token = localStorage.getItem(`token-${t.name}`);
-            if (token && JSON.parse(token).length > 0) {
-              occupied = true;
-            }
-          } catch {}
+          const activeToken = await fetchActiveTokenByTable(table.name);
+          if (activeToken) {
+            occupied = true;
+          }
 
-          statuses[t.name] = occupied ? "Occupied" : "Available";
-
-        })
+          statuses[table.name] = occupied ? "Occupied" : "Available";
+        }),
       );
 
       setTableStatusByNo(statuses);
-
     } catch (err) {
-
       console.log("Error loading tables:", err);
       setTables([]);
-
     }
+  }, [fetchActiveTokenByTable]);
 
-  }, []);
-
-  // LOAD MENU
   const loadMenu = useCallback(
     async (tableNo = selectedTable) => {
-
       if (!tableNo) {
         setMenuItems([]);
         return;
       }
 
       try {
-
         const res = await API.get("/restaurant/menu", {
           params: { tableNumber: String(tableNo) },
         });
 
         const backendRows = res.data || [];
-
         const localRows = readLocalTableMenu(tableNo);
-
         const merged = [...backendRows];
 
-        localRows.forEach((lr) => {
-
+        localRows.forEach((localRow) => {
           const exists = merged.some(
-            (r) =>
-              String(r.name).toLowerCase() ===
-                String(lr.name).toLowerCase() &&
-              Number(r.price) === Number(lr.price) &&
-              String(r.category || "Others") ===
-                String(lr.category || "Others")
+            (row) =>
+              String(row.name).toLowerCase() ===
+                String(localRow.name).toLowerCase() &&
+              Number(row.price) === Number(localRow.price) &&
+              String(row.category || "Others") ===
+                String(localRow.category || "Others"),
           );
 
-          if (!exists) merged.push(lr);
-
+          if (!exists) {
+            merged.push(localRow);
+          }
         });
 
         setMenuItems(merged);
-
       } catch (err) {
-
         console.log("Error loading menu:", err);
         setMenuItems(readLocalTableMenu(tableNo));
-
       }
-
     },
-    [readLocalTableMenu, selectedTable]
+    [readLocalTableMenu, selectedTable],
   );
 
   useEffect(() => {
@@ -152,90 +143,56 @@ export const RestaurantProvider = ({ children }) => {
   }, [loadTables]);
 
   useEffect(() => {
-
     if (!selectedTable) {
       setMenuItems([]);
       return;
     }
 
     loadMenu(selectedTable);
-
   }, [selectedTable, loadMenu]);
 
-  // 🔴 TOKEN CHANGE LISTENER (Live table status)
   useEffect(() => {
-
     const refresh = () => loadTables();
 
     window.addEventListener("tokenUpdated", refresh);
-
     return () => window.removeEventListener("tokenUpdated", refresh);
-
   }, [loadTables]);
 
-  // ADD TABLE
   const addTable = async (tableNumber) => {
-
     const normalized = String(tableNumber || "").trim();
-
     if (!normalized) throw new Error("Table number is required");
 
-    const existing = tables.find(
-      (t) => String(t.name) === normalized
-    );
-
+    const existing = tables.find((table) => String(table.name) === normalized);
     if (existing) return existing;
 
     const tempId = `tmp-${Date.now()}`;
-
-    const optimistic = {
-      id: tempId,
-      name: normalized,
-    };
+    const optimistic = { id: tempId, name: normalized };
 
     setTables((prev) => [...prev, optimistic]);
-
     setTableStatusByNo((prev) => ({
       ...prev,
       [normalized]: "Available",
     }));
 
     try {
-
-      const res = await API.post("/restaurant/tables", {
-        number: normalized,
-      });
-
+      const res = await API.post("/restaurant/tables", { number: normalized });
       const data = res.data || {};
-
-      const persisted = {
-        id: data.id || tempId,
-        name: normalized,
-      };
+      const persisted = { id: data.id || tempId, name: normalized };
 
       setTables((prev) =>
-        prev.map((t) => (t.id === tempId ? persisted : t))
+        prev.map((table) => (table.id === tempId ? persisted : table)),
       );
 
       return persisted;
-
     } catch (err) {
-
       console.log("Error adding table:", err);
       return optimistic;
-
     }
-
   };
 
-  // ADD MENU ITEM
   const addMenuItem = async (name, price, category, tableNoParam) => {
-
     const resolvedTable = tableNoParam || selectedTable;
-
-    const tableNumber = resolvedTable
-      ? String(resolvedTable)
-      : null;
+    const tableNumber = resolvedTable ? String(resolvedTable) : null;
 
     const localItem = {
       id: Date.now(),
@@ -249,24 +206,13 @@ export const RestaurantProvider = ({ children }) => {
     setMenuItems((prev) => [...prev, localItem]);
 
     if (tableNumber) {
-
-      writeLocalTableMenu(
-        tableNumber,
-        [...readLocalTableMenu(tableNumber), localItem]
-      );
-
-      setTableStatusByNo((prev) => ({
-        ...prev,
-        [tableNumber]: "Occupied",
-      }));
-
-      // 🔴 live dashboard refresh
-      window.dispatchEvent(new Event("tokenUpdated"));
-
+      writeLocalTableMenu(tableNumber, [
+        ...readLocalTableMenu(tableNumber),
+        localItem,
+      ]);
     }
 
     try {
-
       const res = await API.post("/restaurant/menu", {
         name,
         price: Number(price),
@@ -283,27 +229,18 @@ export const RestaurantProvider = ({ children }) => {
       };
 
       setMenuItems((prev) =>
-        prev.map((item) =>
-          item.id === localItem.id ? persistedItem : item
-        )
+        prev.map((item) => (item.id === localItem.id ? persistedItem : item)),
       );
 
       await loadMenu(resolvedTable);
-
       return persistedItem;
-
     } catch (err) {
-
       console.log("Error adding menu item:", err);
-
       return localItem;
-
     }
-
   };
 
   const clearOrder = (tableNo = selectedTable) => {
-
     if (!tableNo) return;
 
     const key = String(tableNo);
@@ -317,35 +254,25 @@ export const RestaurantProvider = ({ children }) => {
       ...prev,
       [key]: "Available",
     }));
-
   };
 
   const generateBill = async (billData) => {
-
     const res = await API.post("/restaurant/bill", billData);
 
     clearOrder(selectedTable);
-
     window.dispatchEvent(new Event("tokenUpdated"));
 
     return res.data;
-
   };
 
   const getTableStatus = (tableNo) => {
-
     const key = String(tableNo || "");
-
     return tableStatusByNo[key] || "Available";
-
   };
 
   const orderItems = useMemo(() => {
-
     if (!selectedTable) return [];
-
     return ordersByTable[String(selectedTable)] || [];
-
   }, [ordersByTable, selectedTable]);
 
   return (
@@ -367,5 +294,4 @@ export const RestaurantProvider = ({ children }) => {
       {children}
     </RestaurantContext.Provider>
   );
-
 };

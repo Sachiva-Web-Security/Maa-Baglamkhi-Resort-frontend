@@ -1,113 +1,85 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import API from "../api";
 
 const Kitchen = () => {
-
   const [orders, setOrders] = useState([]);
-
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const orderSound = useRef(null);
   const soundCount = useRef(0);
   const prevOrderCount = useRef(0);
 
-  const getLocalOrders = () => {
-    return JSON.parse(localStorage.getItem("kitchenOrders")) || [];
-  };
+  const fetchOrders = async () => {
+    try {
+      const res = await API.get("/kitchen/orders");
+      const fetchedOrders = Array.isArray(res.data) ? res.data : [];
 
-  const getOrderTime = (time) => {
-
-    if(!time) return "0:00";
-
-    const diff = Math.floor((clock - new Date(time)) / 1000);
-
-    const minutes = Math.floor(diff / 60);
-    const seconds = diff % 60;
-
-    return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
-
-  };
-
-  const fetchOrders = () => {
-
-    const localOrders = getLocalOrders();
-
-    if (localOrders.length > prevOrderCount.current) {
-
-      if (soundCount.current < 2 && orderSound.current) {
-
+      if (
+        fetchedOrders.length > prevOrderCount.current &&
+        soundCount.current < 2 &&
+        orderSound.current
+      ) {
         orderSound.current.currentTime = 0;
-        orderSound.current.play().catch(()=>{});
-
-        soundCount.current++;
-
+        orderSound.current.play().catch(() => {});
+        soundCount.current += 1;
       }
 
+      prevOrderCount.current = fetchedOrders.length;
+      setOrders(fetchedOrders);
+      setError("");
+    } catch (err) {
+      setError(err.response?.data?.message || "Kitchen orders load nahi huye.");
+    } finally {
+      setLoading(false);
     }
-
-    prevOrderCount.current = localOrders.length;
-
-    setOrders(localOrders);
-
   };
 
   useEffect(() => {
-
     orderSound.current = new Audio("/order.mp3");
-
     fetchOrders();
 
-    const interval = setInterval(fetchOrders, 2000);
-
-    window.addEventListener("kitchenUpdated", fetchOrders);
-
-    return () => {
-
-      clearInterval(interval);
-      window.removeEventListener("kitchenUpdated", fetchOrders);
-
-    };
-
+    const interval = setInterval(fetchOrders, 3000);
+    return () => clearInterval(interval);
   }, []);
 
-  
-
-  const markReady = (id) => {
-
-    const localOrders = getLocalOrders();
-
-    const updated = localOrders.map((o)=>
-      o.id === id ? {...o,status:"Ready"} : o
-    );
-
-    localStorage.setItem(
-      "kitchenOrders",
-      JSON.stringify(updated)
-    );
-
-    fetchOrders();
-
+  const markReady = async (id) => {
+    try {
+      await API.put(`/kitchen/orders/${id}`, { status: "Ready" });
+      fetchOrders();
+    } catch (err) {
+      setError(err.response?.data?.message || "Order update nahi ho paaya.");
+    }
   };
 
   const printBill = (order) => {
-
-    const total = order.items.reduce(
-      (sum,item)=>sum + item.price * item.quantity,
-      0
+    const total = (order.items || []).reduce(
+      (sum, item) => sum + Number(item.price || 0) * Number(item.qty || 0),
+      0,
     );
 
-    const printWindow = window.open();
+    const printWindow = window.open("", "_blank");
 
-    const itemsHTML = order.items.map(item=>`
+    if (!printWindow) {
+      return;
+    }
+
+    const itemsHTML = (order.items || [])
+      .map(
+        (item) => `
       <tr>
-        <td>${item.item_name}</td>
-        <td>${item.quantity}</td>
-        <td>₹${item.price}</td>
-        <td>₹${item.price * item.quantity}</td>
+        <td>${item.name}</td>
+        <td>${item.qty}</td>
+        <td>Rs ${item.price}</td>
+        <td>Rs ${Number(item.price || 0) * Number(item.qty || 0)}</td>
       </tr>
-    `).join("");
+    `,
+      )
+      .join("");
 
     printWindow.document.write(`
       <h2>Restaurant Bill</h2>
-      <p>Table: ${order.table_no}</p>
+      <p>Table: ${order.table || "-"}</p>
       <table border="1" style="width:100%">
         <tr>
           <th>Item</th>
@@ -117,92 +89,68 @@ const Kitchen = () => {
         </tr>
         ${itemsHTML}
       </table>
-      <h3>Total: ₹${total}</h3>
+      <h3>Total: Rs ${total}</h3>
     `);
 
+    printWindow.document.close();
     printWindow.print();
-
-    const localOrders = getLocalOrders();
-
-    const updatedOrders =
-      localOrders.filter(o => o.id !== order.id);
-
-    localStorage.setItem(
-      "kitchenOrders",
-      JSON.stringify(updatedOrders)
-    );
-
-    localStorage.removeItem(`token-${order.table_no}`);
-
-    fetchOrders();
-
   };
 
+  if (loading) {
+    return <div className="min-h-screen bg-slate-900 p-6 text-white">Loading...</div>;
+  }
+
   return (
-
     <div className="min-h-screen bg-slate-900 p-6 text-white">
+      <h2 className="mb-6 text-2xl font-bold">Kitchen Orders</h2>
 
-      <h2 className="text-2xl font-bold mb-6">
-        Kitchen Orders
-      </h2>
+      {error && (
+        <div className="mb-4 rounded border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-100">
+          {error}
+        </div>
+      )}
 
-      <div className="grid md:grid-cols-3 gap-4">
+      <div className="grid gap-4 md:grid-cols-3">
+        {orders.length === 0 ? (
+          <p className="text-slate-300">No kitchen orders found.</p>
+        ) : (
+          orders.map((order) => (
+            <div key={order.id} className="rounded-lg bg-slate-800 p-4 shadow">
+              <h3 className="text-xl font-bold">Table {order.table || "-"}</h3>
+              <p className="mt-1 text-sm text-slate-300">Waiter: {order.waiter || "-"}</p>
+              <p className="text-sm text-slate-300">Status: {order.status || "-"}</p>
 
-        {orders.map((order)=>(
+              <div className="mt-2 space-y-1">
+                {(order.items || []).map((item, i) => (
+                  <div key={`${order.id}-${i}`}>
+                    {item.name} x {item.qty}
+                  </div>
+                ))}
+              </div>
 
-          <div
-            key={order.id}
-            className="p-4 bg-slate-800 rounded-lg shadow"
-          >
-
-            <h3 className="text-xl font-bold">
-              Table {order.table_no}
-            </h3>
-
-
-
-            <div className="mt-2">
-
-              {order.items?.map((item,i)=>(
-                <div key={i}>
-                  {item.item_name} x {item.quantity}
-                </div>
-              ))}
-
-            </div>
-
-            <div className="flex gap-2 mt-3">
-
-              {order.status !== "Ready" && (
+              <div className="mt-3 flex gap-2">
+                {String(order.status || "").toLowerCase() !== "ready" && (
+                  <button
+                    onClick={() => markReady(order.id)}
+                    className="rounded bg-green-600 px-3 py-1"
+                  >
+                    Ready
+                  </button>
+                )}
 
                 <button
-                  onClick={()=>markReady(order.id)}
-                  className="bg-green-600 px-3 py-1 rounded"
+                  onClick={() => printBill(order)}
+                  className="rounded bg-purple-600 px-3 py-1"
                 >
-                  Ready
+                  Print
                 </button>
-
-              )}
-
-              <button
-                onClick={()=>printBill(order)}
-                className="bg-purple-600 px-3 py-1 rounded"
-              >
-                Print
-              </button>
-
+              </div>
             </div>
-
-          </div>
-
-        ))}
-
+          ))
+        )}
       </div>
-
     </div>
-
   );
-
 };
 
 export default Kitchen;

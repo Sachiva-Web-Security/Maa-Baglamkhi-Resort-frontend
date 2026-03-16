@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import API from "../../api";
 
 const ItemConsumption = () => {
 
@@ -7,10 +8,17 @@ const ItemConsumption = () => {
   const [groupBy, setGroupBy] = useState("Item");
   const [data, setData] = useState({});
 
-  const loadReport = () => {
+  const loadReport = async () => {
+    let orders = [];
 
-    const orders =
-      JSON.parse(localStorage.getItem("kitchenOrders")) || [];
+    try {
+      const res = await API.get("/kitchen/orders");
+      orders = Array.isArray(res.data) ? res.data : [];
+    } catch (error) {
+      console.error("Failed to load kitchen orders for report:", error);
+      setData({});
+      return;
+    }
 
     const result = {};
 
@@ -33,7 +41,7 @@ const ItemConsumption = () => {
 
         const key =
           groupBy === "Item"
-            ? item.item_name
+            ? item.name
             : item.category || "Items";
 
         if (!result[key]) {
@@ -45,7 +53,7 @@ const ItemConsumption = () => {
 
         }
 
-        result[key].qty += Number(item.quantity);
+        result[key].qty += Number(item.qty || 0);
 
       });
 

@@ -11,6 +11,7 @@ import {
   FaPlus,
   FaSearch,
   FaStore,
+  FaTimes,
   FaTruck,
   FaUtensils,
   FaWarehouse,
@@ -818,6 +819,7 @@ function ReportSection({ title, subtitle, columns, rows }) {
 
 export default function InventoryDashboard() {
   const [activeSection, setActiveSection] = useState("items");
+  const [isSectionModalOpen, setIsSectionModalOpen] = useState(false);
   const [inventoryItems, setInventoryItems] = useState([]);
   const [itemsLoading, setItemsLoading] = useState(true);
   const [itemsError, setItemsError] = useState("");
@@ -872,6 +874,26 @@ export default function InventoryDashboard() {
 
     setSectionSearch("");
   }, [activeSection]);
+
+  useEffect(() => {
+    if (!isSectionModalOpen) {
+      return undefined;
+    }
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        setIsSectionModalOpen(false);
+      }
+    };
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isSectionModalOpen]);
 
   const categories = useMemo(
     () =>
@@ -1336,15 +1358,59 @@ export default function InventoryDashboard() {
                   onClick={() => {
                     setActiveSection(section.id);
                     setCategoryFilter("All");
+                    setIsSectionModalOpen(true);
                   }}
                 />
               ))}
             </div>
           </aside>
 
-          <main className="space-y-6">{renderSectionContent()}</main>
+          <main className="space-y-6">
+            <div className="rounded-[1.8rem] border border-white/10 bg-white/[0.05] p-8 text-center backdrop-blur-xl">
+              <h3 className="text-xl font-semibold text-white">
+                Menu item select karke popup me section open karein
+              </h3>
+              <p className="mt-2 text-sm text-slate-300">
+                Jo bhi inventory section choose karenge, uska form aur data table
+                modal popup me isi page par show hoga.
+              </p>
+            </div>
+          </main>
         </div>
       </div>
+
+      {isSectionModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 px-3 py-6 backdrop-blur-sm"
+          onClick={() => setIsSectionModalOpen(false)}
+        >
+          <div
+            className="relative max-h-[92vh] w-full max-w-[1300px] overflow-y-auto rounded-[1.8rem] border border-white/15 bg-[#071325] p-4 shadow-[0_30px_80px_rgba(2,8,23,0.6)] md:p-6"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs uppercase tracking-[0.25em] text-cyan-200/80">
+                  Inventory Popup
+                </p>
+                <h3 className="text-xl font-semibold text-white">
+                  {selectedSection?.label || "Inventory Section"}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsSectionModalOpen(false)}
+                className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-2 text-sm font-semibold text-slate-200 hover:border-cyan-400/50 hover:text-white"
+              >
+                <FaTimes />
+                Close
+              </button>
+            </div>
+
+            {renderSectionContent()}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
