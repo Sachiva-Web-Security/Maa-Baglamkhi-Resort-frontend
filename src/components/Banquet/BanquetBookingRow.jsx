@@ -1,74 +1,108 @@
-const BanquetBookingRow = ({ booking, onComplete, onGenerateBill, onView, onEdit }) => {
+import { FaEnvelope, FaFileInvoice, FaWhatsapp } from "react-icons/fa";
+
+const BanquetBookingRow = ({
+  booking,
+  onComplete,
+  onGenerateBill,
+  onView,
+  onSendEmail,
+  onSendWhatsApp,
+}) => {
   const getStatusBadge = (status) => {
-    const baseClasses = 'px-3 py-1 rounded-full text-xs font-bold';
+    const baseClasses =
+      "inline-flex rounded-full border px-3 py-1 text-xs font-bold";
+
     switch (status) {
-      case 'Confirmed':
-        return `${baseClasses} bg-blue-900 text-white border border-blue-700`;
-      case 'Completed':
-        return `${baseClasses} bg-yellow-900 text-white border border-yellow-700`;
-      case 'Billed':
-        return `${baseClasses} bg-green-900 text-white border border-green-700`;
+      case "Confirmed":
+        return `${baseClasses} border-sky-200 bg-sky-50 text-sky-700`;
+      case "Completed":
+        return `${baseClasses} border-amber-200 bg-amber-50 text-amber-700`;
+      case "Billed":
+        return `${baseClasses} border-emerald-200 bg-emerald-50 text-emerald-700`;
       default:
-        return `${baseClasses} bg-white/6 text-gray-200 border border-white/6`;
+        return `${baseClasses} border-slate-200 bg-slate-100 text-slate-600`;
     }
   };
 
   return (
-    <tr className="border-t border-white/5 hover:bg-white/2">
-      <td className="px-4 py-3 text-sm font-semibold text-gray-100">{booking.hallName}</td>
-      <td className="px-4 py-3 text-sm text-gray-300">{booking.customerName}</td>
-      <td className="px-4 py-3 text-sm text-gray-300">{booking.eventType}</td>
-      <td className="px-4 py-3 text-sm text-gray-300">{booking.date || '-'}</td>
-      <td className="px-4 py-3 text-sm text-gray-300">
+    <tr className="border-t border-slate-200/80 align-top transition hover:bg-slate-50/80">
+      <td className="px-4 py-4 text-sm font-bold text-slate-900">
+        {booking.hallName}
+      </td>
+      <td className="px-4 py-4 text-sm text-slate-700">
+        <div className="font-semibold text-slate-900">{booking.customerName}</div>
+        <div className="mt-1 text-xs text-slate-500">
+          {booking.guestEmail || booking.phone || "Contact pending"}
+        </div>
+      </td>
+      <td className="px-4 py-4 text-sm text-slate-700">
+        <div className="font-semibold text-slate-900">
+          {booking.eventTitle || booking.eventType}
+        </div>
+        <div className="mt-1 text-xs text-slate-500">
+          {booking.mealSection || "Meal plan"} /{" "}
+          {booking.lightingSystem || "Lighting"}
+        </div>
+      </td>
+      <td className="px-4 py-4 text-sm text-slate-700">{booking.date || "-"}</td>
+      <td className="px-4 py-4 text-sm text-slate-700">
         {booking.startTime} - {booking.endTime}
       </td>
-      <td className="px-4 py-3">
+      <td className="px-4 py-4">
         <span className={getStatusBadge(booking.status)}>{booking.status}</span>
       </td>
-
-      <td className="px-4 py-3">
-        <div className="flex gap-2 flex-wrap">
-
-          {booking.status === 'Confirmed' && (
+      <td className="px-4 py-4">
+        <div className="flex flex-wrap gap-2">
+          {booking.status === "Confirmed" && (
             <button
+              type="button"
               onClick={onComplete}
-              className="px-3 py-1 bg-yellow-700 text-white text-xs font-bold rounded-lg hover:bg-yellow-600 transition-colors"
+              className="rounded-full bg-amber-500 px-3 py-2 text-xs font-bold text-white transition hover:bg-amber-600"
             >
               Mark Completed
             </button>
           )}
 
-          {(booking.status === 'Completed' || booking.status === 'Confirmed') && (
+          {(booking.status === "Completed" || booking.status === "Confirmed") && (
             <button
+              type="button"
               onClick={onGenerateBill}
-              className="px-3 py-1 bg-green-700 text-white text-xs font-bold rounded-lg hover:bg-green-600 transition-colors"
+              className="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-3 py-2 text-xs font-bold text-white transition hover:bg-emerald-700"
             >
+              <FaFileInvoice />
               Generate Bill
             </button>
           )}
 
           {booking.invoiceNo && (
             <button
+              type="button"
               onClick={onView}
-              className="px-3 py-1 bg-blue-700 text-white text-xs font-bold rounded-lg hover:bg-blue-600 transition-colors"
+              className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:border-sky-200 hover:text-sky-700"
             >
               View Bill
             </button>
           )}
 
-          {/* NEW EDIT BUTTON */}
-          {booking.status === 'Confirmed' && (
-            <button
-              onClick={onEdit}
-              className="px-3 py-1 bg-purple-700 text-white text-xs font-bold rounded-lg hover:bg-purple-600 transition-colors"
-            >
-              Edit Date
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={onSendEmail}
+            className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:border-sky-200 hover:text-sky-700"
+          >
+            <FaEnvelope />
+            Email Quote
+          </button>
 
+          <button
+            type="button"
+            onClick={onSendWhatsApp}
+            className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:border-emerald-200 hover:text-emerald-700"
+          >
+            <FaWhatsapp />
+            WhatsApp Quote
+          </button>
         </div>
       </td>
-
     </tr>
   );
 };

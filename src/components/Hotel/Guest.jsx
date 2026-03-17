@@ -1,259 +1,239 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const Guest = () => {
+const fieldCls =
+  "w-full rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100";
 
+const labelCls =
+  "mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500";
+
+const Guest = () => {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    agentBooking:false,
-    bookingPoint:"Sumit Test (ID:53)",
-    mobile:"",
-    guestName:"",
-    guestEmail:"",
-    checkIn:"",
-    checkOut:"",
-    arrival:"12:00",
-    departure:"10:00",
-    bookingStatus:""
-  })
+    agentBooking: false,
+    bookingPoint: "Sumit Test (ID:53)",
+    mobile: "",
+    guestName: "",
+    guestEmail: "",
+    checkIn: "",
+    checkOut: "",
+    arrival: "12:00",
+    departure: "10:00",
+    bookingStatus: "",
+  });
 
-  const handleChange = (e)=>{
-    const {name,value,type,checked} = e.target
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
 
     setFormData({
       ...formData,
-      [name]: type==="checkbox" ? checked : value
-    })
-  }
+      [name]: type === "checkbox" ? checked : value,
+    });
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex justify-center items-center p-6">
-
-      <div className="w-full max-w-4xl bg-white rounded-xl shadow-2xl p-8 transition hover:shadow-3xl">
-
-        {/* Title */}
-        <h2 className="text-xl font-semibold text-gray-700 border-b pb-3 mb-6">
-          Guest Details »
+    <div className="rounded-[26px] border border-slate-200/80 bg-[linear-gradient(180deg,#fafdff_0%,#ffffff_100%)] p-5 shadow-[0_18px_45px_rgba(15,23,42,0.06)] sm:p-6">
+      <div className="mb-6">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
+          Guest Details
+        </p>
+        <h2 className="mt-1 text-2xl font-black text-slate-900">
+          Start hotel booking
         </h2>
+        <p className="mt-2 text-sm text-slate-500">
+          Guest information aur booking basics yahan se fill karein.
+        </p>
+      </div>
 
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_320px]">
+        <div className="space-y-6">
+          <div className="rounded-[24px] border border-slate-200/80 bg-white p-5">
+            <div className="mb-4 text-lg font-bold text-slate-900">
+              Guest Information
+            </div>
 
-        {/* ===== Guest Details ===== */}
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="md:col-span-2 flex items-center justify-between rounded-2xl border border-slate-200/80 bg-slate-50 px-4 py-3">
+                <div>
+                  <div className="text-sm font-bold text-slate-900">
+                    Agent Booking
+                  </div>
+                  <div className="text-sm text-slate-500">
+                    Toggle if booking is coming from external booking source.
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  name="agentBooking"
+                  checked={formData.agentBooking}
+                  onChange={handleChange}
+                  className="h-5 w-5 accent-sky-600"
+                />
+              </div>
 
-        <div className="grid grid-cols-2 gap-6">
+              <div>
+                <label className={labelCls}>Booking Point</label>
+                <select
+                  name="bookingPoint"
+                  value={formData.bookingPoint}
+                  onChange={handleChange}
+                  className={fieldCls}
+                >
+                  <option>Select</option>
+                  <option>Booking.com (ID:16)</option>
+                  <option>Go Ibibo (ID:15)</option>
+                  <option>Make My Trip (ID:14)</option>
+                  <option>Cleartrip (ID:17)</option>
+                  <option>Sumit Test (ID:53)</option>
+                </select>
+              </div>
 
-          {/* Agent Booking */}
+              <div>
+                <label className={labelCls}>Mobile Number</label>
+                <input
+                  type="text"
+                  name="mobile"
+                  value={formData.mobile}
+                  onChange={handleChange}
+                  placeholder="Enter mobile number"
+                  className={fieldCls}
+                />
+              </div>
 
-          <div className="flex items-center gap-3">
-            <label className="text-gray-600 font-medium">
-              Agent Booking
-            </label>
+              <div>
+                <label className={labelCls}>Guest Name</label>
+                <input
+                  type="text"
+                  name="guestName"
+                  value={formData.guestName}
+                  onChange={handleChange}
+                  placeholder="Type or select"
+                  className={fieldCls}
+                />
+              </div>
 
-            <input
-              type="checkbox"
-              name="agentBooking"
-              checked={formData.agentBooking}
-              onChange={handleChange}
-              className="w-4 h-4 accent-blue-500"
-            />
+              <div>
+                <label className={labelCls}>Guest Email</label>
+                <input
+                  type="email"
+                  name="guestEmail"
+                  value={formData.guestEmail}
+                  onChange={handleChange}
+                  placeholder="Enter email"
+                  className={fieldCls}
+                />
+              </div>
+            </div>
           </div>
 
+          <div className="rounded-[24px] border border-slate-200/80 bg-white p-5">
+            <div className="mb-4 text-lg font-bold text-slate-900">
+              Booking Details
+            </div>
 
-          {/* Booking Point */}
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <label className={labelCls}>Check-In</label>
+                <input
+                  type="date"
+                  name="checkIn"
+                  value={formData.checkIn}
+                  onChange={handleChange}
+                  className={fieldCls}
+                />
+              </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">
-              Booking Point *
-            </label>
+              <div>
+                <label className={labelCls}>Check-Out</label>
+                <input
+                  type="date"
+                  name="checkOut"
+                  value={formData.checkOut}
+                  onChange={handleChange}
+                  className={fieldCls}
+                />
+              </div>
 
-            <select
-              name="bookingPoint"
-              value={formData.bookingPoint}
-              onChange={handleChange}
-              className="w-full border rounded-md p-2 focus:ring-2 focus:ring-blue-400 transition"
-            >
-              <option>Select</option>
-              <option>Booking.com (ID:16)</option>
-              <option>Go Ibibo (ID:15)</option>
-              <option>Make My Trip (ID:14)</option>
-              <option>Cleartrip (ID:17)</option>
-              <option>Sumit Test (ID:53)</option>
-            </select>
+              <div>
+                <label className={labelCls}>Expected Arrival</label>
+                <input
+                  type="time"
+                  name="arrival"
+                  value={formData.arrival}
+                  onChange={handleChange}
+                  className={fieldCls}
+                />
+              </div>
+
+              <div>
+                <label className={labelCls}>Expected Departure</label>
+                <input
+                  type="time"
+                  name="departure"
+                  value={formData.departure}
+                  onChange={handleChange}
+                  className={fieldCls}
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className={labelCls}>Booking Status</label>
+                <select
+                  name="bookingStatus"
+                  value={formData.bookingStatus}
+                  onChange={handleChange}
+                  className={fieldCls}
+                >
+                  <option>Select</option>
+                  <option>Confirmed</option>
+                  <option>Pending</option>
+                  <option>Cancelled</option>
+                </select>
+              </div>
+            </div>
           </div>
-
-
-          {/* Mobile */}
-
-          <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">
-              Mobile No.
-            </label>
-
-            <input
-              type="text"
-              name="mobile"
-              value={formData.mobile}
-              onChange={handleChange}
-              placeholder="Enter mobile number"
-              className="w-full border rounded-md p-2 focus:ring-2 focus:ring-blue-400 transition"
-            />
-          </div>
-
-
-          {/* Guest Name */}
-
-          <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">
-              Guest Name
-            </label>
-
-            <input
-              type="text"
-              name="guestName"
-              value={formData.guestName}
-              onChange={handleChange}
-              placeholder="Type or Select"
-              className="w-full border rounded-md p-2 focus:ring-2 focus:ring-blue-400 transition"
-            />
-          </div>
-
-
-          {/* Email */}
-
-          <div className="col-span-2">
-            <label className="block text-sm font-medium text-gray-600 mb-1">
-              Guest Email
-            </label>
-
-            <input
-              type="email"
-              name="guestEmail"
-              value={formData.guestEmail}
-              onChange={handleChange}
-              placeholder="Enter email"
-              className="w-full border rounded-md p-2 focus:ring-2 focus:ring-blue-400 transition"
-            />
-          </div>
-
         </div>
 
-
-
-        {/* ===== Booking Details ===== */}
-
-        <h2 className="text-lg font-semibold text-gray-700 border-b pb-2 mt-8 mb-5">
-          Booking Details »
-        </h2>
-
-        <div className="grid grid-cols-2 gap-6">
-
-          {/* Check In */}
-
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">
-              Check-In *
-            </label>
-
-            <input
-              type="date"
-              name="checkIn"
-              value={formData.checkIn}
-              onChange={handleChange}
-              className="w-full border rounded-md p-2 focus:ring-2 focus:ring-blue-400 transition"
-            />
+        <div className="space-y-4">
+          <div className="rounded-[24px] border border-slate-200/80 bg-white p-5">
+            <div className="text-sm font-bold text-slate-900">Booking preview</div>
+            <div className="mt-4 space-y-3 text-sm text-slate-600">
+              <div className="flex items-center justify-between gap-3">
+                <span>Guest</span>
+                <span className="font-semibold text-slate-900">
+                  {formData.guestName || "Not set"}
+                </span>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span>Booking Point</span>
+                <span className="font-semibold text-slate-900">
+                  {formData.bookingPoint || "--"}
+                </span>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span>Status</span>
+                <span className="font-semibold text-slate-900">
+                  {formData.bookingStatus || "Pending"}
+                </span>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span>Stay Window</span>
+                <span className="font-semibold text-slate-900">
+                  {formData.checkIn || "--"} to {formData.checkOut || "--"}
+                </span>
+              </div>
+            </div>
           </div>
-
-
-          {/* Check Out */}
-
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">
-              Check-Out *
-            </label>
-
-            <input
-              type="date"
-              name="checkOut"
-              value={formData.checkOut}
-              onChange={handleChange}
-              className="w-full border rounded-md p-2 focus:ring-2 focus:ring-blue-400 transition"
-            />
-          </div>
-
-
-          {/* Arrival */}
-
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">
-              Expected Arrival *
-            </label>
-
-            <input
-              type="time"
-              name="arrival"
-              value={formData.arrival}
-              onChange={handleChange}
-              className="w-full border rounded-md p-2 focus:ring-2 focus:ring-blue-400 transition"
-            />
-          </div>
-
-
-          {/* Departure */}
-
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">
-              Expected Departure *
-            </label>
-
-            <input
-              type="time"
-              name="departure"
-              value={formData.departure}
-              onChange={handleChange}
-              className="w-full border rounded-md p-2 focus:ring-2 focus:ring-blue-400 transition"
-            />
-          </div>
-
-
-          {/* Booking Status */}
-
-          <div className="col-span-2">
-            <label className="block text-sm text-gray-600 mb-1">
-              Booking Status *
-            </label>
-
-            <select
-              name="bookingStatus"
-              value={formData.bookingStatus}
-              onChange={handleChange}
-              className="w-full border rounded-md p-2 focus:ring-2 focus:ring-blue-400 transition"
-            >
-              <option>Select</option>
-              <option>Confirmed</option>
-              <option>Pending</option>
-              <option>Cancelled</option>
-            </select>
-          </div>
-
-        </div>
-
-
-
-        {/* Button */}
-
-        <div className="flex justify-center mt-10">
 
           <button
             onClick={() => navigate("/hotel/other-booking")}
-            className="bg-blue-500 hover:bg-blue-600 transition text-white px-10 py-3 rounded-lg shadow-lg hover:scale-105"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-[22px] bg-gradient-to-r from-sky-600 to-cyan-500 px-5 py-4 text-sm font-bold text-white shadow-[0_16px_35px_rgba(14,165,233,0.24)] transition hover:-translate-y-0.5"
           >
-            Next →
+            Next Step
           </button>
-
         </div>
-
       </div>
-
     </div>
   );
 };

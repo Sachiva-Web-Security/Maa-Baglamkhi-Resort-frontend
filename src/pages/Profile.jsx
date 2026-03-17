@@ -1,4 +1,12 @@
 import React, { useEffect, useState } from "react";
+import {
+  FaCamera,
+  FaEnvelope,
+  FaLock,
+  FaShieldAlt,
+  FaUpload,
+  FaUserCircle,
+} from "react-icons/fa";
 import API, { getBackendBaseURL } from "../api";
 
 const Profile = () => {
@@ -216,189 +224,277 @@ const Profile = () => {
       : "Role";
 
   return (
-    <div className="resort-page ">
-      <div className="resort-shell">
-        <section className="resort-hero">
-         <div className="resort-hero-content flex flex-col items-center justify-center text-center">
-            <div className="space-y-3">
-              <p className="resort-eyebrow">Personal Workspace</p>
-              <h1 className="resort-title text-l">Profile and security settings</h1>
-              <p className="resort-subtitle">
-                Update your profile picture and password from a cleaner responsive
-                screen designed for both mobile and desktop.
+    <div className="relative min-h-screen overflow-x-hidden bg-[linear-gradient(135deg,#f5fbff_0%,#f3f8f4_28%,#fff8f1_58%,#f8fafc_100%)] p-4 sm:p-6 lg:p-8">
+      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+        <div className="absolute left-[-8%] top-[-6%] h-72 w-72 rounded-full bg-cyan-200/45 blur-3xl sm:h-96 sm:w-96" />
+        <div className="absolute right-[-10%] top-[8%] h-72 w-72 rounded-full bg-amber-200/45 blur-3xl sm:h-[28rem] sm:w-[28rem]" />
+        <div className="absolute bottom-[18%] left-[18%] h-56 w-56 rounded-full bg-emerald-200/30 blur-3xl sm:h-80 sm:w-80" />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.55)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.45)_1px,transparent_1px)] bg-[size:72px_72px] opacity-25" />
+      </div>
+
+      <div className="mx-auto max-w-[1260px] space-y-7">
+        <section className="overflow-hidden rounded-[28px] border border-slate-900/10 bg-[linear-gradient(120deg,#071b34_0%,#0d4a53_52%,#162d45_100%)] px-5 py-6 shadow-[0_22px_55px_rgba(15,23,42,0.12)] sm:px-7 sm:py-8">
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.9fr)] lg:items-center">
+            <div className="space-y-4">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-cyan-200">
+                Personal Workspace
               </p>
+              <div className="space-y-2">
+                <h1 className="text-3xl font-black leading-tight text-white sm:text-4xl">
+                  Profile and security settings
+                </h1>
+                <p className="max-w-3xl text-sm leading-6 text-slate-100/85 sm:text-base">
+                  Dashboard style personal profile jahan se aap profile picture,
+                  email overview aur password update ko ek cleaner screen par manage kar sakein.
+                </p>
+              </div>
             </div>
-            <div className="resort-stat-grid">
-              <div className="resort-stat">
-                <span className="resort-stat-label">Current Role</span>
-                <span className="resort-stat-value text-[1.1rem] ">{prettyRole}</span>
-              </div>
-              <div className="resort-stat">
-                <span className="resort-stat-label">Email</span>
-                <span className="resort-stat-value text-[0.9rem] break-all">{email || "Not set"}</span>
-              </div>
+
+            <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+              {[
+                { label: "Current Role", value: prettyRole },
+                { label: "Email", value: email || "Not set" },
+                { label: "Profile Status", value: loadingProfile ? "Loading..." : "Ready" },
+              ].map((item) => (
+                <div
+                  key={item.label}
+                  className="rounded-[22px] border border-white/12 bg-white/10 px-4 py-4 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md"
+                >
+                  <span className="text-[11px] text-slate-100/75">{item.label}</span>
+                  <div className="mt-3 break-words text-lg font-bold leading-tight">
+                    {item.value}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </section>
 
-        <div className="w-full max-w-6xl rounded-[2rem] border border-white/15 bg-white/[0.08] p-4 shadow-[0_24px_60px_rgba(2,8,23,0.22)] backdrop-blur-2xl md:p-8">
-          <div className="grid gap-8 md:grid-cols-2">
-        {/* Left: avatar + basic info */}
-        <div className="flex flex-col items-center rounded-[1.75rem] border border-white/10 bg-slate-950/35 p-6 text-center space-y-6">
-          <div className="relative">
-            <div className="w-32 h-32 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-4xl text-white shadow-lg overflow-hidden">
-              {avatarUrl ? (
-                <img
-                  src={avatarUrl}
-                  alt="Profile"
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                (name || "U").charAt(0).toUpperCase()
-              )}
+        <section className="grid gap-4 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,1.2fr)]">
+          <div className="space-y-4">
+            <div className="rounded-[26px] border border-white/60 bg-white/82 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+              <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+                <div className="relative mx-auto sm:mx-0">
+                  <div className="flex h-32 w-32 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-sky-500 to-cyan-500 text-4xl font-black text-white shadow-[0_16px_35px_rgba(14,165,233,0.25)]">
+                    {avatarUrl ? (
+                      <img
+                        src={avatarUrl}
+                        alt="Profile"
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      (name || "U").charAt(0).toUpperCase()
+                    )}
+                  </div>
+                </div>
+
+                <div className="min-w-0 flex-1 text-center sm:text-left">
+                  <div className="text-2xl font-black text-slate-900">
+                    {name || "User"}
+                  </div>
+                  <div className="mt-2 inline-flex items-center gap-2 rounded-full bg-cyan-50 px-3 py-1.5 text-xs font-bold text-cyan-700">
+                    <FaUserCircle />
+                    {prettyRole}
+                  </div>
+                  <div className="mt-3 flex flex-col gap-2 text-sm text-slate-500">
+                    <span className="inline-flex items-center gap-2 justify-center sm:justify-start">
+                      <FaEnvelope className="text-slate-400" />
+                      {email || "Email not set"}
+                    </span>
+                    <span className="inline-flex items-center gap-2 justify-center sm:justify-start">
+                      <FaShieldAlt className="text-slate-400" />
+                      Secure profile controls available
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
 
-          <div>
-            <h2 className="text-2xl font-bold text-white">{name || "User"}</h2>
-            <p className="text-sm text-cyan-100">{prettyRole}</p>
-            {email && (
-              <p className="text-xs text-slate-300 mt-1">{email}</p>
-            )}
-          </div>
+            <div className="rounded-[26px] border border-white/60 bg-white/82 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+              <div className="mb-4">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
+                  Profile Picture
+                </p>
+                <h2 className="mt-1 text-xl font-bold text-slate-900">
+                  Update avatar
+                </h2>
+              </div>
 
-          <form onSubmit={handleAvatarUpload} className="w-full space-y-3 mt-2">
-            {/* File from system */}
-            <input
-              type="file"
-              accept="image/png,image/jpeg,image/webp"
-              onChange={handleAvatarChange}
-              className="w-full text-sm text-indigo-100 file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-500 file:text-white hover:file:bg-indigo-600"
-            />
+              <form onSubmit={handleAvatarUpload} className="space-y-4">
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={handleAvatarChange}
+                  className="w-full rounded-[20px] border border-slate-200/80 bg-white px-4 py-3 text-sm text-slate-600 file:mr-3 file:rounded-full file:border-0 file:bg-sky-600 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-sky-700"
+                />
 
-            {/* Camera controls */}
-            <div className="space-y-2">
-              <button
-                type="button"
-                onClick={handleStartCamera}
-              className="w-full py-2 rounded-full bg-slate-800 text-white text-xs font-semibold hover:bg-slate-700 transition"
-              >
-                Open Camera
-              </button>
-
-              {cameraError && (
-                <p className="text-[11px] text-red-300">{cameraError}</p>
-              )}
-
-              {cameraStream && (
-                <div className="space-y-2">
-                  <video
-                    id="profile-camera-video"
-                    className="w-full rounded-2xl border border-white/20 bg-black/40"
-                    autoPlay
-                    muted
-                  />
+                <div className="space-y-3">
                   <button
                     type="button"
-                    onClick={handleCaptureFromCamera}
-                    className="w-full py-2 rounded-full bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition"
+                    onClick={handleStartCamera}
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-[20px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-700 transition hover:border-cyan-200 hover:text-cyan-700"
                   >
-                    Capture Photo
+                    <FaCamera />
+                    Open Camera
                   </button>
+
+                  {cameraError ? (
+                    <div className="rounded-[18px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+                      {cameraError}
+                    </div>
+                  ) : null}
+
+                  {cameraStream && (
+                    <div className="space-y-3">
+                      <video
+                        id="profile-camera-video"
+                        className="w-full rounded-[22px] border border-slate-200 bg-slate-950/90"
+                        autoPlay
+                        muted
+                      />
+                      <button
+                        type="button"
+                        onClick={handleCaptureFromCamera}
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-[20px] bg-gradient-to-r from-sky-600 to-cyan-500 px-4 py-3 text-sm font-bold text-white shadow-[0_14px_30px_rgba(14,165,233,0.22)] transition hover:-translate-y-0.5"
+                      >
+                        <FaCamera />
+                        Capture Photo
+                      </button>
+                    </div>
+                  )}
                 </div>
-              )}
+
+                <button
+                  type="submit"
+                  disabled={loadingAvatar || !avatarFile}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-[22px] bg-gradient-to-r from-sky-600 to-cyan-500 px-5 py-4 text-sm font-bold text-white shadow-[0_16px_35px_rgba(14,165,233,0.24)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <FaUpload />
+                  {loadingAvatar ? "Uploading..." : "Update Profile Picture"}
+                </button>
+              </form>
             </div>
-
-            <button
-              type="submit"
-              disabled={loadingAvatar || !avatarFile}
-              className="w-full py-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold text-sm hover:from-cyan-600 hover:to-blue-700 disabled:opacity-60 disabled:hover:from-cyan-500 transition"
-            >
-              {loadingAvatar ? "Uploading..." : "Update Profile Picture"}
-            </button>
-          </form>
-        </div>
-
-        {/* Right: password change */}
-        <div className="rounded-[1.75rem] border border-white/10 bg-slate-950/40 p-6 flex flex-col justify-center space-y-4">
-          <h3 className="text-xl font-semibold text-white mb-2">
-            Change Password
-          </h3>
-          <p className="text-xs text-slate-300 mb-2">
-            Yahan aap apna password change kar sakte hain. Email ya current
-            password screen par kahi show nahi ho raha, sirf aap aur admin ke
-            database me update hoga.
-          </p>
-
-          {error && (
-            <div className="text-sm text-red-400 bg-red-900/30 border border-red-500/40 rounded-lg px-3 py-2">
-              {error}
-            </div>
-          )}
-
-          {message && (
-            <div className="text-sm text-emerald-300 bg-emerald-900/30 border border-emerald-500/40 rounded-lg px-3 py-2">
-              {message}
-            </div>
-          )}
-
-          <form onSubmit={handlePasswordChange} className="space-y-4 mt-2">
-            <div>
-              <label className="block text-xs text-slate-200 mb-1">
-                Current Password
-              </label>
-              <input
-                type="password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-slate-800/80 text-sm text-white border border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="Enter current password"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs text-slate-200 mb-1">
-                New Password
-              </label>
-              <input
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-slate-800/80 text-sm text-white border border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="Enter new password"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs text-slate-200 mb-1">
-                Confirm New Password
-              </label>
-              <input
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-slate-800/80 text-sm text-white border border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="Re-enter new password"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loadingPassword}
-              className="w-full py-2.5 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold text-sm hover:from-cyan-600 hover:to-blue-700 disabled:opacity-60 transition"
-            >
-              {loadingPassword ? "Updating..." : "Update Password"}
-            </button>
-          </form>
-
-          {loadingProfile && (
-            <p className="text-xs text-slate-400 mt-2">
-              Profile details load ho rahe hain...
-            </p>
-          )}
-        </div>
           </div>
-        </div>
+
+          <div className="space-y-4">
+            <div className="rounded-[26px] border border-white/60 bg-white/82 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+              <div className="mb-4 flex items-start gap-3">
+                <span className="rounded-2xl bg-amber-50 p-3 text-amber-600">
+                  <FaLock />
+                </span>
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
+                    Security Center
+                  </p>
+                  <h2 className="mt-1 text-xl font-bold text-slate-900">
+                    Change password
+                  </h2>
+                </div>
+              </div>
+
+              <p className="mb-4 text-sm leading-6 text-slate-500">
+                Yahan se aap apna password safely update kar sakte hain. Current
+                credentials screen par expose nahi honge aur update directly account security ke liye use hoga.
+              </p>
+
+              {error ? (
+                <div className="mb-4 rounded-[18px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+                  {error}
+                </div>
+              ) : null}
+
+              {message ? (
+                <div className="mb-4 rounded-[18px] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+                  {message}
+                </div>
+              ) : null}
+
+              <form onSubmit={handlePasswordChange} className="space-y-4">
+                <div>
+                  <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    Current Password
+                  </label>
+                  <input
+                    type="password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    className="w-full rounded-[20px] border border-slate-200/80 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100"
+                    placeholder="Enter current password"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    New Password
+                  </label>
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="w-full rounded-[20px] border border-slate-200/80 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100"
+                    placeholder="Enter new password"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    Confirm Password
+                  </label>
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full rounded-[20px] border border-slate-200/80 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100"
+                    placeholder="Re-enter new password"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loadingPassword}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-[22px] bg-gradient-to-r from-sky-600 to-cyan-500 px-5 py-4 text-sm font-bold text-white shadow-[0_16px_35px_rgba(14,165,233,0.24)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <FaLock />
+                  {loadingPassword ? "Updating..." : "Update Password"}
+                </button>
+              </form>
+            </div>
+
+            <div className="rounded-[26px] border border-white/60 bg-white/82 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
+                Profile Status
+              </p>
+              <h2 className="mt-1 text-xl font-bold text-slate-900">
+                Account overview
+              </h2>
+
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <div className="rounded-[20px] border border-slate-200/80 bg-slate-50 p-4">
+                  <div className="text-xs font-semibold uppercase tracking-[0.15em] text-slate-500">
+                    Role
+                  </div>
+                  <div className="mt-2 text-lg font-black text-slate-900">
+                    {prettyRole}
+                  </div>
+                </div>
+                <div className="rounded-[20px] border border-slate-200/80 bg-slate-50 p-4">
+                  <div className="text-xs font-semibold uppercase tracking-[0.15em] text-slate-500">
+                    Email
+                  </div>
+                  <div className="mt-2 break-all text-sm font-bold text-slate-900">
+                    {email || "Not set"}
+                  </div>
+                </div>
+              </div>
+
+              {loadingProfile ? (
+                <p className="mt-4 text-sm font-semibold text-slate-500">
+                  Profile details load ho rahe hain...
+                </p>
+              ) : null}
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   );
