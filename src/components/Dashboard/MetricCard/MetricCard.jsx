@@ -14,7 +14,7 @@ const MetricCard = ({ title, value, subtitle, icon: Icon, gradient, onClick }) =
           <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-white/85 sm:text-[11px]">
             {title}
           </p>
-          <h2 className="mt- text-[1.9rem] font-bold leading-none sm:text-[2.2rem]">
+          <h2 className="mt-= text-[1.9rem] font-bold leading-none sm:text-[2.2rem]">
             {value}
           </h2>
           <p className="mt-4 max-w-[19ch] text-sm leading-6 text-white/88 sm:text-[15px]">

@@ -1,186 +1,99 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { housekeepingService } from '../services/housekeepingService';
 import { userService } from '../services/userService';
 import { hotelService } from '../services/hotelService';
-import { FaSearch, FaFilePdf, FaChevronUp, FaTimes, FaExclamationCircle, FaBroom, FaCheck, FaBed } from 'react-icons/fa';
-import HousekeepingRow from '../components/Housekeeping/HousekeepingRow';
+import {
+  FaSearch,
+  FaTimes,
+  FaCog,
+  FaClipboardList,
+  FaChartLine,
+  FaBoxOpen,
+  FaClipboardCheck,
+  FaBroom,
+  FaCheck,
+  FaBed,
+  FaSyncAlt,
+} from 'react-icons/fa';
 
-const initialData = [
+const HOUSEKEEPING_OPTIONS = [
   {
-    id: 1,
-    selected: false,
-    type: 'Accommodation',
-    roomNo: '100',
-    building: '',
-    floor: '',
-    section: '',
-    guestStatus: '',
-    roomType: 'Executive King Room',
-    status: 'Vacant Dirty',
-    assignee: 'No Housekeeper',
-    layout: '',
-    articles: '',
-    services: '',
-    notes: false,
+    id: 'parameters',
+    label: 'Parameters',
+    icon: FaCog,
+    description: 'Operational settings and housekeeping controls',
   },
   {
-    id: 2,
-    selected: false,
-    type: 'Accommodation',
-    roomNo: '3',
-    building: '',
-    floor: '',
-    section: '',
-    guestStatus: '',
-    roomType: 'King Room with seaview',
-    status: 'Vacant Clean Inspected',
-    assignee: 'No Housekeeper',
-    layout: '',
-    articles: '',
-    services: '',
-    notes: false,
+    id: 'cleaning-log',
+    label: 'Cleaning Log',
+    icon: FaClipboardList,
+    description: 'Room-wise cleaning activity and status',
   },
   {
-    id: 3,
-    selected: false,
-    type: 'Accommodation',
-    roomNo: '4',
-    building: '',
-    floor: '',
-    section: '',
-    guestStatus: 'Arrives today',
-    roomType: 'Suite',
-    status: 'Occupied Dirty',
-    assignee: 'No Housekeeper',
-    layout: '',
-    articles: '',
-    services: '',
-    notes: true,
+    id: 'room-costing',
+    label: 'Room Costing',
+    icon: FaChartLine,
+    description: 'Estimated cleaning cost per room',
   },
   {
-    id: 4,
-    selected: false,
-    type: 'Accommodation',
-    roomNo: '5',
-    building: '',
-    floor: '',
-    section: '',
-    guestStatus: '',
-    roomType: 'Executive King Room',
-    status: 'Vacant Dirty',
-    assignee: 'No Housekeeper',
-    layout: '',
-    articles: '',
-    services: '',
-    notes: false,
+    id: 'room-report',
+    label: 'Room Report',
+    icon: FaClipboardList,
+    description: 'Status-wise room distribution report',
   },
   {
-    id: 5,
-    selected: false,
-    type: 'Accommodation',
-    roomNo: '6',
-    building: '',
-    floor: '',
-    section: '',
-    guestStatus: 'Arrives today',
-    roomType: 'Standard Room',
-    status: 'Occupied Clean',
-    assignee: 'No Housekeeper',
-    layout: '',
-    articles: '',
-    services: '',
-    notes: true,
+    id: 'amenities-consumption-report',
+    label: 'Amenities Consumption Report',
+    icon: FaBoxOpen,
+    description: 'Consumables usage and refill summary',
   },
   {
-    id: 6,
-    selected: false,
-    type: 'Accommodation',
-    roomNo: '7',
-    building: '',
-    floor: '',
-    section: '',
-    guestStatus: '',
-    roomType: 'Standard Room',
-    status: 'Vacant Dirty',
-    assignee: 'No Housekeeper',
-    layout: '',
-    articles: '',
-    services: '',
-    notes: false,
+    id: 'housekeeping-audit',
+    label: 'Housekeeping Audit',
+    icon: FaClipboardCheck,
+    description: 'Audit checklist for room readiness',
   },
-];
-
-const allColumns = [
-  { key: 'type', label: 'Type', required: true },
-  { key: 'roomNo', label: 'Room No. / Name', required: true },
-  { key: 'building', label: 'Building', required: false },
-  { key: 'floor', label: 'Floor', required: false },
-  { key: 'section', label: 'Section', required: false },
-  { key: 'guestStatus', label: 'Guest Status', required: false },
-  { key: 'roomType', label: 'Room Type', required: false },
-  { key: 'status', label: 'Status', required: false },
-  { key: 'assignee', label: 'Assignee', required: false },
-  { key: 'layout', label: 'Layout', required: false },
-  { key: 'articles', label: 'Articles', required: false },
-  { key: 'services', label: 'Services', required: false },
-  { key: 'notes', label: 'Notes', required: false },
 ];
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
+function statusPillClass(status) {
+  const normalized = String(status || '').toLowerCase();
+  if (normalized.includes('dirty')) return 'bg-amber-500/20 text-amber-300 border-amber-400/40';
+  if (normalized.includes('clean')) return 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40';
+  if (normalized.includes('out of service')) return 'bg-rose-500/20 text-rose-300 border-rose-400/40';
+  return 'bg-cyan-500/20 text-cyan-300 border-cyan-400/40';
+}
+
 function Housekeeping() {
   const [data, setData] = useState([]);
   const [housekeepers, setHousekeepers] = useState([]);
+
+  const [activeOption, setActiveOption] = useState('parameters');
+  const [isOptionPopupOpen, setIsOptionPopupOpen] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newRoomNo, setNewRoomNo] = useState('');
-  const [selectAll, setSelectAll] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [housekeeperFilter, setHousekeeperFilter] = useState('All Housekeeper');
-  const [roomTypeTab, setRoomTypeTab] = useState('Accommodation Rooms');
-  const [showColumns, setShowColumns] = useState(true);
-  const [visibleColumns, setVisibleColumns] = useState(
-    allColumns.map(col => col.key)
-  );
 
-  useEffect(() => {
-    fetchRooms();
-    fetchHousekeepers();
-  }, []);
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [notifyDirty, setNotifyDirty] = useState(true);
+  const [defaultShift, setDefaultShift] = useState('Morning');
 
-  useEffect(() => {
-    const timer = setInterval(fetchRooms, 15000);
-    return () => clearInterval(timer);
-  }, []);
+  const [logSearch, setLogSearch] = useState('');
+  const [logStatus, setLogStatus] = useState('All');
+  const [logAssignee, setLogAssignee] = useState('All');
 
-  const handleAddRoom = async () => {
-    if (!newRoomNo.trim()) return;
-    try {
-      await hotelService.addRoom(newRoomNo.trim());
-      setShowAddModal(false);
-      setNewRoomNo('');
-      fetchRooms();
-    } catch (error) {
-      console.error("Error creating room", error);
-      if (error?.response?.data?.message) {
-        alert(error.response.data.message);
-      }
-    }
-  };
+  const [auditChecks, setAuditChecks] = useState({});
 
   const fetchHousekeepers = async () => {
     try {
       const users = await userService.getAllUsers();
-      // Filter for users with role 'housekeeping' if the role exists, else grab all names to be safe.
-      // Assumes the role column might be 'housekeeping' or similar. 
-      // If roles aren't strictly used, just map the names.
-      const hkUsers = users.filter(u => u.role && u.role.toLowerCase().includes('housekeeping'));
-
-      // Fallback: If no users have the 'housekeeping' role, we just provide all users as an option
+      const hkUsers = users.filter(
+        (u) => u.role && String(u.role).toLowerCase().includes('housekeeping'),
+      );
       const finalHousekeepers = hkUsers.length > 0 ? hkUsers : users;
-
-      setHousekeepers(finalHousekeepers.map(u => u.name));
+      setHousekeepers(finalHousekeepers.map((u) => u.name));
     } catch (error) {
-      console.error("Error fetching housekeepers", error);
+      console.error('Error fetching housekeepers', error);
     }
   };
 
@@ -189,383 +102,615 @@ function Housekeeping() {
       const rooms = await housekeepingService.getAllRooms();
       const today = todayISO();
 
-      const mappedRooms = rooms.map(room => {
+      const mappedRooms = rooms.map((room) => {
         let guestStatus = '-';
         if (String(room.hotelStatus || '').toLowerCase() === 'occupied') {
           if (room.checkOut === today) guestStatus = 'Departs today';
           else if (room.checkIn === today) guestStatus = 'Arrives today';
           else guestStatus = 'Occupied';
         }
+
         return {
           id: room.id || room.roomNo,
-          selected: false,
-          type: 'Accommodation',
           roomNo: room.roomNo || 'N/A',
-          building: '-',
-          floor: '-',
-          section: '-',
-          guestStatus: guestStatus || '-',
-          roomType: String(room.hotelStatus || '').toLowerCase() === 'occupied' ? 'Occupied Room' : 'Available Room',
           status: room.status || 'Vacant Dirty',
           assignee: room.assignee || 'No Housekeeper',
-          layout: '',
-          articles: '',
-          services: '',
-          notes: false,
+          roomType:
+            String(room.hotelStatus || '').toLowerCase() === 'occupied'
+              ? 'Occupied Room'
+              : 'Available Room',
+          guestStatus,
         };
       });
+
       setData(mappedRooms);
     } catch (error) {
-      console.error("Error fetching rooms", error);
+      console.error('Error fetching rooms', error);
     }
   };
 
-  const selectedCount = data.filter(item => item.selected).length;
+  useEffect(() => {
+    fetchRooms();
+    fetchHousekeepers();
+  }, []);
 
-  const handleSelectChange = (id, checked) => {
-    setData(prev =>
-      prev.map(item => (item.id === id ? { ...item, selected: checked } : item))
+  useEffect(() => {
+    if (!autoRefresh) return undefined;
+
+    const timer = setInterval(fetchRooms, 15000);
+    return () => clearInterval(timer);
+  }, [autoRefresh]);
+
+  useEffect(() => {
+    if (!isOptionPopupOpen) return undefined;
+
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setIsOptionPopupOpen(false);
+      }
+    };
+
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', onKeyDown);
+
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [isOptionPopupOpen]);
+
+  const handleAddRoom = async () => {
+    if (!newRoomNo.trim()) return;
+
+    try {
+      await hotelService.addRoom(newRoomNo.trim());
+      setShowAddModal(false);
+      setNewRoomNo('');
+      fetchRooms();
+    } catch (error) {
+      console.error('Error creating room', error);
+      if (error?.response?.data?.message) {
+        alert(error.response.data.message);
+      }
+    }
+  };
+
+  const statusCounts = useMemo(() => {
+    return data.reduce(
+      (acc, room) => {
+        const status = String(room.status || '').toLowerCase();
+        if (status.includes('dirty')) acc.dirty += 1;
+        if (status.includes('clean')) acc.clean += 1;
+        if (status.includes('occupied')) acc.occupied += 1;
+        if (status.includes('out of service')) acc.outOfService += 1;
+        return acc;
+      },
+      { dirty: 0, clean: 0, occupied: 0, outOfService: 0 },
     );
-  };
+  }, [data]);
 
-  const handleSelectAll = checked => {
-    setSelectAll(checked);
-    setData(prev => prev.map(item => ({ ...item, selected: checked })));
-  };
+  const filteredCleaningRows = useMemo(() => {
+    return data.filter((room) => {
+      const search = logSearch.trim().toLowerCase();
+      const matchesSearch =
+        !search ||
+        String(room.roomNo).toLowerCase().includes(search) ||
+        String(room.roomType).toLowerCase().includes(search);
 
-  const handleStatusChange = async (id, status) => {
-    try {
-      await housekeepingService.updateRoomStatus(id, status);
-      setData(prev =>
-        prev.map(item => (item.id === id ? { ...item, status } : item))
-      );
-    } catch (error) {
-      console.error("Error updating status", error);
-    }
-  };
+      const matchesStatus =
+        logStatus === 'All' || String(room.status).toLowerCase().includes(logStatus.toLowerCase());
 
-  const handleAssigneeChange = async (id, assignee) => {
-    try {
-      await housekeepingService.updateRoomAssignee(id, assignee);
-      setData(prev =>
-        prev.map(item => (item.id === id ? { ...item, assignee } : item))
-      );
-    } catch (error) {
-      console.error("Error updating assignee", error);
-    }
-  };
+      const matchesAssignee = logAssignee === 'All' || room.assignee === logAssignee;
 
-  const housekeeperStatuses = useMemo(() => {
-    const statuses = {};
-    housekeepers.forEach(hk => {
-      const hasUncompleted = data.some(room =>
-        room.assignee === hk &&
-        !room.status.toLowerCase().includes('clean') &&
-        room.status !== 'Out of Service'
-      );
-      statuses[hk] = hasUncompleted ? 'BUSY' : 'AVAILABLE';
+      return matchesSearch && matchesStatus && matchesAssignee;
     });
-    return statuses;
-  }, [data, housekeepers]);
+  }, [data, logSearch, logStatus, logAssignee]);
 
+  const costingRows = useMemo(() => {
+    return data.map((room) => {
+      const isDirty = String(room.status).toLowerCase().includes('dirty');
+      const isOccupied = String(room.status).toLowerCase().includes('occupied');
+      const isOut = String(room.status).toLowerCase().includes('out of service');
 
-  const toggleColumn = (columnKey) => {
-    const column = allColumns.find(col => col.key === columnKey);
-    if (column && column.required) return; // Don't allow hiding required columns
+      const baseCost = isDirty ? 480 : 260;
+      const occupancyCost = isOccupied ? 150 : 0;
+      const maintenance = isOut ? 220 : 0;
+      const totalCost = baseCost + occupancyCost + maintenance;
 
-    setVisibleColumns(prev =>
-      prev.includes(columnKey)
-        ? prev.filter(key => key !== columnKey)
-        : [...prev, columnKey]
-    );
-  };
+      return {
+        roomNo: room.roomNo,
+        status: room.status,
+        totalCost,
+      };
+    });
+  }, [data]);
 
-  const filteredData = data.filter(item => {
-    const matchesSearch = searchQuery === '' ||
-      item.roomNo.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.roomType.toLowerCase().includes(searchQuery.toLowerCase());
+  const totalCost = costingRows.reduce((sum, row) => sum + row.totalCost, 0);
 
-    const matchesHousekeeper = housekeeperFilter === 'All Housekeeper' ||
-      item.assignee === housekeeperFilter;
+  const amenitiesRows = useMemo(() => {
+    return data.map((room) => {
+      const occupied = String(room.status).toLowerCase().includes('occupied');
+      const dirty = String(room.status).toLowerCase().includes('dirty');
 
-    const matchesRoomType = roomTypeTab === 'Accommodation Rooms' ||
-      roomTypeTab === 'Event Rooms';
+      return {
+        roomNo: room.roomNo,
+        toiletries: occupied ? 4 : 2,
+        linen: dirty ? 3 : 1,
+        waterBottles: occupied ? 3 : 1,
+      };
+    });
+  }, [data]);
 
-    return matchesSearch && matchesHousekeeper && matchesRoomType;
-  });
+  const amenitiesTotals = amenitiesRows.reduce(
+    (acc, row) => {
+      acc.toiletries += row.toiletries;
+      acc.linen += row.linen;
+      acc.waterBottles += row.waterBottles;
+      return acc;
+    },
+    { toiletries: 0, linen: 0, waterBottles: 0 },
+  );
 
-  // summary counts based on filtered data
-  const roomsToClean = filteredData.filter(item =>
-    item.status.toLowerCase().includes('dirty')
-  ).length;
-  const roomsInspected = filteredData.filter(item =>
-    item.status.toLowerCase().includes('inspected')
-  ).length;
-  const occupiedRooms = filteredData.filter(item =>
-    item.status.toLowerCase().includes('occupied')
-  ).length;
+  const auditSummary = useMemo(() => {
+    const total = data.length;
+    const passed = data.filter((room) => auditChecks[room.id]).length;
+    const failed = total - passed;
+    const passRate = total ? Math.round((passed / total) * 100) : 0;
+    return { total, passed, failed, passRate };
+  }, [data, auditChecks]);
 
-  return (
-    <div className="min-h-screen w-full overflow-x-hidden bg-gradient-to-br from-[#071226] via-[#081827] to-[#041019] text-gray-100 p-4 sm:p-6 lg:p-8">
-      {/* Header */}
-      <div className="mb-5">
-        <h1 className="text-2xl pl-100 font-semibold text-white mb-1">Housekeeping</h1>
-        <div className="text-sm pl-100 text-gray-300">Home / Housekeeping</div>
-      </div>
+  const activeOptionMeta = HOUSEKEEPING_OPTIONS.find((opt) => opt.id === activeOption);
 
-      {/* Top Control Bar */}
-      <div className="bg-gradient-to-b from-[#0f1a2b] to-[#0b1622] rounded-lg shadow-lg border border-white/5 p-4 mb-4">
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(240px,1fr)_auto_260px_auto] gap-3 items-center">
-          {/* Search Bar */}
-          <div className="relative w-full">
-            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search rooms..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-teal-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-400 bg-transparent text-gray-100"
-            />
+  const renderOptionPanel = () => {
+    if (activeOption === 'parameters') {
+      return (
+        <div className="space-y-5">
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="rounded-xl border border-white/10 bg-gradient-to-br from-amber-500/15 to-amber-900/10 p-4">
+              <p className="text-xs uppercase tracking-[0.2em] text-amber-300">Dirty Rooms</p>
+              <p className="mt-2 text-3xl font-bold text-white">{statusCounts.dirty}</p>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-gradient-to-br from-emerald-500/15 to-emerald-900/10 p-4">
+              <p className="text-xs uppercase tracking-[0.2em] text-emerald-300">Clean Rooms</p>
+              <p className="mt-2 text-3xl font-bold text-white">{statusCounts.clean}</p>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-gradient-to-br from-cyan-500/15 to-cyan-900/10 p-4">
+              <p className="text-xs uppercase tracking-[0.2em] text-cyan-300">Occupied Rooms</p>
+              <p className="mt-2 text-3xl font-bold text-white">{statusCounts.occupied}</p>
+            </div>
           </div>
 
-          {/* Hide Columns Shortcut */}
-          <div className="flex justify-center lg:justify-start">
-            <button
-              onClick={() => setShowColumns(!showColumns)}
-              className="px-4 py-2 bg-transparent border border-white/10 text-white rounded-lg text-sm font-medium hover:bg-white/5 transition-colors"
-            >
-              {showColumns ? 'Hide Columns' : 'Show Columns'}
-            </button>
-          </div>
+          <div className="grid gap-4 lg:grid-cols-2">
+            <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+              <h4 className="text-sm font-semibold text-white">Automation Settings</h4>
+              <div className="mt-4 space-y-3">
+                <label className="flex items-center justify-between rounded-lg border border-white/10 px-3 py-2 text-sm text-gray-200">
+                  Auto Refresh (15s)
+                  <input type="checkbox" checked={autoRefresh} onChange={(e) => setAutoRefresh(e.target.checked)} />
+                </label>
+                <label className="flex items-center justify-between rounded-lg border border-white/10 px-3 py-2 text-sm text-gray-200">
+                  Notify for Dirty Rooms
+                  <input type="checkbox" checked={notifyDirty} onChange={(e) => setNotifyDirty(e.target.checked)} />
+                </label>
+                <label className="block rounded-lg border border-white/10 px-3 py-2 text-sm text-gray-200">
+                  <span className="mb-2 block">Default Shift</span>
+                  <select
+                    value={defaultShift}
+                    onChange={(e) => setDefaultShift(e.target.value)}
+                    className="w-full rounded border border-white/10 bg-[#0a1b2f] px-3 py-2 text-white"
+                  >
+                    <option>Morning</option>
+                    <option>Evening</option>
+                    <option>Night</option>
+                  </select>
+                </label>
+              </div>
+            </div>
 
-          {/* Housekeeper Filter */}
-          <div className="w-full">
+            <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+              <h4 className="text-sm font-semibold text-white">Quick Actions</h4>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(true)}
+                  className="rounded-lg bg-gradient-to-r from-teal-500 to-cyan-500 px-4 py-2 text-sm font-semibold text-white"
+                >
+                  + Add Room
+                </button>
+                <button
+                  type="button"
+                  onClick={fetchRooms}
+                  className="rounded-lg border border-white/20 bg-white/5 px-4 py-2 text-sm font-semibold text-white"
+                >
+                  <span className="inline-flex items-center gap-2">
+                    <FaSyncAlt /> Refresh Now
+                  </span>
+                </button>
+              </div>
+              <p className="mt-4 text-xs text-gray-400">
+                Yeh panel housekeeping operations ka control center hai. Yahan se live settings aur quick actions manage kar sakte hain.
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (activeOption === 'cleaning-log') {
+      return (
+        <div className="space-y-4">
+          <div className="grid gap-3 md:grid-cols-[1.4fr,1fr,1fr]">
+            <label className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2">
+              <FaSearch className="text-cyan-300" />
+              <input
+                value={logSearch}
+                onChange={(e) => setLogSearch(e.target.value)}
+                placeholder="Search by room no or type"
+                className="w-full bg-transparent text-sm text-white outline-none placeholder:text-gray-500"
+              />
+            </label>
+
             <select
-              value={housekeeperFilter}
-              onChange={(e) => setHousekeeperFilter(e.target.value)}
-              className="w-full px-4 py-2 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-900 bg-transparent text-white"
+              value={logStatus}
+              onChange={(e) => setLogStatus(e.target.value)}
+              className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-white"
             >
-              <option className="bg-[#071826]" value="All Housekeeper">All Housekeeper</option>
-              {housekeepers.map(hk => (
-                <option key={hk} className="bg-[#071826]" value={hk}>{hk}</option>
+              <option value="All">All Status</option>
+              <option value="dirty">Dirty</option>
+              <option value="clean">Clean</option>
+              <option value="occupied">Occupied</option>
+              <option value="out of service">Out of Service</option>
+            </select>
+
+            <select
+              value={logAssignee}
+              onChange={(e) => setLogAssignee(e.target.value)}
+              className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-white"
+            >
+              <option value="All">All Assignees</option>
+              <option value="No Housekeeper">No Housekeeper</option>
+              {housekeepers.map((hk) => (
+                <option key={hk} value={hk}>{hk}</option>
               ))}
             </select>
           </div>
 
-          {/* Export PDF Button */}
-          <div className="flex lg:justify-end gap-2 mt-3 lg:mt-0">
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="w-full lg:w-auto flex items-center justify-center gap-2 px-5 py-2 bg-gradient-to-r from-teal-500 to-teal-700 text-white rounded-lg hover:opacity-95 transition"
-            >
-              <span className="text-sm font-medium">+ Add Room</span>
-            </button>
-            <button className="w-full lg:w-auto flex items-center justify-center gap-2 px-5 py-2 bg-gradient-to-r from-[#10b981] to-[#06b6d4] text-white rounded-lg hover:opacity-95 transition">
-              <FaFilePdf />
-              <span className="text-sm font-medium">Export PDF</span>
-            </button>
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {filteredCleaningRows.map((room) => (
+              <div key={`clean-${room.id}`} className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-lg font-semibold text-white">Room {room.roomNo}</p>
+                    <p className="text-xs text-gray-400">{room.roomType}</p>
+                  </div>
+                  <span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${statusPillClass(room.status)}`}>
+                    {room.status}
+                  </span>
+                </div>
+                <div className="mt-3 space-y-1 text-sm text-gray-300">
+                  <p>Assignee: <span className="text-white">{room.assignee}</span></p>
+                  <p>Guest: <span className="text-white">{room.guestStatus || '-'}</span></p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
+      );
+    }
 
-        <div className="mt-3 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-300">Selected: {selectedCount}</span>
+    if (activeOption === 'room-costing') {
+      const maxCost = Math.max(...costingRows.map((row) => row.totalCost), 1);
+
+      return (
+        <div className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="rounded-xl border border-white/10 bg-emerald-500/10 p-4">
+              <p className="text-xs uppercase tracking-[0.18em] text-emerald-300">Total Cost</p>
+              <p className="mt-2 text-2xl font-bold text-white">Rs {totalCost}</p>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-cyan-500/10 p-4">
+              <p className="text-xs uppercase tracking-[0.18em] text-cyan-300">Average / Room</p>
+              <p className="mt-2 text-2xl font-bold text-white">Rs {data.length ? Math.round(totalCost / data.length) : 0}</p>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-amber-500/10 p-4">
+              <p className="text-xs uppercase tracking-[0.18em] text-amber-300">High Cost Rooms</p>
+              <p className="mt-2 text-2xl font-bold text-white">{costingRows.filter((r) => r.totalCost >= 600).length}</p>
+            </div>
           </div>
 
-          {/* Room Type Tabs */}
-          <div className="inline-flex rounded-lg border border-white/5 overflow-hidden w-full md:w-auto bg-transparent">
-            <button
-              onClick={() => setRoomTypeTab('Accommodation Rooms')}
-              className={`flex-1 md:flex-none px-4 py-2 text-sm font-medium transition-colors ${roomTypeTab === 'Accommodation Rooms'
-                  ? 'bg-white/5 text-white'
-                  : 'bg-transparent text-gray-300 hover:bg-white/5'
-                }`}
-            >
-              Accommodation Rooms
-            </button>
-            <button
-              onClick={() => setRoomTypeTab('Event Rooms')}
-              className={`flex-1 md:flex-none px-4 py-2 text-sm font-medium transition-colors border-l border-white/5 ${roomTypeTab === 'Event Rooms'
-                  ? 'bg-white/5 text-white'
-                  : 'bg-transparent text-gray-300 hover:bg-white/5'
-                }`}
-            >
-              Event Rooms
-            </button>
+          <div className="space-y-3">
+            {costingRows.map((row) => (
+              <div key={`cost-${row.roomNo}`} className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+                <div className="mb-2 flex items-center justify-between text-sm">
+                  <span className="font-semibold text-white">Room {row.roomNo}</span>
+                  <span className="text-emerald-300">Rs {row.totalCost}</span>
+                </div>
+                <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-emerald-400"
+                    style={{ width: `${Math.round((row.totalCost / maxCost) * 100)}%` }}
+                  />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
+      );
+    }
 
-        {/* Summary Cards */}
-        <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="flex items-center gap-3 p-4 rounded-lg bg-[#2b1210] border border-white/5">
-            <div className="p-2 bg-orange-500 text-white rounded-full">
-              <FaBroom />
-            </div>
-            <div>
-              <div className="text-sm text-orange-300">Rooms to Clean</div>
-              <div className="text-xl font-semibold text-white">{roomsToClean}</div>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 p-4 rounded-lg bg-[#102214] border border-white/5">
-            <div className="p-2 bg-green-500 text-white rounded-full">
-              <FaCheck />
-            </div>
-            <div>
-              <div className="text-sm text-emerald-300">Rooms Inspected</div>
-              <div className="text-xl font-semibold text-white">{roomsInspected}</div>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 p-4 rounded-lg bg-[#21102a] border border-white/5">
-            <div className="p-2 bg-purple-500 text-white rounded-full">
-              <FaBed />
-            </div>
-            <div>
-              <div className="text-sm text-purple-300">Occupied Rooms</div>
-              <div className="text-xl font-semibold text-white">{occupiedRooms}</div>
-            </div>
-          </div>
-        </div>
-      </div>
+    if (activeOption === 'room-report') {
+      const totalRooms = data.length || 1;
 
-      {/* Column Customization Bar */}
-      {showColumns && (
-        <div className="mb-4 bg-[#071826] rounded-lg shadow-sm border border-white/5 p-3 flex items-center gap-2 flex-wrap text-white">
-          <div className="px-3 py-1 bg-teal-500 text-white rounded-full text-sm font-medium">
-            Columns
-          </div>
-          {allColumns.map((column) => (
-            <div
-              key={column.key}
-              onClick={() => toggleColumn(column.key)}
-              className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm cursor-pointer transition-opacity hover:opacity-80 ${visibleColumns.includes(column.key)
-                  ? 'bg-white/5 text-white'
-                  : 'bg-transparent text-gray-300 border border-white/5'
-                }`}
-            >
-              {column.required && <span className="text-teal-500">*</span>}
-              <span>{column.label}</span>
-              {!column.required && visibleColumns.includes(column.key) && (
-                <button
-                  className="ml-1 text-gray-400 hover:text-red-500"
-                >
-                  <FaTimes className="w-3 h-3" />
-                </button>
-              )}
+      const reportItems = [
+        {
+          label: 'Dirty',
+          count: statusCounts.dirty,
+          color: 'from-amber-500/30 to-amber-900/10 border-amber-400/30',
+        },
+        {
+          label: 'Clean',
+          count: statusCounts.clean,
+          color: 'from-emerald-500/30 to-emerald-900/10 border-emerald-400/30',
+        },
+        {
+          label: 'Occupied',
+          count: statusCounts.occupied,
+          color: 'from-cyan-500/30 to-cyan-900/10 border-cyan-400/30',
+        },
+        {
+          label: 'Out of Service',
+          count: statusCounts.outOfService,
+          color: 'from-rose-500/30 to-rose-900/10 border-rose-400/30',
+        },
+      ];
+
+      return (
+        <div className="grid gap-4 md:grid-cols-2">
+          {reportItems.map((item) => (
+            <div key={item.label} className={`rounded-xl border bg-gradient-to-br p-4 ${item.color}`}>
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-gray-200">{item.label}</p>
+                <p className="text-2xl font-bold text-white">{item.count}</p>
+              </div>
+              <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-white/10">
+                <div
+                  className="h-full rounded-full bg-white/70"
+                  style={{ width: `${Math.round((item.count / totalRooms) * 100)}%` }}
+                />
+              </div>
+              <p className="mt-2 text-xs text-gray-300">
+                {Math.round((item.count / totalRooms) * 100)}% of current inventory
+              </p>
             </div>
           ))}
         </div>
-      )}
+      );
+    }
 
-      {/* Table */}
-      <div className="bg-[#071826] rounded-lg shadow-md overflow-hidden border border-white/5">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead className="bg-white/5 text-gray-300 text-xs uppercase">
-              <tr>
-                {visibleColumns.includes('type') && (
-                  <th className="px-4 py-3 font-semibold border-r border-white/5 text-gray-300">
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={selectAll}
-                        onChange={(e) => handleSelectAll(e.target.checked)}
-                        className="cursor-pointer"
-                      />
-                      Type
-                    </div>
-                  </th>
-                )}
-                {visibleColumns.includes('roomNo') && (
-                  <th className="px-4 py-3 font-semibold border-r border-gray-200">Room No. / Name</th>
-                )}
-                {visibleColumns.includes('building') && (
-                  <th className="px-4 py-3 font-semibold border-r border-gray-200">Building</th>
-                )}
-                {visibleColumns.includes('floor') && (
-                  <th className="px-4 py-3 font-semibold border-r border-gray-200">Floor</th>
-                )}
-                {visibleColumns.includes('section') && (
-                  <th className="px-4 py-3 font-semibold border-r border-gray-200">Section</th>
-                )}
-                {visibleColumns.includes('guestStatus') && (
-                  <th className="px-4 py-3 font-semibold border-r border-gray-200">Guest Status</th>
-                )}
-                {visibleColumns.includes('roomType') && (
-                  <th className="px-4 py-3 font-semibold border-r border-gray-200">Room Type</th>
-                )}
-                {visibleColumns.includes('status') && (
-                  <th className="px-4 py-3 font-semibold border-r border-gray-200">Status</th>
-                )}
-                {visibleColumns.includes('assignee') && (
-                  <th className="px-4 py-3 font-semibold border-r border-gray-200">Assignee</th>
-                )}
-                {visibleColumns.includes('layout') && (
-                  <th className="px-4 py-3 font-semibold border-r border-gray-200">Layout</th>
-                )}
-                {visibleColumns.includes('articles') && (
-                  <th className="px-4 py-3 font-semibold border-r border-gray-200">Articles</th>
-                )}
-                {visibleColumns.includes('services') && (
-                  <th className="px-4 py-3 font-semibold border-r border-gray-200">Services</th>
-                )}
-                {visibleColumns.includes('notes') && (
-                  <th className="px-4 py-3 font-semibold">Notes</th>
-                )}
-              </tr>
-            </thead>
-            <tbody>
-              {filteredData.map(item => (
-                <HousekeepingRow
-                  key={item.id}
-                  item={item}
-                  visibleColumns={visibleColumns}
-                  onSelectChange={handleSelectChange}
-                  onStatusChange={handleStatusChange}
-                  onAssigneeChange={handleAssigneeChange}
-                  housekeeperStatuses={housekeeperStatuses}
-                  assigneeOptions={['No Housekeeper', ...housekeepers]}
+    if (activeOption === 'amenities-consumption-report') {
+      return (
+        <div className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="rounded-xl border border-white/10 bg-cyan-500/10 p-4">
+              <p className="text-xs uppercase tracking-[0.18em] text-cyan-300">Toiletries</p>
+              <p className="mt-2 text-2xl font-bold text-white">{amenitiesTotals.toiletries}</p>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-emerald-500/10 p-4">
+              <p className="text-xs uppercase tracking-[0.18em] text-emerald-300">Linen</p>
+              <p className="mt-2 text-2xl font-bold text-white">{amenitiesTotals.linen}</p>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-indigo-500/10 p-4">
+              <p className="text-xs uppercase tracking-[0.18em] text-indigo-300">Water Bottles</p>
+              <p className="mt-2 text-2xl font-bold text-white">{amenitiesTotals.waterBottles}</p>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto rounded-xl border border-white/10">
+            <table className="min-w-full text-left text-sm text-gray-200">
+              <thead className="bg-white/[0.04] text-xs uppercase text-gray-300">
+                <tr>
+                  <th className="px-4 py-3">Room</th>
+                  <th className="px-4 py-3">Toiletries</th>
+                  <th className="px-4 py-3">Linen</th>
+                  <th className="px-4 py-3">Water Bottles</th>
+                </tr>
+              </thead>
+              <tbody>
+                {amenitiesRows.map((row) => (
+                  <tr key={`amen-${row.roomNo}`} className="border-t border-white/10">
+                    <td className="px-4 py-3">{row.roomNo}</td>
+                    <td className="px-4 py-3">{row.toiletries}</td>
+                    <td className="px-4 py-3">{row.linen}</td>
+                    <td className="px-4 py-3">{row.waterBottles}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      );
+    }
+
+    if (activeOption === 'housekeeping-audit') {
+      return (
+        <div className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-4">
+            <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+              <p className="text-xs uppercase tracking-[0.18em] text-gray-300">Total Rooms</p>
+              <p className="mt-2 text-2xl font-bold text-white">{auditSummary.total}</p>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-emerald-500/10 p-4">
+              <p className="text-xs uppercase tracking-[0.18em] text-emerald-300">Passed</p>
+              <p className="mt-2 text-2xl font-bold text-white">{auditSummary.passed}</p>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-rose-500/10 p-4">
+              <p className="text-xs uppercase tracking-[0.18em] text-rose-300">Needs Review</p>
+              <p className="mt-2 text-2xl font-bold text-white">{auditSummary.failed}</p>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-cyan-500/10 p-4">
+              <p className="text-xs uppercase tracking-[0.18em] text-cyan-300">Pass Rate</p>
+              <p className="mt-2 text-2xl font-bold text-white">{auditSummary.passRate}%</p>
+            </div>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {data.map((room) => (
+              <label key={`audit-${room.id}`} className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3">
+                <div>
+                  <p className="font-semibold text-white">Room {room.roomNo}</p>
+                  <p className="text-xs text-gray-400">{room.status}</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={Boolean(auditChecks[room.id])}
+                  onChange={(e) =>
+                    setAuditChecks((prev) => ({
+                      ...prev,
+                      [room.id]: e.target.checked,
+                    }))
+                  }
+                  className="h-4 w-4"
                 />
-              ))}
-            </tbody>
-          </table>
+              </label>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    return null;
+  };
+
+  return (
+    <div className="relative isolate min-h-screen w-full overflow-x-hidden bg-[linear-gradient(135deg,#f5fbff_0%,#f3f8f4_28%,#fff8f1_58%,#f8fafc_100%)] p-4 text-slate-900 sm:p-6 lg:p-8">
+      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+        <div className="absolute left-[-8%] top-[-6%] h-64 w-64 rounded-full bg-cyan-200/45 blur-3xl sm:h-96 sm:w-96" />
+        <div className="absolute right-[-10%] top-[8%] h-64 w-64 rounded-full bg-amber-200/45 blur-3xl sm:h-[26rem] sm:w-[26rem]" />
+        <div className="absolute bottom-[14%] left-[18%] h-56 w-56 rounded-full bg-emerald-200/30 blur-3xl sm:h-80 sm:w-80" />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.55)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.45)_1px,transparent_1px)] bg-[size:72px_72px] opacity-25" />
+      </div>
+
+      <div className="mx-auto max-w-[1200px]">
+      <div className="mb-6 text-center">
+        <h1 className="text-3xl font-semibold text-slate-900">Housekeeping</h1>
+        <p className="mt-1 text-sm text-slate-600">Focused operations panel with option-wise popup pages</p>
+      </div>
+
+      <div className="rounded-2xl border border-slate-900/10 bg-[linear-gradient(120deg,#071b34_0%,#0d4a53_52%,#162d45_100%)] p-4 shadow-[0_22px_55px_rgba(15,23,42,0.12)]">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-200">Housekeeping Sidebar Options</h2>
+          <span className="text-xs text-gray-400">Only option pages are enabled</span>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {HOUSEKEEPING_OPTIONS.map((option) => {
+            const Icon = option.icon;
+            const isActive = option.id === activeOption;
+
+            return (
+              <button
+                key={option.id}
+                type="button"
+                onClick={() => {
+                  setActiveOption(option.id);
+                  setIsOptionPopupOpen(true);
+                }}
+                className={`rounded-xl border px-4 py-3 text-left transition-all ${
+                  isActive
+                    ? 'border-teal-400/70 bg-teal-500/20 shadow-[0_12px_30px_rgba(20,184,166,0.2)]'
+                    : 'border-white/10 bg-white/[0.03] hover:border-teal-400/40 hover:bg-teal-500/10'
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <span className="mt-0.5 text-teal-300"><Icon /></span>
+                  <div>
+                    <p className="text-sm font-semibold text-white">{option.label}</p>
+                    <p className="mt-1 text-xs text-gray-300">{option.description}</p>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* Add Room Modal */}
+      <div className="mt-5 rounded-2xl border border-slate-900/10 bg-white/80 p-6 text-center shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+        <p className="text-xs font-semibold uppercase tracking-[0.26em] text-emerald-500">Housekeeping Workspace</p>
+        <h3 className="mt-2 text-2xl font-bold text-slate-900">Option select karke popup open karein</h3>
+        <p className="mt-2 text-sm text-slate-600">
+          Parameters, Cleaning Log, Room Costing, Room Report, Amenities aur Audit sab pages popup me responsive format me open honge.
+        </p>
+      </div>
+      </div>
+
+      {isOptionPopupOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/65 px-3 py-6 backdrop-blur-sm"
+          onClick={() => setIsOptionPopupOpen(false)}
+        >
+          <div
+            className="w-full max-w-5xl overflow-hidden rounded-2xl border border-white/15 bg-[#071827] shadow-[0_30px_80px_rgba(2,8,23,0.6)]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-3 border-b border-white/10 px-5 py-4">
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-cyan-300">Housekeeping Page</p>
+                <h3 className="text-2xl font-semibold text-white">{activeOptionMeta?.label}</h3>
+                <p className="mt-1 text-sm text-gray-300">{activeOptionMeta?.description}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsOptionPopupOpen(false)}
+                className="rounded-full border border-white/20 px-3 py-1.5 text-sm text-gray-200 hover:border-teal-400/50 hover:text-white"
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="max-h-[78vh] overflow-y-auto p-5">
+              {renderOptionPanel()}
+            </div>
+          </div>
+        </div>
+      )}
+
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
-          <div className="bg-[#0b1622] border border-white/10 rounded-xl p-6 w-full max-w-md shadow-2xl">
-            <div className="flex items-center justify-between mb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-xl border border-white/10 bg-[#0b1622] p-6 shadow-2xl">
+            <div className="mb-4 flex items-center justify-between">
               <h2 className="text-xl font-semibold text-white">Add New Room</h2>
               <button
+                type="button"
                 onClick={() => setShowAddModal(false)}
-                className="text-gray-400 hover:text-white transition"
+                className="text-gray-400 transition hover:text-white"
               >
                 <FaTimes />
               </button>
             </div>
 
             <div className="mb-4">
-              <label className="block text-sm text-gray-400 mb-1">Room No. / Name</label>
+              <label className="mb-1 block text-sm text-gray-400">Room No. / Name</label>
               <input
                 type="text"
                 value={newRoomNo}
                 onChange={(e) => setNewRoomNo(e.target.value)}
-                className="w-full px-4 py-2 border border-white/10 rounded-lg bg-[#071226] text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full rounded-lg border border-white/10 bg-[#071226] px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
                 placeholder="e.g. 101"
               />
             </div>
 
-            <div className="flex justify-end gap-3 mt-6">
+            <div className="mt-6 flex justify-end gap-3">
               <button
+                type="button"
                 onClick={() => setShowAddModal(false)}
-                className="px-4 py-2 rounded-lg border border-white/10 text-gray-300 hover:bg-white/5 transition"
+                className="rounded-lg border border-white/10 px-4 py-2 text-gray-300 transition hover:bg-white/5"
               >
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={handleAddRoom}
-                className="px-4 py-2 bg-gradient-to-r from-teal-500 to-teal-700 hover:opacity-90 text-white rounded-lg transition font-medium"
+                className="rounded-lg bg-gradient-to-r from-teal-500 to-teal-700 px-4 py-2 font-medium text-white transition hover:opacity-90"
               >
                 Add Room
               </button>

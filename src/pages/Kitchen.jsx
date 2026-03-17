@@ -53,7 +53,7 @@ const Kitchen = () => {
       0
     );
 
-    const printWindow = window.open();
+    const printWindow = window.open("", "_blank");
 
     const itemsHTML = order.items
       .map(
@@ -80,11 +80,16 @@ const Kitchen = () => {
         </tr>
         ${itemsHTML}
       </table>
-      <h3>Total: ₹${total}</h3>
+      <h3>Total: Rs ${total}</h3>
     `);
 
+    printWindow.document.close();
     printWindow.print();
   };
+
+  if (loading) {
+    return <div className="min-h-screen bg-slate-900 p-6 text-white">Loading...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-slate-900 p-6 text-white">
@@ -118,7 +123,7 @@ const Kitchen = () => {
                   onClick={() => markReady(order.id)}
                   className="bg-green-600 px-3 py-1 rounded"
                 >
-                  Ready
+                  Print
                 </button>
               )}
 

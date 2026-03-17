@@ -21,9 +21,9 @@ export const RestaurantProvider = ({ children }) => {
     try {
       const res = await API.get("/restaurant/tables");
 
-      const rows = (res.data || []).map((t) => ({
-        id: t.id,
-        name: String(t.number),
+      const rows = (res.data || []).map((table) => ({
+        id: table.id,
+        name: String(table.number),
       }));
 
       setTables(rows);
@@ -106,7 +106,7 @@ export const RestaurantProvider = ({ children }) => {
       const persisted = { id: data.id || tempId, name: normalized };
 
       setTables((prev) =>
-        prev.map((t) => (t.id === tempId ? persisted : t))
+        prev.map((table) => (table.id === tempId ? persisted : table)),
       );
 
       return persisted;

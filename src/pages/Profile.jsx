@@ -216,13 +216,13 @@ const Profile = () => {
       : "Role";
 
   return (
-    <div className="resort-page">
+    <div className="resort-page ">
       <div className="resort-shell">
         <section className="resort-hero">
-          <div className="resort-hero-content lg:flex-row lg:items-end lg:justify-between">
+         <div className="resort-hero-content flex flex-col items-center justify-center text-center">
             <div className="space-y-3">
               <p className="resort-eyebrow">Personal Workspace</p>
-              <h1 className="resort-title">Profile and security settings</h1>
+              <h1 className="resort-title text-l">Profile and security settings</h1>
               <p className="resort-subtitle">
                 Update your profile picture and password from a cleaner responsive
                 screen designed for both mobile and desktop.
@@ -231,11 +231,11 @@ const Profile = () => {
             <div className="resort-stat-grid">
               <div className="resort-stat">
                 <span className="resort-stat-label">Current Role</span>
-                <span className="resort-stat-value text-[1.1rem]">{prettyRole}</span>
+                <span className="resort-stat-value text-[1.1rem] ">{prettyRole}</span>
               </div>
               <div className="resort-stat">
                 <span className="resort-stat-label">Email</span>
-                <span className="resort-stat-value text-[0.95rem]">{email || "Not set"}</span>
+                <span className="resort-stat-value text-[0.9rem] break-all">{email || "Not set"}</span>
               </div>
             </div>
           </div>

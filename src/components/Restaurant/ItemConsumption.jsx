@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { restaurantService } from "../../services/restaurantService";
+import API from "../../api";
 
 const ItemConsumption = () => {
 

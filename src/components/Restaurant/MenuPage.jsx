@@ -1,25 +1,7 @@
 import React, { useContext, useState, useMemo, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { RestaurantContext } from "../../Context/RestaurantContext";
-import { restaurantService } from "../../services/restaurantService";
-
-/* ===============================
-   SEND ORDER TO KITCHEN (DB)
-================================ */
-
-const sendToKitchen = async (table, items) => {
-  await restaurantService.createKitchenOrder({
-    table,
-    waiter: "Waiter",
-    items: items.map((item) => ({
-      name: item.name,
-      quantity: item.qty,
-      price: item.rate,
-    })),
-  });
-  window.dispatchEvent(new Event("kitchenUpdated"));
-};
-
+import API from "../../api";
 
 /* ===============================
    MENU PAGE
