@@ -1,10 +1,15 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import API from "../../api";
 
 const EditToken = () => {
   const { table } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const entityType =
+    location.state?.entityType ||
+    localStorage.getItem(`entityType:${table}`) ||
+    "Table";
 
   const [tokenId, setTokenId] = useState(null);
   const [items, setItems] = useState([]);
@@ -101,6 +106,7 @@ const EditToken = () => {
       gst: tax,
       total,
       date: new Date().toISOString(),
+      entityType,
     };
 
     localStorage.setItem("currentInvoice", JSON.stringify(invoiceData));

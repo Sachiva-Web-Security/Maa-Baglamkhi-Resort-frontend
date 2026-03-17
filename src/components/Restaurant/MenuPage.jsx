@@ -1,6 +1,7 @@
 import React, { useContext, useState, useMemo, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { RestaurantContext } from "../../Context/RestaurantContext";
+import { restaurantService } from "../../services/restaurantService";
 import API from "../../api";
 
 /* ===============================
@@ -12,6 +13,7 @@ const MenuPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { table } = useParams();
+  const entityType = location.state?.entityType || localStorage.getItem(`entityType:${table}`) || "Table";
 
   const { menuItems, addMenuItem, setSelectedTable } = useContext(RestaurantContext);
 
@@ -33,6 +35,18 @@ const MenuPage = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
+
+  // send order items to kitchen service
+  const sendToKitchen = (tableNo, items) =>
+    restaurantService.createKitchenOrder({
+      table: tableNo,
+      waiter: "Waiter",
+      items: items.map(({ name, qty, rate }) => ({
+        name,
+        quantity: qty,
+        price: rate,
+      })),
+    });
 
   /* ===============================
      RESET CATEGORY WHEN MENU CHANGE
@@ -173,6 +187,37 @@ const MenuPage = () => {
 
     try {
 
+      // ensure token exists for this table
+      let tokenId = null;
+      try {
+        const tokenRes = await API.get(`/token/table/${table}`);
+        tokenId = tokenRes.data?.id || null;
+      } catch (err) {
+        console.log("token lookup failed (will create):", err);
+      }
+
+      if (!tokenId) {
+        const createRes = await API.post("/token/create", {
+          tableNumber: String(table),
+          waiter: localStorage.getItem("name") || "Waiter",
+        });
+        tokenId = createRes.data?.tokenId;
+      }
+
+      // push items into token_items so Edit Token page can read them
+      if (tokenId) {
+        await Promise.all(
+          order.map((item) =>
+            API.post("/token/item", {
+              tokenId,
+              name: item.name,
+              qty: item.qty,
+              rate: item.rate,
+            })
+          )
+        );
+      }
+
       // CREATE ORDER IN BACKEND
       await restaurantService.createOrder(
         table,
@@ -190,7 +235,7 @@ const MenuPage = () => {
       window.dispatchEvent(new Event("tokenUpdated"));
 
       navigate(`/restaurant/edit-token/${table}`, {
-        state: { items: order }
+        state: { items: order, entityType }
       });
 
       // clear local order
@@ -261,9 +306,9 @@ const MenuPage = () => {
 
   return (
 
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
+    <div className="space-y-4">
 
-      <div className="bg-white w-[1000px] h-[620px] rounded shadow flex flex-col">
+      <div className="bg-white rounded-2xl shadow border overflow-hidden flex flex-col min-h-[70vh]">
 
         {/* HEADER */}
 

@@ -2,10 +2,12 @@ import API from "../api";
 
 export const reportService = {
   async getDaywiseFood(startDate, endDate) {
-    // backend is mounted at /api/report/daywise-food
-    const response = await API.get("/report/daywise-food", {
-      params: { startDate, endDate },
-    });
+    // build params only when provided to avoid filtering out data
+    const params = {};
+    if (startDate) params.startDate = startDate;
+    if (endDate) params.endDate = endDate;
+
+    const response = await API.get("/report/daywise-food", { params });
     return response.data;
   },
 

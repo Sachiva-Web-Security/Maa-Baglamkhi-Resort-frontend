@@ -1,10 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import API from "../../api";
 
 const TokenItemsPage = () => {
   const { table } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const entityType =
+    location.state?.entityType ||
+    localStorage.getItem(`entityType:${table}`) ||
+    "Table";
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -36,7 +41,7 @@ const TokenItemsPage = () => {
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
       <div className="bg-white w-[600px] rounded shadow">
-        <div className="p-3 border-b font-semibold">Table - {table}</div>
+        <div className="p-3 border-b font-semibold">{entityType} - {table}</div>
 
         <div className="p-4">
           <h4 className="font-semibold mb-3">All Token Items (Non-Invoiced)</h4>
@@ -87,7 +92,11 @@ const TokenItemsPage = () => {
 
             <button
               className="bg-blue-600 text-white px-4 py-2 rounded"
-              onClick={() => navigate(`/restaurant/edit-token/${table}`)}
+              onClick={() =>
+                navigate(`/restaurant/edit-token/${table}`, {
+                  state: { entityType },
+                })
+              }
             >
               Edit Token
             </button>

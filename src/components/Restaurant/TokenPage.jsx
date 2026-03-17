@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import API from "../../api";
 
 const TokenPage = () => {
   const navigate = useNavigate();
   const { table } = useParams();
+  const location = useLocation();
+  const entityType = location.state?.entityType || "Table";
 
   const [items, setItems] = useState([]);
   const [tokenId, setTokenId] = useState(null);
@@ -12,6 +14,10 @@ const TokenPage = () => {
   const waiterName = localStorage.getItem("name") || "Waiter";
 
   useEffect(() => {
+    // persist entity type per reference so downstream pages can read it
+    if (entityType && table) {
+      localStorage.setItem(`entityType:${table}`, entityType);
+    }
     const loadToken = async () => {
       try {
         setLoading(true);
@@ -53,7 +59,9 @@ const TokenPage = () => {
         setTokenId(resolvedTokenId);
       }
 
-      navigate(`/restaurant/menu/${table}`);
+      navigate(`/restaurant/menu/${table}`, {
+        state: { entityType },
+      });
     } catch (error) {
       alert(error.response?.data?.message || "Token create nahi ho paaya.");
     }
@@ -71,8 +79,8 @@ const TokenPage = () => {
         <div className="grid grid-cols-2 gap-6">
           <div>
             <label className="text-sm font-medium">Token Type *</label>
-            <select className="w-full border p-2 rounded mt-1" value="Table" readOnly>
-              <option>Table</option>
+            <select className="w-full border p-2 rounded mt-1" value={entityType} readOnly>
+              <option>{entityType}</option>
             </select>
           </div>
 
