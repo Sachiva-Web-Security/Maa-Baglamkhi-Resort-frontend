@@ -78,15 +78,15 @@ const Banquet = () => {
     [wizard.startTime, wizard.endTime]
   );
 
-  /* ---------------- LOAD ---------------- */
+  /* ---------------- LOAD DATA ---------------- */
 
   useEffect(() => {
     const load = async () => {
       try {
         const res = await API.get("/banquet");
 
-        if (res.data?.halls) setHalls(res.data.halls);
-        if (res.data?.bookings) setBookings(res.data.bookings);
+        setHalls(res.data?.halls || []);
+        setBookings(res.data?.bookings || []);
 
       } catch (err) {
         console.log("Banquet load error", err);
@@ -133,9 +133,9 @@ const Banquet = () => {
   /* ---------------- UI ---------------- */
 
   return (
-    <div className="p-6 text-black">
+    <div className="p-6">
 
-      <h1 className="text-2xl font-bold mb-4 text-black">
+      <h1 className="text-2xl font-bold mb-4">
         Banquet Management
       </h1>
 
@@ -172,7 +172,7 @@ const Banquet = () => {
           {activeStep === 1 && (
             <div className="mt-4">
               <input
-                className="border p-2 mr-2 text-black"
+                className="border p-2 mr-2"
                 placeholder="Customer Name"
                 value={wizard.customerName}
                 onChange={(e) =>
@@ -184,7 +184,7 @@ const Banquet = () => {
               />
 
               <input
-                className="border p-2 text-black"
+                className="border p-2"
                 placeholder="Phone"
                 value={wizard.phone}
                 onChange={(e) =>
@@ -202,7 +202,7 @@ const Banquet = () => {
             <div className="mt-4">
               <input
                 type="date"
-                className="border p-2 mr-2 text-black"
+                className="border p-2 mr-2"
                 value={wizard.date}
                 onChange={(e) =>
                   setWizard((p) => ({ ...p, date: e.target.value }))
@@ -211,7 +211,7 @@ const Banquet = () => {
 
               <input
                 type="time"
-                className="border p-2 mr-2 text-black"
+                className="border p-2 mr-2"
                 value={wizard.startTime}
                 onChange={(e) =>
                   setWizard((p) => ({
@@ -223,7 +223,7 @@ const Banquet = () => {
 
               <input
                 type="time"
-                className="border p-2 text-black"
+                className="border p-2"
                 value={wizard.endTime}
                 onChange={(e) =>
                   setWizard((p) => ({
@@ -233,7 +233,7 @@ const Banquet = () => {
                 }
               />
 
-              <p className="mt-2 text-sm text-black">
+              <p className="mt-2 text-sm">
                 Duration: {wizardHours} hr
               </p>
             </div>
@@ -241,7 +241,7 @@ const Banquet = () => {
 
           {/* Step 3 */}
           {activeStep === 3 && (
-            <div className="mt-4 text-black">
+            <div className="mt-4">
               <p>Hall: {selectedHall?.name}</p>
               <p>Customer: {wizard.customerName}</p>
               <p>Date: {wizard.date}</p>
@@ -279,13 +279,13 @@ const Banquet = () => {
 
       {/* BOOKINGS */}
 
-      <div className="mt-10 text-black">
-        <h2 className="font-bold mb-2 text-black">
+      <div className="mt-10">
+        <h2 className="font-bold mb-2">
           All Bookings
         </h2>
 
-        <table className="w-full border text-black">
-          <thead className="bg-gray-200 text-black">
+        <table className="w-full border">
+          <thead className="bg-gray-200">
             <tr>
               <th className="p-2">Hall</th>
               <th className="p-2">Customer</th>
