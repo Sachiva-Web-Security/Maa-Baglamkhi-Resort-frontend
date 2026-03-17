@@ -16,7 +16,7 @@ export const RestaurantProvider = ({ children }) => {
   const [tableStatusByNo, setTableStatusByNo] = useState({});
   const [selectedTable, setSelectedTable] = useState(null);
 
-  /* ================ LOAD TABLES ================= */
+  /* ================= LOAD TABLES ================= */
   const loadTables = useCallback(async () => {
     try {
       const res = await API.get("/restaurant/tables");
@@ -49,7 +49,7 @@ export const RestaurantProvider = ({ children }) => {
     }
   }, []);
 
-  /* ================ LOAD MENU ================= */
+  /* ================= LOAD MENU ================= */
   const loadMenu = useCallback(
     async (tableNo = selectedTable) => {
       if (!tableNo) {
@@ -86,7 +86,7 @@ export const RestaurantProvider = ({ children }) => {
     return () => window.removeEventListener("tokenUpdated", refresh);
   }, [loadTables]);
 
-  /* ================ ADD TABLE ================= */
+  /* ================= ADD TABLE ================= */
   const addTable = async (tableNumber) => {
     const normalized = String(tableNumber || "").trim();
     if (!normalized) throw new Error("Table number is required");
@@ -98,15 +98,24 @@ export const RestaurantProvider = ({ children }) => {
     const optimistic = { id: tempId, name: normalized };
 
     setTables((prev) => [...prev, optimistic]);
-    setTableStatusByNo((prev) => ({ ...prev, [normalized]: "Available" }));
+    setTableStatusByNo((prev) => ({
+      ...prev,
+      [normalized]: "Available",
+    }));
 
     try {
-      const res = await API.post("/restaurant/tables", { number: normalized });
+      const res = await API.post("/restaurant/tables", {
+        number: normalized,
+      });
+
       const data = res.data || {};
-      const persisted = { id: data.id || tempId, name: normalized };
+      const persisted = {
+        id: data.id || tempId,
+        name: normalized,
+      };
 
       setTables((prev) =>
-        prev.map((table) => (table.id === tempId ? persisted : table)),
+        prev.map((t) => (t.id === tempId ? persisted : t))
       );
 
       return persisted;
@@ -116,13 +125,13 @@ export const RestaurantProvider = ({ children }) => {
     }
   };
 
-  /* ================ ADD MENU ITEM ================= */
+  /* ================= ADD MENU ITEM ================= */
   const addMenuItem = async (name, price, category, tableNoParam) => {
     const resolvedTable = tableNoParam || selectedTable;
     const tableNumber = resolvedTable ? String(resolvedTable) : null;
 
     if (!tableNumber) {
-      throw new Error("Select a table before adding menu items.");
+      throw new Error("Select table first");
     }
 
     const res = await restaurantService.addMenuItem({
@@ -132,74 +141,65 @@ export const RestaurantProvider = ({ children }) => {
       tableNumber,
     });
 
-    const persistedItem = {
-      id: res?.id,
-      name,
-      price: Number(price),
-      category: category || "Others",
-      table_number: tableNumber,
-    };
-
     await loadMenu(resolvedTable);
+
     setTableStatusByNo((prev) => ({
       ...prev,
       [tableNumber]: "Occupied",
     }));
 
-    return persistedItem;
+    return res;
   };
 
-  /* ================ ORDER HELPERS ================= */
+  /* ================= ORDER ================= */
   const getOrderItemsForTable = useCallback(async (tableNo) => {
     const order = await restaurantService.getPendingOrder(tableNo);
     if (!order?.id) return [];
 
     const items = await restaurantService.getOrderItems(order.id);
-    return items.map((item) => ({
-      orderItemId: item.id,
-      name: item.name,
-      quantity: item.quantity,
-      unitPrice: item.price,
-      category: item.category,
+
+    return items.map((i) => ({
+      orderItemId: i.id,
+      name: i.name,
+      quantity: i.quantity,
+      unitPrice: i.price,
+      category: i.category,
     }));
   }, []);
 
   const createOrder = useCallback(
     async ({ waiterName, tableNo, items }) => {
-      let payloadItems = items || [];
-      if (payloadItems.length === 0) {
-        payloadItems = await getOrderItemsForTable(tableNo);
-        payloadItems = payloadItems.map((i) => ({
+      let payload = items || [];
+
+      if (payload.length === 0) {
+        payload = await getOrderItemsForTable(tableNo);
+        payload = payload.map((i) => ({
           name: i.name,
           quantity: i.quantity,
           price: i.unitPrice,
         }));
       }
-      if (payloadItems.length === 0) return;
 
-      await restaurantService.createOrder(tableNo, payloadItems);
+      if (payload.length === 0) return;
+
+      await restaurantService.createOrder(tableNo, payload);
+
       await restaurantService.createKitchenOrder({
         table: tableNo,
         waiter: waiterName || "Waiter",
-        items: payloadItems,
+        items: payload,
       });
+
       await loadTables();
     },
     [getOrderItemsForTable, loadTables]
   );
 
-  const removeItemFromOrder = async () => {
-    // Backend does not expose delete; no-op to keep UI stable.
-    console.warn("removeItemFromOrder not supported by backend");
-  };
-
-  const updateOrderItem = async () => {
-    // Backend does not expose update; no-op to keep UI stable.
-    console.warn("updateOrderItem not supported by backend");
-  };
-
   const clearOrder = async (tableNo = selectedTable) => {
-    setTableStatusByNo((prev) => ({ ...prev, [tableNo]: "Available" }));
+    setTableStatusByNo((prev) => ({
+      ...prev,
+      [tableNo]: "Available",
+    }));
   };
 
   const generateBill = async (billData) => {
@@ -210,8 +210,7 @@ export const RestaurantProvider = ({ children }) => {
   };
 
   const getTableStatus = (tableNo) => {
-    const key = String(tableNo || "");
-    return tableStatusByNo[key] || "Available";
+    return tableStatusByNo[String(tableNo)] || "Available";
   };
 
   const orderItems = useMemo(() => [], []);
@@ -230,8 +229,6 @@ export const RestaurantProvider = ({ children }) => {
         generateBill,
         getTableStatus,
         getOrderItemsForTable,
-        removeItemFromOrder,
-        updateOrderItem,
         createOrder,
         loadMenu,
       }}

@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import SummaryCard from "../components/Accounts/SummaryCard";
 import RecordRow from "../components/Accounts/RecordRow";
 import ReportCard from "../components/Accounts/ReportCard";
-
 import TransactionForm from "../components/Accounts/forms/TransactionForm";
 import InvoiceForm from "../components/Accounts/forms/InvoiceForm";
 
@@ -17,7 +16,9 @@ const formatINR = (amount) =>
   }).format(Number(amount) || 0);
 
 const Accounts = () => {
+
   const [records, setRecords] = useState([]);
+
   const [totals, setTotals] = useState({
     income: 0,
     expense: 0,
@@ -25,44 +26,39 @@ const Accounts = () => {
     gstPayable: 0,
   });
 
+  /* ===== UI STATES ===== */
+
   const [showIncome, setShowIncome] = useState(false);
   const [showExpense, setShowExpense] = useState(false);
   const [showInvoice, setShowInvoice] = useState(false);
   const [showView, setShowView] = useState(false);
-  const [showAudit, setShowAudit] = useState(false);
 
   const [selectedRecord, setSelectedRecord] = useState(null);
 
-  const addRecord = (record) => {
-    setRecords((prev) => [
-      {
-        ...record,
-        id: record.id || Date.now(),
-      },
-      ...prev,
-    ]);
-  };
+  /* ===== FETCH ===== */
 
   const fetchRecords = async () => {
     try {
       const res = await API.get("/accounts/transactions");
       setRecords(res.data || []);
     } catch (err) {
-      console.error("Error loading accounts records", err);
+      console.error(err);
     }
   };
 
   const fetchSummary = async () => {
     try {
       const res = await API.get("/accounts/summary");
+
       setTotals({
         income: Number(res.data?.income) || 0,
         expense: Number(res.data?.expense) || 0,
         net: Number(res.data?.net) || 0,
         gstPayable: Number(res.data?.gstPayable) || 0,
       });
+
     } catch (err) {
-      console.error("Error loading accounts summary", err);
+      console.error(err);
     }
   };
 
@@ -70,6 +66,17 @@ const Accounts = () => {
     fetchRecords();
     fetchSummary();
   }, []);
+
+  /* ===== ADD RECORD ===== */
+
+  const addRecord = (record) => {
+    setRecords((prev) => [
+      { ...record, id: record.id || Date.now() },
+      ...prev,
+    ]);
+  };
+
+  /* ===== ACTIONS ===== */
 
   const handleAddIncome = async (data) => {
     try {
@@ -86,7 +93,8 @@ const Accounts = () => {
 
       fetchSummary();
       setShowIncome(false);
-    } catch (err) {
+
+    } catch {
       alert("Error adding income");
     }
   };
@@ -106,7 +114,8 @@ const Accounts = () => {
 
       fetchSummary();
       setShowExpense(false);
-    } catch (err) {
+
+    } catch {
       alert("Error adding expense");
     }
   };
@@ -116,16 +125,17 @@ const Accounts = () => {
       const res = await API.post("/invoices/create", invoice);
 
       addRecord({
-        id: res.data?.id || Date.now(),
+        id: res.data?.id,
         date: new Date(invoice.date).toLocaleDateString("en-GB"),
         type: "Income",
         description: `Invoice ${invoice.invoiceNo}`,
-        amount: Number(invoice.amount || 0),
+        amount: Number(invoice.amount),
         paymentMode: invoice.paymentMode,
       });
 
       fetchSummary();
       setShowInvoice(false);
+
     } catch {
       alert("Error generating invoice");
     }
@@ -136,154 +146,104 @@ const Accounts = () => {
     setShowView(true);
   };
 
-  const handleNightAudit = () => {
-    alert(
-      `Night Audit Completed
-
-Income: ${formatINR(totals.income)}
-Expense: ${formatINR(totals.expense)}
-Net: ${formatINR(totals.net)}
-GST: ${formatINR(totals.gstPayable)}`
-    );
-    setShowAudit(false);
-  };
+  /* ================= UI ================= */
 
   return (
-    <div className="resort-page">
-      <div className="resort-shell">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white p-6">
 
-        {/* ACTION BUTTONS */}
+      <h1 className="text-3xl font-bold mb-6">
+        Accounts & Finance
+      </h1>
 
-        <div className="resort-actions">
+      {/* ACTION BUTTONS */}
 
-          <button
-            className="resort-button"
-            onClick={() => setShowIncome(true)}
-          >
-            + Add Income
-          </button>
+      <div className="flex gap-3 mb-6">
+        <button onClick={() => setShowIncome(true)} className="bg-green-600 px-4 py-2 rounded">
+          + Add Income
+        </button>
+        <button onClick={() => setShowExpense(true)} className="bg-red-600 px-4 py-2 rounded">
+          + Add Expense
+        </button>
+        <button onClick={() => setShowInvoice(true)} className="bg-blue-600 px-4 py-2 rounded">
+          + Generate Invoice
+        </button>
+      </div>
 
-          <button
-            className="resort-button"
-            onClick={() => setShowExpense(true)}
-          >
-            + Add Expense
-          </button>
+      {/* SUMMARY */}
 
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
 
-        {/* SUMMARY */}
+        <SummaryCard label="Total Income" value={formatINR(totals.income)} />
+        <SummaryCard label="Total Expense" value={formatINR(totals.expense)} />
+        <SummaryCard label="Net Profit" value={formatINR(totals.net)} />
+        <SummaryCard label="GST Payable" value={formatINR(totals.gstPayable)} />
 
-        <section className="resort-grid">
+      </div>
 
-          <SummaryCard
-            label="Total Income"
-            value={formatINR(totals.income)}
-            valueColor="green"
-          />
+      {/* TABLE */}
 
-          <SummaryCard
-            label="Total Expense"
-            value={formatINR(totals.expense)}
-            valueColor="red"
-          />
+      <div className="bg-slate-800/40 rounded-xl overflow-hidden">
 
-          <SummaryCard
-            label="Net Profit"
-            value={formatINR(totals.net)}
-            valueColor="blue"
-          />
+        <table className="w-full text-sm">
 
-          <SummaryCard
-            label="GST Payable"
-            value={formatINR(totals.gstPayable)}
-            valueColor="purple"
-          />
+          <thead className="bg-slate-900/50">
 
-        </section>
-
-        {/* RECORD TABLE */}
-
-        <table className="w-full">
-
-          <thead>
             <tr>
-              <th>Date</th>
-              <th>Type</th>
-              <th>Description</th>
-              <th>Amount</th>
-              <th>Payment Mode</th>
-              <th>Action</th>
+              <th className="p-3 text-left">Date</th>
+              <th className="p-3 text-left">Type</th>
+              <th className="p-3 text-left">Description</th>
+              <th className="p-3 text-left">Amount</th>
+              <th className="p-3 text-left">Payment Mode</th>
+              <th className="p-3 text-left">Action</th>
             </tr>
+
           </thead>
 
           <tbody>
 
             {records.map((r) => (
-              <RecordRow
-                key={r.id}
-                record={r}
-                onView={handleView}
-              />
+              <RecordRow key={r.id} record={r} onView={() => handleView(r)} />
             ))}
 
           </tbody>
 
         </table>
 
-        {/* ADD INCOME */}
+      </div>
 
-        {showIncome && (
-          <TransactionForm
-            type="Income"
-            onSubmit={handleAddIncome}
-            onCancel={() => setShowIncome(false)}
-          />
-        )}
+      {/* REPORT CARDS */}
 
-        {/* ADD EXPENSE */}
+      <div className="grid grid-cols-3 gap-4 mt-6">
 
-        {showExpense && (
-          <TransactionForm
-            type="Expense"
-            onSubmit={handleAddExpense}
-            onCancel={() => setShowExpense(false)}
-          />
-        )}
-
-        {/* INVOICE */}
-
-        {showInvoice && (
-          <InvoiceForm
-            onSubmit={handleGenerateInvoice}
-            onCancel={() => setShowInvoice(false)}
-          />
-        )}
-
-        {/* RECORD VIEW */}
-
-        {showView && selectedRecord && (
-
-          <div className="mt-6 border p-4 rounded">
-
-            <p>Date: {selectedRecord.date}</p>
-            <p>Type: {selectedRecord.type}</p>
-            <p>Description: {selectedRecord.description}</p>
-            <p>Amount: {formatINR(selectedRecord.amount)}</p>
-            <p>Payment Mode: {selectedRecord.paymentMode}</p>
-
-            <button
-              onClick={() => setShowView(false)}
-              className="mt-3 bg-red-500 px-4 py-2 rounded"
-            >
-              Close
-            </button>
-
-          </div>
-
-        )}
+        <ReportCard title="Profit & Loss" onClick={() => alert("P&L")} />
+        <ReportCard title="GST Report" onClick={() => alert("GST")} />
+        <ReportCard title="Collection Report" onClick={() => alert("Collection")} />
 
       </div>
+
+      {/* FORMS */}
+
+      {showIncome && (
+        <TransactionForm type="Income" onSubmit={handleAddIncome} onCancel={() => setShowIncome(false)} />
+      )}
+
+      {showExpense && (
+        <TransactionForm type="Expense" onSubmit={handleAddExpense} onCancel={() => setShowExpense(false)} />
+      )}
+
+      {showInvoice && (
+        <InvoiceForm onSubmit={handleGenerateInvoice} onCancel={() => setShowInvoice(false)} />
+      )}
+
+      {/* VIEW */}
+
+      {showView && selectedRecord && (
+        <div className="mt-6 p-4 bg-slate-700 rounded">
+          <p>{selectedRecord.description}</p>
+          <button onClick={() => setShowView(false)}>Close</button>
+        </div>
+      )}
+
     </div>
   );
 };

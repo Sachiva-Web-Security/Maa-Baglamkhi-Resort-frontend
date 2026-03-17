@@ -5,7 +5,7 @@ import BookingSteps from "../components/Hotel/BookingSteps";
 import Guest from "../components/Hotel/Guest";
 import OtherBooking from "../components/Hotel/otherBooking";
 import Reference from "../components/Hotel/Reference";
-import Company from "../components/Hotel/company"
+import Company from "../components/Hotel/company";
 import Room from "../components/Hotel/Room";
 import Pax from "../components/Hotel/Pax";
 import RoomTariff from "../components/Hotel/RoomTariff";
@@ -14,12 +14,17 @@ import Communication from "../components/Hotel/Communication";
 
 const Hotel = () => {
   return (
-    <div>
+    <div className="p-4">
+      {/* ================= STEP HEADER ================= */}
       <BookingSteps />
 
+      {/* ================= STEP ROUTES ================= */}
       <Routes>
-        <Route index element={<Navigate to="guest" />} />
 
+        {/* Default redirect (BEST PRACTICE) */}
+        <Route index element={<Navigate to="guest" replace />} />
+
+        {/* Step Pages */}
         <Route path="guest" element={<Guest />} />
         <Route path="other-booking" element={<OtherBooking />} />
         <Route path="reference" element={<Reference />} />
@@ -29,6 +34,10 @@ const Hotel = () => {
         <Route path="room-tariff" element={<RoomTariff />} />
         <Route path="advance" element={<Advance />} />
         <Route path="communication" element={<Communication />} />
+
+        {/* Fallback (optional but recommended) */}
+        <Route path="*" element={<Navigate to="guest" replace />} />
+
       </Routes>
     </div>
   );

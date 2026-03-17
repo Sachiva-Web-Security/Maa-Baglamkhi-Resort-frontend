@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { housekeepingService } from '../services/housekeepingService';
 import { userService } from '../services/userService';
-import { hotelService } from '../services/hotelService';
+
 import {
   FaSearch,
   FaTimes,

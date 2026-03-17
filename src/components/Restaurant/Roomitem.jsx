@@ -2,31 +2,33 @@ import React, { useState, useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { RestaurantContext } from "../../Context/RestaurantContext";
 import { FiPlusCircle, FiHome, FiFileText } from "react-icons/fi";
-import { roomService } from "../../services/roomService";
+
+const DEFAULT_ROOMS = [
+  { id: 201, status: "Occupied" },
+  { id: 202, status: "Available" },
+];
 
 const Roomitem = () => {
   const navigate = useNavigate();
   const { setSelectedTable } = useContext(RestaurantContext);
   const [roomNo, setRoomNo] = useState("");
 
-  const [rooms, setRooms] = useState([]);
-
-  // load rooms from backend
-  useEffect(() => {
-    const load = async () => {
+  const [rooms, setRooms] = useState(() => {
+    const stored = localStorage.getItem("rooms:list");
+    if (stored) {
       try {
-        const data = await roomService.getRooms();
-        const normalized = (data || []).map((r) => ({
-          id: r.number || r.id,
-          status: r.status || "Available",
-        }));
-        setRooms(normalized);
-      } catch (err) {
-        console.error("Failed to load rooms", err);
+        return JSON.parse(stored);
+      } catch (e) {
+        console.warn("rooms:list parse failed", e);
       }
-    };
-    load();
-  }, []);
+    }
+    return DEFAULT_ROOMS;
+  });
+
+  // persist rooms locally so they survive navigation/refresh
+  useEffect(() => {
+    localStorage.setItem("rooms:list", JSON.stringify(rooms));
+  }, [rooms]);
 
   const addRoom = () => {
     if (!roomNo) {
@@ -45,16 +47,8 @@ const Roomitem = () => {
       status: "Available",
     };
 
-    const persist = async () => {
-      try {
-        await roomService.addRoom(roomNo);
-        setRooms([...rooms, newRoom]);
-        setRoomNo("");
-      } catch (err) {
-        alert(err?.response?.data?.message || "Failed to add room");
-      }
-    };
-    persist();
+    setRooms([...rooms, newRoom]);
+    setRoomNo("");
   };
 
   const occupiedCount = rooms.filter((r) => r.status === "Occupied").length;

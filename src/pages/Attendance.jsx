@@ -6,18 +6,28 @@ import AttendanceForm from "../components/Attendance/AttendanceForm";
 import API from "../api";
 
 const Attendance = () => {
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+
+  /* ================= STATE ================= */
+
+  const [date, setDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
+
   const [department, setDepartment] = useState("All Departments");
   const [role, setRole] = useState("All Roles");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const [showManualEntry, setShowManualEntry] = useState(false);
   const [employees, setEmployees] = useState([]);
+  const [showManualEntry, setShowManualEntry] = useState(false);
+
+  /* ================= FETCH ================= */
 
   useEffect(() => {
     const fetchAttendance = async () => {
       try {
-        const res = await API.get("/attendance", { params: { date } });
+        const res = await API.get("/attendance", {
+          params: { date },
+        });
         setEmployees(res.data || []);
       } catch (err) {
         console.error("Error loading attendance", err);
@@ -27,11 +37,14 @@ const Attendance = () => {
     fetchAttendance();
   }, [date]);
 
+  /* ================= FILTER ================= */
+
   const filteredEmployees = employees.filter((emp) => {
     const matchesDepartment =
       department === "All Departments" || emp.department === department;
 
-    const matchesRole = role === "All Roles" || emp.role === role;
+    const matchesRole =
+      role === "All Roles" || emp.role === role;
 
     const matchesSearch =
       searchQuery === "" ||
@@ -40,24 +53,19 @@ const Attendance = () => {
     return matchesDepartment && matchesRole && matchesSearch;
   });
 
+  /* ================= STATS ================= */
+
   const totalStaff = employees.length;
   const presentStaff = employees.filter((e) => e.status === "Present").length;
   const absentStaff = employees.filter((e) => e.status === "Absent").length;
   const lateStaff = employees.filter((e) => e.status === "Late").length;
-  const onLeaveStaff = employees.filter(
-    (e) => e.status === "On Leave"
-  ).length;
+  const onLeaveStaff = employees.filter((e) => e.status === "On Leave").length;
 
-  const handleAddManualEntry = () => {
-    setShowManualEntry(true);
-  };
+  /* ================= ACTION ================= */
 
   const handleManualSubmit = async (data) => {
     try {
-      const payload = {
-        ...data,
-        date,
-      };
+      const payload = { ...data, date };
 
       const res = await API.post("/attendance", payload);
 
@@ -69,21 +77,22 @@ const Attendance = () => {
       ]);
 
       setShowManualEntry(false);
-
       alert("Attendance saved");
 
     } catch (err) {
-      console.error("Error saving attendance", err);
+      console.error(err);
       alert("Error saving attendance");
     }
   };
+
+  /* ================= UI ================= */
 
   return (
     <div className="resort-page">
 
       <div className="resort-shell">
 
-        {/* HERO */}
+        {/* ===== HERO ===== */}
 
         <section className="resort-hero">
 
@@ -101,7 +110,6 @@ const Attendance = () => {
 
               <p className="resort-subtitle">
                 Track staff presence, late arrivals, and leave patterns
-                from one responsive workspace.
               </p>
 
             </div>
@@ -109,17 +117,13 @@ const Attendance = () => {
             <div className="resort-stat-grid">
 
               <div className="resort-stat">
-                <span className="resort-stat-label">Date</span>
-                <span className="resort-stat-value">
-                  {date}
-                </span>
+                <span>Date</span>
+                <span>{date}</span>
               </div>
 
               <div className="resort-stat">
-                <span className="resort-stat-label">Visible Staff</span>
-                <span className="resort-stat-value">
-                  {filteredEmployees.length}
-                </span>
+                <span>Visible Staff</span>
+                <span>{filteredEmployees.length}</span>
               </div>
 
             </div>
@@ -128,7 +132,7 @@ const Attendance = () => {
 
         </section>
 
-        {/* FILTERS */}
+        {/* ===== FILTERS ===== */}
 
         <section className="resort-panel">
 
@@ -141,12 +145,12 @@ const Attendance = () => {
             onDepartmentChange={setDepartment}
             onRoleChange={setRole}
             onSearchChange={setSearchQuery}
-            onAddManualEntry={handleAddManualEntry}
+            onAddManualEntry={() => setShowManualEntry(true)}
           />
 
         </section>
 
-        {/* SUMMARY */}
+        {/* ===== SUMMARY ===== */}
 
         <section className="resort-grid">
 
@@ -158,7 +162,7 @@ const Attendance = () => {
 
         </section>
 
-        {/* TABLE */}
+        {/* ===== TABLE ===== */}
 
         <section className="resort-table-shell">
 
@@ -192,19 +196,11 @@ const Attendance = () => {
                 ))}
 
                 {filteredEmployees.length === 0 && (
-
                   <tr>
-
-                    <td colSpan={7} className="p-6">
-
-                      <div className="resort-empty">
-                        No attendance records found.
-                      </div>
-
+                    <td colSpan={7} className="p-6 text-center">
+                      No attendance records found.
                     </td>
-
                   </tr>
-
                 )}
 
               </tbody>
@@ -215,19 +211,17 @@ const Attendance = () => {
 
         </section>
 
-        {/* MANUAL ENTRY FORM */}
+        {/* ===== MANUAL ENTRY ===== */}
 
         {showManualEntry && (
 
           <div className="mt-8 border border-white/10 rounded-xl p-6 bg-slate-900">
 
-            <h2 className="text-lg font-bold mb-4">
+            <h2 className="text-lg font-bold mb-4 text-white">
               Add Manual Entry
             </h2>
 
-            <AttendanceForm
-              onSubmit={handleManualSubmit}
-            />
+            <AttendanceForm onSubmit={handleManualSubmit} />
 
             <button
               className="mt-4 bg-red-500 px-4 py-2 rounded"

@@ -3,9 +3,8 @@ import { useEffect, useMemo, useState } from "react";
 import BanquetStepper from "../components/Banquet/BanquetStepper";
 import BanquetHallCard from "../components/Banquet/BanquetHallCard";
 import BanquetBookingRow from "../components/Banquet/BanquetBookingRow";
-import BanquetBill from "../components/Banquet/BanquetBill";
 
-import API, { getBackendBaseURL } from "../api";
+import API from "../api";
 
 /* ---------------- FORMAT ---------------- */
 
@@ -24,6 +23,15 @@ const menuPackages = [
   { id: "royal", name: "Royal", perGuest: 1250 },
 ];
 
+/* ---------------- STEPS ---------------- */
+
+const steps = [
+  "Select Hall",
+  "Event Details",
+  "Date & Time",
+  "Confirm Booking",
+];
+
 /* ---------------- TIME ---------------- */
 
 function hoursBetween(start, end) {
@@ -33,16 +41,12 @@ function hoursBetween(start, end) {
   const [eh, em] = end.split(":").map(Number);
 
   const diff = eh * 60 + em - (sh * 60 + sm);
-
   if (diff <= 0) return 0;
 
   return Math.max(1, Math.ceil(diff / 60));
 }
 
-const inputCls =
-  "w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-gray-100 text-sm";
-
-const labelCls = "block text-xs font-bold text-gray-300 mb-1";
+/* ---------------- COMPONENT ---------------- */
 
 const Banquet = () => {
   const [halls, setHalls] = useState([]);
@@ -50,12 +54,6 @@ const Banquet = () => {
 
   const [showWizard, setShowWizard] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
-
-  const [showAddHall, setShowAddHall] = useState(false);
-  const [detailHall, setDetailHall] = useState(null);
-
-  const [showBill, setShowBill] = useState(false);
-  const [selectedBooking, setSelectedBooking] = useState(null);
 
   const [wizard, setWizard] = useState({
     hallId: "",
@@ -65,31 +63,14 @@ const Banquet = () => {
     guests: 150,
     menuPackageId: "standard",
     decorationFee: 15000,
-    notes: "",
     date: "",
     startTime: "18:00",
     endTime: "22:00",
-    discount: 0,
-    gstPercent: 5,
   });
-
-  const [newHall, setNewHall] = useState({
-    name: "",
-    capacity: "",
-    ratePerHour: "",
-    is_ac: true,
-  });
-
-  /* ---------------- SELECTED ---------------- */
 
   const selectedHall = useMemo(
     () => halls.find((h) => h.id === wizard.hallId),
     [wizard.hallId, halls]
-  );
-
-  const selectedPackage = useMemo(
-    () => menuPackages.find((p) => p.id === wizard.menuPackageId),
-    [wizard.menuPackageId]
   );
 
   const wizardHours = useMemo(
@@ -97,41 +78,19 @@ const Banquet = () => {
     [wizard.startTime, wizard.endTime]
   );
 
-  /* ---------------- BILL ---------------- */
-
-  const wizardTotals = useMemo(() => {
-    const hallCharge = selectedHall
-      ? selectedHall.ratePerHour * wizardHours
-      : 0;
-
-    const foodCharge =
-      (Number(wizard.guests) || 0) * (selectedPackage?.perGuest || 0);
-
-    const decoration = Number(wizard.decorationFee) || 0;
-
-    const subTotal = hallCharge + foodCharge + decoration;
-
-    const discount = Math.min(subTotal, wizard.discount);
-
-    const taxable = subTotal - discount;
-
-    const gst = Math.round((taxable * wizard.gstPercent) / 100);
-
-    return {
-      subTotal,
-      gst,
-      grandTotal: taxable + gst,
-    };
-  }, [wizard, wizardHours, selectedHall, selectedPackage]);
-
   /* ---------------- LOAD ---------------- */
 
   useEffect(() => {
     const load = async () => {
-      const res = await API.get("/banquet");
+      try {
+        const res = await API.get("/banquet");
 
-      if (res.data?.halls) setHalls(res.data.halls);
-      if (res.data?.bookings) setBookings(res.data.bookings);
+        if (res.data?.halls) setHalls(res.data.halls);
+        if (res.data?.bookings) setBookings(res.data.bookings);
+
+      } catch (err) {
+        console.log("Banquet load error", err);
+      }
     };
 
     load();
@@ -140,186 +99,208 @@ const Banquet = () => {
   /* ---------------- BOOKING ---------------- */
 
   const handleConfirmBooking = async () => {
-    const res = await API.post("/banquet", wizard);
-
-    const newBooking = {
-      ...wizard,
-      id: res.data?.id || Date.now(),
-      hallName: selectedHall?.name,
-      status: "Confirmed",
-    };
-
-    setBookings((prev) => [newBooking, ...prev]);
-
-    setActiveStep(4);
-  };
-
-  const generateBill = async (booking) => {
-    setSelectedBooking(booking);
-    setShowBill(true);
-  };
-
-  /* ---------------- ADD HALL ---------------- */
-
-  const handleAddHall = async () => {
-    const res = await API.post("/banquet/halls", newHall);
-
-    if (res.data?.hall) {
-      setHalls((prev) => [...prev, res.data.hall]);
+    if (!selectedHall) {
+      alert("Please select hall");
+      return;
     }
 
-    setShowAddHall(false);
+    try {
+      const res = await API.post("/banquet", {
+        ...wizard,
+        hallId: selectedHall.id,
+      });
+
+      const newBooking = {
+        ...wizard,
+        id: res.data?.id || Date.now(),
+        hallName: selectedHall.name,
+        status: "Confirmed",
+      };
+
+      setBookings((prev) => [newBooking, ...prev]);
+
+      alert("Booking created");
+
+      setShowWizard(false);
+      setActiveStep(0);
+
+    } catch (err) {
+      console.log(err);
+      alert("Error creating booking");
+    }
   };
 
   /* ---------------- UI ---------------- */
 
   return (
-    <div className="p-6">
+    <div className="p-6 text-black">
 
-      <h1 className="text-2xl font-bold mb-4">Banquet Management</h1>
+      <h1 className="text-2xl font-bold mb-4 text-black">
+        Banquet Management
+      </h1>
 
-      <div className="flex gap-3 mb-4">
-        <button
-          onClick={() => setShowWizard(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded"
-        >
-          + New Booking
-        </button>
+      <button
+        onClick={() => setShowWizard(true)}
+        className="bg-blue-600 text-white px-4 py-2 rounded-lg mb-4"
+      >
+        + New Booking
+      </button>
 
-        <button
-          onClick={() => setShowAddHall(true)}
-          className="bg-green-600 text-white px-4 py-2 rounded"
-        >
-          + Add Hall
-        </button>
-      </div>
+      {/* Wizard */}
 
-      {/* HALL LIST */}
+      {showWizard && (
+        <>
+          <BanquetStepper steps={steps} activeStep={activeStep} />
 
-      <div className="grid grid-cols-4 gap-4">
-        {halls.map((hall) => (
-          <div key={hall.id}>
+          {/* Step 0 */}
+          {activeStep === 0 && (
+            <div className="grid grid-cols-3 gap-4 mt-4">
+              {halls.map((hall) => (
+                <BanquetHallCard
+                  key={hall.id}
+                  hall={hall}
+                  selected={wizard.hallId === hall.id}
+                  onSelect={() =>
+                    setWizard((p) => ({ ...p, hallId: hall.id }))
+                  }
+                />
+              ))}
+            </div>
+          )}
 
-            <BanquetHallCard
-              hall={hall}
-              selected={wizard.hallId === hall.id}
-              onSelect={() =>
-                setWizard((p) => ({
-                  ...p,
-                  hallId: hall.id,
-                }))
-              }
-            />
+          {/* Step 1 */}
+          {activeStep === 1 && (
+            <div className="mt-4">
+              <input
+                className="border p-2 mr-2 text-black"
+                placeholder="Customer Name"
+                value={wizard.customerName}
+                onChange={(e) =>
+                  setWizard((p) => ({
+                    ...p,
+                    customerName: e.target.value,
+                  }))
+                }
+              />
 
+              <input
+                className="border p-2 text-black"
+                placeholder="Phone"
+                value={wizard.phone}
+                onChange={(e) =>
+                  setWizard((p) => ({
+                    ...p,
+                    phone: e.target.value,
+                  }))
+                }
+              />
+            </div>
+          )}
+
+          {/* Step 2 */}
+          {activeStep === 2 && (
+            <div className="mt-4">
+              <input
+                type="date"
+                className="border p-2 mr-2 text-black"
+                value={wizard.date}
+                onChange={(e) =>
+                  setWizard((p) => ({ ...p, date: e.target.value }))
+                }
+              />
+
+              <input
+                type="time"
+                className="border p-2 mr-2 text-black"
+                value={wizard.startTime}
+                onChange={(e) =>
+                  setWizard((p) => ({
+                    ...p,
+                    startTime: e.target.value,
+                  }))
+                }
+              />
+
+              <input
+                type="time"
+                className="border p-2 text-black"
+                value={wizard.endTime}
+                onChange={(e) =>
+                  setWizard((p) => ({
+                    ...p,
+                    endTime: e.target.value,
+                  }))
+                }
+              />
+
+              <p className="mt-2 text-sm text-black">
+                Duration: {wizardHours} hr
+              </p>
+            </div>
+          )}
+
+          {/* Step 3 */}
+          {activeStep === 3 && (
+            <div className="mt-4 text-black">
+              <p>Hall: {selectedHall?.name}</p>
+              <p>Customer: {wizard.customerName}</p>
+              <p>Date: {wizard.date}</p>
+
+              <button
+                onClick={handleConfirmBooking}
+                className="bg-green-600 text-white px-4 py-2 mt-3 rounded"
+              >
+                Confirm Booking
+              </button>
+            </div>
+          )}
+
+          {/* Navigation */}
+          <div className="mt-4 flex gap-3">
             <button
-              onClick={() => setDetailHall(hall)}
-              className="text-xs text-blue-400 mt-1"
+              disabled={activeStep === 0}
+              onClick={() => setActiveStep((s) => s - 1)}
+              className="bg-gray-600 text-white px-4 py-2 rounded"
             >
-              View Details
+              Back
             </button>
 
+            {activeStep < steps.length - 1 && (
+              <button
+                onClick={() => setActiveStep((s) => s + 1)}
+                className="bg-blue-600 text-white px-4 py-2 rounded"
+              >
+                Next
+              </button>
+            )}
           </div>
-        ))}
-      </div>
+        </>
+      )}
 
-      {/* BOOKING TABLE */}
+      {/* BOOKINGS */}
 
-      <div className="mt-10">
+      <div className="mt-10 text-black">
+        <h2 className="font-bold mb-2 text-black">
+          All Bookings
+        </h2>
 
-        <h2 className="text-lg font-bold mb-3">All Bookings</h2>
-
-        <table className="w-full">
-
-          <thead>
+        <table className="w-full border text-black">
+          <thead className="bg-gray-200 text-black">
             <tr>
-              <th>Hall</th>
-              <th>Customer</th>
-              <th>Date</th>
-              <th>Status</th>
-              <th>Action</th>
+              <th className="p-2">Hall</th>
+              <th className="p-2">Customer</th>
+              <th className="p-2">Date</th>
+              <th className="p-2">Status</th>
             </tr>
           </thead>
 
           <tbody>
             {bookings.map((b) => (
-              <BanquetBookingRow
-                key={b.id}
-                booking={b}
-                onGenerateBill={() => generateBill(b)}
-              />
+              <BanquetBookingRow key={b.id} booking={b} />
             ))}
           </tbody>
-
         </table>
-
       </div>
-
-      {/* BILL VIEW */}
-
-      {showBill && selectedBooking && (
-        <div className="mt-8 border p-5 rounded">
-
-          <BanquetBill
-            booking={selectedBooking}
-            halls={halls}
-            menuPackages={menuPackages}
-            formatINR={formatINR}
-          />
-
-          <button
-            onClick={() => setShowBill(false)}
-            className="mt-4 bg-red-500 px-4 py-2 rounded"
-          >
-            Close
-          </button>
-
-        </div>
-      )}
-
-      {/* ADD HALL */}
-
-      {showAddHall && (
-        <div className="mt-8 border p-5 rounded">
-
-          <h2 className="font-bold mb-3">Add Hall</h2>
-
-          <input
-            className={inputCls}
-            placeholder="Hall Name"
-            onChange={(e) =>
-              setNewHall((p) => ({ ...p, name: e.target.value }))
-            }
-          />
-
-          <button
-            onClick={handleAddHall}
-            className="mt-3 bg-green-600 px-4 py-2 rounded"
-          >
-            Add Hall
-          </button>
-
-        </div>
-      )}
-
-      {/* HALL DETAIL */}
-
-      {detailHall && (
-        <div className="mt-8 border p-5 rounded">
-
-          <h2 className="font-bold text-lg">{detailHall.name}</h2>
-
-          <p>Capacity: {detailHall.capacity}</p>
-          <p>Rate: ₹{detailHall.ratePerHour}</p>
-
-          <button
-            onClick={() => setDetailHall(null)}
-            className="mt-3 bg-red-500 px-4 py-2 rounded"
-          >
-            Close
-          </button>
-
-        </div>
-      )}
 
     </div>
   );
