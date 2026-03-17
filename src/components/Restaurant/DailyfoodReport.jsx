@@ -1,56 +1,25 @@
 import React, { useState } from "react";
+import { reportService } from "../../services/reportService";
 
 const DailyfoodReport = () => {
 
   const [date, setDate] = useState("");
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  // Example Data (baad me API se aayega)
-  const data = [
-    {
-      room: 201,
-      status: "Confirmed",
-      guest: "Agent Booking",
-      checkin: "10-Jul-2024 12:00 PM",
-      checkout: "12-Jul-2024 10:00 AM",
-      adult: 1,
-      child: 0,
-      meal: "EP",
-      food: 0.0,
-    },
-    {
-      room: 202,
-      status: "Confirmed",
-      guest: "Palash",
-      checkin: "08-Jul-2024 12:00 PM",
-      checkout: "11-Jul-2024 10:00 AM",
-      adult: 1,
-      child: 0,
-      meal: "EP",
-      food: 0.0,
-    },
-    {
-      room: 202,
-      status: "Checked Out",
-      guest: "shilto khan",
-      checkin: "11-Jul-2024 03:01 PM",
-      checkout: "13-Jul-2024 03:26 PM",
-      adult: 2,
-      child: 1,
-      meal: "CP",
-      food: 828.0,
-    },
-    {
-      room: 203,
-      status: "Checked Out",
-      guest: "dtdyfdlufdo67",
-      checkin: "10-Jul-2024",
-      checkout: "11-Jul-2024",
-      adult: 2,
-      child: 0,
-      meal: "CP",
-      food: 2493.75,
-    },
-  ];
+  const load = async () => {
+    try {
+      setLoading(true);
+      const data = await reportService.getDailyRoomFood(date);
+      setRows(data || []);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to load report");
+      setRows([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
 
@@ -80,7 +49,11 @@ const DailyfoodReport = () => {
           className="border p-2 rounded"
         />
 
-        <button className="bg-green-600 text-white px-4 py-2 rounded">
+        <button
+          onClick={load}
+          className="bg-green-600 text-white px-4 py-2 rounded"
+          disabled={loading}
+        >
           Submit
         </button>
 
@@ -116,9 +89,9 @@ const DailyfoodReport = () => {
 
           <tbody>
 
-            {data.map((row, index) => (
+            {rows.map((row, index) => (
 
-              <tr key={index} className="border-b">
+              <tr key={index} className="border-b ">
 
                 <td className="p-2">{row.room}</td>
 

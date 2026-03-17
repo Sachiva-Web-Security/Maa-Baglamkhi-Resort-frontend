@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { reportService } from "../../services/reportService";
 
 const Daywisefood = () => {
 
@@ -6,55 +7,15 @@ const Daywisefood = () => {
   const [endDate, setEndDate] = useState("");
   const [reportData, setReportData] = useState([]);
 
-  const generateReport = () => {
-
-    const invoices =
-      JSON.parse(localStorage.getItem("invoices")) || [];
-
-    const result = {};
-
-    invoices.forEach((inv) => {
-
-      // safer date conversion
-      const dateObj = new Date(inv.date);
-
-      const dateKey =
-        dateObj.getFullYear() +
-        "-" +
-        String(dateObj.getMonth() + 1).padStart(2, "0") +
-        "-" +
-        String(dateObj.getDate()).padStart(2, "0");
-
-      // date filter
-      if (startDate && dateKey < startDate) return;
-      if (endDate && dateKey > endDate) return;
-
-      if (!result[dateKey]) {
-
-        result[dateKey] = {
-          date: dateKey,
-          advance: 0,
-          gst1: 0,
-          inroom: 0,
-          gst2: 0,
-          restaurant: 0,
-          gst3: 0,
-          total: 0
-        };
-
-      }
-
-      const subtotal = inv.total / 1.05;
-      const gst = inv.total - subtotal;
-
-      result[dateKey].restaurant += subtotal;
-      result[dateKey].gst3 += gst;
-      result[dateKey].total += inv.total;
-
-    });
-
-    setReportData(Object.values(result));
-
+  const generateReport = async () => {
+    try {
+      const rows = await reportService.getDaywiseFood(startDate, endDate);
+      setReportData(rows);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to load report");
+      setReportData([]);
+    }
   };
 
   return (
@@ -138,18 +99,18 @@ const Daywisefood = () => {
 
                 <tr key={index} className="border-b">
 
-                  <td className="p-2">{row.date}</td>
+                  <td className="p-2">{row.bill_date || row.date}</td>
 
                   <td className="p-2 text-right">
-                    ₹{row.restaurant.toFixed(2)}
+                    ₹{Number(row.restaurant_sales || row.restaurant || 0).toFixed(2)}
                   </td>
 
                   <td className="p-2 text-right">
-                    ₹{row.gst3.toFixed(2)}
+                    ₹{Number(row.gst_amount || row.gst3 || 0).toFixed(2)}
                   </td>
 
                   <td className="p-2 text-right font-semibold">
-                    ₹{row.total.toFixed(2)}
+                    ₹{Number(row.total_sales || row.total || 0).toFixed(2)}
                   </td>
 
                 </tr>

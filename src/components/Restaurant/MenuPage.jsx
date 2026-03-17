@@ -1,44 +1,23 @@
 import React, { useContext, useState, useMemo, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { RestaurantContext } from "../../Context/RestaurantContext";
+import { restaurantService } from "../../services/restaurantService";
 
 /* ===============================
-   SEND ORDER TO KITCHEN
+   SEND ORDER TO KITCHEN (DB)
 ================================ */
 
-const sendToKitchen = (table, items) => {
-
-  const orders =
-    JSON.parse(localStorage.getItem("kitchenOrders")) || [];
-
-  // format items for kitchen display
-  const formattedItems = items.map((item) => ({
-    item_name: item.name,
-    quantity: item.qty,
-    price: item.rate,
-    total: item.total
-  }));
-
-  const newOrder = {
-    id: Date.now(),
-    waiter_name: localStorage.getItem("name") || "Waiter",
-    table_no: table,
-    items: formattedItems,
-    status: "Pending",
-    created_at: new Date().toISOString(),
-    time: new Date().toLocaleTimeString()
-  };
-
-  orders.push(newOrder);
-
-  localStorage.setItem(
-    "kitchenOrders",
-    JSON.stringify(orders)
-  );
-
-  // kitchen screen refresh
+const sendToKitchen = async (table, items) => {
+  await restaurantService.createKitchenOrder({
+    table,
+    waiter: "Waiter",
+    items: items.map((item) => ({
+      name: item.name,
+      quantity: item.qty,
+      price: item.rate,
+    })),
+  });
   window.dispatchEvent(new Event("kitchenUpdated"));
-
 };
 
 
@@ -52,11 +31,14 @@ const MenuPage = () => {
   const location = useLocation();
   const { table } = useParams();
 
-  const { menuItems, addMenuItem } = useContext(RestaurantContext);
+  const { menuItems, addMenuItem, setSelectedTable } = useContext(RestaurantContext);
 
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [qty, setQty] = useState({});
   const [order, setOrder] = useState(location.state?.existingItems || []);
+  const [menu, setMenu] = useState(menuItems);
+  const [isLoadingMenu, setIsLoadingMenu] = useState(false);
+  const [menuError, setMenuError] = useState(null);
 
   const [showAddMenu, setShowAddMenu] = useState(false);
 
@@ -67,13 +49,17 @@ const MenuPage = () => {
     tax: 5
   });
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
+
   /* ===============================
      RESET CATEGORY WHEN MENU CHANGE
   =============================== */
 
   useEffect(() => {
+    setSelectedTable(table);
     setSelectedCategory("All");
-  }, [menuItems]);
+  }, [menuItems, setSelectedTable, table]);
 
 
   /* ===============================
@@ -81,8 +67,8 @@ const MenuPage = () => {
   =============================== */
 
   const categories = useMemo(() => {
-    return ["All", ...new Set(menuItems.map((i) => i.category || "Other"))];
-  }, [menuItems]);
+    return ["All", ...new Set(menu.map((i) => i.category || "Other"))];
+  }, [menu]);
 
 
   /* ===============================
@@ -91,13 +77,47 @@ const MenuPage = () => {
 
   const filteredItems = useMemo(() => {
 
-    if (selectedCategory === "All") return menuItems;
+    if (selectedCategory === "All") return menu;
 
-    return menuItems.filter(
+    return menu.filter(
       (item) => item.category === selectedCategory
     );
 
-  }, [menuItems, selectedCategory]);
+  }, [menu, selectedCategory]);
+
+
+  /* ===============================
+     LOAD MENU FROM BACKEND
+  =============================== */
+
+  useEffect(() => {
+
+    let mounted = true;
+    const fetchMenu = async () => {
+      setIsLoadingMenu(true);
+      setMenuError(null);
+      try {
+        const data = await restaurantService.getMenu(table);
+        if (mounted) setMenu(data || []);
+      } catch (err) {
+        if (mounted) {
+          setMenuError(err.response?.data?.message || "Unable to load menu.");
+          setMenu([]);
+        }
+      } finally {
+        if (mounted) setIsLoadingMenu(false);
+      }
+    };
+
+    fetchMenu();
+    return () => { mounted = false; };
+
+  }, [table]);
+
+  // keep local menu in sync when context updates (e.g., addMenuItem)
+  useEffect(() => {
+    setMenu(menuItems);
+  }, [menuItems]);
 
 
   /* ===============================
@@ -159,28 +179,49 @@ const MenuPage = () => {
      SUBMIT ORDER
   =============================== */
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
 
     if (order.length === 0) {
       alert("Please add items");
       return;
     }
 
-    // SAVE TOKEN
-    localStorage.setItem(`token-${table}`, JSON.stringify(order));
+    setIsSubmitting(true);
+    setSubmitError(null);
 
-    // SEND ORDER TO KITCHEN
-    sendToKitchen(table, order);
+    try {
 
-    // DASHBOARD REFRESH
-    window.dispatchEvent(new Event("tokenUpdated"));
+      // CREATE ORDER IN BACKEND
+      await restaurantService.createOrder(
+        table,
+        order.map(({ name, qty, rate }) => ({
+          name,
+          quantity: qty,
+          price: rate,
+        }))
+      );
 
-    navigate(`/restaurant/edit-token/${table}`, {
-      state: { items: order }
-    });
+      // SEND ORDER TO KITCHEN (DB)
+      await sendToKitchen(table, order);
 
-    // clear local order
-    setOrder([]);
+      // DASHBOARD REFRESH
+      window.dispatchEvent(new Event("tokenUpdated"));
+
+      navigate(`/restaurant/edit-token/${table}`, {
+        state: { items: order }
+      });
+
+      // clear local order
+      setOrder([]);
+
+    } catch (err) {
+
+      console.log(err);
+      setSubmitError(err.response?.data?.message || "Failed to submit order");
+
+    } finally {
+      setIsSubmitting(false);
+    }
 
   };
 
@@ -281,7 +322,23 @@ const MenuPage = () => {
 
               <tbody>
 
-                {filteredItems.map((item) => {
+                {isLoadingMenu && (
+                  <tr>
+                    <td colSpan="5" className="p-3 text-center text-gray-500">
+                      Loading menu...
+                    </td>
+                  </tr>
+                )}
+
+                {menuError && (
+                  <tr>
+                    <td colSpan="5" className="p-3 text-center text-red-600">
+                      {menuError}
+                    </td>
+                  </tr>
+                )}
+
+                {!isLoadingMenu && !menuError && filteredItems.map((item) => {
 
                   const quantity = Number(qty[item.id] || 0);
                   const amount = item.price * quantity;
@@ -427,6 +484,12 @@ const MenuPage = () => {
 
         <div className="flex justify-end gap-3 p-3 border-t">
 
+          {submitError && (
+            <span className="text-red-600 mr-auto text-sm">
+              {submitError}
+            </span>
+          )}
+
           <button
             onClick={handleCancel}
             className="bg-red-500 text-white px-4 py-2 rounded"
@@ -436,9 +499,14 @@ const MenuPage = () => {
 
           <button
             onClick={handleSubmit}
-            className="bg-green-600 text-white px-4 py-2 rounded"
+            disabled={isSubmitting}
+            className={`px-4 py-2 rounded text-white ${
+              isSubmitting
+                ? "bg-green-400 cursor-not-allowed"
+                : "bg-green-600"
+            }`}
           >
-            Submit
+            {isSubmitting ? "Submitting..." : "Submit"}
           </button>
 
         </div>

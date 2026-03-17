@@ -53,6 +53,15 @@ onClick={() => navigate("/restaurant/daily-room-food")}
 Daily Roomwise Food Report
 </li>
 
+
+
+<li
+className="cursor-pointer hover:bg-gray-200 p-2 rounded"
+onClick={() => navigate("/restaurant/room-items")}
+>
+Room Items
+</li>
+
 <li
 className="cursor-pointer hover:bg-gray-200 p-2 rounded"
 onClick={() => navigate("/restaurant/daywise-food")}

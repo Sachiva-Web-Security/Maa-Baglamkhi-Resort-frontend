@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { restaurantService } from "../../services/restaurantService";
 
 const ItemConsumption = () => {
 
@@ -7,51 +8,63 @@ const ItemConsumption = () => {
   const [groupBy, setGroupBy] = useState("Item");
   const [data, setData] = useState({});
 
-  const loadReport = () => {
+  const loadReport = async () => {
 
-    const orders =
-      JSON.parse(localStorage.getItem("kitchenOrders")) || [];
+    try {
 
-    const result = {};
+      const orders = await restaurantService.getKitchenOrders();
+      const result = {};
 
-    orders.forEach((order) => {
+      orders.forEach((order) => {
 
-      const orderDate = new Date(order.created_at);
+        const orderDate = new Date(order.created_at);
 
-      if (startDate) {
-        const start = new Date(startDate);
-        if (orderDate < start) return;
-      }
-
-      if (endDate) {
-        const end = new Date(endDate);
-        end.setHours(23, 59, 59, 999);
-        if (orderDate > end) return;
-      }
-
-      order.items.forEach((item) => {
-
-        const key =
-          groupBy === "Item"
-            ? item.item_name
-            : item.category || "Items";
-
-        if (!result[key]) {
-
-          result[key] = {
-            name: key,
-            qty: 0
-          };
-
+        if (startDate) {
+          const start = new Date(startDate);
+          if (orderDate < start) return;
         }
 
-        result[key].qty += Number(item.quantity);
+        if (endDate) {
+          const end = new Date(endDate);
+          end.setHours(23, 59, 59, 999);
+          if (orderDate > end) return;
+        }
+
+        (order.items || []).forEach((item) => {
+
+          const key =
+            groupBy === "Item"
+              ? item.name || item.item_name
+              : item.category || "Items";
+
+          if (!result[key]) {
+
+            result[key] = {
+              name: key,
+              qty: 0
+            };
+
+          }
+
+          const qty = Number(
+            item.quantity ??
+            item.qty ??
+            item.Qty ??
+            0
+          ) || 0;
+
+          result[key].qty += qty;
+
+        });
 
       });
 
-    });
+      setData(result);
 
-    setData(result);
+    } catch (err) {
+      console.error(err);
+      setData({});
+    }
 
   };
 

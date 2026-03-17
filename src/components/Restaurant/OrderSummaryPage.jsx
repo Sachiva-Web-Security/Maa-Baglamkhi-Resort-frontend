@@ -1,4 +1,4 @@
-import React, { useContext, useMemo, useState } from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { RestaurantContext } from "../../Context/RestaurantContext";
 
@@ -14,9 +14,25 @@ const OrderSummaryPage = ({ tableNo }) => {
     createOrder,
   } = useContext(RestaurantContext);
 
-  const [waiterName, setWaiterName] = useState(localStorage.getItem("name") || "Waiter");
+  const [waiterName, setWaiterName] = useState("Waiter");
   const [sending, setSending] = useState(false);
-  const orderItems = useMemo(() => getOrderItemsForTable(tableNo), [getOrderItemsForTable, tableNo]);
+  const [orderItems, setOrderItems] = useState([]);
+
+  useEffect(() => {
+    let active = true;
+    const load = async () => {
+      try {
+        const items = await getOrderItemsForTable(tableNo);
+        if (active) setOrderItems(items);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    load();
+    return () => {
+      active = false;
+    };
+  }, [getOrderItemsForTable, tableNo]);
 
   const totals = useMemo(() => {
     const subtotal = orderItems.reduce((acc, item) => {

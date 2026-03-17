@@ -21,7 +21,7 @@ import Housekeeping from "./pages/Housekeeping";
 import Banquet from "./pages/Banquet";
 import Reports from "./pages/Reports";
 
-
+import Roomitem from "./components/Restaurant/Roomitem";
 
 
 /* ADD THESE */
@@ -300,6 +300,7 @@ function App() {
 
 <Route path="token-items/:table" element={<TokenItemsPage />} />
 
+<Route path="room-items" element={<Roomitem />} />
 {/* ===== REPORT ROUTES ===== */}
 
 <Route path="daily-room-food" element={<DailyfoodReport />} />
