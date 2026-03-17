@@ -1,19 +1,30 @@
-const SummaryCard = ({ label, value, color }) => {
+const SummaryCard = ({ label, value, color, icon: Icon }) => {
   const colors = {
-    green: "from-green-500/30 to-green-600/10 border-green-500/40",
-    red: "from-red-500/30 to-red-600/10 border-red-500/40",
-    yellow: "from-yellow-500/30 to-yellow-600/10 border-yellow-500/40",
-    blue: "from-blue-500/30 to-blue-600/10 border-blue-500/40",
+    green: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    red: "bg-rose-50 text-rose-700 border-rose-200",
+    yellow: "bg-amber-50 text-amber-700 border-amber-200",
+    blue: "bg-sky-50 text-sky-700 border-sky-200",
   };
 
   return (
-    <div
-      className={`rounded-2xl p-4 bg-gradient-to-br ${
-        colors[color] || "from-white/10 to-white/5 border-white/20"
-      } border backdrop-blur-xl shadow-lg`}
-    >
-      <p className="text-gray-300 text-sm">{label}</p>
-      <h2 className="text-2xl font-bold mt-2">{value}</h2>
+    <div className="rounded-[24px] border border-white/60 bg-white/82 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+            {label}
+          </div>
+          <div className="mt-3 text-3xl font-black text-slate-900">{value}</div>
+        </div>
+        {Icon ? (
+          <span
+            className={`inline-flex rounded-2xl border p-3 ${
+              colors[color] || "border-slate-200 bg-slate-50 text-slate-700"
+            }`}
+          >
+            <Icon />
+          </span>
+        ) : null}
+      </div>
     </div>
   );
 };

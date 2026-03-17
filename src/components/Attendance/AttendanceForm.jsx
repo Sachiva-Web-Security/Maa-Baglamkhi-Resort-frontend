@@ -1,24 +1,29 @@
-import { useState } from 'react';
-import './AttendanceForm.css';
+import { useState } from "react";
+
+const fieldCls =
+  "w-full rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100";
+
+const labelCls =
+  "mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500";
 
 const AttendanceForm = ({ onSubmit, onCancel, initialData = {} }) => {
   const [formData, setFormData] = useState({
-    employeeName: initialData.employeeName || '',
-    role: initialData.role || '',
-    department: initialData.department || '',
-    date: initialData.date || new Date().toISOString().split('T')[0],
-    checkIn: initialData.checkIn || '',
-    checkOut: initialData.checkOut || '',
-    status: initialData.status || 'Present',
-    method: initialData.method || 'Manual',
-    notes: initialData.notes || '',
+    employeeName: initialData.employeeName || "",
+    role: initialData.role || "",
+    department: initialData.department || "",
+    date: initialData.date || new Date().toISOString().split("T")[0],
+    checkIn: initialData.checkIn || "",
+    checkOut: initialData.checkOut || "",
+    status: initialData.status || "Present",
+    method: initialData.method || "Manual",
+    notes: initialData.notes || "",
   });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -28,9 +33,11 @@ const AttendanceForm = ({ onSubmit, onCancel, initialData = {} }) => {
   };
 
   return (
-    <form className="attendance-form" onSubmit={handleSubmit}>
-      <div className="form-group">
-        <label htmlFor="employeeName">Employee Name *</label>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label htmlFor="employeeName" className={labelCls}>
+          Employee Name
+        </label>
         <input
           type="text"
           id="employeeName"
@@ -39,35 +46,43 @@ const AttendanceForm = ({ onSubmit, onCancel, initialData = {} }) => {
           onChange={handleChange}
           required
           placeholder="Enter employee name"
+          className={fieldCls}
         />
       </div>
 
-      <div className="form-row">
-        <div className="form-group">
-          <label htmlFor="role">Role *</label>
+      <div className="grid gap-4 md:grid-cols-2">
+        <div>
+          <label htmlFor="role" className={labelCls}>
+            Role
+          </label>
           <select
             id="role"
             name="role"
             value={formData.role}
             onChange={handleChange}
             required
+            className={fieldCls}
           >
             <option value="">Select Role</option>
             <option value="Admin">Admin</option>
             <option value="Manager">Manager</option>
             <option value="Staff">Staff</option>
             <option value="Receptionist">Receptionist</option>
+            <option value="Housekeeping">Housekeeping</option>
           </select>
         </div>
 
-        <div className="form-group">
-          <label htmlFor="department">Department *</label>
+        <div>
+          <label htmlFor="department" className={labelCls}>
+            Department
+          </label>
           <select
             id="department"
             name="department"
             value={formData.department}
             onChange={handleChange}
             required
+            className={fieldCls}
           >
             <option value="">Select Department</option>
             <option value="Reception">Reception</option>
@@ -79,9 +94,11 @@ const AttendanceForm = ({ onSubmit, onCancel, initialData = {} }) => {
         </div>
       </div>
 
-      <div className="form-row">
-        <div className="form-group">
-          <label htmlFor="date">Date *</label>
+      <div className="grid gap-4 md:grid-cols-2">
+        <div>
+          <label htmlFor="date" className={labelCls}>
+            Date
+          </label>
           <input
             type="date"
             id="date"
@@ -89,17 +106,21 @@ const AttendanceForm = ({ onSubmit, onCancel, initialData = {} }) => {
             value={formData.date}
             onChange={handleChange}
             required
+            className={fieldCls}
           />
         </div>
 
-        <div className="form-group">
-          <label htmlFor="status">Status *</label>
+        <div>
+          <label htmlFor="status" className={labelCls}>
+            Status
+          </label>
           <select
             id="status"
             name="status"
             value={formData.status}
             onChange={handleChange}
             required
+            className={fieldCls}
           >
             <option value="Present">Present</option>
             <option value="Absent">Absent</option>
@@ -109,48 +130,57 @@ const AttendanceForm = ({ onSubmit, onCancel, initialData = {} }) => {
         </div>
       </div>
 
-      <div className="form-row">
-        <div className="form-group">
-          <label htmlFor="checkIn">Check-In Time</label>
+      <div className="grid gap-4 md:grid-cols-2">
+        <div>
+          <label htmlFor="checkIn" className={labelCls}>
+            Check-In Time
+          </label>
           <input
             type="time"
             id="checkIn"
             name="checkIn"
             value={formData.checkIn}
             onChange={handleChange}
-            placeholder="HH:MM"
+            className={fieldCls}
           />
         </div>
 
-        <div className="form-group">
-          <label htmlFor="checkOut">Check-Out Time</label>
+        <div>
+          <label htmlFor="checkOut" className={labelCls}>
+            Check-Out Time
+          </label>
           <input
             type="time"
             id="checkOut"
             name="checkOut"
             value={formData.checkOut}
             onChange={handleChange}
-            placeholder="HH:MM"
+            className={fieldCls}
           />
         </div>
       </div>
 
-      <div className="form-group">
-        <label htmlFor="method">Method *</label>
+      <div>
+        <label htmlFor="method" className={labelCls}>
+          Method
+        </label>
         <select
           id="method"
           name="method"
           value={formData.method}
           onChange={handleChange}
           required
+          className={fieldCls}
         >
           <option value="Manual">Manual</option>
           <option value="Biometric">Biometric</option>
         </select>
       </div>
 
-      <div className="form-group">
-        <label htmlFor="notes">Notes</label>
+      <div>
+        <label htmlFor="notes" className={labelCls}>
+          Notes
+        </label>
         <textarea
           id="notes"
           name="notes"
@@ -158,14 +188,22 @@ const AttendanceForm = ({ onSubmit, onCancel, initialData = {} }) => {
           onChange={handleChange}
           rows="3"
           placeholder="Any additional notes..."
+          className={fieldCls}
         />
       </div>
 
-      <div className="form-actions">
-        <button type="button" className="btn-cancel" onClick={onCancel}>
+      <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="rounded-[20px] border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 transition hover:border-cyan-200 hover:text-cyan-700"
+        >
           Cancel
         </button>
-        <button type="submit" className="btn-submit">
+        <button
+          type="submit"
+          className="rounded-[20px] bg-gradient-to-r from-sky-600 to-cyan-500 px-5 py-3 text-sm font-bold text-white shadow-[0_16px_35px_rgba(14,165,233,0.24)] transition hover:-translate-y-0.5"
+        >
           Submit
         </button>
       </div>
@@ -174,4 +212,3 @@ const AttendanceForm = ({ onSubmit, onCancel, initialData = {} }) => {
 };
 
 export default AttendanceForm;
-

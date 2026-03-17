@@ -79,7 +79,6 @@ const RestaurantPOS = () => {
           </div>
         </div>
       </div>
-
     </div>
   );
 };

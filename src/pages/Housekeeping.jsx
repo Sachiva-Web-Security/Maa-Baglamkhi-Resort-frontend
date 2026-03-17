@@ -260,44 +260,78 @@ function Housekeeping() {
   }, [data, auditChecks]);
 
   const activeOptionMeta = HOUSEKEEPING_OPTIONS.find((opt) => opt.id === activeOption);
+  const unassignedRooms = data.filter((room) => room.assignee === 'No Housekeeper').length;
+  const readyRooms = data.filter((room) =>
+    String(room.status || '').toLowerCase().includes('clean'),
+  ).length;
+  const summaryCards = [
+    {
+      label: 'Active Rooms',
+      value: data.length,
+      helper: 'Current housekeeping inventory',
+      accent: 'from-cyan-500 to-sky-500',
+      ring: 'border-cyan-200/70',
+    },
+    {
+      label: 'Ready For Guest',
+      value: readyRooms,
+      helper: 'Clean rooms ready to allocate',
+      accent: 'from-emerald-500 to-teal-500',
+      ring: 'border-emerald-200/70',
+    },
+    {
+      label: 'Need Assignment',
+      value: unassignedRooms,
+      helper: 'Rooms without housekeeper',
+      accent: 'from-amber-500 to-orange-500',
+      ring: 'border-amber-200/70',
+    },
+    {
+      label: 'Audit Pass Rate',
+      value: `${auditSummary.passRate}%`,
+      helper: 'Live readiness compliance',
+      accent: 'from-violet-500 to-indigo-500',
+      ring: 'border-violet-200/70',
+    },
+  ];
 
   const renderOptionPanel = () => {
     if (activeOption === 'parameters') {
       return (
         <div className="space-y-5">
           <div className="grid gap-4 sm:grid-cols-3">
-            <div className="rounded-xl border border-white/10 bg-gradient-to-br from-amber-500/15 to-amber-900/10 p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-amber-300">Dirty Rooms</p>
-              <p className="mt-2 text-3xl font-bold text-white">{statusCounts.dirty}</p>
+            <div className="rounded-[1.4rem] border border-amber-200/60 bg-gradient-to-br from-amber-50 via-white to-orange-50 p-4 shadow-sm">
+              <p className="text-xs uppercase tracking-[0.2em] text-amber-600">Dirty Rooms</p>
+              <p className="mt-2 text-3xl font-bold text-slate-900">{statusCounts.dirty}</p>
             </div>
-            <div className="rounded-xl border border-white/10 bg-gradient-to-br from-emerald-500/15 to-emerald-900/10 p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-emerald-300">Clean Rooms</p>
-              <p className="mt-2 text-3xl font-bold text-white">{statusCounts.clean}</p>
+            <div className="rounded-[1.4rem] border border-emerald-200/60 bg-gradient-to-br from-emerald-50 via-white to-teal-50 p-4 shadow-sm">
+              <p className="text-xs uppercase tracking-[0.2em] text-emerald-600">Clean Rooms</p>
+              <p className="mt-2 text-3xl font-bold text-slate-900">{statusCounts.clean}</p>
             </div>
-            <div className="rounded-xl border border-white/10 bg-gradient-to-br from-cyan-500/15 to-cyan-900/10 p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-cyan-300">Occupied Rooms</p>
-              <p className="mt-2 text-3xl font-bold text-white">{statusCounts.occupied}</p>
+            <div className="rounded-[1.4rem] border border-cyan-200/60 bg-gradient-to-br from-cyan-50 via-white to-sky-50 p-4 shadow-sm">
+              <p className="text-xs uppercase tracking-[0.2em] text-cyan-700">Occupied Rooms</p>
+              <p className="mt-2 text-3xl font-bold text-slate-900">{statusCounts.occupied}</p>
             </div>
           </div>
 
           <div className="grid gap-4 lg:grid-cols-2">
-            <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-              <h4 className="text-sm font-semibold text-white">Automation Settings</h4>
+            <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-[0_18px_40px_rgba(15,23,42,0.06)]">
+              <h4 className="text-sm font-semibold text-slate-900">Automation Settings</h4>
               <div className="mt-4 space-y-3">
-                <label className="flex items-center justify-between rounded-lg border border-white/10 px-3 py-2 text-sm text-gray-200">
+                <label className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
                   Auto Refresh (15s)
                   <input type="checkbox" checked={autoRefresh} onChange={(e) => setAutoRefresh(e.target.checked)} />
                 </label>
-                <label className="flex items-center justify-between rounded-lg border border-white/10 px-3 py-2 text-sm text-gray-200">
+                <label className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
                   Notify for Dirty Rooms
                   <input type="checkbox" checked={notifyDirty} onChange={(e) => setNotifyDirty(e.target.checked)} />
                 </label>
-                <label className="block rounded-lg border border-white/10 px-3 py-2 text-sm text-gray-200">
+                <label className="block rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
                   <span className="mb-2 block">Default Shift</span>
                   <select
                     value={defaultShift}
                     onChange={(e) => setDefaultShift(e.target.value)}
-                    className="w-full rounded border border-white/10 bg-[#0a1b2f] px-3 py-2 text-white"
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 outline-none"
                   >
                     <option>Morning</option>
                     <option>Evening</option>
@@ -307,27 +341,27 @@ function Housekeeping() {
               </div>
             </div>
 
-            <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-              <h4 className="text-sm font-semibold text-white">Quick Actions</h4>
+            <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-[0_18px_40px_rgba(15,23,42,0.06)]">
+              <h4 className="text-sm font-semibold text-slate-900">Quick Actions</h4>
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 <button
                   type="button"
                   onClick={() => setShowAddModal(true)}
-                  className="rounded-lg bg-gradient-to-r from-teal-500 to-cyan-500 px-4 py-2 text-sm font-semibold text-white"
+                  className="rounded-xl bg-gradient-to-r from-cyan-600 to-teal-500 px-4 py-2 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(8,145,178,0.24)]"
                 >
                   + Add Room
                 </button>
                 <button
                   type="button"
                   onClick={fetchRooms}
-                  className="rounded-lg border border-white/20 bg-white/5 px-4 py-2 text-sm font-semibold text-white"
+                  className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700"
                 >
-                  <span className="inline-flex items-center gap-2">
+                  <span className="inline-flex items-center gap-2 text-slate-700">
                     <FaSyncAlt /> Refresh Now
                   </span>
                 </button>
               </div>
-              <p className="mt-4 text-xs text-gray-400">
+              <p className="mt-4 text-xs text-slate-500">
                 Yeh panel housekeeping operations ka control center hai. Yahan se live settings aur quick actions manage kar sakte hain.
               </p>
             </div>
@@ -377,19 +411,19 @@ function Housekeeping() {
 
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {filteredCleaningRows.map((room) => (
-              <div key={`clean-${room.id}`} className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+              <div key={`clean-${room.id}`} className="rounded-[1.35rem] border border-slate-200 bg-white p-4 shadow-[0_16px_35px_rgba(15,23,42,0.05)]">
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="text-lg font-semibold text-white">Room {room.roomNo}</p>
-                    <p className="text-xs text-gray-400">{room.roomType}</p>
+                    <p className="text-lg font-semibold text-slate-900">Room {room.roomNo}</p>
+                    <p className="text-xs text-slate-500">{room.roomType}</p>
                   </div>
                   <span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${statusPillClass(room.status)}`}>
                     {room.status}
                   </span>
                 </div>
-                <div className="mt-3 space-y-1 text-sm text-gray-300">
-                  <p>Assignee: <span className="text-white">{room.assignee}</span></p>
-                  <p>Guest: <span className="text-white">{room.guestStatus || '-'}</span></p>
+                <div className="mt-3 space-y-1 text-sm text-slate-600">
+                  <p>Assignee: <span className="text-slate-900">{room.assignee}</span></p>
+                  <p>Guest: <span className="text-slate-900">{room.guestStatus || '-'}</span></p>
                 </div>
               </div>
             ))}
@@ -404,28 +438,28 @@ function Housekeeping() {
       return (
         <div className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-3">
-            <div className="rounded-xl border border-white/10 bg-emerald-500/10 p-4">
-              <p className="text-xs uppercase tracking-[0.18em] text-emerald-300">Total Cost</p>
-              <p className="mt-2 text-2xl font-bold text-white">Rs {totalCost}</p>
+            <div className="rounded-[1.35rem] border border-emerald-200/70 bg-gradient-to-br from-emerald-50 to-white p-4">
+              <p className="text-xs uppercase tracking-[0.18em] text-emerald-600">Total Cost</p>
+              <p className="mt-2 text-2xl font-bold text-slate-900">Rs {totalCost}</p>
             </div>
-            <div className="rounded-xl border border-white/10 bg-cyan-500/10 p-4">
-              <p className="text-xs uppercase tracking-[0.18em] text-cyan-300">Average / Room</p>
-              <p className="mt-2 text-2xl font-bold text-white">Rs {data.length ? Math.round(totalCost / data.length) : 0}</p>
+            <div className="rounded-[1.35rem] border border-cyan-200/70 bg-gradient-to-br from-cyan-50 to-white p-4">
+              <p className="text-xs uppercase tracking-[0.18em] text-cyan-700">Average / Room</p>
+              <p className="mt-2 text-2xl font-bold text-slate-900">Rs {data.length ? Math.round(totalCost / data.length) : 0}</p>
             </div>
-            <div className="rounded-xl border border-white/10 bg-amber-500/10 p-4">
-              <p className="text-xs uppercase tracking-[0.18em] text-amber-300">High Cost Rooms</p>
-              <p className="mt-2 text-2xl font-bold text-white">{costingRows.filter((r) => r.totalCost >= 600).length}</p>
+            <div className="rounded-[1.35rem] border border-amber-200/70 bg-gradient-to-br from-amber-50 to-white p-4">
+              <p className="text-xs uppercase tracking-[0.18em] text-amber-600">High Cost Rooms</p>
+              <p className="mt-2 text-2xl font-bold text-slate-900">{costingRows.filter((r) => r.totalCost >= 600).length}</p>
             </div>
           </div>
 
           <div className="space-y-3">
             {costingRows.map((row) => (
-              <div key={`cost-${row.roomNo}`} className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+              <div key={`cost-${row.roomNo}`} className="rounded-[1.35rem] border border-slate-200 bg-white p-4 shadow-[0_16px_35px_rgba(15,23,42,0.05)]">
                 <div className="mb-2 flex items-center justify-between text-sm">
-                  <span className="font-semibold text-white">Room {row.roomNo}</span>
-                  <span className="text-emerald-300">Rs {row.totalCost}</span>
+                  <span className="font-semibold text-slate-900">Room {row.roomNo}</span>
+                  <span className="text-emerald-600">Rs {row.totalCost}</span>
                 </div>
-                <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
+                <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
                   <div
                     className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-emerald-400"
                     style={{ width: `${Math.round((row.totalCost / maxCost) * 100)}%` }}
@@ -491,23 +525,23 @@ function Housekeeping() {
       return (
         <div className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-3">
-            <div className="rounded-xl border border-white/10 bg-cyan-500/10 p-4">
-              <p className="text-xs uppercase tracking-[0.18em] text-cyan-300">Toiletries</p>
-              <p className="mt-2 text-2xl font-bold text-white">{amenitiesTotals.toiletries}</p>
+            <div className="rounded-[1.35rem] border border-cyan-200/70 bg-gradient-to-br from-cyan-50 to-white p-4">
+              <p className="text-xs uppercase tracking-[0.18em] text-cyan-700">Toiletries</p>
+              <p className="mt-2 text-2xl font-bold text-slate-900">{amenitiesTotals.toiletries}</p>
             </div>
-            <div className="rounded-xl border border-white/10 bg-emerald-500/10 p-4">
-              <p className="text-xs uppercase tracking-[0.18em] text-emerald-300">Linen</p>
-              <p className="mt-2 text-2xl font-bold text-white">{amenitiesTotals.linen}</p>
+            <div className="rounded-[1.35rem] border border-emerald-200/70 bg-gradient-to-br from-emerald-50 to-white p-4">
+              <p className="text-xs uppercase tracking-[0.18em] text-emerald-600">Linen</p>
+              <p className="mt-2 text-2xl font-bold text-slate-900">{amenitiesTotals.linen}</p>
             </div>
-            <div className="rounded-xl border border-white/10 bg-indigo-500/10 p-4">
-              <p className="text-xs uppercase tracking-[0.18em] text-indigo-300">Water Bottles</p>
-              <p className="mt-2 text-2xl font-bold text-white">{amenitiesTotals.waterBottles}</p>
+            <div className="rounded-[1.35rem] border border-indigo-200/70 bg-gradient-to-br from-indigo-50 to-white p-4">
+              <p className="text-xs uppercase tracking-[0.18em] text-indigo-700">Water Bottles</p>
+              <p className="mt-2 text-2xl font-bold text-slate-900">{amenitiesTotals.waterBottles}</p>
             </div>
           </div>
 
-          <div className="overflow-x-auto rounded-xl border border-white/10">
-            <table className="min-w-full text-left text-sm text-gray-200">
-              <thead className="bg-white/[0.04] text-xs uppercase text-gray-300">
+          <div className="overflow-x-auto rounded-[1.5rem] border border-slate-200 bg-white shadow-[0_18px_40px_rgba(15,23,42,0.06)]">
+            <table className="min-w-full text-left text-sm text-slate-700">
+              <thead className="bg-slate-50 text-xs uppercase text-slate-500">
                 <tr>
                   <th className="px-4 py-3">Room</th>
                   <th className="px-4 py-3">Toiletries</th>
@@ -517,7 +551,7 @@ function Housekeeping() {
               </thead>
               <tbody>
                 {amenitiesRows.map((row) => (
-                  <tr key={`amen-${row.roomNo}`} className="border-t border-white/10">
+                  <tr key={`amen-${row.roomNo}`} className="border-t border-slate-100">
                     <td className="px-4 py-3">{row.roomNo}</td>
                     <td className="px-4 py-3">{row.toiletries}</td>
                     <td className="px-4 py-3">{row.linen}</td>
@@ -535,30 +569,30 @@ function Housekeeping() {
       return (
         <div className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-4">
-            <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-              <p className="text-xs uppercase tracking-[0.18em] text-gray-300">Total Rooms</p>
-              <p className="mt-2 text-2xl font-bold text-white">{auditSummary.total}</p>
+            <div className="rounded-[1.35rem] border border-slate-200 bg-white p-4">
+              <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Total Rooms</p>
+              <p className="mt-2 text-2xl font-bold text-slate-900">{auditSummary.total}</p>
             </div>
-            <div className="rounded-xl border border-white/10 bg-emerald-500/10 p-4">
-              <p className="text-xs uppercase tracking-[0.18em] text-emerald-300">Passed</p>
-              <p className="mt-2 text-2xl font-bold text-white">{auditSummary.passed}</p>
+            <div className="rounded-[1.35rem] border border-emerald-200/70 bg-gradient-to-br from-emerald-50 to-white p-4">
+              <p className="text-xs uppercase tracking-[0.18em] text-emerald-600">Passed</p>
+              <p className="mt-2 text-2xl font-bold text-slate-900">{auditSummary.passed}</p>
             </div>
-            <div className="rounded-xl border border-white/10 bg-rose-500/10 p-4">
-              <p className="text-xs uppercase tracking-[0.18em] text-rose-300">Needs Review</p>
-              <p className="mt-2 text-2xl font-bold text-white">{auditSummary.failed}</p>
+            <div className="rounded-[1.35rem] border border-rose-200/70 bg-gradient-to-br from-rose-50 to-white p-4">
+              <p className="text-xs uppercase tracking-[0.18em] text-rose-600">Needs Review</p>
+              <p className="mt-2 text-2xl font-bold text-slate-900">{auditSummary.failed}</p>
             </div>
-            <div className="rounded-xl border border-white/10 bg-cyan-500/10 p-4">
-              <p className="text-xs uppercase tracking-[0.18em] text-cyan-300">Pass Rate</p>
-              <p className="mt-2 text-2xl font-bold text-white">{auditSummary.passRate}%</p>
+            <div className="rounded-[1.35rem] border border-cyan-200/70 bg-gradient-to-br from-cyan-50 to-white p-4">
+              <p className="text-xs uppercase tracking-[0.18em] text-cyan-700">Pass Rate</p>
+              <p className="mt-2 text-2xl font-bold text-slate-900">{auditSummary.passRate}%</p>
             </div>
           </div>
 
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {data.map((room) => (
-              <label key={`audit-${room.id}`} className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3">
+              <label key={`audit-${room.id}`} className="flex items-center justify-between rounded-[1.35rem] border border-slate-200 bg-white px-4 py-3 shadow-[0_16px_35px_rgba(15,23,42,0.05)]">
                 <div>
-                  <p className="font-semibold text-white">Room {room.roomNo}</p>
-                  <p className="text-xs text-gray-400">{room.status}</p>
+                  <p className="font-semibold text-slate-900">Room {room.roomNo}</p>
+                  <p className="text-xs text-slate-500">{room.status}</p>
                 </div>
                 <input
                   type="checkbox"
@@ -591,56 +625,96 @@ function Housekeeping() {
       </div>
 
       <div className="mx-auto max-w-[1200px]">
-      <div className="mb-6 text-center">
-        <h1 className="text-3xl font-semibold text-slate-900">Housekeeping</h1>
-        <p className="mt-1 text-sm text-slate-600">Focused operations panel with option-wise popup pages</p>
-      </div>
+        <section className="relative overflow-hidden rounded-[2rem] border border-white/70 bg-[linear-gradient(135deg,rgba(7,27,52,0.97)_0%,rgba(8,47,73,0.93)_52%,rgba(15,23,42,0.92)_100%)] px-6 py-8 text-white shadow-[0_28px_80px_rgba(15,23,42,0.18)] sm:px-8">
+          <div className="pointer-events-none absolute inset-0">
+            <div className="absolute right-[-8%] top-[-18%] h-56 w-56 rounded-full bg-cyan-400/20 blur-3xl" />
+            <div className="absolute bottom-[-20%] left-[8%] h-52 w-52 rounded-full bg-emerald-400/15 blur-3xl" />
+            <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.12)_0%,transparent_40%,rgba(255,255,255,0.05)_100%)]" />
+          </div>
+          <div className="relative grid gap-6 lg:grid-cols-[1.2fr,0.8fr] lg:items-end">
+            <div>
+              <span className="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.28em] text-cyan-100">
+                Housekeeping Control
+              </span>
+              <h1 className="mt-4 max-w-2xl text-3xl font-semibold leading-tight text-white sm:text-4xl">
+                Dashboard-style housekeeping workspace for faster room readiness and cleaner operations.
+              </h1>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-200 sm:text-base">
+                Room status, audit flow, costing aur cleaning activity ko ek hi attractive responsive workspace me manage kariye.
+              </p>
+            </div>
 
-      <div className="rounded-2xl border border-slate-900/10 bg-[linear-gradient(120deg,#071b34_0%,#0d4a53_52%,#162d45_100%)] p-4 shadow-[0_22px_55px_rgba(15,23,42,0.12)]">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-200">Housekeeping Sidebar Options</h2>
-          <span className="text-xs text-gray-400">Only option pages are enabled</span>
-        </div>
-
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {HOUSEKEEPING_OPTIONS.map((option) => {
-            const Icon = option.icon;
-            const isActive = option.id === activeOption;
-
-            return (
-              <button
-                key={option.id}
-                type="button"
-                onClick={() => {
-                  setActiveOption(option.id);
-                  setIsOptionPopupOpen(true);
-                }}
-                className={`rounded-xl border px-4 py-3 text-left transition-all ${
-                  isActive
-                    ? 'border-teal-400/70 bg-teal-500/20 shadow-[0_12px_30px_rgba(20,184,166,0.2)]'
-                    : 'border-white/10 bg-white/[0.03] hover:border-teal-400/40 hover:bg-teal-500/10'
-                }`}
-              >
-                <div className="flex items-start gap-3">
-                  <span className="mt-0.5 text-teal-300"><Icon /></span>
-                  <div>
-                    <p className="text-sm font-semibold text-white">{option.label}</p>
-                    <p className="mt-1 text-xs text-gray-300">{option.description}</p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {summaryCards.map((card) => (
+                <div
+                  key={card.label}
+                  className={`rounded-[1.5rem] border ${card.ring} bg-white/10 p-4 backdrop-blur-sm`}
+                >
+                  <div className={`inline-flex rounded-full bg-gradient-to-r ${card.accent} px-3 py-1 text-xs font-semibold text-white`}>
+                    {card.label}
                   </div>
+                  <p className="mt-4 text-3xl font-bold text-white">{card.value}</p>
+                  <p className="mt-1 text-sm text-slate-200">{card.helper}</p>
                 </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+              ))}
+            </div>
+          </div>
+        </section>
 
-      <div className="mt-5 rounded-2xl border border-slate-900/10 bg-white/80 p-6 text-center shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-        <p className="text-xs font-semibold uppercase tracking-[0.26em] text-emerald-500">Housekeeping Workspace</p>
-        <h3 className="mt-2 text-2xl font-bold text-slate-900">Option select karke popup open karein</h3>
-        <p className="mt-2 text-sm text-slate-600">
-          Parameters, Cleaning Log, Room Costing, Room Report, Amenities aur Audit sab pages popup me responsive format me open honge.
-        </p>
-      </div>
+        <section className="mt-6 rounded-[2rem] border border-white/70 bg-white/75 p-4 shadow-[0_22px_55px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-6">
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-700">Workspace Options</p>
+              <h2 className="mt-2 text-2xl font-semibold text-slate-900">Choose the housekeeping module</h2>
+            </div>
+            <div className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-medium text-slate-600">
+              Popup pages with responsive controls
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {HOUSEKEEPING_OPTIONS.map((option) => {
+              const Icon = option.icon;
+              const isActive = option.id === activeOption;
+
+              return (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => {
+                    setActiveOption(option.id);
+                    setIsOptionPopupOpen(true);
+                  }}
+                  className={`group rounded-[1.5rem] border px-4 py-4 text-left transition-all ${
+                    isActive
+                      ? 'border-cyan-300 bg-gradient-to-br from-cyan-50 via-white to-emerald-50 shadow-[0_18px_40px_rgba(6,182,212,0.12)]'
+                      : 'border-slate-200 bg-white hover:-translate-y-0.5 hover:border-cyan-200 hover:shadow-[0_16px_36px_rgba(15,23,42,0.08)]'
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <span className={`mt-0.5 flex h-11 w-11 items-center justify-center rounded-2xl ${
+                      isActive ? 'bg-cyan-600 text-white' : 'bg-slate-100 text-cyan-700 group-hover:bg-cyan-50'
+                    }`}>
+                      <Icon />
+                    </span>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">{option.label}</p>
+                      <p className="mt-1 text-xs leading-5 text-slate-500">{option.description}</p>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        <div className="mt-5 rounded-[2rem] border border-white/70 bg-white/80 p-6 text-center shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+          <p className="text-xs font-semibold uppercase tracking-[0.26em] text-emerald-500">Housekeeping Workspace</p>
+          <h3 className="mt-2 text-2xl font-bold text-slate-900">Option select karke focused popup open karein</h3>
+          <p className="mt-2 text-sm text-slate-600">
+            Parameters, Cleaning Log, Room Costing, Room Report, Amenities aur Audit sab ko dashboard-style layout me fast access diya gaya hai.
+          </p>
+        </div>
       </div>
 
       {isOptionPopupOpen && (
@@ -649,19 +723,19 @@ function Housekeeping() {
           onClick={() => setIsOptionPopupOpen(false)}
         >
           <div
-            className="w-full max-w-5xl overflow-hidden rounded-2xl border border-white/15 bg-[#071827] shadow-[0_30px_80px_rgba(2,8,23,0.6)]"
+            className="w-full max-w-5xl overflow-hidden rounded-[2rem] border border-white/70 bg-[linear-gradient(180deg,#f8fbff_0%,#f4f9f7_100%)] shadow-[0_30px_80px_rgba(2,8,23,0.28)]"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="flex items-start justify-between gap-3 border-b border-white/10 px-5 py-4">
+            <div className="flex items-start justify-between gap-3 border-b border-slate-200 px-5 py-4">
               <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-cyan-300">Housekeeping Page</p>
-                <h3 className="text-2xl font-semibold text-white">{activeOptionMeta?.label}</h3>
-                <p className="mt-1 text-sm text-gray-300">{activeOptionMeta?.description}</p>
+                <p className="text-xs uppercase tracking-[0.2em] text-cyan-700">Housekeeping Page</p>
+                <h3 className="text-2xl font-semibold text-slate-900">{activeOptionMeta?.label}</h3>
+                <p className="mt-1 text-sm text-slate-500">{activeOptionMeta?.description}</p>
               </div>
               <button
                 type="button"
                 onClick={() => setIsOptionPopupOpen(false)}
-                className="rounded-full border border-white/20 px-3 py-1.5 text-sm text-gray-200 hover:border-teal-400/50 hover:text-white"
+                className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-600 hover:border-cyan-300 hover:text-slate-900"
               >
                 Close
               </button>
@@ -676,25 +750,25 @@ function Housekeeping() {
 
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-xl border border-white/10 bg-[#0b1622] p-6 shadow-2xl">
+          <div className="w-full max-w-md rounded-[1.75rem] border border-white/70 bg-white p-6 shadow-[0_28px_70px_rgba(15,23,42,0.2)]">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-white">Add New Room</h2>
+              <h2 className="text-xl font-semibold text-slate-900">Add New Room</h2>
               <button
                 type="button"
                 onClick={() => setShowAddModal(false)}
-                className="text-gray-400 transition hover:text-white"
+                className="text-slate-400 transition hover:text-slate-900"
               >
                 <FaTimes />
               </button>
             </div>
 
             <div className="mb-4">
-              <label className="mb-1 block text-sm text-gray-400">Room No. / Name</label>
+              <label className="mb-1 block text-sm text-slate-500">Room No. / Name</label>
               <input
                 type="text"
                 value={newRoomNo}
                 onChange={(e) => setNewRoomNo(e.target.value)}
-                className="w-full rounded-lg border border-white/10 bg-[#071226] px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                 placeholder="e.g. 101"
               />
             </div>
@@ -703,14 +777,14 @@ function Housekeeping() {
               <button
                 type="button"
                 onClick={() => setShowAddModal(false)}
-                className="rounded-lg border border-white/10 px-4 py-2 text-gray-300 transition hover:bg-white/5"
+                className="rounded-xl border border-slate-200 px-4 py-2 text-slate-600 transition hover:bg-slate-50"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleAddRoom}
-                className="rounded-lg bg-gradient-to-r from-teal-500 to-teal-700 px-4 py-2 font-medium text-white transition hover:opacity-90"
+                className="rounded-xl bg-gradient-to-r from-cyan-600 to-teal-500 px-4 py-2 font-medium text-white transition hover:opacity-90"
               >
                 Add Room
               </button>

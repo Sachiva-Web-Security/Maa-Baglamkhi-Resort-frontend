@@ -348,13 +348,13 @@ function InventorySectionButton({ section, active, onClick }) {
       onClick={onClick}
       className={`flex w-full items-center gap-3 rounded-2xl border px-3 py-3 text-left text-sm font-semibold transition-all duration-200 ${
         active
-          ? "border-cyan-400/60 bg-cyan-500 text-slate-950 shadow-[0_14px_32px_rgba(34,211,238,0.22)]"
-          : "border-white/10 bg-white/[0.04] text-slate-200 hover:border-cyan-400/40 hover:bg-cyan-500/15 hover:text-white"
+          ? "border-cyan-300 bg-cyan-50 text-cyan-900 shadow-[0_14px_32px_rgba(34,211,238,0.12)]"
+          : "border-slate-200 bg-white text-slate-700 hover:border-cyan-300 hover:bg-cyan-50/70 hover:text-cyan-800"
       }`}
     >
       <span
         className={`flex h-10 w-10 items-center justify-center rounded-xl ${
-          active ? "bg-slate-950/15" : "bg-slate-900/70"
+          active ? "bg-white text-cyan-700" : "bg-slate-100 text-slate-600"
         }`}
       >
         <Icon />
@@ -366,25 +366,25 @@ function InventorySectionButton({ section, active, onClick }) {
 
 function SectionMetric({ label, value, tone = "cyan" }) {
   const tones = {
-    cyan: "from-cyan-500/25 to-sky-500/10 border-cyan-400/20",
-    amber: "from-amber-500/25 to-orange-500/10 border-amber-400/20",
-    emerald: "from-emerald-500/25 to-lime-500/10 border-emerald-400/20",
+    cyan: "from-cyan-50 to-sky-50 border-cyan-200",
+    amber: "from-amber-50 to-orange-50 border-amber-200",
+    emerald: "from-emerald-50 to-lime-50 border-emerald-200",
   };
 
   return (
     <div
       className={`rounded-[1.4rem] border bg-gradient-to-br px-4 py-4 ${tones[tone]}`}
     >
-      <p className="text-xs uppercase tracking-[0.18em] text-slate-300">{label}</p>
-      <p className="mt-2 text-2xl font-bold text-white">{value}</p>
+      <p className="text-xs uppercase tracking-[0.18em] text-slate-500">{label}</p>
+      <p className="mt-2 text-2xl font-bold text-slate-900">{value}</p>
     </div>
   );
 }
 
 function SearchBar({ value, onChange, placeholder }) {
   return (
-    <label className="flex items-center gap-3 rounded-2xl border border-white/10 bg-slate-950/55 px-4 py-3 text-slate-200">
-      <FaSearch className="text-cyan-300" />
+    <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-700">
+      <FaSearch className="text-cyan-600" />
       <input
         value={value}
         onChange={(event) => onChange(event.target.value)}
@@ -401,7 +401,7 @@ function FormInput({ field, value, onChange }) {
       <select
         value={value}
         onChange={(event) => onChange(field.key, event.target.value)}
-        className="w-full rounded-xl border border-white/10 bg-slate-950/55 px-3 py-2.5 text-sm text-white outline-none focus:border-cyan-400/60"
+        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-cyan-400"
       >
         <option value="">Select {field.label}</option>
         {field.options.map((option) => (
@@ -418,7 +418,7 @@ function FormInput({ field, value, onChange }) {
       type={field.type}
       value={value}
       onChange={(event) => onChange(field.key, event.target.value)}
-      className="w-full rounded-xl border border-white/10 bg-slate-950/55 px-3 py-2.5 text-sm text-white outline-none placeholder:text-slate-500 focus:border-cyan-400/60"
+      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-cyan-400"
       placeholder={field.label}
     />
   );
@@ -450,13 +450,13 @@ function GenericMasterSection({
   return (
     <div className="space-y-6">
       <div className="grid gap-4 lg:grid-cols-[1.15fr,1.85fr]">
-        <div className="rounded-[1.8rem] border border-white/10 bg-slate-950/40 p-5">
+        <div className="rounded-[1.8rem] border border-slate-200 bg-white p-5 shadow-[0_14px_30px_rgba(15,23,42,0.06)]">
           <div className="mb-4 flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-white">
+              <h3 className="text-lg font-semibold text-slate-900">
                 {editingId ? `Edit ${section.label}` : `Add ${section.label}`}
               </h3>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500">
                 Is section ka data local inventory workspace me save hoga.
               </p>
             </div>
@@ -466,7 +466,7 @@ function GenericMasterSection({
                 setDraft(buildInitialForm(fields));
                 onEdit(null);
               }}
-              className="rounded-full border border-white/10 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:border-cyan-400/40 hover:text-white"
+              className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-cyan-300 hover:text-cyan-700"
             >
               Reset
             </button>
@@ -499,13 +499,13 @@ function GenericMasterSection({
           </button>
         </div>
 
-        <div className="rounded-[1.8rem] border border-white/10 bg-slate-950/35 p-5">
+        <div className="rounded-[1.8rem] border border-slate-200 bg-white p-5 shadow-[0_14px_30px_rgba(15,23,42,0.06)]">
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-white">
+              <h3 className="text-lg font-semibold text-slate-900">
                 {section.label} Register
               </h3>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500">
                 Total {records.length} records available
               </p>
             </div>
@@ -518,9 +518,9 @@ function GenericMasterSection({
             </div>
           </div>
 
-          <div className="overflow-x-auto rounded-2xl border border-white/10">
-            <table className="min-w-full text-sm text-slate-200">
-              <thead className="bg-white/[0.04] text-left text-xs uppercase tracking-[0.15em] text-slate-400">
+          <div className="overflow-x-auto rounded-2xl border border-slate-200">
+            <table className="min-w-full text-sm text-slate-700">
+              <thead className="bg-slate-50 text-left text-xs uppercase tracking-[0.15em] text-slate-500">
                 <tr>
                   {columns.map((column) => (
                     <th key={column} className="px-4 py-3 font-medium">
@@ -533,7 +533,7 @@ function GenericMasterSection({
               <tbody>
                 {filteredRecords.length ? (
                   filteredRecords.map((record) => (
-                    <tr key={record.id} className="border-t border-white/10">
+                    <tr key={record.id} className="border-t border-slate-200">
                       {columns.map((column) => (
                         <td key={column} className="px-4 py-3">
                           {record[column] || "-"}
@@ -563,7 +563,7 @@ function GenericMasterSection({
                   <tr>
                     <td
                       colSpan={columns.length + 1}
-                      className="px-4 py-10 text-center text-slate-400"
+                      className="px-4 py-10 text-center text-slate-500"
                     >
                       Is section me abhi koi matching record nahi mila.
                     </td>
@@ -606,10 +606,10 @@ function ItemsSection({
   return (
     <div className="space-y-6">
       <div className="grid gap-4 lg:grid-cols-[1.05fr,1.95fr]">
-        <div className="rounded-[1.8rem] border border-white/10 bg-slate-950/40 p-5">
+        <div className="rounded-[1.8rem] border border-slate-200 bg-white p-5 shadow-[0_14px_30px_rgba(15,23,42,0.06)]">
           <div className="mb-4 flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-white">
+              <h3 className="text-lg font-semibold text-slate-900">
                 {editingId ? "Edit Inventory Item" : "Add Inventory Item"}
               </h3>
               <p className="text-xs text-slate-400">
@@ -622,7 +622,7 @@ function ItemsSection({
                 setForm(buildInitialForm(ITEMS_FORM));
                 setEditingId(null);
               }}
-              className="rounded-full border border-white/10 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:border-cyan-400/40 hover:text-white"
+              className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-cyan-300 hover:text-cyan-700"
             >
               Reset
             </button>
@@ -655,10 +655,10 @@ function ItemsSection({
           </button>
         </div>
 
-        <div className="rounded-[1.8rem] border border-white/10 bg-slate-950/35 p-5">
+        <div className="rounded-[1.8rem] border border-slate-200 bg-white p-5 shadow-[0_14px_30px_rgba(15,23,42,0.06)]">
           <div className="mb-4 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-white">Items Ledger</h3>
+              <h3 className="text-lg font-semibold text-slate-900">Items Ledger</h3>
               <p className="text-xs text-slate-400">
                 Total {items.length} inventory items loaded
               </p>
@@ -672,7 +672,7 @@ function ItemsSection({
                   placeholder="Search item or store"
                 />
               </div>
-              <label className="flex items-center gap-2 rounded-2xl border border-white/10 bg-slate-950/55 px-4 py-3 text-sm text-slate-200">
+              <label className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
                 <FaFilter className="text-cyan-300" />
                 <select
                   value={categoryFilter}
@@ -690,9 +690,9 @@ function ItemsSection({
             </div>
           </div>
 
-          <div className="overflow-x-auto rounded-2xl border border-white/10">
-            <table className="min-w-full text-sm text-slate-200">
-              <thead className="bg-white/[0.04] text-left text-xs uppercase tracking-[0.15em] text-slate-400">
+          <div className="overflow-x-auto rounded-2xl border border-slate-200">
+            <table className="min-w-full text-sm text-slate-700">
+              <thead className="bg-slate-50 text-left text-xs uppercase tracking-[0.15em] text-slate-500">
                 <tr>
                   <th className="px-4 py-3 font-medium">Item</th>
                   <th className="px-4 py-3 font-medium">Category</th>
@@ -707,8 +707,8 @@ function ItemsSection({
               <tbody>
                 {visibleItems.length ? (
                   visibleItems.map((item) => (
-                    <tr key={item.id} className="border-t border-white/10">
-                      <td className="px-4 py-3 font-semibold text-white">
+                    <tr key={item.id} className="border-t border-slate-200">
+                      <td className="px-4 py-3 font-semibold text-slate-900">
                         {item.name}
                       </td>
                       <td className="px-4 py-3">{item.category}</td>
@@ -770,14 +770,14 @@ function ItemsSection({
 
 function ReportSection({ title, subtitle, columns, rows }) {
   return (
-    <div className="rounded-[1.8rem] border border-white/10 bg-slate-950/35 p-5">
+    <div className="rounded-[1.8rem] border border-slate-200 bg-white p-5 shadow-[0_14px_30px_rgba(15,23,42,0.06)]">
       <div className="mb-5">
-        <h3 className="text-lg font-semibold text-white">{title}</h3>
-        <p className="text-xs text-slate-400">{subtitle}</p>
+        <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
+        <p className="text-xs text-slate-500">{subtitle}</p>
       </div>
-      <div className="overflow-x-auto rounded-2xl border border-white/10">
-        <table className="min-w-full text-sm text-slate-200">
-          <thead className="bg-white/[0.04] text-left text-xs uppercase tracking-[0.15em] text-slate-400">
+      <div className="overflow-x-auto rounded-2xl border border-slate-200">
+        <table className="min-w-full text-sm text-slate-700">
+          <thead className="bg-slate-50 text-left text-xs uppercase tracking-[0.15em] text-slate-500">
             <tr>
               {columns.map((column) => (
                 <th key={column.key} className="px-4 py-3 font-medium">
@@ -791,7 +791,7 @@ function ReportSection({ title, subtitle, columns, rows }) {
               rows.map((row, index) => (
                 <tr
                   key={row.id || `${row.name || "row"}-${index}`}
-                  className="border-t border-white/10"
+                  className="border-t border-slate-200"
                 >
                   {columns.map((column) => (
                     <td key={column.key} className="px-4 py-3">
@@ -804,7 +804,7 @@ function ReportSection({ title, subtitle, columns, rows }) {
               <tr>
                 <td
                   colSpan={columns.length}
-                  className="px-4 py-10 text-center text-slate-400"
+                  className="px-4 py-10 text-center text-slate-500"
                 >
                   Report data abhi available nahi hai.
                 </td>
@@ -1275,8 +1275,8 @@ export default function InventoryDashboard() {
 
   return (
     <div className="min-h-screen">
-      <div className="rounded-[2.25rem] border border-slate-200/70 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.16),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.12),transparent_30%),linear-gradient(180deg,#061423_0%,#0b1c30_42%,#08111f_100%)] p-4 shadow-[0_30px_80px_rgba(8,15,31,0.18)] md:p-6">
-        <div className="mb-6 rounded-[1.8rem] border border-white/10 bg-white/[0.05] p-5 backdrop-blur-xl">
+      <div className="rounded-[2.25rem] border border-white/60 bg-[linear-gradient(135deg,#f5fbff_0%,#f3f8f4_28%,#fff8f1_58%,#f8fafc_100%)] p-4 shadow-[0_30px_80px_rgba(8,15,31,0.08)] md:p-6">
+        <div className="mb-6 rounded-[1.8rem] border border-slate-200 bg-[linear-gradient(120deg,#071b34_0%,#0d4a53_52%,#162d45_100%)] p-5 shadow-[0_22px_55px_rgba(15,23,42,0.12)]">
           <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
             <div className="max-w-3xl">
               <p className="text-xs uppercase tracking-[0.3em] text-cyan-200/80">
@@ -1308,7 +1308,7 @@ export default function InventoryDashboard() {
           </div>
 
           <div className="mt-5 grid gap-3 md:grid-cols-3">
-            <div className="rounded-2xl border border-white/10 bg-slate-950/35 px-4 py-3">
+            <div className="rounded-2xl border border-white/12 bg-white/10 px-4 py-3">
               <p className="text-xs uppercase tracking-[0.18em] text-slate-400">
                 Active Section
               </p>
@@ -1316,7 +1316,7 @@ export default function InventoryDashboard() {
                 {selectedSection?.label}
               </p>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-slate-950/35 px-4 py-3">
+            <div className="rounded-2xl border border-white/12 bg-white/10 px-4 py-3">
               <p className="text-xs uppercase tracking-[0.18em] text-slate-400">
                 Total Stock Value
               </p>
@@ -1324,7 +1324,7 @@ export default function InventoryDashboard() {
                 {formatCurrency(totalStockValue)}
               </p>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-slate-950/35 px-4 py-3">
+            <div className="rounded-2xl border border-white/12 bg-white/10 px-4 py-3">
               <p className="text-xs uppercase tracking-[0.18em] text-slate-400">
                 Items Status
               </p>
@@ -1342,10 +1342,10 @@ export default function InventoryDashboard() {
         </div>
 
         <div className="grid gap-6 xl:grid-cols-[290px,1fr]">
-          <aside className="rounded-[1.8rem] border border-white/10 bg-white/[0.05] p-4 backdrop-blur-xl">
+          <aside className="rounded-[1.8rem] border border-white/60 bg-white/82 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl">
             <div className="mb-4">
-              <h2 className="text-lg font-semibold text-white">Inventory Menu</h2>
-              <p className="text-xs text-slate-400">
+              <h2 className="text-lg font-semibold text-slate-900">Inventory Menu</h2>
+              <p className="text-xs text-slate-500">
                 Image me dikhaye gaye sab options yahan available hain.
               </p>
             </div>
@@ -1366,11 +1366,11 @@ export default function InventoryDashboard() {
           </aside>
 
           <main className="space-y-6">
-            <div className="rounded-[1.8rem] border border-white/10 bg-white/[0.05] p-8 text-center backdrop-blur-xl">
-              <h3 className="text-xl font-semibold text-white">
+            <div className="rounded-[1.8rem] border border-white/60 bg-white/82 p-8 text-center shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+              <h3 className="text-xl font-semibold text-slate-900">
                 Menu item select karke popup me section open karein
               </h3>
-              <p className="mt-2 text-sm text-slate-300">
+              <p className="mt-2 text-sm text-slate-500">
                 Jo bhi inventory section choose karenge, uska form aur data table
                 modal popup me isi page par show hoga.
               </p>
@@ -1385,7 +1385,7 @@ export default function InventoryDashboard() {
           onClick={() => setIsSectionModalOpen(false)}
         >
           <div
-            className="relative max-h-[92vh] w-full max-w-[1300px] overflow-y-auto rounded-[1.8rem] border border-white/15 bg-[#071325] p-4 shadow-[0_30px_80px_rgba(2,8,23,0.6)] md:p-6"
+            className="relative max-h-[92vh] w-full max-w-[1300px] overflow-y-auto rounded-[1.8rem] border border-white/50 bg-white p-4 shadow-[0_30px_80px_rgba(2,8,23,0.2)] md:p-6"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="mb-4 flex items-center justify-between gap-3">
@@ -1393,14 +1393,14 @@ export default function InventoryDashboard() {
                 <p className="text-xs uppercase tracking-[0.25em] text-cyan-200/80">
                   Inventory Popup
                 </p>
-                <h3 className="text-xl font-semibold text-white">
+                <h3 className="text-xl font-semibold text-slate-900">
                   {selectedSection?.label || "Inventory Section"}
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setIsSectionModalOpen(false)}
-                className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-2 text-sm font-semibold text-slate-200 hover:border-cyan-400/50 hover:text-white"
+                className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:border-cyan-300 hover:text-cyan-700"
               >
                 <FaTimes />
                 Close

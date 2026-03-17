@@ -1,3 +1,5 @@
+import { FaMapMarkedAlt, FaSnowflake, FaUsers } from "react-icons/fa";
+
 import { getBackendBaseURL } from "../../api";
 
 const BanquetHallCard = ({ hall, selected, onSelect }) => {
@@ -8,59 +10,104 @@ const BanquetHallCard = ({ hall, selected, onSelect }) => {
   return (
     <button
       type="button"
-      className={`rounded-xl overflow-hidden text-left cursor-pointer transition-all shadow-sm border ${
-        selected
-          ? 'border-blue-500 bg-gradient-to-br from-[#062e54] to-[#0b1730] shadow-[0_8px_30px_rgba(59,130,246,0.12)]'
-          : 'border-white/5 bg-transparent hover:bg-white/2'
-      }`}
       onClick={onSelect}
+      className={`overflow-hidden rounded-[24px] border text-left transition-all ${
+        selected
+          ? "border-cyan-400 bg-[linear-gradient(145deg,#0b2748_0%,#103b4d_55%,#18465a_100%)] shadow-[0_18px_45px_rgba(14,165,233,0.18)]"
+          : "border-slate-200/80 bg-white shadow-[0_14px_35px_rgba(15,23,42,0.06)] hover:-translate-y-1 hover:border-cyan-200"
+      }`}
     >
-      {/* Hall Image */}
       {imgSrc ? (
-        <img
-          src={imgSrc}
-          alt={hall.name}
-          className="w-full h-36 object-cover"
-        />
+        <img src={imgSrc} alt={hall.name} className="h-40 w-full object-cover" />
       ) : (
-        <div className="w-full h-36 bg-gradient-to-br from-blue-900/40 to-slate-800 flex items-center justify-center">
-          <span className="text-3xl">🏛️</span>
+        <div
+          className={`flex h-40 items-center justify-center ${
+            selected
+              ? "bg-[linear-gradient(135deg,#164e63_0%,#0f172a_100%)]"
+              : "bg-[linear-gradient(135deg,#dff7ff_0%,#eef6ff_50%,#fff4df_100%)]"
+          }`}
+        >
+          <span
+            className={`rounded-full p-5 text-3xl ${
+              selected ? "bg-white/10 text-white" : "bg-white/80 text-cyan-700"
+            }`}
+          >
+            <FaMapMarkedAlt />
+          </span>
         </div>
       )}
 
-      <div className="p-3.5">
-        <div className="text-sm font-black text-white mb-2">{hall.name}</div>
-        <div className="grid gap-1.5 text-gray-300 text-xs font-bold mb-2.5">
-          <span>
-            <strong className="text-gray-200">Capacity:</strong> {hall.capacity}
-          </span>
-          <span>
-            <strong className="text-gray-200">Rate:</strong> ₹{hall.ratePerHour}/hr
-          </span>
-        </div>
-
-        {/* AC / Non-AC Badge */}
-        <div className="flex gap-2 flex-wrap mb-2">
-          <span
-            className={`inline-flex px-2 py-1 rounded-full text-[10px] font-black border ${
-              hall.is_ac
-                ? 'bg-cyan-900/60 text-cyan-200 border-cyan-700'
-                : 'bg-orange-900/60 text-orange-200 border-orange-700'
+      <div className="space-y-4 p-4">
+        <div>
+          <div
+            className={`text-lg font-black ${
+              selected ? "text-white" : "text-slate-900"
             }`}
           >
-            {hall.is_ac ? '❄️ AC' : '🌀 Non-AC'}
-          </span>
+            {hall.name}
+          </div>
+          <div
+            className={`mt-1 text-sm ${
+              selected ? "text-slate-200" : "text-slate-500"
+            }`}
+          >
+            Elegant venue setup for weddings, social events and premium functions.
+          </div>
         </div>
 
-        {/* Status */}
-        <div
-          className={`inline-flex px-2.5 py-1.5 rounded-full text-xs font-black border ${
-            hall.status === 'Available'
-              ? 'bg-green-900 text-green-200 border-green-700'
-              : 'bg-red-900 text-red-200 border-red-700'
-          }`}
-        >
-          {hall.status}
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div
+            className={`rounded-2xl border px-3 py-3 ${
+              selected
+                ? "border-white/10 bg-white/8 text-slate-100"
+                : "border-slate-200 bg-slate-50 text-slate-700"
+            }`}
+          >
+            <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em]">
+              <FaUsers />
+              Capacity
+            </div>
+            <div className="mt-2 text-lg font-black">{hall.capacity}</div>
+          </div>
+
+          <div
+            className={`rounded-2xl border px-3 py-3 ${
+              selected
+                ? "border-white/10 bg-white/8 text-slate-100"
+                : "border-slate-200 bg-slate-50 text-slate-700"
+            }`}
+          >
+            <div className="text-xs font-semibold uppercase tracking-[0.14em]">
+              Rate / hour
+            </div>
+            <div className="mt-2 text-lg font-black">Rs. {hall.ratePerHour}</div>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <span
+            className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold ${
+              selected
+                ? "bg-white/10 text-white"
+                : "bg-cyan-50 text-cyan-700"
+            }`}
+          >
+            <FaSnowflake />
+            {hall.is_ac ? "AC Hall" : "Non-AC Hall"}
+          </span>
+          <span
+            className={`inline-flex rounded-full px-3 py-1.5 text-xs font-bold ${
+              hall.status === "Available"
+                ? selected
+                  ? "bg-emerald-400/15 text-emerald-100"
+                  : "bg-emerald-50 text-emerald-700"
+                : selected
+                ? "bg-rose-400/15 text-rose-100"
+                : "bg-rose-50 text-rose-700"
+            }`}
+          >
+            {hall.status}
+          </span>
         </div>
       </div>
     </button>

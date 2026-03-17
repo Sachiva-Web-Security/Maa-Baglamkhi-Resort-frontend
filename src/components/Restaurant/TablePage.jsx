@@ -1,7 +1,10 @@
-import React, { useState, useContext } from "react";
+import React, { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiPlusCircle, FiHome, FiGrid, FiRefreshCw } from "react-icons/fi";
 import { RestaurantContext } from "../../Context/RestaurantContext";
+
+const inputCls =
+  "w-full rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100";
 
 const TablePage = () => {
   const navigate = useNavigate();

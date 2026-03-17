@@ -1,72 +1,99 @@
-const Field = ({ label, children }) => {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <div className="text-xs font-extrabold text-gray-300">{label}</div>
-      {children}
-    </div>
-  );
-};
+const fieldCls =
+  "w-full rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100";
 
-const Select = ({ value, onChange, options }) => {
-  return (
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="w-full px-3 py-2 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-900 bg-transparent font-semibold text-sm text-white"
-    >
-      {options.map((o) => (
-        <option key={o} value={o} className="bg-[#071826] text-white">
-          {o}
-        </option>
-      ))}
-    </select>
-  );
-};
+const Field = ({ label, children }) => (
+  <div className="flex flex-col gap-2">
+    <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+      {label}
+    </div>
+    {children}
+  </div>
+);
+
+const Select = ({ value, onChange, options }) => (
+  <select
+    value={value}
+    onChange={(e) => onChange(e.target.value)}
+    className={fieldCls}
+  >
+    {options.map((option) => (
+      <option key={option} value={option}>
+        {option}
+      </option>
+    ))}
+  </select>
+);
 
 const ReportFilters = ({ value, onChange, visible, options }) => {
   const set = (patch) => onChange((prev) => ({ ...prev, ...patch }));
 
   return (
-    <div className="bg-[#071826] rounded-xl shadow-sm border border-white/5 p-4 mb-4 text-white">
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-3 items-end">
+    <div className="rounded-[26px] border border-white/60 bg-white/82 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
+      <div className="mb-4">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
+          Smart Filters
+        </p>
+        <h2 className="mt-1 text-xl font-bold text-slate-900">
+          Narrow down report results
+        </h2>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
         <Field label="Date From">
           <input
             type="date"
             value={value.dateFrom}
             onChange={(e) => set({ dateFrom: e.target.value })}
-            className="w-full px-3 py-2 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-900 bg-transparent font-semibold text-sm text-white"
+            className={fieldCls}
           />
         </Field>
+
         <Field label="Date To">
           <input
             type="date"
             value={value.dateTo}
             onChange={(e) => set({ dateTo: e.target.value })}
-            className="w-full px-3 py-2 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-900 bg-transparent font-semibold text-sm text-white"
+            className={fieldCls}
           />
         </Field>
 
         {visible.status ? (
           <Field label="Status">
-            <Select value={value.status} onChange={(v) => set({ status: v })} options={options.statuses} />
+            <Select
+              value={value.status}
+              onChange={(selected) => set({ status: selected })}
+              options={options.statuses}
+            />
           </Field>
         ) : null}
 
         {visible.hall ? (
           <Field label="Hall">
-            <Select value={value.hall} onChange={(v) => set({ hall: v })} options={options.halls} />
+            <Select
+              value={value.hall}
+              onChange={(selected) => set({ hall: selected })}
+              options={options.halls}
+            />
           </Field>
         ) : null}
 
         {visible.roomType ? (
           <Field label="Room Type">
-            <Select value={value.roomType} onChange={(v) => set({ roomType: v })} options={options.roomTypes} />
+            <Select
+              value={value.roomType}
+              onChange={(selected) => set({ roomType: selected })}
+              options={options.roomTypes}
+            />
           </Field>
         ) : null}
 
         {visible.paymentMode ? (
           <Field label="Payment Mode">
-            <Select value={value.paymentMode} onChange={(v) => set({ paymentMode: v })} options={options.paymentModes} />
+            <Select
+              value={value.paymentMode}
+              onChange={(selected) => set({ paymentMode: selected })}
+              options={options.paymentModes}
+            />
           </Field>
         ) : null}
       </div>
@@ -75,5 +102,3 @@ const ReportFilters = ({ value, onChange, visible, options }) => {
 };
 
 export default ReportFilters;
-
-
