@@ -252,9 +252,7 @@ const Profile = () => {
 
             <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
               {[
-                { label: "Current Role", value: prettyRole },
-                { label: "Email", value: email || "Not set" },
-                { label: "Profile Status", value: loadingProfile ? "Loading..." : "Ready" },
+               
               ].map((item) => (
                 <div
                   key={item.label}
