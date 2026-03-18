@@ -1,63 +1,69 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Country, State, City } from "country-state-city";
+import { Form, Select } from "antd";
+import { GetCity, GetState, GetCountries } from "react-country-state-city";
 
 const OtherBooking = () => {
-
   const navigate = useNavigate();
 
-  const [countries] = useState(Country.getAllCountries());
-  const [states, setStates] = useState([]);
+  const [countries, setCountries] = useState([]);
+  const [state, setStates] = useState([]);
   const [cities, setCities] = useState([]);
 
-  const [selectedCountry, setSelectedCountry] = useState("");
-  const [selectedState, setSelectedState] = useState("");
-  const [selectedCity, setSelectedCity] = useState("");
+  const getData = (values) => {
+    console.log(values);
+  };
 
-  // Country Change
-  const handleCountryChange = (e) => {
+  // Load Countries
+  const loadCountries = async () => {
+    const countriesData = await GetCountries();
+    const options = countriesData.map((country) => ({
+      label: country.name,
+      value: country.id,
+    }));
+    setCountries(options);
+  };
 
-    const countryCode = e.target.value;
-
-    setSelectedCountry(countryCode);
-
-    const statesList = State.getStatesOfCountry(countryCode);
-
-    setStates(statesList);
-
+  // Country Select
+  const onCountrySelect = async (countryId) => {
+    const statesData = await GetState(countryId);
+    const options = statesData.map((state) => ({
+      label: state.name,
+      value: state.id,
+      countryId: countryId,
+    }));
+    setStates(options);
     setCities([]);
   };
 
-  // State Change
-  const handleStateChange = (e) => {
-
-    const stateCode = e.target.value;
-
-    setSelectedState(stateCode);
-
-    const cityList = City.getCitiesOfState(selectedCountry, stateCode);
-
-    setCities(cityList);
+  // State Select
+  const onStateSelect = async (stateId, option) => {
+    const citiesData = await GetCity(option.countryId, stateId);
+    const options = citiesData.map((city) => ({
+      label: city.name,
+      value: city.name,
+    }));
+    setCities(options);
   };
+
+  useEffect(() => {
+    loadCountries();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-100 flex justify-center items-center p-6">
-
       <div className="w-full max-w-3xl bg-white shadow-lg rounded-xl p-6">
 
-        {/* Title */}
         <h2 className="text-lg font-semibold text-gray-700 border-b pb-2 mb-4">
           Other Booking Details »
         </h2>
 
         <div className="grid grid-cols-2 gap-4">
 
-          {/* Booking Type */}
           <div>
             <label className="block text-sm text-gray-600 mb-1">
               Booking Type *
             </label>
-
             <select className="w-full border rounded-md p-2">
               <option>FIT</option>
               <option>Group</option>
@@ -65,158 +71,108 @@ const OtherBooking = () => {
             </select>
           </div>
 
-          {/* Booking Source */}
           <div>
             <label className="block text-sm text-gray-600 mb-1">
               Booking Source *
             </label>
-
             <select className="w-full border rounded-md p-2">
               <option>Front Office</option>
               <option>Walk in </option>
               <option>Agent</option>
-              <option >office</option>
-              <option >Go ibibo</option>
-              <option >Makemytrip</option>
+              <option>office</option>
+              <option>Go ibibo</option>
+              <option>Makemytrip</option>
             </select>
           </div>
 
-          {/* Booking Reference */}
           <div className="col-span-2">
             <label className="block text-sm text-gray-600 mb-1">
               Booking Reference
             </label>
-
-            <input
-              type="text"
-              className="w-full border rounded-md p-2"
-            />
+            <input type="text" className="w-full border rounded-md p-2" />
           </div>
         </div>
 
-        {/* Address Section */}
         <h2 className="text-lg font-semibold text-gray-700 border-b pb-2 mt-6 mb-4">
           Address Details »
         </h2>
 
         <div className="grid grid-cols-2 gap-4">
 
-          {/* Address */}
           <div className="col-span-2">
             <label className="block text-sm text-gray-600 mb-1">
               Address
             </label>
-
-            <textarea
-              rows="3"
-              className="w-full border rounded-md p-2"
-            />
+            <textarea rows="3" className="w-full border rounded-md p-2" />
           </div>
 
-          {/* Country */}
+          {/* FORM */}
           <div>
-            <label className="block text-sm text-gray-600 mb-1">
-              Country
-            </label>
+            <Form onFinish={getData} layout="vertical">
 
-            <select
-              value={selectedCountry}
-              onChange={handleCountryChange}
-              className="w-full border rounded-md p-2"
-            >
+              {/* Country */}
+              <Form.Item label="Country" name="country" rules={[{ required: true }]}>
+                <Select
+                  size="large"
+                  placeholder="Choose country"
+                  options={countries}
+                  showSearch
+                  onChange={onCountrySelect}
+                  filterOption={(input, option) =>
+                    option?.label?.toLowerCase().includes(input.toLowerCase())
+                  }
+                />
+              </Form.Item>
 
-              <option>Select Country</option>
+              {/* State */}
+              <Form.Item label="State" name="state" rules={[{ required: true }]}>
+                <Select
+                  size="large"
+                  placeholder="Choose state"
+                  options={state}
+                  showSearch
+                  onChange={onStateSelect}
+                  filterOption={(input, option) =>
+                    option?.label?.toLowerCase().includes(input.toLowerCase())
+                  }
+                />
+              </Form.Item>
 
-              {countries.map((country) => (
+              {/* City */}
+              <Form.Item label="City" name="city" rules={[{ required: true }]}>
+                <Select
+                  size="large"
+                  placeholder="Choose city"
+                  options={cities}
+                  showSearch
+                  filterOption={(input, option) =>
+                    option?.label?.toLowerCase().includes(input.toLowerCase())
+                  }
+                />
+              </Form.Item>
 
-                <option
-                  key={country.isoCode}
-                  value={country.isoCode}
+              <Form.Item>
+                <button
+                  type="submit"
+                  className="bg-red-500 text-white px-4 py-2 rounded"
                 >
-                  {country.name}
+                  submit
+                </button>
+              </Form.Item>
 
-                </option>
-
-              ))}
-
-            </select>
+            </Form>
           </div>
 
-          {/* State */}
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">
-              State
-            </label>
-
-            <select
-              value={selectedState}
-              onChange={handleStateChange}
-              className="w-full border rounded-md p-2"
-            >
-
-              <option>Select State</option>
-
-              {states.map((state) => (
-
-                <option
-                  key={state.isoCode}
-                  value={state.isoCode}
-                >
-                  {state.name}
-
-                </option>
-
-              ))}
-
-            </select>
-          </div>
-
-          {/* City */}
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">
-              City
-            </label>
-
-            <select
-              value={selectedCity}
-              onChange={(e)=>setSelectedCity(e.target.value)}
-              className="w-full border rounded-md p-2"
-            >
-
-              <option>Select City</option>
-
-              {cities.map((city) => (
-
-                <option
-                  key={city.name}
-                  value={city.name}
-                >
-                  {city.name}
-
-                </option>
-
-              ))}
-
-            </select>
-          </div>
-
-          {/* Pincode */}
           <div>
             <label className="block text-sm text-gray-600 mb-1">
               PIN Code
             </label>
-
-            <input
-              type="text"
-              className="w-full border rounded-md p-2"
-            />
+            <input type="text" className="w-full border rounded-md p-2" />
           </div>
 
         </div>
 
-        {/* Buttons */}
         <div className="flex justify-end gap-3 mt-6">
-
           <button
             onClick={() => navigate("/hotel/guest")}
             className="bg-gray-300 text-gray-700 px-5 py-2 rounded-lg"
@@ -230,11 +186,9 @@ const OtherBooking = () => {
           >
             Next →
           </button>
-
         </div>
 
       </div>
-
     </div>
   );
 };

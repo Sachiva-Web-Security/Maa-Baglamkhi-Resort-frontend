@@ -1,38 +1,99 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+// ✅ Updated Room Types
 const rooms = [
-  {
-    name: "AC DELUXE ROOM",
-    price: "₹2232 PER NIGHT"
-  },
-  {
-    name: "BANQUET HALL",
-    price: "₹1830 PER NIGHT"
-  },
-  {
-    name: "DELUXE DORMITORY",
-    price: "₹3000 PER NIGHT"
-  },
-  {
-    name: "SUITE ROOM",
-    price: "₹4911 PER NIGHT"
-  }
+  { id: 1, name: "AC ROOM", price: "₹2000 PER NIGHT" },
+  { id: 2, name: "NON-AC ROOM", price: "₹1500 PER NIGHT" },
+  { id: 3, name: "DELUXE ROOM", price: "₹3000 PER NIGHT" },
+  { id: 4, name: "SUPER DELUXE ROOM", price: "₹4000 PER NIGHT" },
+  { id: 5, name: "SUITE ROOM", price: "₹5000 PER NIGHT" },
+  { id: 6, name: "DELUXE DORMITORY", price: "₹800 PER BED" }
 ];
 
 const Room = () => {
-
-  const navigate = useNavigate();   // ✅ hook यहाँ होना चाहिए
+  const navigate = useNavigate();
 
   const [activeRoom, setActiveRoom] = useState(null);
+  const [selectedRooms, setSelectedRooms] = useState({});
+  const [roomOptions, setRoomOptions] = useState({});
+
+  // ✅ Room-wise input (FIXED)
+  const [inputValue, setInputValue] = useState({});
 
   const handleAvailability = (index) => {
     setActiveRoom(activeRoom === index ? null : index);
   };
 
+  // 🔥 Normalize for duplicate check
+  const normalize = (val) => val.trim().toLowerCase();
+
+  const findExistingRoom = (value) => {
+    for (let [roomId, options] of Object.entries(roomOptions)) {
+      if (options.some((item) => normalize(item) === normalize(value))) {
+        const roomName = rooms.find(
+          (r) => r.id === Number(roomId)
+        )?.name;
+        return roomName;
+      }
+    }
+    return null;
+  };
+
+  // ✅ Add Room Number
+  const handleAddOption = (roomId) => {
+    const value = inputValue[roomId];
+
+    if (!value?.trim()) return;
+
+    const existingRoom = findExistingRoom(value);
+
+    if (existingRoom) {
+      alert(`Room already exists in ${existingRoom}`);
+      return;
+    }
+
+    setRoomOptions((prev) => ({
+      ...prev,
+      [roomId]: [...(prev[roomId] || []), value]
+    }));
+
+    setInputValue((prev) => ({ ...prev, [roomId]: "" }));
+  };
+
+  // ✅ Select checkbox
+  const handleSelect = (roomId, value) => {
+    setSelectedRooms((prev) => {
+      const current = prev[roomId] || [];
+
+      const updated = current.includes(value)
+        ? current.filter((v) => v !== value)
+        : [...current, value];
+
+      return { ...prev, [roomId]: updated };
+    });
+  };
+
+  // ❌ Prevent duplicate selection across all rooms
+  const isAlreadySelected = (value) => {
+    return Object.values(selectedRooms).flat().includes(value);
+  };
+
+  // 🔥 Save & Navigate
+  const handleProceed = () => {
+    if (!Object.keys(selectedRooms).length) {
+      alert("Please select at least one room");
+      return;
+    }
+
+    localStorage.setItem("roomsData", JSON.stringify(roomOptions));
+    localStorage.setItem("selectedRooms", JSON.stringify(selectedRooms));
+
+    navigate("/hotel/pax");
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 flex justify-center p-6">
-
       <div className="w-full max-w-4xl bg-white shadow-lg rounded-xl p-6">
 
         <h2 className="text-lg font-semibold text-gray-700 border-b pb-2 mb-6">
@@ -42,13 +103,13 @@ const Room = () => {
         <div className="space-y-5">
 
           {rooms.map((room, index) => (
-            <div key={index} className="border rounded-lg p-4">
+            <div key={room.id} className="border rounded-lg p-4">
 
               <div className="flex justify-between items-center">
 
                 <div>
                   <h3 className="text-blue-600 font-semibold">
-                    ⚡ {room.name} (0)
+                    ⚡ {room.name} ({selectedRooms[room.id]?.length || 0})
                     <span className="text-gray-600 ml-2">
                       × {room.price}
                     </span>
@@ -63,49 +124,59 @@ const Room = () => {
 
                 <button
                   onClick={() => handleAvailability(index)}
-                  className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded shadow"
+                  className="bg-yellow-500 text-white px-4 py-2 rounded"
                 >
                   Check Availability
                 </button>
 
               </div>
 
+              {/* Availability Section */}
               {activeRoom === index && (
-                <div className="mt-4 border-t pt-4 text-sm text-gray-700">
+                <div className="mt-4 border-t pt-4">
 
-                  <p className="font-semibold mb-2">ALL DATES</p>
-
-                  <label className="flex items-center gap-2 mb-2">
-                    <input type="checkbox" className="accent-red-500"/>
-                    402
-                  </label>
-
-                  <p className="font-semibold mt-3">JUL 8, 2024</p>
-
-                  <div className="flex gap-6 mt-1">
-                    <label className="flex items-center gap-2">
-                      <input type="checkbox" className="accent-red-500"/>
-                      402
-                    </label>
-
-                    <label className="flex items-center gap-2">
-                      <input type="checkbox"/>
-                      502
-                    </label>
+                  {/* Add Room Number */}
+                  <div className="flex gap-2 mb-3">
+                    <input
+                      value={inputValue[room.id] || ""}
+                      onChange={(e) =>
+                        setInputValue({
+                          ...inputValue,
+                          [room.id]: e.target.value
+                        })
+                      }
+                      placeholder="Enter Room Number"
+                      className="border p-2 rounded w-full"
+                    />
+                    <button
+                      onClick={() => handleAddOption(room.id)}
+                      className="bg-green-500 text-white px-3 rounded"
+                    >
+                      Add
+                    </button>
                   </div>
 
-                  <p className="font-semibold mt-3">JUL 9, 2024</p>
+                  {/* Room List */}
+                  <div className="flex gap-4 flex-wrap">
+                    {(roomOptions[room.id] || []).map((item) => {
+                      const disabled =
+                        isAlreadySelected(item) &&
+                        !selectedRooms[room.id]?.includes(item);
 
-                  <div className="flex gap-6 mt-1">
-                    <label className="flex items-center gap-2">
-                      <input type="checkbox" className="accent-red-500"/>
-                      402
-                    </label>
-
-                    <label className="flex items-center gap-2">
-                      <input type="checkbox"/>
-                      501
-                    </label>
+                      return (
+                        <label key={item} className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={
+                              selectedRooms[room.id]?.includes(item) || false
+                            }
+                            disabled={disabled}
+                            onChange={() => handleSelect(room.id, item)}
+                          />
+                          {item}
+                        </label>
+                      );
+                    })}
                   </div>
 
                 </div>
@@ -116,8 +187,7 @@ const Room = () => {
 
         </div>
 
-        {/* Bottom Buttons */}
-
+        {/* Buttons */}
         <div className="flex justify-end gap-4 mt-6">
 
           <button
@@ -128,7 +198,7 @@ const Room = () => {
           </button>
 
           <button
-            onClick={() => navigate("/hotel/pax")}
+            onClick={handleProceed}
             className="bg-blue-500 text-white px-6 py-2 rounded-lg"
           >
             Save & Proceed →
@@ -137,7 +207,6 @@ const Room = () => {
         </div>
 
       </div>
-
     </div>
   );
 };

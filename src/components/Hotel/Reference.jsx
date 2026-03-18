@@ -63,14 +63,41 @@ const Reference = () => {
 
         {/* Buttons */}
         <div className="flex justify-end gap-3 mt-6">
+  
 
-         <button onClick={() => navigate("/hotel/other-booking")}>
-← Go Back
-</button>
+  {/* Skip */}
+  <button
+    onClick={() => navigate("/hotel/other-booking")}
+    className="px-6 py-2 rounded-full text-white font-medium 
+               bg-gradient-to-r from-indigo-600 to-pink-500
+               shadow-lg hover:scale-105 hover:shadow-xl 
+               transition-all duration-300"
+  >
+    ← Go Back
+  </button>
 
-          <button onClick={() => navigate("/hotel/company")}>
-Next →
-</button>
+  {/* Skip */}
+  <button
+    onClick={() => navigate("/hotel/company")}
+    className="px-6 py-2 rounded-full text-white font-medium 
+               bg-gradient-to-r from-orange-400 to-pink-500
+               shadow-lg hover:scale-105 hover:shadow-xl 
+               transition-all duration-300"
+  >
+    Skip
+  </button>
+
+  {/* Next */}
+  <button
+    onClick={() => navigate("/hotel/company")}
+    className="px-6 py-2 rounded-full text-white font-semibold 
+               bg-gradient-to-r from-blue-500 to-cyan-400
+               shadow-lg hover:scale-105 hover:shadow-xl 
+               transition-all duration-300"
+  >
+    Next →
+  </button>
+         
 
         </div>
 
