@@ -361,7 +361,7 @@ const Reports = () => {
                   ek jagah se manage ho sakein.
                 </p>
               </div>
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-4">
                 <button
                   type="button"
                   onClick={fetchData}
