@@ -1,7 +1,6 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
-// ✅ Updated Room Types
 const rooms = [
   { id: 1, name: "AC ROOM", price: "₹2000 PER NIGHT" },
   { id: 2, name: "NON-AC ROOM", price: "₹1500 PER NIGHT" },
@@ -13,19 +12,19 @@ const rooms = [
 
 const Room = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const bookingId = location.state?.bookingId;
 
   const [activeRoom, setActiveRoom] = useState(null);
   const [selectedRooms, setSelectedRooms] = useState({});
   const [roomOptions, setRoomOptions] = useState({});
-
-  // ✅ Room-wise input (FIXED)
   const [inputValue, setInputValue] = useState({});
 
   const handleAvailability = (index) => {
     setActiveRoom(activeRoom === index ? null : index);
   };
 
-  // 🔥 Normalize for duplicate check
   const normalize = (val) => val.trim().toLowerCase();
 
   const findExistingRoom = (value) => {
@@ -40,7 +39,6 @@ const Room = () => {
     return null;
   };
 
-  // ✅ Add Room Number
   const handleAddOption = (roomId) => {
     const value = inputValue[roomId];
 
@@ -61,7 +59,6 @@ const Room = () => {
     setInputValue((prev) => ({ ...prev, [roomId]: "" }));
   };
 
-  // ✅ Select checkbox
   const handleSelect = (roomId, value) => {
     setSelectedRooms((prev) => {
       const current = prev[roomId] || [];
@@ -74,22 +71,24 @@ const Room = () => {
     });
   };
 
-  // ❌ Prevent duplicate selection across all rooms
   const isAlreadySelected = (value) => {
     return Object.values(selectedRooms).flat().includes(value);
   };
 
-  // 🔥 Save & Navigate
+  // ✅ UPDATED HANDLE
   const handleProceed = () => {
     if (!Object.keys(selectedRooms).length) {
       alert("Please select at least one room");
       return;
     }
 
-    localStorage.setItem("roomsData", JSON.stringify(roomOptions));
-    localStorage.setItem("selectedRooms", JSON.stringify(selectedRooms));
-
-    navigate("/hotel/pax");
+    navigate("/hotel/pax", {
+      state: {
+        bookingId,
+        roomOptions,
+        selectedRooms
+      }
+    });
   };
 
   return (
@@ -114,12 +113,6 @@ const Room = () => {
                       × {room.price}
                     </span>
                   </h3>
-
-                  {activeRoom !== index && (
-                    <p className="text-sm text-gray-500 mt-2">
-                      Please check for availability...
-                    </p>
-                  )}
                 </div>
 
                 <button
@@ -131,11 +124,9 @@ const Room = () => {
 
               </div>
 
-              {/* Availability Section */}
               {activeRoom === index && (
                 <div className="mt-4 border-t pt-4">
 
-                  {/* Add Room Number */}
                   <div className="flex gap-2 mb-3">
                     <input
                       value={inputValue[room.id] || ""}
@@ -156,7 +147,6 @@ const Room = () => {
                     </button>
                   </div>
 
-                  {/* Room List */}
                   <div className="flex gap-4 flex-wrap">
                     {(roomOptions[room.id] || []).map((item) => {
                       const disabled =
@@ -187,7 +177,6 @@ const Room = () => {
 
         </div>
 
-        {/* Buttons */}
         <div className="flex justify-end gap-4 mt-6">
 
           <button

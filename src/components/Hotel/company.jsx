@@ -1,9 +1,20 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import axios from "axios";
 
 const Company = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
+  const bookingId = location.state?.bookingId;
+
+  // ✅ FORM DATA
+  const [formData, setFormData] = useState({
+    companyName: "",
+    gst: "",
+  });
+
+  // UI state (same as before)
   const [companies, setCompanies] = useState([
     "Tata",
     "Infosys",
@@ -14,14 +25,38 @@ const Company = () => {
   const [showInput, setShowInput] = useState(false);
   const [newCompany, setNewCompany] = useState("");
 
-  // Add new company
+  // ✅ Add new company
   const handleAddCompany = () => {
     if (newCompany.trim() === "") return;
 
-    setCompanies([...companies, newCompany]); // add to list
-    setSelectedCompany(newCompany); // auto select
+    setCompanies([...companies, newCompany]);
+    setSelectedCompany(newCompany);
+
+    // 👉 formData में भी डालो
+    setFormData({ ...formData, companyName: newCompany });
+
     setNewCompany("");
     setShowInput(false);
+  };
+
+  // ✅ API CALL
+  const handleSubmit = async () => {
+    try {
+      await axios.post(
+        `http://localhost:5002/api/hotel/company/${bookingId}`,
+        formData
+      );
+
+      alert("Company Saved ✅");
+
+      navigate("/hotel/room", {
+        state: { bookingId },
+      });
+
+    } catch (err) {
+      console.error(err);
+      alert("Error saving company ❌");
+    }
   };
 
   return (
@@ -43,8 +78,14 @@ const Company = () => {
             <div className="flex gap-3 items-center">
               <select
                 value={selectedCompany}
-                onChange={(e) => setSelectedCompany(e.target.value)}
-                className="flex-1 border rounded-md p-2 focus:ring-2 focus:ring-blue-400"
+                onChange={(e) => {
+                  setSelectedCompany(e.target.value);
+                  setFormData({
+                    ...formData,
+                    companyName: e.target.value,
+                  });
+                }}
+                className="flex-1 border rounded-md p-2"
               >
                 <option value="">Select</option>
                 {companies.map((comp, index) => (
@@ -62,7 +103,7 @@ const Company = () => {
               </button>
             </div>
 
-            {/* Input show when Add New clicked */}
+            {/* Add New Company */}
             {showInput && (
               <div className="flex gap-2 mt-3">
                 <input
@@ -91,7 +132,11 @@ const Company = () => {
 
             <input
               type="text"
-              className="w-full border rounded-md p-2 focus:ring-2 focus:ring-blue-400"
+              value={formData.gst}
+              onChange={(e) =>
+                setFormData({ ...formData, gst: e.target.value })
+              }
+              className="w-full border rounded-md p-2"
               placeholder="Enter GSTIN"
             />
           </div>
@@ -100,12 +145,18 @@ const Company = () => {
         {/* Buttons */}
         <div className="flex justify-end gap-3 mt-6">
 
-          <button onClick={() => navigate("/hotel/reference")}>
+          <button
+            onClick={() => navigate("/hotel/reference")}
+            className="bg-gray-300 px-5 py-2 rounded-lg"
+          >
             ← Go Back
           </button>
 
-          <button onClick={() => navigate("/hotel/room")}>
-            Next →
+          <button
+            onClick={handleSubmit}
+            className="bg-blue-500 text-white px-6 py-2 rounded-lg"
+          >
+            Save & Next →
           </button>
 
         </div>

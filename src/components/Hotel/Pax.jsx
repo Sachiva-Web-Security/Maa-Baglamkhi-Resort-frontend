@@ -1,40 +1,36 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import axios from "axios";
 
 const Pax = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // ✅ GET FROM ROOM PAGE
+  const bookingId = location.state?.bookingId;
+  const roomOptions = location.state?.roomOptions;
+  const selectedRooms = location.state?.selectedRooms;
 
   const [rooms, setRooms] = useState([]);
   const [paxData, setPaxData] = useState({});
 
+  // ✅ CONVERT ROOM DATA
   useEffect(() => {
-    const data = JSON.parse(localStorage.getItem("roomsData")) || {};
-    const selected = JSON.parse(localStorage.getItem("selectedRooms")) || {};
-
     let finalRooms = [];
 
-    for (let roomId in selected) {
-      const roomList = data[roomId] || [];
-
-      selected[roomId].forEach((roomName) => {
-        const found = roomList.find(
-          (r) => r === roomName || r.name === roomName
-        );
-
-        if (found) {
-          if (typeof found === "string") {
-            finalRooms.push({ name: found, roomType: roomId });
-          } else {
-            finalRooms.push({ ...found, roomType: roomId });
-          }
-        }
+    for (let roomId in selectedRooms) {
+      selectedRooms[roomId].forEach((roomName) => {
+        finalRooms.push({
+          name: roomName,
+          roomType: roomId
+        });
       });
     }
 
     setRooms(finalRooms);
-  }, []);
+  }, [selectedRooms]);
 
-  // ✅ handle change
+  // ✅ INPUT CHANGE
   const handleChange = (roomName, field, value) => {
     setPaxData((prev) => ({
       ...prev,
@@ -45,31 +41,45 @@ const Pax = () => {
     }));
   };
 
-  // ✅ total
+  // ✅ TOTAL
   const getTotal = (roomName) => {
     const adults = paxData[roomName]?.adults || 0;
     const children = paxData[roomName]?.children || 0;
     return adults + children;
   };
 
-  // ✅ save for tariff (meal removed)
-  const handleProceed = () => {
-    let finalData = [];
+  // ✅ SAVE PAX + MOVE NEXT
+  const handleProceed = async () => {
+    try {
+      // 🔥 PAX SAVE (backend call)
+      await axios.post(
+        `http://localhost:5002/api/hotel/pax/${bookingId}`,
+        {
+          adults: Object.values(paxData).reduce(
+            (sum, r) => sum + (r.adults || 0),
+            0
+          ),
+          children: Object.values(paxData).reduce(
+            (sum, r) => sum + (r.children || 0),
+            0
+          ),
+          mealPlan: "EP"
+        }
+      );
 
-    rooms.forEach((room) => {
-      const pax = paxData[room.name] || {};
-
-      finalData.push({
-        name: room.name,
-        roomType: room.roomType,
-        adults: pax.adults || 0,
-        children: pax.children || 0,
-        total: (pax.adults || 0) + (pax.children || 0)
+      // 👉 next page
+      navigate("/hotel/room-tariff", {
+        state: {
+          bookingId,
+          rooms,
+          paxData
+        }
       });
-    });
 
-    localStorage.setItem("finalPaxData", JSON.stringify(finalData));
-    navigate("/hotel/room-tariff");
+    } catch (err) {
+      console.error(err);
+      alert("Error saving pax ❌");
+    }
   };
 
   return (

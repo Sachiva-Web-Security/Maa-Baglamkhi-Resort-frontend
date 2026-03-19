@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const fieldCls =
   "w-full rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100";
@@ -22,6 +23,31 @@ const Guest = () => {
     departure: "10:00",
     bookingStatus: "",
   });
+
+  // ✅ SUBMIT FUNCTION (UPDATED)
+  const handleSubmit = async () => {
+    try {
+      const res = await axios.post(
+        "http://localhost:5002/api/hotel/guest",
+        formData
+      );
+
+      console.log(res.data);
+
+      const bookingId = res.data.bookingId;
+
+      alert("Guest saved successfully");
+
+      // ✅ bookingId next page को pass कर रहे हैं
+      navigate("/hotel/other-booking", {
+        state: { bookingId },
+      });
+
+    } catch (err) {
+      console.error(err);
+      alert("Error saving guest");
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -196,38 +222,8 @@ const Guest = () => {
         </div>
 
         <div className="space-y-4">
-          <div className="rounded-[24px] border border-slate-200/80 bg-white p-5">
-            <div className="text-sm font-bold text-slate-900">Booking preview</div>
-            <div className="mt-4 space-y-3 text-sm text-slate-600">
-              <div className="flex items-center justify-between gap-3">
-                <span>Guest</span>
-                <span className="font-semibold text-slate-900">
-                  {formData.guestName || "Not set"}
-                </span>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <span>Booking Point</span>
-                <span className="font-semibold text-slate-900">
-                  {formData.bookingPoint || "--"}
-                </span>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <span>Status</span>
-                <span className="font-semibold text-slate-900">
-                  {formData.bookingStatus || "Pending"}
-                </span>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <span>Stay Window</span>
-                <span className="font-semibold text-slate-900">
-                  {formData.checkIn || "--"} to {formData.checkOut || "--"}
-                </span>
-              </div>
-            </div>
-          </div>
-
           <button
-            onClick={() => navigate("/hotel/other-booking")}
+            onClick={handleSubmit}
             className="inline-flex w-full items-center justify-center gap-2 rounded-[22px] bg-gradient-to-r from-sky-600 to-cyan-500 px-5 py-4 text-sm font-bold text-white shadow-[0_16px_35px_rgba(14,165,233,0.24)] transition hover:-translate-y-0.5"
           >
             Next Step

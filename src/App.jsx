@@ -75,7 +75,7 @@ function Layout({ children, setIsAuthenticated }) {
   }, []);
 
   return (
-    <div className="min-h-screen w-screen overflow-hidden bg-[radial-gradient(circle_at_top_left,rgba(45,212,191,0.16),transparent_28%),radial-gradient(circle_at_top_right,rgba(249,115,22,0.18),transparent_24%),linear-gradient(180deg,#f8fafc_0%,#eef6f7_38%,#f8fafc_100%)]">
+    <div className="min-h-screen w-screen overflow-hidden">
       <Sidebar
         isMobile={isMobile}
         sidebarOpen={sidebarOpen}
@@ -92,7 +92,7 @@ function Layout({ children, setIsAuthenticated }) {
         <Header setIsAuthenticated={setIsAuthenticated} />
 
         <div className="flex-1 overflow-y-auto mt-[70px]">
-          <div className="p-4 sm:p-6 lg:p-8">{children}</div>
+          <div className="p-4">{children}</div>
         </div>
       </div>
     </div>
@@ -140,30 +140,6 @@ function App() {
           }
         />
 
-        {/* PROFILE */}
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <Layout setIsAuthenticated={setIsAuthenticated}>
-                <Profile />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-
-        {/* ATTENDANCE */}
-        <Route
-          path="/attendance"
-          element={
-            <ProtectedRoute allowedRoles={["admin","manager","staff","waiter","receptionist"]}>
-              <Layout setIsAuthenticated={setIsAuthenticated}>
-                <Attendance />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-
         {/* HOTEL */}
         <Route
           path="/hotel/*"
@@ -175,25 +151,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-
-        {/* ACCOUNTS */}
-        <Route
-          path="/accounts"
-          element={
-            <ProtectedRoute allowedRoles={["admin","manager","accountant"]}>
-              <Layout setIsAuthenticated={setIsAuthenticated}>
-                <Accounts />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-
-        {/* ACCOUNT REPORTS */}
-        <Route path="/accounts/audit-report" element={<Layout setIsAuthenticated={setIsAuthenticated}><AuditReport /></Layout>} />
-        <Route path="/accounts/income-expenditure" element={<Layout setIsAuthenticated={setIsAuthenticated}><IncomeExpenditure /></Layout>} />
-        <Route path="/accounts/sales-report" element={<Layout setIsAuthenticated={setIsAuthenticated}><SalesReport /></Layout>} />
-        <Route path="/accounts/collection-report" element={<Layout setIsAuthenticated={setIsAuthenticated}><CollectionReport /></Layout>} />
-        <Route path="/accounts/daywise-collection" element={<Layout setIsAuthenticated={setIsAuthenticated}><DaywiseCollection /></Layout>} />
 
         {/* RESTAURANT */}
         <Route
@@ -221,34 +178,16 @@ function App() {
           <Route path="item-consumption" element={<ItemConsumption />} />
         </Route>
 
-        {/* INVENTORY */}
-        <Route
-          path="/inventory"
-          element={
-            <ProtectedRoute allowedRoles={["admin","manager","kitchen"]}>
-              <Layout setIsAuthenticated={setIsAuthenticated}>
-                <InventoryDashboard />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-
-        {/* USER */}
+        {/* OTHER */}
+        <Route path="/accounts" element={<Layout setIsAuthenticated={setIsAuthenticated}><Accounts /></Layout>} />
+        <Route path="/profile" element={<Layout setIsAuthenticated={setIsAuthenticated}><Profile /></Layout>} />
+        <Route path="/attendance" element={<Layout setIsAuthenticated={setIsAuthenticated}><Attendance /></Layout>} />
+        <Route path="/inventory" element={<Layout setIsAuthenticated={setIsAuthenticated}><InventoryDashboard /></Layout>} />
         <Route path="/user" element={<Layout setIsAuthenticated={setIsAuthenticated}><User /></Layout>} />
-
-        {/* HOUSEKEEPING */}
         <Route path="/housekeeping" element={<Layout setIsAuthenticated={setIsAuthenticated}><Housekeeping /></Layout>} />
-
-        {/* BANQUET */}
         <Route path="/banquet" element={<Layout setIsAuthenticated={setIsAuthenticated}><Banquet /></Layout>} />
-
-        {/* REPORTS */}
         <Route path="/reports" element={<Layout setIsAuthenticated={setIsAuthenticated}><Reports /></Layout>} />
-
-        {/* ASSIGNMENTS */}
         <Route path="/assignments" element={<Layout setIsAuthenticated={setIsAuthenticated}><Assignment /></Layout>} />
-
-        {/* KITCHEN */}
         <Route path="/kitchen" element={<Layout setIsAuthenticated={setIsAuthenticated}><Kitchen /></Layout>} />
 
       </Routes>

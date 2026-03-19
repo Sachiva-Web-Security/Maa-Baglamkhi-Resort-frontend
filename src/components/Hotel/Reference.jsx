@@ -1,14 +1,45 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
-const Reference = () => {
+import React, { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import axios from "axios";
 
-    const navigate = useNavigate();
+const Reference = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const bookingId = location.state?.bookingId;
+
+  // ✅ FORM STATE
+  const [formData, setFormData] = useState({
+    guestType: "",
+    guestNotes: "",
+    internalNotes: "",
+  });
+
+  // ✅ SUBMIT API
+  const handleSubmit = async () => {
+    try {
+      await axios.post(
+        `http://localhost:5002/api/hotel/reference/${bookingId}`,
+        formData
+      );
+
+      alert("Reference Saved ✅");
+
+      navigate("/hotel/company", {
+        state: { bookingId },
+      });
+
+    } catch (err) {
+      console.error(err);
+      alert("Error saving reference ❌");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 flex justify-center items-center p-6">
 
       <div className="w-full max-w-3xl bg-white shadow-lg rounded-xl p-6">
 
-        {/* Reference Notes */}
         <h2 className="text-lg font-semibold text-gray-700 border-b pb-2 mb-4">
           Reference Notes »
         </h2>
@@ -21,11 +52,18 @@ const Reference = () => {
               Guest Type *
             </label>
 
-            <select className="w-full border rounded-md p-2 focus:ring-2 focus:ring-blue-400">
-              <option>General</option>
-              <option>VIP Guest</option>
-              <option>VVIP Guest</option>
-              <option>Scanty Baggage</option>
+            <select
+              value={formData.guestType}
+              onChange={(e) =>
+                setFormData({ ...formData, guestType: e.target.value })
+              }
+              className="w-full border rounded-md p-2"
+            >
+              <option value="">Select</option>
+              <option value="General">General</option>
+              <option value="VIP Guest">VIP Guest</option>
+              <option value="VVIP Guest">VVIP Guest</option>
+              <option value="Scanty Baggage">Scanty Baggage</option>
             </select>
           </div>
 
@@ -33,14 +71,15 @@ const Reference = () => {
           <div className="col-span-2">
             <label className="block text-sm text-gray-600 mb-1">
               Guest Notes
-              <span className="text-xs text-gray-400 ml-2">
-                (Visible in Booking Slip)
-              </span>
             </label>
 
             <textarea
               rows="3"
-              className="w-full border rounded-md p-2 focus:ring-2 focus:ring-blue-400"
+              value={formData.guestNotes}
+              onChange={(e) =>
+                setFormData({ ...formData, guestNotes: e.target.value })
+              }
+              className="w-full border rounded-md p-2"
             ></textarea>
           </div>
 
@@ -48,14 +87,15 @@ const Reference = () => {
           <div className="col-span-2">
             <label className="block text-sm text-red-500 mb-1">
               Internal Notes
-              <span className="text-xs text-gray-400 ml-2">
-                (For Internal Use Only)
-              </span>
             </label>
 
             <textarea
               rows="3"
-              className="w-full border rounded-md p-2 focus:ring-2 focus:ring-blue-400"
+              value={formData.internalNotes}
+              onChange={(e) =>
+                setFormData({ ...formData, internalNotes: e.target.value })
+              }
+              className="w-full border rounded-md p-2"
             ></textarea>
           </div>
 
@@ -63,41 +103,20 @@ const Reference = () => {
 
         {/* Buttons */}
         <div className="flex justify-end gap-3 mt-6">
-  
 
-  {/* Skip */}
-  <button
-    onClick={() => navigate("/hotel/other-booking")}
-    className="px-6 py-2 rounded-full text-white font-medium 
-               bg-gradient-to-r from-indigo-600 to-pink-500
-               shadow-lg hover:scale-105 hover:shadow-xl 
-               transition-all duration-300"
-  >
-    ← Go Back
-  </button>
+          <button
+            onClick={() => navigate("/hotel/other-booking")}
+            className="bg-gray-300 px-5 py-2 rounded-lg"
+          >
+            ← Go Back
+          </button>
 
-  {/* Skip */}
-  <button
-    onClick={() => navigate("/hotel/company")}
-    className="px-6 py-2 rounded-full text-white font-medium 
-               bg-gradient-to-r from-orange-400 to-pink-500
-               shadow-lg hover:scale-105 hover:shadow-xl 
-               transition-all duration-300"
-  >
-    Skip
-  </button>
-
-  {/* Next */}
-  <button
-    onClick={() => navigate("/hotel/company")}
-    className="px-6 py-2 rounded-full text-white font-semibold 
-               bg-gradient-to-r from-blue-500 to-cyan-400
-               shadow-lg hover:scale-105 hover:shadow-xl 
-               transition-all duration-300"
-  >
-    Next →
-  </button>
-         
+          <button
+            onClick={handleSubmit}
+            className="bg-blue-500 text-white px-6 py-2 rounded-lg"
+          >
+            Save & Next →
+          </button>
 
         </div>
 
