@@ -1,247 +1,286 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Form, Select } from "antd";
-import axios from "axios";
-import { GetCity, GetState, GetCountries } from "react-country-state-city";
+import { Select } from "antd";
+import { GetCity, GetCountries, GetState } from "react-country-state-city";
+import API from "../../api";
+import {
+  getBookingDraft,
+  getStoredBookingId,
+  setBookingDraft,
+  setStoredBookingId,
+} from "./bookingSession";
+
+const fieldCls =
+  "w-full rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100";
+
+const labelCls =
+  "mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500";
 
 const OtherBooking = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const bookingId = location.state?.bookingId || getStoredBookingId();
 
-  const bookingId = location.state?.bookingId;
-
-  // ✅ FORM STATE
-  const [formData, setFormData] = useState({
-    bookingType: "",
-    bookingSource: "",
-    bookingReference: "",
-    address: "",
-    country: "",
-    state: "",
-    city: "",
-    pincode: "",
-  });
-
-  // ✅ COUNTRY STATE CITY
+  const [formData, setFormData] = useState(
+    getBookingDraft("otherBooking") || {
+      bookingType: "",
+      bookingSource: "",
+      bookingReference: "",
+      address: "",
+      country: "",
+      state: "",
+      city: "",
+      pincode: "",
+    },
+  );
   const [countries, setCountries] = useState([]);
-  const [state, setStates] = useState([]);
+  const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
 
-  // Load Countries
-  const loadCountries = async () => {
-    const countriesData = await GetCountries();
-    const options = countriesData.map((country) => ({
-      label: country.name,
-      value: country.id,
-    }));
-    setCountries(options);
+  useEffect(() => {
+    const loadCountries = async () => {
+      const countriesData = await GetCountries();
+      setCountries(
+        countriesData.map((country) => ({
+          label: country.name,
+          value: country.id,
+        })),
+      );
+    };
+
+    loadCountries();
+  }, []);
+
+  useEffect(() => {
+    if (bookingId) {
+      setStoredBookingId(bookingId);
+    }
+  }, [bookingId]);
+
+  const updateForm = (patch) => {
+    const next = { ...formData, ...patch };
+    setFormData(next);
+    setBookingDraft("otherBooking", next);
   };
 
   const onCountrySelect = async (countryId, option) => {
     const statesData = await GetState(countryId);
-
-    setFormData({ ...formData, country: option.label });
-
-    const options = statesData.map((state) => ({
-      label: state.name,
-      value: state.id,
-      countryId: countryId,
-    }));
-
-    setStates(options);
+    updateForm({ country: option.label, state: "", city: "" });
+    setStates(
+      statesData.map((state) => ({
+        label: state.name,
+        value: state.id,
+        countryId,
+      })),
+    );
     setCities([]);
   };
 
   const onStateSelect = async (stateId, option) => {
     const citiesData = await GetCity(option.countryId, stateId);
-
-    setFormData({ ...formData, state: option.label });
-
-    const options = citiesData.map((city) => ({
-      label: city.name,
-      value: city.name,
-    }));
-
-    setCities(options);
+    updateForm({ state: option.label, city: "" });
+    setCities(
+      citiesData.map((city) => ({
+        label: city.name,
+        value: city.name,
+      })),
+    );
   };
 
-  useEffect(() => {
-    loadCountries();
-  }, []);
-
-  // ✅ FINAL SUBMIT (API CALL)
   const handleSubmit = async () => {
     try {
-      await axios.post(
-        `http://localhost:5002/api/hotel/other-booking/${bookingId}`,
-        formData
-      );
-
-      alert("Other Booking Saved ✅");
-
-      navigate("/hotel/reference", {
-        state: { bookingId },
-      });
-
+      await API.post(`/hotel/other-booking/${bookingId}`, formData);
+      setBookingDraft("otherBooking", formData);
+      navigate("/hotel/reference", { state: { bookingId } });
     } catch (err) {
       console.error(err);
-      alert("Error saving other booking ❌");
+      alert("Error saving other booking");
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex justify-center items-center p-6">
-      <div className="w-full max-w-3xl bg-white shadow-lg rounded-xl p-6">
+    <div className="min-h-screen bg-[linear-gradient(135deg,#f5fbff_0%,#f8fff8_42%,#fffaf3_100%)] p-4 sm:p-6">
+      <div className="mx-auto max-w-6xl space-y-6">
+        <section className="overflow-hidden rounded-[28px] border border-white/70 bg-[linear-gradient(135deg,#08253d_0%,#0e5b6a_55%,#0f3f67_100%)] px-6 py-7 text-white shadow-[0_24px_70px_rgba(15,23,42,0.18)]">
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_320px] lg:items-center">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-cyan-200">
+                Other Booking
+              </p>
+              <h1 className="mt-3 text-3xl font-black sm:text-4xl">
+                Source, reference and address details
+              </h1>
+              <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-100/85">
+                Booking channel aur address data ko clean format me save karein,
+                taaki front desk aur reporting dono accurate rahein.
+              </p>
+            </div>
 
-        <h2 className="text-lg font-semibold text-gray-700 border-b pb-2 mb-4">
-          Other Booking Details »
-        </h2>
+            <div className="space-y-3 rounded-[24px] border border-white/15 bg-white/10 p-5 backdrop-blur">
+              <div>
+                <div className="text-xs uppercase tracking-[0.2em] text-cyan-100/80">
+                  Booking ID
+                </div>
+                <div className="mt-1 text-2xl font-black">{bookingId || "Pending"}</div>
+              </div>
+              <div>
+                <div className="text-xs uppercase tracking-[0.2em] text-cyan-100/80">
+                  Source
+                </div>
+                <div className="mt-1 text-lg font-bold">
+                  {formData.bookingSource || "Not selected"}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
 
-        <div className="grid grid-cols-2 gap-4">
+        <section className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(300px,0.85fr)]">
+          <div className="rounded-[26px] border border-slate-200/80 bg-white/90 p-6 shadow-[0_18px_45px_rgba(15,23,42,0.06)]">
+            <div className="grid gap-6">
+              <div className="rounded-[24px] border border-slate-200/80 bg-white p-5">
+                <div className="mb-4 text-lg font-bold text-slate-900">
+                  Booking Source Details
+                </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <label className={labelCls}>Booking Type</label>
+                    <select
+                      value={formData.bookingType}
+                      onChange={(e) => updateForm({ bookingType: e.target.value })}
+                      className={fieldCls}
+                    >
+                      <option value="">Select</option>
+                      <option value="FIT">FIT</option>
+                      <option value="Group">Group</option>
+                      <option value="Corporate">Corporate</option>
+                    </select>
+                  </div>
 
-          {/* Booking Type */}
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">
-              Booking Type *
-            </label>
-            <select
-              value={formData.bookingType}
-              onChange={(e) =>
-                setFormData({ ...formData, bookingType: e.target.value })
-              }
-              className="w-full border rounded-md p-2"
-            >
-              <option value="">Select</option>
-              <option value="FIT">FIT</option>
-              <option value="Group">Group</option>
-              <option value="Corporate">Corporate</option>
-            </select>
+                  <div>
+                    <label className={labelCls}>Booking Source</label>
+                    <select
+                      value={formData.bookingSource}
+                      onChange={(e) => updateForm({ bookingSource: e.target.value })}
+                      className={fieldCls}
+                    >
+                      <option value="">Select</option>
+                      <option value="Front Office">Front Office</option>
+                      <option value="Walk in">Walk in</option>
+                      <option value="Agent">Agent</option>
+                      <option value="Office">Office</option>
+                      <option value="Go ibibo">Go ibibo</option>
+                      <option value="Makemytrip">Makemytrip</option>
+                    </select>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className={labelCls}>Booking Reference</label>
+                    <input
+                      type="text"
+                      value={formData.bookingReference}
+                      onChange={(e) => updateForm({ bookingReference: e.target.value })}
+                      placeholder="Enter booking reference"
+                      className={fieldCls}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-[24px] border border-slate-200/80 bg-white p-5">
+                <div className="mb-4 text-lg font-bold text-slate-900">
+                  Address Details
+                </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="md:col-span-2">
+                    <label className={labelCls}>Address</label>
+                    <textarea
+                      rows={4}
+                      value={formData.address}
+                      onChange={(e) => updateForm({ address: e.target.value })}
+                      placeholder="Enter full address"
+                      className={fieldCls}
+                    />
+                  </div>
+
+                  <div>
+                    <label className={labelCls}>Country</label>
+                    <Select options={countries} onChange={onCountrySelect} placeholder="Select country" className="w-full" />
+                  </div>
+
+                  <div>
+                    <label className={labelCls}>State</label>
+                    <Select options={states} onChange={onStateSelect} placeholder="Select state" className="w-full" />
+                  </div>
+
+                  <div>
+                    <label className={labelCls}>City</label>
+                    <Select
+                      options={cities}
+                      onChange={(value) => updateForm({ city: value })}
+                      placeholder="Select city"
+                      className="w-full"
+                    />
+                  </div>
+
+                  <div>
+                    <label className={labelCls}>PIN Code</label>
+                    <input
+                      type="text"
+                      value={formData.pincode}
+                      onChange={(e) => updateForm({ pincode: e.target.value })}
+                      placeholder="Enter pin code"
+                      className={fieldCls}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Booking Source */}
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">
-              Booking Source *
-            </label>
-            <select
-              value={formData.bookingSource}
-              onChange={(e) =>
-                setFormData({ ...formData, bookingSource: e.target.value })
-              }
-              className="w-full border rounded-md p-2"
-            >
-              <option value="">Select</option>
-              <option value="Front Office">Front Office</option>
-              <option value="Walk in">Walk in</option>
-              <option value="Agent">Agent</option>
-              <option value="office">office</option>
-              <option value="Go ibibo">Go ibibo</option>
-              <option value="Makemytrip">Makemytrip</option>
-            </select>
+          <div className="space-y-4">
+            <div className="rounded-[24px] border border-slate-200/80 bg-white/90 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.06)]">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-sky-700">
+                Quick Summary
+              </div>
+              <div className="mt-4 space-y-3 text-sm text-slate-600">
+                <div className="rounded-2xl bg-slate-50 p-4">
+                  <div className="text-xs uppercase tracking-wide text-slate-500">Type</div>
+                  <div className="mt-1 font-bold text-slate-900">
+                    {formData.bookingType || "Not selected"}
+                  </div>
+                </div>
+                <div className="rounded-2xl bg-slate-50 p-4">
+                  <div className="text-xs uppercase tracking-wide text-slate-500">Location</div>
+                  <div className="mt-1 font-bold text-slate-900">
+                    {[formData.city, formData.state, formData.country].filter(Boolean).join(", ") || "Pending"}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-[24px] border border-slate-200/80 bg-[linear-gradient(135deg,#f8fdff_0%,#eff8ff_100%)] p-5 shadow-[0_18px_45px_rgba(15,23,42,0.06)]">
+              <div className="mt-1 text-xl font-black text-slate-900">Continue Booking</div>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                Source aur address details save karke next reference section par move karein.
+              </p>
+              <div className="mt-5 flex flex-col gap-3">
+                <button
+                  onClick={handleSubmit}
+                  className="inline-flex w-full items-center justify-center rounded-[22px] bg-gradient-to-r from-sky-600 to-cyan-500 px-5 py-4 text-sm font-bold text-white shadow-[0_16px_35px_rgba(14,165,233,0.24)] transition hover:-translate-y-0.5"
+                >
+                  Save & Next
+                </button>
+                <button
+                  onClick={() => navigate("/hotel/guest")}
+                  className="inline-flex w-full items-center justify-center rounded-[22px] border border-slate-200 bg-white px-5 py-4 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+                >
+                  Go Back
+                </button>
+              </div>
+            </div>
           </div>
-
-          {/* Booking Reference */}
-          <div className="col-span-2">
-            <label className="block text-sm text-gray-600 mb-1">
-              Booking Reference
-            </label>
-            <input
-              type="text"
-              value={formData.bookingReference}
-              onChange={(e) =>
-                setFormData({ ...formData, bookingReference: e.target.value })
-              }
-              className="w-full border rounded-md p-2"
-            />
-          </div>
-        </div>
-
-        <h2 className="text-lg font-semibold text-gray-700 border-b pb-2 mt-6 mb-4">
-          Address Details »
-        </h2>
-
-        <div className="grid grid-cols-2 gap-4">
-
-          {/* Address */}
-          <div className="col-span-2">
-            <label className="block text-sm text-gray-600 mb-1">
-              Address
-            </label>
-            <textarea
-              rows="3"
-              value={formData.address}
-              onChange={(e) =>
-                setFormData({ ...formData, address: e.target.value })
-              }
-              className="w-full border rounded-md p-2"
-            />
-          </div>
-
-          {/* Country */}
-          <div>
-            <label>Country</label>
-            <Select
-              options={countries}
-              onChange={onCountrySelect}
-              placeholder="Select country"
-            />
-          </div>
-
-          {/* State */}
-          <div>
-            <label>State</label>
-            <Select
-              options={state}
-              onChange={onStateSelect}
-              placeholder="Select state"
-            />
-          </div>
-
-          {/* City */}
-          <div>
-            <label>City</label>
-            <Select
-              options={cities}
-              onChange={(value) =>
-                setFormData({ ...formData, city: value })
-              }
-              placeholder="Select city"
-            />
-          </div>
-
-          {/* Pincode */}
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">
-              PIN Code
-            </label>
-            <input
-              type="text"
-              value={formData.pincode}
-              onChange={(e) =>
-                setFormData({ ...formData, pincode: e.target.value })
-              }
-              className="w-full border rounded-md p-2"
-            />
-          </div>
-
-        </div>
-
-        <div className="flex justify-end gap-3 mt-6">
-          <button
-            onClick={() => navigate("/hotel/guest")}
-            className="bg-gray-300 text-gray-700 px-5 py-2 rounded-lg"
-          >
-            ← Go Back
-          </button>
-
-          <button
-            onClick={handleSubmit}
-            className="bg-blue-500 text-white px-6 py-2 rounded-lg"
-          >
-            Save & Next →
-          </button>
-        </div>
-
+        </section>
       </div>
     </div>
   );

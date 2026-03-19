@@ -1,6 +1,11 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import API from "../../api";
+import {
+  getBookingDraft,
+  setBookingDraft,
+  setStoredBookingId,
+} from "./bookingSession";
 
 const fieldCls =
   "w-full rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100";
@@ -11,30 +16,31 @@ const labelCls =
 const Guest = () => {
   const navigate = useNavigate();
 
-  const [formData, setFormData] = useState({
-    agentBooking: false,
-    bookingPoint: "Sumit Test (ID:53)",
-    mobile: "",
-    guestName: "",
-    guestEmail: "",
-    checkIn: "",
-    checkOut: "",
-    arrival: "12:00",
-    departure: "10:00",
-    bookingStatus: "",
-  });
+  const [formData, setFormData] = useState(
+    getBookingDraft("guest") || {
+      agentBooking: false,
+      bookingPoint: "Sumit Test (ID:53)",
+      mobile: "",
+      guestName: "",
+      guestEmail: "",
+      checkIn: "",
+      checkOut: "",
+      arrival: "12:00",
+      departure: "10:00",
+      bookingStatus: "",
+    },
+  );
 
   // ✅ SUBMIT FUNCTION (UPDATED)
   const handleSubmit = async () => {
     try {
-      const res = await axios.post(
-        "http://localhost:5002/api/hotel/guest",
-        formData
-      );
+      const res = await API.post("/hotel/guest", formData);
 
       console.log(res.data);
 
       const bookingId = res.data.bookingId;
+      setStoredBookingId(bookingId);
+      setBookingDraft("guest", formData);
 
       alert("Guest saved successfully");
 
@@ -52,29 +58,54 @@ const Guest = () => {
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
-    setFormData({
+    const next = {
       ...formData,
       [name]: type === "checkbox" ? checked : value,
-    });
+    };
+    setFormData(next);
+    setBookingDraft("guest", next);
   };
 
   return (
-    <div className="rounded-[26px] border border-slate-200/80 bg-[linear-gradient(180deg,#fafdff_0%,#ffffff_100%)] p-5 shadow-[0_18px_45px_rgba(15,23,42,0.06)] sm:p-6">
-      <div className="mb-6">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
-          Guest Details
-        </p>
-        <h2 className="mt-1 text-2xl font-black text-slate-900">
-          Start hotel booking
-        </h2>
-        <p className="mt-2 text-sm text-slate-500">
-          Guest information aur booking basics yahan se fill karein.
-        </p>
-      </div>
+    <div className="space-y-6">
+      <section className="overflow-hidden rounded-[28px] border border-white/70 bg-[linear-gradient(135deg,#08253d_0%,#0e5b6a_52%,#0f3f67_100%)] px-6 py-7 text-white shadow-[0_24px_70px_rgba(15,23,42,0.18)]">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_320px] lg:items-center">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-cyan-200">
+              Guest Details
+            </p>
+            <h2 className="mt-3 text-3xl font-black sm:text-4xl">
+              Start hotel booking with guest profile
+            </h2>
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-100/85">
+              Guest information, arrival schedule aur booking status ko clean premium form me capture karein.
+            </p>
+          </div>
+
+          <div className="space-y-3 rounded-[24px] border border-white/15 bg-white/10 p-5 backdrop-blur">
+            <div>
+              <div className="text-xs uppercase tracking-[0.2em] text-cyan-100/80">
+                Booking Point
+              </div>
+              <div className="mt-1 text-lg font-black">
+                {formData.bookingPoint || "Not selected"}
+              </div>
+            </div>
+            <div>
+              <div className="text-xs uppercase tracking-[0.2em] text-cyan-100/80">
+                Guest Name
+              </div>
+              <div className="mt-1 text-lg font-black">
+                {formData.guestName || "Walk-in Guest"}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_320px]">
         <div className="space-y-6">
-          <div className="rounded-[24px] border border-slate-200/80 bg-white p-5">
+          <div className="rounded-[24px] border border-slate-200/80 bg-white p-5 shadow-[0_18px_45px_rgba(15,23,42,0.06)]">
             <div className="mb-4 text-lg font-bold text-slate-900">
               Guest Information
             </div>
@@ -153,7 +184,7 @@ const Guest = () => {
             </div>
           </div>
 
-          <div className="rounded-[24px] border border-slate-200/80 bg-white p-5">
+          <div className="rounded-[24px] border border-slate-200/80 bg-white p-5 shadow-[0_18px_45px_rgba(15,23,42,0.06)]">
             <div className="mb-4 text-lg font-bold text-slate-900">
               Booking Details
             </div>
@@ -222,6 +253,30 @@ const Guest = () => {
         </div>
 
         <div className="space-y-4">
+          <div className="rounded-[24px] border border-slate-200/80 bg-white p-5 shadow-[0_18px_45px_rgba(15,23,42,0.06)]">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-sky-700">
+              Quick Snapshot
+            </div>
+            <div className="mt-4 space-y-3">
+              <div className="rounded-2xl bg-slate-50 p-4">
+                <div className="text-xs uppercase tracking-wide text-slate-500">
+                  Mobile
+                </div>
+                <div className="mt-1 font-black text-slate-900">
+                  {formData.mobile || "Not entered"}
+                </div>
+              </div>
+              <div className="rounded-2xl bg-slate-50 p-4">
+                <div className="text-xs uppercase tracking-wide text-slate-500">
+                  Stay Window
+                </div>
+                <div className="mt-1 font-black text-slate-900">
+                  {formData.checkIn || "-"} to {formData.checkOut || "-"}
+                </div>
+              </div>
+            </div>
+          </div>
+
           <button
             onClick={handleSubmit}
             className="inline-flex w-full items-center justify-center gap-2 rounded-[22px] bg-gradient-to-r from-sky-600 to-cyan-500 px-5 py-4 text-sm font-bold text-white shadow-[0_16px_35px_rgba(14,165,233,0.24)] transition hover:-translate-y-0.5"

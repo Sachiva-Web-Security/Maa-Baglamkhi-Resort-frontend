@@ -46,6 +46,7 @@ import DailyfoodReport from "./components/Restaurant/DailyfoodReport";
 import Daywisefood from "./components/Restaurant/Daywisefood";
 import SettlementReport from "./components/Restaurant/SettlementReport";
 import ItemConsumption from "./components/Restaurant/ItemConsumption";
+import Stayover from "./components/Dashboard/Stayover";
 
 /* ================= ACCOUNT REPORTS ================= */
 import SalesReport from "./pages/reports/SalesReport";
@@ -135,6 +136,17 @@ function App() {
             <ProtectedRoute>
               <Layout setIsAuthenticated={setIsAuthenticated}>
                 <Dashboard />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/stayover"
+          element={
+            <ProtectedRoute>
+              <Layout setIsAuthenticated={setIsAuthenticated}>
+                <Stayover />
               </Layout>
             </ProtectedRoute>
           }

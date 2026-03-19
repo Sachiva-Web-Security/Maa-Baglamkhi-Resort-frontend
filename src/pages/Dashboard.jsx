@@ -458,10 +458,10 @@ const Dashboard = () => {
                   </div>
                   <button
                     type="button"
-                    onClick={() => navigate("/hotel")}
+                    onClick={() => navigate("/stayover")}
                     className="rounded-full bg-gradient-to-r from-cyan-600 to-blue-500 px-4 py-2.5 text-[12px] font-bold text-white shadow-[0_12px_30px_rgba(37,99,235,0.22)] transition hover:-translate-y-0.5"
                   >
-                    Room Dashboard
+                    Stay Overview
                   </button>
                 </div>
               </div>
@@ -823,10 +823,10 @@ const Dashboard = () => {
                   <div className="mt-4 space-y-3">
                     <button
                       type="button"
-                      onClick={() => navigate("/hotel")}
+                      onClick={() => navigate("/stayover")}
                       className="w-full rounded-xl bg-white/12 px-4 py-3 text-left text-sm font-semibold text-white transition hover:bg-white/18"
                     >
-                      Open room dashboard
+                      Open stay overview
                     </button>
                     <button
                       type="button"
