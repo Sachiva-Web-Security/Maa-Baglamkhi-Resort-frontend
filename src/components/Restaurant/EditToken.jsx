@@ -1,15 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import API from "../../api";
 
 const EditToken = () => {
   const { table } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const entityType =
-    location.state?.entityType ||
-    localStorage.getItem(`entityType:${table}`) ||
-    "Table";
+  const entityType = location.state?.entityType || "Table";
+  const roomData = location.state?.roomData || null;
 
   const [tokenId, setTokenId] = useState(null);
   const [items, setItems] = useState([]);
@@ -19,7 +17,6 @@ const EditToken = () => {
     const loadTokenItems = async () => {
       try {
         setLoading(true);
-
         const tokenRes = await API.get(`/token/table/${table}`);
         const activeTokenId = tokenRes.data?.id || null;
         setTokenId(activeTokenId);
@@ -58,11 +55,7 @@ const EditToken = () => {
   };
 
   const subtotal = useMemo(
-    () =>
-      items.reduce(
-        (sum, item) => sum + Number(item.qty || 0) * Number(item.rate || 0),
-        0,
-      ),
+    () => items.reduce((sum, item) => sum + Number(item.qty || 0) * Number(item.rate || 0), 0),
     [items],
   );
 
@@ -93,147 +86,168 @@ const EditToken = () => {
   };
 
   const handleInvoice = () => {
-    const invoiceData = {
-      table,
-      tokenId,
-      items: items.map((item) => ({
-        id: item.id,
-        name: item.item_name,
-        qty: Number(item.qty),
-        rate: Number(item.rate),
-      })),
-      subtotal,
-      gst: tax,
-      total,
-      date: new Date().toISOString(),
-      entityType,
-    };
-
-    localStorage.setItem("currentInvoice", JSON.stringify(invoiceData));
-    navigate("/restaurant/payment", { state: invoiceData });
+    navigate("/restaurant/payment", {
+      state: {
+        table,
+        tokenId,
+        items: items.map((item) => ({
+          id: item.id,
+          name: item.item_name,
+          qty: Number(item.qty),
+          rate: Number(item.rate),
+        })),
+        subtotal,
+        gst: tax,
+        total,
+        date: new Date().toISOString(),
+        entityType,
+      },
+    });
   };
 
   if (loading) {
-    return <div className="bg-gray-100 min-h-screen p-6">Loading token...</div>;
+    return <div className="min-h-screen bg-slate-100 p-6">Loading token...</div>;
   }
 
   return (
-    <div className="bg-gray-100 min-h-screen p-6">
-      <div className="text-sm text-gray-500 mb-3">Home &gt; Restaurant Tokens</div>
-
-      <div className="bg-blue-700 text-white px-4 py-2 rounded-t">Edit Token</div>
-
-      <div className="bg-white border p-5">
-        <div className="bg-gray-100 p-4 rounded mb-4 grid grid-cols-3 text-sm">
-          <div>
-            <strong>Token Code:</strong> {tokenId || "Not Created"}
-          </div>
-
-          <div>
-            <strong>Token Reference:</strong> Table / Table-{table}
-          </div>
-
-          <div>
-            <strong>Waiter:</strong> {localStorage.getItem("name") || "Waiter"}
-          </div>
-        </div>
-
-        <div className="flex gap-2 mb-4">
-          <button
-            onClick={() => navigate(`/restaurant/menu/${table}`)}
-            className="bg-red-500 text-white px-4 py-2 rounded text-sm"
-          >
-            Menu Card
-          </button>
-        </div>
-
-        <div className="grid grid-cols-5 font-semibold text-sm border-b pb-2">
-          <div>Item</div>
-          <div>Quantity</div>
-          <div>Rate</div>
-          <div>Amount</div>
-          <div></div>
-        </div>
-
-        {items.map((item) => (
-          <div
-            key={item.id}
-            className="grid grid-cols-5 items-center py-2 border-b text-sm gap-2"
-          >
-            <input
-              value={item.item_name}
-              readOnly
-              className="border p-1 rounded bg-gray-50"
-            />
-
-            <input
-              type="number"
-              value={item.qty}
-              className="border p-1 w-20 rounded"
-              onChange={(event) => handleChange(item.id, "qty", event.target.value)}
-            />
-
-            <input
-              type="number"
-              value={item.rate}
-              className="border p-1 w-24 rounded"
-              onChange={(event) => handleChange(item.id, "rate", event.target.value)}
-            />
-
-            <div>Rs. {Number(item.qty) * Number(item.rate)}</div>
-
+    <div className="min-h-screen bg-[linear-gradient(180deg,#19253c_0%,#1f2d47_100%)] p-4 sm:p-6">
+      <div className="mx-auto max-w-[1320px] space-y-6">
+        <section className="rounded-[28px] border border-white/10 bg-[linear-gradient(135deg,#0f172a_0%,#1d4ed8_50%,#0f766e_100%)] px-6 py-6 text-white shadow-[0_24px_70px_rgba(15,23,42,0.25)]">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-cyan-200">Edit Token</p>
+              <h1 className="mt-2 text-3xl font-black">Manage room token with cleaner billing view</h1>
+              <p className="mt-2 text-sm text-white/80">
+                Token #{tokenId || "Not Created"} | {entityType} / {table}
+              </p>
+            </div>
             <button
-              onClick={() => deleteItem(item.id)}
-              className="bg-red-500 text-white px-2 py-1 rounded"
+              onClick={() => navigate(`/restaurant/menu/${table}`, { state: { entityType, roomData } })}
+              className="rounded-full bg-white px-5 py-3 text-sm font-bold text-slate-900 shadow-lg"
             >
-              Delete
+              Open Menu Card
             </button>
           </div>
-        ))}
+        </section>
 
-        {!items.length && (
-          <div className="py-6 text-sm text-gray-400">No token items found.</div>
-        )}
+        <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="rounded-[26px] border border-slate-200/70 bg-white/95 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.1)]">
+            <div className="grid gap-3 md:grid-cols-3">
+              <div className="rounded-[20px] bg-slate-50 px-4 py-4">
+                <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500">Token Code</div>
+                <div className="mt-2 text-lg font-black text-slate-900">{tokenId || "Not Created"}</div>
+              </div>
+              <div className="rounded-[20px] bg-slate-50 px-4 py-4">
+                <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500">Reference</div>
+                <div className="mt-2 text-lg font-black text-slate-900">{entityType} / {table}</div>
+              </div>
+              <div className="rounded-[20px] bg-slate-50 px-4 py-4">
+                <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500">Waiter</div>
+                <div className="mt-2 text-lg font-black text-slate-900">Waiter</div>
+              </div>
+            </div>
 
-        <div className="mt-6 border-t pt-4">
-          <div className="flex justify-between text-sm">
-            <span>Subtotal</span>
-            <span>Rs. {subtotal.toFixed(2)}</span>
+            {roomData ? (
+              <div className="mt-4 rounded-[18px] bg-[linear-gradient(135deg,#eff6ff_0%,#f8fafc_100%)] px-4 py-4 text-sm text-slate-700">
+                Room {table} | {roomData.categoryName || "Room"} | ID {roomData.roomId || "--"}
+              </div>
+            ) : null}
+
+            <div className="mt-5 overflow-hidden rounded-[22px] border border-slate-200">
+              <div className="grid grid-cols-[minmax(0,1.3fr)_120px_140px_120px_110px] bg-slate-100 px-4 py-3 text-xs font-bold uppercase tracking-[0.16em] text-slate-600">
+                <div>Item</div>
+                <div className="text-center">Quantity</div>
+                <div className="text-center">Rate</div>
+                <div className="text-center">Amount</div>
+                <div className="text-center">Action</div>
+              </div>
+
+              {items.map((item, index) => (
+                <div
+                  key={item.id}
+                  className={`grid grid-cols-[minmax(0,1.3fr)_120px_140px_120px_110px] items-center gap-2 border-t border-slate-100 px-4 py-3 ${index % 2 ? "bg-slate-50/70" : "bg-white"}`}
+                >
+                  <input value={item.item_name} readOnly className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700" />
+                  <div className="flex justify-center">
+                    <input
+                      type="number"
+                      value={item.qty}
+                      className="w-20 rounded-xl border border-slate-200 px-3 py-2 text-center text-sm"
+                      onChange={(event) => handleChange(item.id, "qty", event.target.value)}
+                    />
+                  </div>
+                  <div className="flex justify-center">
+                    <input
+                      type="number"
+                      value={item.rate}
+                      className="w-28 rounded-xl border border-slate-200 px-3 py-2 text-center text-sm"
+                      onChange={(event) => handleChange(item.id, "rate", event.target.value)}
+                    />
+                  </div>
+                  <div className="text-center font-bold text-slate-900">Rs. {Number(item.qty) * Number(item.rate)}</div>
+                  <div className="flex justify-center">
+                    <button
+                      onClick={() => deleteItem(item.id)}
+                      className="rounded-xl bg-rose-500 px-4 py-2 text-sm font-bold text-white"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+
+              {!items.length ? (
+                <div className="px-4 py-10 text-center text-sm text-slate-400">No token items found.</div>
+              ) : null}
+            </div>
           </div>
 
-          <div className="flex justify-between text-sm">
-            <span>Tax (5%)</span>
-            <span>Rs. {tax.toFixed(2)}</span>
+          <div className="space-y-5">
+            <div className="rounded-[26px] border border-slate-200/70 bg-white/95 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.1)]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-emerald-600">Billing</p>
+              <h3 className="mt-2 text-xl font-black text-slate-900">Token totals</h3>
+
+              <div className="mt-5 space-y-3 rounded-[22px] bg-[linear-gradient(135deg,#f8fbff_0%,#f3f9f5_100%)] p-5">
+                <div className="flex items-center justify-between text-sm text-slate-600">
+                  <span>Subtotal</span>
+                  <span className="font-bold text-slate-900">Rs. {subtotal.toFixed(2)}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm text-slate-600">
+                  <span>Tax (5%)</span>
+                  <span className="font-bold text-slate-900">Rs. {tax.toFixed(2)}</span>
+                </div>
+                <div className="flex items-center justify-between text-lg font-black text-slate-900">
+                  <span>Total</span>
+                  <span>Rs. {total.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-[26px] border border-slate-200/70 bg-white/95 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.1)]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-sky-700">Actions</p>
+              <div className="mt-4 grid gap-3">
+                <button
+                  onClick={handleUpdate}
+                  className="rounded-[18px] bg-emerald-600 px-4 py-3 text-sm font-bold text-white"
+                >
+                  Update Token
+                </button>
+                <button
+                  onClick={handleInvoice}
+                  className="rounded-[18px] bg-blue-600 px-4 py-3 text-sm font-bold text-white"
+                >
+                  Create Invoice
+                </button>
+                <button
+                  onClick={() => navigate("/restaurant")}
+                  className="rounded-[18px] border border-slate-200 bg-slate-100 px-4 py-3 text-sm font-bold text-slate-700"
+                >
+                  Back to Dashboard
+                </button>
+              </div>
+            </div>
           </div>
-
-          <div className="flex justify-between font-bold text-lg">
-            <span>Total</span>
-            <span>Rs. {total.toFixed(2)}</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex gap-3 mt-6">
-        <button
-          onClick={handleUpdate}
-          className="bg-green-600 text-white px-4 py-2 rounded"
-        >
-          Update
-        </button>
-
-        <button
-          onClick={handleInvoice}
-          className="bg-blue-600 text-white px-4 py-2 rounded"
-        >
-          Create Invoice
-        </button>
-
-        <button
-          onClick={() => navigate("/restaurant")}
-          className="bg-gray-400 text-white px-4 py-2 rounded"
-        >
-          Back to Dashboard
-        </button>
+        </section>
       </div>
     </div>
   );

@@ -46,6 +46,7 @@ import DailyfoodReport from "./components/Restaurant/DailyfoodReport";
 import Daywisefood from "./components/Restaurant/Daywisefood";
 import SettlementReport from "./components/Restaurant/SettlementReport";
 import ItemConsumption from "./components/Restaurant/ItemConsumption";
+import RecipeMaster from "./components/Restaurant/RecipeMaster";
 import Stayover from "./components/Dashboard/Stayover";
 
 /* ================= ACCOUNT REPORTS ================= */
@@ -187,6 +188,7 @@ function App() {
           <Route path="daily-room-food" element={<DailyfoodReport />} />
           <Route path="daywise-food" element={<Daywisefood />} />
           <Route path="transfer-token" element={<SettlementReport />} />
+          <Route path="recipe-master" element={<RecipeMaster />} />
           <Route path="item-consumption" element={<ItemConsumption />} />
         </Route>
 

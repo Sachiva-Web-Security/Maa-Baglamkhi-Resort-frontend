@@ -5,6 +5,7 @@ const links = [
   { label: "Dashboard", path: "/restaurant" },
   { label: "Tables", path: "/restaurant" },
   { label: "Payment", path: "/restaurant/payment" },
+  { label: "Recipe Master", path: "/restaurant/recipe-master" },
   { label: "Item Consumption", path: "/restaurant/item-consumption" },
   { label: "Daily Roomwise Food Report", path: "/restaurant/daily-room-food" },
   { label: "Room Items", path: "/restaurant/room-items" },

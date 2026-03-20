@@ -29,6 +29,7 @@ const Advance = () => {
   const guestDraft = getBookingDraft("guest") || {};
 
   const [paidAmount, setPaidAmount] = useState(savedAdvance.paidAmount || "");
+  const [discountAmount] = useState(savedAdvance.discountAmount || 0);
   const [paymentMode, setPaymentMode] = useState(savedAdvance.paymentMode || "Cash");
   const [notes, setNotes] = useState(savedAdvance.notes || "");
 
@@ -71,11 +72,12 @@ const Advance = () => {
     setBookingDraft("advance", {
       totalAmount,
       paidAmount: safePaidAmount,
+      discountAmount,
       remainingAmount,
       paymentMode,
       notes,
     });
-  }, [notes, paymentMode, remainingAmount, safePaidAmount, totalAmount]);
+  }, [discountAmount, notes, paymentMode, remainingAmount, safePaidAmount, totalAmount]);
 
   const handleProceed = async () => {
     if (!bookingId) {
@@ -86,8 +88,10 @@ const Advance = () => {
     try {
       await API.post(`/hotel/advance/${bookingId}`, {
         amount: safePaidAmount,
+        discount: discountAmount,
         totalAmount,
         paidAmount: safePaidAmount,
+        discountAmount,
         remainingAmount,
         paymentMode,
         remarks: notes,
@@ -99,6 +103,7 @@ const Advance = () => {
           bookingId,
           totalAmount,
           paidAmount: safePaidAmount,
+          discountAmount,
           remainingAmount,
           rooms: roomSummary,
         },

@@ -10,7 +10,8 @@ const steps = [
   { name: "Room Tariff", path: "/hotel/room-tariff" },
   { name: "Advance", path: "/hotel/advance" },
   { name: "Communication", path: "/hotel/communication" },
-  { name: "All Bookings", path: "/hotel/all-bookings" }
+  { name: "All Bookings", path: "/hotel/all-bookings" },
+  { name: "Booking History", path: "/hotel/booking-history" }
 ];
 
 const BookingSteps = () => {

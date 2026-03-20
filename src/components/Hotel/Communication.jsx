@@ -27,11 +27,14 @@ const Communication = () => {
   const paidAmount = Number(
     liveBooking?.paidAmount || location.state?.paidAmount || advanceDraft.paidAmount || 0,
   );
+  const discountAmount = Number(
+    liveBooking?.discountAmount || location.state?.discountAmount || advanceDraft.discountAmount || 0,
+  );
   const remainingAmount = Number(
     liveBooking?.remainingAmount ||
       location.state?.remainingAmount ||
       advanceDraft.remainingAmount ||
-      Math.max(totalAmount - paidAmount, 0),
+      Math.max(totalAmount - paidAmount - discountAmount, 0),
   );
 
   useEffect(() => {
@@ -80,7 +83,7 @@ const Communication = () => {
     }
 
     return paxDraft.rooms || [];
-  }, [location.state?.rooms, paxDraft.rooms, tariffDraft.rows]);
+  }, [liveBooking?.rooms, location.state?.rooms, paxDraft.rooms, tariffDraft.rows]);
   const guestName = liveBooking?.guest_name || guestDraft.guestName || "Walk-in Guest";
   const guestEmail = liveBooking?.guest_email || guestDraft.guestEmail || "-";
   const guestMobile = liveBooking?.mobile || guestDraft.mobile || "-";
@@ -145,6 +148,27 @@ const Communication = () => {
     navigate("/hotel/all-bookings");
   };
 
+  const refreshBooking = async () => {
+    if (!bookingId) return;
+    const response = await API.get(`/hotel/full-booking/${bookingId}`);
+    setLiveBooking(response.data || null);
+  };
+
+  const handleLifecycle = async (action) => {
+    try {
+      await API.put(`/hotel/${action}/${bookingId}`);
+      alert(action === "check-out" ? "Guest checked out successfully." : "Guest checked in successfully.");
+      if (action === "check-out") {
+        navigate("/hotel/booking-history");
+        return;
+      }
+      await refreshBooking();
+    } catch (error) {
+      console.error(error);
+      alert(action === "check-out" ? "Check-out failed" : "Check-in failed");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[linear-gradient(135deg,#f8fbff_0%,#f8fffc_45%,#fff9f2_100%)] p-4 sm:p-6">
       <div className="mx-auto max-w-7xl space-y-6">
@@ -185,6 +209,27 @@ const Communication = () => {
             </div>
           </div>
         </section>
+
+        <div className="flex flex-wrap gap-3">
+          <button
+            type="button"
+            onClick={() =>
+              handleLifecycle(
+                String(bookingStatus || "").toLowerCase().includes("checked in") ? "check-out" : "check-in",
+              )
+            }
+            className="rounded-full bg-emerald-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-emerald-700"
+          >
+            {String(bookingStatus || "").toLowerCase().includes("checked in") ? "Check Out" : "Check In"}
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate("/hotel/booking-history")}
+            className="rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+          >
+            Open Booking History
+          </button>
+        </div>
 
         <section className="grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(360px,0.75fr)]">
           <div className="rounded-[28px] border border-slate-200/70 bg-white/90 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur">
@@ -233,7 +278,7 @@ const Communication = () => {
                   <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
                     Payment Snapshot
                   </div>
-                  <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                     <div className="rounded-2xl bg-blue-50 p-4">
                       <div className="text-xs uppercase tracking-wide text-blue-700">
                         Total
@@ -252,9 +297,17 @@ const Communication = () => {
                     </div>
                     <div className="rounded-2xl bg-amber-50 p-4">
                       <div className="text-xs uppercase tracking-wide text-amber-700">
-                        Remaining
+                        Discount
                       </div>
                       <div className="mt-1 text-lg font-black text-amber-900">
+                        {formatCurrency(discountAmount)}
+                      </div>
+                    </div>
+                    <div className="rounded-2xl bg-orange-50 p-4">
+                      <div className="text-xs uppercase tracking-wide text-orange-700">
+                        Remaining
+                      </div>
+                      <div className="mt-1 text-lg font-black text-orange-900">
                         {formatCurrency(remainingAmount)}
                       </div>
                     </div>

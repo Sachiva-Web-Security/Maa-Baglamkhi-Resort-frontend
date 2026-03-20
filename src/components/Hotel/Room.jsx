@@ -164,6 +164,23 @@ const Room = () => {
   const handleSelect = (roomId, value) => {
     setSelectedRooms((prev) => {
       const current = prev[roomId] || [];
+      const isCurrentlySelected = current.includes(value);
+
+      if (!isCurrentlySelected) {
+        const existingSelection = Object.entries(prev).find(
+          ([existingRoomId, values]) =>
+            Number(existingRoomId) !== Number(roomId) && values.includes(value),
+        );
+
+        if (existingSelection) {
+          const roomTypeName =
+            roomCatalog.find((room) => Number(room.id) === Number(existingSelection[0]))?.name ||
+            `Type ${existingSelection[0]}`;
+          alert(`Room no ${value} already selected in ${roomTypeName}. Ek hi booking me same room dobarah select nahi hoga.`);
+          return prev;
+        }
+      }
+
       const updated = current.includes(value)
         ? current.filter((roomValue) => roomValue !== value)
         : [...current, value];
@@ -171,8 +188,6 @@ const Room = () => {
       return { ...prev, [roomId]: updated };
     });
   };
-
-  const isAlreadySelected = (value) => Object.values(selectedRooms).flat().includes(value);
 
   const handleProceed = () => {
     if (!Object.keys(selectedRooms).length) {
@@ -298,10 +313,6 @@ const Room = () => {
 
                     <div className="mt-4 flex flex-wrap gap-3">
                       {(roomOptions[room.id] || []).map((item) => {
-                        const disabled =
-                          isAlreadySelected(item) &&
-                          !selectedRooms[room.id]?.includes(item);
-
                         return (
                           <label
                             key={item}
@@ -314,7 +325,6 @@ const Room = () => {
                             <input
                               type="checkbox"
                               checked={selectedRooms[room.id]?.includes(item) || false}
-                              disabled={disabled}
                               onChange={() => handleSelect(room.id, item)}
                             />
                             {item}

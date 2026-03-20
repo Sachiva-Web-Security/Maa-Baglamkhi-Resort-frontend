@@ -83,6 +83,81 @@ export const restaurantService = {
     const response = await API.put(`/kitchen/orders/${id}`, { status });
     return response.data;
   },
+
+  async getConsumptionBootstrap() {
+    const response = await API.get("/restaurant/consumption/bootstrap");
+    return response.data;
+  },
+
+  async getConsumptionDashboardSummary(params) {
+    const response = await API.get("/restaurant/consumption/dashboard-summary", { params });
+    return response.data;
+  },
+
+  async getConsumptionReport(params) {
+    const response = await API.get("/restaurant/consumption/report", { params });
+    return response.data;
+  },
+
+  async getIngredientConsumptionSummary(params) {
+    const response = await API.get("/restaurant/consumption/ingredient-summary", { params });
+    return response.data;
+  },
+
+  async getStockImpact(params) {
+    const response = await API.get("/restaurant/consumption/stock-impact", { params });
+    return response.data;
+  },
+
+  async saveIngredient(payload) {
+    const response = await API.post("/restaurant/consumption/ingredients", payload);
+    return response.data;
+  },
+
+  async getIngredients() {
+    const response = await API.get("/restaurant/consumption/ingredients");
+    return response.data;
+  },
+
+  async saveRecipe(payload) {
+    const response = await API.post("/restaurant/consumption/recipes", payload);
+    return response.data;
+  },
+
+  async getRecipe(menuItemId) {
+    const response = await API.get(`/restaurant/consumption/recipes/${menuItemId}`);
+    return response.data;
+  },
+
+  async createConsumptionSale(payload) {
+    const response = await API.post("/restaurant/consumption/sales", payload);
+    return response.data;
+  },
+
+  async cancelConsumptionSale(saleOrderId, payload) {
+    const response = await API.put(`/restaurant/consumption/sales/${saleOrderId}/cancel`, payload);
+    return response.data;
+  },
+
+  async reconcileConsumptionStock(payload) {
+    const response = await API.post("/restaurant/consumption/reconcile", payload);
+    return response.data;
+  },
+
+  async getActiveTokens() {
+    const response = await API.get("/token/active");
+    return response.data;
+  },
+
+  async getTokenTransferHistory(params) {
+    const response = await API.get("/token/transfers", { params });
+    return response.data;
+  },
+
+  async transferToken(payload) {
+    const response = await API.post("/token/transfer", payload);
+    return response.data;
+  },
 };
 
 export default restaurantService;
