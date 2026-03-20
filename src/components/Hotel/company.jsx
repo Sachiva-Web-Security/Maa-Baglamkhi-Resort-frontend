@@ -51,16 +51,28 @@ const Company = () => {
     setShowInput(false);
   };
 
-  const handleSubmit = async () => {
-    try {
-      await API.post(`/hotel/company/${bookingId}`, formData);
-      setBookingDraft("company", formData);
-      navigate("/hotel/room", { state: { bookingId } });
-    } catch (err) {
-      console.error(err);
-      alert("Error saving company");
-    }
-  };
+// company.jsx
+
+const handleSubmit = async () => {
+  try {
+    const payload = {
+      companyName: formData.companyName,
+      gst: formData.gst
+    };
+
+    console.log("🚀 SENDING:", payload); // debug
+
+    await API.post(`/hotel/company/${bookingId}`, payload);
+
+    setBookingDraft("company", formData);
+
+    navigate("/hotel/room", { state: { bookingId } });
+
+  } catch (err) {
+    console.error("❌ FRONTEND ERROR:", err.response?.data || err);
+    alert("Error saving company");
+  }
+};
 
   return (
     <div className="min-h-screen bg-[linear-gradient(135deg,#f4fbff_0%,#fbfff8_42%,#fffaf1_100%)] p-4 sm:p-6">

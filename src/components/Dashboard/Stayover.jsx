@@ -326,7 +326,22 @@ const Stayover = () => {
                         </div>
                         <div className="mt-3 flex flex-wrap gap-2">
                           {room.status === "cleaning" ? <button type="button" onClick={() => handleRoomStatus(room, "available")} className="rounded-full bg-emerald-500 px-3 py-1 text-[11px] font-bold text-white">Mark Clean</button> : null}
-                          {room.status === "available" ? <button type="button" onClick={() => navigate("/hotel/guest")} className="rounded-full bg-sky-600 px-3 py-1 text-[11px] font-bold text-white">Book Now</button> : null}
+                          {room.status === "available" ? (
+  <button
+    type="button"
+    onClick={() =>
+      navigate("/hotel/guest", {
+        state: {
+          roomNumber: room.roomNumber,
+          category: room.categoryName,
+        },
+      })
+    }
+    className="rounded-full bg-sky-600 px-3 py-1 text-[11px] font-bold text-white"
+  >
+    Book Now
+  </button>
+) : null}
                         </div>
                       </div>
                       {visibleDates.map((date) => {

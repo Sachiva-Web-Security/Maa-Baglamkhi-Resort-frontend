@@ -106,42 +106,45 @@ const RoomTariff = () => {
   };
 
   const grandTotal = rows.reduce((sum, row) => sum + calculateTotal(row), 0);
+const handleProceed = async () => {
+  if (!bookingId) {
+    alert("Booking ID missing hai.");
+    return;
+  }
 
-  const handleProceed = async () => {
-    if (!bookingId) {
-      alert("Booking ID missing hai.");
-      return;
+  if (!rows.length) {
+    alert("Room tariff data missing hai.");
+    return;
+  }
+
+  try {
+    for (const row of rows) {
+      const payload = {
+        roomNumber: row.roomNo,
+        date: new Date().toISOString().slice(0, 19).replace("T", " "), // ✅ FIX
+        quantity: row.quantity,
+        tariff: row.price,
+        gstPercent: row.gst,
+        total: calculateTotal(row),
+      };
+
+      console.log("🚀 SENDING:", payload); // debug
+
+      await API.post(`/hotel/room-tariff/${bookingId}`, payload);
     }
 
-    if (!rows.length) {
-      alert("Room tariff data missing hai.");
-      return;
-    }
-
-    try {
-      for (const row of rows) {
-        await API.post(`/hotel/room-tariff/${bookingId}`, {
-          roomNumber: row.roomNo,
-          date: new Date(),
-          quantity: row.quantity,
-          tariff: row.price,
-          gstPercent: row.gst,
-          total: calculateTotal(row),
-        });
-      }
-
-      navigate("/hotel/advance", {
-        state: {
-          bookingId,
-          rows,
-          totalAmount: grandTotal,
-        },
-      });
-    } catch (error) {
-      console.error(error);
-      alert(error.response?.data?.message || "Error saving room tariff");
-    }
-  };
+    navigate("/hotel/advance", {
+      state: {
+        bookingId,
+        rows,
+        totalAmount: grandTotal,
+      },
+    });
+  } catch (error) {
+    console.error("❌ ERROR:", error.response?.data || error);
+    alert(error.response?.data?.message || "Error saving room tariff");
+  }
+};
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">

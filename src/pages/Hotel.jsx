@@ -14,6 +14,8 @@ import RoomTariff from "../components/Hotel/RoomTariff";
 import AllBooking from "../components/Hotel/AllBooking";
 import EditBooking from "../components/Hotel/EditBooking";
 
+import CollectPayment from "../components/Hotel/CollectPayment";
+import PaymentHistory from "../components/Hotel/PaymentHistroy";
 // STEP LABEL
 const getStepLabel = (pathname) => {
   if (pathname.includes("/all-bookings")) return "All Bookings";
@@ -26,6 +28,7 @@ const getStepLabel = (pathname) => {
   if (pathname.includes("/pax")) return "Pax";
   if (pathname.includes("/advance")) return "Advance";
   if (pathname.includes("/communication")) return "Communication";
+  if (pathname.includes("/payment-history")) return "Payment History";
   return "Guest";
 };
 
@@ -57,11 +60,13 @@ const Hotel = () => {
           <Route path="room-tariff" element={<RoomTariff />} />
           <Route path="advance" element={<Advance />} />
           <Route path="communication" element={<Communication />} />
-
+          <Route path="collect-payment" element={<CollectPayment />} />
           {/* 🔥 NEW */}
+
+           <Route path="payment-history" element={<PaymentHistory />} />
           <Route path="all-bookings" element={<AllBooking />} />
           <Route path="edit-booking" element={<EditBooking />} />
-
+           
         </Routes>
 
       </div>
