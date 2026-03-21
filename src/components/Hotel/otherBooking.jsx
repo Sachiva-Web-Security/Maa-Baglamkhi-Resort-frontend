@@ -103,18 +103,7 @@ const OtherBooking = () => {
       <div className="mx-auto max-w-6xl space-y-6">
         <section className="overflow-hidden rounded-[28px] border border-white/70 bg-[linear-gradient(135deg,#08253d_0%,#0e5b6a_55%,#0f3f67_100%)] px-6 py-7 text-white shadow-[0_24px_70px_rgba(15,23,42,0.18)]">
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_320px] lg:items-center">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-cyan-200">
-                Other Booking
-              </p>
-              <h1 className="mt-3 text-3xl font-black sm:text-4xl">
-                Source, reference and address details
-              </h1>
-              <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-100/85">
-                Booking channel aur address data ko clean format me save karein,
-                taaki front desk aur reporting dono accurate rahein.
-              </p>
-            </div>
+            
 
             <div className="space-y-3 rounded-[24px] border border-white/15 bg-white/10 p-5 backdrop-blur">
               <div>

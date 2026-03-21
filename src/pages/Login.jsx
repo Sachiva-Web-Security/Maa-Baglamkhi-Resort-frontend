@@ -20,54 +20,55 @@ const Login = ({ setIsAuthenticated }) => {
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+ const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    if (!formData.username || !formData.password) {
-      alert("Please fill in all fields");
-      return;
+  if (!formData.username || !formData.password) {
+    alert("Please fill in all fields");
+    return;
+  }
+
+  try {
+    const res = await API.post("/auth/login", {
+      email: formData.username,
+      password: formData.password,
+    });
+
+    const data = res.data;
+
+    // ✅ Save correct data
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("role", data.role.toLowerCase());
+    localStorage.setItem("name", data.name);
+    localStorage.setItem("email", data.email);
+    localStorage.setItem("isAuthenticated", "true");
+    localStorage.setItem("freshLogin", "true");
+
+    if (setIsAuthenticated) {
+      setIsAuthenticated(true);
     }
 
-    try {
-      // ✅ Correct backend endpoint: /api/auth/login
-      const res = await API.post("/auth/login", {
-        email: formData.username,
-        password: formData.password,
-      });
+    navigate("/dashboard", { replace: true });
 
-      const user = res.data;
+  } catch (error) {
+    let errorMsg;
 
-      // ✅ Save Data
-      localStorage.setItem("token", user.token);
-      localStorage.setItem("role", user.role.toLowerCase());
-      localStorage.setItem("name", user.name);
-      localStorage.setItem("email", user.email);
-      localStorage.setItem("isAuthenticated", "true");
-      localStorage.setItem("freshLogin", "true"); // ✅ Flag for loader
+    if (error.message === "Network Error") {
+      const base =
+        (import.meta.env.VITE_API_URL || "http://localhost:5002/api").replace(
+          /\/api\/?$/,
+          "",
+        ) || "http://localhost:5002";
 
-      if (setIsAuthenticated) {
-        setIsAuthenticated(true);
-      }
-      // Navigate to dashboard; loader is controlled via freshLogin flag
-      navigate("/dashboard", { replace: true });
-    } catch (error) {
-      let errorMsg;
-      if (error.message === "Network Error") {
-        const base =
-          (import.meta.env.VITE_API_URL || "http://localhost:5002/api").replace(
-            /\/api\/?$/,
-            "",
-          ) || "http://localhost:5002";
-        errorMsg = `Unable to reach server. Please make sure the backend is running at ${base}.`;
-      } else {
-        errorMsg = error.response?.data?.message || "Invalid Credentials";
-      }
-
-      alert(errorMsg);
-      console.error("Login error:", error);
-      return; // Added return to prevent continuing Execution
+      errorMsg = `Unable to reach server. Backend run karo at ${base}`;
+    } else {
+      errorMsg = error.response?.data?.message || "Invalid Credentials";
     }
-  };
+
+    alert(errorMsg);
+    console.error("Login error:", error);
+  }
+};
 
   return (
     <div

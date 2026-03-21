@@ -136,22 +136,7 @@ const Guest = () => {
                 />
               </div>
 
-              <div>
-                <label className={labelCls}>Booking Point</label>
-                <select
-                  name="bookingPoint"
-                  value={formData.bookingPoint}
-                  onChange={handleChange}
-                  className={fieldCls}
-                >
-                  <option>Select</option>
-                  <option>Booking.com (ID:16)</option>
-                  <option>Go Ibibo (ID:15)</option>
-                  <option>Make My Trip (ID:14)</option>
-                  <option>Cleartrip (ID:17)</option>
-                  <option>Sumit Test (ID:53)</option>
-                </select>
-              </div>
+              
 
               <div>
                 <label className={labelCls}>Mobile Number</label>
@@ -172,7 +157,7 @@ const Guest = () => {
                   name="guestName"
                   value={formData.guestName}
                   onChange={handleChange}
-                  placeholder="Type or select"
+                  placeholder="enter your name "
                   className={fieldCls}
                 />
               </div>
@@ -184,7 +169,7 @@ const Guest = () => {
                   name="guestEmail"
                   value={formData.guestEmail}
                   onChange={handleChange}
-                  placeholder="Enter email"
+                  placeholder="Enter your email "
                   className={fieldCls}
                 />
               </div>

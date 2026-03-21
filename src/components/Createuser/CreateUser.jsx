@@ -30,7 +30,7 @@ const CreateUser = ({ onClose, onUserCreated }) => {
         id: Date.now(),
         name: form.name,
         email: form.email,
-        role: form.role,
+        role: form.role.toLowerCase(),
       };
 
       localStorage.setItem("users", JSON.stringify([...existing, localUser]));
@@ -42,10 +42,10 @@ const CreateUser = ({ onClose, onUserCreated }) => {
       if (onClose) {
         onClose();
       }
-    } catch (error) {
-      console.log(error);
-      window.alert("Error creating user");
-    }
+    }catch (error) {
+  console.log(error);
+  window.alert(error.response?.data?.message || "Error creating user");
+}
   };
 
   return (
@@ -109,9 +109,9 @@ const CreateUser = ({ onClose, onUserCreated }) => {
             onChange={handleChange}
             className={fieldCls}
           >
-            <option value="Admin">Admin</option>
-            <option value="Manager">Manager</option>
-            <option value="Staff">Staff</option>
+            <option value="admin">Admin</option>
+            <option value="manager">Manager</option>
+            <option value="staff">Staff</option>
             <option value="Receptionist">Receptionist</option>
             <option value="Housekeeping">Housekeeping</option>
             <option value="Accountant">Accountant</option>
