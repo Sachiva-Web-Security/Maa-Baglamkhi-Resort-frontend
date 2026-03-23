@@ -12,6 +12,8 @@ const MenuPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { table } = useParams();
+  const banquetMenuPicker = Boolean(location.state?.banquetMenuPicker);
+  const banquetReturnPath = location.state?.returnTo || "/banquet";
   const entityType = location.state?.entityType || "Table";
   const roomData = location.state?.roomData || null;
   const { menuItems, addMenuItem, setSelectedTable } = useContext(RestaurantContext);
@@ -30,9 +32,10 @@ const MenuPage = () => {
   const [expandedCategory, setExpandedCategory] = useState("Other");
 
   useEffect(() => {
+    if (banquetMenuPicker) return;
     setSelectedTable(table);
     setSelectedCategory("All");
-  }, [setSelectedTable, table]);
+  }, [banquetMenuPicker, setSelectedTable, table]);
 
   useEffect(() => {
     let mounted = true;
@@ -40,7 +43,9 @@ const MenuPage = () => {
       setIsLoadingMenu(true);
       setMenuError(null);
       try {
-        const data = await restaurantService.getMenu(table);
+        const data = banquetMenuPicker
+          ? (await API.get("/restaurant/menu")).data
+          : await restaurantService.getMenu(table);
         if (mounted) setMenu(data || []);
       } catch (err) {
         if (mounted) {
@@ -55,11 +60,12 @@ const MenuPage = () => {
     return () => {
       mounted = false;
     };
-  }, [table]);
+  }, [banquetMenuPicker, table]);
 
   useEffect(() => {
+    if (banquetMenuPicker) return;
     setMenu(menuItems);
-  }, [menuItems]);
+  }, [banquetMenuPicker, menuItems]);
 
   useEffect(() => {
     let mounted = true;
@@ -137,6 +143,30 @@ const MenuPage = () => {
 
   const handleSubmit = async () => {
     if (!order.length) return alert("Please add items");
+
+    if (banquetMenuPicker) {
+      const selectedRestaurantMenuItems = order.map((item) => ({
+        name: item.name,
+        qty: Number(item.qty || 0),
+        rate: Number(item.rate || 0),
+        amount: Number(item.amount || 0),
+        taxAmount: Number(item.taxAmount || 0),
+        total: Number(item.total || 0),
+      }));
+      const selectedCustomMenuItems = Array.from(
+        new Set(selectedRestaurantMenuItems.map((item) => item.name).filter(Boolean)),
+      );
+      navigate(banquetReturnPath, {
+        state: {
+          banquetMenuSelection: {
+            selectedCustomMenuItems,
+            selectedRestaurantMenuItems,
+          },
+        },
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     setSubmitError(null);
     try {
@@ -195,13 +225,25 @@ const MenuPage = () => {
         <div className="mb-5 rounded-[22px] bg-[linear-gradient(135deg,#111827_0%,#1d4ed8_50%,#0f766e_100%)] px-5 py-5 text-white">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <div className="text-[11px] uppercase tracking-[0.28em] text-cyan-200">Restaurant Menu Card</div>
-              <div className="mt-2 text-3xl font-black">Room {table} Menu Dashboard</div>
-              <div className="mt-2 text-sm text-white/80">{roomData ? `${roomData.categoryName || "Room"} | ID ${roomData.roomId || "--"}` : "Category-wise item selection"}</div>
+              <div className="text-[11px] uppercase tracking-[0.28em] text-cyan-200">
+                {banquetMenuPicker ? "Banquet Menu Picker" : "Restaurant Menu Card"}
+              </div>
+              <div className="mt-2 text-3xl font-black">
+                {banquetMenuPicker ? "Select Restaurant Menu For Banquet" : `Room ${table} Menu Dashboard`}
+              </div>
+              <div className="mt-2 text-sm text-white/80">
+                {banquetMenuPicker
+                  ? "Items select karke seedha banquet reservation form mein wapas laut sakte hain."
+                  : roomData
+                  ? `${roomData.categoryName || "Room"} | ID ${roomData.roomId || "--"}`
+                  : "Category-wise item selection"}
+              </div>
             </div>
-            <button onClick={() => setShowAddMenu(true)} className="rounded-full bg-white px-5 py-3 text-sm font-bold text-slate-900 shadow-lg">
-              + Add Item
-            </button>
+            {!banquetMenuPicker ? (
+              <button onClick={() => setShowAddMenu(true)} className="rounded-full bg-white px-5 py-3 text-sm font-bold text-slate-900 shadow-lg">
+                + Add Item
+              </button>
+            ) : null}
           </div>
         </div>
 
@@ -276,12 +318,23 @@ const MenuPage = () => {
 
         <div className="mt-5 flex items-center justify-end gap-3">
           {submitError ? <div className="mr-auto text-sm text-rose-600">{submitError}</div> : null}
-          <button onClick={() => navigate("/restaurant")} className="rounded-xl bg-rose-500 px-4 py-3 text-sm font-bold text-white">Cancel</button>
-          <button onClick={handleSubmit} disabled={isSubmitting} className="rounded-xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white disabled:opacity-60">{isSubmitting ? "Submitting..." : "Submit"}</button>
+          <button
+            onClick={() =>
+              banquetMenuPicker
+                ? navigate(banquetReturnPath, { state: { banquetMenuCancelled: true } })
+                : navigate("/restaurant")
+            }
+            className="rounded-xl bg-rose-500 px-4 py-3 text-sm font-bold text-white"
+          >
+            {banquetMenuPicker ? "Back To Banquet" : "Cancel"}
+          </button>
+          <button onClick={handleSubmit} disabled={isSubmitting} className="rounded-xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white disabled:opacity-60">
+            {banquetMenuPicker ? "Use In Banquet" : isSubmitting ? "Submitting..." : "Submit"}
+          </button>
         </div>
       </div>
 
-      {showAddMenu ? (
+      {showAddMenu && !banquetMenuPicker ? (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-950/45 p-4">
           <div className="w-full max-w-xl rounded-[28px] bg-white p-6 shadow-[0_30px_80px_rgba(15,23,42,0.32)]">
             <div className="text-[11px] uppercase tracking-[0.26em] text-blue-700">Add Menu Item</div>
