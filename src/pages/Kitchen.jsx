@@ -1,5 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
-import { FiCheckCircle, FiPrinter, FiClock, FiAlertCircle } from "react-icons/fi";
+import {
+  FiAlertCircle,
+  FiCheckCircle,
+  FiClock,
+  FiPrinter,
+} from "react-icons/fi";
+import { FaFireAlt, FaSyncAlt } from "react-icons/fa";
 import { restaurantService } from "../services/restaurantService";
 
 const Kitchen = () => {
@@ -69,8 +75,8 @@ const Kitchen = () => {
       <tr>
         <td>${item.name || item.item_name}</td>
         <td>${item.qty ?? item.quantity ?? "-"}</td>
-        <td>₹${item.price}</td>
-        <td>₹${Number(item.price || 0) * Number(item.qty ?? item.quantity ?? 0)}</td>
+        <td>Rs ${item.price}</td>
+        <td>Rs ${Number(item.price || 0) * Number(item.qty ?? item.quantity ?? 0)}</td>
       </tr>
     `
       )
@@ -95,148 +101,230 @@ const Kitchen = () => {
     printWindow.print();
   };
 
+  const totalOrders = orders.length;
+  const readyCount = orders.filter((o) => o.status === "Ready").length;
+  const pendingCount = Math.max(0, totalOrders - readyCount);
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 text-white p-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="animate-pulse space-y-4">
-            <div className="h-10 w-64 bg-white/10 rounded-full" />
-            <div className="grid md:grid-cols-3 gap-4">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="h-56 bg-white/5 rounded-3xl border border-white/10" />
-              ))}
-            </div>
+      <div className="relative isolate min-h-screen w-full overflow-x-hidden bg-[linear-gradient(135deg,#f5fbff_0%,#f3f8f4_28%,#fff8f1_58%,#f8fafc_100%)] p-4 transition-all duration-300 sm:p-6 lg:p-8">
+        <div className="mx-auto max-w-[1280px] space-y-6 animate-pulse">
+          <div className="h-52 rounded-[28px] bg-slate-200/70" />
+          <div className="grid gap-4 md:grid-cols-3">
+            {[...Array(3)].map((_, index) => (
+              <div key={index} className="h-64 rounded-[26px] bg-white/80" />
+            ))}
           </div>
         </div>
       </div>
     );
   }
 
-  const totalOrders = orders.length;
-  const readyCount = orders.filter((o) => o.status === "Ready").length;
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 text-white p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
-        {/* Hero */}
-        <div className="rounded-3xl bg-white/5 border border-white/10 p-5 backdrop-blur">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-cyan-300/80">Live Kitchen Queue</p>
-              <h2 className="text-2xl font-bold">Kitchen Orders</h2>
-              <p className="text-sm text-slate-300 mt-1 flex items-center gap-1">
-                <FiClock className="inline" /> Auto-refresh every 4s
+    <div className="relative isolate min-h-screen w-full overflow-x-hidden bg-[linear-gradient(135deg,#f5fbff_0%,#f3f8f4_28%,#fff8f1_58%,#f8fafc_100%)] p-4 transition-all duration-300 sm:p-6 lg:p-8">
+      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+        <div className="absolute left-[-8%] top-[-6%] h-72 w-72 rounded-full bg-cyan-200/45 blur-3xl sm:h-96 sm:w-96" />
+        <div className="absolute right-[-10%] top-[8%] h-72 w-72 rounded-full bg-amber-200/45 blur-3xl sm:h-[28rem] sm:w-[28rem]" />
+        <div className="absolute bottom-[18%] left-[18%] h-56 w-56 rounded-full bg-emerald-200/30 blur-3xl sm:h-80 sm:w-80" />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.55)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.45)_1px,transparent_1px)] bg-[size:72px_72px] opacity-25" />
+      </div>
+
+      <div className="mx-auto max-w-[1280px] space-y-7">
+        <section className="overflow-hidden rounded-[26px] border border-slate-900/10 bg-[linear-gradient(120deg,#071b34_0%,#0d4a53_52%,#162d45_100%)] px-4 py-5 shadow-[0_22px_55px_rgba(15,23,42,0.12)] sm:px-6 sm:py-6 lg:px-8">
+          <div className="relative z-[1] grid gap-5 lg:grid-cols-[minmax(0,1.5fr)_minmax(300px,0.8fr)] lg:items-center">
+            <div className="space-y-3">
+              <p className="text-[7px] font-semibold uppercase tracking-[0.26em] text-cyan-200 sm:text-[10px]">
+                Resort Command Center
               </p>
+              <div className="space-y-1">
+                <h1 className="text-[1.25rem] font-black leading-[1.02] text-white sm:text-[2.4rem]">
+                  Operational snapshot for kitchen
+                </h1>
+                <p className="max-w-3xl text-[12px] leading-5 text-slate-100/88 sm:text-[14px] sm:leading-6">
+                  Track order queues, ready movement, and kitchen printing with the exact same background mood as the main hotel dashboard.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={fetchOrders}
+                  className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-bold text-slate-900 shadow-[0_16px_35px_rgba(255,255,255,0.15)] transition hover:-translate-y-0.5"
+                >
+                  <FaSyncAlt className="text-cyan-600" />
+                  Refresh Queue
+                </button>
+                <div className="rounded-full border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur-md">
+                  Auto refresh every 4 seconds
+                </div>
+              </div>
             </div>
-            <div className="flex gap-3">
-              <div className="px-4 py-3 rounded-2xl bg-emerald-500/15 border border-emerald-400/30">
-                <div className="text-xs text-emerald-200 uppercase">Total</div>
-                <div className="text-xl font-bold text-white">{totalOrders}</div>
-              </div>
-              <div className="px-4 py-3 rounded-2xl bg-amber-500/15 border border-amber-400/30">
-                <div className="text-xs text-amber-200 uppercase">Ready</div>
-                <div className="text-xl font-bold text-white">{readyCount}</div>
-              </div>
+
+            <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+              {[
+                { label: "Active Orders", value: String(totalOrders) },
+                { label: "Ready Orders", value: String(readyCount) },
+                { label: "Pending Orders", value: String(pendingCount) },
+              ].map((item) => (
+                <div
+                  key={item.label}
+                  className="rounded-[22px] border border-white/12 bg-white/10 px-4 py-4 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md"
+                >
+                  <span className="text-[11px] text-slate-100/75">{item.label}</span>
+                  <div className="mt-3 text-2xl font-bold leading-none">{item.value}</div>
+                </div>
+              ))}
             </div>
           </div>
-        </div>
+        </section>
 
-        {/* Orders grid */}
-        <div className="grid md:grid-cols-3 sm:grid-cols-2 gap-4">
-          {orders.map((order) => {
-            const ref = order.table || order.table_number || order.table_no;
-            const entityType =
-              localStorage.getItem(`entityType:${ref}`) ||
-              order.entityType ||
-              "Table";
-            const label = `${entityType} ${ref}`;
-            const status = order.status || "Pending";
-            const statusColor =
-              status === "Ready"
-                ? "bg-emerald-500/15 text-emerald-200 border-emerald-400/40"
-                : "bg-amber-500/15 text-amber-100 border-amber-400/40";
-
-            const total = (order.items || []).reduce((sum, item) => {
-              const qty = Number(item.qty ?? item.quantity ?? 0);
-              return sum + Number(item.price || 0) * qty;
-            }, 0);
-
-            return (
-              <div
-                key={order.id}
-                className="rounded-3xl bg-white/[0.04] border border-white/10 shadow-[0_16px_40px_rgba(0,0,0,0.35)] p-4 flex flex-col gap-3"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.12em] text-slate-300">Ref</p>
-                    <h3 className="text-xl font-bold text-white">{label}</h3>
-                    <p className="text-xs text-slate-400 mt-1">Order #{order.id}</p>
-                  </div>
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-semibold border ${statusColor}`}
-                  >
-                    {status}
-                  </span>
+        <section className="grid gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
+          <aside className="rounded-[26px] border border-white/60 bg-white/76 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+            <div className="mb-4">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
+                Queue Snapshot
+              </p>
+              <h2 className="mt-1 text-xl font-bold text-slate-900">Kitchen stats</h2>
+            </div>
+            <div className="space-y-3">
+              <div className="rounded-[20px] border border-slate-200/80 bg-white p-4">
+                <div className="inline-flex rounded-2xl bg-cyan-50 p-3 text-cyan-700">
+                  <FaFireAlt />
                 </div>
-
-                <div className="space-y-2 bg-white/5 rounded-2xl border border-white/10 p-3">
-                  {(order.items || []).map((item, i) => (
-                    <div
-                      key={i}
-                      className="flex justify-between text-sm text-slate-100"
-                    >
-                      <div className="flex flex-col">
-                        <span className="font-semibold">
-                          {item.name || item.item_name}
-                        </span>
-                        <span className="text-slate-400 text-xs">
-                          Qty: {item.qty ?? item.quantity ?? "-"}
-                        </span>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-semibold">₹{item.price}</div>
-                      </div>
-                    </div>
-                  ))}
+                <div className="mt-4 text-sm font-bold text-slate-900">Live queue monitor</div>
+                <p className="mt-2 text-sm text-slate-500">
+                  Orders restaurant side se aate hi yahan visible ho jate hain.
+                </p>
+              </div>
+              <div className="rounded-[20px] border border-slate-200/80 bg-white p-4">
+                <div className="inline-flex rounded-2xl bg-emerald-50 p-3 text-emerald-700">
+                  <FiClock />
                 </div>
+                <div className="mt-4 text-sm font-bold text-slate-900">Status movement</div>
+                <p className="mt-2 text-sm text-slate-500">
+                  Ready mark karte hi queue clean aur service sync better rehta hai.
+                </p>
+              </div>
+            </div>
+          </aside>
 
-                <div className="flex items-center justify-between">
-                  <div className="text-sm text-slate-200">
-                    Total: <span className="font-bold text-white">₹{total}</span>
-                  </div>
-                  <div className="flex gap-2">
-                    {order.status !== "Ready" && (
-                      <button
-                        onClick={() => markReady(order.id)}
-                        className="inline-flex items-center gap-1 bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-3 py-2 rounded-xl text-sm font-semibold shadow-lg shadow-emerald-600/30"
+          <div className="space-y-4">
+            <section className="rounded-[26px] border border-white/60 bg-white/80 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
+              <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
+                    Live Kitchen Queue
+                  </p>
+                  <h2 className="mt-1 text-xl font-bold text-slate-900">Kitchen orders</h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={fetchOrders}
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-sky-600 to-cyan-500 px-4 py-2.5 text-sm font-bold text-white shadow-[0_12px_30px_rgba(14,165,233,0.24)] transition hover:-translate-y-0.5"
+                >
+                  <FaSyncAlt />
+                  Refresh Now
+                </button>
+              </div>
+
+              {orders.length ? (
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  {orders.map((order) => {
+                    const ref = order.table || order.table_number || order.table_no;
+                    const entityType =
+                      localStorage.getItem(`entityType:${ref}`) ||
+                      order.entityType ||
+                      "Table";
+                    const label = `${entityType} ${ref}`;
+                    const status = order.status || "Pending";
+                    const total = (order.items || []).reduce((sum, item) => {
+                      const qty = Number(item.qty ?? item.quantity ?? 0);
+                      return sum + Number(item.price || 0) * qty;
+                    }, 0);
+
+                    return (
+                      <div
+                        key={order.id}
+                        className="rounded-[24px] border border-slate-200/80 bg-white p-5 shadow-sm"
                       >
-                        <FiCheckCircle /> Ready
-                      </button>
-                    )}
-                    <button
-                      onClick={() => printBill(order)}
-                      className="inline-flex items-center gap-1 bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-3 py-2 rounded-xl text-sm font-semibold shadow-lg shadow-indigo-600/30"
-                    >
-                      <FiPrinter /> Print
-                    </button>
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                              Reference
+                            </div>
+                            <div className="mt-2 text-lg font-black text-slate-900">{label}</div>
+                            <div className="mt-1 text-sm text-slate-500">Order #{order.id}</div>
+                          </div>
+                          <span
+                            className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                              status === "Ready"
+                                ? "bg-emerald-50 text-emerald-700"
+                                : "bg-amber-50 text-amber-700"
+                            }`}
+                          >
+                            {status}
+                          </span>
+                        </div>
+
+                        <div className="mt-4 space-y-2 rounded-[20px] border border-slate-200/70 bg-slate-50 p-4">
+                          {(order.items || []).map((item, index) => (
+                            <div key={index} className="flex items-center justify-between gap-3 text-sm">
+                              <div>
+                                <div className="font-semibold text-slate-900">
+                                  {item.name || item.item_name}
+                                </div>
+                                <div className="text-slate-500">
+                                  Qty: {item.qty ?? item.quantity ?? "-"}
+                                </div>
+                              </div>
+                              <div className="font-bold text-slate-700">Rs. {item.price}</div>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="mt-4 flex items-center justify-between gap-3">
+                          <div className="text-sm text-slate-600">
+                            Total: <span className="font-black text-slate-900">Rs. {total}</span>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {order.status !== "Ready" ? (
+                              <button
+                                type="button"
+                                onClick={() => markReady(order.id)}
+                                className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 px-4 py-2 text-xs font-bold text-white"
+                              >
+                                <FiCheckCircle />
+                                Ready
+                              </button>
+                            ) : null}
+                            <button
+                              type="button"
+                              onClick={() => printBill(order)}
+                              className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-xs font-bold text-slate-700"
+                            >
+                              <FiPrinter />
+                              Print
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="rounded-[22px] border border-dashed border-slate-300 bg-white/70 p-10 text-center text-slate-500">
+                  <FiAlertCircle className="mx-auto mb-3 text-3xl text-slate-400" />
+                  <div className="text-lg font-bold text-slate-900">No orders in kitchen queue</div>
+                  <div className="mt-2 text-sm">
+                    Restaurant se naye orders aate hi yahan automatically show honge.
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {orders.length === 0 && (
-          <div className="border border-dashed border-white/20 rounded-3xl p-10 text-center text-slate-300 bg-white/5">
-            <FiAlertCircle className="mx-auto text-3xl mb-3 text-slate-200" />
-            <p className="text-lg font-semibold">No orders in the kitchen queue.</p>
-            <p className="text-sm text-slate-400 mt-1">New orders will appear here automatically.</p>
+              )}
+            </section>
           </div>
-        )}
+        </section>
       </div>
     </div>
   );
 };
 
 export default Kitchen;
-

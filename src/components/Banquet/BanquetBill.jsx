@@ -1,6 +1,13 @@
-const BanquetBill = ({ booking, halls, menuPackages, formatINR }) => {
-  const hall = halls.find((h) => h.id === booking.hallId);
+const BanquetBill = ({
+  booking,
+  halls,
+  menuPackages,
+  lightingOptions,
+  formatINR,
+}) => {
+  const hall = halls.find((h) => String(h.id) === String(booking.hallId));
   const menuPackage = menuPackages.find((p) => p.id === booking.menuPackageId);
+  const lighting = lightingOptions.find((item) => item.id === booking.lightingSystem);
 
   const calculateTotals = () => {
     const startTime = booking.startTime || "18:00";
@@ -17,20 +24,35 @@ const BanquetBill = ({ booking, halls, menuPackages, formatINR }) => {
 
     const hallCharge = hall ? hall.ratePerHour * hours : 0;
     const foodCharge = (booking.guests || 0) * (menuPackage?.perGuest || 0);
+    const lightingCharge = lighting?.price || 0;
+    const eventSupportCharge = booking.eventSupportFee || 0;
     const decoration = booking.decorationFee || 0;
+    const discount = booking.discount || 0;
 
-    const subTotal = hallCharge + foodCharge + decoration;
-    const gst = Math.round(subTotal * 0.05);
+    const subTotal =
+      hallCharge +
+      foodCharge +
+      lightingCharge +
+      eventSupportCharge +
+      decoration;
+    const taxableAmount = Math.max(0, subTotal - discount);
+    const gst = Math.round(
+      taxableAmount * ((booking.gstPercent || 5) / 100)
+    );
 
-    const grandTotal = subTotal + gst;
+    const grandTotal = taxableAmount + gst;
     const advance = booking.advance || 0;
     const balance = grandTotal - advance;
 
     return {
       hallCharge,
       foodCharge,
+      lightingCharge,
+      eventSupportCharge,
       decoration,
+      discount,
       subTotal,
+      taxableAmount,
       gst,
       grandTotal,
       advance,
@@ -42,9 +64,9 @@ const BanquetBill = ({ booking, halls, menuPackages, formatINR }) => {
   const totals = calculateTotals();
 
   return (
-    <div className="p-6 bg-white rounded-lg">
+    <div className="rounded-3xl bg-white">
 
-      <div className="flex justify-between mb-6">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <div className="text-2xl font-bold">Banquet Invoice</div>
           <div className="text-sm text-gray-500">
@@ -57,7 +79,7 @@ const BanquetBill = ({ booking, halls, menuPackages, formatINR }) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-6 mb-6">
+      <div className="mb-6 grid gap-6 md:grid-cols-2">
 
         <div>
           <div className="font-bold mb-2">Customer</div>
@@ -77,7 +99,8 @@ const BanquetBill = ({ booking, halls, menuPackages, formatINR }) => {
 
       </div>
 
-      <table className="w-full border">
+      <div className="overflow-hidden rounded-3xl border border-slate-200">
+      <table className="w-full">
 
         <thead className="bg-gray-100">
           <tr>
@@ -103,6 +126,20 @@ const BanquetBill = ({ booking, halls, menuPackages, formatINR }) => {
           </tr>
 
           <tr>
+            <td className="p-2">Lighting</td>
+            <td className="text-right p-2">
+              {formatINR(totals.lightingCharge)}
+            </td>
+          </tr>
+
+          <tr>
+            <td className="p-2">Event Support</td>
+            <td className="text-right p-2">
+              {formatINR(totals.eventSupportCharge)}
+            </td>
+          </tr>
+
+          <tr>
             <td className="p-2">Decoration</td>
             <td className="text-right p-2">
               {formatINR(totals.decoration)}
@@ -117,7 +154,21 @@ const BanquetBill = ({ booking, halls, menuPackages, formatINR }) => {
           </tr>
 
           <tr>
-            <td className="p-2">GST (5%)</td>
+            <td className="p-2">Discount</td>
+            <td className="text-right p-2 text-amber-600">
+              - {formatINR(totals.discount)}
+            </td>
+          </tr>
+
+          <tr>
+            <td className="p-2">Taxable Amount</td>
+            <td className="text-right p-2">
+              {formatINR(totals.taxableAmount)}
+            </td>
+          </tr>
+
+          <tr>
+            <td className="p-2">GST ({booking.gstPercent || 5}%)</td>
             <td className="text-right p-2">
               {formatINR(totals.gst)}
             </td>
@@ -147,6 +198,7 @@ const BanquetBill = ({ booking, halls, menuPackages, formatINR }) => {
         </tbody>
 
       </table>
+      </div>
 
     </div>
   );
