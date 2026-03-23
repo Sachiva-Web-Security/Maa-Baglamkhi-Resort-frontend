@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import API from "../../api";
 import {
   getBookingDraft,
+  getStoredBookingCode,
   getStoredBookingId,
   setBookingDraft,
   setStoredBookingId,
@@ -14,8 +15,16 @@ const RoomTariff = () => {
   const location = useLocation();
 
   const bookingId = location.state?.bookingId || getStoredBookingId();
-  const rooms = location.state?.rooms || getBookingDraft("pax")?.rooms || [];
-  const paxData = location.state?.paxData || getBookingDraft("pax")?.paxData || {};
+  const bookingCode = location.state?.bookingCode || getStoredBookingCode();
+  const bookingRef = bookingCode || bookingId;
+  const rooms = useMemo(
+    () => location.state?.rooms || getBookingDraft("pax")?.rooms || [],
+    [location.state?.rooms],
+  );
+  const paxData = useMemo(
+    () => location.state?.paxData || getBookingDraft("pax")?.paxData || {},
+    [location.state?.paxData],
+  );
   const roomDraft = getBookingDraft("room") || {};
   const [categorySetup, setCategorySetup] = useState([]);
   const [rows, setRows] = useState(getBookingDraft("roomTariff")?.rows || []);
@@ -62,16 +71,16 @@ const RoomTariff = () => {
     const priceInputs = roomDraft.priceInputs || {};
 
     const nextRows = rooms.map((room) => {
-      const category = categoryMap[String(room.roomType)] || {};
+      const category = categoryMap[String(room.roomTypeId || room.roomType)] || {};
       const adults = Number(paxData[room.name]?.adults || 0);
       const children = Number(paxData[room.name]?.children || 0);
       const quantity = Math.max(adults + children, 1);
-      const fallbackPrice = Number(priceInputs[room.roomType] || 0);
+      const fallbackPrice = Number(priceInputs[room.roomTypeId || room.roomType] || 0);
       const tariff = Number(category.defaultPrice || fallbackPrice || 0);
 
       return {
         roomNo: room.name,
-        roomType: category.name || `Room Type ${room.roomType}`,
+        roomType: room.roomTypeName || category.name || `Room Type ${room.roomTypeId || room.roomType}`,
         quantity,
         price: tariff,
         gst: 12,
@@ -136,6 +145,7 @@ const handleProceed = async () => {
     navigate("/hotel/advance", {
       state: {
         bookingId,
+        bookingCode,
         rows,
         totalAmount: grandTotal,
       },
@@ -152,6 +162,9 @@ const handleProceed = async () => {
         <h2 className="border-b pb-3 text-xl font-bold text-gray-800">
           Room Tariff
         </h2>
+        <div className="mt-2 text-sm text-slate-500">
+          Booking Ref: <span className="font-black text-slate-900">{bookingRef || "Pending"}</span>
+        </div>
 
         {rows.length ? (
           <>

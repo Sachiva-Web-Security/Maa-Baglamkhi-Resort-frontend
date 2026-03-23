@@ -1,221 +1,315 @@
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { restaurantService } from "../../services/restaurantService";
 
-const ItemConsumption = () => {
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [groupBy, setGroupBy] = useState("Item");
-  const [data, setData] = useState({});
-  const [loading, setLoading] = useState(false);
-  const [attempted, setAttempted] = useState(false);
+const TABS = [
+  { id: "logs", label: "Consumption Report" },
+  { id: "ingredient", label: "Ingredient Summary" },
+  { id: "stock", label: "Stock Impact" },
+];
 
-  const loadReport = async () => {
+const ItemConsumption = () => {
+  const [filters, setFilters] = useState({
+    dateFrom: "",
+    dateTo: "",
+    itemName: "",
+    ingredientName: "",
+    category: "",
+    outlet: "",
+  });
+  const [activeTab, setActiveTab] = useState("logs");
+  const [bootstrap, setBootstrap] = useState({ menuItems: [], ingredients: [], outlets: [] });
+  const [dashboard, setDashboard] = useState({
+    totalItemsSold: 0,
+    totalIngredientsConsumed: 0,
+    totalConsumptionCost: 0,
+    lowStockAffectedItems: 0,
+    wastageQty: 0,
+  });
+  const [logs, setLogs] = useState([]);
+  const [ingredientSummary, setIngredientSummary] = useState([]);
+  const [stockImpact, setStockImpact] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [selectedLog, setSelectedLog] = useState(null);
+
+  const categoryOptions = useMemo(
+    () =>
+      bootstrap.menuItems
+        .map((item) => item.category || "Other")
+        .filter((value, index, array) => array.indexOf(value) === index),
+    [bootstrap.menuItems],
+  );
+
+  const loadBootstrap = useCallback(async () => {
+    try {
+      const data = await restaurantService.getConsumptionBootstrap();
+      setBootstrap(data || { menuItems: [], ingredients: [], outlets: [] });
+    } catch (error) {
+      console.log(error);
+    }
+  }, []);
+
+  const loadReports = useCallback(async () => {
     try {
       setLoading(true);
-      setAttempted(true);
+      const [dashboardRes, logsRes, ingredientRes, stockRes] = await Promise.all([
+        restaurantService.getConsumptionDashboardSummary(filters),
+        restaurantService.getConsumptionReport(filters),
+        restaurantService.getIngredientConsumptionSummary(filters),
+        restaurantService.getStockImpact(filters),
+      ]);
 
-      const orders = await restaurantService.getKitchenOrders();
-      const result = {};
-
-      orders.forEach((order) => {
-        const orderDate = new Date(order.created_at);
-
-        if (startDate) {
-          const start = new Date(startDate);
-          if (orderDate < start) return;
-        }
-
-        if (endDate) {
-          const end = new Date(endDate);
-          end.setHours(23, 59, 59, 999);
-          if (orderDate > end) return;
-        }
-
-        (order.items || []).forEach((item) => {
-          const key =
-            groupBy === "Item"
-              ? item.name || item.item_name
-              : item.category || "Items";
-
-          if (!result[key]) {
-            result[key] = {
-              name: key,
-              qty: 0,
-            };
-          }
-
-          const qty = Number(item.quantity ?? item.qty ?? item.Qty ?? 0) || 0;
-          result[key].qty += qty;
-        });
-      });
-
-      setData(result);
-    } catch (err) {
-      console.error(err);
-      setData({});
+      setDashboard(dashboardRes || {});
+      setLogs(logsRes || []);
+      setIngredientSummary(ingredientRes || []);
+      setStockImpact(stockRes || []);
+      setSelectedLog((logsRes || [])[0] || null);
+    } catch (error) {
+      console.log(error);
+      setLogs([]);
+      setIngredientSummary([]);
+      setStockImpact([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters]);
 
-  const printReport = () => {
-    const rows = Object.values(data)
-      .map(
-        (item) => `
-        <tr>
-          <td style="padding:6px 8px; border-bottom:1px solid #e2e8f0;">${item.name}</td>
-          <td style="padding:6px 8px; text-align:right; border-bottom:1px solid #e2e8f0;">${item.qty}</td>
-        </tr>`
-      )
-      .join("");
+  useEffect(() => {
+    loadBootstrap();
+    loadReports();
+  }, [loadBootstrap, loadReports]);
+
+  const printCurrentView = () => {
+    const rows =
+      activeTab === "logs"
+        ? logs
+            .map(
+              (row) => `
+              <tr>
+                <td>${row.menu_item_name}</td>
+                <td>${row.ingredient_name}</td>
+                <td style="text-align:right">${row.quantity_sold}</td>
+                <td style="text-align:right">${row.total_consumption}</td>
+                <td style="text-align:right">${row.total_consumption_cost}</td>
+              </tr>`,
+            )
+            .join("")
+        : activeTab === "ingredient"
+          ? ingredientSummary
+              .map(
+                (row) => `
+                <tr>
+                  <td>${row.ingredient_name}</td>
+                  <td style="text-align:right">${row.total_consumption}</td>
+                  <td style="text-align:right">${row.total_cost}</td>
+                </tr>`,
+              )
+              .join("")
+          : stockImpact
+              .map(
+                (row) => `
+                <tr>
+                  <td>${row.name}</td>
+                  <td style="text-align:right">${row.currentStock}</td>
+                  <td style="text-align:right">${row.reorderLevel}</td>
+                </tr>`,
+              )
+              .join("");
 
     const win = window.open("", "_blank");
     win.document.write(`
       <html>
-        <head>
-          <title>Item Consumption Report</title>
-          <style>
-            body { font-family: "Segoe UI", sans-serif; color:#0f172a; padding:16px; }
-            h2 { margin:0 0 4px 0; }
-            .meta { color:#64748b; font-size:12px; margin-bottom:12px; }
-            table { width:100%; border-collapse:collapse; font-size:13px; }
-            th { text-align:left; padding:6px 8px; background:#f8fafc; border-bottom:1px solid #e2e8f0; color:#475569; letter-spacing:0.02em; }
-          </style>
-        </head>
-        <body>
-          <h2>Item Consumption Report</h2>
-          <div class="meta">
-            Group By: ${groupBy} |
-            Start: ${startDate || "—"} |
-            End: ${endDate || "—"}
-          </div>
-          <table>
-            <thead>
-              <tr><th>Name</th><th style="text-align:right;">Quantity</th></tr>
-            </thead>
-            <tbody>
-              ${rows || `<tr><td colspan="2" style="padding:12px; text-align:center; color:#94a3b8;">No data</td></tr>`}
-            </tbody>
+        <head><title>Item Consumption Report</title></head>
+        <body style="font-family:Segoe UI;padding:16px;">
+          <h2>Item Consumption</h2>
+          <div>View: ${activeTab}</div>
+          <table style="width:100%;border-collapse:collapse;margin-top:12px;">
+            <tbody>${rows || "<tr><td>No data</td></tr>"}</tbody>
           </table>
         </body>
       </html>
     `);
     win.document.close();
-    win.focus();
     win.print();
-    win.close();
   };
 
   return (
-    <div className="bg-gradient-to-br from-slate-100 via-white to-slate-100 min-h-screen p-6">
-      <div className="text-sm text-slate-500 mb-3">
-        Home &gt; Item Consumption Report
-      </div>
-
-      <div className="rounded-3xl bg-white shadow-[0_18px_40px_rgba(15,23,42,0.12)] border border-slate-100 overflow-hidden">
-        <div className="bg-gradient-to-r from-blue-700 to-indigo-600 text-white px-6 py-4 text-lg font-semibold">
-          Item Consumption Report
-        </div>
-
-        <div className="p-6 space-y-4">
-          <div className="grid md:grid-cols-6 gap-4 items-end">
+    <div className="min-h-screen bg-[linear-gradient(180deg,#19253c_0%,#1f2d47_100%)] p-4 sm:p-6">
+      <div className="mx-auto max-w-[1400px] space-y-6">
+        <section className="rounded-[28px] border border-white/10 bg-[linear-gradient(135deg,#0f172a_0%,#1d4ed8_50%,#0f766e_100%)] px-6 py-6 text-white shadow-[0_24px_70px_rgba(15,23,42,0.25)]">
+          <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <label className="text-xs uppercase text-slate-500 font-semibold">
-                Start Date
-              </label>
-              <input
-                type="date"
-                className="border border-slate-200 p-3 w-full rounded-xl bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-              />
+              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-cyan-200">Item Consumption</p>
+              <h1 className="mt-2 text-3xl font-black">Production-ready consumption analytics</h1>
+              <p className="mt-2 text-sm text-white/80">
+                Recipe/BOM based ingredient usage, cost impact, stock deduction aur branch-wise reporting.
+              </p>
             </div>
-            <div>
-              <label className="text-xs uppercase text-slate-500 font-semibold">
-                End Date
-              </label>
-              <input
-                type="date"
-                className="border border-slate-200 p-3 w-full rounded-xl bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="text-xs uppercase text-slate-500 font-semibold">
-                Group By
-              </label>
-              <select
-                className="border border-slate-200 p-3 w-full rounded-xl bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={groupBy}
-                onChange={(e) => setGroupBy(e.target.value)}
-              >
-                <option value="Item">Item</option>
-                <option value="Category">Category</option>
-              </select>
-            </div>
-            <div>
-              <label className="text-xs uppercase text-slate-500 font-semibold">
-                POS
-              </label>
-              <select className="border border-slate-200 p-3 w-full rounded-xl bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <option>All POS</option>
-              </select>
-            </div>
-            <div>
-              <label className="text-xs uppercase text-slate-500 font-semibold">
-                Token Type
-              </label>
-              <select className="border border-slate-200 p-3 w-full rounded-xl bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <option>Regular Tokens</option>
-                <option>NC Tokens</option>
-              </select>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={loadReport}
-                className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-3 rounded-xl font-semibold shadow-md hover:shadow-lg transition w-full"
-              >
-                {loading ? "Loading..." : "Get Report"}
-              </button>
-            <button
-                onClick={printReport}
-                className="bg-gradient-to-r from-orange-500 to-amber-500 text-white px-4 py-3 rounded-xl font-semibold shadow-md hover:shadow-lg transition w-full"
-              >
-                Print
-              </button>
-            </div>
+            <button onClick={printCurrentView} className="rounded-full bg-white px-5 py-3 text-sm font-bold text-slate-900 shadow-lg">
+              Print View
+            </button>
           </div>
-        </div>
-      </div>
+        </section>
 
-      <div className="bg-white border border-slate-100 rounded-2xl shadow-sm mt-4 overflow-hidden">
-        {attempted && Object.keys(data).length === 0 && !loading && (
-          <div className="p-8 text-center text-slate-500 text-sm">No Data Found</div>
-        )}
+        <section className="grid gap-4 md:grid-cols-5">
+          <div className="rounded-[22px] border border-slate-200/70 bg-white/95 px-5 py-5 shadow-[0_18px_50px_rgba(15,23,42,0.1)]">
+            <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500">Total Items Sold</div>
+            <div className="mt-2 text-3xl font-black text-slate-900">{dashboard.totalItemsSold || 0}</div>
+          </div>
+          <div className="rounded-[22px] border border-slate-200/70 bg-white/95 px-5 py-5 shadow-[0_18px_50px_rgba(15,23,42,0.1)]">
+            <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500">Ingredients Consumed</div>
+            <div className="mt-2 text-3xl font-black text-slate-900">{dashboard.totalIngredientsConsumed || 0}</div>
+          </div>
+          <div className="rounded-[22px] border border-slate-200/70 bg-white/95 px-5 py-5 shadow-[0_18px_50px_rgba(15,23,42,0.1)]">
+            <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500">Consumption Cost</div>
+            <div className="mt-2 text-3xl font-black text-slate-900">Rs. {Number(dashboard.totalConsumptionCost || 0).toFixed(2)}</div>
+          </div>
+          <div className="rounded-[22px] border border-slate-200/70 bg-white/95 px-5 py-5 shadow-[0_18px_50px_rgba(15,23,42,0.1)]">
+            <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500">Low Stock Items</div>
+            <div className="mt-2 text-3xl font-black text-slate-900">{dashboard.lowStockAffectedItems || 0}</div>
+          </div>
+          <div className="rounded-[22px] border border-slate-200/70 bg-white/95 px-5 py-5 shadow-[0_18px_50px_rgba(15,23,42,0.1)]">
+            <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500">Wastage Qty</div>
+            <div className="mt-2 text-3xl font-black text-slate-900">{dashboard.wastageQty || 0}</div>
+          </div>
+        </section>
 
-        {loading && (
-          <div className="p-8 text-center text-slate-500 text-sm">Loading...</div>
-        )}
-
-        {!loading && Object.values(data).length > 0 && (
-          <table className="w-full text-sm text-slate-800">
-            <thead className="bg-slate-50 border-b border-slate-100 text-xs uppercase tracking-wide text-slate-500">
-              <tr>
-                <th className="text-left px-4 py-3">Name</th>
-                <th className="text-right px-4 py-3">Quantity</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Object.values(data).map((item, index) => (
-                <tr key={index} className="border-b border-slate-100">
-                  <td className="px-4 py-3">{item.name}</td>
-                  <td className="px-4 py-3 text-right">{item.qty}</td>
-                </tr>
+        <section className="rounded-[26px] border border-slate-200/70 bg-white/95 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.1)]">
+          <div className="grid gap-4 xl:grid-cols-[repeat(6,minmax(0,1fr))_150px] xl:items-end">
+            <input type="date" value={filters.dateFrom} onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })} className="rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-3" />
+            <input type="date" value={filters.dateTo} onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })} className="rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-3" />
+            <input value={filters.itemName} onChange={(e) => setFilters({ ...filters, itemName: e.target.value })} placeholder="Item wise" className="rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-3" />
+            <input value={filters.ingredientName} onChange={(e) => setFilters({ ...filters, ingredientName: e.target.value })} placeholder="Ingredient wise" className="rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-3" />
+            <select value={filters.category} onChange={(e) => setFilters({ ...filters, category: e.target.value })} className="rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-3">
+              <option value="">All Categories</option>
+              {categoryOptions.map((category) => <option key={category} value={category}>{category}</option>)}
+            </select>
+            <select value={filters.outlet} onChange={(e) => setFilters({ ...filters, outlet: e.target.value })} className="rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-3">
+              <option value="">All Outlets</option>
+              {bootstrap.outlets.map((outlet) => (
+                <option key={`${outlet.outlet}-${outlet.branch}`} value={outlet.outlet}>{outlet.outlet}</option>
               ))}
-            </tbody>
-          </table>
-        )}
+            </select>
+            <button onClick={loadReports} className="rounded-[18px] bg-blue-600 px-4 py-3 text-sm font-bold text-white">
+              {loading ? "Loading..." : "Apply Filters"}
+            </button>
+          </div>
+        </section>
+
+        <section className="rounded-[26px] border border-slate-200/70 bg-white/95 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.1)]">
+          <div className="flex flex-wrap gap-3 border-b border-slate-200 pb-4">
+            {TABS.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`rounded-full px-4 py-2 text-sm font-bold ${
+                  activeTab === tab.id ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-700"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {activeTab === "logs" ? (
+            <div className="mt-5 grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+              <div className="overflow-hidden rounded-[22px] border border-slate-200">
+                <div className="grid grid-cols-[140px_160px_120px_120px_140px] bg-slate-100 px-4 py-3 text-xs font-bold uppercase tracking-[0.16em] text-slate-600">
+                  <div>Menu Item</div>
+                  <div>Ingredient</div>
+                  <div className="text-right">Sold Qty</div>
+                  <div className="text-right">Consumed</div>
+                  <div className="text-right">Cost</div>
+                </div>
+                <div className="max-h-[620px] overflow-auto">
+                  {logs.map((row) => (
+                    <button
+                      key={row.id}
+                      type="button"
+                      onClick={() => setSelectedLog(row)}
+                      className={`grid w-full grid-cols-[140px_160px_120px_120px_140px] items-center gap-2 border-t border-slate-100 px-4 py-4 text-left ${selectedLog?.id === row.id ? "bg-blue-50" : "bg-white hover:bg-slate-50"}`}
+                    >
+                      <div className="font-semibold text-slate-800">{row.menu_item_name}</div>
+                      <div className="text-sm text-slate-600">{row.ingredient_name}</div>
+                      <div className="text-right text-sm font-bold text-slate-800">{row.quantity_sold}</div>
+                      <div className="text-right text-sm font-bold text-slate-800">{row.total_consumption} {row.unit}</div>
+                      <div className="text-right text-sm font-black text-slate-900">Rs. {Number(row.total_consumption_cost || 0).toFixed(2)}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-sky-700">Consumption Details</div>
+                {selectedLog ? (
+                  <div className="mt-4 space-y-3">
+                    {[
+                      ["Date", selectedLog.date],
+                      ["Bill No", selectedLog.bill_no],
+                      ["Menu Item", selectedLog.menu_item_name],
+                      ["Category", selectedLog.category],
+                      ["Ingredient", selectedLog.ingredient_name],
+                      ["Per Item", `${selectedLog.per_item_consumption} ${selectedLog.unit}`],
+                      ["Total Consumption", `${selectedLog.total_consumption} ${selectedLog.unit}`],
+                      ["Opening Stock", selectedLog.opening_stock],
+                      ["Remaining Stock", selectedLog.remaining_stock],
+                      ["Outlet", selectedLog.outlet],
+                      ["Created By", selectedLog.created_by],
+                    ].map(([label, value]) => (
+                      <div key={label} className="rounded-[16px] bg-white px-4 py-3">
+                        <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500">{label}</div>
+                        <div className="mt-1 text-sm font-bold text-slate-900">{value || "--"}</div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="mt-4 rounded-[16px] bg-white px-4 py-6 text-sm text-slate-500">Select a row to view modal-style details.</div>
+                )}
+              </div>
+            </div>
+          ) : null}
+
+          {activeTab === "ingredient" ? (
+            <div className="mt-5 overflow-hidden rounded-[22px] border border-slate-200">
+              <div className="grid grid-cols-[minmax(0,1.4fr)_160px_160px_180px] bg-slate-100 px-4 py-3 text-xs font-bold uppercase tracking-[0.16em] text-slate-600">
+                <div>Ingredient</div>
+                <div className="text-right">Total Consumption</div>
+                <div className="text-right">Total Cost</div>
+                <div className="text-right">Lowest Remaining</div>
+              </div>
+              {ingredientSummary.map((row, index) => (
+                <div key={`${row.ingredient_name}-${index}`} className="grid grid-cols-[minmax(0,1.4fr)_160px_160px_180px] border-t border-slate-100 px-4 py-4">
+                  <div className="font-semibold text-slate-800">{row.ingredient_name}</div>
+                  <div className="text-right font-bold text-slate-800">{row.total_consumption} {row.unit}</div>
+                  <div className="text-right font-black text-slate-900">Rs. {Number(row.total_cost || 0).toFixed(2)}</div>
+                  <div className="text-right text-slate-700">{row.lowest_remaining_stock}</div>
+                </div>
+              ))}
+            </div>
+          ) : null}
+
+          {activeTab === "stock" ? (
+            <div className="mt-5 overflow-hidden rounded-[22px] border border-slate-200">
+              <div className="grid grid-cols-[minmax(0,1.4fr)_140px_140px_120px_120px] bg-slate-100 px-4 py-3 text-xs font-bold uppercase tracking-[0.16em] text-slate-600">
+                <div>Ingredient</div>
+                <div className="text-right">Current</div>
+                <div className="text-right">Reorder</div>
+                <div className="text-right">Wastage</div>
+                <div className="text-right">Status</div>
+              </div>
+              {stockImpact.map((row) => (
+                <div key={row.id} className="grid grid-cols-[minmax(0,1.4fr)_140px_140px_120px_120px] border-t border-slate-100 px-4 py-4">
+                  <div className="font-semibold text-slate-800">{row.name}</div>
+                  <div className="text-right font-bold text-slate-800">{row.currentStock} {row.unit}</div>
+                  <div className="text-right text-slate-700">{row.reorderLevel} {row.unit}</div>
+                  <div className="text-right text-slate-700">{row.wastageQty} {row.unit}</div>
+                  <div className={`text-right font-black ${Number(row.is_low_stock) ? "text-rose-600" : "text-emerald-600"}`}>
+                    {Number(row.is_low_stock) ? "Low Stock" : "Healthy"}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : null}
+        </section>
       </div>
     </div>
   );

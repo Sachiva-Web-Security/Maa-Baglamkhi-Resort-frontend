@@ -35,7 +35,7 @@ const MonthlyRevenueChart = () => {
         }
       } catch (err) {
         if (err.message === "Network Error") {
-          console.error("Network Error: Could not connect to backend at http://localhost:5002. Please ensure the backend server is running (npm run dev in the backend folder).", err);
+          console.error("Network Error: Could not connect to backend. Please ensure the backend server is running and API base URL is configured.", err);
         } else {
           console.error("Error fetching monthly revenue chart data:", err);
         }

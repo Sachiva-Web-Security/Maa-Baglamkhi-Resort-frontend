@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import API from "../../api";
 import {
   getBookingDraft,
+  getStoredBookingCode,
   getStoredBookingId,
   setBookingDraft,
   setStoredBookingId,
@@ -18,17 +19,20 @@ const Company = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const bookingId = location.state?.bookingId || getStoredBookingId();
+  const bookingCode = location.state?.bookingCode || getStoredBookingCode();
+  const bookingRef = bookingCode || bookingId;
 
   const [formData, setFormData] = useState(
     getBookingDraft("company") || {
-      companyName: "",
+      companyName: "Direct Booking",
       gst: "",
     },
   );
-  const [companies, setCompanies] = useState(["Tata", "Infosys", "Reliance"]);
-  const [selectedCompany, setSelectedCompany] = useState("");
+  const [companies, setCompanies] = useState(["Direct Booking", "Tata", "Infosys", "Reliance"]);
+  const [selectedCompany, setSelectedCompany] = useState(getBookingDraft("company")?.companyName || "Direct Booking");
   const [showInput, setShowInput] = useState(false);
   const [newCompany, setNewCompany] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (bookingId) {
@@ -43,10 +47,11 @@ const Company = () => {
   };
 
   const handleAddCompany = () => {
-    if (!newCompany.trim()) return;
-    setCompanies((prev) => [...prev, newCompany]);
-    setSelectedCompany(newCompany);
-    syncCompany(newCompany);
+    const trimmed = newCompany.trim();
+    if (!trimmed) return;
+    setCompanies((prev) => (prev.includes(trimmed) ? prev : [...prev, trimmed]));
+    setSelectedCompany(trimmed);
+    syncCompany(trimmed);
     setNewCompany("");
     setShowInput(false);
   };
@@ -54,45 +59,55 @@ const Company = () => {
 // company.jsx
 
 const handleSubmit = async () => {
+  if (isSubmitting) return;
+
   try {
+    setIsSubmitting(true);
+    const companyName = (formData.companyName || selectedCompany || "Direct Booking").trim() || "Direct Booking";
     const payload = {
-      companyName: formData.companyName,
-      gst: formData.gst
+      companyName,
+      gst: formData.gst,
     };
 
-    console.log("🚀 SENDING:", payload); // debug
+    const next = { ...formData, companyName };
+    setFormData(next);
+    setBookingDraft("company", next);
 
     await API.post(`/hotel/company/${bookingId}`, payload);
 
-    setBookingDraft("company", formData);
-
-    navigate("/hotel/room", { state: { bookingId } });
+    navigate("/hotel/room", { state: { bookingId, bookingCode } });
 
   } catch (err) {
     console.error("❌ FRONTEND ERROR:", err.response?.data || err);
     alert("Error saving company");
+  } finally {
+    setIsSubmitting(false);
   }
+};
+
+const handleSkip = () => {
+  const next = {
+    ...formData,
+    companyName: formData.companyName || selectedCompany || "Direct Booking",
+  };
+
+  setFormData(next);
+  setBookingDraft("company", next);
+  navigate("/hotel/room", { state: { bookingId, bookingCode } });
 };
 
   return (
     <div className="min-h-screen bg-[linear-gradient(135deg,#f4fbff_0%,#fbfff8_42%,#fffaf1_100%)] p-4 sm:p-6">
       <div className="mx-auto max-w-6xl space-y-6">
-        <section className="overflow-hidden rounded-[28px] border border-white/70 bg-[linear-gradient(135deg,#08253d_0%,#92400e_52%,#14532d_100%)] px-6 py-7 text-white shadow-[0_24px_70px_rgba(15,23,42,0.18)]">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-amber-200">
-            Company Details
-          </p>
-          <h1 className="mt-3 text-3xl font-black sm:text-4xl">
-            Attach company profile to the booking
-          </h1>
-          <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-100/85">
-            Corporate ya direct company billing ke liye company name aur GST details clean tareeke se capture karein.
-          </p>
-        </section>
+      
 
         <section className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(300px,0.85fr)]">
           <div className="rounded-[26px] border border-slate-200/80 bg-white/90 p-6 shadow-[0_18px_45px_rgba(15,23,42,0.06)]">
-            <div className="rounded-[24px] border border-slate-200/80 bg-white p-5">
+          <div className="rounded-[24px] border border-slate-200/80 bg-white p-5">
               <div className="mb-4 text-lg font-bold text-slate-900">Company Information</div>
+              <div className="mb-4 rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                Booking Ref: <span className="font-black text-slate-900">{bookingRef || "Pending"}</span>
+              </div>
               <div className="grid gap-4">
                 <div>
                   <label className={labelCls}>Company Name</label>
@@ -193,9 +208,17 @@ const handleSubmit = async () => {
               <div className="mt-5 flex flex-col gap-3">
                 <button
                   onClick={handleSubmit}
+                  disabled={isSubmitting}
                   className="inline-flex w-full items-center justify-center rounded-[22px] bg-gradient-to-r from-amber-500 to-orange-500 px-5 py-4 text-sm font-bold text-white shadow-[0_16px_35px_rgba(245,158,11,0.24)] transition hover:-translate-y-0.5"
                 >
-                  Save & Next
+                  {isSubmitting ? "Saving..." : "Save & Next"}
+                </button>
+                <button
+                  onClick={handleSkip}
+                  disabled={isSubmitting}
+                  className="inline-flex w-full items-center justify-center rounded-[22px] border border-dashed border-slate-300 bg-white px-5 py-4 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+                >
+                  Skip
                 </button>
                 <button
                   onClick={() => navigate("/hotel/reference")}

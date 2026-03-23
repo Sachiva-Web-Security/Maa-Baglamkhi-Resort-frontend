@@ -1,6 +1,15 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { housekeepingService } from '../services/housekeepingService';
 import { userService } from '../services/userService';
+import CleaningLogPanel from '../components/Housekeeping/CleaningLogPanel';
+import {
+  getCleaningTasks,
+  setCleaningTasks,
+} from '../components/Hotel/bookingSession';
+import {
+  upsertDashboardNotification,
+} from '../components/Dashboard/dashboardNotifications';
 
 import {
   FaSearch,
@@ -14,6 +23,8 @@ import {
   FaCheck,
   FaBed,
   FaSyncAlt,
+  FaExclamationTriangle,
+  FaClock,
 } from 'react-icons/fa';
 
 const HOUSEKEEPING_OPTIONS = [
@@ -57,19 +68,54 @@ const HOUSEKEEPING_OPTIONS = [
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
-function statusPillClass(status) {
-  const normalized = String(status || '').toLowerCase();
-  if (normalized.includes('dirty')) return 'bg-amber-500/20 text-amber-300 border-amber-400/40';
-  if (normalized.includes('clean')) return 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40';
-  if (normalized.includes('out of service')) return 'bg-rose-500/20 text-rose-300 border-rose-400/40';
-  return 'bg-cyan-500/20 text-cyan-300 border-cyan-400/40';
-}
+const toTimestamp = (value) => {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date.getTime();
+};
+
+const normalizeCleaningTask = (task, fallbackRoom = {}) => {
+  if (!task) return null;
+
+  const minutes = Number(task.minutes || fallbackRoom.cleaningMinutes || 0) || 0;
+  const startedAtTs =
+    toTimestamp(task.startedAt) ??
+    toTimestamp(task.assignedAt) ??
+    toTimestamp(task.createdAt) ??
+    toTimestamp(fallbackRoom.cleaningStartedAt);
+  const dueAtTs =
+    toTimestamp(task.dueAt) ??
+    toTimestamp(fallbackRoom.cleaningDueAt);
+
+  const resolvedStartedAt =
+    startedAtTs ??
+    (dueAtTs && minutes ? dueAtTs - minutes * 60000 : null) ??
+    (minutes ? Date.now() : null);
+  const resolvedDueAt =
+    dueAtTs ??
+    (resolvedStartedAt && minutes ? resolvedStartedAt + minutes * 60000 : null) ??
+    (minutes ? Date.now() + minutes * 60000 : null);
+
+  return {
+    ...task,
+    minutes,
+    startedAt: resolvedStartedAt ? new Date(resolvedStartedAt).toISOString() : task.startedAt || "",
+    dueAt: resolvedDueAt ? new Date(resolvedDueAt).toISOString() : task.dueAt || "",
+  };
+};
 
 function Housekeeping() {
+  const location = useLocation();
+  const urlParams = new URLSearchParams(location.search);
+  const routeOption = urlParams.get('view') || location.state?.openOption;
   const [data, setData] = useState([]);
   const [housekeepers, setHousekeepers] = useState([]);
 
-  const [activeOption, setActiveOption] = useState('parameters');
+  const [activeOption, setActiveOption] = useState(
+    routeOption && HOUSEKEEPING_OPTIONS.some((option) => option.id === routeOption)
+      ? routeOption
+      : 'parameters',
+  );
   const [isOptionPopupOpen, setIsOptionPopupOpen] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newRoomNo, setNewRoomNo] = useState('');
@@ -81,8 +127,18 @@ function Housekeeping() {
   const [logSearch, setLogSearch] = useState('');
   const [logStatus, setLogStatus] = useState('All');
   const [logAssignee, setLogAssignee] = useState('All');
+  const [cleaningTasks, setCleaningTaskState] = useState({});
+  const [roomMessageDrafts, setRoomMessageDrafts] = useState({});
+  const [nowTs, setNowTs] = useState(() => Date.now());
 
   const [auditChecks, setAuditChecks] = useState({});
+
+  useEffect(() => {
+    const openOption = routeOption;
+    if (openOption && HOUSEKEEPING_OPTIONS.some((option) => option.id === openOption)) {
+      setActiveOption(openOption);
+    }
+  }, [routeOption]);
 
   const fetchHousekeepers = async () => {
     try {
@@ -101,8 +157,37 @@ function Housekeeping() {
     try {
       const rooms = await housekeepingService.getAllRooms();
       const today = todayISO();
+      const rawTasks = getCleaningTasks();
+      const normalizedTasks = { ...rawTasks };
+      let tasksChanged = false;
+
+      Object.entries(rawTasks).forEach(([roomKey, task]) => {
+        const normalizedTask = normalizeCleaningTask(task);
+        if (!normalizedTask) return;
+
+        const originalSignature = JSON.stringify({
+          startedAt: task?.startedAt || "",
+          dueAt: task?.dueAt || "",
+          minutes: Number(task?.minutes || 0) || 0,
+        });
+        const normalizedSignature = JSON.stringify({
+          startedAt: normalizedTask.startedAt || "",
+          dueAt: normalizedTask.dueAt || "",
+          minutes: Number(normalizedTask.minutes || 0) || 0,
+        });
+
+        normalizedTasks[roomKey] = normalizedTask;
+        if (originalSignature !== normalizedSignature) tasksChanged = true;
+      });
+
+      if (tasksChanged) {
+        setCleaningTasks(normalizedTasks);
+      }
+      setCleaningTaskState(normalizedTasks);
 
       const mappedRooms = rooms.map((room) => {
+        const roomKey = String(room.id || room.roomNo || room.roomNumber);
+        const task = normalizeCleaningTask(normalizedTasks[roomKey] || null, room);
         let guestStatus = '-';
         if (String(room.hotelStatus || '').toLowerCase() === 'occupied') {
           if (room.checkOut === today) guestStatus = 'Departs today';
@@ -115,6 +200,11 @@ function Housekeeping() {
           roomNo: room.roomNo || 'N/A',
           status: room.status || 'Vacant Dirty',
           assignee: room.assignee || 'No Housekeeper',
+          cleaningMessage: task?.message || '',
+          cleaningMinutes: Number(task?.minutes || 0) || 0,
+          cleaningDueAt: task?.dueAt || '',
+          cleaningStartedAt: task?.startedAt || '',
+          cleaningTask: task,
           roomType:
             String(room.hotelStatus || '').toLowerCase() === 'occupied'
               ? 'Occupied Room'
@@ -133,6 +223,58 @@ function Housekeeping() {
     fetchRooms();
     fetchHousekeepers();
   }, []);
+
+  useEffect(() => {
+    const timer = setInterval(() => setNowTs(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const syncCleaningTasks = async () => {
+      const tasks = getCleaningTasks();
+      const now = nowTs;
+      let changed = false;
+
+      for (const [roomKey, task] of Object.entries(tasks)) {
+        const dueAt = toTimestamp(task?.dueAt);
+        if (dueAt && now >= dueAt) {
+          const roomNo = task.roomNumber || roomKey;
+          try {
+            await housekeepingService.updateRoomStatus(task.roomId || roomKey, 'Vacant Clean');
+          } catch (error) {
+            console.error('Auto release failed', error);
+          }
+          upsertDashboardNotification({
+            title: `Cleaning time finished - Room ${roomNo}`,
+            message: `Cleaning window over. Please review Room ${roomNo}.`,
+            type: 'warning',
+            route: '/housekeeping?view=cleaning-log',
+            meta: { source: 'housekeeping', roomNo },
+          }, ['title', 'route', 'meta.source', 'meta.roomNo']);
+          delete tasks[roomKey];
+          changed = true;
+        }
+      }
+
+      if (!mounted) return;
+
+      if (changed) {
+        setCleaningTasks(tasks);
+        await fetchRooms();
+      }
+
+      setCleaningTaskState(tasks);
+    };
+
+    syncCleaningTasks();
+    const timer = setInterval(syncCleaningTasks, 60000);
+    return () => {
+      mounted = false;
+      clearInterval(timer);
+    };
+  }, [nowTs]);
 
   useEffect(() => {
     if (!autoRefresh) return undefined;
@@ -163,7 +305,7 @@ function Housekeeping() {
     if (!newRoomNo.trim()) return;
 
     try {
-      await hotelService.addRoom(newRoomNo.trim());
+      await housekeepingService.createRoom({ roomNo: newRoomNo.trim() });
       setShowAddModal(false);
       setNewRoomNo('');
       fetchRooms();
@@ -205,6 +347,110 @@ function Housekeeping() {
       return matchesSearch && matchesStatus && matchesAssignee;
     });
   }, [data, logSearch, logStatus, logAssignee]);
+
+  const activeTaskRows = useMemo(
+    () =>
+      filteredCleaningRows
+        .map((room) => {
+          const roomKey = String(room.id || room.roomNo || room.roomNumber);
+          const task = normalizeCleaningTask(cleaningTasks[roomKey] || room.cleaningTask || null, room);
+          const dueAt = toTimestamp(task?.dueAt);
+          const startedAt = toTimestamp(task?.startedAt);
+          const now = nowTs;
+          const remainingMs = dueAt ? Math.max(dueAt - now, 0) : null;
+          const minutesLeft = remainingMs !== null ? Math.max(Math.ceil(remainingMs / 60000), 0) : null;
+          const totalMs =
+            task?.minutes
+              ? Number(task.minutes) * 60000
+              : startedAt && dueAt
+                ? Math.max(dueAt - startedAt, 1)
+                : null;
+          const progress =
+            totalMs && remainingMs !== null
+              ? Math.max(10, Math.min(100, ((totalMs - remainingMs) / totalMs) * 100))
+              : 34;
+
+          return {
+            ...room,
+            task,
+            minutesLeft,
+            remainingMs,
+            progress,
+            isOverdue: Boolean(dueAt && now >= dueAt),
+          };
+        })
+        .filter((room) => room.task || String(room.status || '').toLowerCase().includes('dirty')),
+    [cleaningTasks, filteredCleaningRows, nowTs],
+  );
+
+  const warningRows = activeTaskRows.filter(
+    (room) => room.isOverdue || (room.minutesLeft !== null && room.minutesLeft <= 5),
+  );
+
+  const extendCleaningTime = async (room, extraMinutes = 5) => {
+    const roomKey = String(room.id || room.roomNo || room.roomNumber);
+    const tasks = getCleaningTasks();
+    const currentTask = tasks[roomKey];
+    if (!currentTask) return;
+
+    const currentDue = toTimestamp(currentTask.dueAt) || nowTs;
+    const nextDueAt = new Date(currentDue + extraMinutes * 60000).toISOString();
+    const nextMessage = currentTask.message?.trim()
+      ? `${currentTask.message} | Need ${extraMinutes} min more time`
+      : `Need ${extraMinutes} min more time`;
+
+    const nextTasks = {
+      ...tasks,
+      [roomKey]: {
+        ...currentTask,
+        dueAt: nextDueAt,
+        message: nextMessage,
+        extensionMinutes: Number(currentTask.extensionMinutes || 0) + extraMinutes,
+      },
+    };
+
+    setCleaningTasks(nextTasks);
+    setCleaningTaskState(nextTasks);
+    upsertDashboardNotification({
+      title: `Cleaning extended - Room ${room.roomNo}`,
+      message: `Extra ${extraMinutes} min requested by housekeeping.`,
+      type: 'warning',
+      route: '/housekeeping',
+      meta: { source: 'housekeeping', roomNo: room.roomNo },
+    }, ['title', 'message', 'route', 'meta.source', 'meta.roomNo']);
+    await housekeepingService.updateRoomStatus(room.id || room.roomNo || room.roomNumber, 'Vacant Dirty');
+    await fetchRooms();
+  };
+
+  const sendCleaningMessage = async (room) => {
+    const roomKey = String(room.id || room.roomNo || room.roomNumber);
+    const draft = String(roomMessageDrafts[roomKey] ?? room.task?.message ?? '').trim();
+    if (!draft) {
+      alert('Please message type karein.');
+      return;
+    }
+
+    const tasks = getCleaningTasks();
+    const currentTask = tasks[roomKey] || room.task || {};
+    const nextTask = {
+      ...currentTask,
+      message: draft,
+      updatedAt: new Date().toISOString(),
+    };
+
+    tasks[roomKey] = nextTask;
+    setCleaningTasks(tasks);
+    setCleaningTaskState(tasks);
+    setRoomMessageDrafts((prev) => ({ ...prev, [roomKey]: "" }));
+    upsertDashboardNotification({
+      title: `Housekeeping message - Room ${room.roomNo}`,
+      message: draft,
+      type: 'info',
+      route: '/housekeeping',
+      meta: { source: 'housekeeping', roomNo: room.roomNo },
+    }, ['title', 'message', 'route', 'meta.source', 'meta.roomNo']);
+    await fetchRooms();
+  };
 
   const costingRows = useMemo(() => {
     return data.map((room) => {
@@ -372,63 +618,21 @@ function Housekeeping() {
 
     if (activeOption === 'cleaning-log') {
       return (
-        <div className="space-y-4">
-          <div className="grid gap-3 md:grid-cols-[1.4fr,1fr,1fr]">
-            <label className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2">
-              <FaSearch className="text-cyan-300" />
-              <input
-                value={logSearch}
-                onChange={(e) => setLogSearch(e.target.value)}
-                placeholder="Search by room no or type"
-                className="w-full bg-transparent text-sm text-white outline-none placeholder:text-gray-500"
-              />
-            </label>
-
-            <select
-              value={logStatus}
-              onChange={(e) => setLogStatus(e.target.value)}
-              className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-white"
-            >
-              <option value="All">All Status</option>
-              <option value="dirty">Dirty</option>
-              <option value="clean">Clean</option>
-              <option value="occupied">Occupied</option>
-              <option value="out of service">Out of Service</option>
-            </select>
-
-            <select
-              value={logAssignee}
-              onChange={(e) => setLogAssignee(e.target.value)}
-              className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-white"
-            >
-              <option value="All">All Assignees</option>
-              <option value="No Housekeeper">No Housekeeper</option>
-              {housekeepers.map((hk) => (
-                <option key={hk} value={hk}>{hk}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {filteredCleaningRows.map((room) => (
-              <div key={`clean-${room.id}`} className="rounded-[1.35rem] border border-slate-200 bg-white p-4 shadow-[0_16px_35px_rgba(15,23,42,0.05)]">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="text-lg font-semibold text-slate-900">Room {room.roomNo}</p>
-                    <p className="text-xs text-slate-500">{room.roomType}</p>
-                  </div>
-                  <span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${statusPillClass(room.status)}`}>
-                    {room.status}
-                  </span>
-                </div>
-                <div className="mt-3 space-y-1 text-sm text-slate-600">
-                  <p>Assignee: <span className="text-slate-900">{room.assignee}</span></p>
-                  <p>Guest: <span className="text-slate-900">{room.guestStatus || '-'}</span></p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <CleaningLogPanel
+          rows={activeTaskRows}
+          warningRows={warningRows}
+          logSearch={logSearch}
+          setLogSearch={setLogSearch}
+          logStatus={logStatus}
+          setLogStatus={setLogStatus}
+          logAssignee={logAssignee}
+          setLogAssignee={setLogAssignee}
+          housekeepers={housekeepers}
+          roomMessageDrafts={roomMessageDrafts}
+          setRoomMessageDrafts={setRoomMessageDrafts}
+          onSendCleaningMessage={sendCleaningMessage}
+          onExtendCleaningTime={extendCleaningTime}
+        />
       );
     }
 

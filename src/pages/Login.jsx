@@ -55,10 +55,10 @@ const Login = ({ setIsAuthenticated }) => {
 
     if (error.message === "Network Error") {
       const base =
-        (import.meta.env.VITE_API_URL || "http://localhost:5002/api").replace(
+        (import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_ORIGIN || "/api").replace(
           /\/api\/?$/,
           "",
-        ) || "http://localhost:5002";
+        ) || "backend server";
 
       errorMsg = `Unable to reach server. Backend run karo at ${base}`;
     } else {

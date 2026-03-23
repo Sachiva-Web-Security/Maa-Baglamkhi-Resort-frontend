@@ -2,8 +2,10 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import API from "../../api";
+import { expandBookings } from "../Dashboard/stayoverUtils";
 import {
   getBookingDraft,
+  getStoredBookingCode,
   getStoredBookingId,
   setBookingDraft,
   setStoredBookingId,
@@ -27,6 +29,8 @@ const Room = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const bookingId = location.state?.bookingId || getStoredBookingId();
+  const bookingCode = location.state?.bookingCode || getStoredBookingCode();
+  const bookingRef = bookingCode || bookingId;
 
   const [roomCatalog, setRoomCatalog] = useState(defaultRooms);
   const roomDraft = getBookingDraft("room") || {};
@@ -35,11 +39,61 @@ const Room = () => {
   const [roomOptions, setRoomOptions] = useState(roomDraft.roomOptions || {});
   const [inputValue, setInputValue] = useState(roomDraft.inputValue || {});
   const [priceInputs, setPriceInputs] = useState(roomDraft.priceInputs || {});
+  const [pickerValues, setPickerValues] = useState(roomDraft.pickerValues || {});
+  const [activeBookings, setActiveBookings] = useState([]);
 
   useEffect(() => {
     if (bookingId) {
       setStoredBookingId(bookingId);
     }
+  }, [bookingId]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadActiveBookings = async () => {
+      try {
+        const response = await API.get("/hotel/all-bookings");
+        const rows = expandBookings(response.data);
+
+        const nextBookings = rows.filter((booking) => {
+          const normalizedStatus = String(booking.bookingStatus || "").toLowerCase();
+          const isCurrentBooking = bookingId && String(booking.bookingId) === String(bookingId);
+          const isClosedBooking =
+            normalizedStatus.includes("check out") ||
+            normalizedStatus.includes("checked out") ||
+            normalizedStatus.includes("cancel");
+
+          return !isCurrentBooking && !isClosedBooking;
+        });
+
+        if (!cancelled) {
+          setActiveBookings(nextBookings);
+        }
+      } catch (error) {
+        console.error("Failed to load active bookings", error);
+      }
+    };
+
+    loadActiveBookings();
+
+    const refreshOnFocus = () => {
+      if (document.visibilityState === "visible") {
+        loadActiveBookings();
+      }
+    };
+
+    const intervalId = window.setInterval(loadActiveBookings, 15000);
+
+    window.addEventListener("focus", loadActiveBookings);
+    document.addEventListener("visibilitychange", refreshOnFocus);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", loadActiveBookings);
+      document.removeEventListener("visibilitychange", refreshOnFocus);
+    };
   }, [bookingId]);
 
   useEffect(() => {
@@ -90,13 +144,36 @@ const Room = () => {
       roomOptions,
       inputValue,
       priceInputs,
+      pickerValues,
+      roomTypeMap: roomCatalog.reduce((acc, room) => {
+        acc[String(room.id)] = room.name;
+        return acc;
+      }, {}),
+      roomCatalog,
     });
-  }, [activeRoom, selectedRooms, roomOptions, inputValue, priceInputs]);
+  }, [activeRoom, selectedRooms, roomOptions, inputValue, priceInputs, pickerValues, roomCatalog]);
 
   const selectedRoomCount = useMemo(
     () => Object.values(selectedRooms).reduce((sum, rooms) => sum + rooms.length, 0),
     [selectedRooms],
   );
+
+  const bookedRoomNumbers = useMemo(() => {
+    const locked = new Set();
+
+    activeBookings.forEach((booking) => {
+      if (booking.roomNumber) {
+        locked.add(String(booking.roomNumber).trim().toLowerCase());
+      }
+    });
+
+    return locked;
+  }, [activeBookings]);
+
+  const isRoomBooked = (value) => bookedRoomNumbers.has(String(value || "").trim().toLowerCase());
+
+  const getAvailableRoomsForType = (roomId) =>
+    (roomOptions[roomId] || []).filter((item) => !isRoomBooked(item));
 
   const handleAvailability = (index) => {
     setActiveRoom(activeRoom === index ? null : index);
@@ -118,6 +195,11 @@ const Room = () => {
     const value = inputValue[roomId];
 
     if (!value?.trim()) return;
+
+    if (isRoomBooked(value)) {
+      alert(`Room no ${value} already booked hai. Checkout ke baad hi dobara select hoga.`);
+      return;
+    }
 
     const existingRoom = findExistingRoom(value);
     if (existingRoom) {
@@ -162,8 +244,30 @@ const Room = () => {
   };
 
   const handleSelect = (roomId, value) => {
+    if (isRoomBooked(value)) {
+      alert(`Room no ${value} already booked hai.`);
+      return;
+    }
+
     setSelectedRooms((prev) => {
       const current = prev[roomId] || [];
+      const isCurrentlySelected = current.includes(value);
+
+      if (!isCurrentlySelected) {
+        const existingSelection = Object.entries(prev).find(
+          ([existingRoomId, values]) =>
+            Number(existingRoomId) !== Number(roomId) && values.includes(value),
+        );
+
+        if (existingSelection) {
+          const roomTypeName =
+            roomCatalog.find((room) => Number(room.id) === Number(existingSelection[0]))?.name ||
+            `Type ${existingSelection[0]}`;
+          alert(`Room no ${value} already selected in ${roomTypeName}. Ek hi booking me same room dobarah select nahi hoga.`);
+          return prev;
+        }
+      }
+
       const updated = current.includes(value)
         ? current.filter((roomValue) => roomValue !== value)
         : [...current, value];
@@ -172,21 +276,33 @@ const Room = () => {
     });
   };
 
-  const isAlreadySelected = (value) => Object.values(selectedRooms).flat().includes(value);
-
   const handleProceed = () => {
     if (!Object.keys(selectedRooms).length) {
       alert("Please select at least one room");
       return;
     }
 
+    const roomTypeMap = roomCatalog.reduce((acc, room) => {
+      acc[String(room.id)] = room.name;
+      return acc;
+    }, {});
+
     navigate("/hotel/pax", {
       state: {
         bookingId,
+        bookingCode,
         roomOptions,
         selectedRooms,
+        roomTypeMap,
+        roomCatalog,
       },
     });
+  };
+
+  const handlePickAvailableRoom = (roomId, value) => {
+    if (!value) return;
+    handleSelect(roomId, value);
+    setPickerValues((prev) => ({ ...prev, [roomId]: "" }));
   };
 
   return (
@@ -194,24 +310,14 @@ const Room = () => {
       <div className="mx-auto max-w-6xl space-y-6">
         <section className="overflow-hidden rounded-[28px] border border-white/70 bg-[linear-gradient(135deg,#08253d_0%,#0e5b6a_48%,#0f766e_100%)] px-6 py-7 text-white shadow-[0_24px_70px_rgba(15,23,42,0.18)]">
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_320px] lg:items-center">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-cyan-200">
-                Room Selection
-              </p>
-              <h1 className="mt-3 text-3xl font-black sm:text-4xl">
-                Choose room inventory and set tariff
-              </h1>
-              <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-100/85">
-                Existing room inventory ko category-wise manage karein, prices update karein aur selected rooms ko booking me attach karein.
-              </p>
-            </div>
+          
 
             <div className="space-y-3 rounded-[24px] border border-white/15 bg-white/10 p-5 backdrop-blur">
               <div>
                 <div className="text-xs uppercase tracking-[0.2em] text-cyan-100/80">
                   Booking ID
                 </div>
-                <div className="mt-1 text-2xl font-black">{bookingId || "Pending"}</div>
+                <div className="mt-1 text-2xl font-black">{bookingRef || "Pending"}</div>
               </div>
               <div>
                 <div className="text-xs uppercase tracking-[0.2em] text-cyan-100/80">
@@ -276,7 +382,40 @@ const Room = () => {
 
                 {activeRoom === index ? (
                   <div className="mt-5 border-t border-slate-200 pt-5">
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                      <div>
+                        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                          Available Rooms
+                        </div>
+                        <div className="mt-1 text-sm text-slate-600">
+                          {getAvailableRoomsForType(room.id).length} room(s) ready for booking
+                        </div>
+                      </div>
+                      <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+                        {room.name}
+                      </span>
+                    </div>
+
                     <div className="flex flex-col gap-3 sm:flex-row">
+                      <select
+                        value={pickerValues[room.id] || ""}
+                        onChange={(event) => handlePickAvailableRoom(room.id, event.target.value)}
+                        className={fieldCls}
+                      >
+                        <option value="">Select available room</option>
+                        {getAvailableRoomsForType(room.id).length ? (
+                          getAvailableRoomsForType(room.id).map((item) => (
+                            <option key={item} value={item}>
+                              {item}
+                            </option>
+                          ))
+                        ) : (
+                          <option value="" disabled>
+                            No available room in this type
+                          </option>
+                        )}
+                      </select>
+
                       <input
                         value={inputValue[room.id] || ""}
                         onChange={(event) =>
@@ -298,26 +437,34 @@ const Room = () => {
 
                     <div className="mt-4 flex flex-wrap gap-3">
                       {(roomOptions[room.id] || []).map((item) => {
-                        const disabled =
-                          isAlreadySelected(item) &&
-                          !selectedRooms[room.id]?.includes(item);
+                        const locked = isRoomBooked(item);
+                        const checked = selectedRooms[room.id]?.includes(item) || locked;
 
                         return (
                           <label
                             key={item}
                             className={`flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition ${
-                              selectedRooms[room.id]?.includes(item)
+                              checked
                                 ? "border-sky-200 bg-sky-50 text-sky-700"
                                 : "border-slate-200 bg-slate-50 text-slate-700"
                             }`}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={selectedRooms[room.id]?.includes(item) || false}
-                              disabled={disabled}
-                              onChange={() => handleSelect(room.id, item)}
-                            />
-                            {item}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                disabled={locked}
+                                onChange={() => handleSelect(room.id, item)}
+                              />
+                              {item}
+                            {locked ? (
+                              <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-rose-700">
+                                Booked
+                              </span>
+                            ) : (
+                              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-emerald-700">
+                                Available
+                              </span>
+                            )}
                           </label>
                         );
                       })}

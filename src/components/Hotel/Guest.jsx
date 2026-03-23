@@ -1,11 +1,15 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useMemo, useState } from "react";
+import { FaCheckCircle, FaExclamationTriangle, FaTimes } from "react-icons/fa";
+import { useLocation, useNavigate } from "react-router-dom";
 import API from "../../api";
 import {
+  clearBookingSession,
   getBookingDraft,
   setBookingDraft,
   setStoredBookingId,
+  setStoredBookingCode,
 } from "./bookingSession";
+import { todayISO } from "../Dashboard/stayoverUtils";
 
 const fieldCls =
   "w-full rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100";
@@ -13,52 +17,184 @@ const fieldCls =
 const labelCls =
   "mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500";
 
+const isValidTime = (value) => /^\d{2}:\d{2}$/.test(value);
+
+const isEarlierTime = (left, right) => {
+  if (!isValidTime(left) || !isValidTime(right)) return false;
+  return left < right;
+};
+
+const timeToMinutes = (value) => {
+  if (!isValidTime(value)) return null;
+  const [hours, minutes] = value.split(":").map(Number);
+  return hours * 60 + minutes;
+};
+
+const hasAtLeastOneHourGap = (arrival, departure) => {
+  const arrivalMinutes = timeToMinutes(arrival);
+  const departureMinutes = timeToMinutes(departure);
+
+  if (arrivalMinutes === null || departureMinutes === null) return true;
+  return departureMinutes - arrivalMinutes >= 60;
+};
+
+const modalToneClasses = {
+  error: {
+    accent: "from-rose-500 to-red-500",
+    badge: "bg-rose-50 text-rose-700 ring-1 ring-rose-100",
+  },
+  success: {
+    accent: "from-emerald-500 to-teal-500",
+    badge: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100",
+  },
+};
+
+const initialGuestForm = {
+  agentBooking: false,
+  bookingPoint: "Sumit Test (ID:53)",
+  mobile: "",
+  guestName: "",
+  guestEmail: "",
+  checkIn: "",
+  checkOut: "",
+  arrival: "12:00",
+  departure: "10:00",
+  bookingStatus: "",
+};
+
 const Guest = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const today = todayISO();
+  const [popup, setPopup] = useState({ open: false, type: "error", title: "", message: "" });
+  const freshStart = Boolean(location.state?.resetBookingDraft);
 
-
-
-
-
-
-
-
-  const [formData, setFormData] = useState(
-    getBookingDraft("guest") || {
-      agentBooking: false,
-      bookingPoint: "Sumit Test (ID:53)",
-      mobile: "",
-      guestName: "",
-      guestEmail: "",
-      checkIn: "",
-      checkOut: "",
-      arrival: "12:00",
-      departure: "10:00",
-      bookingStatus: "",
-    },
+  const [formData, setFormData] = useState(() =>
+    freshStart ? initialGuestForm : getBookingDraft("guest") || initialGuestForm,
   );
+
+  useEffect(() => {
+    if (!freshStart) return;
+
+    clearBookingSession();
+    setFormData(initialGuestForm);
+  }, [freshStart]);
+
+  const minCheckOutDate = useMemo(() => {
+    if (formData.checkIn && formData.checkIn > today) return formData.checkIn;
+    return today;
+  }, [formData.checkIn, today]);
+
+  useEffect(() => {
+    setFormData((prev) => {
+      const next = { ...prev };
+      let changed = false;
+
+      if (next.checkIn && next.checkIn < today) {
+        next.checkIn = today;
+        changed = true;
+      }
+
+      const safeCheckOutMin = next.checkIn && next.checkIn > today ? next.checkIn : today;
+      if (next.checkOut && next.checkOut < safeCheckOutMin) {
+        next.checkOut = safeCheckOutMin;
+        changed = true;
+      }
+
+      if (next.arrival && next.departure && isEarlierTime(next.departure, next.arrival)) {
+        next.departure = next.arrival;
+        changed = true;
+      }
+
+      return changed ? next : prev;
+    });
+  }, [today]);
+
+  useEffect(() => {
+    if (!popup.open) return undefined;
+
+    const handleEscape = (event) => {
+      if (event.key === "Escape") {
+        setPopup((prev) => ({ ...prev, open: false }));
+      }
+    };
+
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [popup.open]);
+
+  const showPopup = (type, title, message) => {
+    setPopup({ open: true, type, title, message });
+  };
+
+  const closePopup = () => {
+    setPopup((prev) => ({ ...prev, open: false }));
+  };
 
   // ✅ SUBMIT FUNCTION (UPDATED)
   const handleSubmit = async () => {
     try {
+      if (!formData.checkIn) {
+        showPopup("error", "Missing Check-in Date", "Please select a check-in date before continuing.");
+        return;
+      }
+
+      if (formData.checkIn < today) {
+        showPopup("error", "Invalid Check-in Date", "Check-in date cannot be in the past.");
+        return;
+      }
+
+      if (!formData.checkOut) {
+        showPopup("error", "Missing Check-out Date", "Please select a check-out date before continuing.");
+        return;
+      }
+
+      if (formData.checkOut < minCheckOutDate) {
+        showPopup("error", "Invalid Check-out Date", "Check-out date cannot be earlier than today or the check-in date.");
+        return;
+      }
+
+      if (formData.arrival && formData.departure && isEarlierTime(formData.departure, formData.arrival)) {
+        showPopup("error", "Invalid Time Range", "Expected departure cannot be earlier than expected arrival.");
+        return;
+      }
+
+      if (
+        formData.checkIn &&
+        formData.checkOut &&
+        formData.checkIn === formData.checkOut &&
+        formData.arrival &&
+        formData.departure &&
+        !hasAtLeastOneHourGap(formData.arrival, formData.departure)
+      ) {
+        showPopup(
+          "error",
+          "Time Gap Required",
+          "For the same date, expected departure must be at least 1 hour after expected arrival.",
+        );
+        return;
+      }
+
       const res = await API.post("/hotel/guest", formData);
 
       console.log(res.data);
 
       const bookingId = res.data.bookingId;
+      const bookingCode = res.data.bookingCode || "";
       setStoredBookingId(bookingId);
-      setBookingDraft("guest", formData);
+      setStoredBookingCode(bookingCode);
+      setBookingDraft("guest", { ...formData, bookingCode });
 
-      alert("Guest saved successfully");
+      showPopup("success", "Booking Saved", "Guest details have been saved successfully.");
 
       // ✅ bookingId next page को pass कर रहे हैं
       navigate("/hotel/other-booking", {
-        state: { bookingId },
+        state: { bookingId, bookingCode },
       });
 
     } catch (err) {
       console.error(err);
-      alert("Error saving guest");
+      showPopup("error", "Save Failed", "We could not save the guest details. Please try again.");
     }
   };
 
@@ -69,45 +205,88 @@ const Guest = () => {
       ...formData,
       [name]: type === "checkbox" ? checked : value,
     };
+
+    if (name === "checkIn") {
+      const safeCheckOutMin = value && value > today ? value : today;
+      if (next.checkOut && next.checkOut < safeCheckOutMin) {
+        next.checkOut = safeCheckOutMin;
+      }
+    }
+
+    if (name === "arrival" && next.departure && isEarlierTime(next.departure, value)) {
+      next.departure = value;
+    }
+
+    if (name === "departure" && next.arrival && isEarlierTime(value, next.arrival)) {
+      next.departure = next.arrival;
+    }
+
     setFormData(next);
     setBookingDraft("guest", next);
   };
 
   return (
     <div className="space-y-6">
-      <section className="overflow-hidden rounded-[28px] border border-white/70 bg-[linear-gradient(135deg,#08253d_0%,#0e5b6a_52%,#0f3f67_100%)] px-6 py-7 text-white shadow-[0_24px_70px_rgba(15,23,42,0.18)]">
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_320px] lg:items-center">
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-cyan-200">
-              Guest Details
-            </p>
-            <h2 className="mt-3 text-3xl font-black sm:text-4xl">
-              Start hotel booking with guest profile
-            </h2>
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-100/85">
-              Guest information, arrival schedule aur booking status ko clean premium form me capture karein.
-            </p>
-          </div>
-
-          <div className="space-y-3 rounded-[24px] border border-white/15 bg-white/10 p-5 backdrop-blur">
-            <div>
-              <div className="text-xs uppercase tracking-[0.2em] text-cyan-100/80">
-                Booking Point
+      {popup.open && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 px-4 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="guest-popup-title"
+          aria-describedby="guest-popup-message"
+          onClick={closePopup}
+        >
+          <div
+            className="w-full max-w-md overflow-hidden rounded-[28px] bg-white shadow-[0_28px_80px_rgba(15,23,42,0.28)]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className={`flex items-start gap-4 bg-gradient-to-r ${modalToneClasses[popup.type].accent} px-6 py-5 text-white`}>
+              <div className="rounded-2xl bg-white/15 p-3">
+                {popup.type === "success" ? (
+                  <FaCheckCircle className="text-xl" />
+                ) : (
+                  <FaExclamationTriangle className="text-xl" />
+                )}
               </div>
-              <div className="mt-1 text-lg font-black">
-                {formData.bookingPoint || "Not selected"}
+              <div className="min-w-0 flex-1">
+                <div className={`mb-2 inline-flex rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-[0.22em] ${modalToneClasses[popup.type].badge}`}>
+                  {popup.type === "success" ? "Success" : "Validation Error"}
+                </div>
+                <h2 id="guest-popup-title" className="text-lg font-black leading-tight">
+                  {popup.title}
+                </h2>
               </div>
+              <button
+                type="button"
+                onClick={closePopup}
+                className="rounded-full p-2 text-white/85 transition hover:bg-white/10 hover:text-white"
+                aria-label="Close popup"
+              >
+                <FaTimes />
+              </button>
             </div>
-            <div>
-              <div className="text-xs uppercase tracking-[0.2em] text-cyan-100/80">
-                Guest Name
-              </div>
-              <div className="mt-1 text-lg font-black">
-                {formData.guestName || "Walk-in Guest"}
+
+            <div className="px-6 py-6">
+              <p id="guest-popup-message" className="text-sm leading-6 text-slate-600">
+                {popup.message}
+              </p>
+
+              <div className="mt-6 flex justify-end">
+                <button
+                  type="button"
+                  onClick={closePopup}
+                  className="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800"
+                >
+                  OK
+                </button>
               </div>
             </div>
           </div>
         </div>
+      )}
+
+      <section className="overflow-hidden rounded-[28px] border border-white/70 bg-[linear-gradient(135deg,#08253d_0%,#0e5b6a_52%,#0f3f67_100%)] px-6 py-7 text-white shadow-[0_24px_70px_rgba(15,23,42,0.18)]">
+        
       </section>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_320px]">
@@ -189,6 +368,7 @@ const Guest = () => {
                   name="checkIn"
                   value={formData.checkIn}
                   onChange={handleChange}
+                  min={today}
                   className={fieldCls}
                 />
               </div>
@@ -200,6 +380,7 @@ const Guest = () => {
                   name="checkOut"
                   value={formData.checkOut}
                   onChange={handleChange}
+                  min={minCheckOutDate}
                   className={fieldCls}
                 />
               </div>
@@ -222,6 +403,7 @@ const Guest = () => {
                   name="departure"
                   value={formData.departure}
                   onChange={handleChange}
+                  min={formData.arrival || undefined}
                   className={fieldCls}
                 />
               </div>

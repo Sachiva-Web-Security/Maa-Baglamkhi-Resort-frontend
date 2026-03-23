@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import API from "../../api";
 import {
   getBookingDraft,
+  getStoredBookingCode,
   getStoredBookingId,
   setBookingDraft,
   setStoredBookingId,
@@ -23,14 +24,18 @@ const Advance = () => {
   const location = useLocation();
 
   const bookingId = location.state?.bookingId || getStoredBookingId();
+  const bookingCode = location.state?.bookingCode || getStoredBookingCode();
+  const bookingRef = bookingCode || bookingId;
   const rows = location.state?.rows || getBookingDraft("roomTariff")?.rows || [];
   const savedAdvance = getBookingDraft("advance") || {};
   const paxDraft = getBookingDraft("pax") || {};
   const guestDraft = getBookingDraft("guest") || {};
 
   const [paidAmount, setPaidAmount] = useState(savedAdvance.paidAmount || "");
+  const [discountAmount] = useState(savedAdvance.discountAmount || 0);
   const [paymentMode, setPaymentMode] = useState(savedAdvance.paymentMode || "Cash");
   const [notes, setNotes] = useState(savedAdvance.notes || "");
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     if (bookingId) {
@@ -60,8 +65,11 @@ const Advance = () => {
     [roomSummary],
   );
 
-  const safePaidAmount = Math.min(Number(paidAmount || 0), totalAmount);
-  const remainingAmount = Math.max(totalAmount - safePaidAmount, 0);
+  const enteredPaidAmount = Number(paidAmount || 0);
+  const enteredDiscountAmount = Number(discountAmount || 0);
+  const remainingAmount = Math.max(totalAmount - enteredPaidAmount - enteredDiscountAmount, 0);
+  const isOverPayment = enteredPaidAmount > totalAmount;
+  const isOverAllocation = enteredPaidAmount + enteredDiscountAmount > totalAmount;
   const totalGuests = Object.values(paxDraft.paxData || {}).reduce(
     (sum, row) => sum + Number(row.adults || 0) + Number(row.children || 0),
     0,
@@ -70,12 +78,13 @@ const Advance = () => {
   useEffect(() => {
     setBookingDraft("advance", {
       totalAmount,
-      paidAmount: safePaidAmount,
+      paidAmount: enteredPaidAmount,
+      discountAmount,
       remainingAmount,
       paymentMode,
       notes,
     });
-  }, [notes, paymentMode, remainingAmount, safePaidAmount, totalAmount]);
+  }, [discountAmount, enteredPaidAmount, notes, paymentMode, remainingAmount, totalAmount]);
 
   const handleProceed = async () => {
     if (!bookingId) {
@@ -83,11 +92,37 @@ const Advance = () => {
       return;
     }
 
+    if (enteredPaidAmount < 0) {
+      setErrorMessage("Paid amount negative nahi ho sakta.");
+      return;
+    }
+
+    if (isOverPayment) {
+      setErrorMessage(
+        `Paid amount total amount se zyada nahi ho sakta. Maximum ${formatCurrency(totalAmount)} allowed hai.`,
+      );
+      return;
+    }
+
+    if (isOverAllocation) {
+      setErrorMessage("Payment + discount total amount se zyada nahi ho sakta.");
+      return;
+    }
+
+    if (enteredPaidAmount <= 0 && enteredDiscountAmount <= 0) {
+      setErrorMessage("Payment ya discount me se kam se kam ek valid amount enter karo.");
+      return;
+    }
+
+    setErrorMessage("");
+
     try {
       await API.post(`/hotel/advance/${bookingId}`, {
-        amount: safePaidAmount,
+        amount: enteredPaidAmount,
+        discount: enteredDiscountAmount,
         totalAmount,
-        paidAmount: safePaidAmount,
+        paidAmount: enteredPaidAmount,
+        discountAmount: enteredDiscountAmount,
         remainingAmount,
         paymentMode,
         remarks: notes,
@@ -97,8 +132,10 @@ const Advance = () => {
       navigate("/hotel/communication", {
         state: {
           bookingId,
+          bookingCode,
           totalAmount,
-          paidAmount: safePaidAmount,
+          paidAmount: enteredPaidAmount,
+          discountAmount: enteredDiscountAmount,
           remainingAmount,
           rooms: roomSummary,
         },
@@ -114,18 +151,7 @@ const Advance = () => {
       <div className="mx-auto max-w-7xl space-y-6">
         <section className="overflow-hidden rounded-[28px] border border-white/70 bg-[linear-gradient(135deg,#0f172a_0%,#1d4ed8_58%,#0f766e_100%)] px-6 py-7 text-white shadow-[0_22px_60px_rgba(15,23,42,0.22)]">
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(280px,0.8fr)] lg:items-center">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-200">
-                Advance Collection
-              </p>
-              <h1 className="mt-3 text-3xl font-black sm:text-4xl">
-                Real booking amount summary and payment collection
-              </h1>
-              <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-100/85 sm:text-base">
-                Front desk ke liye clean billing view jahan room-wise tariff, guest
-                count, received amount aur balance ek jagah par dikhe.
-              </p>
-            </div>
+            
 
             <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
               <div className="rounded-[22px] border border-white/15 bg-white/10 p-4 backdrop-blur">
@@ -133,7 +159,7 @@ const Advance = () => {
                   Booking ID
                 </div>
                 <div className="mt-2 text-2xl font-black">
-                  {bookingId || "Pending"}
+                  {bookingRef || "Pending"}
                 </div>
               </div>
 
@@ -230,6 +256,12 @@ const Advance = () => {
               </h2>
 
               <div className="mt-5 grid gap-4">
+                {errorMessage ? (
+                  <div className="rounded-[18px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+                    {errorMessage}
+                  </div>
+                ) : null}
+
                 <div className="rounded-[22px] bg-slate-50 p-4">
                   <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
                     Guest
@@ -257,7 +289,7 @@ const Advance = () => {
                       Received
                     </div>
                     <div className="mt-2 text-2xl font-black text-emerald-900">
-                      {formatCurrency(safePaidAmount)}
+                      {formatCurrency(enteredPaidAmount)}
                     </div>
                   </div>
 

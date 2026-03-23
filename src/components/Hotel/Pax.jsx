@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import API from "../../api";
 import {
   getBookingDraft,
+  getStoredBookingCode,
   getStoredBookingId,
   setBookingDraft,
   setStoredBookingId,
@@ -17,10 +18,31 @@ const Pax = () => {
   const location = useLocation();
 
   const bookingId = location.state?.bookingId || getStoredBookingId();
-  const selectedRooms =
-    location.state?.selectedRooms || getBookingDraft("room")?.selectedRooms || {};
+  const bookingCode = location.state?.bookingCode || getStoredBookingCode();
+  const bookingRef = bookingCode || bookingId;
+  const selectedRooms = useMemo(
+    () => location.state?.selectedRooms || getBookingDraft("room")?.selectedRooms || {},
+    [location.state?.selectedRooms],
+  );
+  const roomTypeMap = useMemo(
+    () => {
+      const stateMap = location.state?.roomTypeMap || {};
+      if (Object.keys(stateMap).length) return stateMap;
 
-  const [rooms, setRooms] = useState(getBookingDraft("pax")?.rooms || []);
+      const draft = getBookingDraft("room") || {};
+      if (draft.roomTypeMap && Object.keys(draft.roomTypeMap).length) {
+        return draft.roomTypeMap;
+      }
+
+      const catalog = location.state?.roomCatalog || draft.roomCatalog || [];
+      return catalog.reduce((acc, room) => {
+        acc[String(room.id)] = room.name;
+        return acc;
+      }, {});
+    },
+    [location.state?.roomCatalog, location.state?.roomTypeMap],
+  );
+
   const [paxData, setPaxData] = useState(getBookingDraft("pax")?.paxData || {});
 
   useEffect(() => {
@@ -29,22 +51,21 @@ const Pax = () => {
     }
   }, [bookingId]);
 
-  useEffect(() => {
+  const rooms = useMemo(() => {
     const finalRooms = [];
 
     Object.keys(selectedRooms || {}).forEach((roomId) => {
       (selectedRooms[roomId] || []).forEach((roomName) => {
-        finalRooms.push({
-          name: roomName,
-          roomType: roomId,
+          finalRooms.push({
+            name: roomName,
+            roomTypeId: roomId,
+            roomTypeName: roomTypeMap[roomId] || `Room Type ${roomId}`,
+          });
         });
       });
-    });
 
-    if (finalRooms.length) {
-      setRooms(finalRooms);
-    }
-  }, [selectedRooms]);
+    return finalRooms;
+  }, [roomTypeMap, selectedRooms]);
 
   useEffect(() => {
     setBookingDraft("pax", { rooms, paxData });
@@ -66,11 +87,6 @@ const Pax = () => {
     return adults + children;
   };
 
-  const totalGuests = useMemo(
-    () => rooms.reduce((sum, room) => sum + getTotal(room.name), 0),
-    [rooms, paxData],
-  );
-
   const handleProceed = async () => {
     if (!bookingId) {
       alert("Booking ID missing hai.");
@@ -87,6 +103,7 @@ const Pax = () => {
       navigate("/hotel/room-tariff", {
         state: {
           bookingId,
+          bookingCode,
           rooms,
           paxData,
         },
@@ -102,17 +119,7 @@ const Pax = () => {
       <div className="mx-auto max-w-6xl space-y-6">
         <section className="overflow-hidden rounded-[28px] border border-white/70 bg-[linear-gradient(135deg,#08253d_0%,#0e7490_55%,#164e63_100%)] px-6 py-7 text-white shadow-[0_24px_70px_rgba(15,23,42,0.18)]">
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_320px] lg:items-center">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-cyan-200">
-                Pax Details
-              </p>
-              <h1 className="mt-3 text-3xl font-black sm:text-4xl">
-                Add adults and children room-wise
-              </h1>
-              <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-100/85">
-                Har selected room ke liye guest count enter karein, taaki tariff aur invoice automatically accurate bane.
-              </p>
-            </div>
+            
 
             <div className="space-y-3 rounded-[24px] border border-white/15 bg-white/10 p-5 backdrop-blur">
               <div>
@@ -123,9 +130,9 @@ const Pax = () => {
               </div>
               <div>
                 <div className="text-xs uppercase tracking-[0.2em] text-cyan-100/80">
-                  Total Guests
+                  Booking Ref
                 </div>
-                <div className="mt-1 text-2xl font-black">{totalGuests}</div>
+                <div className="mt-1 text-xl font-black">{bookingRef || "Pending"}</div>
               </div>
             </div>
           </div>
@@ -147,7 +154,7 @@ const Pax = () => {
               >
                 <div>
                   <div className="text-lg font-black text-slate-900">{room.name}</div>
-                  <div className="text-sm text-slate-500">Room Type {room.roomType}</div>
+                  <div className="text-sm text-slate-500">{room.roomTypeName}</div>
                 </div>
 
                 <input

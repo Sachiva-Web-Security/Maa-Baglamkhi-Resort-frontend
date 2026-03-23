@@ -5,6 +5,7 @@ import { GetCity, GetCountries, GetState } from "react-country-state-city";
 import API from "../../api";
 import {
   getBookingDraft,
+  getStoredBookingCode,
   getStoredBookingId,
   setBookingDraft,
   setStoredBookingId,
@@ -20,6 +21,7 @@ const OtherBooking = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const bookingId = location.state?.bookingId || getStoredBookingId();
+  const bookingCode = getStoredBookingCode();
 
   const [formData, setFormData] = useState(
     getBookingDraft("otherBooking") || {
@@ -91,7 +93,7 @@ const OtherBooking = () => {
     try {
       await API.post(`/hotel/other-booking/${bookingId}`, formData);
       setBookingDraft("otherBooking", formData);
-      navigate("/hotel/reference", { state: { bookingId } });
+      navigate("/hotel/reference", { state: { bookingId, bookingCode } });
     } catch (err) {
       console.error(err);
       alert("Error saving other booking");
@@ -110,7 +112,7 @@ const OtherBooking = () => {
                 <div className="text-xs uppercase tracking-[0.2em] text-cyan-100/80">
                   Booking ID
                 </div>
-                <div className="mt-1 text-2xl font-black">{bookingId || "Pending"}</div>
+                <div className="mt-1 text-2xl font-black">{bookingCode || bookingId || "Pending"}</div>
               </div>
               <div>
                 <div className="text-xs uppercase tracking-[0.2em] text-cyan-100/80">
@@ -140,6 +142,8 @@ const OtherBooking = () => {
                       className={fieldCls}
                     >
                       <option value="">Select</option>
+                      <option value="Solo">Solo</option>
+                      <option value="Family/Couple">Family/Couple</option>
                       <option value="FIT">FIT</option>
                       <option value="Group">Group</option>
                       <option value="Corporate">Corporate</option>
@@ -156,7 +160,7 @@ const OtherBooking = () => {
                       <option value="">Select</option>
                       <option value="Front Office">Front Office</option>
                       <option value="Walk in">Walk in</option>
-                      <option value="Agent">Agent</option>
+                    
                       <option value="Office">Office</option>
                       <option value="Go ibibo">Go ibibo</option>
                       <option value="Makemytrip">Makemytrip</option>
@@ -194,21 +198,50 @@ const OtherBooking = () => {
 
                   <div>
                     <label className={labelCls}>Country</label>
-                    <Select options={countries} onChange={onCountrySelect} placeholder="Select country" className="w-full" />
+                    <Select options={countries} 
+                     showSearch
+                    onChange={onCountrySelect}
+                     placeholder="Select country"
+                      className="w-full"
+                   filterOption={(input, option) =>
+  (option?.label ?? "")
+    .toString()
+    .toLowerCase()
+    .includes(input.toLowerCase())
+}
+                      />
                   </div>
 
                   <div>
                     <label className={labelCls}>State</label>
-                    <Select options={states} onChange={onStateSelect} placeholder="Select state" className="w-full" />
+                    <Select options={states} 
+                     showSearch
+                    onChange={onStateSelect} 
+                    placeholder="Select state"
+                     className="w-full" 
+                 filterOption={(input, option) =>
+  (option?.label ?? "")
+    .toString()
+    .toLowerCase()
+    .includes(input.toLowerCase())
+}
+                     />
                   </div>
 
                   <div>
                     <label className={labelCls}>City</label>
                     <Select
+                     showSearch
                       options={cities}
                       onChange={(value) => updateForm({ city: value })}
                       placeholder="Select city"
                       className="w-full"
+                   filterOption={(input, option) =>
+  (option?.label ?? "")
+    .toString()
+    .toLowerCase()
+    .includes(input.toLowerCase())
+}
                     />
                   </div>
 
@@ -244,6 +277,9 @@ const OtherBooking = () => {
                   <div className="mt-1 font-bold text-slate-900">
                     {[formData.city, formData.state, formData.country].filter(Boolean).join(", ") || "Pending"}
                   </div>
+                  <div className="mt-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    {formData.pincode ? `PIN Code: ${formData.pincode}` : "PIN Code pending"}
+                  </div>
                 </div>
               </div>
             </div>
@@ -261,7 +297,7 @@ const OtherBooking = () => {
                   Save & Next
                 </button>
                 <button
-                  onClick={() => navigate("/hotel/guest")}
+                  onClick={() => navigate("/hotel/guest", { state: { resetBookingDraft: true } })}
                   className="inline-flex w-full items-center justify-center rounded-[22px] border border-slate-200 bg-white px-5 py-4 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
                 >
                   Go Back

@@ -1,7 +1,13 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import API from "../../api";
-import { getBookingDraft, getStoredBookingId } from "./bookingSession";
+import {
+  clearBookingSession,
+  getBookingDraft,
+  getStoredBookingCode,
+  getStoredBookingId,
+} from "./bookingSession";
+import { pushDashboardNotification } from "../Dashboard/dashboardNotifications";
 
 const formatCurrency = (value) =>
   new Intl.NumberFormat("en-IN", {
@@ -21,17 +27,22 @@ const Communication = () => {
   const [liveBooking, setLiveBooking] = useState(null);
 
   const bookingId = location.state?.bookingId || getStoredBookingId();
+  const bookingCode = location.state?.bookingCode || getStoredBookingCode();
+  const bookingRef = liveBooking?.bookingCode || bookingCode || bookingId;
   const totalAmount = Number(
     liveBooking?.totalAmount || location.state?.totalAmount || advanceDraft.totalAmount || 0,
   );
   const paidAmount = Number(
     liveBooking?.paidAmount || location.state?.paidAmount || advanceDraft.paidAmount || 0,
   );
+  const discountAmount = Number(
+    liveBooking?.discountAmount || location.state?.discountAmount || advanceDraft.discountAmount || 0,
+  );
   const remainingAmount = Number(
     liveBooking?.remainingAmount ||
       location.state?.remainingAmount ||
       advanceDraft.remainingAmount ||
-      Math.max(totalAmount - paidAmount, 0),
+      Math.max(totalAmount - paidAmount - discountAmount, 0),
   );
 
   useEffect(() => {
@@ -80,7 +91,7 @@ const Communication = () => {
     }
 
     return paxDraft.rooms || [];
-  }, [location.state?.rooms, paxDraft.rooms, tariffDraft.rows]);
+  }, [liveBooking?.rooms, location.state?.rooms, paxDraft.rooms, tariffDraft.rows]);
   const guestName = liveBooking?.guest_name || guestDraft.guestName || "Walk-in Guest";
   const guestEmail = liveBooking?.guest_email || guestDraft.guestEmail || "-";
   const guestMobile = liveBooking?.mobile || guestDraft.mobile || "-";
@@ -142,7 +153,36 @@ const Communication = () => {
   };
 
   const handleSubmitBooking = () => {
+    clearBookingSession();
     navigate("/hotel/all-bookings");
+  };
+
+  const refreshBooking = async () => {
+    if (!bookingId) return;
+    const response = await API.get(`/hotel/full-booking/${bookingId}`);
+    setLiveBooking(response.data || null);
+  };
+
+  const handleLifecycle = async (action) => {
+    try {
+      await API.put(`/hotel/${action}/${bookingId}`);
+      alert(action === "check-out" ? "Guest checked out successfully." : "Guest checked in successfully.");
+      pushDashboardNotification({
+        title: action === "check-out" ? `Guest checked out - ${bookingRef}` : `Guest checked in - ${bookingRef}`,
+        message: action === "check-out" ? "Booking history me move ho gaya." : "Guest stay active hai.",
+        type: action === "check-out" ? "warning" : "success",
+        route: action === "check-out" ? "/hotel/booking-history" : "/hotel/all-bookings",
+      });
+      if (action === "check-out") {
+        clearBookingSession();
+        navigate("/hotel/booking-history");
+        return;
+      }
+      await refreshBooking();
+    } catch (error) {
+      console.error(error);
+      alert(action === "check-out" ? "Check-out failed" : "Check-in failed");
+    }
   };
 
   return (
@@ -168,7 +208,7 @@ const Communication = () => {
                 <div className="text-xs uppercase tracking-[0.22em] text-sky-100/80">
                   Booking ID
                 </div>
-                <div className="mt-2 text-2xl font-black">{bookingId}</div>
+                <div className="mt-2 text-2xl font-black">{bookingRef}</div>
               </div>
               <div className="rounded-[22px] border border-white/15 bg-white/10 p-4 backdrop-blur">
                 <div className="text-xs uppercase tracking-[0.22em] text-sky-100/80">
@@ -185,6 +225,21 @@ const Communication = () => {
             </div>
           </div>
         </section>
+
+        <div className="flex flex-wrap gap-3">
+          <button
+            type="button"
+            onClick={() =>
+              handleLifecycle(
+                String(bookingStatus || "").toLowerCase().includes("checked in") ? "check-out" : "check-in",
+              )
+            }
+            className="rounded-full bg-emerald-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-emerald-700"
+          >
+            {String(bookingStatus || "").toLowerCase().includes("checked in") ? "Check Out" : "Check In"}
+          </button>
+          
+        </div>
 
         <section className="grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(360px,0.75fr)]">
           <div className="rounded-[28px] border border-slate-200/70 bg-white/90 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur">
@@ -233,7 +288,7 @@ const Communication = () => {
                   <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
                     Payment Snapshot
                   </div>
-                  <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                     <div className="rounded-2xl bg-blue-50 p-4">
                       <div className="text-xs uppercase tracking-wide text-blue-700">
                         Total
@@ -252,9 +307,17 @@ const Communication = () => {
                     </div>
                     <div className="rounded-2xl bg-amber-50 p-4">
                       <div className="text-xs uppercase tracking-wide text-amber-700">
-                        Remaining
+                        Discount
                       </div>
                       <div className="mt-1 text-lg font-black text-amber-900">
+                        {formatCurrency(discountAmount)}
+                      </div>
+                    </div>
+                    <div className="rounded-2xl bg-orange-50 p-4">
+                      <div className="text-xs uppercase tracking-wide text-orange-700">
+                        Remaining
+                      </div>
+                      <div className="mt-1 text-lg font-black text-orange-900">
                         {formatCurrency(remainingAmount)}
                       </div>
                     </div>
@@ -398,7 +461,10 @@ const Communication = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => navigate("/hotel/guest")}
+                  onClick={() => {
+                    clearBookingSession();
+                    navigate("/hotel/guest", { state: { resetBookingDraft: true } });
+                  }}
                   className="rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
                 >
                   Start New Booking

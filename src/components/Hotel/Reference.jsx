@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import API from "../../api";
 import {
   getBookingDraft,
+  getStoredBookingCode,
   getStoredBookingId,
   setBookingDraft,
   setStoredBookingId,
@@ -18,6 +19,8 @@ const Reference = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const bookingId = location.state?.bookingId || getStoredBookingId();
+  const bookingCode = location.state?.bookingCode || getStoredBookingCode();
+  const bookingRef = bookingCode || bookingId;
 
   const [formData, setFormData] = useState(
     getBookingDraft("reference") || {
@@ -43,7 +46,7 @@ const Reference = () => {
     try {
       await API.post(`/hotel/reference/${bookingId}`, formData);
       setBookingDraft("reference", formData);
-      navigate("/hotel/company", { state: { bookingId } });
+      navigate("/hotel/company", { state: { bookingId, bookingCode } });
     } catch (err) {
       console.error(err);
       alert("Error saving reference");
@@ -53,17 +56,7 @@ const Reference = () => {
   return (
     <div className="min-h-screen bg-[linear-gradient(135deg,#f6fbff_0%,#fcfff8_45%,#fff9f3_100%)] p-4 sm:p-6">
       <div className="mx-auto max-w-6xl space-y-6">
-        <section className="overflow-hidden rounded-[28px] border border-white/70 bg-[linear-gradient(135deg,#08253d_0%,#14532d_48%,#0f3f67_100%)] px-6 py-7 text-white shadow-[0_24px_70px_rgba(15,23,42,0.18)]">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-emerald-200">
-            Reference
-          </p>
-          <h1 className="mt-3 text-3xl font-black sm:text-4xl">
-            Guest notes and internal booking remarks
-          </h1>
-          <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-100/85">
-            VIP flags, guest preferences aur internal operations notes ko structured form me save karein.
-          </p>
-        </section>
+      
 
         <section className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(300px,0.85fr)]">
           <div className="rounded-[26px] border border-slate-200/80 bg-white/90 p-6 shadow-[0_18px_45px_rgba(15,23,42,0.06)]">
@@ -124,7 +117,7 @@ const Reference = () => {
               <div className="mt-4 space-y-3">
                 <div className="rounded-2xl bg-slate-50 p-4">
                   <div className="text-xs uppercase tracking-wide text-slate-500">Booking ID</div>
-                  <div className="mt-1 font-black text-slate-900">{bookingId || "Pending"}</div>
+                  <div className="mt-1 font-black text-slate-900">{bookingRef || "Pending"}</div>
                 </div>
                 <div className="rounded-2xl bg-slate-50 p-4">
                   <div className="text-xs uppercase tracking-wide text-slate-500">Guest Type</div>
