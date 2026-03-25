@@ -34,8 +34,15 @@ export const RestaurantProvider = ({ children }) => {
         rows.map(async (t) => {
           let occupied = false;
           try {
-            const orderRes = await API.get(`/restaurant/order/${t.name}`);
-            if (orderRes.data) occupied = true;
+            const tokenRes = await API.get(`/token/table/${t.name}`);
+            const tokenId = tokenRes.data?.id || null;
+            const tokenItemsRes = tokenId
+              ? await API.get(`/token/items/${tokenId}`)
+              : { data: [] };
+            const hasTokenItems =
+              Array.isArray(tokenItemsRes.data) && tokenItemsRes.data.length > 0;
+
+            occupied = hasTokenItems;
           } catch {}
 
           statuses[t.name] = occupied ? "Occupied" : "Available";
@@ -168,7 +175,7 @@ export const RestaurantProvider = ({ children }) => {
   }, []);
 
   const createOrder = useCallback(
-    async ({ waiterName, tableNo, items }) => {
+    async ({ waiterName, tableNo, items, prepTimeMinutes, entityType = "Table" }) => {
       let payload = items || [];
 
       if (payload.length === 0) {
@@ -187,6 +194,8 @@ export const RestaurantProvider = ({ children }) => {
       await restaurantService.createKitchenOrder({
         table: tableNo,
         waiter: waiterName || "Waiter",
+        entityType,
+        prepTimeMinutes,
         items: payload,
       });
 

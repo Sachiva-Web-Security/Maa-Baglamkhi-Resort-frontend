@@ -7,10 +7,14 @@ import { RestaurantContext } from "../../Context/RestaurantContext";
 import {
   expandBookings,
   getRoomBookingReference,
+  getRoomBookingForDate,
   mergeBookingsWithRooms,
   normalizeRooms,
   todayISO,
 } from "../Dashboard/stayoverUtils";
+
+const ACTIVE_INVOICE_KEY = "restaurant-active-invoice";
+const SAVED_INVOICE_KEY = "restaurant-saved-invoice";
 
 const Roomitem = () => {
   const navigate = useNavigate();
@@ -20,6 +24,7 @@ const Roomitem = () => {
   const [rooms, setRooms] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [tokenSnapshots, setTokenSnapshots] = useState({});
 
   const focusRoomNo = String(location.state?.focusRoomNo || "");
 
@@ -74,11 +79,76 @@ const Roomitem = () => {
   };
 
   const occupiedCount = useMemo(
-    () => rooms.filter((room) => String(room.hotelStatus || "").toLowerCase() === "occupied").length,
+    () =>
+      rooms.filter((room) => String(room.status || room.hotelStatus || "").toLowerCase() === "occupied").length,
     [rooms],
   );
   const mergedBookings = useMemo(() => mergeBookingsWithRooms(bookings, rooms), [bookings, rooms]);
   const today = todayISO();
+  const isActiveBooking = (status) => {
+    const normalized = String(status || "").toLowerCase();
+    return (
+      normalized.includes("confirmed") ||
+      normalized.includes("booked") ||
+      normalized.includes("reserved") ||
+      normalized.includes("checked in") ||
+      normalized.includes("check in") ||
+      normalized.includes("occupied")
+    );
+  };
+
+  const activeRoomCards = useMemo(
+    () =>
+      rooms
+        .map((room) => {
+          const activeBooking = getRoomBookingForDate(room.roomNo, today, mergedBookings, false);
+          return { room, booking: activeBooking };
+        })
+        .filter(({ room, booking }) => {
+          const roomStatus = String(room.status || room.hotelStatus || "").toLowerCase();
+          return (
+            Boolean(booking) &&
+            roomStatus === "occupied" &&
+            isActiveBooking(booking.bookingStatus) &&
+            booking.bookingStatus &&
+            !String(booking.bookingStatus).toLowerCase().includes("cleaning")
+          );
+        }),
+    [rooms, mergedBookings, today],
+  );
+
+  useEffect(() => {
+    const loadTokenSnapshots = async () => {
+      if (!activeRoomCards.length) {
+        setTokenSnapshots({});
+        return;
+      }
+
+      try {
+        const entries = await Promise.all(
+          activeRoomCards.map(async ({ room }) => {
+            const roomRef = String(room.roomNo);
+            const tokenRes = await API.get(`/token/table/${roomRef}`);
+            const tokenId = tokenRes.data?.id || null;
+
+            if (!tokenId) {
+              return [roomRef, { tokenId: null, items: [] }];
+            }
+
+            const itemsRes = await API.get(`/token/items/${tokenId}`);
+            return [roomRef, { tokenId, items: itemsRes.data || [] }];
+          }),
+        );
+
+        setTokenSnapshots(Object.fromEntries(entries));
+      } catch (error) {
+        console.error("Failed to load room token snapshots:", error);
+        setTokenSnapshots({});
+      }
+    };
+
+    loadTokenSnapshots();
+  }, [activeRoomCards]);
 
   const openRoomFlow = (room, target = "token") => {
     setSelectedTable(room.roomNo);
@@ -93,6 +163,51 @@ const Roomitem = () => {
     }
 
     navigate(`/restaurant/token/${room.roomNo}`, { state });
+  };
+
+  const openRoomInvoice = (room) => {
+    const roomRef = String(room.roomNo);
+    const snapshot = tokenSnapshots[roomRef];
+    const items = snapshot?.items || [];
+    const activeBooking =
+      getRoomBookingForDate(room.roomNo, today, mergedBookings, false) ||
+      getRoomBookingReference(room.roomNo, today, mergedBookings);
+    const customerName = room.guest || activeBooking?.guestName || "Walk-in Customer";
+    const phone = activeBooking?.mobile || "";
+
+    if (!items.length) {
+      return;
+    }
+
+    const subtotal = items.reduce(
+      (sum, item) => sum + Number(item.qty || 0) * Number(item.rate || 0),
+      0,
+    );
+    const gst = subtotal * 0.05;
+    const total = subtotal + gst;
+
+    const invoicePayload = {
+      table: roomRef,
+      tokenId: snapshot.tokenId,
+      items: items.map((item) => ({
+        id: item.id,
+        name: item.item_name,
+        qty: Number(item.qty),
+        rate: Number(item.rate),
+      })),
+      subtotal,
+      gst,
+      total,
+      date: new Date().toISOString(),
+      entityType: "Room",
+      customerName,
+      phone,
+      roomData: room,
+    };
+
+    localStorage.setItem(ACTIVE_INVOICE_KEY, JSON.stringify(invoicePayload));
+    localStorage.setItem(SAVED_INVOICE_KEY, JSON.stringify(invoicePayload));
+    navigate("/restaurant/payment", { state: invoicePayload });
   };
 
   return (
@@ -153,13 +268,13 @@ const Roomitem = () => {
       {loading ? <div className="mt-6 text-sm text-slate-500">Loading hotel rooms...</div> : null}
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 mt-6">
-        {rooms.map((room) => {
+        {activeRoomCards.map(({ room, booking }) => {
           const hotelStatus = String(room.hotelStatus || room.status || "");
           const isFocused = focusRoomNo && String(room.roomNo) === focusRoomNo;
-          const bookingReference = getRoomBookingReference(room.roomNo, today, mergedBookings);
-          const guestName = room.guest || bookingReference?.guestName || "No active guest";
-          const stayCheckIn = room.checkIn || bookingReference?.checkIn || "--";
-          const stayCheckOut = room.checkOut || bookingReference?.checkOut || "--";
+          const guestName = room.guest || booking?.guestName || "No active guest";
+          const stayCheckIn = room.checkIn || booking?.checkIn || "--";
+          const stayCheckOut = room.checkOut || booking?.checkOut || "--";
+          const hasMenuItems = (tokenSnapshots[String(room.roomNo)]?.items || []).length > 0;
           return (
             <div
               key={`${room.roomId}-${room.roomNo}`}
@@ -185,7 +300,7 @@ const Roomitem = () => {
                         : "bg-emerald-50 text-emerald-700 border-emerald-200"
                     }`}
                   >
-                    {hotelStatus || "Available"}
+                  {hotelStatus || "Available"}
                   </span>
                 </div>
 
@@ -203,12 +318,14 @@ const Roomitem = () => {
                   + Token
                 </button>
 
-                <button
-                  className="w-full bg-gradient-to-r from-fuchsia-500 to-purple-500 text-white py-2.5 rounded-xl text-sm font-semibold shadow-md hover:shadow-lg transition"
-                  onClick={() => openRoomFlow(room, "token")}
-                >
-                  + NC Token
-                </button>
+                {hasMenuItems ? (
+                  <button
+                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2.5 rounded-xl text-sm font-semibold shadow-md hover:shadow-lg transition"
+                    onClick={() => openRoomInvoice(room)}
+                  >
+                    Create Invoice
+                  </button>
+                ) : null}
 
                 <button
                   className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-2.5 rounded-xl text-sm font-semibold shadow-md hover:shadow-lg transition"
@@ -221,6 +338,7 @@ const Roomitem = () => {
           );
         })}
       </div>
+
     </div>
   );
 };

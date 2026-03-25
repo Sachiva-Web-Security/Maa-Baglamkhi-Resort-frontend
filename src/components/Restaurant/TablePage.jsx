@@ -1,30 +1,107 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiPlusCircle, FiHome, FiGrid, FiRefreshCw } from "react-icons/fi";
+import API from "../../api";
 import { RestaurantContext } from "../../Context/RestaurantContext";
+import AddTableModal from "./AddTableModal";
 
-const inputCls =
-  "w-full rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100";
+const ACTIVE_INVOICE_KEY = "restaurant-active-invoice";
+const SAVED_INVOICE_KEY = "restaurant-saved-invoice";
 
 const TablePage = () => {
   const navigate = useNavigate();
   const { tables, addTable, getTableStatus, setSelectedTable } = useContext(RestaurantContext);
 
   const [tableNo, setTableNo] = useState("");
+  const [showAddTable, setShowAddTable] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [tokenSnapshots, setTokenSnapshots] = useState({});
+
+  useEffect(() => {
+    const loadTokenSnapshots = async () => {
+      if (!tables.length) {
+        setTokenSnapshots({});
+        return;
+      }
+
+      try {
+        const entries = await Promise.all(
+          tables.map(async (table) => {
+            const tokenRes = await API.get(`/token/table/${table.name}`);
+            const tokenId = tokenRes.data?.id || null;
+
+            if (!tokenId) {
+              return [table.name, { tokenId: null, items: [] }];
+            }
+
+            const itemsRes = await API.get(`/token/items/${tokenId}`);
+            return [table.name, { tokenId, items: itemsRes.data || [] }];
+          }),
+        );
+
+        setTokenSnapshots(Object.fromEntries(entries));
+      } catch (error) {
+        console.error("Failed to load table token snapshots:", error);
+        setTokenSnapshots({});
+      }
+    };
+
+    loadTokenSnapshots();
+  }, [tables]);
 
   const handleAddTable = async () => {
     if (!tableNo.trim()) return;
     try {
+      setSaving(true);
       await addTable(tableNo);
       setTableNo("");
+      setShowAddTable(false);
     } catch (err) {
       alert(err.message);
+    } finally {
+      setSaving(false);
     }
   };
 
   const runningTables = tables.filter((t) => getTableStatus(t.name) === "Occupied").length;
   const blankTables = tables.filter((t) => getTableStatus(t.name) === "Available").length;
-  const pendingInvoice = 0;
+  const pendingInvoice = tables.filter((table) => (tokenSnapshots[table.name]?.items || []).length > 0).length;
+
+  const openCreateInvoice = (tableName) => {
+    const snapshot = tokenSnapshots[tableName];
+    const items = snapshot?.items || [];
+
+    if (!items.length) {
+      return;
+    }
+
+    const subtotal = items.reduce(
+      (sum, item) => sum + Number(item.qty || 0) * Number(item.rate || 0),
+      0,
+    );
+    const gst = subtotal * 0.05;
+    const total = subtotal + gst;
+
+    const invoicePayload = {
+      table: tableName,
+      tokenId: snapshot.tokenId,
+      items: items.map((item) => ({
+        id: item.id,
+        name: item.item_name,
+        qty: Number(item.qty),
+        rate: Number(item.rate),
+      })),
+      subtotal,
+      gst,
+      total,
+      date: new Date().toISOString(),
+      entityType: "Table",
+    };
+
+    localStorage.setItem(ACTIVE_INVOICE_KEY, JSON.stringify(invoicePayload));
+    localStorage.setItem(SAVED_INVOICE_KEY, JSON.stringify(invoicePayload));
+    navigate("/restaurant/payment", { state: invoicePayload });
+  };
 
   return (
     <div className="space-y-6">
@@ -36,23 +113,12 @@ const TablePage = () => {
           <p className="text-sm text-white/80 mt-1">Quickly view and manage tables and tokens.</p>
         </div>
         <div className="flex items-end gap-3 w-full md:w-auto">
-          <div className="flex-1 md:flex-none">
-            <label className="text-xs text-white/80">Add Table</label>
-            <div className="flex gap-2 mt-1">
-              <input
-                value={tableNo}
-                onChange={(e) => setTableNo(e.target.value)}
-                placeholder="Enter Table No"
-                className="w-full md:w-56 bg-white/10 border border-white/30 text-white placeholder-white/60 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-white/70"
-              />
-              <button
-                onClick={handleAddTable}
-                className="inline-flex items-center gap-2 bg-white text-slate-900 font-semibold px-4 py-2 rounded-xl shadow-md hover:shadow-lg transition"
-              >
-                <FiPlusCircle /> Add
-              </button>
-            </div>
-          </div>
+          <button
+            onClick={() => setShowAddTable(true)}
+            className="inline-flex items-center gap-2 bg-white text-slate-900 font-semibold px-4 py-2 rounded-xl shadow-md hover:shadow-lg transition"
+          >
+            <FiPlusCircle /> Add Table
+          </button>
         </div>
       </div>
 
@@ -92,6 +158,7 @@ const TablePage = () => {
         {tables.map((table, i) => {
           const status = getTableStatus(table.name);
           const occupied = status === "Occupied";
+          const hasMenuItems = (tokenSnapshots[table.name]?.items || []).length > 0;
           return (
             <div
               key={i}
@@ -120,9 +187,14 @@ const TablePage = () => {
                   + Token
                 </button>
 
-                <button className="w-full bg-gradient-to-r from-fuchsia-500 to-purple-500 text-white py-2.5 rounded-xl text-sm font-semibold shadow-md hover:shadow-lg transition">
-                  + NC Token
-                </button>
+                {occupied && hasMenuItems ? (
+                  <button
+                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2.5 rounded-xl text-sm font-semibold shadow-md hover:shadow-lg transition"
+                    onClick={() => openCreateInvoice(table.name)}
+                  >
+                    Create Invoice
+                  </button>
+                ) : null}
 
                 <button
                   className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-2.5 rounded-xl text-sm font-semibold shadow-md hover:shadow-lg transition"
@@ -138,6 +210,15 @@ const TablePage = () => {
           );
         })}
       </div>
+
+      <AddTableModal
+        open={showAddTable}
+        onClose={() => setShowAddTable(false)}
+        onSubmit={handleAddTable}
+        value={tableNo}
+        setValue={setTableNo}
+        loading={saving}
+      />
     </div>
   );
 };

@@ -24,7 +24,6 @@ import {
   BOARD_BUCKET_META,
   expandBookings,
   formatCurrency,
-  formatDateKey,
   formatHeaderDate,
   formatShortDate,
   getBookingContact,
@@ -32,6 +31,7 @@ import {
   getBookingTimelineStatus,
   getRoomBookingForDate,
   mergeBookingsWithRooms,
+  normalizeBookingPreview,
   normalizeRooms,
   roomSort,
   STATUS_META,
@@ -370,22 +370,6 @@ useEffect(() => {
     }
   };
 
-  const normalizeBookingPreview = (booking) => ({
-    ...booking,
-    bookingId: booking?.bookingId || booking?.id || "",
-    bookingCode: booking?.bookingCode || booking?.booking_code || "",
-    guestName: booking?.guestName || booking?.guest_name || "Walk-in Guest",
-    mobile: getBookingContact(booking) || "-",
-    company: booking?.company || booking?.company_name || booking?.companyName || "Direct",
-    bookingStatus: booking?.bookingStatus || booking?.booking_status || "",
-    checkIn: formatDateKey(booking?.checkIn || booking?.check_in || ""),
-    checkOut: formatDateKey(booking?.checkOut || booking?.check_out || ""),
-    totalAmount: booking?.totalAmount || 0,
-    paidAmount: booking?.paidAmount || 0,
-    discountAmount: booking?.discountAmount || 0,
-    remainingAmount: booking?.remainingAmount || 0,
-  });
-
   const getCellData = (room, date) => {
     const isHistoricalDate = date < today;
     const booking = getRoomBookingForDate(room.roomNumber, date, mergedBookings, !isHistoricalDate);
@@ -515,6 +499,49 @@ useEffect(() => {
       alert("Mark clean failed.");
     } finally {
       setAssigningCleaning(false);
+    }
+  };
+
+  const handleBlockedRoom = async (mode) => {
+    const roomNumber = selectedRoom?.roomNumber;
+    if (!roomNumber) {
+      alert("Room number missing hai.");
+      return;
+    }
+
+    try {
+      if (mode === "block") {
+        const blockReason = window.prompt("Block reason likhiye", selectedRoom?.roomData?.blockReason || "Maintenance");
+        if (blockReason === null) return;
+        const blockFrom = window.prompt("Block from date (YYYY-MM-DD)", selectedDate || todayISO());
+        if (blockFrom === null) return;
+        const blockTo = window.prompt(
+          "Block to date (YYYY-MM-DD)",
+          selectedRoom?.roomData?.blockTo || blockFrom || selectedDate || todayISO(),
+        );
+        if (blockTo === null) return;
+        const blockNotes = window.prompt("Notes", selectedRoom?.roomData?.blockNotes || "") ?? "";
+
+        await API.put(`/hotel/rooms/state/${roomNumber}`, {
+          status: "Blocked",
+          blockReason,
+          blockFrom,
+          blockTo,
+          blockNotes,
+          blockedBy: "Front Desk",
+        });
+      } else {
+        await API.put(`/hotel/rooms/state/${roomNumber}`, {
+          status: "Available",
+        });
+      }
+
+      await loadData(true);
+      setSelectedRoom(null);
+      alert(mode === "block" ? "Room blocked successfully." : "Room unblocked successfully.");
+    } catch (error) {
+      console.error(error);
+      alert(mode === "block" ? "Room block nahi ho paaya." : "Room unblock nahi ho paaya.");
     }
   };
 
@@ -1178,6 +1205,24 @@ useEffect(() => {
                       {formatCurrency(selectedRoom.booking?.remainingAmount || 0)}
                     </span>
                   </div>
+                  {String(selectedRoom.roomData?.hotelStatus || selectedRoom.roomData?.status || "").toLowerCase().includes("block") ? (
+                    <>
+                      <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2">
+                        <span>Block Reason</span>
+                        <span className="font-semibold text-slate-900">{selectedRoom.roomData?.blockReason || "--"}</span>
+                      </div>
+                      <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2">
+                        <span>Block Dates</span>
+                        <span className="font-semibold text-slate-900">
+                          {selectedRoom.roomData?.blockFrom || "--"} to {selectedRoom.roomData?.blockTo || "--"}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2">
+                        <span>Blocked By</span>
+                        <span className="font-semibold text-slate-900">{selectedRoom.roomData?.blockedBy || "Front Desk"}</span>
+                      </div>
+                    </>
+                  ) : null}
                 </div>
               </div>
 
@@ -1331,6 +1376,21 @@ useEffect(() => {
                   className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                 >
                   Open Main Dashboard
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleBlockedRoom(
+                      String(selectedRoom.roomData?.hotelStatus || selectedRoom.roomData?.status || "").toLowerCase().includes("block")
+                        ? "unblock"
+                        : "block",
+                    )
+                  }
+                  className="rounded-xl bg-slate-700 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+                >
+                  {String(selectedRoom.roomData?.hotelStatus || selectedRoom.roomData?.status || "").toLowerCase().includes("block")
+                    ? "Unblock Room"
+                    : "Block Room"}
                 </button>
               </div>
             </div>

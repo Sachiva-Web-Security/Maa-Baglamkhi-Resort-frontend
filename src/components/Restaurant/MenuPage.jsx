@@ -1,10 +1,10 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { FiChevronDown, FiPlus } from "react-icons/fi";
 
 import { RestaurantContext } from "../../Context/RestaurantContext";
-import API from "../../api";
+import API, { getBackendBaseURL } from "../../api";
 import { restaurantService } from "../../services/restaurantService";
+import AddMenuItemModal from "./AddMenuItemModal";
 
 const normalizeCategory = (value) => (value || "Other").trim().toLowerCase();
 
@@ -16,7 +16,7 @@ const MenuPage = () => {
   const banquetReturnPath = location.state?.returnTo || "/banquet";
   const entityType = location.state?.entityType || "Table";
   const roomData = location.state?.roomData || null;
-  const { menuItems, addMenuItem, setSelectedTable } = useContext(RestaurantContext);
+  const { menuItems, setSelectedTable } = useContext(RestaurantContext);
 
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [qty, setQty] = useState({});
@@ -28,8 +28,13 @@ const MenuPage = () => {
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSavingMenuItem, setIsSavingMenuItem] = useState(false);
   const [newItem, setNewItem] = useState({ name: "", price: "", category: "Other", tax: 5 });
+  const [newItemImage, setNewItemImage] = useState(null);
+  const [newItemImagePreview, setNewItemImagePreview] = useState("");
   const [expandedCategory, setExpandedCategory] = useState("Other");
+  const [taxByItem, setTaxByItem] = useState({});
+  const [prepTimeMinutes, setPrepTimeMinutes] = useState(20);
 
   useEffect(() => {
     if (banquetMenuPicker) return;
@@ -83,6 +88,18 @@ const MenuPage = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (!newItemImage) {
+      setNewItemImagePreview("");
+      return undefined;
+    }
+
+    const previewUrl = URL.createObjectURL(newItemImage);
+    setNewItemImagePreview(previewUrl);
+
+    return () => URL.revokeObjectURL(previewUrl);
+  }, [newItemImage]);
+
   const categories = useMemo(() => {
     const set = new Map();
     menu.forEach((item) => {
@@ -129,12 +146,28 @@ const MenuPage = () => {
     const quantity = Number(qty[item.id] || 0);
     if (quantity <= 0) return;
     const amount = item.price * quantity;
-    const taxAmount = (amount * (item.tax || 5)) / 100;
+    const taxPercent = Number(taxByItem[item.id] ?? item.tax ?? 5);
+    const taxAmount = (amount * taxPercent) / 100;
     setOrder((prev) => [
       ...prev,
       { id: Date.now(), name: item.name, qty: quantity, rate: item.price, amount, taxAmount, total: amount + taxAmount },
     ]);
     setQty((prev) => ({ ...prev, [item.id]: "" }));
+  };
+
+  const handleTaxChange = (itemId, value) => {
+    setTaxByItem((prev) => ({ ...prev, [itemId]: value }));
+  };
+
+  const buildMenuImageSrc = (imagePath) => {
+    if (!imagePath) return "";
+    if (/^https?:\/\//i.test(imagePath)) return imagePath;
+    return `${getBackendBaseURL()}${imagePath}`;
+  };
+
+  const handleNewItemImageChange = (event) => {
+    const file = event.target.files?.[0];
+    setNewItemImage(file || null);
   };
 
   const subtotal = order.reduce((sum, item) => sum + item.amount, 0);
@@ -190,9 +223,12 @@ const MenuPage = () => {
         table,
         order.map(({ name, qty: quantity, rate: price }) => ({ name, quantity, price })),
       );
+      localStorage.setItem(`entityType:${table}`, entityType);
       await restaurantService.createKitchenOrder({
         table,
-        waiter: "Waiter",
+        waiter: entityType === "Room" ? "Room Service" : "Waiter",
+        entityType,
+        prepTimeMinutes,
         items: order.map(({ name, qty: quantity, rate: price }) => ({ name, quantity, price })),
       });
       window.dispatchEvent(new Event("tokenUpdated"));
@@ -208,14 +244,28 @@ const MenuPage = () => {
   const handleAddMenuItem = async () => {
     if (!newItem.name || !newItem.price) return alert("Enter item name and price");
     try {
-      await addMenuItem(newItem.name, newItem.price, newItem.category, table);
+      setIsSavingMenuItem(true);
+      const payload = new FormData();
+      payload.append("name", newItem.name);
+      payload.append("price", newItem.price);
+      payload.append("category", newItem.category);
+      payload.append("tableNumber", table);
+      payload.append("tax", String(newItem.tax ?? 5));
+      if (newItemImage) {
+        payload.append("image", newItemImage);
+      }
+
+      await restaurantService.addMenuItem(payload);
       const response = await API.get("/restaurant/menu");
       setMenuCatalog(Array.isArray(response.data) ? response.data : []);
       setNewItem({ name: "", price: "", category: "Other", tax: 5 });
+      setNewItemImage(null);
       setExpandedCategory("Other");
       setShowAddMenu(false);
     } catch {
       alert("Failed to add menu item");
+    } finally {
+      setIsSavingMenuItem(false);
     }
   };
 
@@ -249,7 +299,8 @@ const MenuPage = () => {
 
         <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_290px]">
           <div className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm">
-            <div className="grid grid-cols-[minmax(0,1.3fr)_100px_70px_120px_120px] bg-slate-100 px-4 py-3 text-xs font-bold uppercase tracking-[0.16em] text-slate-600">
+            <div className="grid grid-cols-[84px_minmax(0,1.6fr)_96px_72px_120px_110px] bg-slate-100 px-4 py-3 text-xs font-bold uppercase tracking-[0.16em] text-slate-600">
+              <div>Image</div>
               <div>Item</div>
               <div className="text-center">Rate</div>
               <div className="text-center">Tax</div>
@@ -257,20 +308,46 @@ const MenuPage = () => {
               <div className="text-center">Amount</div>
             </div>
             <div className="max-h-[620px] overflow-auto">
-              {isLoadingMenu ? <div className="p-6 text-center text-slate-500">Loading menu...</div> : null}
-              {menuError ? <div className="p-6 text-center text-rose-600">{menuError}</div> : null}
-              {!isLoadingMenu && !menuError && !filteredItems.length ? <div className="p-6 text-center text-slate-500">No items in this category.</div> : null}
-              {!isLoadingMenu && !menuError && filteredItems.map((item, index) => {
+              <div className="min-w-[920px]">
+                {isLoadingMenu ? <div className="p-6 text-center text-slate-500">Loading menu...</div> : null}
+                {menuError ? <div className="p-6 text-center text-rose-600">{menuError}</div> : null}
+                {!isLoadingMenu && !menuError && !filteredItems.length ? <div className="p-6 text-center text-slate-500">No items in this category.</div> : null}
+                {!isLoadingMenu && !menuError && filteredItems.map((item, index) => {
                 const quantity = Number(qty[item.id] || 0);
                 const amount = item.price * quantity;
+                const itemImageSrc = buildMenuImageSrc(item.image_url || item.imageUrl);
                 return (
-                  <div key={item.id} className={`grid grid-cols-[minmax(0,1.3fr)_100px_70px_120px_120px] items-center gap-2 border-t border-slate-100 px-4 py-3 ${index % 2 ? "bg-slate-50/70" : "bg-white"}`}>
-                    <div>
-                      <div className="font-bold text-slate-900">{item.name}</div>
-                      <div className="text-xs text-slate-500">{item.category || "Other"}</div>
+                  <div key={item.id} className={`grid grid-cols-[84px_minmax(0,1.6fr)_96px_72px_120px_110px] items-center gap-3 border-t border-slate-100 px-4 py-3 ${index % 2 ? "bg-slate-50/70" : "bg-white"}`}>
+                    <div className="flex justify-center">
+                      {itemImageSrc ? (
+                        <img
+                          src={itemImageSrc}
+                          alt={item.name}
+                          className="h-16 w-16 rounded-[18px] border border-slate-200 object-cover shadow-sm"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="flex h-16 w-16 items-center justify-center rounded-[18px] border border-dashed border-slate-300 bg-slate-50 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">
+                          No Image
+                        </div>
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="truncate text-[15px] font-bold leading-5 text-slate-900">{item.name}</div>
+                      <div className="mt-1 truncate text-xs text-slate-500">{item.category || "Other"}</div>
                     </div>
                     <div className="text-center font-semibold text-slate-700">Rs. {item.price}</div>
-                    <div className="text-center text-slate-600">{item.tax || 5}%</div>
+                    <div className="flex items-center justify-center gap-1">
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.1"
+                        value={taxByItem[item.id] ?? item.tax ?? 5}
+                        onChange={(e) => handleTaxChange(item.id, e.target.value)}
+                        className="w-14 rounded-xl border border-slate-200 px-2 py-2 text-center text-sm"
+                      />
+                      <span className="text-sm text-slate-600">%</span>
+                    </div>
                     <div className="flex items-center justify-center gap-2">
                       <input type="number" min="1" value={qty[item.id] || ""} onChange={(e) => handleQtyChange(item.id, e.target.value)} className="w-16 rounded-xl border border-slate-200 px-2 py-2 text-center text-sm" />
                       <button onClick={() => handleAdd(item)} className="rounded-xl bg-emerald-500 px-3 py-2 text-sm font-bold text-white">+</button>
@@ -278,7 +355,8 @@ const MenuPage = () => {
                     <div className="text-center font-bold text-slate-800">Rs. {amount || 0}</div>
                   </div>
                 );
-              })}
+                })}
+              </div>
             </div>
           </div>
 
@@ -312,6 +390,23 @@ const MenuPage = () => {
                 <div className="flex justify-between text-sm"><span>Tax</span><span>Rs. {taxTotal.toFixed(2)}</span></div>
                 <div className="flex justify-between text-lg font-black"><span>Total</span><span>Rs. {grandTotal.toFixed(2)}</span></div>
               </div>
+              <div className="mt-4 rounded-[18px] border border-slate-200 bg-slate-50 p-4">
+                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Kitchen ETA</div>
+                <select
+                  value={prepTimeMinutes}
+                  onChange={(event) => setPrepTimeMinutes(Number(event.target.value))}
+                  className="mt-3 w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-semibold text-slate-700"
+                >
+                  {[10, 15, 20, 30, 45, 60].map((minutes) => (
+                    <option key={minutes} value={minutes}>
+                      {minutes} minutes
+                    </option>
+                  ))}
+                </select>
+                <div className="mt-2 text-xs text-slate-500">
+                  Ye time kitchen card par dikhega aur ready countdown isi se chalega.
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -334,60 +429,26 @@ const MenuPage = () => {
         </div>
       </div>
 
-      {showAddMenu && !banquetMenuPicker ? (
-        <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-950/45 p-4">
-          <div className="w-full max-w-xl rounded-[28px] bg-white p-6 shadow-[0_30px_80px_rgba(15,23,42,0.32)]">
-            <div className="text-[11px] uppercase tracking-[0.26em] text-blue-700">Add Menu Item</div>
-            <div className="mt-2 text-3xl font-black text-slate-900">Create a new menu option</div>
-            <div className="mt-5 grid gap-4">
-              <input value={newItem.name} onChange={(e) => setNewItem({ ...newItem, name: e.target.value })} placeholder="Item Name" className="rounded-[18px] border-2 border-slate-200 px-4 py-4 text-lg outline-none focus:border-blue-400" />
-              <input type="number" value={newItem.price} onChange={(e) => setNewItem({ ...newItem, price: e.target.value })} placeholder="Price" className="rounded-[18px] border-2 border-slate-200 px-4 py-4 text-lg outline-none focus:border-blue-400" />
-              <div className="rounded-[20px] border border-slate-200 bg-slate-50 p-3">
-                <div className="mb-3 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">Categories</div>
-                <div className="max-h-[320px] space-y-3 overflow-auto pr-1">
-                  {addCategories.map((category) => {
-                    const expanded = normalizeCategory(expandedCategory) === normalizeCategory(category);
-                    const items = catalogByCategory[category] || [];
-                    const selected = normalizeCategory(newItem.category) === normalizeCategory(category);
-                    return (
-                      <div key={category} className="overflow-hidden rounded-[18px] border border-slate-200 bg-white">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setNewItem({ ...newItem, category });
-                            setExpandedCategory(expanded ? "" : category);
-                          }}
-                          className={`flex w-full items-center justify-between px-4 py-4 text-left ${selected ? "bg-blue-600 text-white" : "text-slate-800"}`}
-                        >
-                          <div>
-                            <div className="font-black">{category}</div>
-                            <div className={`text-xs ${selected ? "text-white/80" : "text-slate-500"}`}>{items.length} items</div>
-                          </div>
-                          <FiChevronDown className={`text-xl transition ${expanded ? "rotate-180" : ""}`} />
-                        </button>
-                        {expanded ? (
-                          <div className="border-t border-slate-100 bg-slate-50 px-3 py-3">
-                            {items.length ? items.map((item) => (
-                              <div key={`${category}-${item.id}`} className="mb-2 flex items-center justify-between rounded-xl bg-white px-3 py-3 text-sm">
-                                <span className="font-semibold text-slate-700">{item.name}</span>
-                                <span className="font-bold text-slate-900">Rs. {item.price}</span>
-                              </div>
-                            )) : <div className="rounded-xl bg-white px-3 py-3 text-sm text-slate-500">Is category me abhi koi item nahi hai.</div>}
-                          </div>
-                        ) : null}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-            <div className="mt-6 flex justify-end gap-3">
-              <button onClick={() => setShowAddMenu(false)} className="rounded-xl border border-slate-200 px-5 py-3 font-bold text-slate-700">Cancel</button>
-              <button onClick={handleAddMenuItem} className="rounded-xl bg-emerald-600 px-5 py-3 font-bold text-white">Add</button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <AddMenuItemModal
+        open={showAddMenu && !banquetMenuPicker}
+        onClose={() => {
+          setShowAddMenu(false);
+          setNewItem({ name: "", price: "", category: "Other", tax: 5 });
+          setNewItemImage(null);
+          setExpandedCategory("Other");
+        }}
+        onSubmit={handleAddMenuItem}
+        form={newItem}
+        setForm={setNewItem}
+        categories={addCategories}
+        catalogByCategory={catalogByCategory}
+        expandedCategory={expandedCategory}
+        setExpandedCategory={setExpandedCategory}
+        imagePreview={newItemImagePreview}
+        imageFileName={newItemImage?.name || ""}
+        onImageChange={handleNewItemImageChange}
+        loading={isSavingMenuItem}
+      />
     </div>
   );
 };

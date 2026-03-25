@@ -15,6 +15,7 @@ const OrderSummaryPage = ({ tableNo }) => {
   const [waiterName, setWaiterName] = useState("Waiter");
   const [sending, setSending] = useState(false);
   const [orderItems, setOrderItems] = useState([]);
+  const [prepTimeMinutes, setPrepTimeMinutes] = useState(20);
 
   /* ================= LOAD ORDER ================= */
 
@@ -59,7 +60,7 @@ const OrderSummaryPage = ({ tableNo }) => {
     try {
       setSending(true);
 
-      await createOrder({ waiterName, tableNo });
+      await createOrder({ waiterName, tableNo, prepTimeMinutes, entityType: "Table" });
 
       alert("Order sent to kitchen successfully");
       navigate("/kitchen");
@@ -141,6 +142,23 @@ const OrderSummaryPage = ({ tableNo }) => {
           <span>{formatMoney(totals.total)}</span>
         </div>
 
+      </div>
+
+      <div className="mb-4">
+        <label className="mb-2 block text-sm font-semibold text-white">
+          Kitchen ETA
+        </label>
+        <select
+          value={prepTimeMinutes}
+          onChange={(event) => setPrepTimeMinutes(Number(event.target.value))}
+          className="w-full rounded-lg border border-gray-700 bg-slate-800 px-3 py-2 text-white"
+        >
+          {[10, 15, 20, 30, 45, 60].map((minutes) => (
+            <option key={minutes} value={minutes}>
+              {minutes} minutes
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* ACTION */}

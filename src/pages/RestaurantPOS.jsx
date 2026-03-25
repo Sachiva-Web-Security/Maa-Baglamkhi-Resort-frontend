@@ -1,10 +1,7 @@
 import React from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
-  FaBookOpen,
   FaCashRegister,
-  FaExchangeAlt,
-  FaListAlt,
   FaReceipt,
   FaStore,
   FaUtensils,
@@ -14,8 +11,7 @@ const links = [
   { label: "Dashboard", path: "/restaurant", icon: FaStore },
   { label: "Tables", path: "/restaurant", icon: FaUtensils },
   { label: "Payment", path: "/restaurant/payment", icon: FaReceipt },
-  { label: "Recipe Master", path: "/restaurant/recipe-master", icon: FaBookOpen },
-  { label: "Item Consumption", path: "/restaurant/item-consumption", icon: FaListAlt },
+  { label: "Payment Bills", path: "/restaurant/payment-bills", icon: FaCashRegister },
   {
     label: "Daily Roomwise Food Report",
     path: "/restaurant/daily-room-food",
@@ -23,7 +19,6 @@ const links = [
   },
   { label: "Room Items", path: "/restaurant/room-items", icon: FaUtensils },
   { label: "Daywise Food Report", path: "/restaurant/daywise-food", icon: FaReceipt },
-  { label: "Transfer Restaurant Token", path: "/restaurant/transfer-token", icon: FaExchangeAlt },
 ];
 
 const RestaurantPOS = () => {

@@ -63,6 +63,16 @@ const Accounts = () => {
   useEffect(() => {
     fetchRecords();
     fetchSummary();
+
+    const handleAccountsUpdated = () => {
+      fetchRecords();
+      fetchSummary();
+    };
+
+    window.addEventListener("accountsUpdated", handleAccountsUpdated);
+    return () => {
+      window.removeEventListener("accountsUpdated", handleAccountsUpdated);
+    };
   }, []);
 
   const handleAddIncome = async (data) => {

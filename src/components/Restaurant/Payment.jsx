@@ -10,6 +10,8 @@ const Payment = () => {
   const location = useLocation();
   const [submitting, setSubmitting] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("Cash");
+  const [customerName, setCustomerName] = useState(location.state?.customerName || "");
+  const [phone, setPhone] = useState(location.state?.phone || "");
 
   const invoice = location.state || null;
 
@@ -19,7 +21,7 @@ const Payment = () => {
     location.state?.type ||
     "Table";
 
-  const [selectedItemIndex, setSelectedItemIndex] = useState(0);
+  const [selectedItemIndex] = useState(0);
 
   const selectedItem = useMemo(() => {
     if (!invoice?.items?.length) return null;
@@ -66,6 +68,8 @@ const Payment = () => {
     <hr/>
     <div>Date : ${invoice.date}</div>
     <div>${entityType} : ${invoice.table}</div>
+    <div>Customer : ${customerName || invoice.customerName || "Walk-in Customer"}</div>
+    <div>Phone : ${phone || "--"}</div>
     <div class="pill" style="margin-top:4px;">Payment Method: ${paymentMethod}</div>
     <hr/>
     <table>
@@ -117,6 +121,8 @@ const Payment = () => {
 
       const billResponse = await API.post("/restaurant/bill", {
         table: invoice.table,
+        customerName: customerName || invoice.customerName || "",
+        phone: phone || invoice.phone || "",
         subtotal: Number(invoice.subtotal || 0),
         gst: Number(invoice.gst || 0),
         total: Number(invoice.total || 0),
@@ -160,6 +166,31 @@ const Payment = () => {
     }
   };
 
+  const handleGenerateBill = async () => {
+    try {
+      setSubmitting(true);
+
+      await API.post("/restaurant/bill", {
+        table: invoice.table,
+        customerName: customerName || invoice.customerName || "",
+        phone: phone || invoice.phone || "",
+        subtotal: Number(invoice.subtotal || 0),
+        gst: Number(invoice.gst || 0),
+        total: Number(invoice.total || 0),
+        paymentMethod,
+        invoiceStatus: "Generated",
+        entityType,
+      });
+
+      alert("Bill generated successfully!");
+      navigate("/restaurant/payment-bills");
+    } catch (error) {
+      alert(error.response?.data?.message || "Bill generate nahi ho paaya.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#1a243a_0%,#24324b_100%)] p-4 sm:p-6">
       <div className="mx-auto max-w-[1380px] space-y-6">
@@ -179,65 +210,8 @@ const Payment = () => {
           </div>
         </section>
 
-        <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-          <div className="rounded-[26px] border border-slate-200/70 bg-white/95 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.1)]">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-4">
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-sky-700">Order Rows</p>
-                <h2 className="mt-2 text-2xl font-black text-slate-900">All items row-wise</h2>
-              </div>
-              {invoice.date ? (
-                <div className="rounded-full bg-slate-100 px-4 py-2 text-xs font-bold text-slate-600">
-                  {invoice.date.substring(0, 10)}
-                </div>
-              ) : null}
-            </div>
-
-            <div className="mt-5 overflow-hidden rounded-[22px] border border-slate-200">
-              <div className="grid grid-cols-[64px_minmax(0,1.4fr)_100px_110px_120px] bg-slate-100 px-4 py-3 text-xs font-bold uppercase tracking-[0.16em] text-slate-600">
-                <div>No.</div>
-                <div>Item</div>
-                <div className="text-center">Qty</div>
-                <div className="text-center">Rate</div>
-                <div className="text-center">Amount</div>
-              </div>
-
-              <div className="max-h-[620px] overflow-auto">
-                {invoice.items?.map((item, index) => {
-                  const isActive = selectedItemIndex === index;
-                  return (
-                    <button
-                      key={`${item.id || item.name}-${index}`}
-                      type="button"
-                      onClick={() => setSelectedItemIndex(index)}
-                      className={`grid w-full grid-cols-[64px_minmax(0,1.4fr)_100px_110px_120px] items-center gap-2 border-t border-slate-100 px-4 py-4 text-left transition ${
-                        isActive
-                          ? "bg-[linear-gradient(90deg,#eff6ff_0%,#ffffff_100%)]"
-                          : "bg-white hover:bg-slate-50"
-                      }`}
-                    >
-                      <div className={`text-sm font-black ${isActive ? "text-blue-700" : "text-slate-600"}`}>
-                        {index + 1}
-                      </div>
-                      <div>
-                        <div className="text-sm font-black text-slate-900">{item.name}</div>
-                        <div className="mt-1 text-xs text-slate-500">
-                          Click to open payment card
-                        </div>
-                      </div>
-                      <div className="text-center font-semibold text-slate-700">{item.qty}</div>
-                      <div className="text-center font-semibold text-slate-700">{formatCurrency(item.rate)}</div>
-                      <div className="text-center font-bold text-slate-900">
-                        {formatCurrency(Number(item.qty || 0) * Number(item.rate || 0))}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-5">
+        <section className="flex justify-center">
+          <div className="w-full max-w-[420px]">
             <div className="rounded-[28px] border border-slate-200/70 bg-white/95 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.1)]">
               <div className="flex items-center justify-between gap-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
                 <span>Secure Payment</span>
@@ -306,6 +280,26 @@ const Payment = () => {
               </div>
 
               <div className="mt-5 rounded-[22px] border border-slate-200 bg-white p-4">
+                <div className="text-sm font-semibold text-slate-700">Customer Details</div>
+                <div className="mt-3 space-y-3">
+                  <input
+                    type="text"
+                    value={customerName}
+                    onChange={(event) => setCustomerName(event.target.value)}
+                    placeholder="Customer Name"
+                    className="w-full rounded-xl border border-slate-200 px-3 py-3 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(event) => setPhone(event.target.value)}
+                    placeholder="Phone Number"
+                    className="w-full rounded-xl border border-slate-200 px-3 py-3 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div className="mt-5 rounded-[22px] border border-slate-200 bg-white p-4">
                 <div className="text-sm font-semibold text-slate-700">Payment Method</div>
                 <select
                   value={paymentMethod}
@@ -331,6 +325,13 @@ const Payment = () => {
                   className="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 px-4 py-3 font-semibold text-white shadow-lg disabled:opacity-60"
                 >
                   {submitting ? "Processing..." : "Pay Now"}
+                </button>
+                <button
+                  onClick={handleGenerateBill}
+                  disabled={submitting}
+                  className="w-full rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-3 font-semibold text-white shadow-lg disabled:opacity-60"
+                >
+                  {submitting ? "Processing..." : "Generate Bill"}
                 </button>
                 <button
                   onClick={handlePrint}
