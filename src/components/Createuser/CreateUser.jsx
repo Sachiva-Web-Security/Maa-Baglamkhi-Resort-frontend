@@ -13,39 +13,55 @@ const CreateUser = ({ onClose, onUserCreated }) => {
     password: "",
     role: "Staff",
   });
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e) => {
+    setError("");
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+    setIsSubmitting(true);
 
     try {
-      const res = await API.post("/users", form);
-      window.alert(res.data.message);
+      const res = await API.post("/users", form, { skipAuthRedirect: true });
 
       const existing = JSON.parse(localStorage.getItem("users")) || [];
-      const localUser = {
+      const createdUser = res.data?.user || {
         id: Date.now(),
         name: form.name,
         email: form.email,
         role: form.role.toLowerCase(),
       };
 
-      localStorage.setItem("users", JSON.stringify([...existing, localUser]));
+      const dedupedUsers = existing.filter(
+        (item) => String(item.email || "").toLowerCase() !== String(createdUser.email || "").toLowerCase()
+      );
+      localStorage.setItem("users", JSON.stringify([...dedupedUsers, createdUser]));
 
       if (onUserCreated) {
-        onUserCreated(localUser);
+        onUserCreated(createdUser);
       }
 
       if (onClose) {
         onClose();
       }
-    }catch (error) {
-  console.log(error);
-  window.alert(error.response?.data?.message || "Error creating user");
-}
+    } catch (error) {
+      console.log(error);
+      const status = error.response?.status;
+      if (status === 401) {
+        setError("Session expire ho gayi hai ya token missing hai. Login page par bina bheje create action roka gaya hai.");
+      } else if (status === 403) {
+        setError("Sirf admin user naya account create kar sakta hai.");
+      } else {
+        setError(error.response?.data?.message || "Error creating user");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -119,12 +135,19 @@ const CreateUser = ({ onClose, onUserCreated }) => {
             <option value="Kitchen">Kitchen</option>
           </select>
 
+          {error ? (
+            <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+              {error}
+            </div>
+          ) : null}
+
           <button
             type="submit"
+            disabled={isSubmitting}
             className="inline-flex w-full items-center justify-center gap-2 rounded-[22px] bg-gradient-to-r from-sky-600 to-cyan-500 px-5 py-4 text-sm font-bold text-white shadow-[0_16px_35px_rgba(14,165,233,0.24)] transition hover:-translate-y-0.5"
           >
             <FaUserPlus />
-            Create User
+            {isSubmitting ? "Creating..." : "Create User"}
           </button>
         </form>
       </div>

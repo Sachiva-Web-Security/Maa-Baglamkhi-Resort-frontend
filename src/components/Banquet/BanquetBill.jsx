@@ -99,8 +99,8 @@ const BanquetBill = ({
 
       </div>
 
-      <div className="overflow-hidden rounded-3xl border border-slate-200">
-      <table className="w-full">
+      <div className="overflow-x-auto rounded-3xl border border-slate-200">
+      <table className="min-w-[540px] w-full">
 
         <thead className="bg-gray-100">
           <tr>
