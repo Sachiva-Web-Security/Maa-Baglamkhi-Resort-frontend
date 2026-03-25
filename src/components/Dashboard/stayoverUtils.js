@@ -146,6 +146,8 @@ export const getBookingContact = (booking) =>
 export const roomSort = (left, right) =>
   String(left).localeCompare(String(right), undefined, { numeric: true });
 
+export const normalizeRoomKey = (value) => String(value || "").trim().toLowerCase();
+
 const toRoomList = (value) =>
   String(value || "")
     .split(",")
@@ -177,7 +179,7 @@ export const normalizeRooms = (rawRooms) => {
 
   const deduped = new Map();
   normalized.forEach((room) => {
-    const key = String(room.roomNumber || room.roomNo || room.roomId || "").trim().toLowerCase();
+    const key = normalizeRoomKey(room.roomNumber || room.roomNo || room.roomId || "");
     if (!key) return;
     deduped.set(key, room);
   });
@@ -204,6 +206,22 @@ export const expandBookings = (rawBookings) =>
       remainingAmount: booking.remainingAmount || 0,
     })),
   );
+
+export const normalizeBookingPreview = (booking) => ({
+  ...booking,
+  bookingId: booking?.bookingId || booking?.id || "",
+  bookingCode: booking?.bookingCode || booking?.booking_code || "",
+  guestName: booking?.guestName || booking?.guest_name || booking?.guest || "Walk-in Guest",
+  mobile: getBookingContact(booking) || booking?.mobile || "-",
+  company: booking?.company || booking?.company_name || booking?.companyName || "Direct",
+  bookingStatus: booking?.bookingStatus || booking?.booking_status || "",
+  checkIn: formatDateKey(booking?.checkIn || booking?.check_in || ""),
+  checkOut: formatDateKey(booking?.checkOut || booking?.check_out || ""),
+  totalAmount: booking?.totalAmount || 0,
+  paidAmount: booking?.paidAmount || 0,
+  discountAmount: booking?.discountAmount || 0,
+  remainingAmount: booking?.remainingAmount || 0,
+});
 
 export const mergeBookingsWithRooms = (bookings, rooms) => {
   const seen = new Set(
@@ -238,7 +256,7 @@ export const mergeBookingsWithRooms = (bookings, rooms) => {
 };
 
 export const getBookingTimelineStatus = (booking, date, today) => {
-  if (!booking.checkIn || !booking.checkOut || date < booking.checkIn || date >= booking.checkOut) {
+  if (!booking.checkIn || !booking.checkOut || date < booking.checkIn || date > booking.checkOut) {
     return "available";
   }
 
@@ -271,7 +289,7 @@ export const getBookingBoardBucket = (booking, date) => {
     return "pencil";
   }
 
-  if (!booking.checkIn || !booking.checkOut || date >= booking.checkOut) {
+  if (!booking.checkIn || !booking.checkOut || date > booking.checkOut) {
     return null;
   }
 
@@ -281,17 +299,17 @@ export const getBookingBoardBucket = (booking, date) => {
     bookingStatus.includes("occupied") ||
     bookingStatus.includes("in house")
   ) {
-    return date < booking.checkIn ? "confirmed" : "checked_in";
+    return "confirmed";
   }
   if (
     bookingStatus.includes("confirmed") ||
     bookingStatus.includes("booked") ||
     bookingStatus.includes("reserved")
   ) {
-    return date > booking.checkIn ? "checked_in" : "confirmed";
+    return "confirmed";
   }
   if (date < booking.checkIn) return "confirmed";
-  if (date > booking.checkIn && date < booking.checkOut) return "checked_in";
+  if (date >= booking.checkIn && date <= booking.checkOut) return "confirmed";
   return "confirmed";
 };
 
@@ -304,8 +322,19 @@ export const getBookingStatusLabel = (booking) => {
 };
 
 export const getRoomBookingForDate = (roomNumber, date, mergedBookings, includeUpcoming = true) => {
+  const roomKey = normalizeRoomKey(roomNumber);
   const roomBookings = mergedBookings
-    .filter((booking) => String(booking.roomNumber) === String(roomNumber))
+    .filter((booking) => {
+      const bookingKeys = [
+        booking.roomNumber,
+        booking.roomNo,
+        ...(Array.isArray(booking.rooms) ? booking.rooms : toRoomList(booking.rooms)),
+      ]
+        .map((item) => normalizeRoomKey(item))
+        .filter(Boolean);
+
+      return bookingKeys.includes(roomKey);
+    })
     .sort((left, right) => {
       const leftStart = left.checkIn || "9999-12-31";
       const rightStart = right.checkIn || "9999-12-31";
@@ -319,7 +348,7 @@ export const getRoomBookingForDate = (roomNumber, date, mergedBookings, includeU
     if (!booking.checkIn || !booking.checkOut) return false;
     const checkIn = new Date(booking.checkIn);
     const checkOut = new Date(booking.checkOut);
-    return currentDate >= checkIn && currentDate < checkOut;
+    return currentDate >= checkIn && currentDate <= checkOut;
   });
 
   if (activeBooking) return activeBooking;
@@ -342,8 +371,19 @@ export const getRoomBookingForDate = (roomNumber, date, mergedBookings, includeU
 };
 
 export const getRoomBookingReference = (roomNumber, date, mergedBookings) => {
+  const roomKey = normalizeRoomKey(roomNumber);
   const roomBookings = mergedBookings
-    .filter((booking) => String(booking.roomNumber) === String(roomNumber))
+    .filter((booking) => {
+      const bookingKeys = [
+        booking.roomNumber,
+        booking.roomNo,
+        ...(Array.isArray(booking.rooms) ? booking.rooms : toRoomList(booking.rooms)),
+      ]
+        .map((item) => normalizeRoomKey(item))
+        .filter(Boolean);
+
+      return bookingKeys.includes(roomKey);
+    })
     .sort((left, right) => {
       const leftStart = left.checkIn || "9999-12-31";
       const rightStart = right.checkIn || "9999-12-31";
@@ -391,6 +431,45 @@ export const buildDailyBoard = (rooms, mergedBookings, date, today) => {
   rooms.forEach((room) => {
     if (room.status === "blocked") return;
 
+    const booking = getRoomBookingForDate(room.roomNumber, date, mergedBookings, !isHistoricalDate);
+    if (booking) {
+      const bucket = getBookingBoardBucket(booking, date);
+      if (!bucket) return;
+
+      buckets[bucket].push({
+        id: `${bucket}-${booking.bookingId}-${room.roomNumber}-${date}`,
+        roomId: room.roomId,
+        roomNumber: room.roomNumber,
+        room: room.roomNumber,
+        roomType: room.categoryName,
+        title: booking.guestName,
+        subtitle: `${booking.mobile} | ${booking.company}`,
+        booking,
+        roomData: room,
+        statusLabel: bucket === "pencil" ? getBookingStatusLabel(booking) : "",
+      });
+      return;
+    }
+
+    const fallbackBooking = getRoomBookingReference(room.roomNumber, date, mergedBookings);
+    const roomStatus = String(room.status || "").toLowerCase();
+
+    if (fallbackBooking && ["occupied", "reserved", "check_in_confirmed"].includes(roomStatus)) {
+      buckets.confirmed.push({
+        id: `confirmed-fallback-${fallbackBooking.bookingId || room.roomNumber}-${date}`,
+        roomId: room.roomId,
+        roomNumber: room.roomNumber,
+        room: room.roomNumber,
+        roomType: room.categoryName,
+        title: fallbackBooking.guestName || room.categoryName,
+        subtitle: `${fallbackBooking.mobile || "-"} | ${fallbackBooking.company || "Direct"}`,
+        booking: fallbackBooking,
+        roomData: room,
+        statusLabel: String(fallbackBooking.bookingStatus || "").trim() || "Confirmed",
+      });
+      return;
+    }
+
     if (room.status === "cleaning") {
       if (isHistoricalDate) return;
 
@@ -407,38 +486,17 @@ export const buildDailyBoard = (rooms, mergedBookings, date, today) => {
       return;
     }
 
-    const booking = getRoomBookingForDate(room.roomNumber, date, mergedBookings, !isHistoricalDate);
+    if (isHistoricalDate || roomStatus !== "available") return;
 
-    if (!booking) {
-      if (isHistoricalDate) return;
-
-      buckets.available.push({
-        id: `available-${room.id}`,
-        roomId: room.roomId,
-        roomNumber: room.roomNumber,
-        room: room.roomNumber,
-        roomType: room.categoryName,
-        title: room.categoryName,
-        subtitle: room.status === "cleaning" ? "Cleaning" : "Ready to sell",
-        roomData: room,
-      });
-      return;
-    }
-
-    const bucket = getBookingBoardBucket(booking, date);
-    if (!bucket) return;
-
-    buckets[bucket].push({
-      id: `${bucket}-${booking.bookingId}-${room.roomNumber}-${date}`,
+    buckets.available.push({
+      id: `available-${room.id}`,
       roomId: room.roomId,
       roomNumber: room.roomNumber,
       room: room.roomNumber,
       roomType: room.categoryName,
-      title: booking.guestName,
-      subtitle: `${booking.mobile} | ${booking.company}`,
-      booking,
+      title: room.categoryName,
+      subtitle: "Ready to sell",
       roomData: room,
-      statusLabel: bucket === "pencil" ? getBookingStatusLabel(booking) : "",
     });
   });
 

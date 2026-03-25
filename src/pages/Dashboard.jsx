@@ -42,8 +42,10 @@ import {
   formatDateLabel,
   formatCurrency,
   getBookingContact,
+  getRoomBookingReference,
   formatShortDate,
   mergeBookingsWithRooms,
+  normalizeBookingPreview,
   normalizeRooms,
   todayISO,
 } from "../components/Dashboard/stayoverUtils";
@@ -534,12 +536,10 @@ const Dashboard = () => {
       item?.roomData?.housekeepingLabel ||
       "Room";
 
-    const booking = item.booking
-      ? {
-          ...item.booking,
-          mobile: getBookingContact(item.booking) || item.booking.mobile || "-",
-        }
-      : null;
+    const fallbackBooking =
+      item?.booking || getRoomBookingReference(roomNumber, selectedDate || todayISO(), mergedBookings);
+
+    const booking = fallbackBooking ? normalizeBookingPreview(fallbackBooking) : null;
 
     setSelectedRoom({
       ...item,
@@ -558,13 +558,7 @@ const Dashboard = () => {
     API.get(`/hotel/full-booking/${bookingId}`)
       .then((response) => {
         const fullBooking = response?.data || {};
-        const resolvedMobile = getBookingContact(fullBooking) || booking?.mobile || fullBooking.mobile || "-";
-        const resolvedGuestName =
-          fullBooking.guest_name ||
-          fullBooking.guestName ||
-          booking?.guestName ||
-          fullBooking.guest ||
-          "Walk-in Guest";
+        const normalizedFullBooking = normalizeBookingPreview(fullBooking);
 
         setSelectedRoom((current) =>
           current && String(current.booking?.bookingId) === String(bookingId)
@@ -572,9 +566,7 @@ const Dashboard = () => {
                 ...current,
                 booking: {
                   ...current.booking,
-                  ...fullBooking,
-                  guestName: resolvedGuestName,
-                  mobile: resolvedMobile,
+                  ...normalizedFullBooking,
                 },
               }
             : current,
@@ -655,6 +647,49 @@ const Dashboard = () => {
       toast.error("Housekeeping assignment save nahi ho paaya.");
     } finally {
       setAssigningCleaning(false);
+    }
+  };
+
+  const handleBlockedRoom = async (mode) => {
+    const roomNumber = selectedRoom?.roomNumber;
+    if (!roomNumber) {
+      alert("Room number missing hai.");
+      return;
+    }
+
+    try {
+      if (mode === "block") {
+        const blockReason = window.prompt("Block reason likhiye", selectedRoom?.roomData?.blockReason || "Maintenance");
+        if (blockReason === null) return;
+        const blockFrom = window.prompt("Block from date (YYYY-MM-DD)", selectedDate || todayISO());
+        if (blockFrom === null) return;
+        const blockTo = window.prompt(
+          "Block to date (YYYY-MM-DD)",
+          selectedRoom?.roomData?.blockTo || blockFrom || selectedDate || todayISO(),
+        );
+        if (blockTo === null) return;
+        const blockNotes = window.prompt("Notes", selectedRoom?.roomData?.blockNotes || "") ?? "";
+
+        await API.put(`/hotel/rooms/state/${roomNumber}`, {
+          status: "Blocked",
+          blockReason,
+          blockFrom,
+          blockTo,
+          blockNotes,
+          blockedBy: "Front Desk",
+        });
+      } else {
+        await API.put(`/hotel/rooms/state/${roomNumber}`, {
+          status: "Available",
+        });
+      }
+
+      await loadDashboardData();
+      setSelectedRoom(null);
+      toast.success(mode === "block" ? "Room blocked successfully." : "Room unblocked successfully.");
+    } catch (error) {
+      console.error(error);
+      toast.error(mode === "block" ? "Room block nahi ho paaya." : "Room unblock nahi ho paaya.");
     }
   };
 
@@ -1048,9 +1083,14 @@ const Dashboard = () => {
                                                             </span>
                                                           </div>
                                                         ) : null}
-                                                        <div className="font-black text-orange-900">Room {item.roomNumber}</div>
+                                                        <div className="font-black text-orange-900">
+                                                          {item.booking?.guestName || `Room ${item.roomNumber}`}
+                                                        </div>
                                                         <div className="mt-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-orange-700">
-                                                          ID {item.roomId || "--"}
+                                                          Room {item.roomNumber} | ID {item.roomId || "--"}
+                                                        </div>
+                                                        <div className="mt-1 text-[11px] text-orange-800">
+                                                          {item.booking?.mobile || item.subtitle || "Confirmed booking"}
                                                         </div>
                                                       </button>
                                                     ))
@@ -1216,9 +1256,14 @@ const Dashboard = () => {
                                                             </span>
                                                           </div>
                                                         ) : null}
-                                                        <div className="font-black text-amber-900">Room {item.roomNumber}</div>
+                                                        <div className="font-black text-amber-900">
+                                                          {item.booking?.guestName || `Room ${item.roomNumber}`}
+                                                        </div>
                                                         <div className="mt-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-amber-700">
-                                                          ID {item.roomId || "--"}
+                                                          Room {item.roomNumber} | ID {item.roomId || "--"}
+                                                        </div>
+                                                        <div className="mt-1 text-[11px] text-amber-800">
+                                                          {item.booking?.mobile || item.statusLabel || "Awaiting confirmation"}
                                                         </div>
                                                       </button>
                                                     ))
@@ -1815,6 +1860,24 @@ const Dashboard = () => {
                     <span>Company</span>
                     <span className="font-semibold text-slate-900">{selectedRoom.booking?.company || "--"}</span>
                   </div>
+                  {String(selectedRoom.roomData?.hotelStatus || selectedRoom.roomData?.status || "").toLowerCase().includes("block") ? (
+                    <>
+                      <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2">
+                        <span>Block Reason</span>
+                        <span className="font-semibold text-slate-900">{selectedRoom.roomData?.blockReason || "--"}</span>
+                      </div>
+                      <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2">
+                        <span>Block Dates</span>
+                        <span className="font-semibold text-slate-900">
+                          {selectedRoom.roomData?.blockFrom || "--"} to {selectedRoom.roomData?.blockTo || "--"}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2">
+                        <span>Blocked By</span>
+                        <span className="font-semibold text-slate-900">{selectedRoom.roomData?.blockedBy || "Front Desk"}</span>
+                      </div>
+                    </>
+                  ) : null}
                 </div>
               </div>
 
@@ -1965,6 +2028,21 @@ const Dashboard = () => {
                   className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                 >
                   Book / Update Room
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleBlockedRoom(
+                      String(selectedRoom.roomData?.hotelStatus || selectedRoom.roomData?.status || "").toLowerCase().includes("block")
+                        ? "unblock"
+                        : "block",
+                    )
+                  }
+                  className="rounded-xl bg-slate-700 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+                >
+                  {String(selectedRoom.roomData?.hotelStatus || selectedRoom.roomData?.status || "").toLowerCase().includes("block")
+                    ? "Unblock Room"
+                    : "Block Room"}
                 </button>
               </div>
             </div>

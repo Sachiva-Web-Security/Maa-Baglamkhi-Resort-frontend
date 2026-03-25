@@ -41,6 +41,7 @@ const Room = () => {
   const [priceInputs, setPriceInputs] = useState(roomDraft.priceInputs || {});
   const [pickerValues, setPickerValues] = useState(roomDraft.pickerValues || {});
   const [activeBookings, setActiveBookings] = useState([]);
+  const [blockedRooms, setBlockedRooms] = useState(new Set());
 
   useEffect(() => {
     if (bookingId) {
@@ -138,6 +139,34 @@ const Room = () => {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
+
+    const loadBlockedRooms = async () => {
+      try {
+        const response = await API.get("/housekeeping");
+        const blocked = new Set(
+          (Array.isArray(response.data) ? response.data : [])
+            .filter((room) => String(room.hotelStatus || room.status || "").toLowerCase().includes("block"))
+            .map((room) => String(room.roomNo || room.roomNumber || "").trim().toLowerCase())
+            .filter(Boolean),
+        );
+
+        if (!cancelled) {
+          setBlockedRooms(blocked);
+        }
+      } catch (error) {
+        console.error("Failed to load blocked rooms", error);
+      }
+    };
+
+    loadBlockedRooms();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
     setBookingDraft("room", {
       activeRoom,
       selectedRooms,
@@ -171,9 +200,10 @@ const Room = () => {
   }, [activeBookings]);
 
   const isRoomBooked = (value) => bookedRoomNumbers.has(String(value || "").trim().toLowerCase());
+  const isRoomBlocked = (value) => blockedRooms.has(String(value || "").trim().toLowerCase());
 
   const getAvailableRoomsForType = (roomId) =>
-    (roomOptions[roomId] || []).filter((item) => !isRoomBooked(item));
+    (roomOptions[roomId] || []).filter((item) => !isRoomBooked(item) && !isRoomBlocked(item));
 
   const handleAvailability = (index) => {
     setActiveRoom(activeRoom === index ? null : index);
@@ -198,6 +228,11 @@ const Room = () => {
 
     if (isRoomBooked(value)) {
       alert(`Room no ${value} already booked hai. Checkout ke baad hi dobara select hoga.`);
+      return;
+    }
+
+    if (isRoomBlocked(value)) {
+      alert(`Room no ${value} blocked hai. Isko abhi sell nahi kar sakte.`);
       return;
     }
 
@@ -246,6 +281,11 @@ const Room = () => {
   const handleSelect = (roomId, value) => {
     if (isRoomBooked(value)) {
       alert(`Room no ${value} already booked hai.`);
+      return;
+    }
+
+    if (isRoomBlocked(value)) {
+      alert(`Room no ${value} blocked hai.`);
       return;
     }
 

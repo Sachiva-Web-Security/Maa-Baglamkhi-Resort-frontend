@@ -1,17 +1,27 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import API from "../../api";
+
+const ACTIVE_INVOICE_KEY = "restaurant-active-invoice";
+const SAVED_INVOICE_KEY = "restaurant-saved-invoice";
 
 const EditToken = () => {
   const { table } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const entityType = location.state?.entityType || "Table";
+  const entityType = location.state?.entityType || localStorage.getItem(`entityType:${table}`) || "Table";
   const roomData = location.state?.roomData || null;
 
   const [tokenId, setTokenId] = useState(null);
   const [items, setItems] = useState([]);
+  const [kitchenOrder, setKitchenOrder] = useState(null);
   const [loading, setLoading] = useState(true);
+  const readySound = useRef(null);
+  const lastReadyKey = useRef("");
+
+  useEffect(() => {
+    readySound.current = new Audio("/order.mp3");
+  }, []);
 
   useEffect(() => {
     const loadTokenItems = async () => {
@@ -38,6 +48,51 @@ const EditToken = () => {
 
     loadTokenItems();
   }, [table]);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadKitchenOrder = async () => {
+      try {
+        const response = await API.get("/kitchen/orders");
+        const rows = Array.isArray(response.data) ? response.data : [];
+        const match = rows.find((order) => {
+          const orderRef = String(order.table || order.table_number || order.table_no || "");
+          const orderEntityType = String(order.entityType || "").trim() || "Table";
+          return (
+            orderRef === String(table) &&
+            orderEntityType.toLowerCase() === String(entityType).toLowerCase() &&
+            String(order.status || "").toLowerCase() !== "cancelled"
+          );
+        });
+
+        if (!active) return;
+
+        setKitchenOrder(match || null);
+
+        if (match && String(match.status || "").toLowerCase() === "ready") {
+          const readyKey = `${match.id}:${match.readyAt || match.expectedReadyAt || "ready"}`;
+          if (lastReadyKey.current !== readyKey) {
+            lastReadyKey.current = readyKey;
+            readySound.current?.play().catch(() => {});
+          }
+        }
+      } catch (error) {
+        if (active) {
+          console.log("Kitchen status load failed:", error);
+          setKitchenOrder(null);
+        }
+      }
+    };
+
+    loadKitchenOrder();
+    const interval = setInterval(loadKitchenOrder, 4000);
+
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
+  }, [entityType, table]);
 
   const handleChange = (id, field, value) => {
     setItems((current) =>
@@ -86,23 +141,26 @@ const EditToken = () => {
   };
 
   const handleInvoice = () => {
-    navigate("/restaurant/payment", {
-      state: {
-        table,
-        tokenId,
-        items: items.map((item) => ({
-          id: item.id,
-          name: item.item_name,
-          qty: Number(item.qty),
-          rate: Number(item.rate),
-        })),
-        subtotal,
-        gst: tax,
-        total,
-        date: new Date().toISOString(),
-        entityType,
-      },
-    });
+    const invoicePayload = {
+      table,
+      tokenId,
+      items: items.map((item) => ({
+        id: item.id,
+        name: item.item_name,
+        qty: Number(item.qty),
+        rate: Number(item.rate),
+      })),
+      subtotal,
+      gst: tax,
+      total,
+      date: new Date().toISOString(),
+      entityType,
+      roomData,
+    };
+
+    localStorage.setItem(ACTIVE_INVOICE_KEY, JSON.stringify(invoicePayload));
+    localStorage.setItem(SAVED_INVOICE_KEY, JSON.stringify(invoicePayload));
+    navigate("/restaurant/payment", { state: invoicePayload });
   };
 
   if (loading) {
@@ -150,6 +208,33 @@ const EditToken = () => {
             {roomData ? (
               <div className="mt-4 rounded-[18px] bg-[linear-gradient(135deg,#eff6ff_0%,#f8fafc_100%)] px-4 py-4 text-sm text-slate-700">
                 Room {table} | {roomData.categoryName || "Room"} | ID {roomData.roomId || "--"}
+              </div>
+            ) : null}
+
+            {kitchenOrder ? (
+              <div
+                className={`mt-4 rounded-[18px] border px-4 py-4 text-sm ${
+                  String(kitchenOrder.status || "").toLowerCase() === "ready"
+                    ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                    : "border-amber-200 bg-amber-50 text-amber-800"
+                }`}
+              >
+                <div className="text-[11px] font-semibold uppercase tracking-[0.18em]">
+                  Kitchen Status
+                </div>
+                <div className="mt-2 text-lg font-black">
+                  {kitchenOrder.status || "Pending"}
+                </div>
+                <div className="mt-1">
+                  {String(kitchenOrder.status || "").toLowerCase() === "ready"
+                    ? kitchenOrder.readyMessage || `${entityType} ${table} order ready hai.`
+                    : `ETA ${kitchenOrder.prepTimeMinutes || 20} min | Ready by ${new Date(
+                        kitchenOrder.expectedReadyAt || Date.now(),
+                      ).toLocaleTimeString("en-IN", {
+                        hour: "numeric",
+                        minute: "2-digit",
+                      })}`}
+                </div>
               </div>
             ) : null}
 
@@ -234,6 +319,7 @@ const EditToken = () => {
                 </button>
                 <button
                   onClick={handleInvoice}
+                  disabled={!items.length}
                   className="rounded-[18px] bg-blue-600 px-4 py-3 text-sm font-bold text-white"
                 >
                   Create Invoice

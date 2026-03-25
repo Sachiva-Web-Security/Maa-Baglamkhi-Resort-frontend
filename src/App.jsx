@@ -36,17 +36,16 @@ import RestaurantPOS from "./pages/RestaurantPOS";
 import TablePage from "./components/Restaurant/TablePage";
 import MenuPage from "./components/Restaurant/MenuPage";
 import Payment from "./components/Restaurant/Payment";
+import PaymentBills from "./components/Restaurant/PaymentBills";
 import TokenPage from "./components/Restaurant/TokenPage";
 import EditToken from "./components/Restaurant/EditToken";
 import TokenItemsPage from "./components/Restaurant/TokenItempage";
 import Roomitem from "./components/Restaurant/Roomitem";
 
-/* ================= REPORTS ================= */
+/* ================= RESTAURANT REPORTS ================= */
 import DailyfoodReport from "./components/Restaurant/DailyfoodReport";
 import Daywisefood from "./components/Restaurant/Daywisefood";
-import SettlementReport from "./components/Restaurant/SettlementReport";
-import ItemConsumption from "./components/Restaurant/ItemConsumption";
-import RecipeMaster from "./components/Restaurant/RecipeMaster";
+import AddMenuItemPage from "./components/Restaurant/AddMenuItemPage";
 import Stayover from "./components/Dashboard/Stayover";
 
 /* ================= ACCOUNT REPORTS ================= */
@@ -59,11 +58,28 @@ import AuditReport from "./pages/reports/AuditReport";
 /* ================= CONTEXT ================= */
 import { RestaurantProvider } from "./Context/RestaurantContext";
 
+// ─── Role Sets ────────────────────────────────────────────────────────────────
+// Define once here — easy to update in one place
+const ROLES = {
+  ALL: ["admin", "manager", "receptionist", "waiter", "kitchen", "housekeeping", "accountant", "staff"],
+  ADMIN_ONLY: ["admin"],
+  ADMIN_MANAGER: ["admin", "manager", "staff"],
+  HOTEL: ["admin", "manager", "receptionist", "staff"],
+  RESTAURANT: ["admin", "manager", "waiter", "kitchen", "staff"],
+  KITCHEN: ["admin", "manager", "kitchen", "staff"],
+  ACCOUNTS: ["admin", "manager", "accountant"],
+  INVENTORY: ["admin", "manager", "kitchen", "staff"],
+  HOUSEKEEPING: ["admin", "manager", "housekeeping", "staff"],
+  BANQUET: ["admin", "manager", "receptionist", "staff"],
+  REPORTS: ["admin", "manager", "accountant"],
+  ASSIGNMENTS: ["admin", "manager", "housekeeping", "staff"],
+};
+
 /* ================= LAYOUT ================= */
 function Layout({ children, setIsAuthenticated }) {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const sidebarWidth = sidebarOpen ? 250 : 88;
+  const sidebarWidth = isMobile ? 0 : sidebarOpen ? 250 : 88;
 
   useEffect(() => {
     const handleResize = () => {
@@ -71,30 +87,27 @@ function Layout({ children, setIsAuthenticated }) {
       setIsMobile(mobile);
       if (mobile) setSidebarOpen(false);
     };
-
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   return (
-    <div className="min-h-screen w-screen overflow-hidden">
+    <div className="min-h-screen w-full overflow-x-hidden bg-slate-50">
       <Sidebar
         isMobile={isMobile}
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
       />
-
       <div
-        className="flex flex-col h-screen transition-all duration-300"
+        className="flex min-h-screen flex-col transition-all duration-300"
         style={{
-          marginLeft: sidebarWidth,
-          width: `calc(100vw - ${sidebarWidth}px)`,
+          marginLeft: isMobile ? 0 : sidebarWidth,
+          width: isMobile ? "100%" : `calc(100% - ${sidebarWidth}px)`,
         }}
       >
         <Header setIsAuthenticated={setIsAuthenticated} />
-
-        <div className="flex-1 overflow-y-auto mt-[70px]">
-          <div className="p-4">{children}</div>
+        <div className="flex-1 overflow-y-auto pt-[70px]">
+          <div className="p-3 sm:p-4 lg:p-5">{children}</div>
         </div>
       </div>
     </div>
@@ -107,69 +120,61 @@ function App() {
     Boolean(localStorage.getItem("token"))
   );
 
+  // Helper: wrap a page in Layout + ProtectedRoute together
+  const protect = (element, roles) => (
+    <ProtectedRoute allowedRoles={roles}>
+      <Layout setIsAuthenticated={setIsAuthenticated}>
+        {element}
+      </Layout>
+    </ProtectedRoute>
+  );
+
   return (
     <Router>
       <Routes>
 
-        {/* AUTH */}
+        {/* ── AUTH ──────────────────────────────────────── */}
         <Route
           path="/login"
           element={
-            isAuthenticated ? (
-              <Navigate to="/dashboard" replace />
-            ) : (
-              <Login setIsAuthenticated={setIsAuthenticated} />
-            )
+            isAuthenticated
+              ? <Navigate to="/dashboard" replace />
+              : <Login setIsAuthenticated={setIsAuthenticated} />
           }
         />
-
         <Route
           path="/register"
           element={isAuthenticated ? <Navigate to="/dashboard" /> : <Register />}
         />
-
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
-        {/* DASHBOARD */}
+        {/* ── DASHBOARD — all authenticated roles ───────── */}
         <Route
           path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Layout setIsAuthenticated={setIsAuthenticated}>
-                <Dashboard />
-              </Layout>
-            </ProtectedRoute>
-          }
+          element={protect(<Dashboard />, ROLES.ALL)}
         />
-
         <Route
           path="/stayover"
-          element={
-            <ProtectedRoute>
-              <Layout setIsAuthenticated={setIsAuthenticated}>
-                <Stayover />
-              </Layout>
-            </ProtectedRoute>
-          }
+          element={protect(<Stayover />, ROLES.ALL)}
         />
 
-        {/* HOTEL */}
+        {/* ── PROFILE — all authenticated roles ─────────── */}
+        <Route
+          path="/profile"
+          element={protect(<Profile />, ROLES.ALL)}
+        />
+
+        {/* ── HOTEL ─────────────────────────────────────── */}
         <Route
           path="/hotel/*"
-          element={
-            <ProtectedRoute allowedRoles={["admin","manager","receptionist"]}>
-              <Layout setIsAuthenticated={setIsAuthenticated}>
-                <Hotel />
-              </Layout>
-            </ProtectedRoute>
-          }
+          element={protect(<Hotel />, ROLES.HOTEL)}
         />
 
-        {/* RESTAURANT */}
+        {/* ── RESTAURANT ────────────────────────────────── */}
         <Route
           path="/restaurant"
           element={
-            <ProtectedRoute allowedRoles={["admin","manager","waiter","kitchen"]}>
+            <ProtectedRoute allowedRoles={ROLES.RESTAURANT}>
               <Layout setIsAuthenticated={setIsAuthenticated}>
                 <RestaurantProvider>
                   <RestaurantPOS />
@@ -183,26 +188,77 @@ function App() {
           <Route path="menu/:table" element={<MenuPage />} />
           <Route path="edit-token/:table" element={<EditToken />} />
           <Route path="payment" element={<Payment />} />
+          <Route path="payment-bills" element={<PaymentBills />} />
           <Route path="token-items/:table" element={<TokenItemsPage />} />
           <Route path="room-items" element={<Roomitem />} />
+          <Route path="add-menu-item" element={<AddMenuItemPage />} />
           <Route path="daily-room-food" element={<DailyfoodReport />} />
           <Route path="daywise-food" element={<Daywisefood />} />
-          <Route path="transfer-token" element={<SettlementReport />} />
-          <Route path="recipe-master" element={<RecipeMaster />} />
-          <Route path="item-consumption" element={<ItemConsumption />} />
         </Route>
 
-        {/* OTHER */}
-        <Route path="/accounts" element={<Layout setIsAuthenticated={setIsAuthenticated}><Accounts /></Layout>} />
-        <Route path="/profile" element={<Layout setIsAuthenticated={setIsAuthenticated}><Profile /></Layout>} />
-        <Route path="/attendance" element={<Layout setIsAuthenticated={setIsAuthenticated}><Attendance /></Layout>} />
-        <Route path="/inventory" element={<Layout setIsAuthenticated={setIsAuthenticated}><InventoryDashboard /></Layout>} />
-        <Route path="/user" element={<Layout setIsAuthenticated={setIsAuthenticated}><User /></Layout>} />
-        <Route path="/housekeeping" element={<Layout setIsAuthenticated={setIsAuthenticated}><Housekeeping /></Layout>} />
-        <Route path="/banquet" element={<Layout setIsAuthenticated={setIsAuthenticated}><Banquet /></Layout>} />
-        <Route path="/reports" element={<Layout setIsAuthenticated={setIsAuthenticated}><Reports /></Layout>} />
-        <Route path="/assignments" element={<Layout setIsAuthenticated={setIsAuthenticated}><Assignment /></Layout>} />
-        <Route path="/kitchen" element={<Layout setIsAuthenticated={setIsAuthenticated}><Kitchen /></Layout>} />
+        {/* ── KITCHEN ───────────────────────────────────── */}
+        <Route
+          path="/kitchen"
+          element={protect(<Kitchen />, ROLES.KITCHEN)}
+        />
+
+        {/* ── ACCOUNTS ──────────────────────────────────── */}
+        <Route
+          path="/accounts"
+          element={protect(<Accounts />, ROLES.ACCOUNTS)}
+        />
+
+        {/* ── INVENTORY ─────────────────────────────────── */}
+        <Route
+          path="/inventory"
+          element={protect(<InventoryDashboard />, ROLES.INVENTORY)}
+        />
+
+        {/* ── HOUSEKEEPING ──────────────────────────────── */}
+        <Route
+          path="/housekeeping"
+          element={protect(<Housekeeping />, ROLES.HOUSEKEEPING)}
+        />
+
+        {/* ── BANQUET ───────────────────────────────────── */}
+        <Route
+          path="/banquet"
+          element={protect(<Banquet />, ROLES.BANQUET)}
+        />
+
+        {/* ── REPORTS ───────────────────────────────────── */}
+        <Route
+          path="/reports"
+          element={protect(<Reports />, ROLES.REPORTS)}
+        />
+
+        {/* ── ACCOUNT SUB-REPORTS ───────────────────────── */}
+        <Route path="/reports/sales"       element={protect(<SalesReport />,       ROLES.REPORTS)} />
+        <Route path="/reports/income-exp"  element={protect(<IncomeExpenditure />, ROLES.REPORTS)} />
+        <Route path="/reports/daywise"     element={protect(<DaywiseCollection />, ROLES.REPORTS)} />
+        <Route path="/reports/collection"  element={protect(<CollectionReport />,  ROLES.REPORTS)} />
+        <Route path="/reports/audit"       element={protect(<AuditReport />,       ROLES.REPORTS)} />
+
+        {/* ── ATTENDANCE — all roles ─────────────────────── */}
+        <Route
+          path="/attendance"
+          element={protect(<Attendance />, ROLES.ALL)}
+        />
+
+        {/* ── ASSIGNMENTS ───────────────────────────────── */}
+        <Route
+          path="/assignments"
+          element={protect(<Assignment />, ROLES.ASSIGNMENTS)}
+        />
+
+        {/* ── USER MANAGEMENT — admin only ──────────────── */}
+        <Route
+          path="/user"
+          element={protect(<User />, ROLES.ADMIN_ONLY)}
+        />
+
+        {/* ── CATCH-ALL: redirect unknown paths to dashboard */}
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
 
       </Routes>
     </Router>
