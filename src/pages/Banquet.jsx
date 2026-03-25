@@ -1672,7 +1672,7 @@ const Banquet = () => {
 
     if (activeQuickSection === "meals") {
       return (
-        <div className="space-y-5">
+        <div className="  space-y-4">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
               Event Dining
@@ -2018,7 +2018,7 @@ const Banquet = () => {
         </section>
 
         <section className="grid gap-4 xl:grid-cols-[280px_minmax(0,1fr)]">
-          <aside className="rounded-[26px] border border-white/60 bg-white/76 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+          <aside className="h-[560px] rounded-[26px] border border-white/60 bg-white/76 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl xl:sticky xl:top-6 xl:self-start">
             <div className="mb-4">
               <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
                 Banquet Menu
@@ -2026,10 +2026,10 @@ const Banquet = () => {
               <h2 className="mt-1 text-xl font-bold text-slate-900">
                 Quick sections
               </h2>
-            </div>
-            <div className="space-y-2">
-              {quickSections.map((section) => {
-                const Icon = section.icon;
+            </div>                                               
+            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">                                                               
+              {quickSections.map((section) => {     
+                const Icon = section.icon;                                                                    
 
                 return (
                   <button
@@ -2083,9 +2083,9 @@ const Banquet = () => {
                   Add Hall
                 </button>
               </div>
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <div className="grid items-stretch gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {paginatedHalls.map((hall) => (
-                  <div key={hall.id} className="space-y-2">
+                  <div key={hall.id} className="flex h-full flex-col gap-2">
                     <BanquetHallCard
                       hall={hall}
                       selected={String(wizard.hallId) === String(hall.id)}
@@ -2099,7 +2099,7 @@ const Banquet = () => {
                     <button
                       type="button"
                       onClick={() => setDetailHall(hall)}
-                      className="text-xs font-semibold text-cyan-700 transition hover:text-cyan-900"
+                      className="mt-auto text-xs font-semibold text-cyan-700 transition hover:text-cyan-900"
                     >
                       View hall details
                     </button>
@@ -2116,16 +2116,18 @@ const Banquet = () => {
 
             <section
               id="addons"
-              className="grid gap-4 rounded-[26px] border border-white/60 bg-white/78 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl md:grid-cols-3 sm:p-5"
+              className="grid items-stretch gap-3 w-full  rounded-[26px] border border-white/60 bg-white/78 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:grid-cols-2 lg:grid-cols-[repeat(3,minmax(0,1fr))_minmax(240px,1fr)] sm:p-5"
             >
               {[
                 {
                   icon: FaLightbulb,
                   title: "Lighting system",
-                  value: "Classic to intelligent stage setup",
-                  info: pricingConfig.lightingOptions
-                    .map((item) => `${item.label} ${formatINR(item.price)}`)
-                    .join(" | "),
+                  value: "Classic se intelligent stage setup",
+                  info: `Classic ${formatINR(
+                    pricingConfig.lightingOptions[0]?.price
+                  )} | Stage focus ${formatINR(
+                    pricingConfig.lightingOptions[1]?.price
+                  )}`,
                 },
                 {
                   icon: FaHeadset,
@@ -2139,26 +2141,29 @@ const Banquet = () => {
                   value: "Decoration, floral gate and welcome desk",
                   info: `Current decor fee ${formatINR(pricingConfig.decorServiceFee)}.`,
                 },
+                {
+                  icon: FaMoneyCheckAlt,
+                  title: "Addon pricing",
+                  value: "Lighting, support aur decor pricing ready",
+                  info: `Estimated addon range ${formatINR(
+                    (pricingConfig.lightingOptions[0]?.price || 0) +
+                      (pricingConfig.eventSupportFee || 0)
+                  )} onwards.`,
+                },
               ].map((card) => {
                 const Icon = card.icon;
 
                 return (
                   <div
                     key={card.title}
-                    className="rounded-[22px] border border-slate-200/80 bg-white p-5"
+                    className="flex min-h-[146px] h-full flex-col rounded-[22px] border border-slate-200/80 bg-white p-4 lg:col-span-1"
                   >
-                    <div className="mb-4 inline-flex rounded-2xl bg-amber-50 p-3 text-amber-600">
-                      <Icon />
+                    <div className="mb-3 inline-flex rounded-2xl bg-amber-50 p-3 text-amber-600">
+                        <Icon />
                     </div>
-                    <h3 className="text-lg font-bold text-slate-900">
-                      {card.title}
-                    </h3>
-                    <p className="mt-2 text-sm font-medium text-slate-700">
-                      {card.value}
-                    </p>
-                    <p className="mt-3 text-sm leading-6 text-slate-500">
-                      {card.info}
-                    </p>
+                    <h3 className="text-sm font-bold text-slate-900">{card.title}</h3>
+                    <p className="mt-2 text-xs leading-5 text-slate-600">{card.value}</p>
+                    <p className="mt-2 text-xs leading-5 text-slate-400">{card.info}</p>
                   </div>
                 );
               })}
@@ -2168,7 +2173,7 @@ const Banquet = () => {
               id="meals"
               className="rounded-[26px] border border-white/60 bg-white/78 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5"
             >
-              <div className="mb-5">
+              <div className="mb-5 ">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
                   Event Dining
                 </p>
@@ -2176,50 +2181,102 @@ const Banquet = () => {
                   Meal menu section
                 </h2>
               </div>
-              <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
-                <div className="grid gap-4 md:grid-cols-3">
+              <div className="grid items-stretch gap-3 sm:grid-cols-2 lg:grid-cols-[repeat(3,minmax(0,1fr))_minmax(240px,1fr)]">
                   {pricingConfig.menuPackages.map((menu) => (
                     <button
                       type="button"
                       key={menu.id}
                       onClick={() => setSelectedMenuPackage(menu)}
-                      className="rounded-[22px] border border-slate-200/80 bg-white p-5 text-left transition hover:-translate-y-1 hover:border-cyan-300 hover:shadow-[0_18px_35px_rgba(8,145,178,0.14)]"
+                      className="flex h-full min-h-[256px] flex-col rounded-[18px] border border-slate-200/80 bg-white p-4 text-left transition hover:-translate-y-1 hover:border-cyan-300 hover:shadow-[0_18px_35px_rgba(8,145,178,0.14)]"
                     >
                       <div className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-600">
                         {menu.name}
                       </div>
-                      <div className="mt-3 text-2xl font-black text-slate-900">
+                      <div className="mt-3 text-xl font-black text-slate-900">
                         {formatINR(menu.perGuest)}
                       </div>
-                      <div className="mt-1 text-sm text-slate-500">Per guest</div>
-                      <p className="mt-4 text-sm leading-6 text-slate-600">
+                      <div className="mt-1 text-xs text-slate-500">Per guest</div>
+                      <p className="mt-3 text-xs leading-5 text-slate-600">
                         {menu.mealLabel}
                       </p>
-                      <div className="mt-4 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                      <div className="mt-3 space-y-1.5">
+                        {menu.highlights.slice(0, 2).map((item) => (
+                          <p
+                            key={item}
+                            className="text-[10px] leading-4 text-slate-400"
+                          >
+                            {item}
+                          </p>
+                        ))}
+                      </div>
+                      <div className="mt-auto pt-5 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">
                         Click to view details
                       </div>
                     </button>
                   ))}
-                </div>
-                <div className="rounded-[22px] border border-slate-200/80 bg-[linear-gradient(180deg,#f9fdff_0%,#ffffff_100%)] p-5">
-                  <div className="text-sm font-bold text-slate-900">
-                    Meal sections for events
+                <div className="flex h-full min-h-[256px] flex-col rounded-[18px] border border-slate-200/80 bg-[linear-gradient(180deg,#f9fdff_0%,#ffffff_100%)] p-4 sm:col-span-2 lg:col-span-1">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="text-xs font-bold text-slate-900">
+                      Meal sections for events
+                    </div>
+                    <span className="rounded-full border border-cyan-100 bg-cyan-50 px-2.5 py-1 text-[10px] font-semibold text-cyan-700">
+                      Flexible planning
+                    </span>
                   </div>
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {mealSections.map((section) => (
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    <div className="rounded-[16px] border border-slate-200/80 bg-white px-3 py-2.5">
+                      <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+                        Packages
+                      </div>
+                      <div className="mt-2 text-lg font-black text-slate-900">
+                        {pricingConfig.menuPackages.length}
+                      </div>
+                    </div>
+                    <div className="rounded-[16px] border border-slate-200/80 bg-white px-3 py-2.5">
+                      <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+                        Sections
+                      </div>
+                      <div className="mt-2 text-lg font-black text-slate-900">
+                        {mealSections.length}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-3 text-xs font-bold text-slate-900">
+                    Available service blocks
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {mealSections.slice(0, 4).map((section) => (
                       <span
                         key={section}
-                        className="rounded-full border border-cyan-100 bg-cyan-50 px-3 py-1.5 text-xs font-semibold text-cyan-700"
+                        className="rounded-full border border-cyan-100 bg-cyan-50 px-2.5 py-1 text-[10px] font-semibold text-cyan-700"
                       >
                         {section}
                       </span>
                     ))}
                   </div>
-                  <p className="mt-4 text-sm leading-6 text-slate-500">
-                    Reservation form mein restaurant menu sirf custom menu items
-                    section ke andar show hota hai, jisse booking ke time par
-                    direct selection easy rahe.
+                  <p className="mt-3 text-[10px] leading-4 text-slate-500">
+                    Reservation form me custom menu items ke saath direct meal
+                    planning easy rahti hai.
                   </p>
+                  <div className="mt-3 space-y-1.5">
+                    {[
+                      "Package choose karein according to guest budget.",
+                      "Meal sections ya custom items add karein.",
+                    ].map((item, index) => (
+                      <div
+                        key={item}
+                        className="flex items-start gap-2 text-[10px] leading-4 text-slate-500"
+                      >
+                        <span className="mt-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-cyan-50 text-[9px] font-bold text-cyan-700">
+                          {index + 1}
+                        </span>
+                        <span>{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-auto pt-3 text-[10px] font-semibold text-cyan-700">
+                    Reservation form se easy selection
+                  </div>
                 </div>
               </div>
             </section>
@@ -2428,7 +2485,7 @@ const Banquet = () => {
               Reservation pricing preview
             </h2>
           </div>
-          <div className="grid gap-4 md:grid-cols-5">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
             {[
             { label: "Hall amount", value: formatINR(wizardTotals.hallCharge) },
             { label: "Meal amount", value: formatINR(wizardTotals.mealCharge) },

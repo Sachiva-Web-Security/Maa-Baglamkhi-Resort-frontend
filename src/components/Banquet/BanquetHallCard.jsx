@@ -11,17 +11,17 @@ const BanquetHallCard = ({ hall, selected, onSelect }) => {
     <button
       type="button"
       onClick={onSelect}
-      className={`overflow-hidden rounded-[24px] border text-left transition-all ${
+      className={`flex h-full flex-col overflow-hidden rounded-[24px] border text-left transition-all ${
         selected
           ? "border-cyan-400 bg-[linear-gradient(145deg,#0b2748_0%,#103b4d_55%,#18465a_100%)] shadow-[0_18px_45px_rgba(14,165,233,0.18)]"
           : "border-slate-200/80 bg-white shadow-[0_14px_35px_rgba(15,23,42,0.06)] hover:-translate-y-1 hover:border-cyan-200"
       }`}
     >
       {imgSrc ? (
-        <img src={imgSrc} alt={hall.name} className="h-40 w-full object-cover" />
+        <img src={imgSrc} alt={hall.name} className="h-32 w-full object-cover sm:h-40" />
       ) : (
         <div
-          className={`flex h-40 items-center justify-center ${
+          className={`flex h-32 items-center justify-center sm:h-40 ${
             selected
               ? "bg-[linear-gradient(135deg,#164e63_0%,#0f172a_100%)]"
               : "bg-[linear-gradient(135deg,#dff7ff_0%,#eef6ff_50%,#fff4df_100%)]"
@@ -37,7 +37,7 @@ const BanquetHallCard = ({ hall, selected, onSelect }) => {
         </div>
       )}
 
-      <div className="space-y-4 p-4">
+      <div className="flex flex-1 flex-col space-y-4 p-4">
         <div>
           <div
             className={`text-lg font-black ${

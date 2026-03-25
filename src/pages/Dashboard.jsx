@@ -24,7 +24,6 @@ import FoodSalesChart from "../components/Dashboard/Charts/FoodSalesChart";
 import MonthlyRevenueChart from "../components/Dashboard/Charts/MonthlyRevenueChart";
 import RoomOccupancyChart from "../components/Dashboard/Charts/RoomOccupancyChart";
 import MetricCard from "../components/Dashboard/MetricCard/MetricCard";
-import HomePage from "../components/HomePage/HomePage";
 import {
   getCleaningTasks,
   setCleaningTasks,
@@ -1684,9 +1683,6 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <div className="rounded-[24px] border border-white/60 bg-white/72 p-3 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-4">
-            <HomePage />
-          </div>
         </div>
       </div>
 

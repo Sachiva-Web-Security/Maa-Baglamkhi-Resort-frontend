@@ -938,87 +938,118 @@ useEffect(() => {
           )}
         </section>
 
-        <section className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(360px,0.9fr)]">
-          <div className="rounded-[28px] border border-slate-200/70 bg-white/85 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-600">Active Booking Data</p>
-                <h3 className="mt-2 text-xl font-black text-slate-900">{formatShortDate(selectedDate)} ke live stays</h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => navigate("/hotel/all-bookings")}
-                className="rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-100"
-              >
-                View All
-              </button>
-            </div>
-            <div className="mt-5 max-h-[520px] space-y-3 overflow-y-auto pr-1">
-              {activeBookingRecords.length ? (
-                activeBookingRecords.map((booking) => {
-                  const roomNumber = String(booking.rooms || "").split(",")[0]?.trim() || booking.rooms || "";
-                  const room =
-                    rooms.find((item) => String(item.roomNumber) === String(roomNumber)) || {
-                      roomNumber,
-                      categoryName: booking.company_name || "Direct",
-                    };
-
-                  return (
-                    <button
-                      type="button"
-                      key={booking.bookingId}
-                      onClick={() => openRoomPreview(room, booking)}
-                      className="w-full rounded-[22px] border border-slate-200 bg-[linear-gradient(135deg,#ffffff_0%,#f7fbff_100%)] p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-                    >
-                      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                        <div>
-                          <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
-                            Booking #{booking.bookingId}
-                          </div>
-                          <div className="mt-1 text-lg font-black text-slate-900">
-                            {booking.guest_name || booking.guestName || "Walk-in Guest"}
-                          </div>
-                          <div className="mt-1 text-sm text-slate-500">
-                            Room {booking.rooms || "Not assigned yet"} | {getBookingContact(booking) || "--"} |{" "}
-                            {booking.company_name || booking.company || "Direct"}
-                          </div>
-                          <div className="mt-1 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-                            {booking.booking_status || "Confirmed"}
-                          </div>
-                        </div>
-                        <div className="rounded-[18px] bg-sky-50 px-4 py-3 text-sm font-semibold text-sky-700">
-                          {formatShortDate(booking.check_in || booking.checkIn)} to{" "}
-                          {formatShortDate(booking.check_out || booking.checkOut)}
-                        </div>
-                      </div>
-                      <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                        <div className="rounded-[18px] bg-slate-50 px-4 py-3 text-sm text-slate-600">
-                          Total Bill
-                          <div className="mt-1 text-lg font-black text-slate-900">
-                            {formatCurrency(booking.totalAmount)}
-                          </div>
-                        </div>
-                        <div className="rounded-[18px] bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                          Paid
-                          <div className="mt-1 text-lg font-black text-emerald-900">
-                            {formatCurrency(booking.paidAmount)}
-                          </div>
-                        </div>
-                        <div className="rounded-[18px] bg-amber-50 px-4 py-3 text-sm text-amber-700">
-                          Remaining
-                          <div className="mt-1 text-lg font-black text-amber-900">
-                            {formatCurrency(booking.remainingAmount)}
-                          </div>
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })
-              ) : (
-                <div className="rounded-[24px] border border-dashed border-slate-300 bg-slate-50 px-5 py-10 text-center text-sm text-slate-500">
-                  Backend se abhi koi active booking record nahi mila.
+        <section className="grid gap-1 xl:grid-cols-[minmax(0,1.1fr)_minmax(360px,0.9fr)]">
+          <div className="space-y-6">
+            <div className="h-[650px] rounded-[28px]  border-slate-200/70 bg-white/85 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl ">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-600">Active Booking Data</p>
+                  <h3 className="mt-2 text-xl font-black text-slate-900">{formatShortDate(selectedDate)} ke live stays</h3>
                 </div>
-              )}
+                <button
+                  type="button"
+                  onClick={() => navigate("/hotel/all-bookings")}
+                  className="rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-100"
+                >
+                  View All
+                </button>
+              </div>
+              <div className="mt-5 max-h-[520px] space-y-3 overflow-y-auto pr-1">
+                {activeBookingRecords.length ? (
+                  activeBookingRecords.map((booking) => {
+                    const roomNumber = String(booking.rooms || "").split(",")[0]?.trim() || booking.rooms || "";
+                    const room =
+                      rooms.find((item) => String(item.roomNumber) === String(roomNumber)) || {
+                        roomNumber,
+                        categoryName: booking.company_name || "Direct",
+                      };
+
+                    return (
+                      <button
+                        type="button"
+                        key={booking.bookingId}
+                        onClick={() => openRoomPreview(room, booking)}
+                        className="w-full rounded-[22px] border border-slate-200 bg-[linear-gradient(135deg,#ffffff_0%,#f7fbff_100%)] p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                      >
+                        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                          <div>
+                            <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
+                              Booking #{booking.bookingId}
+                            </div>
+                            <div className="mt-1 text-lg font-black text-slate-900">
+                              {booking.guest_name || booking.guestName || "Walk-in Guest"}
+                            </div>
+                            <div className="mt-1 text-sm text-slate-500">
+                              Room {booking.rooms || "Not assigned yet"} | {getBookingContact(booking) || "--"} |{" "}
+                              {booking.company_name || booking.company || "Direct"}
+                            </div>
+                            <div className="mt-1 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                              {booking.booking_status || "Confirmed"}
+                            </div>
+                          </div>
+                          <div className="rounded-[18px] bg-sky-50 px-4 py-3 text-sm font-semibold text-sky-700">
+                            {formatShortDate(booking.check_in || booking.checkIn)} to{" "}
+                            {formatShortDate(booking.check_out || booking.checkOut)}
+                          </div>
+                        </div>
+                        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                          <div className="rounded-[18px] bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                            Total Bill
+                            <div className="mt-1 text-lg font-black text-slate-900">
+                              {formatCurrency(booking.totalAmount)}
+                            </div>
+                          </div>
+                          <div className="rounded-[18px] bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                            Paid
+                            <div className="mt-1 text-lg font-black text-emerald-900">
+                              {formatCurrency(booking.paidAmount)}
+                            </div>
+                          </div>
+                          <div className="rounded-[18px] bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                            Remaining
+                            <div className="mt-1 text-lg font-black text-amber-900">
+                              {formatCurrency(booking.remainingAmount)}
+                            </div>
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })
+                ) : (
+                  <div className="rounded-[24px] border border-dashed border-slate-300 bg-slate-50 px-5 py-10 text-center text-sm text-slate-500">
+                    Backend se abhi koi active booking record nahi mila.
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="rounded-[28px] border border-slate-200/70 bg-[linear-gradient(135deg,#f8fdff_0%,#eff8ff_100%)] p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-sky-700 ">Quick Direction</p>
+              <h3 className="mt-2 text-xl font-black text-slate-900">Front desk shortcuts</h3>
+              <div className="mt-4 space-y-3">
+                <button
+                  type="button"
+                  onClick={() => navigate("/dashboard")}
+                  className="flex w-full items-center justify-between rounded-[20px] bg-white px-4 py-4 text-left shadow-sm transition hover:-translate-y-0.5"
+                >
+                  <span>
+                    <span className="block text-sm font-black text-slate-900">Open Main Dashboard</span>
+                    <span className="block text-xs text-slate-500">Booking master style overview wapas dekhne ke liye</span>
+                  </span>
+                  <FaArrowRight className="text-sky-600" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate("/hotel/room")}
+                  className="flex w-full items-center justify-between rounded-[20px] bg-white px-4 py-4 text-left shadow-sm transition hover:-translate-y-0.5"
+                >
+                  <span>
+                    <span className="block text-sm font-black text-slate-900">Manage Room Inventory</span>
+                    <span className="block text-xs text-slate-500">Category wise rooms add aur edit karne ke liye</span>
+                  </span>
+                  <FaArrowRight className="text-sky-600" />
+                </button>
+              </div>
             </div>
           </div>
 
@@ -1054,35 +1085,6 @@ useEffect(() => {
                     Booking feed abhi empty hai.
                   </div>
                 )}
-              </div>
-            </div>
-
-            <div className="rounded-[28px] border border-slate-200/70 bg-[linear-gradient(135deg,#f8fdff_0%,#eff8ff_100%)] p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-sky-700">Quick Direction</p>
-              <h3 className="mt-2 text-xl font-black text-slate-900">Front desk shortcuts</h3>
-              <div className="mt-4 space-y-3">
-                <button
-                  type="button"
-                  onClick={() => navigate("/dashboard")}
-                  className="flex w-full items-center justify-between rounded-[20px] bg-white px-4 py-4 text-left shadow-sm transition hover:-translate-y-0.5"
-                >
-                  <span>
-                    <span className="block text-sm font-black text-slate-900">Open Main Dashboard</span>
-                    <span className="block text-xs text-slate-500">Booking master style overview wapas dekhne ke liye</span>
-                  </span>
-                  <FaArrowRight className="text-sky-600" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => navigate("/hotel/room")}
-                  className="flex w-full items-center justify-between rounded-[20px] bg-white px-4 py-4 text-left shadow-sm transition hover:-translate-y-0.5"
-                >
-                  <span>
-                    <span className="block text-sm font-black text-slate-900">Manage Room Inventory</span>
-                    <span className="block text-xs text-slate-500">Category wise rooms add aur edit karne ke liye</span>
-                  </span>
-                  <FaArrowRight className="text-sky-600" />
-                </button>
               </div>
             </div>
           </div>

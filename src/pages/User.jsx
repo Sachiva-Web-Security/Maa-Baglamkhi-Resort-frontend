@@ -1,11 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
-  FaEnvelope,
+  FaEdit,
   FaSearch,
-  FaShieldAlt,
-  FaUserCheck,
+  FaTrash,
+  FaTimes,
   FaUserPlus,
-  FaUsers,
 } from "react-icons/fa";
 
 import CreateUser from "../components/Createuser/CreateUser";
@@ -20,6 +19,20 @@ const User = () => {
   const [search, setSearch] = useState("");
   const [error, setError] = useState("");
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [deleteMessage, setDeleteMessage] = useState("");
+  const [paginationMessage, setPaginationMessage] = useState("");
+  const [page, setPage] = useState(1);
+  const [usersPerPage, setUsersPerPage] = useState(8);
+  const [editingUser, setEditingUser] = useState(null);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    email: "",
+    role: "staff",
+    password: "",
+  });
+  const [editError, setEditError] = useState("");
+  const [isUpdatingUser, setIsUpdatingUser] = useState(false);
 
   const loggedInEmail = localStorage.getItem("email") || "";
   const loggedInAvatar = localStorage.getItem("avatarUrl") || "";
@@ -44,6 +57,7 @@ const User = () => {
           }
         });
 
+        setError("");
         setUsers(mergedUsers);
       } catch (err) {
         console.error("Failed to load users", err);
@@ -56,11 +70,187 @@ const User = () => {
   }, []);
 
   const handleUserCreated = (newUser) => {
+    setError("");
     setUsers((prev) => {
       const exists = prev.some((user) => user.email === newUser.email);
       if (exists) return prev;
       return [...prev, newUser];
     });
+    setSuccessMessage(`${newUser.name || "User"} created successfully`);
+  };
+
+  const handleDeleteUser = async (user) => {
+    const id = user.id || user._id;
+    if (!id) {
+      setError("User id missing hai, delete nahi ho pa raha.");
+      return;
+    }
+
+    try {
+      setError("");
+      await API.delete(`/users/${id}`, { skipAuthRedirect: true });
+      setUsers((prev) =>
+        prev.filter((item) => String(item.id || item._id) !== String(id))
+      );
+
+      const localUsers = JSON.parse(localStorage.getItem("users")) || [];
+      localStorage.setItem(
+        "users",
+        JSON.stringify(
+          localUsers.filter(
+            (item) =>
+              String(item.id) !== String(id) &&
+              String(item.email || "").toLowerCase() !==
+                String(user.email || "").toLowerCase()
+          )
+        )
+      );
+
+      setDeleteMessage(`${user.name || user.fullName || "User"} deleted successfully`);
+    } catch (err) {
+      console.error("Failed to delete user", err);
+      const status = err.response?.status;
+      if (status === 403) {
+        setError("Sirf admin user account delete kar sakta hai.");
+      } else if (status === 401) {
+        setError("Session expire ho gayi hai ya token missing hai. Delete action roka gaya hai.");
+      } else if (status === 404) {
+        setUsers((prev) =>
+          prev.filter(
+            (item) =>
+              String(item.id || item._id) !== String(id) &&
+              String(item.email || "").toLowerCase() !==
+                String(user.email || "").toLowerCase()
+          )
+        );
+        const localUsers = JSON.parse(localStorage.getItem("users")) || [];
+        localStorage.setItem(
+          "users",
+          JSON.stringify(
+            localUsers.filter(
+              (item) =>
+                String(item.id) !== String(id) &&
+                String(item.email || "").toLowerCase() !==
+                  String(user.email || "").toLowerCase()
+            )
+          )
+        );
+        setDeleteMessage(`${user.name || user.fullName || "User"} deleted successfully`);
+      } else {
+        setError(err.response?.data?.message || "User delete nahi ho paaya.");
+      }
+    }
+  };
+
+  const openEditUser = (user) => {
+    setEditError("");
+    setEditingUser(user);
+    setEditForm({
+      name: user.name || user.fullName || user.username || "",
+      email: user.email || "",
+      role: String(user.role || user.userRole || "staff").toLowerCase(),
+      password: "",
+    });
+  };
+
+  const handleEditChange = (e) => {
+    setEditError("");
+    setEditForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleUsersPerPageChange = (size) => {
+    setPaginationMessage("");
+    setPage(1);
+    setUsersPerPage(size);
+    if (filteredUsers.length <= size) {
+      setPaginationMessage("Abhi aur user nahi hain.");
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (page === 1) {
+      setPaginationMessage("Aap first page par hain.");
+      return;
+    }
+
+    setPaginationMessage("");
+    setPage((prev) => Math.max(1, prev - 1));
+  };
+
+  const handleNextPage = () => {
+    if (page >= totalPages) {
+      setPaginationMessage("Abhi aur user nahi hain.");
+      return;
+    }
+
+    setPaginationMessage("");
+    setPage((prev) => Math.min(totalPages, prev + 1));
+  };
+
+  const handleUpdateUser = async (e) => {
+    e.preventDefault();
+    if (!editingUser) return;
+
+    const id = editingUser.id || editingUser._id;
+    if (!id) {
+      setEditError("User id missing hai, update nahi ho pa raha.");
+      return;
+    }
+
+    try {
+      setIsUpdatingUser(true);
+      setEditError("");
+      setError("");
+
+      const payload = {
+        name: editForm.name.trim(),
+        email: editForm.email.trim(),
+        role: editForm.role,
+      };
+
+      if (editForm.password.trim()) {
+        payload.password = editForm.password.trim();
+      }
+
+      const res = await API.put(`/users/${id}`, payload, {
+        skipAuthRedirect: true,
+      });
+
+      const updatedUser = res.data?.user || { ...editingUser, ...payload, id };
+
+      setUsers((prev) =>
+        prev.map((user) =>
+          String(user.id || user._id) === String(id)
+            ? { ...user, ...updatedUser }
+            : user
+        )
+      );
+
+      const localUsers = JSON.parse(localStorage.getItem("users")) || [];
+      localStorage.setItem(
+        "users",
+        JSON.stringify(
+          localUsers.map((user) =>
+            String(user.id) === String(id) ? { ...user, ...updatedUser } : user
+          )
+        )
+      );
+
+      setEditingUser(null);
+      setSuccessMessage(`${updatedUser.name || "User"} updated successfully`);
+    } catch (err) {
+      console.error("Failed to update user", err);
+      const status = err.response?.status;
+      if (status === 403) {
+        setEditError("Sirf admin user account edit kar sakta hai.");
+      } else if (status === 401) {
+        setEditError("Session expire ho gayi hai ya token missing hai.");
+      } else {
+        setEditError(err.response?.data?.message || "User update nahi ho paaya.");
+      }
+    } finally {
+      setIsUpdatingUser(false);
+    }
   };
 
   const filteredUsers = useMemo(
@@ -83,6 +273,20 @@ const User = () => {
       }),
     [search, users]
   );
+
+  const totalPages = useMemo(
+    () => Math.max(1, Math.ceil(filteredUsers.length / usersPerPage)),
+    [filteredUsers.length, usersPerPage]
+  );
+
+  const visibleUsers = useMemo(() => {
+    const startIndex = (page - 1) * usersPerPage;
+    return filteredUsers.slice(startIndex, startIndex + usersPerPage);
+  }, [filteredUsers, page, usersPerPage]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, users.length, usersPerPage]);
 
 
 
@@ -172,8 +376,8 @@ const User = () => {
           </div>
         </section>
 
-        <section className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_340px]">
-          <div className="rounded-[26px] border border-white/60 bg-white/82 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
+        <section className="rounded-[26px] border border-white/60 bg-white/82 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
+          <div>
             <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
@@ -214,67 +418,7 @@ const User = () => {
             ) : null}
           </div>
 
-          <div className="rounded-[26px] border border-white/60 bg-white/82 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
-            <div className="mb-4 flex items-start gap-3">
-              <span className="rounded-2xl bg-cyan-50 p-3 text-cyan-700">
-                <FaShieldAlt />
-              </span>
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
-                  Team Snapshot
-                </p>
-                <h2 className="mt-1 text-xl font-bold text-slate-900">
-                  Quick overview
-                </h2>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              {[
-                {
-                  icon: FaUsers,
-                  title: "Total directory",
-                  value: `${users.length} staff accounts available`,
-                },
-                {
-                  icon: FaUserCheck,
-                  title: "Filtered view",
-                  value: `${filteredUsers.length} users current search mein dikh rahe hain`,
-                },
-                {
-                  icon: FaEnvelope,
-                  title: "Search ready",
-                  value: "Email, role aur username sab search support karte hain",
-                },
-              ].map((item) => {
-                const Icon = item.icon;
-                return (
-                  <div
-                    key={item.title}
-                    className="rounded-[20px] border border-slate-200/80 bg-slate-50 p-4"
-                  >
-                    <div className="flex items-start gap-3">
-                      <span className="rounded-2xl bg-white p-3 text-slate-700 shadow-sm">
-                        <Icon />
-                      </span>
-                      <div>
-                        <div className="text-sm font-bold text-slate-900">
-                          {item.title}
-                        </div>
-                        <div className="mt-1 text-sm leading-6 text-slate-500">
-                          {item.value}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-
-        <section className="hidden rounded-[26px] border border-white/60 bg-white/82 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl lg:block">
-          <div className="overflow-x-auto">
+          <div className="mt-5 hidden overflow-x-auto rounded-[22px] border border-slate-200/80 bg-white lg:block">
             <table className="min-w-full text-left">
               <thead className="bg-slate-50 text-xs uppercase tracking-[0.18em] text-slate-500">
                 <tr>
@@ -283,12 +427,16 @@ const User = () => {
                   <th className="px-5 py-4 font-semibold">Name</th>
                   <th className="px-5 py-4 font-semibold">Email</th>
                   <th className="px-5 py-4 font-semibold">Role</th>
+                  <th className="px-5 py-4 font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredUsers.length > 0 ? (
-                  filteredUsers.map((user, index) => {
-                    const meta = getUserMeta(user, index);
+                {visibleUsers.length > 0 ? (
+                  visibleUsers.map((user, index) => {
+                    const meta = getUserMeta(
+                      user,
+                      (page - 1) * usersPerPage + index
+                    );
 
                     return (
                       <tr
@@ -324,13 +472,33 @@ const User = () => {
                             {meta.role}
                           </span>
                         </td>
+                        <td className="px-5 py-4">
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => openEditUser(user)}
+                              className="inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-2 text-xs font-bold text-cyan-700 transition hover:bg-cyan-100"
+                            >
+                              <FaEdit />
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteUser(user)}
+                              className="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700 transition hover:bg-rose-100"
+                            >
+                              <FaTrash />
+                              Delete
+                            </button>
+                          </div>
+                        </td>
                       </tr>
                     );
                   })
                 ) : (
                   <tr>
                     <td
-                      colSpan="5"
+                      colSpan="6"
                       className="px-5 py-12 text-center text-sm font-semibold text-slate-500"
                     >
                       No users found
@@ -340,12 +508,14 @@ const User = () => {
               </tbody>
             </table>
           </div>
-        </section>
 
-        <section className="grid gap-4 lg:hidden">
-          {filteredUsers.length > 0 ? (
-            filteredUsers.map((user, index) => {
-              const meta = getUserMeta(user, index);
+          <div className="mt-5 grid gap-4 lg:hidden">
+          {visibleUsers.length > 0 ? (
+            visibleUsers.map((user, index) => {
+              const meta = getUserMeta(
+                user,
+                (page - 1) * usersPerPage + index
+              );
 
               return (
                 <div
@@ -383,6 +553,22 @@ const User = () => {
                       {meta.role}
                     </span>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => openEditUser(user)}
+                    className="mt-4 inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-2 text-xs font-bold text-cyan-700 transition hover:bg-cyan-100"
+                  >
+                    <FaEdit />
+                    Edit User
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteUser(user)}
+                    className="mt-4 inline-flex items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700 transition hover:bg-rose-100"
+                  >
+                    <FaTrash />
+                    Delete User
+                  </button>
                 </div>
               );
             })
@@ -391,6 +577,52 @@ const User = () => {
               No users found
             </div>
           )}
+          </div>
+
+          {filteredUsers.length > 0 ? (
+            <div className="mt-5 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={handlePrevPage}
+                disabled={page === 1}
+                className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Prev
+              </button>
+              <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-2 py-2">
+                {[5, 10, 25, 50].map((size) => (
+                  <button
+                    key={size}
+                    type="button"
+                    onClick={() => handleUsersPerPageChange(size)}
+                    className={`rounded-full px-3 py-1.5 text-xs font-bold transition ${
+                      usersPerPage === size
+                        ? "bg-cyan-500 text-white shadow-[0_10px_24px_rgba(14,165,233,0.18)]"
+                        : "text-slate-600 hover:bg-slate-100"
+                    }`}
+                  >
+                    {size}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={handleNextPage}
+                disabled={page === totalPages}
+                className="inline-flex items-center justify-center rounded-full border border-cyan-200 bg-white px-5 py-3 text-sm font-bold text-cyan-700 shadow-[0_12px_30px_rgba(14,165,233,0.12)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          ) : null}
+
+          {paginationMessage ? (
+            <div className="mt-3 flex justify-end">
+              <div className="rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-xs font-semibold text-amber-700">
+                {paginationMessage}
+              </div>
+            </div>
+          ) : null}
         </section>
 
         {showCreateModal && (
@@ -399,6 +631,154 @@ const User = () => {
             onUserCreated={handleUserCreated}
           />
         )}
+
+        {editingUser ? (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 px-4 backdrop-blur-sm">
+            <div className="w-full max-w-xl rounded-[30px] border border-white/50 bg-[linear-gradient(180deg,#fafdff_0%,#f8fbff_100%)] p-6 shadow-[0_24px_80px_rgba(15,23,42,0.25)] sm:p-7">
+              <div className="mb-6 flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
+                    User Update
+                  </p>
+                  <h2 className="mt-1 text-2xl font-black text-slate-900">
+                    Edit user
+                  </h2>
+                  <p className="mt-2 text-sm text-slate-500">
+                    Name, email, role aur optional password update karein.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingUser(null);
+                    setEditError("");
+                  }}
+                  className="rounded-full border border-slate-200 bg-white p-3 text-slate-700 transition hover:border-cyan-200 hover:text-cyan-700"
+                >
+                  <FaTimes />
+                </button>
+              </div>
+
+              <form onSubmit={handleUpdateUser} className="space-y-4">
+                <input
+                  type="text"
+                  name="name"
+                  placeholder="Full Name"
+                  required
+                  value={editForm.name}
+                  onChange={handleEditChange}
+                  className="w-full rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100"
+                />
+
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="Email Address"
+                  required
+                  value={editForm.email}
+                  onChange={handleEditChange}
+                  className="w-full rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100"
+                />
+
+                <input
+                  type="password"
+                  name="password"
+                  placeholder="New Password (optional)"
+                  value={editForm.password}
+                  onChange={handleEditChange}
+                  className="w-full rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100"
+                />
+
+                <select
+                  name="role"
+                  value={editForm.role}
+                  onChange={handleEditChange}
+                  className="w-full rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100"
+                >
+                  <option value="admin">Admin</option>
+                  <option value="manager">Manager</option>
+                  <option value="staff">Staff</option>
+                  <option value="receptionist">Receptionist</option>
+                  <option value="housekeeping">Housekeeping</option>
+                  <option value="accountant">Accountant</option>
+                  <option value="waiter">Waiter</option>
+                  <option value="kitchen">Kitchen</option>
+                </select>
+
+                {editError ? (
+                  <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+                    {editError}
+                  </div>
+                ) : null}
+
+                <button
+                  type="submit"
+                  disabled={isUpdatingUser}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-[22px] bg-gradient-to-r from-sky-600 to-cyan-500 px-5 py-4 text-sm font-bold text-white shadow-[0_16px_35px_rgba(14,165,233,0.24)] transition hover:-translate-y-0.5"
+                >
+                  <FaEdit />
+                  {isUpdatingUser ? "Updating..." : "Update User"}
+                </button>
+              </form>
+            </div>
+          </div>
+        ) : null}
+
+        {successMessage ? (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 px-4 backdrop-blur-sm">
+            <div className="w-full max-w-md rounded-[28px] border border-white/50 bg-[linear-gradient(180deg,#fafdff_0%,#f8fbff_100%)] p-6 text-center shadow-[0_24px_80px_rgba(15,23,42,0.25)] sm:p-7">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.24),_rgba(6,182,212,0.12)_60%,_rgba(255,255,255,0.96)_100%)] shadow-[0_18px_45px_rgba(16,185,129,0.18)]">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-cyan-500 text-sm font-black text-white">
+                  OK
+                </div>
+              </div>
+              <p className="mt-5 text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
+                User Created
+              </p>
+              <h3 className="mt-2 text-2xl font-black text-slate-900">
+                {successMessage}
+              </h3>
+              <p className="mt-3 text-sm leading-6 text-slate-500">
+                New team member ko directory mein successfully add kar diya gaya hai.
+              </p>
+              <button
+                type="button"
+                onClick={() => setSuccessMessage("")}
+                className="mt-6 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-teal-600 to-emerald-500 px-6 py-3 text-sm font-bold text-white shadow-[0_16px_35px_rgba(16,185,129,0.24)] transition hover:-translate-y-0.5"
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        ) : null}
+
+        {deleteMessage ? (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 px-4 backdrop-blur-sm">
+            <div className="w-full max-w-md rounded-[28px] border border-white/50 bg-[linear-gradient(180deg,#fff8f8_0%,#ffffff_100%)] p-6 text-center shadow-[0_24px_80px_rgba(15,23,42,0.25)] sm:p-7">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[radial-gradient(circle_at_top,_rgba(244,63,94,0.18),_rgba(251,146,60,0.12)_60%,_rgba(255,255,255,0.96)_100%)] shadow-[0_18px_45px_rgba(244,63,94,0.14)]">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-rose-500 to-orange-400 text-sm font-black text-white">
+                  OK
+                </div>
+              </div>
+              <p className="mt-5 text-[10px] font-semibold uppercase tracking-[0.24em] text-rose-400">
+                User Deleted
+              </p>
+              <h3 className="mt-2 text-2xl font-black text-slate-900">
+                {deleteMessage}
+              </h3>
+              <p className="mt-3 text-sm leading-6 text-slate-500">
+                Selected user ko directory se successfully remove kar diya gaya hai.
+              </p>
+              <button
+                type="button"
+                onClick={() => setDeleteMessage("")}
+                className="mt-6 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-rose-600 to-orange-500 px-6 py-3 text-sm font-bold text-white shadow-[0_16px_35px_rgba(244,63,94,0.22)] transition hover:-translate-y-0.5"
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        ) : null}
       </div>
     </div>
   );
