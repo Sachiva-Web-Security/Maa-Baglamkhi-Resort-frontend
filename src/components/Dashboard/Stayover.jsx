@@ -22,7 +22,6 @@ import { pushDashboardNotification } from "./dashboardNotifications";
 import {
   addDays,
   buildStaySummary,
-  BOARD_BUCKET_META,
   expandBookings,
   formatCurrency,
   formatHeaderDate,
@@ -96,7 +95,6 @@ const Stayover = () => {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [dropdownRoom, setDropdownRoom] = useState(null); 
   const [expandedDay, setExpandedDay] = useState(selectedDate);
-  const [expandedBucket, setExpandedBucket] = useState(null);
   const [editBookingModal, setEditBookingModal] = useState(null);
   const [selectedAssignee, setSelectedAssignee] = useState("");
   const [selectedCleaningMinutes, setSelectedCleaningMinutes] = useState(30);
@@ -160,17 +158,17 @@ const Stayover = () => {
       }
     };
 
-    const intervalId = window.setInterval(() => {
+    const intervalId = globalThis.setInterval(() => {
       loadData(true);
     }, 30000);
 
-    window.addEventListener("focus", handleFocus);
+    globalThis.addEventListener("focus", handleFocus);
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      window.removeEventListener("focus", handleFocus);
+      globalThis.removeEventListener("focus", handleFocus);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
-      window.clearInterval(intervalId);
+      globalThis.clearInterval(intervalId);
     };
   }, [loadData]);
 
@@ -214,10 +212,10 @@ const Stayover = () => {
     };
 
     syncExpiredCleaningTasks();
-    const timer = window.setInterval(syncExpiredCleaningTasks, 60000);
+    const timer = globalThis.setInterval(syncExpiredCleaningTasks, 60000);
     return () => {
       mounted = false;
-      window.clearInterval(timer);
+      globalThis.clearInterval(timer);
     };
   }, [loadData]);
 
@@ -261,18 +259,10 @@ const Stayover = () => {
   );
 
   useEffect(() => {
-    const currentDay = staySummary.find((day) => day.date === expandedDay);
-    const firstOpenBucket = Object.entries(currentDay?.board || {}).find(([, items]) => Array.isArray(items) && items.length > 0)?.[0];
-    setExpandedBucket(firstOpenBucket ? `${expandedDay}:${firstOpenBucket}` : null);
-  }, [expandedDay, staySummary]);
-
-
-
-useEffect(() => {
-  const closeDropdown = () => setDropdownRoom(null);
-  window.addEventListener("click", closeDropdown);
-  return () => window.removeEventListener("click", closeDropdown);
-}, []);
+    const closeDropdown = () => setDropdownRoom(null);
+    globalThis.addEventListener("click", closeDropdown);
+    return () => globalThis.removeEventListener("click", closeDropdown);
+  }, []);
 
 
   const dailySummary = useMemo(

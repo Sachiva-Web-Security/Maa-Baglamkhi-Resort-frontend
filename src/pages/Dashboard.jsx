@@ -32,7 +32,6 @@ import {
 import { pushDashboardNotification } from "../components/Dashboard/dashboardNotifications";
 import {
   addDays,
-  BOARD_BUCKET_META,
   buildStaySummary,
   expandBookings,
   formatDateLabel,
@@ -109,7 +108,7 @@ const groupRoomsByType = (items = []) => {
 
   (items || []).forEach((item) => {
     const roomTypeLabel = normalizeAvailableRoomType(item.roomType);
-    if (Object.prototype.hasOwnProperty.call(buckets, roomTypeLabel)) {
+    if (Object.hasOwn(buckets, roomTypeLabel)) {
       buckets[roomTypeLabel].push(item);
       return;
     }
@@ -263,13 +262,13 @@ const Dashboard = () => {
       }
     };
 
-    const intervalId = window.setInterval(refreshDashboard, 30000);
-    window.addEventListener("focus", refreshDashboard);
+    const intervalId = globalThis.setInterval(refreshDashboard, 30000);
+    globalThis.addEventListener("focus", refreshDashboard);
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      window.clearInterval(intervalId);
-      window.removeEventListener("focus", refreshDashboard);
+      globalThis.clearInterval(intervalId);
+      globalThis.removeEventListener("focus", refreshDashboard);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [loadDashboardData]);
