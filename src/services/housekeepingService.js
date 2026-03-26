@@ -6,8 +6,18 @@ export const housekeepingService = {
     return response.data;
   },
 
+  getLogs: async () => {
+    const response = await API.get("/housekeeping/logs");
+    return response.data;
+  },
+
   createRoom: async (data) => {
     const response = await API.post("/housekeeping", data);
+    return response.data;
+  },
+
+  updateRoom: async (id, data) => {
+    const response = await API.put(`/housekeeping/${id}`, data);
     return response.data;
   },
 
@@ -19,5 +29,10 @@ export const housekeepingService = {
   updateRoomAssignee: async (id, assignee) => {
     const response = await API.put(`/housekeeping/assignee/${id}`, { assignee });
     return response.data;
-  }
+  },
+
+  deleteRoom: async (id) => {
+    const response = await API.delete(`/housekeeping/${id}`);
+    return response.data;
+  },
 };

@@ -1,81 +1,75 @@
 import {
   BrowserRouter as Router,
-  Routes,
   Route,
-  Navigate,
+  Routes,
 } from "react-router-dom";
 import { useEffect, useState } from "react";
 
-/* ================= COMPONENTS ================= */
-import Sidebar from "./components/Sidebar/Sidebar";
 import Header from "./components/Header/Header";
 import ProtectedRoute from "./components/ProtectedRoute";
+import RoleHomeRedirect from "./components/RoleHomeRedirect";
+import Sidebar from "./components/Sidebar/Sidebar";
 
-/* ================= PAGES ================= */
-import Dashboard from "./pages/Dashboard";
-import Attendance from "./pages/Attendance";
 import Accounts from "./pages/Accounts";
-import Housekeeping from "./pages/Housekeeping";
-import Banquet from "./pages/Banquet";
-import Reports from "./pages/Reports";
-import Profile from "./pages/Profile";
-import User from "./pages/User";
+import AccountsDashboard from "./pages/AccountsDashboard";
 import Assignment from "./pages/Assignments";
-import Kitchen from "./pages/Kitchen";
+import Attendance from "./pages/Attendance";
+import Banquet from "./pages/Banquet";
+import Dashboard from "./pages/Dashboard";
 import Hotel from "./pages/Hotel";
-
-/* ================= AUTH ================= */
+import Housekeeping from "./pages/Housekeeping";
+import HousekeepingDashboard from "./pages/HousekeepingDashboard";
+import Kitchen from "./pages/Kitchen";
+import KitchenDashboard from "./pages/KitchenDashboard";
 import Login from "./pages/Login";
+import ManagerDashboard from "./pages/ManagerDashboard";
+import Profile from "./pages/Profile";
+import ReceptionDashboard from "./pages/ReceptionDashboard";
 import Register from "./pages/Register";
+import Reports from "./pages/Reports";
+import RestaurantDashboard from "./pages/RestaurantDashboard";
+import RestaurantPOS from "./pages/RestaurantPOS";
+import StaffDashboard from "./pages/StaffDashboard";
+import User from "./pages/User";
 
-/* ================= INVENTORY ================= */
 import InventoryDashboard from "./components/Inventory/InventoryDashboard";
 
-/* ================= RESTAURANT ================= */
-import RestaurantPOS from "./pages/RestaurantPOS";
-import TablePage from "./components/Restaurant/TablePage";
+import AddMenuItemPage from "./components/Restaurant/AddMenuItemPage";
+import DailyfoodReport from "./components/Restaurant/DailyfoodReport";
+import Daywisefood from "./components/Restaurant/Daywisefood";
+import EditToken from "./components/Restaurant/EditToken";
 import MenuPage from "./components/Restaurant/MenuPage";
 import Payment from "./components/Restaurant/Payment";
 import PaymentBills from "./components/Restaurant/PaymentBills";
-import TokenPage from "./components/Restaurant/TokenPage";
-import EditToken from "./components/Restaurant/EditToken";
-import TokenItemsPage from "./components/Restaurant/TokenItempage";
 import Roomitem from "./components/Restaurant/Roomitem";
+import TablePage from "./components/Restaurant/TablePage";
+import TokenItemsPage from "./components/Restaurant/TokenItempage";
+import TokenPage from "./components/Restaurant/TokenPage";
 
-/* ================= RESTAURANT REPORTS ================= */
-import DailyfoodReport from "./components/Restaurant/DailyfoodReport";
-import Daywisefood from "./components/Restaurant/Daywisefood";
-import AddMenuItemPage from "./components/Restaurant/AddMenuItemPage";
 import Stayover from "./components/Dashboard/Stayover";
 
-/* ================= ACCOUNT REPORTS ================= */
-import SalesReport from "./pages/reports/SalesReport";
-import IncomeExpenditure from "./pages/reports/IncomeExpenditure";
-import DaywiseCollection from "./pages/reports/DaywiseCollection";
-import CollectionReport from "./pages/reports/CollectionReport";
 import AuditReport from "./pages/reports/AuditReport";
+import CollectionReport from "./pages/reports/CollectionReport";
+import DaywiseCollection from "./pages/reports/DaywiseCollection";
+import IncomeExpenditure from "./pages/reports/IncomeExpenditure";
+import SalesReport from "./pages/reports/SalesReport";
 
-/* ================= CONTEXT ================= */
 import { RestaurantProvider } from "./Context/RestaurantContext";
 
-// ─── Role Sets ────────────────────────────────────────────────────────────────
-// Define once here — easy to update in one place
 const ROLES = {
   ALL: ["admin", "manager", "receptionist", "waiter", "kitchen", "housekeeping", "accountant", "staff"],
   ADMIN_ONLY: ["admin"],
-  ADMIN_MANAGER: ["admin", "manager", "staff"],
   HOTEL: ["admin", "manager", "receptionist", "staff"],
-  RESTAURANT: ["admin", "manager", "waiter", "kitchen", "staff"],
-  KITCHEN: ["admin", "manager", "kitchen", "staff"],
+  RESTAURANT: ["admin", "manager", "waiter", "kitchen", "staff","receptionist"],
+  KITCHEN: ["admin", "manager", "kitchen"],
   ACCOUNTS: ["admin", "manager", "accountant"],
-  INVENTORY: ["admin", "manager", "kitchen", "staff"],
-  HOUSEKEEPING: ["admin", "manager", "housekeeping", "staff"],
-  BANQUET: ["admin", "manager", "receptionist", "staff"],
+  INVENTORY: ["admin", "manager", "kitchen"],
+  HOUSEKEEPING: ["admin", "manager", "housekeeping"],
+  BANQUET: ["admin", "manager", "receptionist"],
   REPORTS: ["admin", "manager", "accountant"],
   ASSIGNMENTS: ["admin", "manager", "housekeeping", "staff"],
 };
 
-/* ================= LAYOUT ================= */
 function Layout({ children, setIsAuthenticated }) {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -87,6 +81,7 @@ function Layout({ children, setIsAuthenticated }) {
       setIsMobile(mobile);
       if (mobile) setSidebarOpen(false);
     };
+
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
@@ -114,13 +109,11 @@ function Layout({ children, setIsAuthenticated }) {
   );
 }
 
-/* ================= MAIN APP ================= */
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(
     Boolean(localStorage.getItem("token"))
   );
 
-  // Helper: wrap a page in Layout + ProtectedRoute together
   const protect = (element, roles) => (
     <ProtectedRoute allowedRoles={roles}>
       <Layout setIsAuthenticated={setIsAuthenticated}>
@@ -132,47 +125,46 @@ function App() {
   return (
     <Router>
       <Routes>
-
-        {/* ── AUTH ──────────────────────────────────────── */}
         <Route
           path="/login"
-          element={
-            isAuthenticated
-              ? <Navigate to="/dashboard" replace />
-              : <Login setIsAuthenticated={setIsAuthenticated} />
-          }
+          element={isAuthenticated ? <RoleHomeRedirect /> : <Login setIsAuthenticated={setIsAuthenticated} />}
         />
         <Route
           path="/register"
-          element={isAuthenticated ? <Navigate to="/dashboard" /> : <Register />}
+          element={isAuthenticated ? <RoleHomeRedirect /> : <Register />}
         />
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/" element={<RoleHomeRedirect />} />
 
-        {/* ── DASHBOARD — all authenticated roles ───────── */}
-        <Route
-          path="/dashboard"
-          element={protect(<Dashboard />, ROLES.ALL)}
-        />
-        <Route
-          path="/stayover"
-          element={protect(<Stayover />, ROLES.ALL)}
-        />
+        <Route path="/dashboard" element={protect(<Dashboard />, ["admin"])} />
+        <Route path="/manager-dashboard" element={protect(<ManagerDashboard />, ["manager"])} />
+        <Route path="/reception-dashboard" element={protect(<ReceptionDashboard />, ["receptionist"])} />
+        <Route path="/housekeeping-dashboard" element={protect(<HousekeepingDashboard />, ["housekeeping"])} />
+        <Route path="/accounts-dashboard" element={protect(<AccountsDashboard />, ["accountant"])} />
+        <Route path="/kitchen-dashboard" element={protect(<KitchenDashboard />, ["kitchen"])} />
+        <Route path="/restaurant-dashboard" element={protect(<RestaurantDashboard />, ["waiter"])} />
+        <Route path="/staff-dashboard" element={protect(<StaffDashboard />, ["staff"])} />
+        <Route path="/stayover" element={protect(<Stayover />, ["admin", "manager"])} />
 
-        {/* ── PROFILE — all authenticated roles ─────────── */}
-        <Route
-          path="/profile"
-          element={protect(<Profile />, ROLES.ALL)}
-        />
+        <Route path="/profile" element={protect(<Profile />, ROLES.ALL)} />
+        <Route path="/attendance" element={protect(<Attendance />, ROLES.ALL)} />
+        <Route path="/hotel/*" element={protect(<Hotel />, ROLES.HOTEL)} />
+        <Route path="/accounts" element={protect(<Accounts />, ROLES.ACCOUNTS)} />
+        <Route path="/inventory" element={protect(<InventoryDashboard />, ROLES.INVENTORY)} />
+        <Route path="/housekeeping" element={protect(<Housekeeping />, ROLES.HOUSEKEEPING)} />
+        <Route path="/banquet" element={protect(<Banquet />, ROLES.BANQUET)} />
+        <Route path="/reports" element={protect(<Reports />, ROLES.REPORTS)} />
+        <Route path="/assignments" element={protect(<Assignment />, ROLES.ASSIGNMENTS)} />
+        <Route path="/kitchen" element={protect(<Kitchen />, ROLES.KITCHEN)} />
+        <Route path="/user" element={protect(<User />, ROLES.ADMIN_ONLY)} />
 
-        {/* ── HOTEL ─────────────────────────────────────── */}
-        <Route
-          path="/hotel/*"
-          element={protect(<Hotel />, ROLES.HOTEL)}
-        />
+        <Route path="/reports/sales" element={protect(<SalesReport />, ROLES.REPORTS)} />
+        <Route path="/reports/income-exp" element={protect(<IncomeExpenditure />, ROLES.REPORTS)} />
+        <Route path="/reports/daywise" element={protect(<DaywiseCollection />, ROLES.REPORTS)} />
+        <Route path="/reports/collection" element={protect(<CollectionReport />, ROLES.REPORTS)} />
+        <Route path="/reports/audit" element={protect(<AuditReport />, ROLES.REPORTS)} />
 
-        {/* ── RESTAURANT ────────────────────────────────── */}
         <Route
-          path="/restaurant"
+          path="/restaurant/*"
           element={
             <ProtectedRoute allowedRoles={ROLES.RESTAURANT}>
               <Layout setIsAuthenticated={setIsAuthenticated}>
@@ -196,70 +188,7 @@ function App() {
           <Route path="daywise-food" element={<Daywisefood />} />
         </Route>
 
-        {/* ── KITCHEN ───────────────────────────────────── */}
-        <Route
-          path="/kitchen"
-          element={protect(<Kitchen />, ROLES.KITCHEN)}
-        />
-
-        {/* ── ACCOUNTS ──────────────────────────────────── */}
-        <Route
-          path="/accounts"
-          element={protect(<Accounts />, ROLES.ACCOUNTS)}
-        />
-
-        {/* ── INVENTORY ─────────────────────────────────── */}
-        <Route
-          path="/inventory"
-          element={protect(<InventoryDashboard />, ROLES.INVENTORY)}
-        />
-
-        {/* ── HOUSEKEEPING ──────────────────────────────── */}
-        <Route
-          path="/housekeeping"
-          element={protect(<Housekeeping />, ROLES.HOUSEKEEPING)}
-        />
-
-        {/* ── BANQUET ───────────────────────────────────── */}
-        <Route
-          path="/banquet"
-          element={protect(<Banquet />, ROLES.BANQUET)}
-        />
-
-        {/* ── REPORTS ───────────────────────────────────── */}
-        <Route
-          path="/reports"
-          element={protect(<Reports />, ROLES.REPORTS)}
-        />
-
-        {/* ── ACCOUNT SUB-REPORTS ───────────────────────── */}
-        <Route path="/reports/sales"       element={protect(<SalesReport />,       ROLES.REPORTS)} />
-        <Route path="/reports/income-exp"  element={protect(<IncomeExpenditure />, ROLES.REPORTS)} />
-        <Route path="/reports/daywise"     element={protect(<DaywiseCollection />, ROLES.REPORTS)} />
-        <Route path="/reports/collection"  element={protect(<CollectionReport />,  ROLES.REPORTS)} />
-        <Route path="/reports/audit"       element={protect(<AuditReport />,       ROLES.REPORTS)} />
-
-        {/* ── ATTENDANCE — all roles ─────────────────────── */}
-        <Route
-          path="/attendance"
-          element={protect(<Attendance />, ROLES.ALL)}
-        />
-
-        {/* ── ASSIGNMENTS ───────────────────────────────── */}
-        <Route
-          path="/assignments"
-          element={protect(<Assignment />, ROLES.ASSIGNMENTS)}
-        />
-
-        {/* ── USER MANAGEMENT — admin only ──────────────── */}
-        <Route
-          path="/user"
-          element={protect(<User />, ROLES.ADMIN_ONLY)}
-        />
-
-        {/* ── CATCH-ALL: redirect unknown paths to dashboard */}
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-
+        <Route path="*" element={<RoleHomeRedirect />} />
       </Routes>
     </Router>
   );

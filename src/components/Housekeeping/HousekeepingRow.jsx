@@ -1,162 +1,94 @@
-import React from 'react';
-import { FaExclamationCircle, FaCheck, FaBed } from 'react-icons/fa';
+const STATUS_OPTIONS = [
+  "Vacant Dirty",
+  "Vacant Clean",
+  "Occupied Dirty",
+  "Cleaning In Progress",
+  "Out of Service",
+];
 
-function HousekeepingRow({ item, visibleColumns, onSelectChange, onStatusChange, onAssigneeChange, housekeeperStatuses = {}, assigneeOptions = [] }) {
-  const statusOptions = [
-    'Vacant Dirty',
-    'Vacant Clean Inspected',
-    'Occupied Dirty',
-    'Occupied Clean',
-    'Out of Service',
-  ];
+const STATUS_TONE = {
+  "Vacant Dirty": "bg-amber-100 text-amber-700 border-amber-200",
+  "Vacant Clean": "bg-emerald-100 text-emerald-700 border-emerald-200",
+  "Occupied Dirty": "bg-rose-100 text-rose-700 border-rose-200",
+  "Cleaning In Progress": "bg-violet-100 text-violet-700 border-violet-200",
+  "Out of Service": "bg-slate-200 text-slate-700 border-slate-300",
+};
 
-  const getStatusTextClass = (status) => {
-    if (status === 'Vacant Clean Inspected') return 'text-emerald-300';
-    if (status === 'Occupied Clean') return 'text-emerald-300';
-    if (status === 'Occupied Dirty') return 'text-amber-300';
-    if (status === 'Vacant Dirty') return 'text-amber-300';
-    if (status === 'Out of Service') return 'text-rose-300';
-    return 'text-gray-300';
-  };
+export default function HousekeepingRow({
+  room,
+  housekeepers = [],
+  onStatusChange,
+  onAssigneeChange,
+}) {
+  const tone = STATUS_TONE[room.status] || "bg-slate-100 text-slate-700 border-slate-200";
 
   return (
-    <tr className="border-b border-white/5 hover:bg-white/5 transition-colors">
-      {visibleColumns.includes('type') && (
-        <td className="px-4 py-3 border-r border-white/5">
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={item.selected || false}
-              onChange={(e) => onSelectChange(item.id, e.target.checked)}
-              className="cursor-pointer"
-            />
-            <span className="text-sm text-white">{item.type}</span>
-          </div>
-        </td>
-      )}
+    <div className="rounded-[26px] border border-slate-200/80 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-5 shadow-[0_12px_35px_rgba(15,23,42,0.08)]">
+      <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-200 pb-4">
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-500">Room</p>
+          <h3 className="mt-2 text-2xl font-black text-slate-900">{room.roomNo}</h3>
+          <p className="mt-1 text-sm text-slate-500">Guest: {room.guest || "No active guest"}</p>
+        </div>
+        <div className={`rounded-full border px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] ${tone}`}>
+          {room.status}
+        </div>
+      </div>
 
-      {visibleColumns.includes('roomNo') && (
-        <td className="px-4 py-3 border-r border-white/5">
-          <span className="text-sm text-white">{item.roomNo}</span>
-        </td>
-      )}
-
-      {visibleColumns.includes('building') && (
-        <td className="px-4 py-3 border-r border-white/5">
-          <span className="text-sm text-gray-300">{item.building || '-'}</span>
-        </td>
-      )}
-
-      {visibleColumns.includes('floor') && (
-        <td className="px-4 py-3 border-r border-white/5">
-          <span className="text-sm text-gray-300">{item.floor || '-'}</span>
-        </td>
-      )}
-
-      {visibleColumns.includes('section') && (
-        <td className="px-4 py-3 border-r border-white/5">
-          <span className="text-sm text-gray-300">{item.section || '-'}</span>
-        </td>
-      )}
-
-      {visibleColumns.includes('guestStatus') && (
-        <td className="px-4 py-3 border-r border-white/5">
-          {item.guestStatus && item.guestStatus !== '-' ? (
-            <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold w-fit ${
-              item.guestStatus === 'Arrives today' 
-                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                : item.guestStatus === 'Departs today'
-                ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-                : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-            }`}>
-              {item.guestStatus === 'Arrives today' ? <FaCheck className="w-3 h-3" /> : null}
-              {item.guestStatus === 'Departs today' ? <FaExclamationCircle className="w-3 h-3" /> : null}
-              {item.guestStatus === 'Occupied' ? <FaBed className="w-3 h-3" /> : null}
-              <span>{item.guestStatus}</span>
-            </div>
-          ) : (
-            <span className="text-sm text-gray-500">-</span>
-          )}
-        </td>
-      )}
-
-      {visibleColumns.includes('roomType') && (
-        <td className="px-4 py-3 border-r border-white/5">
-          <span className="text-sm text-white">{item.roomType}</span>
-        </td>
-      )}
-
-      {visibleColumns.includes('status') && (
-        <td className="px-4 py-3 border-r border-white/5">
+      <div className="mt-4 grid gap-4 lg:grid-cols-[1.15fr,1.15fr,0.9fr]">
+        <div className="rounded-[1.35rem] border border-slate-200 bg-slate-50/80 p-4">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Status</p>
           <select
-            value={item.status}
-            onChange={(e) => onStatusChange(item.id, e.target.value)}
-            className={`w-full min-w-[190px] px-3 py-2 border border-white/10 rounded-lg bg-transparent text-sm font-medium focus:outline-none focus:ring-2 focus:ring-teal-900 ${getStatusTextClass(item.status)}`}
+            value={room.status}
+            onChange={(e) => onStatusChange(room.id, e.target.value)}
+            className="mt-3 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-violet-300 focus:ring-4 focus:ring-violet-100"
           >
-            {statusOptions.map((opt) => (
-              <option key={opt} value={opt}>
-                {opt}
+            {STATUS_OPTIONS.map((item) => (
+              <option key={item} value={item}>
+                {item}
               </option>
             ))}
           </select>
-        </td>
-      )}
+        </div>
 
-      {visibleColumns.includes('assignee') && (
-        <td className="px-4 py-3 border-r border-white/5">
+        <div className="rounded-[1.35rem] border border-slate-200 bg-slate-50/80 p-4">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Assignee</p>
           <select
-            value={item.assignee}
-            onChange={(e) => onAssigneeChange(item.id, e.target.value)}
-            className="w-full min-w-[210px] px-3 py-2 border border-white/10 rounded-lg bg-[#071826] text-sm text-white focus:outline-none focus:ring-2 focus:ring-teal-900"
+            value={room.assignee || "No Housekeeper"}
+            onChange={(e) => onAssigneeChange(room.id, e.target.value)}
+            className="mt-3 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-violet-300 focus:ring-4 focus:ring-violet-100"
           >
-            {assigneeOptions.map((opt) => {
-              // Add BUSY/AVAILABLE tag if applicable
-              let label = opt;
-              if (opt !== 'No Housekeeper' && housekeeperStatuses[opt]) {
-                label = `${opt} - ${housekeeperStatuses[opt]}`;
-              }
-
-              return (
-                <option key={opt} value={opt} className={housekeeperStatuses[opt] === 'BUSY' ? 'text-rose-400' : 'text-emerald-400'}>
-                  {label}
-                </option>
-              );
-            })}
+            <option value="No Housekeeper">No Housekeeper</option>
+            {housekeepers.map((hk, index) => (
+              <option key={index} value={hk.name || hk}>
+                {hk.name || hk}
+              </option>
+            ))}
           </select>
-        </td>
-      )}
+        </div>
 
-      {visibleColumns.includes('layout') && (
-        <td className="px-4 py-3 border-r border-white/5">
-          <span className="text-sm text-gray-300">{item.layout || '-'}</span>
-        </td>
-      )}
-
-      {visibleColumns.includes('articles') && (
-        <td className="px-4 py-3 border-r border-white/5">
-          <span className="text-sm text-gray-300">{item.articles || '-'}</span>
-        </td>
-      )}
-
-      {visibleColumns.includes('services') && (
-        <td className="px-4 py-3 border-r border-white/5">
-          <span className="text-sm text-gray-300">{item.services || '-'}</span>
-        </td>
-      )}
-
-      {visibleColumns.includes('notes') && (
-        <td className="px-4 py-3">
-          {item.notes ? (
-            <button className="px-3 py-1 bg-emerald-500 text-black text-sm rounded-md hover:bg-emerald-600 transition-colors">
-              Notes
-            </button>
-          ) : (
-            <span className="text-sm text-gray-300">-</span>
-          )}
-        </td>
-      )}
-    </tr>
+        <div className="rounded-[1.35rem] border border-slate-200 bg-white p-4 shadow-sm">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Details</p>
+          <div className="mt-3 space-y-2 text-sm text-slate-600">
+            <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2">
+              <span>Priority</span>
+              <span className="font-semibold text-slate-900">{room.priority || "Normal"}</span>
+            </div>
+            <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2">
+              <span>Hotel Status</span>
+              <span className="font-semibold text-slate-900">{room.hotelStatus || "-"}</span>
+            </div>
+            <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2">
+              <span>Check In</span>
+              <span className="font-semibold text-slate-900">{room.checkIn || "-"}</span>
+            </div>
+            <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2">
+              <span>Check Out</span>
+              <span className="font-semibold text-slate-900">{room.checkOut || "-"}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
-
-export default HousekeepingRow;
