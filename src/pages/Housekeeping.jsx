@@ -104,6 +104,16 @@ const normalizeCleaningTask = (task, fallbackRoom = {}) => {
   };
 };
 
+const getRoomUiKey = (room, index = 0, prefix = 'room') =>
+  String(
+    room?.uiKey ??
+      room?.id ??
+      room?.roomId ??
+      room?.roomNo ??
+      room?.roomNumber ??
+      `${prefix}-${index}`,
+  );
+
 function Housekeeping() {
   const location = useLocation();
   const urlParams = new URLSearchParams(location.search);
@@ -185,7 +195,7 @@ function Housekeeping() {
       }
       setCleaningTaskState(normalizedTasks);
 
-      const mappedRooms = rooms.map((room) => {
+      const mappedRooms = rooms.map((room, index) => {
         const roomKey = String(room.id || room.roomNo || room.roomNumber);
         const task = normalizeCleaningTask(normalizedTasks[roomKey] || null, room);
         let guestStatus = '-';
@@ -196,6 +206,7 @@ function Housekeeping() {
         }
 
         return {
+          uiKey: getRoomUiKey(room, index),
           id: room.id || room.roomNo,
           roomNo: room.roomNo || 'N/A',
           status: room.status || 'Vacant Dirty',
@@ -453,7 +464,7 @@ function Housekeeping() {
   };
 
   const costingRows = useMemo(() => {
-    return data.map((room) => {
+    return data.map((room, index) => {
       const isDirty = String(room.status).toLowerCase().includes('dirty');
       const isOccupied = String(room.status).toLowerCase().includes('occupied');
       const isOut = String(room.status).toLowerCase().includes('out of service');
@@ -464,6 +475,7 @@ function Housekeeping() {
       const totalCost = baseCost + occupancyCost + maintenance;
 
       return {
+        uiKey: getRoomUiKey(room, index, 'cost'),
         roomNo: room.roomNo,
         status: room.status,
         totalCost,
@@ -474,11 +486,12 @@ function Housekeeping() {
   const totalCost = costingRows.reduce((sum, row) => sum + row.totalCost, 0);
 
   const amenitiesRows = useMemo(() => {
-    return data.map((room) => {
+    return data.map((room, index) => {
       const occupied = String(room.status).toLowerCase().includes('occupied');
       const dirty = String(room.status).toLowerCase().includes('dirty');
 
       return {
+        uiKey: getRoomUiKey(room, index, 'amen'),
         roomNo: room.roomNo,
         toiletries: occupied ? 4 : 2,
         linen: dirty ? 3 : 1,
@@ -657,8 +670,8 @@ function Housekeeping() {
           </div>
 
           <div className="space-y-3">
-            {costingRows.map((row) => (
-              <div key={`cost-${row.roomNo}`} className="rounded-[1.35rem] border border-slate-200 bg-white p-4 shadow-[0_16px_35px_rgba(15,23,42,0.05)]">
+            {costingRows.map((row, index) => (
+              <div key={`cost-${getRoomUiKey(row, index, 'cost')}`} className="rounded-[1.35rem] border border-slate-200 bg-white p-4 shadow-[0_16px_35px_rgba(15,23,42,0.05)]">
                 <div className="mb-2 flex items-center justify-between text-sm">
                   <span className="font-semibold text-slate-900">Room {row.roomNo}</span>
                   <span className="text-emerald-600">Rs {row.totalCost}</span>
@@ -754,8 +767,8 @@ function Housekeeping() {
                 </tr>
               </thead>
               <tbody>
-                {amenitiesRows.map((row) => (
-                  <tr key={`amen-${row.roomNo}`} className="border-t border-slate-100">
+                {amenitiesRows.map((row, index) => (
+                  <tr key={`amen-${getRoomUiKey(row, index, 'amen')}`} className="border-t border-slate-100">
                     <td className="px-4 py-3">{row.roomNo}</td>
                     <td className="px-4 py-3">{row.toiletries}</td>
                     <td className="px-4 py-3">{row.linen}</td>
@@ -792,8 +805,8 @@ function Housekeeping() {
           </div>
 
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {data.map((room) => (
-              <label key={`audit-${room.id}`} className="flex items-center justify-between rounded-[1.35rem] border border-slate-200 bg-white px-4 py-3 shadow-[0_16px_35px_rgba(15,23,42,0.05)]">
+            {data.map((room, index) => (
+              <label key={`audit-${getRoomUiKey(room, index, 'audit')}`} className="flex items-center justify-between rounded-[1.35rem] border border-slate-200 bg-white px-4 py-3 shadow-[0_16px_35px_rgba(15,23,42,0.05)]">
                 <div>
                   <p className="font-semibold text-slate-900">Room {room.roomNo}</p>
                   <p className="text-xs text-slate-500">{room.status}</p>

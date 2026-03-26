@@ -8,6 +8,7 @@ import {
   FaUserCircle,
 } from "react-icons/fa";
 import API, { getBackendBaseURL } from "../api";
+import { withAudit } from "../utils/auditAction";
 
 const Profile = () => {
   const [name, setName] = useState(localStorage.getItem("name") || "");
@@ -150,9 +151,13 @@ const Profile = () => {
       }
 
       // Backend: update profile picture for current user
-      const res = await API.put("/users/me/avatar", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const res = await API.put(
+        "/users/me/avatar",
+        formData,
+        withAudit("update_profile_avatar", {
+          headers: { "Content-Type": "multipart/form-data" },
+        }),
+      );
 
       let urlFromServer = res.data?.avatarUrl || res.data?.url || avatarUrl;
 
@@ -197,11 +202,15 @@ const Profile = () => {
       setLoadingPassword(true);
 
       // Backend: change password for current user
-      await API.post("/users/change-password", {
-        email,
-        currentPassword,
-        newPassword,
-      });
+      await API.post(
+        "/users/change-password",
+        {
+          email,
+          currentPassword,
+          newPassword,
+        },
+        withAudit("change_password"),
+      );
 
       setCurrentPassword("");
       setNewPassword("");

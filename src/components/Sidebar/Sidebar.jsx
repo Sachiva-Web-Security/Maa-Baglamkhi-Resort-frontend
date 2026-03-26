@@ -14,6 +14,7 @@ import {
   FaFire,
   FaTasks,
   FaBars,
+  FaHistory,
 } from "react-icons/fa";
 
 const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen }) => {
@@ -60,6 +61,7 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen }) => {
       { id: 13, name: "Assignments", icon: FaTasks, path: "/assignments" },
       { id: 8, name: "Banquet", icon: FaGlassCheers, path: "/banquet" },
       { id: 9, name: "Reports", icon: FaChartBar, path: "/reports" },
+      { id: 14, name: "Audit Logs", icon: FaHistory, path: "/reports/audit" },
       { id: 11, name: "User Management", icon: FaUserCheck, path: "/user" },
     ];
   } else if (role === "waiter") {
@@ -100,6 +102,10 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen }) => {
       { id: 7, name: "Housekeeping", icon: FaBroom, path: "/housekeeping" },
       { id: 13, name: "Assignments", icon: FaTasks, path: "/assignments" },
     ];
+
+    if (role === "manager") {
+      roleMenus.push({ id: 14, name: "Audit Logs", icon: FaHistory, path: "/reports/audit" });
+    }
   }
 
   const menuItems = [

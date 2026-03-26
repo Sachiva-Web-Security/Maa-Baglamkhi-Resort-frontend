@@ -64,6 +64,7 @@ const ROLES = {
   ALL: ["admin", "manager", "receptionist", "waiter", "kitchen", "housekeeping", "accountant", "staff"],
   ADMIN_ONLY: ["admin"],
   ADMIN_MANAGER: ["admin", "manager", "staff"],
+  AUDIT: ["admin", "manager"],
   HOTEL: ["admin", "manager", "receptionist", "staff"],
   RESTAURANT: ["admin", "manager", "waiter", "kitchen", "staff"],
   KITCHEN: ["admin", "manager", "kitchen", "staff"],
@@ -237,7 +238,7 @@ function App() {
         <Route path="/reports/income-exp"  element={protect(<IncomeExpenditure />, ROLES.REPORTS)} />
         <Route path="/reports/daywise"     element={protect(<DaywiseCollection />, ROLES.REPORTS)} />
         <Route path="/reports/collection"  element={protect(<CollectionReport />,  ROLES.REPORTS)} />
-        <Route path="/reports/audit"       element={protect(<AuditReport />,       ROLES.REPORTS)} />
+        <Route path="/reports/audit"       element={protect(<AuditReport />,       ROLES.AUDIT)} />
 
         {/* ── ATTENDANCE — all roles ─────────────────────── */}
         <Route

@@ -40,7 +40,7 @@ const FoodSalesChart = () => {
   }, []);
 
   return (
-    <div className="w-full">
+    <div className="w-full min-w-0">
       <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-300">
         Dining Trend
       </p>
@@ -48,7 +48,7 @@ const FoodSalesChart = () => {
         Food sales this week
       </h3>
       <div className="mt-4 h-[190px] w-full">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height={190}>
           <LineChart data={data}>
             <XAxis dataKey="day" tick={{ fontSize: 11, fill: "#64748b" }} />
             <YAxis tick={{ fontSize: 11, fill: "#64748b" }} />

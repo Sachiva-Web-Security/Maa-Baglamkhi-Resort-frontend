@@ -134,6 +134,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(localStorage.getItem("freshLogin") === "true");
   const [blurBg, setBlurBg] = useState(false);
   const [selectedDate, setSelectedDate] = useState(todayISO());
+  const [boardStartDate, setBoardStartDate] = useState(todayISO());
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [bucketOpen, setBucketOpen] = useState(() =>
     boardOrder.reduce((acc, key) => {
@@ -356,11 +357,11 @@ const Dashboard = () => {
   const mergedBookings = useMemo(() => mergeBookingsWithRooms(bookings, rooms), [bookings, rooms]);
 
   const stayOverview = useMemo(
-    () => buildStaySummary(rooms, mergedBookings, selectedDate),
-    [mergedBookings, rooms, selectedDate],
+    () => buildStaySummary(rooms, mergedBookings, boardStartDate),
+    [boardStartDate, mergedBookings, rooms],
   );
 
-  const selectedBoardDay = stayOverview[0] || null;
+  const selectedBoardDay = stayOverview.find((day) => day.date === selectedDate) || stayOverview[0] || null;
   const selectedDaySnapshot = selectedBoardDay?.board || {
     available: [],
     confirmed: [],
@@ -575,6 +576,297 @@ const Dashboard = () => {
         console.error("Full booking hydrate failed", error);
       });
   };
+
+  useEffect(() => {
+    if (!stayOverview.length) return;
+
+    const isSelectedDateVisible = stayOverview.some((day) => day.date === selectedDate);
+    if (!isSelectedDateVisible) {
+      setSelectedDate(stayOverview[0].date);
+      setAvailableTypeOpen("");
+    }
+  }, [selectedDate, stayOverview]);
+
+  const jumpBoardWindow = (nextDate) => {
+    setBoardStartDate(nextDate);
+    setSelectedDate(nextDate);
+    setAvailableTypeOpen("");
+  };
+
+  const toggleBoardDay = (date) => {
+    setSelectedDate(date);
+    setAvailableTypeOpen("");
+  };
+
+  const renderBoardColumnContent = (day, key) => {
+    const items = day?.board?.[key] || [];
+    const groups = groupRoomsByType(items);
+
+    if (["available", "confirmed", "cleaning", "pencil", "blocked", "checked_in"].includes(key)) {
+      const toneMap = {
+        available: {
+          border: "border-emerald-200",
+          soft: "bg-emerald-50/70",
+          badge: "border-emerald-200 bg-emerald-50 text-emerald-700 shadow-[0_8px_20px_rgba(16,185,129,0.18)]",
+          title: "text-emerald-900",
+          sub: "text-emerald-700",
+          button: "border-emerald-100",
+          dot: "border-emerald-200 bg-emerald-50 text-emerald-600",
+          empty: "border-dashed border-emerald-200 bg-white text-emerald-500",
+          pill: "border-emerald-200 bg-emerald-50 text-emerald-700",
+        },
+        confirmed: {
+          border: "border-orange-200",
+          soft: "bg-orange-50/70",
+          badge: "border-orange-200 bg-orange-50 text-orange-700 shadow-[0_8px_20px_rgba(249,115,22,0.18)]",
+          title: "text-orange-900",
+          sub: "text-orange-700",
+          button: "border-orange-100",
+          dot: "border-orange-200 bg-orange-50 text-orange-600",
+          empty: "border-dashed border-orange-200 bg-white text-orange-500",
+          pill: "border-orange-200 bg-orange-50 text-orange-700",
+        },
+        cleaning: {
+          border: "border-violet-200",
+          soft: "bg-violet-50/70",
+          badge: "border-violet-200 bg-violet-50 text-violet-700 shadow-[0_8px_20px_rgba(124,58,237,0.18)]",
+          title: "text-violet-900",
+          sub: "text-violet-700",
+          button: "border-violet-100",
+          dot: "border-violet-200 bg-violet-50 text-violet-600",
+          empty: "border-dashed border-violet-200 bg-white text-violet-500",
+          pill: "border-violet-200 bg-violet-50 text-violet-700",
+        },
+        pencil: {
+          border: "border-amber-200",
+          soft: "bg-amber-50/70",
+          badge: "border-amber-200 bg-amber-50 text-amber-700 shadow-[0_8px_20px_rgba(245,158,11,0.18)]",
+          title: "text-amber-900",
+          sub: "text-amber-700",
+          button: "border-amber-100",
+          dot: "border-amber-200 bg-amber-50 text-amber-600",
+          empty: "border-dashed border-amber-200 bg-white text-amber-500",
+          pill: "border-amber-200 bg-amber-50 text-amber-700",
+        },
+        blocked: {
+          border: "border-slate-200",
+          soft: "bg-slate-50/80",
+          badge: "border-slate-200 bg-slate-50 text-slate-700 shadow-[0_8px_20px_rgba(100,116,139,0.18)]",
+          title: "text-slate-900",
+          sub: "text-slate-600",
+          button: "border-slate-100",
+          dot: "border-slate-200 bg-slate-50 text-slate-600",
+          empty: "border-dashed border-slate-200 bg-white text-slate-500",
+          pill: "border-slate-200 bg-slate-50 text-slate-700",
+        },
+        checked_in: {
+          border: "border-sky-200",
+          soft: "bg-sky-50/70",
+          badge: "border-sky-200 bg-sky-50 text-sky-700 shadow-[0_8px_20px_rgba(14,165,233,0.18)]",
+          title: "text-sky-900",
+          sub: "text-sky-700",
+          button: "border-sky-100",
+          dot: "border-sky-200 bg-sky-50 text-sky-600",
+          empty: "border-dashed border-sky-200 bg-white text-sky-500",
+          pill: "border-sky-200 bg-sky-50 text-sky-700",
+        },
+      };
+
+      const subtitleMap = {
+        available: "available",
+        confirmed: "confirmed",
+        cleaning: "cleaning",
+        pencil: "pencil",
+        blocked: "blocked",
+        checked_in: "checked in",
+      };
+
+      const tone = toneMap[key];
+
+      return (
+        <div className="max-h-[270px] space-y-3 overflow-y-auto pr-1">
+          {groups.length ? (
+            groups.map((group) => {
+              const typeKey = `${day?.date || "today"}-${key}-${group.label}`;
+              const isTypeOpen = availableTypeOpen === typeKey;
+
+              return (
+                <div key={group.label} className="relative w-full overflow-visible">
+                  <span className={`absolute -right-1 -top-2 z-20 flex h-7 w-7 items-center justify-center rounded-full border text-[11px] font-black ${tone.badge}`}>
+                    {group.items.length}
+                  </span>
+                  <div className={`overflow-hidden rounded-[18px] border bg-white shadow-sm ${tone.border}`}>
+                    <button
+                      type="button"
+                      onClick={() => toggleAvailableType(typeKey)}
+                      className={`flex w-full items-center justify-between gap-3 border-b px-3 py-3 text-left ${tone.button}`}
+                    >
+                      <div className="min-w-0">
+                        <div className={`text-sm font-black uppercase tracking-[0.12em] ${tone.title}`}>
+                          {group.label}
+                        </div>
+                        <div className={`mt-1 text-[11px] font-medium ${tone.sub}`}>
+                          {group.items.length} room(s) {subtitleMap[key]}
+                        </div>
+                      </div>
+                      <span
+                        className={`flex h-8 w-8 items-center justify-center rounded-full border shadow-sm transition-transform duration-500 ease-out ${
+                          isTypeOpen ? "rotate-180" : "rotate-0"
+                        } ${tone.dot}`}
+                      >
+                        <FaChevronDown className="text-xs" />
+                      </span>
+                    </button>
+
+                    <div
+                      style={{ gridTemplateRows: isTypeOpen ? "1fr" : "0fr" }}
+                      className="grid transition-[grid-template-rows] duration-500 ease-out"
+                    >
+                      <div
+                        className={`overflow-hidden px-3 pb-3 transition-all duration-500 ease-out ${
+                          isTypeOpen ? "opacity-100 translate-y-0" : "pointer-events-none opacity-0 translate-y-2"
+                        }`}
+                      >
+                        <div className="space-y-2 pt-2">
+                          {group.items.length ? (
+                            group.items.map((item) => (
+                              <button
+                                type="button"
+                                key={item.id}
+                                onClick={() => openRoomPreview(item)}
+                                className={`w-full rounded-[14px] border px-2.5 py-2 text-left text-xs shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${tone.border} ${tone.soft}`}
+                              >
+                                {item.statusLabel ? (
+                                  <div className="mb-1 flex justify-end">
+                                    <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] ${tone.pill}`}>
+                                      {item.statusLabel}
+                                    </span>
+                                  </div>
+                                ) : null}
+                                <div className={`font-black ${tone.title}`}>
+                                  {key === "confirmed" || key === "pencil"
+                                    ? item.booking?.guestName || `Room ${item.roomNumber}`
+                                    : `Room ${item.roomNumber}`}
+                                </div>
+                                <div className={`mt-1 text-[11px] font-semibold uppercase tracking-[0.14em] ${tone.sub}`}>
+                                  {key === "confirmed" || key === "pencil"
+                                    ? `Room ${item.roomNumber} | ID ${item.roomId || "--"}`
+                                    : `ID ${item.roomId || "--"}`}
+                                </div>
+                                {key === "confirmed" || key === "pencil" ? (
+                                  <div className={`mt-1 text-[11px] ${tone.title}`}>
+                                    {item.booking?.mobile || item.subtitle || item.statusLabel || "Booking details"}
+                                  </div>
+                                ) : null}
+                              </button>
+                            ))
+                          ) : (
+                            <div className={`rounded-[14px] border px-3 py-4 text-center text-xs ${tone.empty}`}>
+                              No rooms
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <div className="rounded-[16px] border border-dashed border-slate-200 px-3 py-6 text-center text-xs text-slate-400">
+              No rooms
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    const meta = BOARD_BUCKET_META[key];
+    return (
+      <div className="space-y-2">
+        {items.length ? (
+          items.slice(0, 6).map((item) => (
+            <button
+              type="button"
+              key={item.id}
+              onClick={() => openRoomPreview(item)}
+              className={`w-full rounded-[16px] border px-3 py-2 text-left text-xs shadow-sm ${meta.soft}`}
+            >
+              {item.statusLabel ? (
+                <div className="mb-1 flex justify-end">
+                  <span className="rounded-full border border-white/60 bg-white/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-600">
+                    {item.statusLabel}
+                  </span>
+                </div>
+              ) : null}
+              <div className="font-black">Room {item.roomNumber}</div>
+              <div className="mt-1 text-[11px] font-semibold uppercase tracking-[0.14em]">
+                {item.roomType || "Room Type"} | ID {item.roomId || "--"}
+              </div>
+              <div className="mt-1 line-clamp-2">{item.title}</div>
+            </button>
+          ))
+        ) : (
+          <div className="rounded-[16px] border border-dashed border-slate-200 px-3 py-6 text-center text-xs text-slate-400">
+            No rooms
+          </div>
+        )}
+        {items.length > 6 ? (
+          <div className="text-xs font-semibold text-slate-500">
+            +{items.length - 6} more rooms
+          </div>
+        ) : null}
+      </div>
+    );
+  };
+
+  const renderExpandedBoard = (day) => (
+    <div className="grid grid-cols-[150px_minmax(230px,1.25fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)] border-t border-slate-200">
+      <div className="border-r border-slate-200 bg-slate-50" />
+      {boardOrder.map((key) => {
+        const meta = BOARD_BUCKET_META[key];
+        const items = day?.board?.[key] || [];
+        const isOpen = bucketOpen[key] !== false;
+
+        return (
+          <div key={`${day.date}-${key}`} className="border-r border-slate-200 bg-white last:border-r-0">
+            <div className={`h-1.5 w-full ${meta.bar}`} />
+            <div className="flex h-[320px] flex-col px-3 py-3">
+              <button
+                type="button"
+                onClick={() => toggleBucket(key)}
+                className="flex items-center justify-between gap-2 text-left"
+              >
+                <div className="text-sm font-bold text-slate-900">
+                  {meta.label} ({items.length})
+                </div>
+                <span
+                  className={`flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition-transform duration-500 ease-out ${
+                    isOpen ? "rotate-180" : "rotate-0"
+                  }`}
+                >
+                  <FaChevronDown className="text-xs transition-transform duration-500 ease-out" />
+                </span>
+              </button>
+
+              <div
+                style={{ gridTemplateRows: isOpen ? "1fr" : "0fr" }}
+                className="mt-3 grid min-h-0 flex-1 transition-[grid-template-rows] duration-500 ease-out"
+              >
+                <div
+                  className={`min-h-0 overflow-hidden transition-all duration-500 ease-out ${
+                    isOpen ? "opacity-100 translate-y-0" : "pointer-events-none opacity-0 translate-y-2"
+                  }`}
+                >
+                  {renderBoardColumnContent(day, key)}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
 
   useEffect(() => {
     if (!selectedRoom) return;
@@ -900,6 +1192,75 @@ const Dashboard = () => {
 
               <div className="mt-5 overflow-x-auto">
                 <div className="min-w-[1700px] space-y-3">
+                  {stayOverview.map((day) => {
+                    const isExpanded = selectedDate === day.date;
+
+                    return (
+                      <div
+                        key={`inline-${day.date}`}
+                        className={`overflow-hidden rounded-[20px] border shadow-sm transition ${
+                          isExpanded
+                            ? "border-cyan-300 bg-cyan-50/40 shadow-[0_14px_30px_rgba(8,145,178,0.12)]"
+                            : "border-slate-200 bg-white"
+                        }`}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => toggleBoardDay(day.date)}
+                          className="grid w-full grid-cols-[150px_minmax(230px,1.25fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)] text-left"
+                        >
+                          <div
+                            className={`flex items-center justify-between gap-3 border-r px-4 py-4 text-sm font-bold ${
+                              isExpanded
+                                ? "border-cyan-200 bg-cyan-100/80 text-cyan-900"
+                                : "border-slate-200 bg-slate-50 text-slate-700"
+                            }`}
+                          >
+                            <span>{formatDateLabel(day.date)}</span>
+                            <span
+                              className={`flex h-8 w-8 items-center justify-center rounded-full border bg-white text-slate-500 shadow-sm transition-transform duration-500 ease-out ${
+                                isExpanded ? "rotate-180 border-cyan-200 text-cyan-700" : "rotate-0 border-slate-200"
+                              }`}
+                            >
+                              <FaChevronDown className="text-xs" />
+                            </span>
+                          </div>
+
+                          {boardOrder.map((key) => (
+                            <div
+                              key={`inline-${day.date}-${key}`}
+                              className={`border-r px-3 py-3 text-center text-sm last:border-r-0 ${
+                                isExpanded ? "border-cyan-200 bg-cyan-50/40" : "border-slate-200 bg-white"
+                              }`}
+                            >
+                              <div className="font-bold text-slate-900">{BOARD_BUCKET_META[key].label}</div>
+                              <div className={`mt-1 text-xs ${isExpanded ? "text-cyan-700" : "text-slate-500"}`}>
+                                {day.board[key].length} rooms
+                              </div>
+                            </div>
+                          ))}
+                        </button>
+
+                        <div
+                          style={{ gridTemplateRows: isExpanded ? "1fr" : "0fr" }}
+                          className="grid transition-[grid-template-rows] duration-500 ease-out"
+                        >
+                          <div
+                            className={`overflow-hidden transition-all duration-500 ease-out ${
+                              isExpanded ? "opacity-100 translate-y-0" : "pointer-events-none opacity-0 -translate-y-2"
+                            }`}
+                          >
+                            {renderExpandedBoard(day)}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="hidden mt-5 overflow-x-auto">
+                <div className="min-w-[1700px] space-y-3">
                   <div className="grid grid-cols-[150px_minmax(230px,1.25fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)] overflow-hidden rounded-[22px] border border-slate-200">
                     <div className="border-r border-slate-200 bg-slate-100 px-4 py-4 text-sm font-bold text-slate-700">
                       {selectedBoardDay ? formatDateLabel(selectedBoardDay.date) : "Selected Date"}
@@ -921,20 +1282,20 @@ const Dashboard = () => {
                                 {meta.label} ({items.length})
                               </div>
                               <span
-                                className={`flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition-transform duration-300 ease-out ${
+                                className={`flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition-transform duration-500 ease-out ${
                                   isOpen ? "rotate-180" : "rotate-0"
                                 }`}
                               >
-                                <FaChevronDown className="text-xs transition-transform duration-300 ease-out" />
+                                <FaChevronDown className="text-xs transition-transform duration-500 ease-out" />
                               </span>
                             </button>
 
                             <div
                               style={{ gridTemplateRows: isOpen ? "1fr" : "0fr" }}
-                              className="mt-3 grid min-h-0 flex-1 transition-[grid-template-rows] duration-300 ease-out"
+                              className="mt-3 grid min-h-0 flex-1 transition-[grid-template-rows] duration-500 ease-out"
                             >
                               <div
-                                className={`min-h-0 overflow-hidden transition-all duration-300 ease-out ${
+                                className={`min-h-0 overflow-hidden transition-all duration-500 ease-out ${
                                   isOpen ? "opacity-100 translate-y-0" : "pointer-events-none opacity-0 translate-y-2"
                                 }`}
                               >
@@ -965,7 +1326,7 @@ const Dashboard = () => {
                                                 </div>
                                               </div>
                                               <span
-                                                className={`flex h-8 w-8 items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 text-emerald-600 shadow-sm transition-transform duration-300 ease-out ${
+                                                className={`flex h-8 w-8 items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 text-emerald-600 shadow-sm transition-transform duration-500 ease-out ${
                                                   isTypeOpen ? "rotate-180" : "rotate-0"
                                                 }`}
                                               >
@@ -975,10 +1336,10 @@ const Dashboard = () => {
 
                                             <div
                                               style={{ gridTemplateRows: isTypeOpen ? "1fr" : "0fr" }}
-                                              className="grid transition-[grid-template-rows] duration-300 ease-out"
+                                              className="grid transition-[grid-template-rows] duration-500 ease-out"
                                             >
                                               <div
-                                                className={`overflow-hidden px-3 pb-3 transition-all duration-300 ease-out ${
+                                                className={`overflow-hidden px-3 pb-3 transition-all duration-500 ease-out ${
                                                   isTypeOpen ? "opacity-100 translate-y-0" : "pointer-events-none opacity-0 translate-y-2"
                                                 }`}
                                               >
@@ -1049,7 +1410,7 @@ const Dashboard = () => {
                                                 </div>
                                               </div>
                                               <span
-                                                className={`flex h-8 w-8 items-center justify-center rounded-full border border-orange-200 bg-orange-50 text-orange-600 shadow-sm transition-transform duration-300 ease-out ${
+                                                className={`flex h-8 w-8 items-center justify-center rounded-full border border-orange-200 bg-orange-50 text-orange-600 shadow-sm transition-transform duration-500 ease-out ${
                                                   isTypeOpen ? "rotate-180" : "rotate-0"
                                                 }`}
                                               >
@@ -1059,10 +1420,10 @@ const Dashboard = () => {
 
                                             <div
                                               style={{ gridTemplateRows: isTypeOpen ? "1fr" : "0fr" }}
-                                              className="grid transition-[grid-template-rows] duration-300 ease-out"
+                                              className="grid transition-[grid-template-rows] duration-500 ease-out"
                                             >
                                               <div
-                                                className={`overflow-hidden px-3 pb-3 transition-all duration-300 ease-out ${
+                                                className={`overflow-hidden px-3 pb-3 transition-all duration-500 ease-out ${
                                                   isTypeOpen ? "opacity-100 translate-y-0" : "pointer-events-none opacity-0 translate-y-2"
                                                 }`}
                                               >
@@ -1138,7 +1499,7 @@ const Dashboard = () => {
                                                 </div>
                                               </div>
                                               <span
-                                                className={`flex h-8 w-8 items-center justify-center rounded-full border border-violet-200 bg-violet-50 text-violet-600 shadow-sm transition-transform duration-300 ease-out ${
+                                                className={`flex h-8 w-8 items-center justify-center rounded-full border border-violet-200 bg-violet-50 text-violet-600 shadow-sm transition-transform duration-500 ease-out ${
                                                   isTypeOpen ? "rotate-180" : "rotate-0"
                                                 }`}
                                               >
@@ -1148,10 +1509,10 @@ const Dashboard = () => {
 
                                             <div
                                               style={{ gridTemplateRows: isTypeOpen ? "1fr" : "0fr" }}
-                                              className="grid transition-[grid-template-rows] duration-300 ease-out"
+                                              className="grid transition-[grid-template-rows] duration-500 ease-out"
                                             >
                                               <div
-                                                className={`overflow-hidden px-3 pb-3 transition-all duration-300 ease-out ${
+                                                className={`overflow-hidden px-3 pb-3 transition-all duration-500 ease-out ${
                                                   isTypeOpen ? "opacity-100 translate-y-0" : "pointer-events-none opacity-0 translate-y-2"
                                                 }`}
                                               >
@@ -1222,7 +1583,7 @@ const Dashboard = () => {
                                                 </div>
                                               </div>
                                               <span
-                                                className={`flex h-8 w-8 items-center justify-center rounded-full border border-amber-200 bg-amber-50 text-amber-600 shadow-sm transition-transform duration-300 ease-out ${
+                                                className={`flex h-8 w-8 items-center justify-center rounded-full border border-amber-200 bg-amber-50 text-amber-600 shadow-sm transition-transform duration-500 ease-out ${
                                                   isTypeOpen ? "rotate-180" : "rotate-0"
                                                 }`}
                                               >
@@ -1232,10 +1593,10 @@ const Dashboard = () => {
 
                                             <div
                                               style={{ gridTemplateRows: isTypeOpen ? "1fr" : "0fr" }}
-                                              className="grid transition-[grid-template-rows] duration-300 ease-out"
+                                              className="grid transition-[grid-template-rows] duration-500 ease-out"
                                             >
                                               <div
-                                                className={`overflow-hidden px-3 pb-3 transition-all duration-300 ease-out ${
+                                                className={`overflow-hidden px-3 pb-3 transition-all duration-500 ease-out ${
                                                   isTypeOpen ? "opacity-100 translate-y-0" : "pointer-events-none opacity-0 translate-y-2"
                                                 }`}
                                               >
@@ -1311,7 +1672,7 @@ const Dashboard = () => {
                                                 </div>
                                               </div>
                                               <span
-                                                className={`flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-600 shadow-sm transition-transform duration-300 ease-out ${
+                                                className={`flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-600 shadow-sm transition-transform duration-500 ease-out ${
                                                   isTypeOpen ? "rotate-180" : "rotate-0"
                                                 }`}
                                               >
@@ -1321,10 +1682,10 @@ const Dashboard = () => {
 
                                             <div
                                               style={{ gridTemplateRows: isTypeOpen ? "1fr" : "0fr" }}
-                                              className="grid transition-[grid-template-rows] duration-300 ease-out"
+                                              className="grid transition-[grid-template-rows] duration-500 ease-out"
                                             >
                                               <div
-                                                className={`overflow-hidden px-3 pb-3 transition-all duration-300 ease-out ${
+                                                className={`overflow-hidden px-3 pb-3 transition-all duration-500 ease-out ${
                                                   isTypeOpen ? "opacity-100 translate-y-0" : "pointer-events-none opacity-0 translate-y-2"
                                                 }`}
                                               >
@@ -1395,7 +1756,7 @@ const Dashboard = () => {
                                                 </div>
                                               </div>
                                               <span
-                                                className={`flex h-8 w-8 items-center justify-center rounded-full border border-sky-200 bg-sky-50 text-sky-600 shadow-sm transition-transform duration-300 ease-out ${
+                                                className={`flex h-8 w-8 items-center justify-center rounded-full border border-sky-200 bg-sky-50 text-sky-600 shadow-sm transition-transform duration-500 ease-out ${
                                                   isTypeOpen ? "rotate-180" : "rotate-0"
                                                 }`}
                                               >
@@ -1405,10 +1766,10 @@ const Dashboard = () => {
 
                                             <div
                                               style={{ gridTemplateRows: isTypeOpen ? "1fr" : "0fr" }}
-                                              className="grid transition-[grid-template-rows] duration-300 ease-out"
+                                              className="grid transition-[grid-template-rows] duration-500 ease-out"
                                             >
                                               <div
-                                                className={`overflow-hidden px-3 pb-3 transition-all duration-300 ease-out ${
+                                                className={`overflow-hidden px-3 pb-3 transition-all duration-500 ease-out ${
                                                   isTypeOpen ? "opacity-100 translate-y-0" : "pointer-events-none opacity-0 translate-y-2"
                                                 }`}
                                               >
@@ -1496,26 +1857,52 @@ const Dashboard = () => {
                     })}
                   </div>
 
-                  {stayOverview.slice(1).map((day) => (
-                    <button
-                      type="button"
-                      key={day.date}
-                      onClick={() => setSelectedDate(day.date)}
-                      className="grid w-full grid-cols-[150px_minmax(230px,1.25fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)] overflow-hidden rounded-[18px] border border-slate-200 bg-white text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-                    >
-                      <div className="border-r border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-700">
-                        {formatDateLabel(day.date)}
-                      </div>
-                      {boardOrder.map((key) => (
-                        <div key={`${day.date}-${key}`} className="border-r border-slate-200 px-3 py-3 text-center text-sm last:border-r-0">
-                          <div className="font-bold text-slate-900">{BOARD_BUCKET_META[key].label}</div>
-                          <div className="mt-1 text-xs text-slate-500">
-                            {day.board[key].length} rooms
-                          </div>
+                  {stayOverview.slice(1).map((day) => {
+                    const isExpanded = selectedDate === day.date;
+
+                    return (
+                      <button
+                        type="button"
+                        key={day.date}
+                        onClick={() => toggleBoardDay(day.date)}
+                        className={`grid w-full grid-cols-[150px_minmax(230px,1.25fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)] overflow-hidden rounded-[18px] border text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
+                          isExpanded
+                            ? "border-cyan-300 bg-cyan-50/70 shadow-[0_14px_30px_rgba(8,145,178,0.12)]"
+                            : "border-slate-200 bg-white"
+                        }`}
+                      >
+                        <div
+                          className={`flex items-center justify-between gap-3 border-r px-4 py-3 text-sm font-bold ${
+                            isExpanded
+                              ? "border-cyan-200 bg-cyan-100/70 text-cyan-900"
+                              : "border-slate-200 bg-slate-50 text-slate-700"
+                          }`}
+                        >
+                          <span>{formatDateLabel(day.date)}</span>
+                          <span
+                            className={`flex h-8 w-8 items-center justify-center rounded-full border bg-white text-slate-500 shadow-sm transition-transform duration-500 ease-out ${
+                              isExpanded ? "rotate-180 border-cyan-200 text-cyan-700" : "rotate-0 border-slate-200"
+                            }`}
+                          >
+                            <FaChevronDown className="text-xs" />
+                          </span>
                         </div>
-                      ))}
-                    </button>
-                  ))}
+                        {boardOrder.map((key) => (
+                          <div
+                            key={`${day.date}-${key}`}
+                            className={`border-r px-3 py-3 text-center text-sm last:border-r-0 ${
+                              isExpanded ? "border-cyan-200" : "border-slate-200"
+                            }`}
+                          >
+                            <div className="font-bold text-slate-900">{BOARD_BUCKET_META[key].label}</div>
+                            <div className={`mt-1 text-xs ${isExpanded ? "text-cyan-700" : "text-slate-500"}`}>
+                              {day.board[key].length} rooms
+                            </div>
+                          </div>
+                        ))}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -1523,7 +1910,7 @@ const Dashboard = () => {
                 <div className="inline-flex flex-wrap items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 shadow-sm">
                   <button
                     type="button"
-                    onClick={() => setSelectedDate((prev) => addDays(prev, -1))}
+                    onClick={() => jumpBoardWindow(addDays(boardStartDate, -1))}
                     className="inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-cyan-600 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-white shadow-sm transition hover:bg-cyan-700"
                   >
                     Previous
@@ -1532,14 +1919,14 @@ const Dashboard = () => {
                     <FaCalendarAlt className="text-cyan-600" />
                     <input
                       type="date"
-                      value={selectedDate}
-                      onChange={(event) => setSelectedDate(event.target.value)}
+                      value={boardStartDate}
+                      onChange={(event) => jumpBoardWindow(event.target.value)}
                       className="bg-transparent outline-none"
                     />
                   </div>
                   <button
                     type="button"
-                    onClick={() => setSelectedDate((prev) => addDays(prev, 1))}
+                    onClick={() => jumpBoardWindow(addDays(boardStartDate, 1))}
                     className="inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-cyan-600 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-white shadow-sm transition hover:bg-cyan-700"
                   >
                     Next
@@ -1714,7 +2101,7 @@ const Dashboard = () => {
             </div>
 
             <div className="grid gap-4">
-              <div className="min-h-[290px] rounded-[24px] border border-white/70 bg-white/82 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
+              <div className="min-h-[290px] min-w-0 rounded-[24px] border border-white/70 bg-white/82 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-emerald-300">
                   Room Mix
                 </p>
@@ -1722,7 +2109,7 @@ const Dashboard = () => {
                 <RoomOccupancyChart />
               </div>
 
-              <div className="flex min-h-[230px] items-center rounded-[24px] border border-white/70 bg-white/82 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
+              <div className="flex min-h-[230px] min-w-0 items-center rounded-[24px] border border-white/70 bg-white/82 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
                 <FoodSalesChart />
               </div>
             </div>

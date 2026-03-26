@@ -9,6 +9,28 @@ API.interceptors.request.use((req) => {
   if (token) {
     req.headers.Authorization = `Bearer ${token}`;
   }
+
+  const method = String(req.method || "get").toLowerCase();
+  const inferredAction =
+    req.auditAction ||
+    (req.url?.includes("/login")
+      ? "login"
+      : method === "delete"
+      ? "delete"
+      : method === "put" || method === "patch"
+      ? "update"
+      : method === "post"
+      ? "create"
+      : "read");
+
+  req.headers["X-Audit-Action"] = inferredAction;
+  req.headers["X-Audit-Source"] = "frontend";
+
+  const email = localStorage.getItem("email");
+  if (email) {
+    req.headers["X-Audit-User-Email"] = email;
+  }
+
   return req;
 });
 

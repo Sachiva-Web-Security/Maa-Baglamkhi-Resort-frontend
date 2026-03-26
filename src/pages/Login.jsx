@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import API from "../api";
 import bgImage from "../assets/bg.jpg";
+import { withAudit } from "../utils/auditAction";
 
 const Login = ({ setIsAuthenticated }) => {
   const [formData, setFormData] = useState({
@@ -29,10 +30,14 @@ const Login = ({ setIsAuthenticated }) => {
   }
 
   try {
-    const res = await API.post("/auth/login", {
-      email: formData.username,
-      password: formData.password,
-    });
+    const res = await API.post(
+      "/auth/login",
+      {
+        email: formData.username,
+        password: formData.password,
+      },
+      withAudit("login"),
+    );
 
     const data = res.data;
 

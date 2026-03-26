@@ -67,10 +67,10 @@ const RoomOccupancyChart = () => {
     normalizedData.find((item) => item.name === "Available")?.value || 0;
 
   return (
-    <div className="w-full">
+    <div className="w-full min-w-0">
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(160px,0.9fr)_minmax(0,1fr)] xl:items-center">
-        <div className="relative mx-auto aspect-square w-full max-w-[220px]">
-            <ResponsiveContainer width="100%" height="100%" aspect={1}>
+        <div className="relative mx-auto h-[220px] w-full max-w-[220px] min-w-0">
+            <ResponsiveContainer width="100%" height={220}>
               <PieChart>
                 <Pie
                   data={normalizedData}
