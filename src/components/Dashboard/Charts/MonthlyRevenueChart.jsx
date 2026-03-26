@@ -11,14 +11,7 @@ import {
 import API from "../../../api";
 
 const MonthlyRevenueChart = () => {
-  const [data, setData] = useState([
-    { month: "Jan", revenue: 85000 },
-    { month: "Feb", revenue: 92000 },
-    { month: "Mar", revenue: 105000 },
-    { month: "Apr", revenue: 98000 },
-    { month: "May", revenue: 115000 },
-    { month: "Jun", revenue: 125000 },
-  ]);
+  const [data, setData] = useState([]);
 
   useEffect(() => {
     const fetchCharts = async () => {

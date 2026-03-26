@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 import API from "../../api";
 import { expandBookings } from "../Dashboard/stayoverUtils";
+import BookingCancelAction from "./BookingCancelAction";
 import {
   getBookingDraft,
   getStoredBookingCode,
@@ -24,6 +25,8 @@ const DEFAULT_ROOMS = [
 
 const fieldCls =
   "w-full rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100";
+const pickerButtonCls =
+  "w-full rounded-2xl border border-cyan-200 bg-[linear-gradient(135deg,#f8fdff_0%,#eefaff_100%)] px-4 py-3 text-left text-sm text-slate-900 shadow-[0_10px_24px_rgba(6,182,212,0.08)] outline-none transition hover:border-cyan-300 hover:shadow-[0_14px_30px_rgba(6,182,212,0.14)] focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100";
 
 const formatPriceText = (price, unitLabel) => `Rs ${price} ${unitLabel}`;
 
@@ -104,6 +107,7 @@ const Room = () => {
   const [inputValue,     setInputValue]     = useState(roomDraft.inputValue    || {});
   const [priceInputs,    setPriceInputs]    = useState(roomDraft.priceInputs   || {});
   const [pickerValues,   setPickerValues]   = useState(roomDraft.pickerValues  || {});
+  const [openPickers,    setOpenPickers]    = useState({});
 
   // BUG FIX: separate state for all three unavailability sources
   const [activeBookings,       setActiveBookings]       = useState([]);
@@ -439,6 +443,7 @@ const Room = () => {
     if (!value) return;
     handleSelect(roomId, value);
     setPickerValues((prev) => ({ ...prev, [roomId]: "" }));
+    setOpenPickers((prev) => ({ ...prev, [roomId]: false }));
   };
 
   // ─── Summary bar stats ─────────────────────────────────────────────────────────
@@ -574,26 +579,72 @@ const Room = () => {
 
                     {/* Quick-pick available rooms dropdown */}
                     <div className="flex flex-col gap-3 sm:flex-row">
-                      <select
-                        value={pickerValues[room.id] || ""}
-                        onChange={(e) =>
-                          handlePickAvailableRoom(room.id, e.target.value)
-                        }
-                        className={fieldCls}
-                      >
-                        <option value="">Select available room</option>
-                        {getAvailableRoomsForType(room.id).length ? (
-                          getAvailableRoomsForType(room.id).map((item) => (
-                            <option key={item} value={item}>
-                              {item}
-                            </option>
-                          ))
-                        ) : (
-                          <option value="" disabled>
-                            No available room in this type
-                          </option>
-                        )}
-                      </select>
+                      <div className="relative flex-1">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setOpenPickers((prev) => ({ ...prev, [room.id]: !prev[room.id] }))
+                          }
+                          className={pickerButtonCls}
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <div>
+                              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-700">
+                                Available room picker
+                              </div>
+                              <div className="mt-1 text-sm font-bold text-slate-900">
+                                {pickerValues[room.id] || "Select available room"}
+                              </div>
+                            </div>
+                            <span className="text-lg text-cyan-700">
+                              {openPickers[room.id] ? "▲" : "▼"}
+                            </span>
+                          </div>
+                        </button>
+
+                        {openPickers[room.id] ? (
+                          <div className="absolute left-0 right-0 top-[calc(100%+10px)] z-20 overflow-hidden rounded-[22px] border border-cyan-100 bg-white shadow-[0_24px_60px_rgba(15,23,42,0.16)]">
+                            <div className="border-b border-slate-100 bg-slate-50 px-4 py-3">
+                              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                                Select available room
+                              </div>
+                              <div className="mt-1 text-sm text-slate-600">
+                                {getAvailableRoomsForType(room.id).length} room(s) ready to assign
+                              </div>
+                            </div>
+
+                            {getAvailableRoomsForType(room.id).length ? (
+                              <div className="max-h-64 overflow-y-auto p-2">
+                                {getAvailableRoomsForType(room.id).map((item) => (
+                                  <button
+                                    key={item}
+                                    type="button"
+                                    onClick={() => {
+                                      setPickerValues((prev) => ({ ...prev, [room.id]: item }));
+                                      handlePickAvailableRoom(room.id, item);
+                                    }}
+                                    className="flex w-full items-center justify-between rounded-[18px] px-4 py-3 text-left transition hover:bg-cyan-50"
+                                  >
+                                    <div>
+                                      <div className="text-base font-black text-slate-900">{item}</div>
+                                      <div className="mt-1 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                                        Ready for booking
+                                      </div>
+                                    </div>
+                                    <span className="rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-emerald-700">
+                                      Available
+                                    </span>
+                                  </button>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="px-4 py-5 text-sm font-semibold text-slate-500">
+                                No available room in this type
+                              </div>
+                            )}
+                          </div>
+                        ) : null}
+                      </div>
 
                       <input
                         value={inputValue[room.id] || ""}
@@ -668,6 +719,12 @@ const Room = () => {
             >
               Go Back
             </button>
+
+            <BookingCancelAction
+              bookingId={bookingId}
+              bookingCode={bookingCode}
+              buttonClassName="sm:min-w-[170px]"
+            />
 
             <button
               type="button"

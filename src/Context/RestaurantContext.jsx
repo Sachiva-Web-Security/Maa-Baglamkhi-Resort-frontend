@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import API from "../api";
 import { restaurantService } from "../services/restaurantService";
+import { getRestaurantSocket, releaseRestaurantSocket } from "../utils/restaurantSocket";
 
 export const RestaurantContext = createContext();
 
@@ -19,11 +20,13 @@ export const RestaurantProvider = ({ children }) => {
   /* ================= LOAD TABLES ================= */
   const loadTables = useCallback(async () => {
     try {
-      const res = await API.get("/restaurant/tables");
-
-      const rows = (res.data || []).map((table) => ({
+      const rows = (await restaurantService.getTables() || []).map((table) => ({
         id: table.id,
         name: String(table.number),
+        floorName: table.floor_name || table.floorName || "",
+        sectionName: table.section_name || table.sectionName || "",
+        seatCount: Number(table.seat_count || table.seatCount || 0) || 4,
+        statusColor: table.status_color || table.statusColor || "",
       }));
 
       setTables(rows);
@@ -93,16 +96,59 @@ export const RestaurantProvider = ({ children }) => {
     return () => window.removeEventListener("tokenUpdated", refresh);
   }, [loadTables]);
 
+  useEffect(() => {
+    let activeSocket = null;
+    let unsubscribed = false;
+
+    const setupSocket = async () => {
+      const socket = await getRestaurantSocket();
+      if (!socket || unsubscribed) return;
+      activeSocket = socket;
+
+      const refresh = () => loadTables();
+      socket.on("kitchen-order-created", refresh);
+      socket.on("kitchen-order-updated", refresh);
+
+      return () => {
+        socket.off("kitchen-order-created", refresh);
+        socket.off("kitchen-order-updated", refresh);
+      };
+    };
+
+    const teardownPromise = setupSocket();
+
+    return () => {
+      unsubscribed = true;
+      Promise.resolve(teardownPromise).then((teardown) => teardown && teardown());
+      if (activeSocket) {
+        activeSocket.disconnect();
+        activeSocket = null;
+      }
+      releaseRestaurantSocket();
+    };
+  }, [loadTables]);
+
   /* ================= ADD TABLE ================= */
-  const addTable = async (tableNumber) => {
-    const normalized = String(tableNumber || "").trim();
+  const addTable = async (tableInput) => {
+    const payload =
+      typeof tableInput === "object" && tableInput !== null
+        ? tableInput
+        : { number: tableInput };
+    const normalized = String(payload.number || "").trim();
     if (!normalized) throw new Error("Table number is required");
 
     const existing = tables.find((t) => String(t.name) === normalized);
     if (existing) return existing;
 
     const tempId = `tmp-${Date.now()}`;
-    const optimistic = { id: tempId, name: normalized };
+    const optimistic = {
+      id: tempId,
+      name: normalized,
+      floorName: payload.floorName || "",
+      sectionName: payload.sectionName || "",
+      seatCount: Number(payload.seatCount || 4),
+      statusColor: payload.statusColor || "",
+    };
 
     setTables((prev) => [...prev, optimistic]);
     setTableStatusByNo((prev) => ({
@@ -111,14 +157,21 @@ export const RestaurantProvider = ({ children }) => {
     }));
 
     try {
-      const res = await API.post("/restaurant/tables", {
+      const data = await restaurantService.addTable({
         number: normalized,
+        floorName: payload.floorName || "",
+        sectionName: payload.sectionName || "",
+        seatCount: Number(payload.seatCount || 4),
+        statusColor: payload.statusColor || "",
       });
 
-      const data = res.data || {};
       const persisted = {
         id: data.id || tempId,
         name: normalized,
+        floorName: payload.floorName || "",
+        sectionName: payload.sectionName || "",
+        seatCount: Number(payload.seatCount || 4),
+        statusColor: payload.statusColor || "",
       };
 
       setTables((prev) =>

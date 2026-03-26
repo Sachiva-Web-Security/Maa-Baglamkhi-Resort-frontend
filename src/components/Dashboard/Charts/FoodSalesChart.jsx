@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   LineChart,
   Line,
@@ -10,37 +10,46 @@ import {
 import API from '../../../api';
 
 const FoodSalesChart = () => {
+  const [data, setData] = useState([]);
 
-  const [data, setData] = useState([
-    { day: 'Mon', sales: 12000 },
-    { day: 'Tue', sales: 15000 },
-    { day: 'Wed', sales: 18000 },
-    { day: 'Thu', sales: 22000 },
-    { day: 'Fri', sales: 28000 },
-  ]);
-
-  useEffect(() => {
-    const fetchCharts = async () => {
-      try {
-        const res = await API.get("/dashboard/charts");
-        if (res.data && res.data.foodSales) {
-          // Assuming backend returns an array like { name: 'Main Course', value: 45 }
-          // We map it to { day, sales } just so the line chart works
-          const mappedData = res.data.foodSales.map(item => ({
-            day: item.name,
-            sales: item.value
-          }));
-          setData(mappedData);
-        }
-      } catch (err) {
-        console.error("Error fetching food sales chart data:", err);
+  const fetchCharts = useCallback(async () => {
+    try {
+      const res = await API.get("/dashboard/charts");
+      if (res.data && res.data.foodSales) {
+        const mappedData = res.data.foodSales.map((item) => ({
+          day: item.name,
+          sales: Number(item.value || 0),
+        }));
+        setData(mappedData);
       }
-    };
-    fetchCharts();
+    } catch (err) {
+      console.error("Error fetching food sales chart data:", err);
+    }
   }, []);
 
+  useEffect(() => {
+    fetchCharts();
+  }, [fetchCharts]);
+
+  useEffect(() => {
+    const refresh = () => fetchCharts();
+    const handleVisibilityChange = () => {
+      if (!document.hidden) refresh();
+    };
+
+    const intervalId = window.setInterval(refresh, 30000);
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [fetchCharts]);
+
   return (
-    <div className="w-full">
+    <div className="w-full min-w-0">
       <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-300">
         Dining Trend
       </p>
@@ -48,7 +57,7 @@ const FoodSalesChart = () => {
         Food sales this week
       </h3>
       <div className="mt-4 h-[190px] w-full">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height={190}>
           <LineChart data={data}>
             <XAxis dataKey="day" tick={{ fontSize: 11, fill: "#64748b" }} />
             <YAxis tick={{ fontSize: 11, fill: "#64748b" }} />

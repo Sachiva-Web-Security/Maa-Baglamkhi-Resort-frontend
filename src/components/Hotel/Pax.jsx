@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import API from "../../api";
+import BookingCancelAction from "./BookingCancelAction";
 import {
   getBookingDraft,
   getStoredBookingCode,
@@ -192,6 +193,11 @@ const Pax = () => {
             >
               Go Back
             </button>
+            <BookingCancelAction
+              bookingId={bookingId}
+              bookingCode={bookingCode}
+              buttonClassName="sm:min-w-[170px]"
+            />
             <button
               onClick={handleProceed}
               className="rounded-[22px] bg-gradient-to-r from-sky-600 to-cyan-500 px-6 py-3 text-sm font-bold text-white shadow-[0_16px_35px_rgba(14,165,233,0.24)] transition hover:-translate-y-0.5"

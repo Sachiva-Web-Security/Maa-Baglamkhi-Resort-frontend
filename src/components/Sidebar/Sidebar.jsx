@@ -8,6 +8,7 @@ import {
   FaClipboardList,
   FaFire,
   FaGlassCheers,
+  FaHistory,
   FaHome,
   FaHotel,
   FaTasks,
@@ -75,7 +76,8 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen }) => {
       { id: 5, name: "Inventory", icon: FaBoxes, path: "/inventory" },
       { id: 6, name: "Housekeeping", icon: FaBroom, path: "/housekeeping" },
       { id: 7, name: "Banquet", icon: FaGlassCheers, path: "/banquet" },
-        { id: 8, name: "Restaurant POS", icon: FaUtensils, path: "/restaurant" },
+      { id: 8, name: "Restaurant POS", icon: FaUtensils, path: "/restaurant" },
+      { id: 14, name: "Audit Logs", icon: FaHistory, path: "/reports/audit" },
     ],
     receptionist: [
       { id: 2, name: "Guest Booking", icon: FaHotel, path: "/hotel/guest" },
@@ -83,7 +85,7 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen }) => {
       { id: 4, name: "Check-In / Out", icon: FaTasks, path: "/hotel/communication" },
       { id: 5, name: "Guest List", icon: FaUserCheck, path: "/hotel/booking-history" },
       { id: 6, name: "Banquet", icon: FaGlassCheers, path: "/banquet" },
-       { id: 7, name: "Restaurant POS", icon: FaUtensils, path: "/restaurant" },
+      { id: 7, name: "Restaurant POS", icon: FaUtensils, path: "/restaurant" },
     ],
     housekeeping: [
       { id: 2, name: "Room Status", icon: FaBroom, path: "/housekeeping" },
@@ -94,8 +96,8 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen }) => {
     accountant: [
       { id: 2, name: "Accounts", icon: FaWallet, path: "/accounts" },
       { id: 3, name: "Reports", icon: FaChartBar, path: "/reports" },
-      // { id: 4, name: "Transactions", icon: FaClipboardList, path: "/accounts" },
-      // { id: 5, name: "Billing", icon: FaHotel, path: "/hotel/all-bookings" },
+      { id: 4, name: "Inventory", icon: FaBoxes, path: "/inventory" },
+      { id: 5, name: "Audit Logs", icon: FaHistory, path: "/reports/audit" },
     ],
     kitchen: [
       { id: 2, name: "Kitchen Orders", icon: FaFire, path: "/kitchen" },
@@ -109,8 +111,7 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen }) => {
       { id: 5, name: "Billing", icon: FaWallet, path: "/restaurant/payment-bills" },
     ],
     staff: [
-     // { id: 2, name: "Attendance", icon: FaUserCheck, path: "/attendance" },
-      { id: 3, name: "Assignments", icon: FaTasks, path: "/assignments" },
+      { id: 2, name: "Assignments", icon: FaTasks, path: "/assignments" },
     ],
   };
 

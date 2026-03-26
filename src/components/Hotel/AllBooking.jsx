@@ -54,6 +54,7 @@ const AllBooking = () => {
   const [historyBookings, setHistoryBookings] = useState([]);
   const [viewMode,        setViewMode]        = useState("active");
   const [loading,         setLoading]         = useState(true);
+  const [cancelModal,     setCancelModal]     = useState({ open: false, booking: null, reason: "", submitting: false });
   const navigate = useNavigate();
 
   // ─── Fetch both active and history bookings ──────────────────────────────────
@@ -86,6 +87,32 @@ const AllBooking = () => {
     } catch (err) {
       console.error(err);
       alert(action === "check-out" ? "Check-out failed" : "Check-in failed");
+    }
+  };
+
+  const handleCancelBooking = async () => {
+    const booking = cancelModal.booking;
+    const reason = String(cancelModal.reason || "").trim();
+
+    if (!booking?.bookingId) {
+      alert("Valid booking nahi mili.");
+      return;
+    }
+
+    if (!reason) {
+      alert("Cancellation reason likhna zaroori hai.");
+      return;
+    }
+
+    try {
+      setCancelModal((current) => ({ ...current, submitting: true }));
+      await API.put(`/hotel/cancel/${booking.bookingId}`, { reason });
+      setCancelModal({ open: false, booking: null, reason: "", submitting: false });
+      fetchBookings();
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.message || "Booking cancel nahi ho paayi.");
+      setCancelModal((current) => ({ ...current, submitting: false }));
     }
   };
 
@@ -379,6 +406,19 @@ const AllBooking = () => {
                         </button>
                       )}
 
+                      {viewMode === "active" &&
+                      !String(booking.booking_status || "").toLowerCase().includes("checked in") ? (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setCancelModal({ open: true, booking, reason: "", submitting: false })
+                          }
+                          className="rounded-full bg-rose-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-rose-700"
+                        >
+                          Cancel Booking
+                        </button>
+                      ) : null}
+
                       {viewMode === "active" && remaining > 0 && (
                         <button
                           type="button"
@@ -437,6 +477,61 @@ const AllBooking = () => {
             </div>
           )}
         </section>
+
+        {cancelModal.open ? (
+          <div
+            className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-950/45 px-4 backdrop-blur-sm"
+            onClick={() => setCancelModal({ open: false, booking: null, reason: "", submitting: false })}
+          >
+            <div
+              className="w-full max-w-md rounded-[28px] border border-rose-200 bg-white p-5 shadow-[0_24px_70px_rgba(15,23,42,0.22)]"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="inline-flex rounded-full bg-rose-100 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-rose-700">
+                Cancel Booking
+              </div>
+              <h3 className="mt-3 text-xl font-black text-slate-900">
+                Booking #{cancelModal.booking?.bookingId}
+              </h3>
+              <p className="mt-2 text-sm text-slate-600">
+                {cancelModal.booking?.guest_name || "--"} | Room {cancelModal.booking?.rooms || "--"}
+              </p>
+              <label className="mt-4 block">
+                <span className="mb-2 block text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                  Cancellation Reason
+                </span>
+                <textarea
+                  value={cancelModal.reason}
+                  onChange={(event) =>
+                    setCancelModal((current) => ({ ...current, reason: event.target.value }))
+                  }
+                  rows={4}
+                  placeholder="Guest cancelled, no-show, wrong date, price issue..."
+                  className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm text-slate-800 outline-none focus:ring-2 focus:ring-rose-400"
+                />
+              </label>
+              <div className="mt-5 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setCancelModal({ open: false, booking: null, reason: "", submitting: false })}
+                  className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700"
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCancelBooking}
+                  disabled={cancelModal.submitting}
+                  className={`rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-700 ${
+                    cancelModal.submitting ? "cursor-not-allowed opacity-70" : ""
+                  }`}
+                >
+                  {cancelModal.submitting ? "Cancelling..." : "Confirm Cancel"}
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </div>
     </div>
   );

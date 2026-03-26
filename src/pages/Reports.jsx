@@ -25,7 +25,6 @@ const REPORT_TYPES = [
 ];
 
 const PAYMENT_MODES = ["Cash", "Card", "UPI", "Bank Transfer"];
-const ROOM_TYPES = ["Standard", "Deluxe", "Suite", "Executive"];
 const HALLS = [
   "Grand Ballroom",
   "Garden Banquet",
@@ -184,13 +183,33 @@ const Reports = () => {
   );
 
   const options = useMemo(
-    () => ({
-      statuses: STATUSES,
-      halls: ["All", ...HALLS],
-      roomTypes: ["All", ...ROOM_TYPES],
-      paymentModes: ["All", ...PAYMENT_MODES],
-    }),
-    []
+    () => {
+      const dynamicStatuses = Array.from(
+        new Set(data.map((row) => row.status).filter(Boolean)),
+      );
+      const dynamicHalls = Array.from(
+        new Set(data.map((row) => row.hall).filter(Boolean)),
+      );
+      const dynamicRoomTypes = Array.from(
+        new Set(data.map((row) => row.roomType).filter(Boolean)),
+      );
+      const dynamicPaymentModes = Array.from(
+        new Set(data.map((row) => row.paymentMode).filter(Boolean)),
+      );
+
+      const mergeOptions = (defaults, dynamic) => [
+        "All",
+        ...Array.from(new Set([...defaults, ...dynamic].filter((item) => item && item !== "All"))),
+      ];
+
+      return {
+        statuses: mergeOptions(STATUSES, dynamicStatuses),
+        halls: mergeOptions(HALLS, dynamicHalls),
+        roomTypes: mergeOptions([], dynamicRoomTypes),
+        paymentModes: mergeOptions(PAYMENT_MODES, dynamicPaymentModes),
+      };
+    },
+    [data]
   );
 
   const visibleFilters = useMemo(

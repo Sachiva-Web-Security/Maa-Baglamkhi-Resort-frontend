@@ -16,7 +16,7 @@ import {
 const palette = ["#14b8a6", "#3b82f6", "#f59e0b", "#ef4444", "#0f766e", "#8b5cf6"];
 
 const Card = ({ title, subtitle, children }) => (
-  <div className="rounded-[26px] border border-white/60 bg-white/82 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
+  <div className="min-w-0 rounded-[26px] border border-white/60 bg-white/82 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
     <div className="mb-4">
       <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
         Visual Summary
@@ -24,7 +24,7 @@ const Card = ({ title, subtitle, children }) => (
       <h2 className="mt-1 text-xl font-bold text-slate-900">{title}</h2>
       {subtitle ? <div className="mt-1 text-sm text-slate-500">{subtitle}</div> : null}
     </div>
-    <div className="h-[320px] w-full">{children}</div>
+    <div className="h-[320px] w-full min-w-0">{children}</div>
   </div>
 );
 
@@ -100,7 +100,7 @@ const ReportCharts = ({ reportType, rows }) => {
 
     return (
       <Card title="All Bills by Source" subtitle="Combined amount grouped by billing module">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height={320}>
           <BarChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             <XAxis dataKey="name" stroke="#64748b" tick={{ fontSize: 12 }} />
@@ -118,7 +118,7 @@ const ReportCharts = ({ reportType, rows }) => {
 
     return (
       <Card title="Banquet Revenue by Hall" subtitle="See which hall is generating the highest revenue">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height={320}>
           <BarChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             <XAxis dataKey="name" stroke="#64748b" tick={{ fontSize: 12 }} />
@@ -136,7 +136,7 @@ const ReportCharts = ({ reportType, rows }) => {
 
     return (
       <Card title="Restaurant Sales Trend" subtitle="Track selected date range food billing movement">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height={320}>
           <LineChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             <XAxis dataKey="date" stroke="#64748b" tick={{ fontSize: 12 }} />
@@ -160,7 +160,7 @@ const ReportCharts = ({ reportType, rows }) => {
 
     return (
       <Card title="Housekeeping Status Mix" subtitle="Room condition distribution for selected rows">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height={320}>
           <BarChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             <XAxis dataKey="name" stroke="#64748b" tick={{ fontSize: 12 }} />
@@ -188,7 +188,7 @@ const ReportCharts = ({ reportType, rows }) => {
 
     return (
       <Card title="Accounts Overview" subtitle="Income vs expense vs net impact">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height={320}>
           <BarChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             <XAxis dataKey="name" stroke="#64748b" tick={{ fontSize: 12 }} />
@@ -205,7 +205,7 @@ const ReportCharts = ({ reportType, rows }) => {
 
   return (
     <Card title="Room Status Mix" subtitle="Occupancy and room state distribution">
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height={320}>
         <PieChart>
           <Pie
             data={data}

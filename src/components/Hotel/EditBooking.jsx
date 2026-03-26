@@ -14,6 +14,8 @@ const normalizeDateInput = (value) => {
   return date.toISOString().slice(0, 10);
 };
 
+const todayISO = () => new Date().toISOString().slice(0, 10);
+
 const getRoomKey = (room) => String(room?.room_number || room?.roomNumber || room?.roomNo || room?.id || "").trim();
 
 const dedupeRooms = (rooms, focusRoomNo = "") => {
@@ -60,7 +62,9 @@ const EditBooking = ({
     checkIn: "",
     checkOut: "",
   });
+  const [originalDates, setOriginalDates] = useState({ checkIn: "", checkOut: "" });
   const bookingRef = data.booking_code || bookingCode || bookingId;
+  const today = todayISO();
 
   const [rooms, setRooms] = useState([]);
 
@@ -79,6 +83,10 @@ const EditBooking = ({
           checkIn: normalizeDateInput(res.data.check_in || res.data.checkIn || ""),
           checkOut: normalizeDateInput(res.data.check_out || res.data.checkOut || ""),
           booking_code: res.data.booking_code || res.data.bookingCode || bookingCode || "",
+        });
+        setOriginalDates({
+          checkIn: normalizeDateInput(res.data.check_in || res.data.checkIn || ""),
+          checkOut: normalizeDateInput(res.data.check_out || res.data.checkOut || ""),
         });
         const nextRooms = dedupeRooms(res.data.rooms, focusRoomNo).map(normalizeRoomView);
         setRooms(nextRooms);
@@ -102,6 +110,22 @@ const EditBooking = ({
 
   const handleUpdate = async () => {
     try {
+      const minCheckIn = [today, originalDates.checkIn].filter(Boolean).sort().slice(-1)[0] || today;
+      const minCheckOut = [today, data.checkIn || minCheckIn, originalDates.checkOut]
+        .filter(Boolean)
+        .sort()
+        .slice(-1)[0] || minCheckIn;
+
+      if (!data.checkIn || data.checkIn < minCheckIn) {
+        alert("Check-in date existing booking date ya aaj se piche nahi ho sakti.");
+        return;
+      }
+
+      if (!data.checkOut || data.checkOut < minCheckOut) {
+        alert("Check-out date existing booking date aur selected check-in se piche nahi ho sakti.");
+        return;
+      }
+
       const updatedRooms = rooms.map((room) => ({
         ...room,
         total: calculateTotal(room),
@@ -196,8 +220,23 @@ const EditBooking = ({
               <input
                 type="date"
                 className={inputCls}
+                min={[today, originalDates.checkIn].filter(Boolean).sort().slice(-1)[0] || today}
                 value={data.checkIn}
-                onChange={(e) => setData({ ...data, checkIn: e.target.value })}
+                onChange={(e) =>
+                  setData((prev) => {
+                    const nextCheckIn = e.target.value;
+                    const minCheckOut = [today, nextCheckIn, originalDates.checkOut]
+                      .filter(Boolean)
+                      .sort()
+                      .slice(-1)[0] || nextCheckIn || today;
+
+                    return {
+                      ...prev,
+                      checkIn: nextCheckIn,
+                      checkOut: prev.checkOut && prev.checkOut < minCheckOut ? minCheckOut : prev.checkOut,
+                    };
+                  })
+                }
               />
             </label>
 
@@ -209,6 +248,7 @@ const EditBooking = ({
               <input
                 type="date"
                 className={inputCls}
+                min={[today, data.checkIn || "", originalDates.checkOut].filter(Boolean).sort().slice(-1)[0] || today}
                 value={data.checkOut}
                 onChange={(e) => setData({ ...data, checkOut: e.target.value })}
               />

@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Select } from "antd";
 import { GetCity, GetCountries, GetState } from "react-country-state-city";
 import API from "../../api";
+import BookingCancelAction from "./BookingCancelAction";
 import {
   getBookingDraft,
   getStoredBookingCode,
@@ -302,6 +303,11 @@ const OtherBooking = () => {
                 >
                   Go Back
                 </button>
+                <BookingCancelAction
+                  bookingId={bookingId}
+                  bookingCode={bookingCode}
+                  fullWidth
+                />
               </div>
             </div>
           </div>

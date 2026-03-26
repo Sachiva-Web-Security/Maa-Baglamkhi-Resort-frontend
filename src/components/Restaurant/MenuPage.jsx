@@ -7,6 +7,41 @@ import { restaurantService } from "../../services/restaurantService";
 import AddMenuItemModal from "./AddMenuItemModal";
 
 const normalizeCategory = (value) => (value || "Other").trim().toLowerCase();
+const normalizeItemName = (value) => String(value || "").trim().toLowerCase();
+
+const pickPreferredMenuItem = (current, candidate) => {
+  const currentCategory = normalizeCategory(current?.category);
+  const candidateCategory = normalizeCategory(candidate?.category);
+  const currentScore =
+    (currentCategory !== "other" ? 2 : 0) +
+    (current?.image_url || current?.imageUrl ? 1 : 0);
+  const candidateScore =
+    (candidateCategory !== "other" ? 2 : 0) +
+    (candidate?.image_url || candidate?.imageUrl ? 1 : 0);
+
+  if (candidateScore !== currentScore) {
+    return candidateScore > currentScore ? candidate : current;
+  }
+
+  return Number(candidate?.id || 0) > Number(current?.id || 0) ? candidate : current;
+};
+
+const normalizeOrderItem = (item) => {
+  const qty = Number(item?.qty || item?.quantity || 0);
+  const rate = Number(item?.rate || item?.price || 0);
+  const amount = Number(item?.amount ?? qty * rate);
+  const taxAmount = Number(item?.taxAmount || 0);
+  const total = Number(item?.total ?? amount + taxAmount);
+
+  return {
+    ...item,
+    qty,
+    rate,
+    amount,
+    taxAmount,
+    total,
+  };
+};
 
 const MenuPage = () => {
   const navigate = useNavigate();
@@ -20,7 +55,11 @@ const MenuPage = () => {
 
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [qty, setQty] = useState({});
-  const [order, setOrder] = useState(location.state?.existingItems || []);
+  const [order, setOrder] = useState(
+    Array.isArray(location.state?.existingItems)
+      ? location.state.existingItems.map(normalizeOrderItem)
+      : [],
+  );
   const [menu, setMenu] = useState(menuItems);
   const [menuCatalog, setMenuCatalog] = useState([]);
   const [isLoadingMenu, setIsLoadingMenu] = useState(false);
@@ -29,7 +68,15 @@ const MenuPage = () => {
   const [submitError, setSubmitError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSavingMenuItem, setIsSavingMenuItem] = useState(false);
-  const [newItem, setNewItem] = useState({ name: "", price: "", category: "Other", tax: 5 });
+  const [newItem, setNewItem] = useState({
+    name: "",
+    price: "",
+    category: "Other",
+    tax: 5,
+    happyHourPrice: "",
+    happyHourStart: "",
+    happyHourEnd: "",
+  });
   const [newItemImage, setNewItemImage] = useState(null);
   const [newItemImagePreview, setNewItemImagePreview] = useState("");
   const [expandedCategory, setExpandedCategory] = useState("Other");
@@ -72,6 +119,24 @@ const MenuPage = () => {
     setMenu(menuItems);
   }, [banquetMenuPicker, menuItems]);
 
+  const visibleMenu = useMemo(() => {
+    const deduped = new Map();
+
+    (Array.isArray(menu) ? menu : []).forEach((item) => {
+      const key = normalizeItemName(item?.name);
+      if (!key) return;
+
+      if (!deduped.has(key)) {
+        deduped.set(key, item);
+        return;
+      }
+
+      deduped.set(key, pickPreferredMenuItem(deduped.get(key), item));
+    });
+
+    return Array.from(deduped.values());
+  }, [menu]);
+
   useEffect(() => {
     let mounted = true;
     const loadCatalog = async () => {
@@ -102,20 +167,20 @@ const MenuPage = () => {
 
   const categories = useMemo(() => {
     const set = new Map();
-    menu.forEach((item) => {
+    visibleMenu.forEach((item) => {
       const label = (item.category || "Other").trim() || "Other";
       const key = normalizeCategory(label);
       if (!set.has(key)) set.set(key, label);
     });
     return ["All", ...Array.from(set.values())];
-  }, [menu]);
+  }, [visibleMenu]);
 
   const filteredItems = useMemo(() => {
-    if (selectedCategory === "All") return menu;
-    return menu.filter(
+    if (selectedCategory === "All") return visibleMenu;
+    return visibleMenu.filter(
       (item) => normalizeCategory(item.category) === normalizeCategory(selectedCategory),
     );
-  }, [menu, selectedCategory]);
+  }, [visibleMenu, selectedCategory]);
 
   const addCategories = useMemo(() => {
     const defaults = ["Beverages", "Breakfast", "Paneer", "Salad", "Rice", "Starter", "Chicken", "Chinese", "Soup", "Dessert", "Other"];
@@ -145,12 +210,27 @@ const MenuPage = () => {
   const handleAdd = (item) => {
     const quantity = Number(qty[item.id] || 0);
     if (quantity <= 0) return;
-    const amount = item.price * quantity;
-    const taxPercent = Number(taxByItem[item.id] ?? item.tax ?? 5);
+    const effectivePriceValue =
+      item.effectivePrice ?? item.effective_price ?? item.price ?? 0;
+    const effectiveRate = Number(effectivePriceValue);
+    const amount = effectiveRate * quantity;
+    const taxValue = taxByItem[item.id] ?? item.tax ?? 5;
+    const taxPercent = Number(taxValue);
     const taxAmount = (amount * taxPercent) / 100;
     setOrder((prev) => [
       ...prev,
-      { id: Date.now(), name: item.name, qty: quantity, rate: item.price, amount, taxAmount, total: amount + taxAmount },
+      {
+        id: Date.now(),
+        menuItemId: item.id,
+        name: item.name,
+        qty: quantity,
+        rate: effectiveRate,
+        baseRate: Number(item.price || 0),
+        amount,
+        taxAmount,
+        total: amount + taxAmount,
+        category: item.category || "Other",
+      },
     ]);
     setQty((prev) => ({ ...prev, [item.id]: "" }));
   };
@@ -251,6 +331,9 @@ const MenuPage = () => {
       payload.append("category", newItem.category);
       payload.append("tableNumber", table);
       payload.append("tax", String(newItem.tax ?? 5));
+      payload.append("happyHourPrice", newItem.happyHourPrice || "");
+      payload.append("happyHourStart", newItem.happyHourStart || "");
+      payload.append("happyHourEnd", newItem.happyHourEnd || "");
       if (newItemImage) {
         payload.append("image", newItemImage);
       }
@@ -258,7 +341,15 @@ const MenuPage = () => {
       await restaurantService.addMenuItem(payload);
       const response = await API.get("/restaurant/menu");
       setMenuCatalog(Array.isArray(response.data) ? response.data : []);
-      setNewItem({ name: "", price: "", category: "Other", tax: 5 });
+      setNewItem({
+        name: "",
+        price: "",
+        category: "Other",
+        tax: 5,
+        happyHourPrice: "",
+        happyHourStart: "",
+        happyHourEnd: "",
+      });
       setNewItemImage(null);
       setExpandedCategory("Other");
       setShowAddMenu(false);
@@ -314,7 +405,10 @@ const MenuPage = () => {
                 {!isLoadingMenu && !menuError && !filteredItems.length ? <div className="p-6 text-center text-slate-500">No items in this category.</div> : null}
                 {!isLoadingMenu && !menuError && filteredItems.map((item, index) => {
                 const quantity = Number(qty[item.id] || 0);
-                const amount = item.price * quantity;
+                const effectivePrice = Number(
+                  item.effectivePrice ?? item.effective_price ?? item.price ?? 0,
+                );
+                const amount = effectivePrice * quantity;
                 const itemImageSrc = buildMenuImageSrc(item.image_url || item.imageUrl);
                 return (
                   <div key={item.id} className={`grid grid-cols-[84px_minmax(0,1.6fr)_96px_72px_120px_110px] items-center gap-3 border-t border-slate-100 px-4 py-3 ${index % 2 ? "bg-slate-50/70" : "bg-white"}`}>
@@ -334,9 +428,21 @@ const MenuPage = () => {
                     </div>
                     <div className="min-w-0">
                       <div className="truncate text-[15px] font-bold leading-5 text-slate-900">{item.name}</div>
-                      <div className="mt-1 truncate text-xs text-slate-500">{item.category || "Other"}</div>
+                      <div className="mt-1 truncate text-xs text-slate-500">
+                        {item.category || "Other"}
+                        {item.happyHourActive ? ` | Happy hour ${item.happy_hour_start?.slice(0, 5)}-${item.happy_hour_end?.slice(0, 5)}` : ""}
+                      </div>
                     </div>
-                    <div className="text-center font-semibold text-slate-700">Rs. {item.price}</div>
+                    <div className="text-center font-semibold text-slate-700">
+                      {item.happyHourActive ? (
+                        <div>
+                          <div className="text-emerald-600">Rs. {effectivePrice}</div>
+                          <div className="text-[11px] line-through text-slate-400">Rs. {item.price}</div>
+                        </div>
+                      ) : (
+                        `Rs. ${item.price}`
+                      )}
+                    </div>
                     <div className="flex items-center justify-center gap-1">
                       <input
                         type="number"
@@ -378,12 +484,14 @@ const MenuPage = () => {
             <div className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm">
               <div className="mb-3 text-sm font-black text-slate-900">Order Summary</div>
               <div className="space-y-2 text-sm">
-                {order.map((item) => (
+                {order.map((item) => {
+                  const itemTotal = Number(item.total ?? item.amount ?? Number(item.qty || 0) * Number(item.rate || 0));
+                  return (
                   <div key={item.id} className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-3">
                     <div className="font-semibold text-slate-700">{item.name} x {item.qty}</div>
-                    <div className="font-bold text-slate-900">Rs. {item.total.toFixed(2)}</div>
+                    <div className="font-bold text-slate-900">Rs. {itemTotal.toFixed(2)}</div>
                   </div>
-                ))}
+                )})}
               </div>
               <div className="mt-4 space-y-2 rounded-[18px] bg-[linear-gradient(135deg,#eff6ff_0%,#f0fdf4_100%)] p-4">
                 <div className="flex justify-between text-sm"><span>Subtotal</span><span>Rs. {subtotal.toFixed(2)}</span></div>
@@ -433,7 +541,15 @@ const MenuPage = () => {
         open={showAddMenu && !banquetMenuPicker}
         onClose={() => {
           setShowAddMenu(false);
-          setNewItem({ name: "", price: "", category: "Other", tax: 5 });
+          setNewItem({
+            name: "",
+            price: "",
+            category: "Other",
+            tax: 5,
+            happyHourPrice: "",
+            happyHourStart: "",
+            happyHourEnd: "",
+          });
           setNewItemImage(null);
           setExpandedCategory("Other");
         }}

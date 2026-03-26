@@ -8,6 +8,7 @@ import {
   FaChevronUp,
   FaDoorOpen,
   FaEdit,
+  FaCheckCircle,
   FaExclamationCircle,
   FaHotel,
   FaPlus,
@@ -55,6 +56,28 @@ const normalizeStaffName = (value) =>
     .trim()
     .toLowerCase();
 
+const normalizeDateInput = (value) => {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value).slice(0, 10);
+  return date.toISOString().slice(0, 10);
+};
+
+const popupTone = {
+  success: {
+    panel: "border-emerald-200 bg-emerald-50",
+    badge: "bg-emerald-100 text-emerald-700",
+    button: "bg-emerald-600 hover:bg-emerald-700",
+    icon: FaCheckCircle,
+  },
+  error: {
+    panel: "border-rose-200 bg-rose-50",
+    badge: "bg-rose-100 text-rose-700",
+    button: "bg-rose-600 hover:bg-rose-700",
+    icon: FaExclamationCircle,
+  },
+};
+
 const Stayover = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -79,7 +102,15 @@ const Stayover = () => {
   const [selectedCleaningMinutes, setSelectedCleaningMinutes] = useState(30);
   const [assigningCleaning, setAssigningCleaning] = useState(false);
   const [cleaningTaskStamp, setCleaningTaskStamp] = useState(0);
+  const [bookingDateDraft, setBookingDateDraft] = useState({ checkIn: "", checkOut: "" });
+  const [savingBookingDates, setSavingBookingDates] = useState(false);
+  const [actionPopup, setActionPopup] = useState({ open: false, type: "success", message: "" });
+  const [cancelBookingModal, setCancelBookingModal] = useState({ open: false, reason: "", submitting: false });
 // format: `${room.id}-${date}`
+  const showActionPopup = React.useCallback((type, message) => {
+    setActionPopup({ open: true, type, message });
+  }, []);
+
   const loadData = React.useCallback(async (silent = false) => {
     try {
       if (silent) {
@@ -87,15 +118,22 @@ const Stayover = () => {
       } else {
         setLoading(true);
       }
-      const [bookingResponse, roomResponse, usersResponse] = await Promise.all([
+      const [bookingResponse, roomResponse, usersResponse] = await Promise.allSettled([
         API.get("/hotel/all-bookings"),
         API.get("/housekeeping"),
         API.get("/users"),
       ]);
-      setBookingRecords(Array.isArray(bookingResponse.data) ? bookingResponse.data : []);
-      setBookings(expandBookings(bookingResponse.data));
-      setRooms(normalizeRooms(roomResponse.data));
-      setHousekeepers(getHousekeepingUsers(usersResponse.data));
+
+      if (bookingResponse.status !== "fulfilled" || roomResponse.status !== "fulfilled") {
+        throw bookingResponse.status !== "fulfilled" ? bookingResponse.reason : roomResponse.reason;
+      }
+
+      setBookingRecords(Array.isArray(bookingResponse.value.data) ? bookingResponse.value.data : []);
+      setBookings(expandBookings(bookingResponse.value.data));
+      setRooms(normalizeRooms(roomResponse.value.data));
+      setHousekeepers(
+        usersResponse.status === "fulfilled" ? getHousekeepingUsers(usersResponse.value.data) : [],
+      );
       setError("");
       setHasLoadedOnce(true);
     } catch (err) {
@@ -249,6 +287,11 @@ useEffect(() => {
     [staySummary],
   );
 
+  const selectedDaySummary = useMemo(
+    () => staySummary.find((day) => day.date === selectedDate) || staySummary[0] || null,
+    [selectedDate, staySummary],
+  );
+
   const upcomingBookings = useMemo(
     () =>
       [...mergedBookings]
@@ -336,27 +379,27 @@ useEffect(() => {
     () => [
       {
         label: "Occupied / Reserved",
-        value: rooms.filter((room) => ["occupied", "reserved", "check_in_confirmed"].includes(room.status)).length,
+        value: (selectedDaySummary?.confirmedCount || 0) + (selectedDaySummary?.checkedInCount || 0),
         helper: "Current booked inventory",
         icon: FaBed,
         tone: "from-sky-600 to-cyan-500",
       },
       {
         label: "Available Rooms",
-        value: rooms.filter((room) => room.status === "available").length,
+        value: selectedDaySummary?.availableCount || 0,
         helper: "Ready for booking",
         icon: FaHotel,
         tone: "from-emerald-600 to-lime-500",
       },
       {
         label: "Cleaning Queue",
-        value: rooms.filter((room) => room.status === "cleaning").length,
+        value: selectedDaySummary?.cleaningCount || 0,
         helper: "Housekeeping pending",
         icon: FaBroom,
         tone: "from-violet-600 to-fuchsia-500",
       },
     ],
-    [rooms],
+    [selectedDaySummary],
   );
 
   const handleRoomStatus = async (room, status) => {
@@ -366,7 +409,7 @@ useEffect(() => {
       await loadData(true);
     } catch (err) {
       console.error(err);
-      alert("Room status update nahi ho paaya.");
+      showActionPopup("error", "Room status update nahi ho paaya.");
     }
   };
 
@@ -410,15 +453,120 @@ useEffect(() => {
     }
   }, [selectedRoom, housekeepers]);
 
+  useEffect(() => {
+    setBookingDateDraft({
+      checkIn: normalizeDateInput(selectedRoom?.booking?.checkIn || ""),
+      checkOut: normalizeDateInput(selectedRoom?.booking?.checkOut || ""),
+    });
+  }, [selectedRoom]);
+
+  const bookingDateLimits = useMemo(() => {
+    const originalCheckIn = normalizeDateInput(selectedRoom?.booking?.checkIn || "");
+    const originalCheckOut = normalizeDateInput(selectedRoom?.booking?.checkOut || "");
+    const minCheckIn = [today, originalCheckIn].filter(Boolean).sort().slice(-1)[0] || today;
+    const minCheckOut = [today, bookingDateDraft.checkIn || minCheckIn, originalCheckOut]
+      .filter(Boolean)
+      .sort()
+      .slice(-1)[0] || minCheckIn;
+
+    return {
+      minCheckIn,
+      minCheckOut,
+      originalCheckIn,
+      originalCheckOut,
+    };
+  }, [bookingDateDraft.checkIn, selectedRoom, today]);
+
+  const handleBookingDateChange = (field, value) => {
+    setBookingDateDraft((prev) => {
+      const next = { ...prev, [field]: value };
+
+      if (field === "checkIn" && next.checkOut && next.checkOut < value) {
+        next.checkOut = value;
+      }
+
+      return next;
+    });
+  };
+
+  const handleSaveBookingDates = async () => {
+    if (!selectedRoom?.booking?.bookingId || String(selectedRoom.booking.bookingId).startsWith("room-")) {
+      showActionPopup("error", "Valid booking record nahi mila.");
+      return;
+    }
+
+    const nextCheckIn = bookingDateDraft.checkIn;
+    const nextCheckOut = bookingDateDraft.checkOut;
+
+    if (!nextCheckIn || !nextCheckOut) {
+      showActionPopup("error", "Check-in aur check-out dono dates zaroori hain.");
+      return;
+    }
+
+    if (nextCheckIn < bookingDateLimits.minCheckIn) {
+      showActionPopup("error", "Check-in date existing booking date ya aaj se piche nahi ho sakti.");
+      return;
+    }
+
+    if (nextCheckOut < bookingDateLimits.minCheckOut) {
+      showActionPopup("error", "Check-out date existing booking date aur selected check-in se piche nahi ho sakti.");
+      return;
+    }
+
+    try {
+      setSavingBookingDates(true);
+      const response = await API.get(`/hotel/full-booking/${selectedRoom.booking.bookingId}`);
+      const bookingDetails = response.data || {};
+
+      await API.put(`/hotel/full-booking/${selectedRoom.booking.bookingId}`, {
+        guest_name: bookingDetails.guest_name || bookingDetails.guestName || selectedRoom.booking.guestName || "",
+        mobile: bookingDetails.mobile || selectedRoom.booking.mobile || "",
+        company_name: bookingDetails.company_name || bookingDetails.companyName || selectedRoom.booking.company || "",
+        paidAmount: bookingDetails.paidAmount || selectedRoom.booking.paidAmount || 0,
+        checkIn: nextCheckIn,
+        checkOut: nextCheckOut,
+        arrival: bookingDetails.arrival || null,
+        departure: bookingDetails.departure || null,
+        rooms: Array.isArray(bookingDetails.rooms) ? bookingDetails.rooms : [],
+      });
+
+      setSelectedRoom((current) =>
+        current
+          ? {
+              ...current,
+              booking: {
+                ...current.booking,
+                checkIn: nextCheckIn,
+                checkOut: nextCheckOut,
+              },
+              roomData: {
+                ...current.roomData,
+                checkIn: nextCheckIn,
+                checkOut: nextCheckOut,
+              },
+            }
+          : current,
+      );
+
+      await loadData(true);
+      showActionPopup("success", "Booking dates updated.");
+    } catch (error) {
+      console.error(error);
+      showActionPopup("error", "Booking dates update nahi ho paaya.");
+    } finally {
+      setSavingBookingDates(false);
+    }
+  };
+
   const handleAssignCleaning = async () => {
     const roomId = selectedRoom?.roomData?.id || selectedRoom?.roomId || selectedRoom?.roomNumber;
     if (!roomId) {
-      alert("Room record missing hai.");
+      showActionPopup("error", "Room record missing hai.");
       return;
     }
 
     if (!selectedAssignee) {
-      alert("Please housekeeper select karein.");
+      showActionPopup("error", "Please housekeeper select karein.");
       return;
     }
 
@@ -459,10 +607,10 @@ useEffect(() => {
             }
           : prev,
       );
-      alert("Cleaning assigned.");
+      showActionPopup("success", "Cleaning assigned.");
     } catch (err) {
       console.error(err);
-      alert("Cleaning assign nahi ho paaya.");
+      showActionPopup("error", "Cleaning assign nahi ho paaya.");
     } finally {
       setAssigningCleaning(false);
     }
@@ -471,7 +619,7 @@ useEffect(() => {
   const handleMarkClean = async () => {
     const roomId = selectedRoom?.roomData?.id || selectedRoom?.roomId || selectedRoom?.roomNumber;
     if (!roomId) {
-      alert("Room record missing hai.");
+      showActionPopup("error", "Room record missing hai.");
       return;
     }
 
@@ -493,10 +641,10 @@ useEffect(() => {
             }
           : prev,
       );
-      alert("Room marked clean.");
+      showActionPopup("success", "Room marked clean.");
     } catch (err) {
       console.error(err);
-      alert("Mark clean failed.");
+      showActionPopup("error", "Mark clean failed.");
     } finally {
       setAssigningCleaning(false);
     }
@@ -505,7 +653,7 @@ useEffect(() => {
   const handleBlockedRoom = async (mode) => {
     const roomNumber = selectedRoom?.roomNumber;
     if (!roomNumber) {
-      alert("Room number missing hai.");
+      showActionPopup("error", "Room number missing hai.");
       return;
     }
 
@@ -538,16 +686,16 @@ useEffect(() => {
 
       await loadData(true);
       setSelectedRoom(null);
-      alert(mode === "block" ? "Room blocked successfully." : "Room unblocked successfully.");
+      showActionPopup("success", mode === "block" ? "Room blocked successfully." : "Room unblocked successfully.");
     } catch (error) {
       console.error(error);
-      alert(mode === "block" ? "Room block nahi ho paaya." : "Room unblock nahi ho paaya.");
+      showActionPopup("error", mode === "block" ? "Room block nahi ho paaya." : "Room unblock nahi ho paaya.");
     }
   };
 
   const handleBookingLifecycle = async (action) => {
     if (!selectedRoom?.booking?.bookingId || String(selectedRoom.booking.bookingId).startsWith("room-")) {
-      alert("Is room ke liye valid booking record nahi mila.");
+      showActionPopup("error", "Is room ke liye valid booking record nahi mila.");
       return;
     }
 
@@ -560,10 +708,38 @@ useEffect(() => {
       }
       await loadData(true);
       setSelectedRoom(null);
-      alert(action === "check-in" ? "Guest checked in." : "Guest checked out. Room cleaning me chala gaya.");
+      showActionPopup("success", action === "check-in" ? "Guest checked in." : "Guest checked out. Room cleaning me chala gaya.");
     } catch (error) {
       console.error(error);
-      alert(action === "check-in" ? "Check-in failed" : "Check-out failed");
+      showActionPopup("error", action === "check-in" ? "Check-in failed" : "Check-out failed");
+    }
+  };
+
+  const handleCancelBooking = async () => {
+    const bookingId = selectedRoom?.booking?.bookingId;
+    const cancelReason = String(cancelBookingModal.reason || "").trim();
+
+    if (!bookingId || String(bookingId).startsWith("room-")) {
+      showActionPopup("error", "Is room ke liye valid booking record nahi mila.");
+      return;
+    }
+
+    if (!cancelReason) {
+      showActionPopup("error", "Cancellation reason zaroor likhiye.");
+      return;
+    }
+
+    try {
+      setCancelBookingModal((current) => ({ ...current, submitting: true }));
+      await API.put(`/hotel/cancel/${bookingId}`, { reason: cancelReason });
+      await loadData(true);
+      setCancelBookingModal({ open: false, reason: "", submitting: false });
+      setSelectedRoom(null);
+      showActionPopup("success", "Booking cancelled successfully.");
+    } catch (error) {
+      console.error(error);
+      setCancelBookingModal((current) => ({ ...current, submitting: false }));
+      showActionPopup("error", error.response?.data?.message || "Booking cancel nahi ho paayi.");
     }
   };
 
@@ -1176,6 +1352,71 @@ useEffect(() => {
                 </div>
               </div>
 
+              {selectedRoom.booking?.bookingId && !String(selectedRoom.booking.bookingId).startsWith("room-") ? (
+                <div className="rounded-[1.5rem] border border-cyan-200 bg-cyan-50/70 p-4 shadow-sm">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="text-sm font-semibold text-slate-900">Stay Dates</div>
+                      <p className="mt-1 text-xs text-slate-600">
+                        Check-in aur check-out ko aage badha sakte hain. Existing date ya aaj se piche nahi ja sakte.
+                      </p>
+                    </div>
+                    <div className="rounded-full bg-white px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-cyan-700 shadow-sm">
+                      Live Update
+                    </div>
+                  </div>
+
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    <label className="space-y-2">
+                      <span className="block text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                        Check-In Date
+                      </span>
+                      <input
+                        type="date"
+                        min={bookingDateLimits.minCheckIn}
+                        value={bookingDateDraft.checkIn}
+                        onChange={(e) => handleBookingDateChange("checkIn", e.target.value)}
+                        className="w-full rounded-xl border border-cyan-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-cyan-400"
+                      />
+                    </label>
+
+                    <label className="space-y-2">
+                      <span className="block text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                        Check-Out Date
+                      </span>
+                      <input
+                        type="date"
+                        min={bookingDateLimits.minCheckOut}
+                        value={bookingDateDraft.checkOut}
+                        onChange={(e) => handleBookingDateChange("checkOut", e.target.value)}
+                        className="w-full rounded-xl border border-cyan-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-cyan-400"
+                      />
+                    </label>
+                  </div>
+
+                  <div className="mt-3 text-[11px] text-slate-500">
+                    Current saved stay: {bookingDateLimits.originalCheckIn ? formatShortDate(bookingDateLimits.originalCheckIn) : "--"} to{" "}
+                    {bookingDateLimits.originalCheckOut ? formatShortDate(bookingDateLimits.originalCheckOut) : "--"}
+                  </div>
+
+                  <div className="mt-4 flex flex-wrap items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={handleSaveBookingDates}
+                      disabled={savingBookingDates}
+                      className={`rounded-xl bg-cyan-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-cyan-700 ${
+                        savingBookingDates ? "cursor-not-allowed opacity-70" : ""
+                      }`}
+                    >
+                      {savingBookingDates ? "Saving..." : "Update Stay Dates"}
+                    </button>
+                    <div className="rounded-xl border border-cyan-200 bg-white px-4 py-3 text-sm text-slate-700">
+                      Updated dates stay board, preview, booking feed aur active booking list me dikhengi.
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+
               <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm">
                 <div className="text-sm font-semibold text-slate-900">Booking snapshot</div>
                 <div className="mt-4 space-y-3 text-sm text-slate-600">
@@ -1250,10 +1491,10 @@ useEffect(() => {
                       className="w-full rounded-xl border border-violet-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-violet-400"
                     >
                       <option value="">Select housekeeper</option>
-                      {housekeepers.map((name) => {
+                      {housekeepers.map((name, index) => {
                         const isBusy = busyHousekeepers.has(normalizeStaffName(name));
                         return (
-                          <option key={name} value={name} disabled={isBusy && selectedAssignee !== name}>
+                          <option key={`${name}-${index}`} value={name} disabled={isBusy && selectedAssignee !== name}>
                             {name} {isBusy ? "(Busy)" : "(Available)"}
                           </option>
                         );
@@ -1370,6 +1611,17 @@ useEffect(() => {
                     Extend Booking
                   </button>
                 ) : null}
+                {selectedRoom.booking?.bookingId &&
+                !String(selectedRoom.booking.bookingId).startsWith("room-") &&
+                !String(selectedRoom.booking?.bookingStatus || "").toLowerCase().includes("checked in") ? (
+                  <button
+                    type="button"
+                    onClick={() => setCancelBookingModal({ open: true, reason: "", submitting: false })}
+                    className="rounded-xl bg-rose-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-rose-700"
+                  >
+                    Cancel Booking
+                  </button>
+                ) : null}
                 <button
                   type="button"
                   onClick={() => navigate("/dashboard")}
@@ -1426,6 +1678,95 @@ useEffect(() => {
           }}
           onClose={() => setEditBookingModal(null)}
         />
+      ) : null}
+
+      {cancelBookingModal.open ? (
+        <div
+          className="fixed inset-0 z-[1150] flex items-center justify-center bg-slate-950/45 px-4 backdrop-blur-sm"
+          onClick={() => setCancelBookingModal({ open: false, reason: "", submitting: false })}
+        >
+          <div
+            className="w-full max-w-md rounded-[1.75rem] border border-rose-200 bg-white p-5 shadow-[0_24px_70px_rgba(15,23,42,0.22)]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="inline-flex rounded-full bg-rose-100 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-rose-700">
+              Cancel Booking
+            </div>
+            <h3 className="mt-3 text-lg font-black text-slate-900">
+              Room {selectedRoom?.roomNumber} booking cancel karna hai?
+            </h3>
+            <p className="mt-2 text-sm text-slate-600">
+              Guest: {selectedRoom?.booking?.guestName || "--"} | Booking #{selectedRoom?.booking?.bookingId || "--"}
+            </p>
+            <label className="mt-4 block">
+              <span className="mb-2 block text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                Cancellation Reason
+              </span>
+              <textarea
+                value={cancelBookingModal.reason}
+                onChange={(event) =>
+                  setCancelBookingModal((current) => ({ ...current, reason: event.target.value }))
+                }
+                rows={4}
+                placeholder="Guest cancelled, arrival issue, pricing issue..."
+                className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm text-slate-800 outline-none focus:ring-2 focus:ring-rose-400"
+              />
+            </label>
+            <div className="mt-5 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setCancelBookingModal({ open: false, reason: "", submitting: false })}
+                className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700"
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                onClick={handleCancelBooking}
+                disabled={cancelBookingModal.submitting}
+                className={`rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-700 ${
+                  cancelBookingModal.submitting ? "cursor-not-allowed opacity-70" : ""
+                }`}
+              >
+                {cancelBookingModal.submitting ? "Cancelling..." : "Confirm Cancel"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {actionPopup.open ? (
+        <div
+          className="fixed inset-0 z-[1200] flex items-center justify-center bg-slate-950/35 px-4 backdrop-blur-sm"
+          onClick={() => setActionPopup((current) => ({ ...current, open: false }))}
+        >
+          <div
+            className={`w-full max-w-sm rounded-[1.75rem] border p-5 shadow-[0_24px_70px_rgba(15,23,42,0.22)] ${popupTone[actionPopup.type]?.panel || popupTone.success.panel}`}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start gap-3">
+              {(() => {
+                const Icon = popupTone[actionPopup.type]?.icon || FaCheckCircle;
+                return <Icon className="mt-0.5 text-lg text-slate-900" />;
+              })()}
+              <div className="min-w-0 flex-1">
+                <div className={`inline-flex rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] ${popupTone[actionPopup.type]?.badge || popupTone.success.badge}`}>
+                  {actionPopup.type === "error" ? "Error" : "Success"}
+                </div>
+                <div className="mt-3 text-sm font-semibold text-slate-900">{actionPopup.message}</div>
+              </div>
+            </div>
+            <div className="mt-5 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setActionPopup((current) => ({ ...current, open: false }))}
+                className={`rounded-xl px-4 py-2 text-sm font-semibold text-white transition ${popupTone[actionPopup.type]?.button || popupTone.success.button}`}
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
       ) : null}
     </div>
   );

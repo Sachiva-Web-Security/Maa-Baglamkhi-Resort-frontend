@@ -66,6 +66,16 @@ export const restaurantService = {
     return response.data;
   },
 
+  async getTables() {
+    const response = await API.get("/restaurant/tables");
+    return response.data;
+  },
+
+  async addTable(payload) {
+    const response = await API.post("/restaurant/tables", payload);
+    return response.data;
+  },
+
   // POST /kitchen/order
   async createKitchenOrder(payload) {
     const response = await API.post("/kitchen/order", payload);
@@ -97,6 +107,31 @@ export const restaurantService = {
   // PUT /kitchen/orders/:id/cancel
   async cancelKitchenOrder(id) {
     const response = await API.put(`/kitchen/orders/${id}/cancel`);
+    return response.data;
+  },
+
+  async createSplitBill(payload) {
+    const response = await API.post("/restaurant/split-bills", payload);
+    return response.data;
+  },
+
+  async createItemActionRequest(payload) {
+    const response = await API.post("/restaurant/item-action-requests", payload);
+    return response.data;
+  },
+
+  async getItemActionRequests() {
+    const response = await API.get("/restaurant/item-action-requests");
+    return response.data;
+  },
+
+  async reviewItemActionRequest(id, payload) {
+    const response = await API.put(`/restaurant/item-action-requests/${id}/review`, payload);
+    return response.data;
+  },
+
+  async getWaiterPerformance() {
+    const response = await API.get("/restaurant/waiter-performance");
     return response.data;
   },
 

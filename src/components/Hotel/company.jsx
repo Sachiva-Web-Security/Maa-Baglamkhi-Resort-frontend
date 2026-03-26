@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import API from "../../api";
+import BookingCancelAction from "./BookingCancelAction";
 import {
   getBookingDraft,
   getStoredBookingCode,
@@ -226,6 +227,11 @@ const handleSkip = () => {
                 >
                   Go Back
                 </button>
+                <BookingCancelAction
+                  bookingId={bookingId}
+                  bookingCode={bookingCode}
+                  fullWidth
+                />
               </div>
             </div>
           </div>

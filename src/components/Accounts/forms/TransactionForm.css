@@ -1,56 +1,166 @@
 .accounts-form {
   display: flex;
   flex-direction: column;
+  gap: 18px;
+  padding: 24px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+
+.accounts-form__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.accounts-form__header-copy {
+  min-width: 0;
+}
+
+.accounts-form__eyebrow {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #0f766e;
+}
+
+.accounts-form__title {
+  margin: 8px 0 0;
+  font-size: 24px;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.accounts-form__subtitle {
+  margin: 8px 0 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #64748b;
+}
+
+.accounts-form__badge {
+  flex-shrink: 0;
+  border-radius: 999px;
+  padding: 10px 14px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.accounts-form__badge--income {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.accounts-form__badge--expense {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.accounts-form__panel {
+  display: flex;
+  flex-direction: column;
   gap: 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 22px;
+  padding: 18px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .accounts-form__row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 14px;
 }
 
 .accounts-form__field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 7px;
+}
+
+.accounts-form__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.accounts-form__chip {
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  background: #f8fafc;
+  color: #334155;
+  padding: 7px 11px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.accounts-form__chip:hover {
+  border-color: #67e8f9;
+  background: #ecfeff;
+  color: #0f766e;
+}
+
+.accounts-form__chip--active {
+  border-color: #06b6d4;
+  background: #cffafe;
+  color: #155e75;
 }
 
 .accounts-form__label {
-  font-size: 13px;
-  font-weight: 700;
-  color: #374151;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #475569;
 }
 
 .accounts-form__input {
-  padding: 10px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 10px;
+  min-height: 46px;
+  padding: 12px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 14px;
   font-size: 14px;
   outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
   background: #ffffff;
+  color: #0f172a;
+}
+
+.accounts-form__input::placeholder {
+  color: #94a3b8;
 }
 
 .accounts-form__input:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18);
+  border-color: #06b6d4;
+  box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.18);
+}
+
+.accounts-form__input--readonly {
+  background: #f8fafc;
+  color: #475569;
 }
 
 .accounts-form__actions {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
-  margin-top: 6px;
+  gap: 12px;
+  margin-top: 2px;
 }
 
 .accounts-btn {
   border: none;
-  border-radius: 10px;
-  padding: 10px 14px;
+  border-radius: 14px;
+  padding: 11px 18px;
+  font-size: 13px;
   font-weight: 800;
   cursor: pointer;
-  transition: opacity 0.15s ease, transform 0.1s ease;
+  transition: opacity 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
 }
 
 .accounts-btn:active {
@@ -58,23 +168,39 @@
 }
 
 .accounts-btn--primary {
-  background: #2563eb;
+  background: linear-gradient(135deg, #2563eb 0%, #06b6d4 100%);
   color: #ffffff;
+  box-shadow: 0 12px 25px rgba(37, 99, 235, 0.22);
 }
 
 .accounts-btn--ghost {
-  background: #f3f4f6;
-  color: #111827;
-  border: 1px solid #e5e7eb;
+  background: #f8fafc;
+  color: #0f172a;
+  border: 1px solid #e2e8f0;
 }
 
 .accounts-btn:hover {
-  opacity: 0.92;
+  opacity: 0.96;
 }
 
 @media (max-width: 640px) {
+  .accounts-form {
+    padding: 18px;
+  }
+
+  .accounts-form__header {
+    flex-direction: column;
+  }
+
   .accounts-form__row {
     grid-template-columns: 1fr;
   }
-}
 
+  .accounts-form__actions {
+    flex-direction: column-reverse;
+  }
+
+  .accounts-btn {
+    width: 100%;
+  }
+}

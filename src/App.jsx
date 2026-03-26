@@ -1,15 +1,24 @@
-import {
-  BrowserRouter as Router,
-  Route,
-  Routes,
-} from "react-router-dom";
 import { useEffect, useState } from "react";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 
+import { RestaurantProvider } from "./Context/RestaurantContext";
+import RoleHomeRedirect from "./components/RoleHomeRedirect";
 import Header from "./components/Header/Header";
 import ProtectedRoute from "./components/ProtectedRoute";
-import RoleHomeRedirect from "./components/RoleHomeRedirect";
 import Sidebar from "./components/Sidebar/Sidebar";
-
+import Stayover from "./components/Dashboard/Stayover";
+import InventoryDashboard from "./components/Inventory/InventoryDashboard";
+import AddMenuItemPage from "./components/Restaurant/AddMenuItemPage";
+import DailyfoodReport from "./components/Restaurant/DailyfoodReport";
+import Daywisefood from "./components/Restaurant/Daywisefood";
+import EditToken from "./components/Restaurant/EditToken";
+import MenuPage from "./components/Restaurant/MenuPage";
+import Payment from "./components/Restaurant/Payment";
+import PaymentBills from "./components/Restaurant/PaymentBills";
+import Roomitem from "./components/Restaurant/Roomitem";
+import TablePage from "./components/Restaurant/TablePage";
+import TokenItemsPage from "./components/Restaurant/TokenItempage";
+import TokenPage from "./components/Restaurant/TokenPage";
 import Accounts from "./pages/Accounts";
 import AccountsDashboard from "./pages/AccountsDashboard";
 import Assignment from "./pages/Assignments";
@@ -31,42 +40,24 @@ import RestaurantDashboard from "./pages/RestaurantDashboard";
 import RestaurantPOS from "./pages/RestaurantPOS";
 import StaffDashboard from "./pages/StaffDashboard";
 import User from "./pages/User";
-
-import InventoryDashboard from "./components/Inventory/InventoryDashboard";
-
-import AddMenuItemPage from "./components/Restaurant/AddMenuItemPage";
-import DailyfoodReport from "./components/Restaurant/DailyfoodReport";
-import Daywisefood from "./components/Restaurant/Daywisefood";
-import EditToken from "./components/Restaurant/EditToken";
-import MenuPage from "./components/Restaurant/MenuPage";
-import Payment from "./components/Restaurant/Payment";
-import PaymentBills from "./components/Restaurant/PaymentBills";
-import Roomitem from "./components/Restaurant/Roomitem";
-import TablePage from "./components/Restaurant/TablePage";
-import TokenItemsPage from "./components/Restaurant/TokenItempage";
-import TokenPage from "./components/Restaurant/TokenPage";
-
-import Stayover from "./components/Dashboard/Stayover";
-
 import AuditReport from "./pages/reports/AuditReport";
 import CollectionReport from "./pages/reports/CollectionReport";
 import DaywiseCollection from "./pages/reports/DaywiseCollection";
 import IncomeExpenditure from "./pages/reports/IncomeExpenditure";
 import SalesReport from "./pages/reports/SalesReport";
 
-import { RestaurantProvider } from "./Context/RestaurantContext";
-
 const ROLES = {
   ALL: ["admin", "manager", "receptionist", "waiter", "kitchen", "housekeeping", "accountant", "staff"],
   ADMIN_ONLY: ["admin"],
   HOTEL: ["admin", "manager", "receptionist", "staff"],
-  RESTAURANT: ["admin", "manager", "waiter", "kitchen", "staff","receptionist"],
+  RESTAURANT: ["admin", "manager", "waiter", "kitchen", "staff", "receptionist"],
   KITCHEN: ["admin", "manager", "kitchen"],
   ACCOUNTS: ["admin", "manager", "accountant"],
   INVENTORY: ["admin", "manager", "kitchen"],
   HOUSEKEEPING: ["admin", "manager", "housekeeping"],
   BANQUET: ["admin", "manager", "receptionist"],
   REPORTS: ["admin", "manager", "accountant"],
+  AUDIT: ["admin", "manager"],
   ASSIGNMENTS: ["admin", "manager", "housekeeping", "staff"],
 };
 
@@ -127,7 +118,13 @@ function App() {
       <Routes>
         <Route
           path="/login"
-          element={isAuthenticated ? <RoleHomeRedirect /> : <Login setIsAuthenticated={setIsAuthenticated} />}
+          element={
+            isAuthenticated ? (
+              <RoleHomeRedirect />
+            ) : (
+              <Login setIsAuthenticated={setIsAuthenticated} />
+            )
+          }
         />
         <Route
           path="/register"
@@ -161,7 +158,7 @@ function App() {
         <Route path="/reports/income-exp" element={protect(<IncomeExpenditure />, ROLES.REPORTS)} />
         <Route path="/reports/daywise" element={protect(<DaywiseCollection />, ROLES.REPORTS)} />
         <Route path="/reports/collection" element={protect(<CollectionReport />, ROLES.REPORTS)} />
-        <Route path="/reports/audit" element={protect(<AuditReport />, ROLES.REPORTS)} />
+        <Route path="/reports/audit" element={protect(<AuditReport />, ROLES.AUDIT)} />
 
         <Route
           path="/restaurant/*"

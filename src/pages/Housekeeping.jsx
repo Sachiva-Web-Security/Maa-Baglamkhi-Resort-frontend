@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { FaBroom, FaPlus, FaSyncAlt } from "react-icons/fa";
+
+import CleaningLogPanel from "../components/Housekeeping/CleaningLogPanel";
+import FiltersSection from "../components/Housekeeping/FiltersSection";
+import HousekeepingRow from "../components/Housekeeping/HousekeepingRow";
 import { housekeepingService } from "../services/housekeepingService";
 import { userService } from "../services/userService";
-import HousekeepingRow from "../components/Housekeeping/HousekeepingRow";
-import FiltersSection from "../components/Housekeeping/FiltersSection";
-import CleaningLogPanel from "../components/Housekeeping/CleaningLogPanel";
 
 const STATUS_OPTIONS = [
   "Vacant Dirty",
@@ -19,8 +20,11 @@ const isDirtyStatus = (value) => {
   return normalized === "vacant dirty" || normalized === "occupied dirty";
 };
 
-const isCleanStatus = (value) => String(value || "").toLowerCase() === "vacant clean";
-const isBusyStatus = (value) => String(value || "").toLowerCase() === "cleaning in progress";
+const isCleanStatus = (value) =>
+  String(value || "").toLowerCase() === "vacant clean";
+
+const isBusyStatus = (value) =>
+  String(value || "").toLowerCase() === "cleaning in progress";
 
 export default function Housekeeping() {
   const [rooms, setRooms] = useState([]);
@@ -63,8 +67,8 @@ export default function Housekeeping() {
   const fetchHousekeepers = async () => {
     try {
       const users = await userService.getAllUsers();
-      const hkUsers = users.filter((u) =>
-        String(u.role || "").toLowerCase().includes("housekeeping")
+      const hkUsers = users.filter((user) =>
+        String(user.role || "").toLowerCase().includes("housekeeping")
       );
       setHousekeepers(hkUsers.length ? hkUsers : users);
     } catch (error) {
@@ -82,8 +86,12 @@ export default function Housekeeping() {
   const filteredRooms = useMemo(() => {
     return rooms.filter((room) => {
       const matchesSearch =
-        String(room.roomNo || "").toLowerCase().includes(search.toLowerCase()) ||
-        String(room.guest || "").toLowerCase().includes(search.toLowerCase());
+        String(room.roomNo || room.roomNumber || "")
+          .toLowerCase()
+          .includes(search.toLowerCase()) ||
+        String(room.guest || "")
+          .toLowerCase()
+          .includes(search.toLowerCase());
 
       const matchesStatus =
         status === "All" ||
@@ -162,33 +170,57 @@ export default function Housekeeping() {
                   <p className="text-[11px] uppercase tracking-[0.28em] text-cyan-100">
                     Housekeeping
                   </p>
-                  <h1 className="text-2xl font-black text-white sm:text-3xl">Room Cleaning Dashboard</h1>
+                  <h1 className="text-2xl font-black text-white sm:text-3xl">
+                    Room Cleaning Dashboard
+                  </h1>
                   <p className="mt-1 text-sm text-white/70">
-                    Dashboard ki theme ke saath live room status, cleaners aur logs ek jagah.
+                    Live room status, cleaners aur logs ek jagah.
                   </p>
                 </div>
               </div>
 
               <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 <div className="rounded-[1.6rem] border border-white/10 bg-white/10 p-4 text-white">
-                  <p className="text-[11px] uppercase tracking-[0.18em] text-cyan-100">Total Rooms</p>
+                  <p className="text-[11px] uppercase tracking-[0.18em] text-cyan-100">
+                    Total Rooms
+                  </p>
                   <h2 className="mt-3 text-3xl font-black">{rooms.length}</h2>
-                  <p className="mt-1 text-xs text-white/65">Housekeeping feed me mapped inventory</p>
+                  <p className="mt-1 text-xs text-white/65">
+                    Housekeeping mapped inventory
+                  </p>
                 </div>
                 <div className="rounded-[1.6rem] border border-white/10 bg-white/10 p-4 text-white">
-                  <p className="text-[11px] uppercase tracking-[0.18em] text-cyan-100">Dirty Rooms</p>
-                  <h2 className="mt-3 text-3xl font-black">{rooms.filter((r) => isDirtyStatus(r.status)).length}</h2>
-                  <p className="mt-1 text-xs text-white/65">Immediate cleaning attention</p>
+                  <p className="text-[11px] uppercase tracking-[0.18em] text-cyan-100">
+                    Dirty Rooms
+                  </p>
+                  <h2 className="mt-3 text-3xl font-black">
+                    {rooms.filter((room) => isDirtyStatus(room.status)).length}
+                  </h2>
+                  <p className="mt-1 text-xs text-white/65">
+                    Immediate cleaning attention
+                  </p>
                 </div>
                 <div className="rounded-[1.6rem] border border-white/10 bg-white/10 p-4 text-white">
-                  <p className="text-[11px] uppercase tracking-[0.18em] text-cyan-100">Clean Rooms</p>
-                  <h2 className="mt-3 text-3xl font-black">{rooms.filter((r) => isCleanStatus(r.status)).length}</h2>
-                  <p className="mt-1 text-xs text-white/65">Ready for next allocation</p>
+                  <p className="text-[11px] uppercase tracking-[0.18em] text-cyan-100">
+                    Clean Rooms
+                  </p>
+                  <h2 className="mt-3 text-3xl font-black">
+                    {rooms.filter((room) => isCleanStatus(room.status)).length}
+                  </h2>
+                  <p className="mt-1 text-xs text-white/65">
+                    Ready for next allocation
+                  </p>
                 </div>
                 <div className="rounded-[1.6rem] border border-white/10 bg-white/10 p-4 text-white">
-                  <p className="text-[11px] uppercase tracking-[0.18em] text-cyan-100">In Progress</p>
-                  <h2 className="mt-3 text-3xl font-black">{rooms.filter((r) => isBusyStatus(r.status)).length}</h2>
-                  <p className="mt-1 text-xs text-white/65">Team currently working</p>
+                  <p className="text-[11px] uppercase tracking-[0.18em] text-cyan-100">
+                    In Progress
+                  </p>
+                  <h2 className="mt-3 text-3xl font-black">
+                    {rooms.filter((room) => isBusyStatus(room.status)).length}
+                  </h2>
+                  <p className="mt-1 text-xs text-white/65">
+                    Team currently working
+                  </p>
                 </div>
               </div>
             </div>
@@ -200,9 +232,15 @@ export default function Housekeeping() {
             <div className="rounded-[28px] border border-white/70 bg-white/95 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.12)] backdrop-blur-xl">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-700">Quick Add</p>
-                  <h2 className="mt-2 text-2xl font-black text-slate-900">Add Housekeeping Room</h2>
-                  <p className="mt-1 text-sm text-slate-500">Naya room create ya existing room details update karein.</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-700">
+                    Quick Add
+                  </p>
+                  <h2 className="mt-2 text-2xl font-black text-slate-900">
+                    Add Housekeeping Room
+                  </h2>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Naya room create ya existing room details update karein.
+                  </p>
                 </div>
                 <div className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-slate-600">
                   {loading ? "Syncing" : "Ready"}
@@ -214,13 +252,17 @@ export default function Housekeeping() {
                   type="text"
                   placeholder="Room Number"
                   value={form.roomNo}
-                  onChange={(e) => setForm({ ...form, roomNo: e.target.value })}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, roomNo: e.target.value }))
+                  }
                   className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:border-cyan-400 focus:bg-white focus:ring-4 focus:ring-cyan-100"
                 />
 
                 <select
                   value={form.status}
-                  onChange={(e) => setForm({ ...form, status: e.target.value })}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, status: e.target.value }))
+                  }
                   className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:border-cyan-400 focus:bg-white focus:ring-4 focus:ring-cyan-100"
                 >
                   {STATUS_OPTIONS.map((item) => (
@@ -234,13 +276,17 @@ export default function Housekeeping() {
                   type="text"
                   placeholder="Assignee"
                   value={form.assignee}
-                  onChange={(e) => setForm({ ...form, assignee: e.target.value })}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, assignee: e.target.value }))
+                  }
                   className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:border-cyan-400 focus:bg-white focus:ring-4 focus:ring-cyan-100"
                 />
 
                 <select
                   value={form.priority}
-                  onChange={(e) => setForm({ ...form, priority: e.target.value })}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, priority: e.target.value }))
+                  }
                   className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:border-cyan-400 focus:bg-white focus:ring-4 focus:ring-cyan-100"
                 >
                   <option value="Low">Low</option>
@@ -251,12 +297,14 @@ export default function Housekeeping() {
                 <textarea
                   placeholder="Notes"
                   value={form.notes}
-                  onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, notes: e.target.value }))
+                  }
                   className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:border-cyan-400 focus:bg-white focus:ring-4 focus:ring-cyan-100 md:col-span-2"
                   rows={3}
                 />
 
-                <div className="md:col-span-2 flex flex-wrap gap-3">
+                <div className="flex flex-wrap gap-3 md:col-span-2">
                   <button
                     onClick={handleAddRoom}
                     className="inline-flex items-center gap-2 rounded-2xl bg-[linear-gradient(135deg,#0f172a_0%,#1d4ed8_100%)] px-5 py-3 font-semibold text-white shadow-lg shadow-slate-900/15 transition hover:-translate-y-0.5"
@@ -292,17 +340,25 @@ export default function Housekeeping() {
             <div className="rounded-[28px] border border-white/70 bg-white/85 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-6">
               <div className="mb-5 flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-violet-600">Status Board</p>
-                  <h2 className="mt-2 text-2xl font-black text-slate-900">Room Status List</h2>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-violet-600">
+                    Status Board
+                  </p>
+                  <h2 className="mt-2 text-2xl font-black text-slate-900">
+                    Room Status List
+                  </h2>
                 </div>
-                {loading && <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">Loading...</span>}
+                {loading ? (
+                  <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">
+                    Loading...
+                  </span>
+                ) : null}
               </div>
 
               <div className="grid gap-4">
                 {filteredRooms.length > 0 ? (
                   filteredRooms.map((room) => (
                     <HousekeepingRow
-                      key={room.id}
+                      key={room.id || room.roomNo || room.roomNumber}
                       room={room}
                       housekeepers={housekeepers}
                       onStatusChange={handleStatusChange}
