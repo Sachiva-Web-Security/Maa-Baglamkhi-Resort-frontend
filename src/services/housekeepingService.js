@@ -70,6 +70,13 @@ export const logCost        = (data)   => request("POST", "/housekeeping/costing
 export const getCheckoutReport = (date) =>
   request("GET", `/housekeeping/checkout-report?date=${date}`);
 
+export const getCompletedCleaningLogs = (params = {}) => {
+  const qs = new URLSearchParams(params).toString();
+  return request("GET", `/housekeeping/completed-cleaning${qs ? "?" + qs : ""}`);
+};
+export const createCompletedCleaningLog = (data) =>
+  request("POST", "/housekeeping/completed-cleaning", data);
+
 // ── ASSIGNMENTS ────────────────────────────────────────────────
 export const getAssignments    = (params = {}) => {
   const qs = new URLSearchParams(params).toString();
@@ -107,6 +114,8 @@ export const housekeepingService = {
   getCostingLogs,
   logCost,
   getCheckoutReport,
+  getCompletedCleaningLogs,
+  createCompletedCleaningLog,
   getAssignments,
   createAssignment,
   updateAssignment,

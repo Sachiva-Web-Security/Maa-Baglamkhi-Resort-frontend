@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import API from "../../api";
+import BookingCancelAction from "./BookingCancelAction";
 import {
   getBookingDraft,
   getStoredBookingCode,
@@ -370,6 +371,11 @@ const Advance = () => {
                 >
                   Go Back
                 </button>
+                <BookingCancelAction
+                  bookingId={bookingId}
+                  bookingCode={bookingCode}
+                  buttonClassName="rounded-full"
+                />
                 <button
                   type="button"
                   onClick={handleProceed}

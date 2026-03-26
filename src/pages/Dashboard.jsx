@@ -15,7 +15,7 @@ import {
   FaTimes,
 } from "react-icons/fa";
 import { ToastContainer, toast } from "react-toastify";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -29,10 +29,7 @@ import {
   setCleaningTasks,
   upsertCleaningTask,
 } from "../components/Hotel/bookingSession";
-import {
-  getDashboardNotifications,
-  pushDashboardNotification,
-} from "../components/Dashboard/dashboardNotifications";
+import { pushDashboardNotification } from "../components/Dashboard/dashboardNotifications";
 import {
   addDays,
   BOARD_BUCKET_META,
@@ -79,10 +76,14 @@ const DASHBOARD_SEARCH_TARGETS = [
 ];
 
 const getHousekeepingUsers = (users) =>
-  (Array.isArray(users) ? users : [])
-    .filter((user) => String(user.role || "").toLowerCase().includes("housekeeping"))
-    .map((user) => user.name)
-    .filter(Boolean);
+  Array.from(
+    new Set(
+      (Array.isArray(users) ? users : [])
+        .filter((user) => String(user.role || "").toLowerCase().includes("housekeeping"))
+        .map((user) => String(user.name || "").trim())
+        .filter(Boolean),
+    ),
+  );
 
 const normalizeAvailableRoomType = (value) => {
   const raw = String(value || "").trim();
@@ -144,13 +145,13 @@ const Dashboard = () => {
   );
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
-  const [dashboardNotifications, setDashboardNotifications] = useState([]);
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [availableTypeOpen, setAvailableTypeOpen] = useState("");
   const [housekeepers, setHousekeepers] = useState([]);
   const [selectedAssignee, setSelectedAssignee] = useState("");
   const [selectedCleaningMinutes, setSelectedCleaningMinutes] = useState(30);
   const [assigningCleaning, setAssigningCleaning] = useState(false);
+  const [refreshingDashboard, setRefreshingDashboard] = useState(false);
   const [apiMetrics, setApiMetrics] = useState({
     totalRooms: 0,
     occupiedRooms: 0,
@@ -160,73 +161,30 @@ const Dashboard = () => {
   const [rooms, setRooms] = useState([]);
   const [bookings, setBookings] = useState([]);
 
-  const loadDashboardData = async () => {
-    const [metricsRes, roomsRes, bookingsRes, usersRes] = await Promise.all([
-      API.get("/dashboard/metrics"),
-      API.get("/housekeeping"),
-      API.get("/hotel/all-bookings"),
-      API.get("/users"),
-    ]);
+  const loadDashboardData = useCallback(async (silent = false) => {
+    try {
+      if (silent) setRefreshingDashboard(true);
 
-    setApiMetrics({
-      totalRooms: metricsRes.data.totalRooms || 0,
-      occupiedRooms: metricsRes.data.occupiedRooms || 0,
-      todayRevenue: metricsRes.data.todayRevenue || 0,
-      todayCheckins: metricsRes.data.todayCheckins || 0,
-    });
-    setRooms(normalizeRooms(roomsRes.data));
-    setBookings(expandBookings(bookingsRes.data));
-    setHousekeepers(getHousekeepingUsers(usersRes.data));
-  };
+      const [metricsRes, roomsRes, bookingsRes, usersRes] = await Promise.all([
+        API.get("/dashboard/metrics"),
+        API.get("/housekeeping"),
+        API.get("/hotel/all-bookings"),
+        API.get("/users"),
+      ]);
 
-  const buildNotificationFeed = () => {
-    const stored = getDashboardNotifications().map((item) => ({
-      ...item,
-      kind: "stored",
-    }));
-
-    const cleaningMessages = getCleaningTasks()
-      ? Object.entries(getCleaningTasks())
-          .filter(([, task]) => task?.message || task?.assignee || task?.dueAt)
-          .map(([roomKey, task]) => ({
-            id: `cleaning-${roomKey}`,
-            title: `Room ${task.roomNumber || roomKey}`,
-            message:
-              task.message ||
-              `Assigned to ${task.assignee || "Housekeeping"} for ${Number(task.minutes || 0) || 0} min`,
-            type: String(task.status || "").toLowerCase().includes("dirty") ? "warning" : "info",
-            route: "/housekeeping",
-            createdAt: task.updatedAt || task.createdAt || task.startedAt || new Date().toISOString(),
-          }))
-      : [];
-
-    const merged = [...stored, ...cleaningMessages]
-      .filter((item, index, arr) => {
-        const signature = [
-          item?.meta?.source || "general",
-          item?.meta?.roomNo || item?.title || "",
-          item?.title || "",
-          item?.message || "",
-          item?.route || "",
-        ].join("|");
-        return (
-          arr.findIndex((entry) =>
-            [
-              entry?.meta?.source || "general",
-              entry?.meta?.roomNo || entry?.title || "",
-              entry?.title || "",
-              entry?.message || "",
-              entry?.route || "",
-            ].join("|") === signature,
-          ) === index
-        );
-      })
-      .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-
-    return merged.slice(0, 8);
-  };
-
-  const cleaningTaskCount = Object.entries(getCleaningTasks()).filter(([, task]) => task?.message || task?.assignee || task?.dueAt).length;
+      setApiMetrics({
+        totalRooms: metricsRes.data.totalRooms || 0,
+        occupiedRooms: metricsRes.data.occupiedRooms || 0,
+        todayRevenue: metricsRes.data.todayRevenue || 0,
+        todayCheckins: metricsRes.data.todayCheckins || 0,
+      });
+      setRooms(normalizeRooms(roomsRes.data));
+      setBookings(expandBookings(bookingsRes.data));
+      setHousekeepers(getHousekeepingUsers(usersRes.data));
+    } finally {
+      if (silent) setRefreshingDashboard(false);
+    }
+  }, []);
 
   const searchResults = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -290,24 +248,31 @@ const Dashboard = () => {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [loadDashboardData]);
 
   useEffect(() => {
-    const syncNotifications = () => {
-      setDashboardNotifications(buildNotificationFeed());
+    const refreshDashboard = () => {
+      loadDashboardData(true).catch((error) => {
+        console.error("Dashboard refresh failed", error);
+      });
     };
 
-    syncNotifications();
-    const timer = setInterval(syncNotifications, 10000);
-    window.addEventListener("storage", syncNotifications);
-    window.addEventListener("dashboard-notifications-updated", syncNotifications);
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        refreshDashboard();
+      }
+    };
+
+    const intervalId = window.setInterval(refreshDashboard, 30000);
+    window.addEventListener("focus", refreshDashboard);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      clearInterval(timer);
-      window.removeEventListener("storage", syncNotifications);
-      window.removeEventListener("dashboard-notifications-updated", syncNotifications);
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", refreshDashboard);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [bookings, rooms, selectedDate]);
+  }, [loadDashboardData]);
 
   useEffect(() => {
     let mounted = true;
@@ -352,7 +317,7 @@ const Dashboard = () => {
       mounted = false;
       clearInterval(timer);
     };
-  }, []);
+  }, [loadDashboardData]);
 
   const mergedBookings = useMemo(() => mergeBookingsWithRooms(bookings, rooms), [bookings, rooms]);
 
@@ -385,6 +350,126 @@ const Dashboard = () => {
         return status.includes("dirty") || !room.assignee || room.assignee === "No Housekeeper";
       }).length,
     [rooms],
+  );
+  const dirtyRoomCount = useMemo(
+    () =>
+      rooms.filter((room) =>
+        String(room.housekeepingLabel || room.status || "").toLowerCase().includes("dirty"),
+      ).length,
+    [rooms],
+  );
+  const unassignedHousekeepingCount = useMemo(
+    () =>
+      rooms.filter((room) => {
+        const assignee = String(room.assignee || "").trim().toLowerCase();
+        return !assignee || assignee === "no housekeeper";
+      }).length,
+    [rooms],
+  );
+  const actionableAlerts = useMemo(
+    () => [
+      {
+        key: "attention",
+        tone: "border-rose-200 bg-rose-50",
+        iconClass: "text-rose-500",
+        title: `${attentionCount} live room issue${attentionCount === 1 ? "" : "s"}`,
+        detail: `${dirtyRoomCount} dirty room, ${unassignedHousekeepingCount} unassigned housekeeping room.`,
+      },
+      {
+        key: "confirmed",
+        tone: "border-amber-200 bg-amber-50",
+        iconClass: "text-amber-500",
+        title: `${selectedDaySnapshot.confirmed.length} confirmed room${selectedDaySnapshot.confirmed.length === 1 ? "" : "s"}`,
+        detail: `Confirmed for ${formatDateLabel(selectedDate)} from live booking board.`,
+      },
+      {
+        key: "cleaning",
+        tone: "border-violet-200 bg-violet-50",
+        iconClass: "text-violet-500",
+        title: `${selectedDaySnapshot.cleaning.length} cleaning room${selectedDaySnapshot.cleaning.length === 1 ? "" : "s"}`,
+        detail: `Cleaning queue for ${formatDateLabel(selectedDate)} from housekeeping feed.`,
+      },
+      {
+        key: "checked-in",
+        tone: "border-cyan-200 bg-cyan-50",
+        iconClass: "text-cyan-500",
+        title: `${selectedDaySnapshot.checked_in.length} checked-in room${selectedDaySnapshot.checked_in.length === 1 ? "" : "s"}`,
+        detail: `In-house rooms for ${formatDateLabel(selectedDate)} from active stay data.`,
+      },
+    ],
+    [
+      attentionCount,
+      dirtyRoomCount,
+      selectedDate,
+      selectedDaySnapshot.checked_in.length,
+      selectedDaySnapshot.cleaning.length,
+      selectedDaySnapshot.confirmed.length,
+      unassignedHousekeepingCount,
+    ],
+  );
+  const pendingSettlementAmount = useMemo(
+    () =>
+      bookings.reduce((sum, booking) => sum + Number(booking.remainingAmount || 0), 0),
+    [bookings],
+  );
+  const pendingSettlementCount = useMemo(
+    () => bookings.filter((booking) => Number(booking.remainingAmount || 0) > 0).length,
+    [bookings],
+  );
+  const dashboardNotifications = useMemo(
+    () =>
+      [
+        {
+          id: `notif-attention-${selectedDate}`,
+          title: `${attentionCount} rooms need attention`,
+          message: `${dirtyRoomCount} dirty room and ${unassignedHousekeepingCount} room without housekeeper assignment.`,
+          route: "/housekeeping",
+          createdAt: `${selectedDate}T09:00:00`,
+        },
+        {
+          id: `notif-confirmed-${selectedDate}`,
+          title: `${selectedDaySnapshot.confirmed.length} confirmed rooms`,
+          message: `Confirmed arrivals for ${formatDateLabel(selectedDate)} from live booking board.`,
+          route: "/stayover",
+          createdAt: `${selectedDate}T08:00:00`,
+        },
+        {
+          id: `notif-cleaning-${selectedDate}`,
+          title: `${selectedDaySnapshot.cleaning.length} rooms in cleaning`,
+          message: `Housekeeping queue for ${formatDateLabel(selectedDate)} from live room feed.`,
+          route: "/housekeeping",
+          createdAt: `${selectedDate}T07:00:00`,
+        },
+        {
+          id: `notif-checkin-${selectedDate}`,
+          title: `${selectedDaySnapshot.checked_in.length} checked-in rooms`,
+          message: `In-house occupied rooms for ${formatDateLabel(selectedDate)} from active stay data.`,
+          route: "/hotel/all-bookings",
+          createdAt: `${selectedDate}T06:00:00`,
+        },
+        {
+          id: `notif-settlement-${selectedDate}`,
+          title: `${pendingSettlementCount} bookings pending settlement`,
+          message: `${formatCurrency(pendingSettlementAmount)} still due across active bookings.`,
+          route: "/accounts",
+          createdAt: `${selectedDate}T05:00:00`,
+        },
+      ].filter((item) => {
+        const digits = item.title.match(/\d+/g);
+        const total = digits ? digits.reduce((sum, value) => sum + Number(value || 0), 0) : 0;
+        return total > 0;
+      }),
+    [
+      attentionCount,
+      dirtyRoomCount,
+      pendingSettlementAmount,
+      pendingSettlementCount,
+      selectedDate,
+      selectedDaySnapshot.checked_in.length,
+      selectedDaySnapshot.cleaning.length,
+      selectedDaySnapshot.confirmed.length,
+      unassignedHousekeepingCount,
+    ],
   );
 
   const liveTotalRooms = rooms.length || apiMetrics.totalRooms || 0;
@@ -448,11 +533,13 @@ const Dashboard = () => {
     { label: "Today's Revenue", value: `Rs. ${Number(displayRevenue || 0).toLocaleString()}` },
     { label: "Check-ins", value: String(liveCheckins) },
   ];
-
   const quickActions = [
     {
       label: "New Booking",
       helper: "Front desk guest entry",
+      liveValue: `${liveCheckins}`,
+      liveLabel: "today check-ins",
+      detail: `${selectedDaySnapshot.confirmed.length} confirmed room(s) for ${formatDateLabel(selectedDate)}`,
       icon: FaDoorOpen,
       route: "/hotel/guest",
       tone: "from-cyan-500 to-blue-500",
@@ -460,6 +547,9 @@ const Dashboard = () => {
     {
       label: "Cleaning Log",
       helper: "Review room readiness",
+      liveValue: `${selectedDaySnapshot.cleaning.length}`,
+      liveLabel: "rooms in queue",
+      detail: `${selectedDaySnapshot.cleaning.length} live housekeeping room(s) need readiness review`,
       icon: FaBroom,
       route: "/housekeeping?view=cleaning-log",
       tone: "from-emerald-500 to-teal-500",
@@ -467,6 +557,9 @@ const Dashboard = () => {
     {
       label: "Settlement Review",
       helper: "Track billing movement",
+      liveValue: formatCurrency(pendingSettlementAmount),
+      liveLabel: "balance due",
+      detail: `${pendingSettlementCount} booking(s) still waiting for settlement`,
       icon: FaClipboardCheck,
       route: "/accounts",
       tone: "from-amber-500 to-orange-500",
@@ -1998,10 +2091,10 @@ const Dashboard = () => {
                   </div>
                   <button
                     type="button"
-                    onClick={() => window.location.reload()}
+                    onClick={() => loadDashboardData(true)}
                     className="rounded-full border border-slate-200 bg-slate-50 p-2 text-slate-600 transition hover:text-slate-900"
                   >
-                    <FaSyncAlt />
+                    <FaSyncAlt className={refreshingDashboard ? "animate-spin" : ""} />
                   </button>
                 </div>
                 <div className="space-y-3">
@@ -2025,19 +2118,27 @@ const Dashboard = () => {
                       >
                         {item.label === "Cleaning Log" ? (
                           <span className="absolute -right-2 -top-2 z-20 flex h-7 w-7 items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 text-[11px] font-black text-emerald-700 shadow-[0_8px_20px_rgba(16,185,129,0.18)]">
-                            {cleaningTaskCount}
+                            {selectedDaySnapshot.cleaning.length}
                           </span>
                         ) : null}
                         <div className="flex items-center gap-3">
                           <span className={`flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-r ${item.tone} text-white`}>
                             <Icon />
                           </span>
-                          <div>
+                          <div className="min-w-0">
                             <div className="text-sm font-semibold text-slate-900">{item.label}</div>
                             <div className="text-xs text-slate-500">{item.helper}</div>
+                            <div className="mt-1 text-[11px] font-semibold text-slate-700">
+                              {item.detail}
+                            </div>
                           </div>
                         </div>
-                        <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Open</span>
+                        <div className="text-right">
+                          <div className="text-sm font-black text-slate-900">{item.liveValue}</div>
+                          <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+                            {item.liveLabel}
+                          </div>
+                        </div>
                       </button>
                     );
                   })}
@@ -2050,29 +2151,20 @@ const Dashboard = () => {
                 </p>
                 <h3 className="mt-1 text-lg font-bold text-slate-900">Actionable room issues</h3>
                 <div className="mt-4 space-y-3">
-                  <div className="rounded-[18px] border border-rose-200 bg-rose-50 px-4 py-3">
-                    <div className="flex items-start gap-3">
-                      <FaExclamationTriangle className="mt-0.5 text-rose-500" />
-                      <div>
-                        <div className="text-sm font-semibold text-slate-900">{attentionCount} rooms need attention</div>
-                        <div className="text-xs text-slate-600">
-                          Dirty rooms ya unassigned housekeeping rooms ko review karein.
+                  {actionableAlerts.map((item) => (
+                    <div
+                      key={item.key}
+                      className={`rounded-[18px] border px-4 py-3 ${item.tone}`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <FaExclamationTriangle className={`mt-0.5 ${item.iconClass}`} />
+                        <div>
+                          <div className="text-sm font-semibold text-slate-900">{item.title}</div>
+                          <div className="text-xs text-slate-600">{item.detail}</div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="rounded-[18px] border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-slate-700">
-                    Confirmed for {formatDateLabel(selectedDate)}:
-                    <span className="ml-2 font-semibold text-amber-700">{selectedDaySnapshot.confirmed.length}</span>
-                  </div>
-                  <div className="rounded-[18px] border border-violet-200 bg-violet-50 px-4 py-3 text-sm text-slate-700">
-                    Cleaning for {formatDateLabel(selectedDate)}:
-                    <span className="ml-2 font-semibold text-violet-700">{selectedDaySnapshot.cleaning.length}</span>
-                  </div>
-                  <div className="rounded-[18px] border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm text-slate-700">
-                    Checked in on {formatDateLabel(selectedDate)}:
-                    <span className="ml-2 font-semibold text-cyan-700">{selectedDaySnapshot.checked_in.length}</span>
-                  </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -2293,8 +2385,8 @@ const Dashboard = () => {
                       >
                         <option value="">Select housekeeper</option>
                         {housekeepers.length ? (
-                          housekeepers.map((name) => (
-                            <option key={name} value={name}>
+                          housekeepers.map((name, index) => (
+                            <option key={`${name}-${index}`} value={name}>
                               {name}
                             </option>
                           ))

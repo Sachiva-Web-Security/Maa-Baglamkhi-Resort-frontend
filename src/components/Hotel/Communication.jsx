@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import API from "../../api";
+import BookingCancelAction from "./BookingCancelAction";
 import {
   clearBookingSession,
   getBookingDraft,
@@ -238,7 +239,13 @@ const Communication = () => {
           >
             {String(bookingStatus || "").toLowerCase().includes("checked in") ? "Check Out" : "Check In"}
           </button>
-          
+          {!String(bookingStatus || "").toLowerCase().includes("checked in") ? (
+            <BookingCancelAction
+              bookingId={bookingId}
+              bookingCode={bookingRef}
+              buttonClassName="rounded-full"
+            />
+          ) : null}
         </div>
 
         <section className="grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(360px,0.75fr)]">

@@ -12,11 +12,7 @@ const STATUS_CONFIG = {
 const STATUS_ORDER = ["Occupied", "Available", "Cleaning", "Maintenance"];
 
 const RoomOccupancyChart = () => {
-  const [data, setData] = useState([
-    { name: "Occupied", value: 85 },
-    { name: "Available", value: 28 },
-    { name: "Cleaning", value: 7 },
-  ]);
+  const [data, setData] = useState([]);
 
   useEffect(() => {
     const fetchCharts = async () => {

@@ -1,10 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import API from '../api';
 import { housekeepingService } from '../services/housekeepingService';
 import { userService } from '../services/userService';
 import CleaningLogPanel from '../components/Housekeeping/CleaningLogPanel';
+import { expandBookings } from '../components/Dashboard/stayoverUtils';
 import {
   getCleaningTasks,
+  removeCleaningTask,
   setCleaningTasks,
 } from '../components/Hotel/bookingSession';
 import {
@@ -13,6 +16,7 @@ import {
 
 import {
   FaSearch,
+  FaChevronDown,
   FaTimes,
   FaCog,
   FaClipboardList,
@@ -120,6 +124,7 @@ function Housekeeping() {
   const routeOption = urlParams.get('view') || location.state?.openOption;
   const [data, setData] = useState([]);
   const [housekeepers, setHousekeepers] = useState([]);
+  const [bookedRoomOptions, setBookedRoomOptions] = useState([]);
 
   const [activeOption, setActiveOption] = useState(
     routeOption && HOUSEKEEPING_OPTIONS.some((option) => option.id === routeOption)
@@ -138,6 +143,7 @@ function Housekeeping() {
   const [logStatus, setLogStatus] = useState('All');
   const [logAssignee, setLogAssignee] = useState('All');
   const [cleaningTasks, setCleaningTaskState] = useState({});
+  const [completedCleaningLogs, setCompletedCleaningLogState] = useState([]);
   const [roomMessageDrafts, setRoomMessageDrafts] = useState({});
   const [nowTs, setNowTs] = useState(() => Date.now());
 
@@ -157,9 +163,50 @@ function Housekeeping() {
         (u) => u.role && String(u.role).toLowerCase().includes('housekeeping'),
       );
       const finalHousekeepers = hkUsers.length > 0 ? hkUsers : users;
-      setHousekeepers(finalHousekeepers.map((u) => u.name));
+      setHousekeepers(
+        Array.from(
+          new Set(finalHousekeepers.map((u) => String(u.name || '').trim()).filter(Boolean)),
+        ),
+      );
     } catch (error) {
       console.error('Error fetching housekeepers', error);
+    }
+  };
+
+  const fetchBookedRooms = async () => {
+    try {
+      const response = await API.get('/hotel/all-bookings');
+      const bookingRows = expandBookings(response.data);
+      const confirmedRooms = Array.from(
+        new Map(
+          bookingRows
+            .filter((booking) => {
+              const status = String(booking.bookingStatus || '').toLowerCase();
+              return (
+                status.includes('confirmed') ||
+                status.includes('booked') ||
+                status.includes('reserved')
+              );
+            })
+            .map((booking) => [
+              String(booking.roomNumber || booking.roomNo || '').trim(),
+              {
+                roomNo: String(booking.roomNumber || booking.roomNo || '').trim(),
+                guestName: booking.guestName || '',
+                bookingId: booking.bookingId || '',
+              },
+            ]),
+        ).values(),
+      )
+        .filter((booking) => booking.roomNo)
+        .sort((left, right) =>
+          String(left.roomNo).localeCompare(String(right.roomNo), undefined, { numeric: true }),
+        );
+
+      setBookedRoomOptions(confirmedRooms);
+    } catch (error) {
+      console.error('Error fetching confirmed rooms', error);
+      setBookedRoomOptions([]);
     }
   };
 
@@ -230,9 +277,29 @@ function Housekeeping() {
     }
   };
 
+  const fetchCompletedCleaningLogs = async () => {
+    try {
+      const logs = await housekeepingService.getCompletedCleaningLogs();
+      setCompletedCleaningLogState(
+        (Array.isArray(logs) ? logs : []).map((entry) => ({
+          ...entry,
+          roomId: entry.roomId || entry.room_id,
+          roomNo: entry.roomNo || entry.room_no,
+          guestStatus: entry.guestStatus || entry.guest_status,
+          completedAt: entry.completedAt || entry.completed_at,
+        })),
+      );
+    } catch (error) {
+      console.error('Error fetching completed cleaning logs', error);
+      setCompletedCleaningLogState([]);
+    }
+  };
+
   useEffect(() => {
     fetchRooms();
     fetchHousekeepers();
+    fetchBookedRooms();
+    fetchCompletedCleaningLogs();
   }, []);
 
   useEffect(() => {
@@ -398,6 +465,23 @@ function Housekeeping() {
     (room) => room.isOverdue || (room.minutesLeft !== null && room.minutesLeft <= 5),
   );
 
+  const addRoomOptions = useMemo(() => {
+    const existingRooms = new Set(
+      data.map((room) => String(room.roomNo || '').trim().toLowerCase()).filter(Boolean),
+    );
+
+    return bookedRoomOptions.filter(
+      (room) => !existingRooms.has(String(room.roomNo || '').trim().toLowerCase()),
+    );
+  }, [bookedRoomOptions, data]);
+
+  const completedTodayRows = useMemo(() => {
+    const today = todayISO();
+    return completedCleaningLogs.filter(
+      (entry) => String(entry.completedAt || '').slice(0, 10) === today,
+    );
+  }, [completedCleaningLogs]);
+
   const extendCleaningTime = async (room, extraMinutes = 5) => {
     const roomKey = String(room.id || room.roomNo || room.roomNumber);
     const tasks = getCleaningTasks();
@@ -461,6 +545,46 @@ function Housekeeping() {
       meta: { source: 'housekeeping', roomNo: room.roomNo },
     }, ['title', 'message', 'route', 'meta.source', 'meta.roomNo']);
     await fetchRooms();
+  };
+
+  const markCleaningComplete = async (room) => {
+    const roomKey = String(room.id || room.roomNo || room.roomNumber);
+
+    try {
+      await housekeepingService.updateRoomStatus(room.id || room.roomNo || room.roomNumber, 'Vacant Clean');
+      const completedEntry = {
+        roomId: room.id || room.roomNo || room.roomNumber,
+        roomNo: room.roomNo,
+        assignee: room.assignee || 'No Housekeeper',
+        status: 'Vacant Clean',
+        guestStatus: room.guestStatus || '-',
+        completedAt: new Date().toISOString(),
+      };
+      await housekeepingService.createCompletedCleaningLog(completedEntry);
+      await fetchCompletedCleaningLogs();
+      removeCleaningTask(roomKey);
+      setCleaningTaskState((prev) => {
+        const next = { ...prev };
+        delete next[roomKey];
+        return next;
+      });
+      setRoomMessageDrafts((prev) => {
+        const next = { ...prev };
+        delete next[roomKey];
+        return next;
+      });
+      upsertDashboardNotification({
+        title: `Cleaning completed - Room ${room.roomNo}`,
+        message: `${room.assignee || 'Housekeeping'} marked this room as clean.`,
+        type: 'success',
+        route: '/housekeeping?view=cleaning-log',
+        meta: { source: 'housekeeping', roomNo: room.roomNo },
+      }, ['title', 'route', 'meta.source', 'meta.roomNo']);
+      await fetchRooms();
+    } catch (error) {
+      console.error('Error marking room as clean', error);
+      alert('Room clean mark karne me problem aayi.');
+    }
   };
 
   const costingRows = useMemo(() => {
@@ -645,6 +769,8 @@ function Housekeeping() {
           setRoomMessageDrafts={setRoomMessageDrafts}
           onSendCleaningMessage={sendCleaningMessage}
           onExtendCleaningTime={extendCleaningTime}
+          onMarkCleaningComplete={markCleaningComplete}
+          completedTodayRows={completedTodayRows}
         />
       );
     }
@@ -981,13 +1107,23 @@ function Housekeeping() {
 
             <div className="mb-4">
               <label className="mb-1 block text-sm text-slate-500">Room No. / Name</label>
-              <input
-                type="text"
-                value={newRoomNo}
-                onChange={(e) => setNewRoomNo(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                placeholder="e.g. 101"
-              />
+              <div className="relative">
+                <select
+                  value={newRoomNo}
+                  onChange={(e) => setNewRoomNo(e.target.value)}
+                  className="w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 pr-11 text-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                >
+                  <option value="">Select confirmed room</option>
+                  {addRoomOptions.map((room) => (
+                    <option key={room.bookingId || room.roomNo} value={room.roomNo}>
+                      {room.roomNo}{room.guestName ? ` - ${room.guestName}` : ''}
+                    </option>
+                  ))}
+                </select>
+                <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-sm text-slate-400">
+                  <FaChevronDown />
+                </span>
+              </div>
             </div>
 
             <div className="mt-6 flex justify-end gap-3">

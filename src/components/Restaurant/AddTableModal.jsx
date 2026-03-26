@@ -18,13 +18,48 @@ const AddTableModal = ({
 
         <div className="mt-5 grid gap-4">
           <input
-            value={value}
-            onChange={(event) => setValue(event.target.value)}
+            value={value.number}
+            onChange={(event) => setValue((prev) => ({ ...prev, number: event.target.value }))}
             placeholder="Enter Table No"
             className="rounded-[18px] border-2 border-slate-200 px-4 py-4 text-lg outline-none focus:border-blue-400"
           />
+          <div className="grid grid-cols-2 gap-4">
+            <input
+              value={value.floorName}
+              onChange={(event) => setValue((prev) => ({ ...prev, floorName: event.target.value }))}
+              placeholder="Floor"
+              className="rounded-[18px] border-2 border-slate-200 px-4 py-4 text-base outline-none focus:border-blue-400"
+            />
+            <input
+              value={value.sectionName}
+              onChange={(event) => setValue((prev) => ({ ...prev, sectionName: event.target.value }))}
+              placeholder="Section"
+              className="rounded-[18px] border-2 border-slate-200 px-4 py-4 text-base outline-none focus:border-blue-400"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <input
+              type="number"
+              min="1"
+              value={value.seatCount}
+              onChange={(event) => setValue((prev) => ({ ...prev, seatCount: event.target.value }))}
+              placeholder="Seat Count"
+              className="rounded-[18px] border-2 border-slate-200 px-4 py-4 text-base outline-none focus:border-blue-400"
+            />
+            <select
+              value={value.statusColor}
+              onChange={(event) => setValue((prev) => ({ ...prev, statusColor: event.target.value }))}
+              className="rounded-[18px] border-2 border-slate-200 px-4 py-4 text-base outline-none focus:border-blue-400"
+            >
+              <option value="">Auto Status Color</option>
+              <option value="emerald">Emerald</option>
+              <option value="amber">Amber</option>
+              <option value="rose">Rose</option>
+              <option value="sky">Sky</option>
+            </select>
+          </div>
           <div className="rounded-[20px] bg-slate-50 px-4 py-4 text-sm text-slate-600">
-            Table number only. Backend me direct create hoga.
+            Table number ke saath floor, section aur seating details bhi save hongi.
           </div>
         </div>
 

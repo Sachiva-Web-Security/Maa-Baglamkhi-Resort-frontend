@@ -5,6 +5,8 @@ import API from "../../api";
 import {
   clearBookingSession,
   getBookingDraft,
+  getStoredBookingCode,
+  getStoredBookingId,
   setBookingDraft,
   setStoredBookingId,
   setStoredBookingCode,
@@ -67,7 +69,10 @@ const Guest = () => {
   const location = useLocation();
   const today = todayISO();
   const [popup, setPopup] = useState({ open: false, type: "error", title: "", message: "" });
+  const [cancelFlowModal, setCancelFlowModal] = useState({ open: false, reason: "", submitting: false });
   const freshStart = Boolean(location.state?.resetBookingDraft);
+  const activeBookingId = location.state?.bookingId || getStoredBookingId();
+  const activeBookingCode = location.state?.bookingCode || getStoredBookingCode();
 
   const [formData, setFormData] = useState(() =>
     freshStart ? initialGuestForm : getBookingDraft("guest") || initialGuestForm,
@@ -223,6 +228,37 @@ const Guest = () => {
 
     setFormData(next);
     setBookingDraft("guest", next);
+  };
+
+  const handleCancelBookingFlow = async () => {
+    const reason = String(cancelFlowModal.reason || "").trim();
+
+    if (activeBookingId) {
+      if (!reason) {
+        showPopup("error", "Reason Required", "Please enter a cancellation reason before cancelling this saved booking.");
+        return;
+      }
+
+      try {
+        setCancelFlowModal((current) => ({ ...current, submitting: true }));
+        await API.put(`/hotel/cancel/${activeBookingId}`, { reason });
+        clearBookingSession();
+        setFormData(initialGuestForm);
+        setCancelFlowModal({ open: false, reason: "", submitting: false });
+        navigate("/hotel/all-bookings");
+        return;
+      } catch (error) {
+        console.error(error);
+        setCancelFlowModal((current) => ({ ...current, submitting: false }));
+        showPopup("error", "Cancellation Failed", error.response?.data?.message || "Booking cancel nahi ho paayi.");
+        return;
+      }
+    }
+
+    clearBookingSession();
+    setFormData(initialGuestForm);
+    setCancelFlowModal({ open: false, reason: "", submitting: false });
+    navigate("/hotel/all-bookings");
   };
 
   return (
@@ -431,6 +467,14 @@ const Guest = () => {
             <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-sky-700">
               Quick Snapshot
             </div>
+            <div className="mt-4 rounded-2xl bg-slate-50 p-4">
+              <div className="text-xs uppercase tracking-wide text-slate-500">
+                Booking Ref
+              </div>
+              <div className="mt-1 font-black text-slate-900">
+                {activeBookingCode || activeBookingId || "Draft not saved"}
+              </div>
+            </div>
             <div className="mt-4 space-y-3">
               <div className="rounded-2xl bg-slate-50 p-4">
                 <div className="text-xs uppercase tracking-wide text-slate-500">
@@ -457,8 +501,100 @@ const Guest = () => {
           >
             Next Step
           </button>
+
+          <button
+            type="button"
+            onClick={() => setCancelFlowModal({ open: true, reason: "", submitting: false })}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-[22px] border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-bold text-rose-700 transition hover:bg-rose-100"
+          >
+            {activeBookingId ? "Cancel Booking" : "Discard Booking"}
+          </button>
         </div>
       </div>
+
+      {cancelFlowModal.open ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 px-4 backdrop-blur-sm"
+          onClick={() => setCancelFlowModal({ open: false, reason: "", submitting: false })}
+        >
+          <div
+            className="w-full max-w-md overflow-hidden rounded-[28px] bg-white shadow-[0_28px_80px_rgba(15,23,42,0.28)]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start gap-4 bg-gradient-to-r from-rose-500 to-red-500 px-6 py-5 text-white">
+              <div className="rounded-2xl bg-white/15 p-3">
+                <FaExclamationTriangle className="text-xl" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="mb-2 inline-flex rounded-full bg-rose-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.22em] text-rose-700 ring-1 ring-rose-100">
+                  {activeBookingId ? "Cancel Booking" : "Discard Draft"}
+                </div>
+                <h2 className="text-lg font-black leading-tight">
+                  {activeBookingId ? "Guest booking cancel karna hai?" : "Current booking draft discard karna hai?"}
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setCancelFlowModal({ open: false, reason: "", submitting: false })}
+                className="rounded-full p-2 text-white/85 transition hover:bg-white/10 hover:text-white"
+              >
+                <FaTimes />
+              </button>
+            </div>
+
+            <div className="px-6 py-6">
+              <p className="text-sm leading-6 text-slate-600">
+                {activeBookingId
+                  ? `Booking #${activeBookingCode || activeBookingId} cancel hogi aur room release ho jayega.`
+                  : "Unsaved draft clear ho jayega aur current booking flow band ho jayega."}
+              </p>
+
+              {activeBookingId ? (
+                <label className="mt-4 block">
+                  <span className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    Cancellation Reason
+                  </span>
+                  <textarea
+                    value={cancelFlowModal.reason}
+                    onChange={(event) =>
+                      setCancelFlowModal((current) => ({ ...current, reason: event.target.value }))
+                    }
+                    rows={4}
+                    placeholder="Guest changed mind, wrong date, pricing issue..."
+                    className={fieldCls}
+                  />
+                </label>
+              ) : null}
+
+              <div className="mt-6 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setCancelFlowModal({ open: false, reason: "", submitting: false })}
+                  className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCancelBookingFlow}
+                  disabled={cancelFlowModal.submitting}
+                  className={`inline-flex items-center justify-center rounded-2xl bg-rose-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-rose-700 ${
+                    cancelFlowModal.submitting ? "cursor-not-allowed opacity-70" : ""
+                  }`}
+                >
+                  {cancelFlowModal.submitting
+                    ? activeBookingId
+                      ? "Cancelling..."
+                      : "Discarding..."
+                    : activeBookingId
+                      ? "Confirm Cancel"
+                      : "Discard Booking"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 };

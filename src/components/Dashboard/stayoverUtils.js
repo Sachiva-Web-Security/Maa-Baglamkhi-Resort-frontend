@@ -299,7 +299,7 @@ export const getBookingBoardBucket = (booking, date) => {
     bookingStatus.includes("occupied") ||
     bookingStatus.includes("in house")
   ) {
-    return "confirmed";
+    return "checked_in";
   }
   if (
     bookingStatus.includes("confirmed") ||
@@ -430,9 +430,30 @@ export const buildDailyBoard = (rooms, mergedBookings, date, today) => {
 
   rooms.forEach((room) => {
     if (room.status === "blocked") return;
+    const roomStatus = String(room.status || "").toLowerCase();
 
     const booking = getRoomBookingForDate(room.roomNumber, date, mergedBookings, !isHistoricalDate);
     if (booking) {
+      if (roomStatus === "occupied" && room.guest && !isHistoricalDate) {
+        buckets.checked_in.push({
+          id: `checked-in-booking-${booking.bookingId || "room"}-${room.roomNumber}-${date}`,
+          roomId: room.roomId,
+          roomNumber: room.roomNumber,
+          room: room.roomNumber,
+          roomType: room.categoryName,
+          title: room.guest || booking.guestName,
+          subtitle: `${booking.mobile || "-"} | ${booking.company || "Direct"}`,
+          booking: {
+            ...booking,
+            bookingStatus: "Checked In",
+            checkIn: formatDateKey(room.checkIn) || booking.checkIn,
+            checkOut: formatDateKey(room.checkOut) || booking.checkOut,
+          },
+          roomData: room,
+        });
+        return;
+      }
+
       const bucket = getBookingBoardBucket(booking, date);
       if (!bucket) return;
 
@@ -452,9 +473,19 @@ export const buildDailyBoard = (rooms, mergedBookings, date, today) => {
     }
 
     const fallbackBooking = getRoomBookingReference(room.roomNumber, date, mergedBookings);
-    const roomStatus = String(room.status || "").toLowerCase();
 
-    if (fallbackBooking && ["occupied", "reserved", "check_in_confirmed"].includes(roomStatus)) {
+    const hasCurrentRoomStay =
+      room.guest &&
+      room.checkIn &&
+      room.checkOut &&
+      date >= formatDateKey(room.checkIn) &&
+      date <= formatDateKey(room.checkOut);
+
+    if (
+      fallbackBooking &&
+      hasCurrentRoomStay &&
+      ["occupied", "reserved", "check_in_confirmed"].includes(roomStatus)
+    ) {
       buckets.confirmed.push({
         id: `confirmed-fallback-${fallbackBooking.bookingId || room.roomNumber}-${date}`,
         roomId: room.roomId,
@@ -466,6 +497,32 @@ export const buildDailyBoard = (rooms, mergedBookings, date, today) => {
         booking: fallbackBooking,
         roomData: room,
         statusLabel: String(fallbackBooking.bookingStatus || "").trim() || "Confirmed",
+      });
+      return;
+    }
+
+    if (roomStatus === "occupied" && room.guest && !isHistoricalDate) {
+      buckets.checked_in.push({
+        id: `checked-in-room-${room.roomNumber}-${date}`,
+        roomId: room.roomId,
+        roomNumber: room.roomNumber,
+        room: room.roomNumber,
+        roomType: room.categoryName,
+        title: room.guest,
+        subtitle: `${room.categoryName} | In-house`,
+        booking: {
+          bookingId: `room-${room.roomId || room.roomNumber}`,
+          guestName: room.guest,
+          roomNumber: room.roomNumber,
+          roomNo: room.roomNumber,
+          rooms: room.roomNumber,
+          bookingStatus: room.hotelStatus || "Checked In",
+          checkIn: formatDateKey(room.checkIn),
+          checkOut: formatDateKey(room.checkOut),
+          mobile: getBookingContact(room) || "-",
+          company: room.categoryName || "Direct",
+        },
+        roomData: room,
       });
       return;
     }

@@ -12,6 +12,7 @@ const Payment = () => {
   const [paymentMethod, setPaymentMethod] = useState("Cash");
   const [customerName, setCustomerName] = useState(location.state?.customerName || "");
   const [phone, setPhone] = useState(location.state?.phone || "");
+  const [splitCount, setSplitCount] = useState(2);
 
   const invoice = location.state || null;
 
@@ -27,6 +28,22 @@ const Payment = () => {
     if (!invoice?.items?.length) return null;
     return invoice.items[selectedItemIndex] || invoice.items[0];
   }, [invoice, selectedItemIndex]);
+
+  const splitPreview = useMemo(() => {
+    const count = Math.max(1, Number(splitCount || 1));
+    const evenSubtotal = Number(invoice?.subtotal || 0) / count;
+    const evenTax = Number(invoice?.gst || 0) / count;
+    const evenTotal = Number(invoice?.total || 0) / count;
+
+    return Array.from({ length: count }, (_, index) => ({
+      splitLabel: `Split ${index + 1}`,
+      splitNo: index + 1,
+      splitCount: count,
+      subtotal: evenSubtotal,
+      gst: evenTax,
+      total: evenTotal,
+    }));
+  }, [invoice, splitCount]);
 
   if (!invoice) {
     return <div className="min-h-screen bg-slate-100 p-6">No Invoice Data</div>;
@@ -121,6 +138,7 @@ const Payment = () => {
 
       const billResponse = await API.post("/restaurant/bill", {
         table: invoice.table,
+        waiterName: invoice.waiterName || null,
         customerName: customerName || invoice.customerName || "",
         phone: phone || invoice.phone || "",
         subtotal: Number(invoice.subtotal || 0),
@@ -130,26 +148,28 @@ const Payment = () => {
         entityType,
       });
 
-      await restaurantService.createConsumptionSale({
-        referenceNo: `BILL-${billResponse.data?.id || invoice.tokenId || invoice.table}-${invoice.date || Date.now()}`,
-        referenceType: "restaurant-bill",
-        sourceBillId: billResponse.data?.id || null,
-        entityType,
-        entityRef: invoice.table,
-        outlet: invoice.outlet || "Main Kitchen",
-        branch: invoice.branch || "Main Branch",
-        subtotal: Number(invoice.subtotal || 0),
-        tax: Number(invoice.gst || 0),
-        total: Number(invoice.total || 0),
-        createdBy: "system",
-        items: (invoice.items || []).map((item) => ({
-          menuItemId: item.menuItemId || item.menu_item_id || null,
-          name: item.name,
-          category: item.category || "Other",
-          quantity: Number(item.qty || 0),
-          price: Number(item.rate || 0),
-        })),
-      });
+      if (typeof restaurantService.createConsumptionSale === "function") {
+        await restaurantService.createConsumptionSale({
+          referenceNo: `BILL-${billResponse.data?.id || invoice.tokenId || invoice.table}-${invoice.date || Date.now()}`,
+          referenceType: "restaurant-bill",
+          sourceBillId: billResponse.data?.id || null,
+          entityType,
+          entityRef: invoice.table,
+          outlet: invoice.outlet || "Main Kitchen",
+          branch: invoice.branch || "Main Branch",
+          subtotal: Number(invoice.subtotal || 0),
+          tax: Number(invoice.gst || 0),
+          total: Number(invoice.total || 0),
+          createdBy: "system",
+          items: (invoice.items || []).map((item) => ({
+            menuItemId: item.menuItemId || item.menu_item_id || null,
+            name: item.name,
+            category: item.category || "Other",
+            quantity: Number(item.qty || 0),
+            price: Number(item.rate || 0),
+          })),
+        });
+      }
 
       await API.put(`/restaurant/order/${invoice.table}/pay`);
       await API.put(`/token/close/${invoice.table}`);
@@ -172,6 +192,7 @@ const Payment = () => {
 
       await API.post("/restaurant/bill", {
         table: invoice.table,
+        waiterName: invoice.waiterName || null,
         customerName: customerName || invoice.customerName || "",
         phone: phone || invoice.phone || "",
         subtotal: Number(invoice.subtotal || 0),
@@ -186,6 +207,33 @@ const Payment = () => {
       navigate("/restaurant/payment-bills");
     } catch (error) {
       alert(error.response?.data?.message || "Bill generate nahi ho paaya.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleCreateSplitBill = async () => {
+    try {
+      setSubmitting(true);
+      await Promise.all(
+        splitPreview.map((split) =>
+          restaurantService.createSplitBill({
+            tableNumber: invoice.table,
+            entityType,
+            splitLabel: split.splitLabel,
+            splitNo: split.splitNo,
+            splitCount: split.splitCount,
+            subtotal: split.subtotal,
+            gst: split.gst,
+            total: split.total,
+            paymentMethod,
+            items: invoice.items || [],
+          }),
+        ),
+      );
+      alert("Split bill saved successfully.");
+    } catch (error) {
+      alert(error.response?.data?.message || "Split bill save nahi ho paaya.");
     } finally {
       setSubmitting(false);
     }
@@ -310,6 +358,35 @@ const Payment = () => {
                   <option value="Card">Card</option>
                   <option value="UPI">UPI</option>
                 </select>
+              </div>
+
+              <div className="mt-5 rounded-[22px] border border-slate-200 bg-white p-4">
+                <div className="text-sm font-semibold text-slate-700">Split Bill</div>
+                <div className="mt-3 flex items-center gap-3">
+                  <input
+                    type="number"
+                    min="2"
+                    max="10"
+                    value={splitCount}
+                    onChange={(event) => setSplitCount(event.target.value)}
+                    className="w-24 rounded-xl border border-slate-200 px-3 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <button
+                    onClick={handleCreateSplitBill}
+                    disabled={submitting}
+                    className="rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-lg disabled:opacity-60"
+                  >
+                    Save Split Bill
+                  </button>
+                </div>
+                <div className="mt-3 space-y-2">
+                  {splitPreview.map((split) => (
+                    <div key={split.splitNo} className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-3 text-sm text-slate-700">
+                      <span>{split.splitLabel}</span>
+                      <span className="font-bold text-slate-900">{formatCurrency(split.total)}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               <div className="mt-5 flex flex-col gap-3">

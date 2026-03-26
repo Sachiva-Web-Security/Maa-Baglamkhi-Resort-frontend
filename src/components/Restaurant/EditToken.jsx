@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import API from "../../api";
+import { restaurantService } from "../../services/restaurantService";
 
 const ACTIVE_INVOICE_KEY = "restaurant-active-invoice";
 const SAVED_INVOICE_KEY = "restaurant-saved-invoice";
@@ -11,11 +12,14 @@ const EditToken = () => {
   const location = useLocation();
   const entityType = location.state?.entityType || localStorage.getItem(`entityType:${table}`) || "Table";
   const roomData = location.state?.roomData || null;
+  const currentRole = String(localStorage.getItem("role") || "").toLowerCase();
 
   const [tokenId, setTokenId] = useState(null);
   const [items, setItems] = useState([]);
   const [kitchenOrder, setKitchenOrder] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [waiterName, setWaiterName] = useState("Waiter");
+  const [actionRequests, setActionRequests] = useState([]);
   const readySound = useRef(null);
   const lastReadyKey = useRef("");
 
@@ -30,6 +34,7 @@ const EditToken = () => {
         const tokenRes = await API.get(`/token/table/${table}`);
         const activeTokenId = tokenRes.data?.id || null;
         setTokenId(activeTokenId);
+        setWaiterName(tokenRes.data?.waiter || "Waiter");
 
         if (!activeTokenId) {
           setItems([]);
@@ -47,6 +52,24 @@ const EditToken = () => {
     };
 
     loadTokenItems();
+  }, [table]);
+
+  useEffect(() => {
+    const loadActionRequests = async () => {
+      try {
+        const rows = await restaurantService.getItemActionRequests();
+        setActionRequests(
+          (rows || []).filter((row) => String(row.table_number || "") === String(table)),
+        );
+      } catch (error) {
+        console.log("Action request load failed:", error);
+        setActionRequests([]);
+      }
+    };
+
+    loadActionRequests();
+    window.addEventListener("tokenUpdated", loadActionRequests);
+    return () => window.removeEventListener("tokenUpdated", loadActionRequests);
   }, [table]);
 
   useEffect(() => {
@@ -144,6 +167,7 @@ const EditToken = () => {
     const invoicePayload = {
       table,
       tokenId,
+      waiterName,
       items: items.map((item) => ({
         id: item.id,
         name: item.item_name,
@@ -161,6 +185,61 @@ const EditToken = () => {
     localStorage.setItem(ACTIVE_INVOICE_KEY, JSON.stringify(invoicePayload));
     localStorage.setItem(SAVED_INVOICE_KEY, JSON.stringify(invoicePayload));
     navigate("/restaurant/payment", { state: invoicePayload });
+  };
+
+  const requestItemAction = async (item, actionType) => {
+    const reason = window.prompt(`${actionType} reason for ${item.item_name}?`);
+    if (!reason) return;
+
+    try {
+      await restaurantService.createItemActionRequest({
+        tokenItemId: item.id,
+        tableNumber: table,
+        actionType,
+        reason,
+        requestedBy: localStorage.getItem("name") || waiterName || "Staff",
+      });
+      const rows = await restaurantService.getItemActionRequests();
+      setActionRequests((rows || []).filter((row) => String(row.table_number || "") === String(table)));
+      alert(`${actionType} request sent for manager approval.`);
+    } catch (error) {
+      alert(error.response?.data?.message || "Request send nahi ho paayi.");
+    }
+  };
+
+  const reviewItemAction = async (request, status) => {
+    const managerNote = window.prompt(`${status} note for request #${request.id}`) || "";
+    try {
+      await restaurantService.reviewItemActionRequest(request.id, {
+        status,
+        managerNote,
+        approvedBy: localStorage.getItem("name") || "Manager",
+      });
+
+      if (status === "Approved") {
+        const targetItem = items.find((item) => Number(item.id) === Number(request.token_item_id));
+        if (targetItem && request.action_type === "Complimentary") {
+          await API.put("/token/item", {
+            id: targetItem.id,
+            qty: Number(targetItem.qty),
+            rate: 0,
+          });
+          setItems((current) =>
+            current.map((item) => (item.id === targetItem.id ? { ...item, rate: 0 } : item)),
+          );
+        }
+
+        if (targetItem && request.action_type === "Void") {
+          await API.delete(`/token/item/${targetItem.id}`);
+          setItems((current) => current.filter((item) => item.id !== targetItem.id));
+        }
+      }
+
+      const rows = await restaurantService.getItemActionRequests();
+      setActionRequests((rows || []).filter((row) => String(row.table_number || "") === String(table)));
+    } catch (error) {
+      alert(error.response?.data?.message || "Review save nahi ho paaya.");
+    }
   };
 
   if (loading) {
@@ -199,11 +278,11 @@ const EditToken = () => {
                 <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500">Reference</div>
                 <div className="mt-2 text-lg font-black text-slate-900">{entityType} / {table}</div>
               </div>
-              <div className="rounded-[20px] bg-slate-50 px-4 py-4">
-                <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500">Waiter</div>
-                <div className="mt-2 text-lg font-black text-slate-900">Waiter</div>
+                <div className="rounded-[20px] bg-slate-50 px-4 py-4">
+                  <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500">Waiter</div>
+                  <div className="mt-2 text-lg font-black text-slate-900">{waiterName}</div>
+                </div>
               </div>
-            </div>
 
             {roomData ? (
               <div className="mt-4 rounded-[18px] bg-[linear-gradient(135deg,#eff6ff_0%,#f8fafc_100%)] px-4 py-4 text-sm text-slate-700">
@@ -238,8 +317,8 @@ const EditToken = () => {
               </div>
             ) : null}
 
-            <div className="mt-5 overflow-hidden rounded-[22px] border border-slate-200">
-              <div className="grid grid-cols-[minmax(0,1.3fr)_120px_140px_120px_110px] bg-slate-100 px-4 py-3 text-xs font-bold uppercase tracking-[0.16em] text-slate-600">
+              <div className="mt-5 overflow-hidden rounded-[22px] border border-slate-200">
+              <div className="grid grid-cols-[minmax(0,1.3fr)_120px_140px_120px_220px] bg-slate-100 px-4 py-3 text-xs font-bold uppercase tracking-[0.16em] text-slate-600">
                 <div>Item</div>
                 <div className="text-center">Quantity</div>
                 <div className="text-center">Rate</div>
@@ -250,7 +329,7 @@ const EditToken = () => {
               {items.map((item, index) => (
                 <div
                   key={item.id}
-                  className={`grid grid-cols-[minmax(0,1.3fr)_120px_140px_120px_110px] items-center gap-2 border-t border-slate-100 px-4 py-3 ${index % 2 ? "bg-slate-50/70" : "bg-white"}`}
+                  className={`grid grid-cols-[minmax(0,1.3fr)_120px_140px_120px_220px] items-center gap-2 border-t border-slate-100 px-4 py-3 ${index % 2 ? "bg-slate-50/70" : "bg-white"}`}
                 >
                   <input value={item.item_name} readOnly className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700" />
                   <div className="flex justify-center">
@@ -271,12 +350,26 @@ const EditToken = () => {
                   </div>
                   <div className="text-center font-bold text-slate-900">Rs. {Number(item.qty) * Number(item.rate)}</div>
                   <div className="flex justify-center">
-                    <button
-                      onClick={() => deleteItem(item.id)}
-                      className="rounded-xl bg-rose-500 px-4 py-2 text-sm font-bold text-white"
-                    >
-                      Delete
-                    </button>
+                    <div className="flex flex-wrap justify-center gap-2">
+                      <button
+                        onClick={() => requestItemAction(item, "Complimentary")}
+                        className="rounded-xl bg-sky-500 px-3 py-2 text-xs font-bold text-white"
+                      >
+                        Complimentary
+                      </button>
+                      <button
+                        onClick={() => requestItemAction(item, "Void")}
+                        className="rounded-xl bg-amber-500 px-3 py-2 text-xs font-bold text-white"
+                      >
+                        Void
+                      </button>
+                      <button
+                        onClick={() => deleteItem(item.id)}
+                        className="rounded-xl bg-rose-500 px-3 py-2 text-xs font-bold text-white"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -284,6 +377,42 @@ const EditToken = () => {
               {!items.length ? (
                 <div className="px-4 py-10 text-center text-sm text-slate-400">No token items found.</div>
               ) : null}
+            </div>
+
+            <div className="rounded-[26px] border border-slate-200/70 bg-white/95 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.1)]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-amber-600">Manager Approval</p>
+              <h3 className="mt-2 text-xl font-black text-slate-900">Complimentary / void requests</h3>
+              <div className="mt-4 space-y-3">
+                {actionRequests.length ? actionRequests.slice(0, 6).map((request) => (
+                  <div key={request.id} className="rounded-[18px] bg-slate-50 px-4 py-4 text-sm">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="font-bold text-slate-900">{request.action_type}</div>
+                      <div className="text-xs font-semibold text-slate-500">{request.status}</div>
+                    </div>
+                    <div className="mt-2 text-slate-600">{request.reason}</div>
+                    {["manager", "admin"].includes(currentRole) && request.status === "Pending" ? (
+                      <div className="mt-3 flex gap-2">
+                        <button
+                          onClick={() => reviewItemAction(request, "Approved")}
+                          className="rounded-xl bg-emerald-600 px-3 py-2 text-xs font-bold text-white"
+                        >
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => reviewItemAction(request, "Rejected")}
+                          className="rounded-xl bg-rose-600 px-3 py-2 text-xs font-bold text-white"
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
+                )) : (
+                  <div className="rounded-[18px] bg-slate-50 px-4 py-4 text-sm text-slate-500">
+                    Koi complimentary/void request pending nahi hai.
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 

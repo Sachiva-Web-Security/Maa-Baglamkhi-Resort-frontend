@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { FaClock, FaChevronLeft, FaChevronRight, FaExclamationTriangle, FaSearch, FaPaperPlane } from "react-icons/fa";
+import { FaClock, FaChevronLeft, FaChevronRight, FaExclamationTriangle, FaSearch, FaPaperPlane, FaCheck } from "react-icons/fa";
 
 const PAGE_SIZE = 6;
 const PAGE_WINDOW = 10;
@@ -25,6 +25,7 @@ const formatCountdown = (ms) => {
 const CleaningLogPanel = ({
   rows = [],
   warningRows = [],
+  completedTodayRows = [],
   logSearch,
   setLogSearch,
   logStatus,
@@ -36,6 +37,7 @@ const CleaningLogPanel = ({
   setRoomMessageDrafts,
   onSendCleaningMessage,
   onExtendCleaningTime,
+  onMarkCleaningComplete,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [extraMinutesByRoom, setExtraMinutesByRoom] = useState({});
@@ -121,6 +123,10 @@ const CleaningLogPanel = ({
                 <div className="text-[10px] uppercase tracking-[0.22em] text-cyan-100/80">Assignees</div>
                 <div className="mt-1 text-2xl font-black">{housekeepers.length}</div>
               </div>
+              <div className="rounded-[1.2rem] border border-white/10 bg-white/10 px-4 py-3 text-white sm:col-span-3">
+                <div className="text-[10px] uppercase tracking-[0.22em] text-cyan-100/80">Completed Today</div>
+                <div className="mt-1 text-2xl font-black">{completedTodayRows.length}</div>
+              </div>
             </div>
           </div>
 
@@ -168,8 +174,8 @@ const CleaningLogPanel = ({
                 >
                   <option value="All">All Assignees</option>
                   <option value="No Housekeeper">No Housekeeper</option>
-                  {housekeepers.map((hk) => (
-                    <option key={hk} value={hk}>
+                  {housekeepers.map((hk, index) => (
+                    <option key={`${hk}-${index}`} value={hk}>
                       {hk}
                     </option>
                   ))}
@@ -185,6 +191,53 @@ const CleaningLogPanel = ({
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      <div className="rounded-[1.6rem] border border-emerald-200 bg-[linear-gradient(135deg,#ecfdf5_0%,#ffffff_100%)] p-4 shadow-[0_18px_38px_rgba(15,23,42,0.06)]">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700">
+              Completed Cleaning Rooms
+            </div>
+            <div className="mt-1 text-sm text-slate-600">
+              Aaj total <span className="font-bold text-slate-900">{completedTodayRows.length}</span> room clean mark hue hain.
+            </div>
+          </div>
+          <div className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white">
+            {completedTodayRows.length} Completed
+          </div>
+        </div>
+
+        <div className="mt-4 overflow-x-auto rounded-[1.2rem] border border-emerald-100 bg-white">
+          <table className="min-w-full text-left text-sm text-slate-700">
+            <thead className="bg-emerald-50 text-[11px] uppercase tracking-[0.14em] text-emerald-700">
+              <tr>
+                <th className="px-4 py-3">Room</th>
+                <th className="px-4 py-3">Assignee</th>
+                <th className="px-4 py-3">Guest Status</th>
+                <th className="px-4 py-3">Completed At</th>
+              </tr>
+            </thead>
+            <tbody>
+              {completedTodayRows.length ? (
+                completedTodayRows.map((entry, index) => (
+                  <tr key={`${entry.roomId || entry.roomNo}-${entry.completedAt || index}`} className="border-t border-emerald-50">
+                    <td className="px-4 py-3 font-semibold text-slate-900">Room {entry.roomNo}</td>
+                    <td className="px-4 py-3">{entry.assignee || "No Housekeeper"}</td>
+                    <td className="px-4 py-3">{entry.guestStatus || "-"}</td>
+                    <td className="px-4 py-3">{formatTimeRange(entry.completedAt)}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={4} className="px-4 py-6 text-center text-slate-500">
+                    Aaj abhi tak koi room completed mark nahi hua.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -322,6 +375,17 @@ const CleaningLogPanel = ({
                           +5
                         </button>
                       </div>
+                    </div>
+
+                    <div className="mt-4">
+                      <button
+                        type="button"
+                        onClick={() => onMarkCleaningComplete(room)}
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-[1rem] bg-gradient-to-r from-emerald-600 to-teal-500 px-4 py-3 text-sm font-semibold text-white transition hover:opacity-95"
+                      >
+                        <FaCheck className="text-xs" />
+                        Mark Cleaning Complete
+                      </button>
                     </div>
                   </div>
                 </div>

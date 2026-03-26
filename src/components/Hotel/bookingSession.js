@@ -2,6 +2,7 @@ const BOOKING_ID_KEY = "hotel_active_booking_id";
 const BOOKING_CODE_KEY = "hotel_active_booking_code";
 const BOOKING_DRAFT_KEY = "hotel_booking_step_draft";
 const CLEANING_TASKS_KEY = "hotel_cleaning_tasks";
+const COMPLETED_CLEANING_LOGS_KEY = "hotel_completed_cleaning_logs";
 
 export const getStoredBookingId = () => {
   try {
@@ -102,4 +103,35 @@ export const removeCleaningTask = (roomKey) => {
   const current = getCleaningTasks();
   delete current[String(roomKey)];
   setCleaningTasks(current);
+};
+
+export const getCompletedCleaningLogs = () => {
+  try {
+    const raw = localStorage.getItem(COMPLETED_CLEANING_LOGS_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+export const setCompletedCleaningLogs = (logs) => {
+  try {
+    localStorage.setItem(COMPLETED_CLEANING_LOGS_KEY, JSON.stringify(Array.isArray(logs) ? logs : []));
+  } catch {
+    // ignore
+  }
+};
+
+export const addCompletedCleaningLog = (entry) => {
+  if (!entry) return;
+  const current = getCompletedCleaningLogs();
+  const next = [
+    {
+      ...entry,
+      completedAt: entry.completedAt || new Date().toISOString(),
+    },
+    ...current,
+  ].slice(0, 200);
+  setCompletedCleaningLogs(next);
 };

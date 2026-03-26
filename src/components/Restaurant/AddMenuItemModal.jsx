@@ -38,6 +38,36 @@ const AddMenuItemModal = ({
             placeholder="Price"
             className="rounded-[18px] border-2 border-slate-200 px-4 py-4 text-lg outline-none focus:border-blue-400"
           />
+          <div className="grid grid-cols-2 gap-4">
+            <input
+              type="number"
+              value={form.tax}
+              onChange={(event) => setForm((prev) => ({ ...prev, tax: event.target.value }))}
+              placeholder="Tax %"
+              className="rounded-[18px] border-2 border-slate-200 px-4 py-4 text-base outline-none focus:border-blue-400"
+            />
+            <input
+              type="number"
+              value={form.happyHourPrice}
+              onChange={(event) => setForm((prev) => ({ ...prev, happyHourPrice: event.target.value }))}
+              placeholder="Happy Hour Price"
+              className="rounded-[18px] border-2 border-slate-200 px-4 py-4 text-base outline-none focus:border-blue-400"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <input
+              type="time"
+              value={form.happyHourStart}
+              onChange={(event) => setForm((prev) => ({ ...prev, happyHourStart: event.target.value }))}
+              className="rounded-[18px] border-2 border-slate-200 px-4 py-4 text-base outline-none focus:border-blue-400"
+            />
+            <input
+              type="time"
+              value={form.happyHourEnd}
+              onChange={(event) => setForm((prev) => ({ ...prev, happyHourEnd: event.target.value }))}
+              className="rounded-[18px] border-2 border-slate-200 px-4 py-4 text-base outline-none focus:border-blue-400"
+            />
+          </div>
 
           <label className="block cursor-pointer rounded-[20px] border-2 border-dashed border-slate-200 bg-slate-50 px-4 py-4 transition hover:border-blue-300 hover:bg-blue-50/40">
             <div className="flex items-center gap-4">

@@ -165,8 +165,8 @@ export default function ShiftRosterModal({ housekeepers, onClose, apiBase }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {housekeepers.map(staff => (
-                    <tr key={staff} className="border-t border-slate-100 hover:bg-slate-50">
+                  {housekeepers.map((staff, staffIndex) => (
+                    <tr key={`${staff}-${staffIndex}`} className="border-t border-slate-100 hover:bg-slate-50">
                       <td className="px-4 py-3 font-semibold text-slate-800 sticky left-0 bg-white">{staff}</td>
                       {weekDates.map((d, i) => {
                         const dateStr = d.toISOString().slice(0, 10);
