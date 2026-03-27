@@ -2,7 +2,21 @@ import { getBackendBaseURL } from "../api";
 
 let socketPromise = null;
 let socketInstance = null;
-const SOCKET_CLIENT_VERSION = "polling-only-v2";
+const SOCKET_CLIENT_VERSION = "proxy-ws-v3";
+
+const getSocketScriptURL = () => {
+  if (window.location.origin.includes("localhost:5173")) {
+    return `/socket.io/socket.io.js?v=${SOCKET_CLIENT_VERSION}`;
+  }
+  return `${getBackendBaseURL()}/socket.io/socket.io.js?v=${SOCKET_CLIENT_VERSION}`;
+};
+
+const getSocketServerURL = () => {
+  if (window.location.origin.includes("localhost:5173")) {
+    return window.location.origin;
+  }
+  return getBackendBaseURL();
+};
 
 const loadSocketScript = () =>
   new Promise((resolve, reject) => {
@@ -19,7 +33,7 @@ const loadSocketScript = () =>
     }
 
     const script = document.createElement("script");
-    script.src = `${getBackendBaseURL()}/socket.io/socket.io.js?v=${SOCKET_CLIENT_VERSION}`;
+    script.src = getSocketScriptURL();
     script.async = true;
     script.dataset.socketIoClient = "true";
     script.onload = () => resolve(window.io);
@@ -31,9 +45,12 @@ export const getRestaurantSocket = async () => {
   if (!socketPromise) {
     socketPromise = loadSocketScript().then((ioFactory) => {
       if (!ioFactory) return null;
-      socketInstance = ioFactory(getBackendBaseURL(), {
-        transports: ["polling"],
-        upgrade: false,
+      socketInstance = ioFactory(getSocketServerURL(), {
+        path: "/socket.io",
+        transports: ["websocket", "polling"],
+        withCredentials: false,
+        forceNew: true,
+        reconnection: true,
       });
       return socketInstance;
     });
@@ -52,4 +69,5 @@ export const releaseRestaurantSocket = () => {
     socketInstance = null;
   }
   socketPromise = null;
+  delete window.io;
 };

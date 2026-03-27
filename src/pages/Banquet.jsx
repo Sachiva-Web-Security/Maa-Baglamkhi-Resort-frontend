@@ -2116,7 +2116,7 @@ const Banquet = () => {
 
             <section
               id="addons"
-              className="grid items-stretch gap-3 w-full  rounded-[26px] border border-white/60 bg-white/78 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:grid-cols-2 lg:grid-cols-[repeat(3,minmax(0,1fr))_minmax(240px,1fr)] sm:p-5"
+              className="grid items-stretch gap-3 w-fullrounded-[26px] border border-white/60 bg-white/78 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:grid-cols-2 lg:grid-cols-[repeat(3,minmax(0,1fr))_minmax(240px,1fr)] sm:p-5"
             >
               {[
                 {

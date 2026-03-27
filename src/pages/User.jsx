@@ -36,6 +36,8 @@ const User = () => {
 
   const loggedInEmail = localStorage.getItem("email") || "";
   const loggedInAvatar = localStorage.getItem("avatarUrl") || "";
+  const currentUserRole = (localStorage.getItem("role") || "").toLowerCase();
+  const isAdmin = currentUserRole === "admin";
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -80,6 +82,11 @@ const User = () => {
   };
 
   const handleDeleteUser = async (user) => {
+    if (!isAdmin) {
+      setError("Sirf admin user account delete kar sakta hai.");
+      return;
+    }
+
     const id = user.id || user._id;
     if (!id) {
       setError("User id missing hai, delete nahi ho pa raha.");
@@ -143,6 +150,12 @@ const User = () => {
   };
 
   const openEditUser = (user) => {
+    if (!isAdmin) {
+      setError("Sirf admin user account edit kar sakta hai.");
+      return;
+    }
+
+    setError("");
     setEditError("");
     setEditingUser(user);
     setEditForm({
@@ -191,6 +204,11 @@ const User = () => {
     e.preventDefault();
     if (!editingUser) return;
 
+    if (!isAdmin) {
+      setEditError("Sirf admin user account edit kar sakta hai.");
+      return;
+    }
+
     const id = editingUser.id || editingUser._id;
     if (!id) {
       setEditError("User id missing hai, update nahi ho pa raha.");
@@ -235,6 +253,16 @@ const User = () => {
           )
         )
       );
+
+      const updatedEmail = updatedUser.email || payload.email;
+      if (
+        String(editingUser.email || "").toLowerCase() ===
+        String(loggedInEmail || "").toLowerCase()
+      ) {
+        localStorage.setItem("name", updatedUser.name || payload.name);
+        localStorage.setItem("email", updatedEmail);
+        localStorage.setItem("role", updatedUser.role || payload.role);
+      }
 
       setEditingUser(null);
       setSuccessMessage(`${updatedUser.name || "User"} updated successfully`);
@@ -348,6 +376,7 @@ const User = () => {
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(true)}
+                  disabled={!isAdmin}
                   className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-bold text-slate-900 shadow-[0_16px_35px_rgba(255,255,255,0.15)] transition hover:-translate-y-0.5"
                 >
                   <FaUserPlus className="text-cyan-600" />
@@ -393,6 +422,7 @@ const User = () => {
               <button
                 type="button"
                 onClick={() => setShowCreateModal(true)}
+                disabled={!isAdmin}
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-sky-600 to-cyan-500 px-4 py-2.5 text-sm font-bold text-white shadow-[0_12px_30px_rgba(14,165,233,0.24)] transition hover:-translate-y-0.5"
               >
                 <FaUserPlus />
@@ -414,6 +444,12 @@ const User = () => {
             {error ? (
               <div className="mt-4 rounded-[18px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
                 {error}
+              </div>
+            ) : null}
+
+            {!isAdmin ? (
+              <div className="mt-4 rounded-[18px] border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-700">
+                Edit, create aur delete action sirf admin account se allowed hain.
               </div>
             ) : null}
           </div>
@@ -477,6 +513,7 @@ const User = () => {
                             <button
                               type="button"
                               onClick={() => openEditUser(user)}
+                              disabled={!isAdmin}
                               className="inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-2 text-xs font-bold text-cyan-700 transition hover:bg-cyan-100"
                             >
                               <FaEdit />
@@ -485,6 +522,7 @@ const User = () => {
                             <button
                               type="button"
                               onClick={() => handleDeleteUser(user)}
+                              disabled={!isAdmin}
                               className="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700 transition hover:bg-rose-100"
                             >
                               <FaTrash />
@@ -556,6 +594,7 @@ const User = () => {
                   <button
                     type="button"
                     onClick={() => openEditUser(user)}
+                    disabled={!isAdmin}
                     className="mt-4 inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-2 text-xs font-bold text-cyan-700 transition hover:bg-cyan-100"
                   >
                     <FaEdit />
@@ -564,6 +603,7 @@ const User = () => {
                   <button
                     type="button"
                     onClick={() => handleDeleteUser(user)}
+                    disabled={!isAdmin}
                     className="mt-4 inline-flex items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700 transition hover:bg-rose-100"
                   >
                     <FaTrash />

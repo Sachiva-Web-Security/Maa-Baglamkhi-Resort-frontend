@@ -67,12 +67,18 @@ const Assignment = () => {
 
     try {
       if (editId) {
-        await API.put(`/assignments/edit/${editId}`, form);
+        await API.put(`/assignments/${editId}`, {
+          staffName: form.staff_name,
+          roomNumber: form.room_number,
+          task: form.task,
+        });
         setEditId(null);
       } else {
         await API.post("/assignments", {
-          ...form,
-          assigned_by: localStorage.getItem("name"),
+          staffName: form.staff_name,
+          roomNumber: form.room_number,
+          task: form.task,
+          assignedBy: localStorage.getItem("name"),
         });
       }
 

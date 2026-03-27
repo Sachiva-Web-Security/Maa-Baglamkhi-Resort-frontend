@@ -1,8 +1,11 @@
+
+import { getRoleHome } from "../utils/roleHome";
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import API from "../api";
 import bgImage from "../assets/bg.jpg";
 import { withAudit } from "../utils/auditAction";
+
 
 const Login = ({ setIsAuthenticated }) => {
   const [formData, setFormData] = useState({
@@ -53,7 +56,7 @@ const Login = ({ setIsAuthenticated }) => {
       setIsAuthenticated(true);
     }
 
-    navigate("/dashboard", { replace: true });
+    navigate(getRoleHome(data.role), { replace: true });
 
   } catch (error) {
     let errorMsg;

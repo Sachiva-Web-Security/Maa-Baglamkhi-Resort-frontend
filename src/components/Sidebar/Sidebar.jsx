@@ -1,33 +1,39 @@
 import { useState } from "react";
-import { matchPath, useNavigate, useLocation } from "react-router-dom";
+import { matchPath, useLocation, useNavigate } from "react-router-dom";
 import {
-  FaHome,
-  FaUserCheck,
-  FaHotel,
-  FaUtensils,
-  FaWallet,
+  FaBars,
   FaBoxes,
   FaBroom,
-  FaGlassCheers,
   FaChartBar,
-  FaUser,
+  FaClipboardList,
   FaFire,
-  FaTasks,
-  FaBars,
+  FaGlassCheers,
   FaHistory,
+  FaHome,
+  FaHotel,
+  FaTasks,
+  FaUser,
+  FaUserCheck,
+  FaUtensils,
+  FaWallet,
 } from "react-icons/fa";
+
+import { getRoleHome } from "../../utils/roleHome";
 
 const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [hoveredItem, setHoveredItem] = useState(null);
   const [hoveredControl, setHoveredControl] = useState(null);
+
   const clearHoveredStates = () => {
     setHoveredItem(null);
     setHoveredControl(null);
   };
+
   const isControlHighlighted = (control) => hoveredControl === control;
   const isItemHighlighted = (id, active) => active || hoveredItem === id;
+
   const handlePointerHover = (value) => (event) => {
     if (event.pointerType === "mouse" || event.pointerType === "pen") {
       value === "menu" || value === "avatar"
@@ -35,6 +41,7 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen }) => {
         : setHoveredItem(value);
     }
   };
+
   const clearPointerHover = (value) => (event) => {
     if (event.pointerType === "mouse" || event.pointerType === "pen") {
       value === "menu" || value === "avatar"
@@ -46,72 +53,72 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen }) => {
   const role = (localStorage.getItem("role") || "").toLowerCase();
   const userName = localStorage.getItem("name") || "User";
   const avatarUrl = localStorage.getItem("avatarUrl") || "";
+  const dashboardPath = getRoleHome(role);
 
-  let roleMenus = [];
-
-  if (role === "admin") {
-    roleMenus = [
+  const roleMenuMap = {
+    admin: [
       { id: 2, name: "Attendance", icon: FaUserCheck, path: "/attendance" },
       { id: 3, name: "Hotel", icon: FaHotel, path: "/hotel" },
       { id: 4, name: "Restaurant POS", icon: FaUtensils, path: "/restaurant" },
-      { id: 12, name: "Kitchen", icon: FaFire, path: "/kitchen" },
-      { id: 5, name: "Accounts", icon: FaWallet, path: "/accounts" },
-      { id: 6, name: "Inventory", icon: FaBoxes, path: "/inventory" },
-      { id: 7, name: "Housekeeping", icon: FaBroom, path: "/housekeeping" },
-      { id: 13, name: "Assignments", icon: FaTasks, path: "/assignments" },
-      { id: 8, name: "Banquet", icon: FaGlassCheers, path: "/banquet" },
-      { id: 9, name: "Reports", icon: FaChartBar, path: "/reports" },
+      { id: 5, name: "Kitchen", icon: FaFire, path: "/kitchen" },
+      { id: 6, name: "Accounts", icon: FaWallet, path: "/accounts" },
+      { id: 7, name: "Inventory", icon: FaBoxes, path: "/inventory" },
+      { id: 8, name: "Housekeeping", icon: FaBroom, path: "/housekeeping" },
+      { id: 9, name: "Assignments", icon: FaTasks, path: "/assignments" },
+      { id: 10, name: "Banquet", icon: FaGlassCheers, path: "/banquet" },
+      { id: 11, name: "Reports", icon: FaChartBar, path: "/reports" },
+      { id: 12, name: "User Management", icon: FaUserCheck, path: "/user" },
+    ],
+    manager: [
+      { id: 2, name: "All Bookings", icon: FaHotel, path: "/hotel/all-bookings" },
+      { id: 3, name: "Accounts", icon: FaWallet, path: "/accounts" },
+      { id: 4, name: "Reports", icon: FaChartBar, path: "/reports" },
+      { id: 5, name: "Inventory", icon: FaBoxes, path: "/inventory" },
+      { id: 6, name: "Housekeeping", icon: FaBroom, path: "/housekeeping" },
+      { id: 7, name: "Banquet", icon: FaGlassCheers, path: "/banquet" },
+      { id: 8, name: "Restaurant POS", icon: FaUtensils, path: "/restaurant" },
       { id: 14, name: "Audit Logs", icon: FaHistory, path: "/reports/audit" },
-      { id: 11, name: "User Management", icon: FaUserCheck, path: "/user" },
-    ];
-  } else if (role === "waiter") {
-    roleMenus = [
-      { id: 2, name: "Attendance", icon: FaUserCheck, path: "/attendance" },
-      { id: 3, name: "Restaurant POS", icon: FaUtensils, path: "/restaurant" },
-    ];
-  } else if (role === "receptionist") {
-    roleMenus = [
-      { id: 2, name: "Attendance", icon: FaUserCheck, path: "/attendance" },
-      { id: 3, name: "Hotel", icon: FaHotel, path: "/hotel" },
-      { id: 4, name: "Banquet", icon: FaGlassCheers, path: "/banquet" },
-    ];
-  } else if (role === "housekeeping") {
-    roleMenus = [
-      { id: 2, name: "Housekeeping", icon: FaBroom, path: "/housekeeping" },
-      { id: 13, name: "Assignments", icon: FaTasks, path: "/assignments" },
-    ];
-  } else if (role === "accountant") {
-    roleMenus = [
+    ],
+    receptionist: [
+      { id: 2, name: "Guest Booking", icon: FaHotel, path: "/hotel/guest" },
+      { id: 3, name: "All Bookings", icon: FaClipboardList, path: "/hotel/all-bookings" },
+      { id: 4, name: "Check-In / Out", icon: FaTasks, path: "/hotel/communication" },
+      { id: 5, name: "Guest List", icon: FaUserCheck, path: "/hotel/booking-history" },
+      { id: 6, name: "Banquet", icon: FaGlassCheers, path: "/banquet" },
+      { id: 7, name: "Restaurant POS", icon: FaUtensils, path: "/restaurant" },
+    ],
+    housekeeping: [
+      { id: 2, name: "Room Status", icon: FaBroom, path: "/housekeeping" },
+      { id: 3, name: "Dirty Rooms", icon: FaTasks, path: "/housekeeping" },
+      { id: 4, name: "Assignments", icon: FaClipboardList, path: "/assignments" },
+      { id: 5, name: "Cleaned Rooms", icon: FaUserCheck, path: "/housekeeping" },
+    ],
+    accountant: [
       { id: 2, name: "Accounts", icon: FaWallet, path: "/accounts" },
       { id: 3, name: "Reports", icon: FaChartBar, path: "/reports" },
-    ];
-  } else if (role === "kitchen") {
-    roleMenus = [
-      { id: 12, name: "Kitchen", icon: FaFire, path: "/kitchen" },
+      { id: 4, name: "Inventory", icon: FaBoxes, path: "/inventory" },
+      { id: 5, name: "Audit Logs", icon: FaHistory, path: "/reports/audit" },
+    ],
+    kitchen: [
+      { id: 2, name: "Kitchen Orders", icon: FaFire, path: "/kitchen" },
+      { id: 3, name: "Restaurant POS", icon: FaUtensils, path: "/restaurant" },
+      { id: 4, name: "Inventory", icon: FaBoxes, path: "/inventory" },
+    ],
+    waiter: [
       { id: 2, name: "Restaurant POS", icon: FaUtensils, path: "/restaurant" },
-      { id: 3, name: "Inventory", icon: FaBoxes, path: "/inventory" },
-    ];
-  } else if (role === "manager" || role === "staff") {
-    roleMenus = [
-      { id: 2, name: "Attendance", icon: FaUserCheck, path: "/attendance" },
-      { id: 3, name: "Hotel", icon: FaHotel, path: "/hotel" },
-      { id: 4, name: "Restaurant POS", icon: FaUtensils, path: "/restaurant" },
-      { id: 12, name: "Kitchen", icon: FaFire, path: "/kitchen" },
-      { id: 5, name: "Accounts", icon: FaWallet, path: "/accounts" },
-      { id: 6, name: "Inventory", icon: FaBoxes, path: "/inventory" },
-      { id: 7, name: "Housekeeping", icon: FaBroom, path: "/housekeeping" },
-      { id: 13, name: "Assignments", icon: FaTasks, path: "/assignments" },
-    ];
-
-    if (role === "manager") {
-      roleMenus.push({ id: 14, name: "Audit Logs", icon: FaHistory, path: "/reports/audit" });
-    }
-  }
+      { id: 3, name: "Tables", icon: FaClipboardList, path: "/restaurant" },
+      { id: 4, name: "Orders", icon: FaTasks, path: "/restaurant" },
+      { id: 5, name: "Billing", icon: FaWallet, path: "/restaurant/payment-bills" },
+    ],
+    staff: [
+      { id: 2, name: "Assignments", icon: FaTasks, path: "/assignments" },
+    ],
+  };
 
   const menuItems = [
-    { id: 1, name: "Dashboard", icon: FaHome, path: "/dashboard" },
+    { id: 1, name: "Dashboard", icon: FaHome, path: dashboardPath },
+    ...(roleMenuMap[role] || []),
     { id: 99, name: "My Profile", icon: FaUser, path: "/profile" },
-    ...roleMenus,
   ];
 
   const handleNavClick = (path) => {
@@ -126,63 +133,46 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen }) => {
       setSidebarOpen(true);
     }
   };
+
   const isActive = (path) => {
     if (location.pathname === path) {
       return true;
     }
 
-    return Boolean(
-      matchPath({ path: `${path}/*`, end: false }, location.pathname),
-    );
+    return Boolean(matchPath({ path: `${path}/*`, end: false }, location.pathname));
   };
+
   const showLabels = sidebarOpen;
 
   return (
     <>
       {isMobile && sidebarOpen && (
         <div
-          className="fixed inset-0 top-[70px] left-[88px] bg-black/50 z-30"
+          className="fixed inset-0 left-[88px] top-[70px] z-30 bg-black/50"
           onClick={() => setSidebarOpen(false)}
-        ></div>
+        />
       )}
 
-      {/* Sidebar */}
       <div
         className={`
-      fixed top-[70px] left-0
-      h-[calc(100vh-70px)]
-      flex flex-col justify-between
-      text-gray-800
-      bg-[linear-gradient(180deg,#081225_0%,#0b1730_55%,#09101f_100%)]
-      border-r border-white/10
-      shadow-[0_18px_40px_rgba(2,8,23,0.45)] 
-      z-40
-      transition-all duration-300 ease-in-out
-      ${sidebarOpen ? "w-[250px]" : "w-[88px]"}
-      translate-x-0
-    `}
+          fixed left-0 top-[70px] z-40
+          flex h-[calc(100vh-70px)] translate-x-0 flex-col justify-between
+          border-r border-white/10 bg-[linear-gradient(180deg,#081225_0%,#0b1730_55%,#09101f_100%)]
+          text-gray-800 shadow-[0_18px_40px_rgba(2,8,23,0.45)]
+          transition-all duration-300 ease-in-out
+          ${sidebarOpen ? "w-[250px]" : "w-[88px]"}
+        `}
       >
         <style>{`
-        .sidebar-scroll::-webkit-scrollbar {
-          width: 6px;
-        }
-        .sidebar-scroll::-webkit-scrollbar-track {
-          background: #0f172a;
-        }
-        .sidebar-scroll::-webkit-scrollbar-thumb {
-          background: #192034;
-          border-radius: 10px;
-        }
-        .sidebar-scroll::-webkit-scrollbar-thumb:hover {
-          background: #1d4ed8;
-        }
-      `}</style>
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.22),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(14,165,233,0.14),transparent_30%)]"></div>
-        <div
-          className={`relative border-b border-white/10 ${
-            showLabels ? "px-4 py-4" : "px-3 py-4"
-          }`}
-        >
+          .sidebar-scroll::-webkit-scrollbar { width: 6px; }
+          .sidebar-scroll::-webkit-scrollbar-track { background: #0f172a; }
+          .sidebar-scroll::-webkit-scrollbar-thumb { background: #192034; border-radius: 10px; }
+          .sidebar-scroll::-webkit-scrollbar-thumb:hover { background: #1d4ed8; }
+        `}</style>
+
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.22),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(14,165,233,0.14),transparent_30%)]" />
+
+        <div className={`relative border-b border-white/10 ${showLabels ? "px-4 py-4" : "px-3 py-4"}`}>
           <button
             type="button"
             aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
@@ -198,32 +188,22 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen }) => {
             onTouchStart={() => setHoveredControl("menu")}
             onTouchEnd={clearHoveredStates}
             onTouchCancel={clearHoveredStates}
-            className={`flex items-center rounded-2xl border border-white/10 bg-white/[0.06] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-sm transition-all duration-300 hover:bg-blue-600 hover:border-blue-400 active:bg-blue-600 active:border-blue-400 focus-visible:bg-blue-600 focus-visible:border-blue-400 ${
-              showLabels
-                ? "w-full gap-3 justify-start px-4 py-3"
-                : "w-full justify-center px-3 py-3"
+            className={`flex items-center rounded-2xl border border-white/10 bg-white/[0.06] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-sm transition-all duration-300 hover:border-blue-400 hover:bg-blue-600 active:border-blue-400 active:bg-blue-600 focus-visible:border-blue-400 focus-visible:bg-blue-600 ${
+              showLabels ? "w-full justify-start gap-3 px-4 py-3" : "w-full justify-center px-3 py-3"
             } ${
               isControlHighlighted("menu")
-                ? "bg-blue-600 border-blue-400 shadow-[0_14px_28px_rgba(37,99,235,0.3)]"
+                ? "border-blue-400 bg-blue-600 shadow-[0_14px_28px_rgba(37,99,235,0.3)]"
                 : ""
             }`}
           >
             <span className="text-xl text-blue-300">
               <FaBars />
             </span>
-            {showLabels && (
-              <span className="text-sm font-semibold tracking-wide leading-none">
-                Menu
-              </span>
-            )}
+            {showLabels ? <span className="text-sm font-semibold tracking-wide leading-none">Menu</span> : null}
           </button>
         </div>
-        {/* Menu */}
-        <nav
-          className={`relative flex-1 space-y-2 overflow-y-auto font-bold sidebar-scroll ${
-            showLabels ? "px-4 py-4" : "px-3 py-4"
-          }`}
-        >
+
+        <nav className={`sidebar-scroll relative flex-1 space-y-2 overflow-y-auto font-bold ${showLabels ? "px-4 py-4" : "px-3 py-4"}`}>
           {menuItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.path);
@@ -246,47 +226,38 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen }) => {
                 onTouchStart={() => setHoveredItem(item.id)}
                 onTouchEnd={clearHoveredStates}
                 onTouchCancel={clearHoveredStates}
-                className={`
-            group w-full flex items-center rounded-2xl border
-          cursor-pointer transition-all duration-300
-          ${
-            showLabels
-              ? "gap-3 px-4 py-3 justify-start"
-              : "justify-center px-3 py-3"
-          }
-      ${
-        highlighted
-          ? "border-blue-400/60 bg-blue-600 text-white shadow-[0_14px_28px_rgba(37,99,235,0.3)]"
-          : "border-transparent bg-white/[0.03] text-slate-200 hover:border-blue-400/40 hover:bg-blue-600 hover:text-white hover:shadow-[0_14px_28px_rgba(37,99,235,0.25)] active:border-blue-400/40 active:bg-blue-600 active:text-white active:shadow-[0_14px_28px_rgba(37,99,235,0.25)] focus-visible:border-blue-400/40 focus-visible:bg-blue-600 focus-visible:text-white focus-visible:shadow-[0_14px_28px_rgba(37,99,235,0.25)]"
-      }
-      ${hovered && !active ? "border-blue-400/40 bg-blue-600 text-white shadow-[0_14px_28px_rgba(37,99,235,0.3)] scale-[1.01]" : ""}
-   `}
                 title={!showLabels ? item.name : undefined}
+                className={`
+                  group flex w-full cursor-pointer items-center rounded-2xl border transition-all duration-300
+                  ${showLabels ? "justify-start gap-3 px-4 py-3" : "justify-center px-3 py-3"}
+                  ${
+                    highlighted
+                      ? "border-blue-400/60 bg-blue-600 text-white shadow-[0_14px_28px_rgba(37,99,235,0.3)]"
+                      : "border-transparent bg-white/[0.03] text-slate-200 hover:border-blue-400/40 hover:bg-blue-600 hover:text-white hover:shadow-[0_14px_28px_rgba(37,99,235,0.25)]"
+                  }
+                  ${hovered && !active ? "scale-[1.01] border-blue-400/40 bg-blue-600 text-white shadow-[0_14px_28px_rgba(37,99,235,0.3)]" : ""}
+                `}
               >
                 <span
                   className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all duration-300 ${
                     highlighted
                       ? "bg-white/18 text-white"
-                      : "bg-slate-800/80 text-slate-100 group-hover:bg-white/18 group-hover:text-white group-active:bg-white/18 group-active:text-white"
+                      : "bg-slate-800/80 text-slate-100 group-hover:bg-white/18 group-hover:text-white"
                   }`}
                 >
                   <Icon className="text-base" />
                 </span>
-                {showLabels && (
-                  <span className="text-base font-semibold text-white text-left leading-tight">
+                {showLabels ? (
+                  <span className="text-left text-base font-semibold leading-tight text-white">
                     {item.name}
                   </span>
-                )}
+                ) : null}
               </button>
             );
           })}
         </nav>
 
-        <div
-          className={`relative p-3 border-t border-white/10 bg-black/10 backdrop-blur-md ${
-            showLabels ? "" : "flex justify-center"
-          }`}
-        >
+        <div className={`relative border-t border-white/10 bg-black/10 p-3 backdrop-blur-md ${showLabels ? "" : "flex justify-center"}`}>
           <button
             type="button"
             onClick={() => setSidebarOpen((prev) => !prev)}
@@ -301,25 +272,24 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen }) => {
             onTouchStart={() => setHoveredControl("avatar")}
             onTouchEnd={clearHoveredStates}
             onTouchCancel={clearHoveredStates}
-            className={`w-full flex items-center rounded-2xl border border-white/10 transition-all duration-300 ${
+            title={!showLabels ? userName : undefined}
+            className={`flex w-full items-center rounded-2xl border border-white/10 transition-all duration-300 ${
               showLabels
-                ? "gap-3 text-left cursor-pointer bg-white/[0.04] hover:bg-blue-600 active:bg-blue-600 focus-visible:bg-blue-600 p-2.5"
-                : "justify-center cursor-pointer bg-white/[0.04] hover:bg-blue-600 active:bg-blue-600 focus-visible:bg-blue-600 p-2"
+                ? "cursor-pointer gap-3 bg-white/[0.04] p-2.5 text-left hover:bg-blue-600"
+                : "cursor-pointer justify-center bg-white/[0.04] p-2 hover:bg-blue-600"
             } ${
               isControlHighlighted("avatar")
-                ? "bg-blue-600 border-blue-400 shadow-[0_14px_28px_rgba(37,99,235,0.3)]"
+                ? "border-blue-400 bg-blue-600 shadow-[0_14px_28px_rgba(37,99,235,0.3)]"
                 : ""
             }`}
-            title={!showLabels ? userName : undefined}
           >
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-900 ring-1 ring-white/10 flex items-center justify-center text-white overflow-hidden">
+            <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-slate-700 to-slate-900 text-white ring-1 ring-white/10">
               {avatarUrl ? (
                 <img
                   src={avatarUrl}
                   alt="Avatar"
-                  className="w-full h-full object-cover"
+                  className="h-full w-full object-cover"
                   onError={(e) => {
-                    // fallback if saved URL is no longer valid
                     e.currentTarget.style.display = "none";
                   }}
                 />
@@ -327,16 +297,14 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen }) => {
                 (userName || "U").charAt(0).toUpperCase()
               )}
             </div>
-            {showLabels && (
+            {showLabels ? (
               <div>
-                <p className="text-lg font-semibold text-white leading-tight">
-                  {userName}
-                </p>
+                <p className="text-lg font-semibold leading-tight text-white">{userName}</p>
                 <p className="text-sm font-medium uppercase tracking-[0.08em] text-blue-200/90">
-                  {role.charAt(0).toUpperCase() + role.slice(1)}
+                  {role ? role.charAt(0).toUpperCase() + role.slice(1) : "User"}
                 </p>
               </div>
-            )}
+            ) : null}
           </button>
         </div>
       </div>
