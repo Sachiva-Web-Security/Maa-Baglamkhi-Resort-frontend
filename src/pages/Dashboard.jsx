@@ -32,6 +32,7 @@ import {
 import { pushDashboardNotification } from "../components/Dashboard/dashboardNotifications";
 import {
   addDays,
+  BOARD_BUCKET_META,
   buildStaySummary,
   expandBookings,
   formatDateLabel,
@@ -136,6 +137,7 @@ const Dashboard = () => {
   const [selectedDate, setSelectedDate] = useState(todayISO());
   const [boardStartDate, setBoardStartDate] = useState(todayISO());
   const [selectedRoom, setSelectedRoom] = useState(null);
+  const [openMetricPanel, setOpenMetricPanel] = useState("");
   const [bucketOpen, setBucketOpen] = useState(() =>
     boardOrder.reduce((acc, key) => {
       acc[key] = true;
@@ -156,6 +158,12 @@ const Dashboard = () => {
     occupiedRooms: 0,
     todayRevenue: 0,
     todayCheckins: 0,
+    expectedArrivals: 0,
+    expectedCheckouts: 0,
+    totalRevenueGenerated: 0,
+    expectedArrivalDetails: [],
+    expectedCheckoutDetails: [],
+    todayCheckinDetails: [],
   });
   const [rooms, setRooms] = useState([]);
   const [bookings, setBookings] = useState([]);
@@ -176,6 +184,12 @@ const Dashboard = () => {
         occupiedRooms: metricsRes.data.occupiedRooms || 0,
         todayRevenue: metricsRes.data.todayRevenue || 0,
         todayCheckins: metricsRes.data.todayCheckins || 0,
+        expectedArrivals: metricsRes.data.expectedArrivals || 0,
+        expectedCheckouts: metricsRes.data.expectedCheckouts || 0,
+        totalRevenueGenerated: metricsRes.data.totalRevenueGenerated || 0,
+        expectedArrivalDetails: metricsRes.data.expectedArrivalDetails || [],
+        expectedCheckoutDetails: metricsRes.data.expectedCheckoutDetails || [],
+        todayCheckinDetails: metricsRes.data.todayCheckinDetails || [],
       });
       setRooms(normalizeRooms(roomsRes.data));
       setBookings(expandBookings(bookingsRes.data));
@@ -491,6 +505,28 @@ const Dashboard = () => {
   );
   const occupancyRate = liveTotalRooms ? `${Math.round((liveOccupiedRooms / liveTotalRooms) * 100)}%` : "0%";
   const displayRevenue = liveRevenue || apiMetrics.todayRevenue || 0;
+  const totalGeneratedRevenue = Number(apiMetrics.totalRevenueGenerated || 0);
+  const metricPanelData = {
+    expected_arrivals: {
+      title: "Expected Arrivals",
+      subtitle: "Guests expected to arrive today with booking date details.",
+      items: apiMetrics.expectedArrivalDetails || [],
+      empty: "Aaj ke liye koi expected arrival nahi mila.",
+    },
+    expected_checkouts: {
+      title: "Expected Check-outs",
+      subtitle: "Guests scheduled to check out today.",
+      items: apiMetrics.expectedCheckoutDetails || [],
+      empty: "Aaj ke liye koi expected check-out nahi mila.",
+    },
+    today_checkins: {
+      title: "Today's Check-ins",
+      subtitle: "Guests who are already marked as checked in today.",
+      items: apiMetrics.todayCheckinDetails || [],
+      empty: "Aaj abhi tak koi checked-in arrival record nahi mila.",
+    },
+  };
+  const activeMetricPanel = metricPanelData[openMetricPanel] || null;
 
   const metrics = [
     {
@@ -524,6 +560,33 @@ const Dashboard = () => {
       icon: FaCheckCircle,
       gradient: "bg-[linear-gradient(135deg,#D61B79_0%,#E43288_52%,#EB67AD_100%)]",
       route: "/hotel",
+      panelKey: "today_checkins",
+    },
+    {
+      title: "Expected Arrivals",
+      value: String(apiMetrics.expectedArrivals || 0),
+      subtitle: "Scheduled arrivals for today",
+      icon: FaDoorOpen,
+      gradient: "bg-[linear-gradient(135deg,#0F8C7B_0%,#14B8A6_48%,#5EEAD4_100%)]",
+      route: "/hotel/all-bookings",
+      panelKey: "expected_arrivals",
+    },
+    {
+      title: "Expected Check-outs",
+      value: String(apiMetrics.expectedCheckouts || 0),
+      subtitle: "Planned departures for today",
+      icon: FaCalendarAlt,
+      gradient: "bg-[linear-gradient(135deg,#7C3AED_0%,#8B5CF6_48%,#C4B5FD_100%)]",
+      route: "/hotel/all-bookings",
+      panelKey: "expected_checkouts",
+    },
+    {
+      title: "Total Revenue Generated",
+      value: `Rs. ${totalGeneratedRevenue.toLocaleString()}`,
+      subtitle: "Overall billed revenue snapshot",
+      icon: FaClipboardCheck,
+      gradient: "bg-[linear-gradient(135deg,#A16207_0%,#D97706_50%,#FBBF24_100%)]",
+      route: "/accounts",
     },
   ];
 
@@ -531,7 +594,15 @@ const Dashboard = () => {
     { label: "Occupancy", value: occupancyRate },
     { label: "Today's Revenue", value: `Rs. ${Number(displayRevenue || 0).toLocaleString()}` },
     { label: "Check-ins", value: String(liveCheckins) },
+    { label: "Expected Arrivals", value: String(apiMetrics.expectedArrivals || 0) },
   ];
+  const handleMetricClick = (metric) => {
+    if (metric.panelKey) {
+      setOpenMetricPanel((current) => (current === metric.panelKey ? "" : metric.panelKey));
+      return;
+    }
+    navigate(metric.route);
+  };
   const quickActions = [
     {
       label: "New Booking",
@@ -1216,7 +1287,7 @@ const Dashboard = () => {
               </div>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-4">
                 {heroStats.map((item) => (
                   <div
                     key={item.label}
@@ -1239,10 +1310,84 @@ const Dashboard = () => {
                 subtitle={metric.subtitle}
                 icon={metric.icon}
                 gradient={metric.gradient}
-                onClick={() => navigate(metric.route)}
+                onClick={() => handleMetricClick(metric)}
               />
             ))}
           </div>
+
+          {activeMetricPanel ? (
+            <div className="mt-4 rounded-[24px] border border-cyan-100 bg-white/88 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-cyan-700">
+                    Live Details
+                  </p>
+                  <h3 className="mt-1 text-lg font-bold text-slate-900">{activeMetricPanel.title}</h3>
+                  <p className="mt-1 text-sm text-slate-500">{activeMetricPanel.subtitle}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setOpenMetricPanel("")}
+                  className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
+                >
+                  <FaTimes className="text-[11px]" />
+                  Close
+                </button>
+              </div>
+
+              <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                {activeMetricPanel.items.length ? (
+                  activeMetricPanel.items.map((item) => (
+                    <div
+                      key={`${openMetricPanel}-${item.bookingId}-${item.checkIn}-${item.checkOut}`}
+                      className="rounded-[20px] border border-slate-200 bg-slate-50/80 p-4 shadow-sm"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className="text-sm font-bold text-slate-900">{item.guestName || "Guest"}</div>
+                          <div className="mt-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                            {item.bookingCode || "Direct Booking"}
+                          </div>
+                        </div>
+                        <span className="rounded-full border border-cyan-200 bg-cyan-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-cyan-700">
+                          {item.bookingStatus || "Confirmed"}
+                        </span>
+                      </div>
+
+                      <div className="mt-4 grid grid-cols-2 gap-3 text-xs">
+                        <div className="rounded-[16px] border border-slate-200 bg-white px-3 py-3">
+                          <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">Check-In</div>
+                          <div className="mt-1 font-bold text-slate-900">
+                            {item.checkIn ? formatShortDate(item.checkIn) : "--"}
+                          </div>
+                        </div>
+                        <div className="rounded-[16px] border border-slate-200 bg-white px-3 py-3">
+                          <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">Check-Out</div>
+                          <div className="mt-1 font-bold text-slate-900">
+                            {item.checkOut ? formatShortDate(item.checkOut) : "--"}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 rounded-[16px] border border-dashed border-slate-200 bg-white px-3 py-3">
+                        <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">Rooms</div>
+                        <div className="mt-1 text-sm font-semibold text-slate-800">
+                          {item.rooms || "Room not linked"}
+                        </div>
+                        {item.mobile ? (
+                          <div className="mt-2 text-xs text-slate-500">Contact: {item.mobile}</div>
+                        ) : null}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="rounded-[20px] border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-sm text-slate-500 sm:col-span-2 xl:col-span-3">
+                    {activeMetricPanel.empty}
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : null}
 
           <section className="grid gap-4 xl:grid-cols-[minmax(0,1.62fr)_minmax(280px,0.68fr)]">
             <div className="rounded-[24px] border border-white/70 bg-white/82 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { FaChartLine, FaMoneyBillWave, FaPlus, FaReceipt } from "react-icons/fa";
 
 import InvoiceForm from "../components/Accounts/forms/InvoiceForm";
@@ -180,7 +181,9 @@ const AccountsModuleCard = ({ title, subtitle, fields, onSubmit, rows, columns, 
 };
 
 const Accounts = () => {
+  const navigate = useNavigate();
   const [records, setRecords] = useState([]);
+  const [customerInvoices, setCustomerInvoices] = useState([]);
   const [totals, setTotals] = useState({
     income: 0,
     expense: 0,
@@ -235,6 +238,16 @@ const Accounts = () => {
     }
   };
 
+  const fetchInvoices = async () => {
+    try {
+      const res = await API.get("/invoices/all");
+      setCustomerInvoices(Array.isArray(res.data) ? res.data : []);
+    } catch (err) {
+      console.error("Error loading invoices", err);
+      setCustomerInvoices([]);
+    }
+  };
+
   const loadExpandedAccounts = async () => {
     try {
       const [
@@ -275,6 +288,7 @@ const Accounts = () => {
       fetchRecords(),
       fetchSummary(),
       loadExpandedAccounts(),
+      fetchInvoices(),
     ]);
   };
 
@@ -355,6 +369,16 @@ const Accounts = () => {
       setShowInvoice(false);
     } catch {
       window.alert("Error generating invoice");
+    }
+  };
+
+  const handleInvoiceStatusChange = async (invoiceId, paymentStatus) => {
+    try {
+      await API.patch(`/invoices/payment-status/${invoiceId}`, { paymentStatus });
+      await fetchInvoices();
+    } catch (error) {
+      console.error("Failed to update invoice payment status", error);
+      window.alert("Invoice status update nahi ho paya.");
     }
   };
 
@@ -712,6 +736,78 @@ const Accounts = () => {
                     </td>
                   </tr>
                 ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section className="rounded-[26px] border border-white/60 bg-white/82 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
+          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-700">
+                Customer Invoices
+              </div>
+              <h2 className="mt-2 text-2xl font-black text-slate-900">Hotel + restaurant billing records</h2>
+              <p className="mt-2 text-sm text-slate-500">
+                Reception se generate hui invoices yahan save hoti hain. Accounts yahin se payment status track kar sakta hai.
+              </p>
+            </div>
+            <div className="rounded-full bg-slate-100 px-4 py-2 text-xs font-bold text-slate-600">
+              {customerInvoices.length} invoices
+            </div>
+          </div>
+
+          <div className="overflow-x-auto rounded-[22px] border border-slate-200">
+            <table className="min-w-full text-left text-sm">
+              <thead className="bg-slate-50 text-[11px] uppercase tracking-[0.16em] text-slate-500">
+                <tr>
+                  <th className="px-4 py-3">Invoice</th>
+                  <th className="px-4 py-3">Customer</th>
+                  <th className="px-4 py-3">Room</th>
+                  <th className="px-4 py-3">Date</th>
+                  <th className="px-4 py-3">Total</th>
+                  <th className="px-4 py-3">Payment Status</th>
+                  <th className="px-4 py-3">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {customerInvoices.map((invoice) => (
+                  <tr key={invoice.id} className="border-t border-slate-200">
+                    <td className="px-4 py-4 font-semibold text-slate-900">{invoice.invoice_no || invoice.invoiceNo}</td>
+                    <td className="px-4 py-4 text-slate-700">{invoice.customer_name || invoice.customerName}</td>
+                    <td className="px-4 py-4 text-slate-700">{invoice.room_no || invoice.roomNumber || "--"}</td>
+                    <td className="px-4 py-4 text-slate-700">{invoice.date || "--"}</td>
+                    <td className="px-4 py-4 font-bold text-slate-900">
+                      {formatINR(invoice.totalAmount ?? invoice.total_amount ?? invoice.final_total)}
+                    </td>
+                    <td className="px-4 py-4">
+                      <select
+                        value={invoice.paymentStatus || invoice.payment_status || invoice.status || "Pending"}
+                        onChange={(event) => handleInvoiceStatusChange(invoice.id, event.target.value)}
+                        className={fieldClass}
+                      >
+                        <option value="Pending">Pending</option>
+                        <option value="Paid">Paid</option>
+                      </select>
+                    </td>
+                    <td className="px-4 py-4">
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/invoice/${invoice.booking_id || invoice.customer_id}`)}
+                        className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700"
+                      >
+                        Open Invoice
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {!customerInvoices.length ? (
+                  <tr>
+                    <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
+                      Abhi tak koi customer invoice generate nahi hui.
+                    </td>
+                  </tr>
+                ) : null}
               </tbody>
             </table>
           </div>

@@ -23,6 +23,7 @@ import User from "./pages/User";
 import Assignment from "./pages/Assignments";
 import Kitchen from "./pages/Kitchen";
 import Hotel from "./pages/Hotel";
+import CustomerInvoicePage from "./pages/CustomerInvoicePage";
 
 /* ================= AUTH ================= */
 import Login from "./pages/Login";
@@ -207,6 +208,11 @@ function App() {
         <Route
           path="/accounts"
           element={protect(<Accounts />, ROLES.ACCOUNTS)}
+        />
+
+        <Route
+          path="/invoice/:customerId"
+          element={protect(<CustomerInvoicePage />, ROLES.ALL)}
         />
 
         {/* ── INVENTORY ─────────────────────────────────── */}

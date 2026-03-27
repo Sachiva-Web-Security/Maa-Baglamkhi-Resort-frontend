@@ -246,6 +246,13 @@ const Communication = () => {
               buttonClassName="rounded-full"
             />
           ) : null}
+          <button
+            type="button"
+            onClick={() => navigate(`/invoice/${bookingId}`)}
+            className="rounded-full bg-indigo-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-indigo-700"
+          >
+            Generate Invoice
+          </button>
         </div>
 
         <section className="grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(360px,0.75fr)]">

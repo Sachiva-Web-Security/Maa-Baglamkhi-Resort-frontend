@@ -358,6 +358,14 @@ const AllBooking = () => {
                         View
                       </button>
 
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/invoice/${booking.bookingId}`)}
+                        className="rounded-full bg-indigo-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-indigo-700"
+                      >
+                        Generate Invoice
+                      </button>
+
                       {viewMode === "active" && (
                         <button
                           type="button"
