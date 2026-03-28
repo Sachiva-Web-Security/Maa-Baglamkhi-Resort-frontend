@@ -4,7 +4,6 @@ import {
   FiCheckCircle,
   FiClock,
   FiPrinter,
-  FiSave,
   FiXCircle,
 } from "react-icons/fi";
 import { FaSyncAlt } from "react-icons/fa";
@@ -15,6 +14,26 @@ const PREP_TIME_OPTIONS = [10, 15, 20, 30, 45, 60];
 
 const toMillis = (value) => {
   if (!value) return null;
+
+  if (typeof value === "string") {
+    const mysqlMatch = value.match(
+      /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?$/,
+    );
+
+    if (mysqlMatch) {
+      const [, year, month, day, hours, minutes, seconds = "00"] = mysqlMatch;
+      const parsed = new Date(
+        Number(year),
+        Number(month) - 1,
+        Number(day),
+        Number(hours),
+        Number(minutes),
+        Number(seconds),
+      ).getTime();
+      return Number.isNaN(parsed) ? null : parsed;
+    }
+  }
+
   const parsed = new Date(value).getTime();
   return Number.isNaN(parsed) ? null : parsed;
 };
@@ -34,6 +53,20 @@ const getRemainingMinutes = (order) => {
   return Math.ceil((dueAt - Date.now()) / 60000);
 };
 
+const getRemainingSeconds = (order) => {
+  const dueAt = toMillis(order.expectedReadyAt);
+  if (!dueAt) return null;
+  return Math.max(0, Math.ceil((dueAt - Date.now()) / 1000));
+};
+
+const formatCountdown = (totalSeconds) => {
+  if (totalSeconds === null || totalSeconds === undefined) return "--:--";
+  const safeSeconds = Math.max(0, Number(totalSeconds) || 0);
+  const minutes = Math.floor(safeSeconds / 60);
+  const seconds = safeSeconds % 60;
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+};
+
 const isOrderOverdue = (order) => {
   if (String(order.status || "").toLowerCase() === "ready") return false;
   const remaining = getRemainingMinutes(order);
@@ -45,10 +78,10 @@ const Kitchen = () => {
   const [roomRefs, setRoomRefs] = useState(new Set());
   const [etaDrafts, setEtaDrafts] = useState({});
   const [loading, setLoading] = useState(false);
+  const [, setTicker] = useState(0);
   const orderSound = useRef(null);
-  const prevOrderCount = useRef(0);
   const firstLoad = useRef(true);
-  const overdueRegistry = useRef(new Set());
+  const seenOrderIds = useRef(new Set());
 
   const fetchOrders = async () => {
     if (firstLoad.current) setLoading(true);
@@ -65,11 +98,14 @@ const Kitchen = () => {
         return next;
       });
 
-      if ((data?.length || 0) > prevOrderCount.current && orderSound.current) {
+      const incomingIds = new Set((data || []).map((order) => String(order.id)));
+      const hasNewOrder = (data || []).some((order) => !seenOrderIds.current.has(String(order.id)));
+
+      if (!firstLoad.current && hasNewOrder && orderSound.current) {
         orderSound.current.currentTime = 0;
         orderSound.current.play().catch(() => {});
       }
-      prevOrderCount.current = data?.length || 0;
+      seenOrderIds.current = incomingIds;
     } catch (err) {
       console.error("Failed to load kitchen orders", err);
       setOrders([]);
@@ -123,63 +159,55 @@ const Kitchen = () => {
     fetchOrders();
     fetchRoomRefs();
     const interval = setInterval(fetchOrders, 4000);
+    const ticker = setInterval(() => setTicker((current) => current + 1), 1000);
     window.addEventListener("kitchenUpdated", fetchOrders);
     return () => {
       clearInterval(interval);
+      clearInterval(ticker);
       window.removeEventListener("kitchenUpdated", fetchOrders);
     };
   }, []);
-
-  useEffect(() => {
-    const overdueOrders = orders.filter((order) => isOrderOverdue(order));
-    const registry = overdueRegistry.current;
-    let shouldPlayWarning = false;
-
-    overdueOrders.forEach((order) => {
-      if (!registry.has(order.id)) {
-        registry.add(order.id);
-        shouldPlayWarning = true;
-      }
-    });
-
-    Array.from(registry).forEach((id) => {
-      if (!overdueOrders.some((order) => order.id === id)) {
-        registry.delete(id);
-      }
-    });
-
-    if (shouldPlayWarning && orderSound.current) {
-      orderSound.current.currentTime = 0;
-      orderSound.current.play().catch(() => {});
-    }
-  }, [orders]);
-
-  const saveOrder = async (id) => {
-    try {
-      const res = await restaurantService.saveKitchenOrder(id, "Saved");
-      fetchOrders();
-      window.dispatchEvent(
-        new CustomEvent("accountsUpdated", {
-          detail: res?.accountEntry || null,
-        }),
-      );
-      window.alert("Data account main save ho gaya hai.");
-    } catch (err) {
-      console.error(err);
-      alert("Failed to save order");
-    }
-  };
 
   const cancelOrder = async (id) => {
     const confirmCancel = window.confirm("Cancel this kitchen order?");
     if (!confirmCancel) return;
 
     try {
-      await restaurantService.cancelKitchenOrder(id);
+      const response = await restaurantService.cancelKitchenOrder(id);
       fetchOrders();
+      window.alert(response?.message || "Order cancelled successfully.");
     } catch (err) {
       console.error(err);
-      alert("Failed to cancel order");
+      alert(err.response?.data?.message || "Failed to cancel order");
+    }
+  };
+
+  const restoreOrder = async (order) => {
+    try {
+      await restaurantService.updateKitchenOrderStatus(order.id, {
+        status: "Pending",
+        prepTimeMinutes: Number(etaDrafts[order.id] || order.prepTimeMinutes || 20),
+        readyMessage: "",
+      });
+      fetchOrders();
+      window.alert("Cancelled order wapas kitchen queue me aa gaya hai.");
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.message || "Order restore nahi ho paaya.");
+    }
+  };
+
+  const removeCancelledOrder = async (order) => {
+    const confirmed = window.confirm("Is cancelled order ko list se hatana hai?");
+    if (!confirmed) return;
+
+    try {
+      const response = await restaurantService.removeKitchenOrder(order.id);
+      fetchOrders();
+      window.alert(response?.message || "Cancelled order permanently remove ho gaya.");
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.message || "Cancelled order remove nahi ho paaya.");
     }
   };
 
@@ -254,7 +282,11 @@ const Kitchen = () => {
   };
 
   const totalOrders = orders.length;
-  const visibleOrders = orders.filter((o) => o.status !== "Cancelled");
+  const cancelledOrders = orders.filter((o) => String(o.status || "").toLowerCase() === "cancelled");
+  const visibleOrders = orders.filter((o) => {
+    const status = String(o.status || "").toLowerCase();
+    return !["cancelled", "saved", "served", "complete", "completed"].includes(status);
+  });
   const readyCount = visibleOrders.filter((o) => o.status === "Ready").length;
   const pendingCount = Math.max(0, visibleOrders.length - readyCount);
   const overdueCount = visibleOrders.filter((o) => isOrderOverdue(o)).length;
@@ -439,16 +471,16 @@ const Kitchen = () => {
                           </div>
                           <div className="mt-2 flex items-center gap-2 text-sm font-bold text-slate-900">
                             <FiClock className={overdue ? "text-rose-600" : "text-cyan-600"} />
-                            {formatClock(order.expectedReadyAt)}
+                            {formatCountdown(getRemainingSeconds(order))}
                           </div>
                           <div className={`mt-1 text-xs ${overdue ? "text-rose-700" : "text-slate-500"}`}>
                             {status === "Ready"
-                              ? `Ready at ${formatClock(order.readyAt)}`
+                              ? "Order ready for service"
                               : remainingMinutes === null
                               ? "ETA not set"
-                              : remainingMinutes >= 0
+                              : remainingMinutes > 0
                               ? `${remainingMinutes} min left`
-                              : `${Math.abs(remainingMinutes)} min late`}
+                              : "Time up"}
                           </div>
                         </div>
                       </div>
@@ -490,16 +522,6 @@ const Kitchen = () => {
                               Order Ready
                             </button>
                           ) : null}
-                          {status === "Ready" ? (
-                            <button
-                              type="button"
-                              onClick={() => saveOrder(order.id)}
-                              className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-xs font-bold text-white transition hover:-translate-y-0.5"
-                            >
-                              <FiSave />
-                              Save Order
-                            </button>
-                          ) : null}
                           <button
                             type="button"
                             onClick={() => cancelOrder(order.id)}
@@ -533,6 +555,83 @@ const Kitchen = () => {
             )}
           </div>
         </section>
+
+        {cancelledOrders.length ? (
+          <section className="rounded-[26px] border border-rose-100 bg-white/80 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
+            <div className="mb-5">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-rose-400">
+                Cancelled Orders
+              </p>
+              <h2 className="mt-1 text-lg font-bold text-slate-900 sm:text-xl">
+                Cancelled kitchen records
+              </h2>
+            </div>
+
+            <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(280px,1fr))]">
+              {cancelledOrders.map((order) => {
+                const ref = order.table || order.table_number || order.table_no;
+                const entityType = resolveEntityType(order);
+                const total = (order.items || []).reduce((sum, item) => {
+                  const qty = Number(item.qty ?? item.quantity ?? 0);
+                  return sum + Number(item.price || 0) * qty;
+                }, 0);
+
+                return (
+                  <div
+                    key={`cancelled-${order.id}`}
+                    className="rounded-[24px] border border-rose-200 bg-rose-50/70 p-4 shadow-sm sm:p-5"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-rose-500">
+                          Reference
+                        </div>
+                        <div className="mt-2 text-base font-black text-slate-900 sm:text-lg">
+                          {entityType} {ref || "--"}
+                        </div>
+                        <div className="mt-1 text-xs text-slate-500 sm:text-sm">
+                          Order #{order.id}
+                        </div>
+                      </div>
+                      <span className="rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-700">
+                        Cancelled
+                      </span>
+                    </div>
+
+                    <div className="mt-4 rounded-[18px] border border-rose-200 bg-white/70 px-4 py-4 text-sm text-slate-700">
+                      {order.readyMessage || `${entityType} ${ref || "--"} order cancelled.`}
+                    </div>
+
+                    <div className="mt-4 text-sm text-slate-600">
+                      Total: <span className="font-black text-slate-900">Rs. {total}</span>
+                    </div>
+                    <div className="mt-2 text-xs font-semibold text-rose-700">
+                      Cancelled orders ka amount accounts me add nahi hota.
+                    </div>
+                    <div className="mt-4">
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => restoreOrder(order)}
+                          className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-xs font-bold text-white transition hover:-translate-y-0.5"
+                        >
+                          Restore Order
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => removeCancelledOrder(order)}
+                          className="inline-flex items-center gap-2 rounded-full bg-rose-500 px-4 py-2 text-xs font-bold text-white transition hover:-translate-y-0.5"
+                        >
+                          Remove Order
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        ) : null}
       </div>
     </div>
   );

@@ -9,12 +9,16 @@ import {
 
 import RoleDashboardShell from "../components/roleDashboards/RoleDashboardShell";
 import { restaurantService } from "../services/restaurantService";
+import { getRestaurantSocket, releaseRestaurantSocket } from "../utils/restaurantSocket";
+
+const normalizeName = (value) => String(value || "").trim().toLowerCase();
 
 const RestaurantDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [orders, setOrders] = useState([]);
   const [kitchenOrders, setKitchenOrders] = useState([]);
+  const [readyNotification, setReadyNotification] = useState(null);
 
   useEffect(() => {
     let mounted = true;
@@ -44,6 +48,52 @@ const RestaurantDashboard = () => {
     load();
     return () => {
       mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let activeSocket = null;
+    let unsubscribed = false;
+    const currentUserName = normalizeName(localStorage.getItem("name"));
+    const currentRole = normalizeName(localStorage.getItem("role"));
+
+    const setupSocket = async () => {
+      const socket = await getRestaurantSocket();
+      if (!socket || unsubscribed) return;
+      activeSocket = socket;
+
+      const onReady = (payload = {}) => {
+        const assignedWaiter = normalizeName(payload.waiter);
+        if (!assignedWaiter || !currentUserName) return;
+        if (assignedWaiter !== currentUserName) return;
+        if (currentRole !== "waiter" && currentRole !== "admin" && currentRole !== "manager") return;
+
+        setReadyNotification({
+          orderId: payload.id,
+          waiter: payload.waiter,
+          referenceLabel:
+            payload.referenceLabel ||
+            `${String(payload.entityType || "Table")} ${payload.table || "--"}`,
+          message:
+            payload.readyMessage ||
+            `${String(payload.entityType || "Table")} ${payload.table || "--"} order ready hai. Serve on the ${String(payload.entityType || "table").toLowerCase()}.`,
+        });
+      };
+
+      socket.on("kitchen-order-ready", onReady);
+      return () => {
+        socket.off("kitchen-order-ready", onReady);
+      };
+    };
+
+    const teardownPromise = setupSocket();
+    return () => {
+      unsubscribed = true;
+      Promise.resolve(teardownPromise).then((teardown) => teardown && teardown());
+      if (activeSocket) {
+        activeSocket.disconnect();
+      }
+      releaseRestaurantSocket();
     };
   }, []);
 
@@ -102,22 +152,50 @@ const RestaurantDashboard = () => {
   }), [orders]);
 
   return (
-    <RoleDashboardShell
-      badge="Restaurant Service"
-      title="Waiter dashboard for tables and running orders"
-      description="Active tables, running orders, KOT readiness aur billing shortcuts ko service team ke liye role-specific tarike se dikhaya gaya hai."
-      stats={stats}
-      quickActions={[
-        { label: "Open POS", helper: "Tables aur menu se nayi order flow start karein.", route: "/restaurant", icon: FaCashRegister, tone: "cyan" },
-        { label: "Payment Bills", helper: "Settled orders aur billing history dekhein.", route: "/restaurant/payment-bills", icon: FaReceipt, tone: "emerald" },
-        { label: "Token Items", helper: "Running order item details ko quickly access karein.", route: "/restaurant", icon: FaClipboardCheck, tone: "amber" },
-        { label: "Menu Board", helper: "Food menu aur serving workflow ko open karein.", route: "/restaurant/add-menu-item", icon: FaUtensils, tone: "violet" },
-      ]}
-      insights={insights}
-      table={table}
-      loading={loading}
-      error={error}
-    />
+    <>
+      <RoleDashboardShell
+        badge="Restaurant Service"
+        title="Waiter dashboard for tables and running orders"
+        description="Active tables, running orders, KOT readiness aur billing shortcuts ko service team ke liye role-specific tarike se dikhaya gaya hai."
+        stats={stats}
+        quickActions={[
+          { label: "Open POS", helper: "Tables aur menu se nayi order flow start karein.", route: "/restaurant", icon: FaCashRegister, tone: "cyan" },
+          { label: "Payment Bills", helper: "Settled orders aur billing history dekhein.", route: "/restaurant/payment-bills", icon: FaReceipt, tone: "emerald" },
+          { label: "Token Items", helper: "Running order item details ko quickly access karein.", route: "/restaurant", icon: FaClipboardCheck, tone: "amber" },
+          { label: "Menu Board", helper: "Food menu aur serving workflow ko open karein.", route: "/restaurant/add-menu-item", icon: FaUtensils, tone: "violet" },
+        ]}
+        insights={insights}
+        table={table}
+        loading={loading}
+        error={error}
+      />
+
+      {readyNotification ? (
+        <div className="fixed inset-0 z-[140] flex items-center justify-center bg-slate-950/50 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-[28px] border border-white/30 bg-white p-6 shadow-[0_32px_80px_rgba(15,23,42,0.24)]">
+            <div className="rounded-[22px] bg-[linear-gradient(135deg,#0f172a_0%,#1d4ed8_55%,#0f766e_100%)] px-5 py-5 text-white">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-cyan-100/80">Service Alert</p>
+              <h3 className="mt-2 text-2xl font-black">Order Ready</h3>
+              <p className="mt-2 text-sm text-white/85">{readyNotification.referenceLabel}</p>
+            </div>
+
+            <div className="mt-5 rounded-[20px] border border-emerald-200 bg-emerald-50 px-4 py-4 text-sm font-semibold text-emerald-800">
+              {readyNotification.message}
+            </div>
+
+            <div className="mt-5 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setReadyNotification(null)}
+                className="rounded-full bg-slate-900 px-5 py-3 text-sm font-bold text-white"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </>
   );
 };
 

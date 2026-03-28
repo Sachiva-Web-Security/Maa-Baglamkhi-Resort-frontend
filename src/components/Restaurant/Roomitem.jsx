@@ -4,6 +4,7 @@ import { FiFileText, FiHome, FiPlusCircle } from "react-icons/fi";
 
 import API from "../../api";
 import { RestaurantContext } from "../../Context/RestaurantContext";
+import { restaurantService } from "../../services/restaurantService";
 import {
   expandBookings,
   getRoomBookingReference,
@@ -15,6 +16,12 @@ import {
 
 const ACTIVE_INVOICE_KEY = "restaurant-active-invoice";
 const SAVED_INVOICE_KEY = "restaurant-saved-invoice";
+const normalizeInvoiceStatus = (value) => String(value || "").trim().toLowerCase();
+const getReusableBill = (bill) => (normalizeInvoiceStatus(bill?.invoiceStatus) === "paid" ? null : bill);
+const createBillLookupKey = (entityType, tableName, tokenId) =>
+  tokenId
+    ? `${String(entityType || "Table").toLowerCase()}:token:${Number(tokenId)}`
+    : `${String(entityType || "Table").toLowerCase()}:table:${String(tableName || "").trim()}`;
 
 const Roomitem = () => {
   const navigate = useNavigate();
@@ -25,6 +32,7 @@ const Roomitem = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tokenSnapshots, setTokenSnapshots] = useState({});
+  const [billByRoom, setBillByRoom] = useState({});
 
   const focusRoomNo = String(location.state?.focusRoomNo || "");
 
@@ -49,6 +57,29 @@ const Roomitem = () => {
 
   useEffect(() => {
     loadRooms();
+  }, []);
+
+  useEffect(() => {
+    const loadBills = async () => {
+      try {
+        const response = await API.get("/restaurant/bills");
+        const latestByRoom = {};
+        (Array.isArray(response.data) ? response.data : []).forEach((bill) => {
+          const key = createBillLookupKey(bill.entityType, bill.tableNumber, bill.tokenId);
+          if (!latestByRoom[key] || Number(bill.id || 0) > Number(latestByRoom[key].id || 0)) {
+            latestByRoom[key] = bill;
+          }
+        });
+        setBillByRoom(latestByRoom);
+      } catch (error) {
+        console.error("Failed to load room bills:", error);
+        setBillByRoom({});
+      }
+    };
+
+    loadBills();
+    window.addEventListener("tokenUpdated", loadBills);
+    return () => window.removeEventListener("tokenUpdated", loadBills);
   }, []);
 
   const addRoom = async () => {
@@ -130,13 +161,14 @@ const Roomitem = () => {
             const roomRef = String(room.roomNo);
             const tokenRes = await API.get(`/token/table/${roomRef}`);
             const tokenId = tokenRes.data?.id || null;
+            const tokenCode = tokenRes.data?.token_code || tokenRes.data?.tokenCode || null;
 
             if (!tokenId) {
-              return [roomRef, { tokenId: null, items: [] }];
+              return [roomRef, { tokenId: null, tokenCode: null, items: [] }];
             }
 
             const itemsRes = await API.get(`/token/items/${tokenId}`);
-            return [roomRef, { tokenId, items: itemsRes.data || [] }];
+            return [roomRef, { tokenId, tokenCode, items: itemsRes.data || [] }];
           }),
         );
 
@@ -165,15 +197,18 @@ const Roomitem = () => {
     navigate(`/restaurant/token/${room.roomNo}`, { state });
   };
 
-  const openRoomInvoice = (room) => {
+  const openRoomInvoice = async (room) => {
     const roomRef = String(room.roomNo);
     const snapshot = tokenSnapshots[roomRef];
     const items = snapshot?.items || [];
+    const relatedBill = getReusableBill(
+      billByRoom[createBillLookupKey("Room", roomRef, snapshot?.tokenId || null)] || null,
+    );
     const activeBooking =
       getRoomBookingForDate(room.roomNo, today, mergedBookings, false) ||
       getRoomBookingReference(room.roomNo, today, mergedBookings);
-    const customerName = room.guest || activeBooking?.guestName || "Walk-in Customer";
-    const phone = activeBooking?.mobile || "";
+    const customerName = relatedBill?.customerName || room.guest || activeBooking?.guestName || "Walk-in Customer";
+    const phone = relatedBill?.phone || activeBooking?.mobile || "";
 
     if (!items.length) {
       return;
@@ -189,6 +224,7 @@ const Roomitem = () => {
     const invoicePayload = {
       table: roomRef,
       tokenId: snapshot.tokenId,
+      tokenCode: snapshot.tokenCode || null,
       items: items.map((item) => ({
         id: item.id,
         name: item.item_name,
@@ -200,14 +236,87 @@ const Roomitem = () => {
       total,
       date: new Date().toISOString(),
       entityType: "Room",
+      billId: relatedBill?.id || null,
+      invoiceStatus: relatedBill?.invoiceStatus || null,
       customerName,
       phone,
+      paymentMethod: relatedBill?.paymentMethod || "Cash",
+      discountAmount: Number(relatedBill?.discountAmount || 0),
+      splitCount: Number(relatedBill?.split_count || 1),
+      personCount: Number(relatedBill?.split_count || 1),
+      bookingId: activeBooking?.bookingId || null,
+      bookingCode: activeBooking?.bookingCode || "",
       roomData: room,
     };
 
-    localStorage.setItem(ACTIVE_INVOICE_KEY, JSON.stringify(invoicePayload));
-    localStorage.setItem(SAVED_INVOICE_KEY, JSON.stringify(invoicePayload));
-    navigate("/restaurant/payment", { state: invoicePayload });
+    try {
+      const response = await restaurantService.createBill({
+        ...invoicePayload,
+        tokenId: snapshot?.tokenId || null,
+        invoiceStatus: "Generated",
+        paymentMethod: null,
+      });
+      const persistedInvoice = {
+        ...invoicePayload,
+        billId: response?.id || invoicePayload.billId || null,
+        invoiceStatus: response?.bill?.invoiceStatus || "Generated",
+      };
+      localStorage.setItem(ACTIVE_INVOICE_KEY, JSON.stringify(persistedInvoice));
+      localStorage.setItem(SAVED_INVOICE_KEY, JSON.stringify(persistedInvoice));
+      window.dispatchEvent(new Event("tokenUpdated"));
+      navigate("/restaurant/payment", { state: persistedInvoice });
+    } catch (error) {
+      alert(error.response?.data?.message || "Invoice create nahi ho paaya.");
+    }
+  };
+
+  const openPayNow = (room) => {
+    const roomRef = String(room.roomNo);
+    const snapshot = tokenSnapshots[roomRef];
+    const items = snapshot?.items || [];
+    const relatedBill = items.length
+      ? getReusableBill(billByRoom[createBillLookupKey("Room", roomRef, snapshot?.tokenId || null)] || null)
+      : billByRoom[createBillLookupKey("Room", roomRef, snapshot?.tokenId || null)] || null;
+    const activeBooking =
+      getRoomBookingForDate(room.roomNo, today, mergedBookings, false) ||
+      getRoomBookingReference(room.roomNo, today, mergedBookings);
+    const subtotal = items.length
+      ? items.reduce((sum, item) => sum + Number(item.qty || 0) * Number(item.rate || 0), 0)
+      : Number(relatedBill?.subtotal || 0);
+    const gst = items.length ? subtotal * 0.05 : Number(relatedBill?.gst || 0);
+    const discountAmount = Number(relatedBill?.discountAmount || 0);
+    const total = items.length ? subtotal + gst - discountAmount : Number(relatedBill?.total || 0);
+
+    navigate(`/restaurant/pay-now/${roomRef}`, {
+      state: {
+        table: roomRef,
+        tokenId: snapshot?.tokenId || null,
+        tokenCode: snapshot?.tokenCode || null,
+        waiterName: "Room Service",
+        items: items.map((item) => ({
+          id: item.id,
+          name: item.item_name,
+          qty: Number(item.qty),
+          rate: Number(item.rate),
+        })),
+        subtotal,
+        gst,
+        total,
+        date: relatedBill?.created_at || new Date().toISOString(),
+        entityType: "Room",
+        billId: relatedBill?.id || null,
+        invoiceStatus: relatedBill?.invoiceStatus || null,
+        customerName: relatedBill?.customerName || room.guest || activeBooking?.guestName || "Walk-in Customer",
+        phone: relatedBill?.phone || activeBooking?.mobile || "",
+        paymentMethod: relatedBill?.paymentMethod || "Cash",
+        discountAmount,
+        splitCount: Number(relatedBill?.split_count || 1),
+        personCount: Number(relatedBill?.split_count || 1),
+        bookingId: activeBooking?.bookingId || null,
+        bookingCode: activeBooking?.bookingCode || "",
+        roomData: room,
+      },
+    });
   };
 
   return (
@@ -275,6 +384,11 @@ const Roomitem = () => {
           const stayCheckIn = room.checkIn || booking?.checkIn || "--";
           const stayCheckOut = room.checkOut || booking?.checkOut || "--";
           const hasMenuItems = (tokenSnapshots[String(room.roomNo)]?.items || []).length > 0;
+          const relatedBill =
+            billByRoom[
+              createBillLookupKey("Room", String(room.roomNo), tokenSnapshots[String(room.roomNo)]?.tokenId || null)
+            ] || null;
+          const showPayNow = relatedBill && String(relatedBill.invoiceStatus || "").toLowerCase() !== "paid";
           return (
             <div
               key={`${room.roomId}-${room.roomNo}`}
@@ -324,6 +438,15 @@ const Roomitem = () => {
                     onClick={() => openRoomInvoice(room)}
                   >
                     Create Invoice
+                  </button>
+                ) : null}
+
+                {showPayNow ? (
+                  <button
+                    className="w-full bg-gradient-to-r from-emerald-500 to-green-600 text-white py-2.5 rounded-xl text-sm font-semibold shadow-md hover:shadow-lg transition"
+                    onClick={() => openPayNow(room)}
+                  >
+                    Pay Now
                   </button>
                 ) : null}
 

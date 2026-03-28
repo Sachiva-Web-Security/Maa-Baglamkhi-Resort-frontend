@@ -6,12 +6,14 @@ import {
   FaCheckCircle, FaTrash, FaEdit, FaShoppingCart, FaFlask, FaChartBar,
   FaArrowRight, FaBell, FaCalendarAlt,
 } from "react-icons/fa";
-import API from "../../api";
+import API, { getBackendBaseURL } from "../../api";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const INVENTORY_SECTIONS = [
   { id: "items",              label: "Items",               icon: FaWarehouse,    type: "items" },
+  { id: "menu-items",         label: "Menu Items",          icon: FaUtensils,     type: "menu" },
+  { id: "menu-categories",    label: "Menu Categories",     icon: FaListAlt,      type: "master" },
   { id: "segments",           label: "Segments",            icon: FaLayerGroup,   type: "master" },
   { id: "vendors",            label: "Vendors",             icon: FaTruck,        type: "master" },
   { id: "units",              label: "Units",               icon: FaBalanceScale, type: "master" },
@@ -49,7 +51,20 @@ const STORAGE_KEYS = {
   "stock-transfer": "inventory_stock_transfer",
   "purchase-orders": "inventory_purchase_orders",
   "waste-log": "inventory_waste_log",
+  "menu-items": "inventory_menu_items",
+  "menu-categories": "inventory_menu_categories",
 };
+
+const MENU_ITEM_FIELDS = [
+  { key: "name", label: "Dish Name", type: "text", required: true },
+  { key: "category", label: "Category", type: "text", required: true },
+  { key: "price", label: "Price", type: "number", required: true },
+  { key: "imageFile", label: "Upload Image", type: "file" },
+  { key: "imageUrl", label: "Image URL", type: "text" },
+  { key: "description", label: "Description", type: "text" },
+  { key: "foodType", label: "Food Type", type: "select", options: ["Veg", "Non Veg", "Egg"] },
+  { key: "status", label: "Status", type: "select", options: ["Available", "Out of Stock"] },
+];
 
 const MASTER_FIELDS = {
   segments: [
@@ -125,6 +140,11 @@ const MASTER_FIELDS = {
     { key: "approvedBy", label: "Approved By", type: "text" },
     { key: "date", label: "Date", type: "date", required: true },
   ],
+  "menu-categories": [
+    { key: "name", label: "Category Name", type: "text", required: true },
+    { key: "parent", label: "Parent Group", type: "text" },
+    { key: "status", label: "Status", type: "select", options: ["Active", "Inactive"] },
+  ],
 };
 
 const MASTER_TABLE_COLUMNS = {
@@ -139,6 +159,7 @@ const MASTER_TABLE_COLUMNS = {
   "purchase-items": ["itemName", "vendor", "quantity", "unit", "ratePerUnit", "amount", "invoiceNo", "date"],
   "purchase-services": ["serviceName", "vendor", "amount", "date", "status"],
   "stock-transfer": ["itemName", "fromStore", "toStore", "quantity", "unit", "approvedBy", "date"],
+  "menu-categories": ["name", "parent", "status"],
 };
 
 const ITEMS_FORM = [
@@ -225,6 +246,36 @@ const DEFAULT_MASTER_DATA = {
   "waste-log": [
     { id: 1, itemName: "Paneer", quantity: 2, unit: "kg", reason: "Expired", store: "Live Kitchen", remarks: "Past expiry date", date: "2026-03-15" },
   ],
+  "menu-categories": [
+    { id: 1, name: "Veg Starter", parent: "Starters", status: "Active" },
+    { id: 2, name: "Non Veg Starter", parent: "Starters", status: "Active" },
+    { id: 3, name: "Soups", parent: "Starters", status: "Active" },
+    { id: 4, name: "Salads", parent: "Starters", status: "Active" },
+    { id: 5, name: "Main Course Veg", parent: "Main Course", status: "Active" },
+    { id: 6, name: "Main Course Non Veg", parent: "Main Course", status: "Active" },
+    { id: 7, name: "Breads", parent: "Main Course", status: "Active" },
+    { id: 8, name: "Rice & Biryani", parent: "Main Course", status: "Active" },
+    { id: 9, name: "Chinese", parent: "Speciality", status: "Active" },
+    { id: 10, name: "South Indian", parent: "Speciality", status: "Active" },
+    { id: 11, name: "Snacks", parent: "Quick Bites", status: "Active" },
+    { id: 12, name: "Fast Food", parent: "Quick Bites", status: "Active" },
+    { id: 13, name: "Combos", parent: "Meals", status: "Active" },
+    { id: 14, name: "Thali", parent: "Meals", status: "Active" },
+    { id: 15, name: "Breakfast", parent: "Meals", status: "Active" },
+    { id: 16, name: "Beverages", parent: "Drinks", status: "Active" },
+    { id: 17, name: "Mocktails", parent: "Drinks", status: "Active" },
+    { id: 18, name: "Tea & Coffee", parent: "Drinks", status: "Active" },
+    { id: 19, name: "Desserts", parent: "Sweet Section", status: "Active" },
+    { id: 20, name: "Sweets", parent: "Sweet Section", status: "Active" },
+    { id: 21, name: "Ice Cream", parent: "Sweet Section", status: "Active" },
+    { id: 22, name: "Jain Food", parent: "Speciality", status: "Active" },
+    { id: 23, name: "Kids Menu", parent: "Speciality", status: "Active" },
+    { id: 24, name: "Tandoor", parent: "Speciality", status: "Active" },
+  ],
+  "menu-items": [
+    { id: 1, name: "Paneer Butter Masala", category: "Main Course", price: 280, imageUrl: "", description: "Rich tomato gravy with soft paneer cubes.", foodType: "Veg", status: "Available" },
+    { id: 2, name: "Veg Thali", category: "Combos", price: 250, imageUrl: "", description: "Complete thali with sabzi, dal, rice and roti.", foodType: "Veg", status: "Available" },
+  ],
 };
 
 // ─── Utility Functions ────────────────────────────────────────────────────────
@@ -259,6 +310,13 @@ function formatCurrency(amount) {
   }).format(Number(amount || 0));
 }
 
+function resolveAssetUrl(value) {
+  const normalized = String(value || "").trim();
+  if (!normalized) return "";
+  if (/^https?:\/\//i.test(normalized)) return normalized;
+  return `${getBackendBaseURL()}${normalized.startsWith("/") ? normalized : `/${normalized}`}`;
+}
+
 function getExpiryStatus(expiryDate) {
   if (!expiryDate) return null;
   const today = new Date();
@@ -288,9 +346,28 @@ function FormInput({ field, value, onChange }) {
       </select>
     );
   }
+  if (field.type === "file") {
+    return (
+      <input
+        type="file"
+        accept="image/*"
+        onChange={(e) => onChange(field.key, e.target.files?.[0] || null)}
+        className={cls}
+      />
+    );
+  }
+  const datalistId = field.suggestions?.length ? `field-suggestions-${field.key.replace(/[^a-z0-9]/gi, "-").toLowerCase()}` : undefined;
   return (
-    <input type={field.type} value={value} onChange={(e) => onChange(field.key, e.target.value)}
-      className={cls} placeholder={field.label} />
+    <>
+      <input type={field.type} value={value} onChange={(e) => onChange(field.key, e.target.value)}
+        list={datalistId}
+        className={cls} placeholder={field.label} />
+      {datalistId ? (
+        <datalist id={datalistId}>
+          {field.suggestions.map((option) => <option key={option} value={option} />)}
+        </datalist>
+      ) : null}
+    </>
   );
 }
 
@@ -595,6 +672,138 @@ function GenericMasterSection({ section, records, onSave, onEdit, onDelete, draf
 }
 
 // ─── Section: Purchase Orders (PO / GRN) ─────────────────────────────────────
+
+function MenuItemsSection({ records, draft, setDraft, editingId, onSave, onEdit, onDelete, searchQuery, setSearchQuery, menuCategoryOptions }) {
+  const filtered = records.filter((record) =>
+    Object.values(record).some((value) => String(value ?? "").toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+  const previewImage = useMemo(() => {
+    if (draft.imageFile instanceof File) {
+      return URL.createObjectURL(draft.imageFile);
+    }
+    return resolveAssetUrl(draft.imageUrl);
+  }, [draft.imageFile, draft.imageUrl]);
+
+  useEffect(() => {
+    if (!previewImage || !(draft.imageFile instanceof File)) return undefined;
+    return () => URL.revokeObjectURL(previewImage);
+  }, [draft.imageFile, previewImage]);
+
+  const grouped = filtered.reduce((acc, item) => {
+    const key = item.category || "Uncategorized";
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(item);
+    return acc;
+  }, {});
+
+  return (
+    <div className="space-y-5">
+      <div className="grid gap-5 xl:grid-cols-[360px,1fr]">
+        <div className="space-y-5">
+          <FormPanel
+            title="Menu Item"
+            subtitle="Inventory module se category-wise dish cards manage karo."
+            fields={MENU_ITEM_FIELDS.map((field) =>
+              field.key === "category" ? { ...field, suggestions: menuCategoryOptions } : field
+            )}
+            draft={draft}
+            setDraft={setDraft}
+            editingId={editingId}
+            onSave={onSave}
+            onReset={() => { setDraft(buildInitialForm(MENU_ITEM_FIELDS)); onEdit(null); }}
+          />
+          {previewImage ? (
+            <div className="overflow-hidden rounded-[28px] border border-white/70 bg-white/90 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+              <div className="aspect-[4/3] w-full overflow-hidden bg-slate-100">
+                <img src={previewImage} alt={draft.name || "Menu preview"} className="h-full w-full object-cover" />
+              </div>
+              <div className="space-y-1 p-4">
+                <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-cyan-500">Image Preview</p>
+                <h4 className="text-sm font-semibold text-slate-900">{draft.name || "Dish image preview"}</h4>
+                <p className="text-xs text-slate-500">
+                  {draft.imageFile instanceof File ? "Selected image upload ke saath save hogi." : "Saved image preview."}
+                </p>
+              </div>
+            </div>
+          ) : null}
+        </div>
+
+        <div className="space-y-5">
+          <div className="overflow-hidden rounded-[28px] border border-white/70 bg-white/90 p-5 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h3 className="text-base font-semibold text-slate-900">Menu card library</h3>
+                <p className="text-xs text-slate-400">{records.length} dishes ready to manage</p>
+              </div>
+              <div className="w-72">
+                <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Search dish / category / food type" />
+              </div>
+            </div>
+          </div>
+
+          {Object.keys(grouped).length ? Object.entries(grouped).map(([category, items]) => (
+            <div key={category} className="overflow-hidden rounded-[28px] border border-white/70 bg-white/90 p-5 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-[10px] font-bold uppercase tracking-[0.24em] text-cyan-500">Category</div>
+                  <h3 className="mt-1 text-lg font-semibold text-slate-900">{category}</h3>
+                </div>
+                <Badge color="cyan">{items.length} items</Badge>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
+                {items.map((item) => (
+                  <div key={item.id} className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_18px_40px_rgba(15,23,42,0.06)]">
+                    <div className="h-44 bg-slate-100">
+                      {item.imageUrl ? (
+                        <img src={resolveAssetUrl(item.imageUrl)} alt={item.name} className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="flex h-full items-center justify-center bg-[linear-gradient(135deg,#dbeafe_0%,#f8fafc_100%)] text-sm font-semibold text-slate-400">
+                          Dish Image
+                        </div>
+                      )}
+                    </div>
+                    <div className="space-y-3 p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className="text-lg font-bold text-slate-900">{item.name}</div>
+                          <div className="mt-1 text-sm text-slate-500">{item.description || "No description added yet."}</div>
+                        </div>
+                        <Badge color={String(item.status || "").toLowerCase().includes("out") ? "red" : "green"}>
+                          {item.status || "Available"}
+                        </Badge>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <Badge color={String(item.foodType || "").toLowerCase().includes("non") ? "red" : "green"}>
+                          {item.foodType || "Veg"}
+                        </Badge>
+                        <Badge color="amber">{formatCurrency(item.price)}</Badge>
+                      </div>
+                      <div className="flex gap-2">
+                        <button type="button" onClick={() => onEdit(item)}
+                          className="inline-flex items-center gap-1 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-700 hover:bg-cyan-100 transition">
+                          <FaEdit size={10} /> Edit
+                        </button>
+                        <button type="button" onClick={() => onDelete(item.id)}
+                          className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-600 hover:bg-red-100 transition">
+                          <FaTrash size={10} /> Delete
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )) : (
+            <div className="rounded-[28px] border border-dashed border-slate-300 bg-white/80 px-6 py-14 text-center text-sm text-slate-500 shadow-[0_24px_60px_rgba(15,23,42,0.07)]">
+              No menu items yet. Left side form se first dish save karo.
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function PurchaseOrderSection({ records, onSave, onEdit, onDelete, draft, setDraft, editingId, searchQuery, setSearchQuery }) {
   const filtered = records.filter((r) =>
@@ -909,14 +1118,32 @@ export default function InventoryDashboard() {
   );
   const [masterDraft, setMasterDraft] = useState({});
   const [editingMasterId, setEditingMasterId] = useState(null);
+  const [menuDraft, setMenuDraft] = useState(buildInitialForm(MENU_ITEM_FIELDS));
+  const [editingMenuId, setEditingMenuId] = useState(null);
+  const [menuItemsData, setMenuItemsData] = useState([]);
 
   // Load inventory items from API
   useEffect(() => {
     const load = async () => {
       try {
         setItemsLoading(true);
-        const res = await API.get("/inventory");
-        setInventoryItems(Array.isArray(res.data) ? res.data : []);
+        const [inventoryRes, menuRes] = await Promise.all([
+          API.get("/inventory"),
+          API.get("/restaurant/menu"),
+        ]);
+        setInventoryItems(Array.isArray(inventoryRes.data) ? inventoryRes.data : []);
+        setMenuItemsData(
+          (Array.isArray(menuRes.data) ? menuRes.data : []).map((item) => ({
+            id: item.id,
+            name: item.name,
+            category: item.category || "",
+            price: Number(item.price || 0),
+            imageUrl: item.image_url || item.imageUrl || "",
+            description: item.description || "",
+            foodType: item.food_type || item.foodType || "Veg",
+            status: item.availability_status || item.status || "Available",
+          })),
+        );
       } catch (err) {
         setItemsError(err.response?.data?.message || "Could not load inventory items.");
       } finally {
@@ -940,12 +1167,23 @@ export default function InventoryDashboard() {
     const fields = section.type === "master" ? MASTER_FIELDS[activeSection] || [] : [];
     setMasterDraft(buildInitialForm(fields));
     setEditingMasterId(null);
+    if (section.type === "menu") {
+      setMenuDraft(buildInitialForm(MENU_ITEM_FIELDS));
+      setEditingMenuId(null);
+    }
     setSectionSearch("");
   }, [activeSection]);
 
   const categories = useMemo(
     () => [...new Set(inventoryItems.map((i) => i.category).filter(Boolean))].sort(),
     [inventoryItems]
+  );
+
+  const menuCategoryOptions = useMemo(
+    () =>
+      [...new Set((masterData["menu-categories"] || []).map((item) => String(item.name || "").trim()).filter(Boolean))]
+        .sort((a, b) => a.localeCompare(b)),
+    [masterData],
   );
 
   const totalStockValue = inventoryItems.reduce((s, i) => s + Number(i.stock || 0) * Number(i.price || 0), 0);
@@ -1077,6 +1315,106 @@ export default function InventoryDashboard() {
     }));
   }, [activeSection]);
 
+  const saveMenuItem = useCallback(() => {
+    const run = async () => {
+      const missing = MENU_ITEM_FIELDS.filter((field) => field.required).some((field) => {
+        if (field.key === "imageFile") return false;
+        return !String(menuDraft[field.key] ?? "").trim();
+      });
+      if (missing) {
+        alert("Please fill all required menu item fields.");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("name", menuDraft.name || "");
+      formData.append("category", menuDraft.category || "");
+      formData.append("price", String(Number(menuDraft.price || 0)));
+      formData.append("description", menuDraft.description || "");
+      formData.append("foodType", menuDraft.foodType || "Veg");
+      formData.append("status", menuDraft.status || "Available");
+      formData.append("imageUrl", menuDraft.imageUrl || "");
+      if (menuDraft.imageUrl) {
+        formData.append("existingImageUrl", menuDraft.imageUrl);
+      }
+      if (menuDraft.imageFile instanceof File) {
+        formData.append("image", menuDraft.imageFile);
+      }
+
+      try {
+        let nextId = editingMenuId;
+        if (editingMenuId) {
+          await API.put(`/restaurant/menu/${editingMenuId}`, formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+        } else {
+          const response = await API.post("/restaurant/menu", formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+          nextId = response.data?.id || null;
+        }
+
+        const menuRes = await API.get("/restaurant/menu");
+        const nextMenuItems = (Array.isArray(menuRes.data) ? menuRes.data : []).map((item) => ({
+          id: item.id,
+          name: item.name,
+          category: item.category || "",
+          price: Number(item.price || 0),
+          imageUrl: item.image_url || item.imageUrl || "",
+          description: item.description || "",
+          foodType: item.food_type || item.foodType || "Veg",
+          status: item.availability_status || item.status || "Available",
+        }));
+        setMenuItemsData(nextMenuItems);
+
+        const normalizedCategory = String(menuDraft.category || "").trim();
+        if (normalizedCategory) {
+          setMasterData((cur) => {
+            const existingCategories = cur["menu-categories"] || [];
+            const hasCategory = existingCategories.some(
+              (item) => String(item.name || "").trim().toLowerCase() === normalizedCategory.toLowerCase(),
+            );
+            return hasCategory
+              ? cur
+              : {
+                  ...cur,
+                  "menu-categories": [...existingCategories, { id: Date.now() + Number(nextId || 0), name: normalizedCategory, parent: "Custom", status: "Active" }],
+                };
+          });
+        }
+
+        setMenuDraft(buildInitialForm(MENU_ITEM_FIELDS));
+        setEditingMenuId(null);
+      } catch (err) {
+        alert(err.response?.data?.message || "Menu item save nahi ho paaya.");
+      }
+    };
+
+    run();
+  }, [editingMenuId, menuDraft]);
+
+  const editMenuItem = useCallback((record) => {
+    if (!record) {
+      setEditingMenuId(null);
+      setMenuDraft(buildInitialForm(MENU_ITEM_FIELDS));
+      return;
+    }
+    setEditingMenuId(record.id);
+    setMenuDraft({ ...buildInitialForm(MENU_ITEM_FIELDS), ...record, imageFile: null });
+  }, []);
+
+  const deleteMenuItem = useCallback((id) => {
+    const run = async () => {
+      try {
+        await API.delete(`/restaurant/menu/${id}`);
+        setMenuItemsData((cur) => cur.filter((item) => item.id !== id));
+      } catch (err) {
+        alert(err.response?.data?.message || "Menu item delete nahi ho paaya.");
+      }
+    };
+    run();
+  }, []);
+
   // ── Inventory items CRUD ──────────────────────────────────
   const saveInventoryItem = async () => {
     const missing = ITEMS_FORM.some((f) => f.required && !String(itemsForm[f.key] ?? "").trim());
@@ -1122,6 +1460,23 @@ export default function InventoryDashboard() {
           searchQuery={sectionSearch} setSearchQuery={setSectionSearch}
           categoryFilter={categoryFilter} setCategoryFilter={setCategoryFilter}
           categories={categories}
+        />
+      );
+    }
+
+    if (selectedSection.type === "menu") {
+      return (
+        <MenuItemsSection
+          records={menuItemsData}
+          draft={menuDraft}
+          setDraft={setMenuDraft}
+          editingId={editingMenuId}
+          onSave={saveMenuItem}
+          onEdit={editMenuItem}
+          onDelete={deleteMenuItem}
+          searchQuery={sectionSearch}
+          setSearchQuery={setSectionSearch}
+          menuCategoryOptions={menuCategoryOptions}
         />
       );
     }
@@ -1174,8 +1529,8 @@ export default function InventoryDashboard() {
 
   // ── Sidebar section groups ────────────────────────────────
   const sectionGroups = [
-    { label: "Stock", ids: ["items", "stock-transfer", "stock-audit", "waste-log"] },
-    { label: "Masters", ids: ["segments","vendors","units","unit-conversion","store-kitchen","item-groups","gravies","ingredients"] },
+    { label: "Stock", ids: ["items", "menu-items", "stock-transfer", "stock-audit", "waste-log"] },
+    { label: "Masters", ids: ["menu-categories","segments","vendors","units","unit-conversion","store-kitchen","item-groups","gravies","ingredients"] },
     { label: "Purchases", ids: ["purchase-items","purchase-services","purchase-orders"] },
     { label: "Reports", ids: ["vendor-report","stock-report","closing-stock-report","item-report","item-consumption-report","total-consumption-report","item-audit"] },
   ];

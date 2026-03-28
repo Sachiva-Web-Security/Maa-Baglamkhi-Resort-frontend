@@ -1,15 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import API from "../../api";
 
-const formatCurrency = (value) =>
-  `Rs. ${Number(value || 0).toLocaleString("en-IN")}`;
+const formatCurrency = (value) => `Rs. ${Number(value || 0).toLocaleString("en-IN")}`;
+const formatVisitId = (tokenCode, tokenId) => tokenCode || (tokenId ? `VIS-${String(tokenId).padStart(6, "0")}` : "--");
 
 const formatDate = (value) => {
   if (!value) return "--";
-
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return value;
-
   return parsed.toLocaleString("en-IN", {
     year: "numeric",
     month: "short",
@@ -19,10 +17,34 @@ const formatDate = (value) => {
   });
 };
 
+const getCustomerDisplay = (bill) => ({
+  name: String(bill?.customerName || "").trim() || "Walk-in Customer",
+  phone: String(bill?.phone || "").trim() || "--",
+});
+const createBillCardKey = (bill) =>
+  bill?.tokenId
+    ? `${String(bill.entityType || "Table").toLowerCase()}:token:${Number(bill.tokenId)}`
+    : [
+        String(bill?.tableNumber || "").trim(),
+        String(bill?.entityType || "Table").trim().toLowerCase(),
+      ].join("|");
+
+const getStatusMeta = (bill) => {
+  const isPaid = String(bill?.invoiceStatus || "").toLowerCase() === "paid";
+  return {
+    label: isPaid ? "Paid" : "Pending",
+    billStage: isPaid ? "Payment Completed" : "Bill Generated",
+    classes: isPaid
+      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+      : "border-amber-200 bg-amber-50 text-amber-700",
+  };
+};
+
 const PaymentBills = () => {
   const [bills, setBills] = useState([]);
   const [loading, setLoading] = useState(true);
   const [roomNumbers, setRoomNumbers] = useState(new Set());
+  const [selectedBill, setSelectedBill] = useState(null);
 
   useEffect(() => {
     const fetchBills = async () => {
@@ -33,7 +55,9 @@ const PaymentBills = () => {
           API.get("/housekeeping"),
         ]);
 
-        setBills(Array.isArray(billsResponse.data) ? billsResponse.data : []);
+        const nextBills = Array.isArray(billsResponse.data) ? billsResponse.data : [];
+        setBills(nextBills);
+        setSelectedBill(nextBills[0] || null);
         setRoomNumbers(
           new Set(
             (Array.isArray(roomsResponse.data) ? roomsResponse.data : [])
@@ -43,6 +67,7 @@ const PaymentBills = () => {
         );
       } catch (error) {
         setBills([]);
+        setSelectedBill(null);
         setRoomNumbers(new Set());
       } finally {
         setLoading(false);
@@ -52,34 +77,23 @@ const PaymentBills = () => {
     fetchBills();
   }, []);
 
-  const uniqueBills = bills.filter((bill, index, allBills) => {
-    const billKey = [
-      (bill.customerName || "").trim().toLowerCase(),
-      (bill.phone || "").trim(),
-      String(bill.tableNumber || "").trim(),
-      Number(bill.total || 0),
-    ].join("|");
+  const uniqueBills = useMemo(() => {
+    const latestByTable = new Map();
+    (Array.isArray(bills) ? bills : []).forEach((bill) => {
+      const key = createBillCardKey(bill);
 
-    return (
-      index ===
-      allBills.findIndex((candidate) => {
-        const candidateKey = [
-          (candidate.customerName || "").trim().toLowerCase(),
-          (candidate.phone || "").trim(),
-          String(candidate.tableNumber || "").trim(),
-          Number(candidate.total || 0),
-        ].join("|");
+      const existing = latestByTable.get(key);
+      if (!existing || Number(bill.id || 0) > Number(existing.id || 0)) {
+        latestByTable.set(key, bill);
+      }
+    });
 
-        return candidateKey === billKey;
-      })
-    );
-  });
+    return Array.from(latestByTable.values()).sort((a, b) => Number(b.id || 0) - Number(a.id || 0));
+  }, [bills]);
 
-  const latestBill = uniqueBills[0] || null;
   const resolveEntityType = (bill) => {
     const explicitType = String(bill.entityType || "").trim().toLowerCase();
     if (explicitType === "room" || explicitType === "table") return explicitType;
-
     return roomNumbers.has(String(bill.tableNumber || "").trim()) ? "room" : "table";
   };
 
@@ -88,68 +102,48 @@ const PaymentBills = () => {
       ? `Room ${bill.tableNumber || "--"}`
       : `Table ${bill.tableNumber || "--"}`;
 
+  const latestBill = uniqueBills[0] || null;
+
   return (
     <section className="space-y-6">
       <div className="overflow-hidden rounded-[28px] border border-slate-200/80 bg-[linear-gradient(135deg,#0f172a_0%,#1d4ed8_52%,#0f766e_100%)] px-6 py-7 text-white shadow-[0_22px_55px_rgba(15,23,42,0.12)]">
         <p className="text-[10px] font-semibold uppercase tracking-[0.34em] text-cyan-100/80">
           Restaurant Billing
         </p>
-        <h2 className="mt-3 text-3xl font-black leading-tight">
-          Payment Bills
-        </h2>
+        <h2 className="mt-3 text-3xl font-black leading-tight">Payment Bills</h2>
         <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-100/85">
-          Generate kiye gaye bills aur payment history yahin show honge.
+          Generate bill ke baad customer name, mobile number, amount aur payment status yahan clean card format me show hoga.
         </p>
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[360px_minmax(0,1fr)]">
         <div className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-[0_18px_40px_rgba(15,23,42,0.06)]">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-sky-500">
-            Latest Bill
-          </p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-sky-500">Latest Bill</p>
           {latestBill ? (
             <div className="mt-4 space-y-4">
               <div className="rounded-[20px] bg-slate-50 p-4">
-                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                  Customer
-                </div>
-                <div className="mt-2 text-2xl font-black text-slate-900">
-                  {latestBill.customerName || "Walk-in Customer"}
-                </div>
-                <div className="mt-1 text-sm font-semibold text-slate-600">
-                  {getEntityLabel(latestBill)} | {latestBill.phone || "--"}
-                </div>
+                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Customer</div>
+                <div className="mt-2 text-2xl font-black text-slate-900">{getCustomerDisplay(latestBill).name}</div>
+                <div className="mt-1 text-sm font-semibold text-slate-600">{getCustomerDisplay(latestBill).phone}</div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-[18px] border border-slate-200 p-4">
-                  <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
-                    {resolveEntityType(latestBill) === "room" ? "Room" : "Table"}
-                  </div>
-                  <div className="mt-2 text-lg font-black text-slate-900">
-                    {latestBill.tableNumber}
-                  </div>
+                  <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Entity</div>
+                  <div className="mt-2 text-lg font-black text-slate-900">{getEntityLabel(latestBill)}</div>
                 </div>
                 <div className="rounded-[18px] border border-slate-200 p-4">
-                  <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
-                    Status
-                  </div>
-                  <div className="mt-2 text-lg font-black text-emerald-600">
-                    {latestBill.invoiceStatus || "Saved"}
+                  <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Status</div>
+                  <div className={`mt-2 inline-flex rounded-full border px-3 py-1 text-sm font-black ${getStatusMeta(latestBill).classes}`}>
+                    {getStatusMeta(latestBill).label}
                   </div>
                 </div>
               </div>
 
               <div className="rounded-[20px] border border-emerald-200 bg-emerald-50 p-4">
-                <div className="text-[11px] uppercase tracking-[0.18em] text-emerald-700">
-                  Total Amount
-                </div>
-                <div className="mt-2 text-3xl font-black text-emerald-700">
-                  {formatCurrency(latestBill.total)}
-                </div>
-                <div className="mt-2 text-sm text-emerald-900/80">
-                  {formatDate(latestBill.created_at)}
-                </div>
+                <div className="text-[11px] uppercase tracking-[0.18em] text-emerald-700">Total Amount</div>
+                <div className="mt-2 text-3xl font-black text-emerald-700">{formatCurrency(latestBill.total)}</div>
+                <div className="mt-2 text-sm text-emerald-900/80">{formatDate(latestBill.created_at)}</div>
               </div>
             </div>
           ) : (
@@ -162,12 +156,8 @@ const PaymentBills = () => {
         <div className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-[0_18px_40px_rgba(15,23,42,0.06)]">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-sky-500">
-                Bills History
-              </p>
-              <h3 className="mt-2 text-2xl font-black text-slate-900">
-                Generated payment bills
-              </h3>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-sky-500">Bills Overview</p>
+              <h3 className="mt-2 text-2xl font-black text-slate-900">Generated payment bill cards</h3>
             </div>
             <div className="rounded-full bg-slate-100 px-4 py-2 text-xs font-bold text-slate-600">
               {uniqueBills.length} Bills
@@ -179,52 +169,112 @@ const PaymentBills = () => {
               Bills loading...
             </div>
           ) : uniqueBills.length ? (
-            <div className="mt-6 overflow-hidden rounded-[22px] border border-slate-200">
-              <div className="grid grid-cols-[80px_1.1fr_1fr_120px_130px_140px] gap-3 bg-slate-100 px-4 py-3 text-[11px] font-bold uppercase tracking-[0.16em] text-slate-600">
-                <div>ID</div>
-                <div>Customer</div>
-                <div>Phone</div>
-                <div>Entity</div>
-                <div>Total</div>
-                <div>Status</div>
-              </div>
-
-              <div className="max-h-[620px] overflow-auto">
-                {uniqueBills.map((bill) => (
-                  <div
+            <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-2">
+              {uniqueBills.map((bill) => {
+                const statusMeta = getStatusMeta(bill);
+                return (
+                  <button
                     key={bill.id}
-                    className="grid grid-cols-[80px_1.1fr_1fr_120px_130px_140px] gap-3 border-t border-slate-100 px-4 py-4 text-sm text-slate-700"
+                    type="button"
+                    onClick={() => setSelectedBill(bill)}
+                    className={`rounded-[22px] border px-4 py-4 text-left transition ${
+                      selectedBill?.id === bill.id
+                        ? "border-cyan-300 bg-cyan-50 shadow-[0_16px_35px_rgba(8,145,178,0.12)]"
+                        : "border-slate-200 bg-white hover:border-cyan-200 hover:bg-slate-50"
+                    }`}
                   >
-                    <div className="font-black text-slate-900">#{bill.id}</div>
-                    <div>
-                      <div className="font-bold text-slate-900">
-                        {bill.customerName || "Walk-in Customer"}
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="text-lg font-black text-slate-900">{getEntityLabel(bill)}</div>
+                        <div className="mt-1 text-xs text-slate-500">
+                          Bill #{bill.id} | Visit ID {formatVisitId(bill.tokenCode, bill.tokenId)} | {formatDate(bill.created_at)}
+                        </div>
                       </div>
-                      <div className="mt-1 text-xs text-slate-500">
-                        {formatDate(bill.created_at)}
-                      </div>
-                    </div>
-                    <div className="font-semibold">{bill.phone || "--"}</div>
-                    <div className="font-semibold">{getEntityLabel(bill)}</div>
-                    <div className="font-black text-emerald-600">
-                      {formatCurrency(bill.total)}
-                    </div>
-                    <div>
-                      <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
-                        {bill.invoiceStatus || "Saved"}
+                      <span className={`rounded-full border px-3 py-1 text-xs font-bold ${statusMeta.classes}`}>
+                        {statusMeta.label}
                       </span>
                     </div>
-                  </div>
-                ))}
-              </div>
+
+                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                      <div className="rounded-xl bg-slate-50 px-3 py-3">
+                        <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500">Customer</div>
+                        <div className="mt-1 font-bold text-slate-900">{getCustomerDisplay(bill).name}</div>
+                        <div className="mt-1 text-xs text-slate-500">{getCustomerDisplay(bill).phone}</div>
+                      </div>
+                      <div className="rounded-xl bg-slate-50 px-3 py-3">
+                        <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500">Amount</div>
+                        <div className="mt-1 text-lg font-black text-emerald-600">{formatCurrency(bill.total)}</div>
+                        <div className="mt-1 text-xs text-slate-500">{statusMeta.billStage}</div>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           ) : (
             <div className="mt-6 rounded-[20px] border border-dashed border-slate-300 bg-slate-50 px-4 py-10 text-center text-sm text-slate-500">
-              Generate Bill karne ke baad yahan entry show ho jayegi.
+              Generate Bill karne ke baad yahan bill card show ho jayega.
             </div>
           )}
         </div>
       </div>
+
+      {selectedBill ? (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/55 px-4 py-6 backdrop-blur-sm">
+          <div className="relative w-full max-w-[560px] rounded-[30px] border border-white/35 bg-white/95 p-6 shadow-[0_30px_90px_rgba(15,23,42,0.30)]">
+            <button
+              type="button"
+              onClick={() => setSelectedBill(null)}
+              className="absolute right-5 top-5 rounded-full bg-slate-900 px-3 py-1 text-sm font-bold text-white"
+            >
+              Close
+            </button>
+
+            <div className="rounded-[24px] bg-[linear-gradient(135deg,#0f172a_0%,#1d4ed8_55%,#0f766e_100%)] px-5 py-5 text-white">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-cyan-100/80">Bill Detail Card</p>
+              <h3 className="mt-2 text-2xl font-black">{getEntityLabel(selectedBill)}</h3>
+              <p className="mt-2 text-sm text-white/85">Bill #{selectedBill.id} | {formatDate(selectedBill.created_at)}</p>
+            </div>
+
+            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              <div className="rounded-[20px] border border-slate-200 bg-slate-50 px-4 py-4">
+                <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500">Customer Name</div>
+                <div className="mt-2 text-lg font-black text-slate-900">{getCustomerDisplay(selectedBill).name}</div>
+              </div>
+              <div className="rounded-[20px] border border-slate-200 bg-slate-50 px-4 py-4">
+                <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500">Mobile Number</div>
+                <div className="mt-2 text-lg font-black text-slate-900">{getCustomerDisplay(selectedBill).phone}</div>
+              </div>
+              <div className="rounded-[20px] border border-slate-200 bg-slate-50 px-4 py-4">
+                <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500">Bill Status</div>
+                <div className={`mt-2 inline-flex rounded-full border px-3 py-1 text-sm font-black ${getStatusMeta(selectedBill).classes}`}>
+                  {getStatusMeta(selectedBill).label}
+                </div>
+                <div className="mt-2 text-xs text-slate-500">{getStatusMeta(selectedBill).billStage}</div>
+              </div>
+              <div className="rounded-[20px] border border-slate-200 bg-slate-50 px-4 py-4">
+                <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500">Total Amount</div>
+                <div className="mt-2 text-2xl font-black text-emerald-600">{formatCurrency(selectedBill.total)}</div>
+              </div>
+            </div>
+
+            <div className="mt-4 grid gap-4 sm:grid-cols-3">
+              <div className="rounded-[18px] border border-slate-200 px-4 py-4">
+                <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500">Subtotal</div>
+                <div className="mt-2 font-black text-slate-900">{formatCurrency(selectedBill.subtotal)}</div>
+              </div>
+              <div className="rounded-[18px] border border-slate-200 px-4 py-4">
+                <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500">Tax</div>
+                <div className="mt-2 font-black text-slate-900">{formatCurrency(selectedBill.gst)}</div>
+              </div>
+              <div className="rounded-[18px] border border-slate-200 px-4 py-4">
+                <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500">Payment Mode</div>
+                <div className="mt-2 font-black text-slate-900">{selectedBill.paymentMethod || "Pending"}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 };

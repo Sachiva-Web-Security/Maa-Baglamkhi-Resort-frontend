@@ -293,6 +293,7 @@ export const RestaurantProvider = ({ children }) => {
         getOrderItemsForTable,
         createOrder,
         loadMenu,
+        loadTables,
       }}
     >
       {children}

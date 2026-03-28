@@ -61,7 +61,7 @@ const initialGuestForm = {
   checkOut: "",
   arrival: "12:00",
   departure: "10:00",
-  bookingStatus: "",
+  bookingStatus: "Pending",
 };
 
 const Guest = () => {
@@ -89,6 +89,16 @@ const Guest = () => {
     if (formData.checkIn && formData.checkIn > today) return formData.checkIn;
     return today;
   }, [formData.checkIn, today]);
+
+  const bookingStatusPreview = useMemo(() => {
+    const hasCoreBookingData =
+      Boolean(String(formData.mobile || "").trim()) &&
+      Boolean(String(formData.guestName || "").trim()) &&
+      Boolean(String(formData.checkIn || "").trim()) &&
+      Boolean(String(formData.checkOut || "").trim());
+
+    return hasCoreBookingData ? "Confirmed" : "Pending";
+  }, [formData.mobile, formData.guestName, formData.checkIn, formData.checkOut]);
 
   useEffect(() => {
     setFormData((prev) => {
@@ -180,7 +190,12 @@ const Guest = () => {
         return;
       }
 
-      const res = await API.post("/hotel/guest", formData);
+      const payload = {
+        ...formData,
+        bookingStatus: "Confirmed",
+      };
+
+      const res = await API.post("/hotel/guest", payload);
 
       console.log(res.data);
 
@@ -188,7 +203,7 @@ const Guest = () => {
       const bookingCode = res.data.bookingCode || "";
       setStoredBookingId(bookingId);
       setStoredBookingCode(bookingCode);
-      setBookingDraft("guest", { ...formData, bookingCode });
+      setBookingDraft("guest", { ...payload, bookingCode });
 
       showPopup("success", "Booking Saved", "Guest details have been saved successfully.");
 
@@ -321,10 +336,6 @@ const Guest = () => {
         </div>
       )}
 
-      <section className="overflow-hidden rounded-[28px] border border-white/70 bg-[linear-gradient(135deg,#08253d_0%,#0e5b6a_52%,#0f3f67_100%)] px-6 py-7 text-white shadow-[0_24px_70px_rgba(15,23,42,0.18)]">
-        
-      </section>
-
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_320px]">
         <div className="space-y-6">
           <div className="rounded-[24px] border border-slate-200/80 bg-white p-5 shadow-[0_18px_45px_rgba(15,23,42,0.06)]">
@@ -446,17 +457,25 @@ const Guest = () => {
 
               <div className="md:col-span-2">
                 <label className={labelCls}>Booking Status</label>
-                <select
-                  name="bookingStatus"
-                  value={formData.bookingStatus}
-                  onChange={handleChange}
-                  className={fieldCls}
-                >
-                  <option>Select</option>
-                  <option>Confirmed</option>
-                  <option>Pending</option>
-                  <option>Cancelled</option>
-                </select>
+                <div className="rounded-2xl border border-slate-200/80 bg-slate-50 px-4 py-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <div className="text-sm font-bold text-slate-900">{bookingStatusPreview}</div>
+                      <div className="mt-1 text-xs text-slate-500">
+                        Booking save hone par status automatically confirmed ho jayega. Incomplete draft ko pending maana jayega.
+                      </div>
+                    </div>
+                    <span
+                      className={`inline-flex rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] ${
+                        bookingStatusPreview === "Confirmed"
+                          ? "bg-emerald-100 text-emerald-700"
+                          : "bg-amber-100 text-amber-700"
+                      }`}
+                    >
+                      {bookingStatusPreview}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

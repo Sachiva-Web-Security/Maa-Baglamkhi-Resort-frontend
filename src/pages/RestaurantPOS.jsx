@@ -5,20 +5,15 @@ import {
   FaReceipt,
   FaStore,
   FaUtensils,
+  FaBed,
 } from "react-icons/fa";
 
 const links = [
-  { label: "Dashboard", path: "/restaurant", icon: FaStore },
   { label: "Tables", path: "/restaurant", icon: FaUtensils },
   { label: "Payment", path: "/restaurant/payment", icon: FaReceipt },
-  { label: "Payment Bills", path: "/restaurant/payment-bills", icon: FaCashRegister },
-  {
-    label: "Daily Roomwise Food Report",
-    path: "/restaurant/daily-room-food",
-    icon: FaCashRegister,
-  },
-  { label: "Room Items", path: "/restaurant/room-items", icon: FaUtensils },
-  { label: "Daywise Food Report", path: "/restaurant/daywise-food", icon: FaReceipt },
+  { label: "Bills", path: "/restaurant/payment-bills", icon: FaCashRegister },
+  { label: "Room Orders", path: "/restaurant/room-items", icon: FaBed },
+  { label: "Add Menu", path: "/restaurant/add-menu-item", icon: FaStore },
 ];
 
 const RestaurantPOS = () => {
@@ -27,7 +22,10 @@ const RestaurantPOS = () => {
 
   const activeLink =
     links.find((link) => location.pathname === link.path) ||
-    links.find((link) => location.pathname.startsWith(link.path) && link.path !== "/restaurant") ||
+    links.find(
+      (link) =>
+        location.pathname.startsWith(link.path) && link.path !== "/restaurant",
+    ) ||
     links[0];
 
   const heroStats = [
@@ -35,9 +33,8 @@ const RestaurantPOS = () => {
     { label: "Kitchen Sync", value: "Live Queue" },
     { label: "Action Flow", value: "Tables to Billing" },
   ];
-
   return (
-    <div className="relative isolate min-h-screen w-full overflow-x-hidden bg-[linear-gradient(135deg,#f5fbff_0%,#f3f8f4_28%,#fff8f1_58%,#f8fafc_100%)] p-4 transition-all duration-300 sm:p-6 lg:p-8">
+    <div className="relative isolate w-full overflow-x-hidden bg-[linear-gradient(135deg,#f5fbff_0%,#f3f8f4_28%,#fff8f1_58%,#f8fafc_100%)] p-3 transition-all duration-300 sm:p-4 lg:p-5">
       <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute left-[-8%] top-[-6%] h-72 w-72 rounded-full bg-cyan-200/45 blur-3xl sm:h-96 sm:w-96" />
         <div className="absolute right-[-10%] top-[8%] h-72 w-72 rounded-full bg-amber-200/45 blur-3xl sm:h-[28rem] sm:w-[28rem]" />
@@ -45,98 +42,108 @@ const RestaurantPOS = () => {
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.55)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.45)_1px,transparent_1px)] bg-[size:72px_72px] opacity-25" />
       </div>
 
-      <div className="mx-auto max-w-[1280px] space-y-7">
-        <section className="overflow-hidden rounded-[26px] border border-slate-900/10 bg-[linear-gradient(120deg,#071b34_0%,#0d4a53_52%,#162d45_100%)] px-4 py-5 shadow-[0_22px_55px_rgba(15,23,42,0.12)] sm:px-6 sm:py-6 lg:px-8">
-          <div className="relative z-[1] grid gap-5 lg:grid-cols-[minmax(0,1.5fr)_minmax(300px,0.8fr)] lg:items-center">
-            <div className="space-y-3">
-              <p className="text-[7px] font-semibold uppercase tracking-[0.26em] text-cyan-200 sm:text-[10px]">
+      <div className="mx-auto max-w-[1280px] space-y-3">
+        <section className="overflow-hidden rounded-[20px] border border-slate-900/10 bg-[linear-gradient(120deg,#071b34_0%,#0d4a53_52%,#162d45_100%)] px-3 py-2.5 shadow-[0_14px_32px_rgba(15,23,42,0.10)] sm:px-4 sm:py-3">
+          <div className="relative z-[1] space-y-2.5">
+            <div className="flex flex-col gap-2.5 xl:flex-row xl:items-start xl:justify-between">
+              <div className="space-y-2">
+                <p className="text-[7px] font-semibold uppercase tracking-[0.26em] text-cyan-200 sm:text-[10px]">
                 Resort Command Center
-              </p>
-              <div className="space-y-1">
-                <h1 className="text-[1.25rem] font-black leading-[1.02] text-white sm:text-[2.4rem]">
-                  Operational snapshot for restaurant
-                </h1>
-                <p className="max-w-3xl text-[12px] leading-5 text-slate-100/88 sm:text-[14px] sm:leading-6">
-                  Track tables, billing flow, room orders, and menu activity from the same dashboard theme used across hotel operations.
                 </p>
+                <div className="space-y-1">
+                  <h1 className="text-[0.98rem] font-black leading-[1.02] text-white sm:text-[1.35rem]">
+                  Operational snapshot for restaurant
+                  </h1>
+                  <p className="max-w-3xl text-[10px] leading-4 text-slate-100/88">
+                  Track tables, billing flow, room orders, and menu activity
+                  from the same dashboard theme used across hotel operations.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => navigate(activeLink.path)}
+                    className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-[11px] font-bold text-slate-900 shadow-[0_10px_22px_rgba(255,255,255,0.12)] transition hover:-translate-y-0.5"
+                  >
+                    <FaUtensils className="text-cyan-600" />
+                    Open Active Section
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => navigate("/kitchen")}
+                    className="rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[11px] font-semibold text-white backdrop-blur-md"
+                  >
+                    Go To Kitchen
+                  </button>
+                </div>
               </div>
-              <div className="flex flex-wrap gap-3">
-                <button
-                  type="button"
-                  onClick={() => navigate(activeLink.path)}
-                  className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-bold text-slate-900 shadow-[0_16px_35px_rgba(255,255,255,0.15)] transition hover:-translate-y-0.5"
-                >
-                  <FaUtensils className="text-cyan-600" />
-                  Open Active Section
-                </button>
-                <button
-                  type="button"
-                  onClick={() => navigate("/kitchen")}
-                  className="rounded-full border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur-md"
-                >
-                  Go To Kitchen
-                </button>
+
+              <div className="grid gap-2 sm:grid-cols-3 xl:w-[290px]">
+                {heroStats.map((item) => (
+                  <div
+                    key={item.label}
+                    className="rounded-[14px] border border-white/12 bg-white/10 px-3 py-2 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md"
+                  >
+                    <span className="text-[10px] text-slate-100/75">
+                      {item.label}
+                    </span>
+                    <div className="mt-1 text-[15px] font-bold leading-tight">
+                      {item.value}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
-              {heroStats.map((item) => (
-                <div
-                  key={item.label}
-                  className="rounded-[22px] border border-white/12 bg-white/10 px-4 py-4 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md"
-                >
-                  <span className="text-[11px] text-slate-100/75">{item.label}</span>
-                  <div className="mt-3 text-2xl font-bold leading-none">{item.value}</div>
-                </div>
-              ))}
+            <div className="rounded-[16px] border border-white/12 bg-white/10 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md">
+              <div className="mb-1.5 flex items-center justify-between gap-3">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-cyan-200">
+                  Quick Sections
+                </p>
+              </div>
+              <div className="grid gap-1.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+                  {links.map((link) => {
+                    const Icon = link.icon || FaUtensils;
+                    const active = location.pathname === link.path;
+
+                    return (
+                      <button
+                        key={`${link.path}-${link.label}`}
+                        type="button"
+                        onClick={() => navigate(link.path)}
+                        className={`flex items-center gap-2 rounded-[12px] border px-2.5 py-1.5 text-left transition hover:-translate-y-0.5 ${
+                          active
+                            ? "border-cyan-300 bg-cyan-50/90 text-slate-900 shadow-[0_12px_28px_rgba(8,145,178,0.10)]"
+                            : "border-white/12 bg-white/90 text-slate-900 hover:border-cyan-300"
+                        }`}
+                      >
+                        <span
+                          className={`mt-0.5 rounded-2xl p-2 ${
+                            active
+                              ? "bg-cyan-100 text-cyan-700"
+                              : "bg-cyan-50 text-cyan-700"
+                          }`}
+                        >
+                          <Icon />
+                        </span>
+                        <span>
+                          <span className="block text-xs font-bold leading-tight">
+                            {link.label}
+                          </span>
+                          <span className="block text-[10px] text-slate-500">
+                            {active ? "Currently open" : "Open this section"}
+                          </span>
+                        </span>
+                      </button>
+                    );
+                  })}
+              </div>
             </div>
           </div>
         </section>
 
-        <section className="grid gap-4 xl:grid-cols-[280px_minmax(0,1fr)]">
-          <aside className="rounded-[26px] border border-white/60 bg-white/76 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-            <div className="mb-4">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
-                Restaurant Menu
-              </p>
-              <h2 className="mt-1 text-xl font-bold text-slate-900">Quick sections</h2>
-            </div>
-            <div className="space-y-2">
-              {links.map((link) => {
-                const Icon = link.icon || FaUtensils;
-                const active = location.pathname === link.path;
-
-                return (
-                  <button
-                    key={`${link.path}-${link.label}`}
-                    type="button"
-                    onClick={() => navigate(link.path)}
-                    className={`flex w-full items-start gap-3 rounded-[20px] border px-4 py-3 text-left transition hover:-translate-y-0.5 ${
-                      active
-                        ? "border-cyan-300 bg-cyan-50/80 shadow-[0_12px_28px_rgba(8,145,178,0.10)]"
-                        : "border-slate-200/80 bg-white hover:border-cyan-300"
-                    }`}
-                  >
-                    <span
-                      className={`mt-0.5 rounded-2xl p-2 ${
-                        active ? "bg-cyan-100 text-cyan-700" : "bg-cyan-50 text-cyan-700"
-                      }`}
-                    >
-                      <Icon />
-                    </span>
-                    <span>
-                      <span className="block text-sm font-bold text-slate-900">{link.label}</span>
-                      <span className="block text-xs text-slate-500">
-                        {active ? "Currently open" : "Open this section"}
-                      </span>
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </aside>
-
-          <div className="rounded-[26px] border border-white/60 bg-white/80 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
+        <section>
+          <div className="rounded-[22px] border border-white/60 bg-white/80 p-2.5 shadow-[0_12px_28px_rgba(15,23,42,0.07)] backdrop-blur-xl sm:p-3">
             <Outlet />
           </div>
         </section>

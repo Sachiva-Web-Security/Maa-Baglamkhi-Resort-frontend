@@ -4,19 +4,19 @@ let socketPromise = null;
 let socketInstance = null;
 const SOCKET_CLIENT_VERSION = "proxy-ws-v3";
 
-const getSocketScriptURL = () => {
-  if (window.location.origin.includes("localhost:5173")) {
-    return `/socket.io/socket.io.js?v=${SOCKET_CLIENT_VERSION}`;
-  }
-  return `${getBackendBaseURL()}/socket.io/socket.io.js?v=${SOCKET_CLIENT_VERSION}`;
-};
-
-const getSocketServerURL = () => {
-  if (window.location.origin.includes("localhost:5173")) {
-    return window.location.origin;
+const resolveSocketBaseURL = () => {
+  const explicitOrigin = import.meta.env.VITE_BACKEND_ORIGIN || import.meta.env.VITE_API_URL || "";
+  if (/^https?:\/\//i.test(explicitOrigin)) {
+    return explicitOrigin.replace(/\/api\/?$/, "");
   }
   return getBackendBaseURL();
 };
+
+const getSocketScriptURL = () => {
+  return `${resolveSocketBaseURL()}/socket.io/socket.io.js?v=${SOCKET_CLIENT_VERSION}`;
+};
+
+const getSocketServerURL = () => resolveSocketBaseURL();
 
 const loadSocketScript = () =>
   new Promise((resolve, reject) => {

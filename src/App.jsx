@@ -6,12 +6,11 @@ import Header from "./components/Header/Header";
 import InventoryDashboard from "./components/Inventory/InventoryDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AddMenuItemPage from "./components/Restaurant/AddMenuItemPage";
-import DailyfoodReport from "./components/Restaurant/DailyfoodReport";
-import Daywisefood from "./components/Restaurant/Daywisefood";
 import EditToken from "./components/Restaurant/EditToken";
 import MenuPage from "./components/Restaurant/MenuPage";
 import Payment from "./components/Restaurant/Payment";
 import PaymentBills from "./components/Restaurant/PaymentBills";
+import PayNowPage from "./components/Restaurant/PayNowPage";
 import Roomitem from "./components/Restaurant/Roomitem";
 import TablePage from "./components/Restaurant/TablePage";
 import TokenItemsPage from "./components/Restaurant/TokenItempage";
@@ -195,12 +194,11 @@ function App() {
           <Route path="menu/:table" element={<MenuPage />} />
           <Route path="edit-token/:table" element={<EditToken />} />
           <Route path="payment" element={<Payment />} />
+          <Route path="pay-now/:table" element={<PayNowPage />} />
           <Route path="payment-bills" element={<PaymentBills />} />
           <Route path="token-items/:table" element={<TokenItemsPage />} />
           <Route path="room-items" element={<Roomitem />} />
           <Route path="add-menu-item" element={<AddMenuItemPage />} />
-          <Route path="daily-room-food" element={<DailyfoodReport />} />
-          <Route path="daywise-food" element={<Daywisefood />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
