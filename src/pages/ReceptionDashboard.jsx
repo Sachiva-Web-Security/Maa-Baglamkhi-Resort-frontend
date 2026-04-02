@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   FaBed,
   FaCalendarCheck,
   FaCalendarTimes,
+  FaBoxes,
   FaDoorOpen,
   FaExchangeAlt,
   FaUserCheck,
@@ -10,6 +11,7 @@ import {
 
 import API from "../api";
 import RoleDashboardShell from "../components/roleDashboards/RoleDashboardShell";
+import useDashboardAutoRefresh from "../hooks/useDashboardAutoRefresh";
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
@@ -19,38 +21,33 @@ const ReceptionDashboard = () => {
   const [bookings, setBookings] = useState([]);
   const [rooms, setRooms] = useState([]);
 
-  useEffect(() => {
-    let mounted = true;
+  const load = useCallback(async (silent = false) => {
+    try {
+      if (!silent) setLoading(true);
+      setError("");
 
-    const load = async () => {
-      try {
-        setLoading(true);
-        setError("");
+      const results = await Promise.allSettled([
+        API.get("/hotel/all-bookings"),
+        API.get("/housekeeping"),
+      ]);
 
-        const results = await Promise.allSettled([
-          API.get("/hotel/all-bookings"),
-          API.get("/housekeeping"),
-        ]);
+      const [bookingsRes, roomsRes] = results;
+      setBookings(bookingsRes.status === "fulfilled" ? bookingsRes.value.data || [] : []);
+      setRooms(roomsRes.status === "fulfilled" ? roomsRes.value.data || [] : []);
 
-        if (!mounted) return;
-
-        const [bookingsRes, roomsRes] = results;
-        setBookings(bookingsRes.status === "fulfilled" ? bookingsRes.value.data || [] : []);
-        setRooms(roomsRes.status === "fulfilled" ? roomsRes.value.data || [] : []);
-
-        if (bookingsRes.status !== "fulfilled" && roomsRes.status !== "fulfilled") {
-          setError("Reception dashboard data load nahi ho pa raha.");
-        }
-      } finally {
-        if (mounted) setLoading(false);
+      if (bookingsRes.status !== "fulfilled" && roomsRes.status !== "fulfilled") {
+        setError("Reception dashboard data load nahi ho pa raha.");
       }
-    };
-
-    load();
-    return () => {
-      mounted = false;
-    };
+    } finally {
+      if (!silent) setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  useDashboardAutoRefresh(load);
 
   const stats = useMemo(() => {
     const today = todayISO();
@@ -152,6 +149,7 @@ const ReceptionDashboard = () => {
         { label: "Guest Check-In", helper: "Nayi booking entry ya walk-in guest process karein.", route: "/hotel/guest", icon: FaDoorOpen, tone: "cyan" },
         { label: "Guest Check-Out", helper: "Departing guest settlement aur follow-up open karein.", route: "/hotel/communication", icon: FaExchangeAlt, tone: "amber" },
         { label: "All Bookings", helper: "Reservation queue ko desk se directly manage karein.", route: "/hotel/all-bookings", icon: FaCalendarCheck, tone: "emerald" },
+        { label: "Inventory", helper: "Stock items aur supply status ko directly review aur manage karein.", route: "/inventory", icon: FaBoxes, tone: "rose" },
         { label: "Booking History", helper: "Past stays aur guest references review karein.", route: "/hotel/booking-history", icon: FaUserCheck, tone: "violet" },
       ]}
       insights={insights}

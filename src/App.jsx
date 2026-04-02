@@ -1,9 +1,11 @@
 import { BrowserRouter as Router, Navigate, Route, Routes } from "react-router-dom";
 import { useEffect, useState } from "react";
 
-import { RestaurantProvider } from "./Context/RestaurantContext";
+import { RestaurantProvider } from "./Context/RestaurantContext.jsx";
 import Header from "./components/Header/Header";
 import InventoryDashboard from "./components/Inventory/InventoryDashboard";
+import InventoryMastersModulePage from "./pages/InventoryMastersModulePage";
+import MenuRecipeModulePage from "./pages/MenuRecipeModulePage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AddMenuItemPage from "./components/Restaurant/AddMenuItemPage";
 import EditToken from "./components/Restaurant/EditToken";
@@ -53,12 +55,12 @@ const ROLES = {
   RESTAURANT: ["admin", "manager", "waiter", "kitchen", "staff", "receptionist"],
   KITCHEN: ["admin", "manager", "kitchen"],
   ACCOUNTS: ["admin", "manager", "accountant"],
-  INVENTORY: ["admin", "manager", "kitchen"],
+  INVENTORY: ["admin", "manager", "kitchen", "receptionist"],
   HOUSEKEEPING: ["admin", "manager", "housekeeping"],
   BANQUET: ["admin", "manager", "receptionist"],
   REPORTS: ["admin", "manager", "accountant"],
-  AUDIT: ["admin", "manager"],
-  ASSIGNMENTS: ["admin", "manager", "housekeeping", "staff"],
+  AUDIT: ["admin", "manager", "accountant"],
+  ASSIGNMENTS: ["admin", "manager", "receptionist", "housekeeping", "accountant", "staff"],
 };
 
 function Layout({ children, setIsAuthenticated }) {
@@ -113,96 +115,102 @@ function App() {
 
   return (
     <Router>
-      <Routes>
-        <Route
-          path="/login"
-          element={
-            isAuthenticated ? (
-              <RoleHomeRedirect />
-            ) : (
-              <Login setIsAuthenticated={setIsAuthenticated} />
-            )
-          }
-        />
-        <Route
-          path="/register"
-          element={isAuthenticated ? <RoleHomeRedirect /> : <Register />}
-        />
-        <Route path="/" element={<RoleHomeRedirect />} />
+      <div className="desktop-scale-shell">
+        <div className="desktop-scale-content">
+          <Routes>
+            <Route
+              path="/login"
+              element={
+                isAuthenticated ? (
+                  <RoleHomeRedirect />
+                ) : (
+                  <Login setIsAuthenticated={setIsAuthenticated} />
+                )
+              }
+            />
+            <Route
+              path="/register"
+              element={isAuthenticated ? <RoleHomeRedirect /> : <Register />}
+            />
+            <Route path="/" element={<RoleHomeRedirect />} />
 
-        <Route path="/dashboard" element={protect(<Dashboard />, ["admin"])} />
-        <Route path="/manager-dashboard" element={protect(<ManagerDashboard />, ["manager"])} />
-        <Route
-          path="/reception-dashboard"
-          element={protect(<ReceptionDashboard />, ["receptionist"])}
-        />
-        <Route
-          path="/housekeeping-dashboard"
-          element={protect(<HousekeepingDashboard />, ["housekeeping"])}
-        />
-        <Route
-          path="/accounts-dashboard"
-          element={protect(<AccountsDashboard />, ["accountant"])}
-        />
-        <Route path="/kitchen-dashboard" element={protect(<KitchenDashboard />, ["kitchen"])} />
-        <Route
-          path="/restaurant-dashboard"
-          element={protect(<RestaurantDashboard />, ["waiter"])}
-        />
-        <Route path="/staff-dashboard" element={protect(<StaffDashboard />, ["staff"])} />
-        <Route path="/stayover" element={protect(<Stayover />, ["admin", "manager"])} />
+            <Route path="/dashboard" element={protect(<Dashboard />, ["admin"])} />
+            <Route path="/manager-dashboard" element={protect(<ManagerDashboard />, ["manager"])} />
+            <Route
+              path="/reception-dashboard"
+              element={protect(<ReceptionDashboard />, ["receptionist"])}
+            />
+            <Route
+              path="/housekeeping-dashboard"
+              element={protect(<HousekeepingDashboard />, ["housekeeping"])}
+            />
+            <Route
+              path="/accounts-dashboard"
+              element={protect(<AccountsDashboard />, ["accountant"])}
+            />
+            <Route path="/kitchen-dashboard" element={protect(<KitchenDashboard />, ["kitchen"])} />
+            <Route
+              path="/restaurant-dashboard"
+              element={protect(<RestaurantDashboard />, ["waiter"])}
+            />
+            <Route path="/staff-dashboard" element={protect(<StaffDashboard />, ["staff"])} />
+            <Route path="/stayover" element={protect(<Stayover />, ["admin", "manager"])} />
 
-        <Route path="/profile" element={protect(<Profile />, ROLES.ALL)} />
-        <Route path="/attendance" element={protect(<Attendance />, ROLES.ALL)} />
-        <Route path="/hotel/*" element={protect(<Hotel />, ROLES.HOTEL)} />
-        <Route path="/accounts" element={protect(<Accounts />, ROLES.ACCOUNTS)} />
-        <Route path="/inventory" element={protect(<InventoryDashboard />, ROLES.INVENTORY)} />
-        <Route path="/housekeeping" element={protect(<Housekeeping />, ROLES.HOUSEKEEPING)} />
-        <Route path="/banquet" element={protect(<Banquet />, ROLES.BANQUET)} />
-        <Route path="/reports" element={protect(<Reports />, ROLES.REPORTS)} />
-        <Route path="/assignments" element={protect(<Assignment />, ROLES.ASSIGNMENTS)} />
-        <Route path="/kitchen" element={protect(<Kitchen />, ROLES.KITCHEN)} />
-        <Route path="/user" element={protect(<User />, ROLES.ADMIN_ONLY)} />
-        <Route path="/invoice/:customerId" element={protect(<CustomerInvoicePage />, ROLES.ALL)} />
+            <Route path="/profile" element={protect(<Profile />, ROLES.ALL)} />
+            <Route path="/attendance" element={protect(<Attendance />, ROLES.ALL)} />
+            <Route path="/hotel/*" element={protect(<Hotel />, ROLES.HOTEL)} />
+            <Route path="/accounts" element={protect(<Accounts />, ROLES.ACCOUNTS)} />
+            <Route path="/inventory" element={protect(<InventoryDashboard />, ROLES.INVENTORY)} />
+            <Route path="/inventory/masters" element={protect(<InventoryMastersModulePage />, ROLES.INVENTORY)} />
+            <Route path="/inventory/recipes" element={protect(<MenuRecipeModulePage />, ROLES.INVENTORY)} />
+            <Route path="/housekeeping" element={protect(<Housekeeping />, ROLES.HOUSEKEEPING)} />
+            <Route path="/banquet" element={protect(<Banquet />, ROLES.BANQUET)} />
+            <Route path="/reports" element={protect(<Reports />, ROLES.REPORTS)} />
+            <Route path="/assignments" element={protect(<Assignment />, ROLES.ASSIGNMENTS)} />
+            <Route path="/kitchen" element={protect(<Kitchen />, ROLES.KITCHEN)} />
+            <Route path="/user" element={protect(<User />, ROLES.ADMIN_ONLY)} />
+            <Route path="/invoice/:customerId" element={protect(<CustomerInvoicePage />, ROLES.ALL)} />
 
-        <Route path="/reports/sales" element={protect(<SalesReport />, ROLES.REPORTS)} />
-        <Route
-          path="/reports/income-exp"
-          element={protect(<IncomeExpenditure />, ROLES.REPORTS)}
-        />
-        <Route path="/reports/daywise" element={protect(<DaywiseCollection />, ROLES.REPORTS)} />
-        <Route
-          path="/reports/collection"
-          element={protect(<CollectionReport />, ROLES.REPORTS)}
-        />
-        <Route path="/reports/audit" element={protect(<AuditReport />, ROLES.AUDIT)} />
+            <Route path="/reports/sales" element={protect(<SalesReport />, ROLES.REPORTS)} />
+            <Route
+              path="/reports/income-exp"
+              element={protect(<IncomeExpenditure />, ROLES.REPORTS)}
+            />
+            <Route path="/reports/daywise" element={protect(<DaywiseCollection />, ROLES.REPORTS)} />
+            <Route
+              path="/reports/collection"
+              element={protect(<CollectionReport />, ROLES.REPORTS)}
+            />
+            <Route path="/reports/audit" element={protect(<AuditReport />, ROLES.AUDIT)} />
 
-        <Route
-          path="/restaurant/*"
-          element={
-            <ProtectedRoute allowedRoles={ROLES.RESTAURANT}>
-              <Layout setIsAuthenticated={setIsAuthenticated}>
-                <RestaurantProvider>
-                  <RestaurantPOS />
-                </RestaurantProvider>
-              </Layout>
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<TablePage />} />
-          <Route path="token/:table" element={<TokenPage />} />
-          <Route path="menu/:table" element={<MenuPage />} />
-          <Route path="edit-token/:table" element={<EditToken />} />
-          <Route path="payment" element={<Payment />} />
-          <Route path="pay-now/:table" element={<PayNowPage />} />
-          <Route path="payment-bills" element={<PaymentBills />} />
-          <Route path="token-items/:table" element={<TokenItemsPage />} />
-          <Route path="room-items" element={<Roomitem />} />
-          <Route path="add-menu-item" element={<AddMenuItemPage />} />
-        </Route>
+            <Route
+              path="/restaurant/*"
+              element={
+                <ProtectedRoute allowedRoles={ROLES.RESTAURANT}>
+                  <Layout setIsAuthenticated={setIsAuthenticated}>
+                    <RestaurantProvider>
+                      <RestaurantPOS />
+                    </RestaurantProvider>
+                  </Layout>
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<TablePage />} />
+              <Route path="token/:table" element={<TokenPage />} />
+              <Route path="menu/:table" element={<MenuPage />} />
+              <Route path="edit-token/:table" element={<EditToken />} />
+              <Route path="payment" element={<Payment />} />
+              <Route path="pay-now/:table" element={<PayNowPage />} />
+              <Route path="payment-bills" element={<PaymentBills />} />
+              <Route path="token-items/:table" element={<TokenItemsPage />} />
+              <Route path="room-items" element={<Roomitem />} />
+              <Route path="add-menu-item" element={<AddMenuItemPage />} />
+            </Route>
 
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Routes>
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </div>
+      </div>
     </Router>
   );
 }

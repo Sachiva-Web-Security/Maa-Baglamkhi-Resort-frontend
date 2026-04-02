@@ -95,8 +95,7 @@ const GuestProfile = () => {
             Guest Profile & Stay History
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-100/80">
-            Mobile ya naam se search karke guest ke saare past stays, total
-            spend aur booking patterns ek jagah dekho.
+            “Search by mobile number or name to view all of a guest’s past stays, total spend, and booking patterns in one place.”
           </p>
         </section>
 
@@ -276,10 +275,10 @@ const GuestProfile = () => {
           <div className="rounded-[28px] border-2 border-dashed border-slate-200 py-16 text-center">
             <div className="text-4xl">👤</div>
             <p className="mt-4 text-lg font-bold text-slate-500">
-              Guest ka mobile ya naam search karo
+         enter a guest mobile no.
             </p>
             <p className="mt-2 text-sm text-slate-400">
-              Past stays, total spend aur booking history sab ek jagah dikhe ga.
+            “Past stays, total spend, and booking history will all be visible in one place.”
             </p>
           </div>
         )}

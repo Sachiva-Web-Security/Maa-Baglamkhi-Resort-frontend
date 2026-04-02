@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   FaBell,
   FaIdBadge,
@@ -7,7 +7,9 @@ import {
 } from "react-icons/fa";
 
 import API from "../api";
+import { getDashboardNotifications } from "../components/Dashboard/dashboardNotifications";
 import RoleDashboardShell from "../components/roleDashboards/RoleDashboardShell";
+import useDashboardAutoRefresh from "../hooks/useDashboardAutoRefresh";
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
@@ -16,40 +18,51 @@ const StaffDashboard = () => {
   const [error, setError] = useState("");
   const [attendance, setAttendance] = useState([]);
   const [assignments, setAssignments] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+
+  const load = useCallback(async (silent = false) => {
+    try {
+      if (!silent) setLoading(true);
+      setError("");
+
+      const name = localStorage.getItem("name");
+      const role = localStorage.getItem("role");
+
+      const results = await Promise.allSettled([
+        API.get("/attendance", { params: { date: todayISO() } }),
+        API.get(`/assignments?role=${role}&name=${encodeURIComponent(name || "")}`),
+      ]);
+
+      const [attendanceRes, assignmentRes] = results;
+      setAttendance(attendanceRes.status === "fulfilled" ? attendanceRes.value.data || [] : []);
+      setAssignments(assignmentRes.status === "fulfilled" ? assignmentRes.value.data || [] : []);
+
+      if (attendanceRes.status !== "fulfilled" && assignmentRes.status !== "fulfilled") {
+        setError("Staff dashboard data load nahi ho pa raha.");
+      }
+    } finally {
+      if (!silent) setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    let mounted = true;
+    load();
+  }, [load]);
 
-    const load = async () => {
-      try {
-        setLoading(true);
-        setError("");
+  useDashboardAutoRefresh(load);
 
-        const name = localStorage.getItem("name");
-        const role = localStorage.getItem("role");
-
-        const results = await Promise.allSettled([
-          API.get("/attendance", { params: { date: todayISO() } }),
-          API.get(`/assignments?role=${role}&name=${encodeURIComponent(name || "")}`),
-        ]);
-
-        if (!mounted) return;
-
-        const [attendanceRes, assignmentRes] = results;
-        setAttendance(attendanceRes.status === "fulfilled" ? attendanceRes.value.data || [] : []);
-        setAssignments(assignmentRes.status === "fulfilled" ? assignmentRes.value.data || [] : []);
-
-        if (attendanceRes.status !== "fulfilled" && assignmentRes.status !== "fulfilled") {
-          setError("Staff dashboard data load nahi ho pa raha.");
-        }
-      } finally {
-        if (mounted) setLoading(false);
-      }
+  useEffect(() => {
+    const syncNotifications = () => {
+      setNotifications(getDashboardNotifications());
     };
 
-    load();
+    syncNotifications();
+    window.addEventListener("dashboard-notifications-updated", syncNotifications);
+    window.addEventListener("storage", syncNotifications);
+
     return () => {
-      mounted = false;
+      window.removeEventListener("dashboard-notifications-updated", syncNotifications);
+      window.removeEventListener("storage", syncNotifications);
     };
   }, []);
 
@@ -57,6 +70,12 @@ const StaffDashboard = () => {
   const myAttendance = attendance.find(
     (item) => String(item.name || "").toLowerCase() === currentUserName.toLowerCase()
   );
+  const completedTasks = assignments.filter(
+    (item) => String(item.status || "").toLowerCase() === "completed"
+  ).length;
+  const todaysAnnouncements = notifications.filter(
+    (item) => String(item.createdAt || "").slice(0, 10) === todayISO()
+  ).length;
 
   const stats = useMemo(() => [
     {
@@ -75,19 +94,19 @@ const StaffDashboard = () => {
     },
     {
       label: "Announcements",
-      value: 3,
-      note: "Operational updates and reminders visible today.",
+      value: todaysAnnouncements,
+      note: "Dashboard notifications aur reminders visible today.",
       icon: FaBell,
       tone: "amber",
     },
     {
-      label: "Profile Shortcut",
-      value: "Ready",
-      note: "Profile and user details are one click away.",
+      label: "Completed Tasks",
+      value: completedTasks,
+      note: "Assignments already closed by this staff account.",
       icon: FaIdBadge,
       tone: "violet",
     },
-  ], [assignments.length, myAttendance?.status]);
+  ], [assignments.length, completedTasks, myAttendance?.status, todaysAnnouncements]);
 
   const insights = useMemo(() => [
     {

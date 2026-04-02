@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { FaTimes, FaBroom, FaPlus, FaSyncAlt, FaDownload, FaChevronLeft, FaChevronRight } from "react-icons/fa";
-import axios from "axios";
+import API from "../../api";
 
 const SHIFTS = ["Morning (6am-2pm)", "Afternoon (2pm-10pm)", "Night (10pm-6am)", "Day (8am-8pm)", "Off"];
 const SHIFT_COLORS = {
@@ -35,7 +35,7 @@ export default function ShiftRosterModal({ housekeepers, onClose, apiBase }) {
   const fetchRoster = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${apiBase}/housekeeping/roster`, { params: { weekStart } });
+      const res = await API.get("/housekeeping/roster", { params: { weekStart } });
       // Build map: { staffName: { "YYYY-MM-DD": shift } }
       const map = {};
       (res.data || []).forEach(row => {
@@ -69,7 +69,7 @@ export default function ShiftRosterModal({ housekeepers, onClose, apiBase }) {
           entries.push({ staffName: staff, shiftDate: date, shift });
         });
       });
-      await axios.post(`${apiBase}/housekeeping/roster`, { entries });
+      await API.post("/housekeeping/roster", { entries });
       alert("Roster saved successfully!");
     } catch { alert("Failed to save roster."); }
     setSaving(false);

@@ -89,29 +89,29 @@ const Advance = () => {
 
   const handleProceed = async () => {
     if (!bookingId) {
-      alert("Booking ID missing hai.");
+      alert("Booking ID is missing.");
       return;
     }
 
     if (enteredPaidAmount < 0) {
-      setErrorMessage("Paid amount negative nahi ho sakta.");
+      setErrorMessage("Paid amount cannot be negative.");
       return;
     }
 
     if (isOverPayment) {
       setErrorMessage(
-        `Paid amount total amount se zyada nahi ho sakta. Maximum ${formatCurrency(totalAmount)} allowed hai.`,
+        `Paid amount cannot be greater than the total amount. Maximum allowed is ${formatCurrency(totalAmount)}.`,
       );
       return;
     }
 
     if (isOverAllocation) {
-      setErrorMessage("Payment + discount total amount se zyada nahi ho sakta.");
+      setErrorMessage("Payment plus discount cannot be greater than the total amount.");
       return;
     }
 
     if (enteredPaidAmount <= 0 && enteredDiscountAmount <= 0) {
-      setErrorMessage("Payment ya discount me se kam se kam ek valid amount enter karo.");
+      setErrorMessage("Enter at least one valid amount for payment or discount.");
       return;
     }
 
@@ -242,7 +242,7 @@ const Advance = () => {
               </div>
             ) : (
               <div className="mt-6 rounded-[24px] border border-dashed border-slate-300 bg-slate-50 px-5 py-12 text-center text-slate-500">
-                Room tariff data abhi available nahi hai.
+          data not available of a room tariff
               </div>
             )}
           </div>
@@ -359,8 +359,7 @@ const Advance = () => {
                 Invoice aur communication preview
               </h3>
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                Advance save hone ke baad communication page par final amount,
-                paid amount aur remaining balance show hoga.
+               After saving the advance, the final amount, paid amount, and remaining balance will be shown on the communication page.”
               </p>
 
               <div className="mt-5 flex gap-3">

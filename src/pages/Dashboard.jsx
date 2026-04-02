@@ -70,6 +70,7 @@ const DASHBOARD_SEARCH_TARGETS = [
   { label: "Inventory", route: "/inventory", helper: "Stock and item control", keywords: ["inventory", "stock", "item"] },
   { label: "Users", route: "/user", helper: "User management", keywords: ["user", "users", "staff", "employee"] },
   { label: "Reports", route: "/reports", helper: "Summary and analytics", keywords: ["reports", "report", "analytics"] },
+  { label: "Audit Logs", route: "/reports/audit", helper: "Security and activity trail", keywords: ["audit", "audit log", "activity log", "history"] },
   { label: "Kitchen", route: "/kitchen", helper: "Kitchen status", keywords: ["kitchen", "food", "prep"] },
   { label: "Restaurant", route: "/restaurant", helper: "Restaurant dashboard", keywords: ["restaurant", "table", "menu"] },
   { label: "Banquet", route: "/banquet", helper: "Event and hall ops", keywords: ["banquet", "hall", "event"] },
@@ -135,6 +136,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(localStorage.getItem("freshLogin") === "true");
   const [blurBg, setBlurBg] = useState(false);
   const [selectedDate, setSelectedDate] = useState(todayISO());
+  const [expandedBoardDay, setExpandedBoardDay] = useState(todayISO());
   const [boardStartDate, setBoardStartDate] = useState(todayISO());
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [openMetricPanel, setOpenMetricPanel] = useState("");
@@ -534,7 +536,7 @@ const Dashboard = () => {
       value: String(liveTotalRooms),
       subtitle: "Calm inventory overview",
       icon: FaBed,
-      gradient: "bg-[linear-gradient(135deg,#14978F_0%,#22B4A6_44%,#5ED9CF_100%)]",
+      gradient: "bg-[linear-gradient(180deg,#89E85D_0%,#42D37D_34%,#15B58B_66%,#0A727D_100%)]",
       route: "/hotel",
     },
     {
@@ -746,18 +748,27 @@ const Dashboard = () => {
     const isSelectedDateVisible = stayOverview.some((day) => day.date === selectedDate);
     if (!isSelectedDateVisible) {
       setSelectedDate(stayOverview[0].date);
+      setExpandedBoardDay(stayOverview[0].date);
+      setAvailableTypeOpen("");
+      return;
+    }
+
+    if (expandedBoardDay && !stayOverview.some((day) => day.date === expandedBoardDay)) {
+      setExpandedBoardDay(stayOverview[0].date);
       setAvailableTypeOpen("");
     }
-  }, [selectedDate, stayOverview]);
+  }, [expandedBoardDay, selectedDate, stayOverview]);
 
   const jumpBoardWindow = (nextDate) => {
     setBoardStartDate(nextDate);
     setSelectedDate(nextDate);
+    setExpandedBoardDay(nextDate);
     setAvailableTypeOpen("");
   };
 
   const toggleBoardDay = (date) => {
     setSelectedDate(date);
+    setExpandedBoardDay((current) => (current === date ? "" : date));
     setAvailableTypeOpen("");
   };
 
@@ -1200,108 +1211,119 @@ const Dashboard = () => {
       ) : null}
 
       <div
-        className={`relative isolate min-h-screen w-full overflow-x-hidden bg-[linear-gradient(135deg,#f5fbff_0%,#f3f8f4_28%,#fff8f1_58%,#f8fafc_100%)] p-4 transition-all duration-300 sm:p-6 lg:p-8 ${
+        className={`relative isolate min-h-screen w-full overflow-x-hidden bg-[radial-gradient(circle_at_top_left,#dff6ff_0%,transparent_22%),radial-gradient(circle_at_top_right,#fff1c7_0%,transparent_24%),linear-gradient(135deg,#f3f8ff_0%,#f6fbf8_32%,#fff9f2_60%,#f8fbff_100%)] p-4 transition-all duration-300 sm:p-6 lg:p-8 ${
           blurBg ? "blur-[6px]" : ""
         }`}
       >
         <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-          <div className="absolute left-[-8%] top-[-6%] h-72 w-72 rounded-full bg-cyan-200/45 blur-3xl sm:h-96 sm:w-96" />
+          <div className="absolute left-[-8%] top-[-6%] h-72 w-72 rounded-full bg-cyan-200/55 blur-3xl sm:h-96 sm:w-96" />
           <div className="absolute right-[-10%] top-[8%] h-72 w-72 rounded-full bg-amber-200/45 blur-3xl sm:h-[28rem] sm:w-[28rem]" />
-          <div className="absolute bottom-[18%] left-[18%] h-56 w-56 rounded-full bg-emerald-200/30 blur-3xl sm:h-80 sm:w-80" />
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.55)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.45)_1px,transparent_1px)] bg-[size:72px_72px] opacity-25" />
+          <div className="absolute bottom-[18%] left-[18%] h-56 w-56 rounded-full bg-emerald-200/35 blur-3xl sm:h-80 sm:w-80" />
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.5)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.36)_1px,transparent_1px)] bg-[size:72px_72px] opacity-20" />
         </div>
 
-        <div className="mx-auto max-w-[1280px] space-y-7">
-          <section className="overflow-hidden rounded-[26px] border border-slate-900/10 bg-[linear-gradient(120deg,#071b34_0%,#0d4a53_52%,#162d45_100%)] px-4 py-5 shadow-[0_22px_55px_rgba(15,23,42,0.12)] sm:px-6 sm:py-6 lg:px-8">
+        <div className="mt-10 max-w-full space-y-5">
+          <section className="relative overflow-hidden rounded-[30px] border border-slate-900/10 bg-[linear-gradient(130deg,#0b1733_0%,#133a59_42%,#125f67_100%)] px-4 py-5 shadow-[0_30px_90px_rgba(15,23,42,0.18)] sm:px-6 sm:py-6 lg:px-8">
+            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.08)_0%,transparent_28%,rgba(255,255,255,0.05)_56%,transparent_100%)]" />
+            <div className="pointer-events-none absolute -left-16 top-4 h-48 w-48 rounded-full bg-cyan-300/15 blur-3xl" />
+            <div className="pointer-events-none absolute right-0 top-0 h-56 w-56 rounded-full bg-sky-300/10 blur-3xl" />
             <div className="relative z-[1] grid gap-5 lg:grid-cols-[minmax(0,1.5fr)_minmax(300px,0.8fr)] lg:items-center">
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <p className="text-[7px] font-semibold uppercase tracking-[0.26em] text-cyan-200 sm:text-[10px]">
                   Resort Command Center
                 </p>
-              <div className="space-y-1">
-                <h1 className="text-[1.25rem] font-black leading-[1.02] text-white sm:text-[2.4rem]">
-                  Operational snapshot for today
-                </h1>
-                <p className="max-w-3xl text-[12px] leading-5 text-slate-100/88 sm:text-[14px] sm:leading-6">
-                  Track rooms, revenue, arrivals, and restaurant activity from one cleaner dashboard built for daily hotel operations.
-                </p>
-              </div>
-
-              <div className="relative rounded-[22px] border border-white/15 bg-white/10 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md">
-                <label className="flex items-center gap-3 rounded-[18px] border border-white/10 bg-slate-950/20 px-4 py-3">
-                  <FaSearch className="text-cyan-200" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(event) => setSearchQuery(event.target.value)}
-                    onFocus={() => setSearchFocused(true)}
-                    onBlur={() => setTimeout(() => setSearchFocused(false), 150)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" && searchResults.length) {
-                        openSearchTarget(searchResults[0]);
-                      }
-                    }}
-                    placeholder="Search page, file, room module or report..."
-                    className="w-full bg-transparent text-sm font-medium text-white outline-none placeholder:text-slate-300/70"
-                  />
-                  {searchQuery ? (
-                    <button
-                      type="button"
-                      onClick={() => setSearchQuery("")}
-                      className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[11px] font-semibold text-white transition hover:bg-white/15"
-                    >
-                      Clear
-                    </button>
-                  ) : null}
-                </label>
-                {searchFocused && (searchQuery || searchResults.length) ? (
-                  <div className="absolute left-3 right-3 top-[84px] z-20 overflow-hidden rounded-[18px] border border-white/10 bg-slate-950/90 shadow-[0_20px_40px_rgba(0,0,0,0.28)] backdrop-blur-md">
-                    <div className="max-h-[280px] overflow-y-auto p-2">
-                      {searchResults.length ? (
-                        searchResults.map((target) => (
-                          <button
-                            key={target.route}
-                            type="button"
-                            onMouseDown={(event) => event.preventDefault()}
-                            onClick={() => openSearchTarget(target)}
-                            className="flex w-full items-center justify-between rounded-[14px] border border-white/10 px-3 py-2.5 text-left transition hover:bg-white/10"
-                          >
-                            <div>
-                              <div className="text-sm font-semibold text-white">{target.label}</div>
-                              <div className="text-[11px] text-slate-200/80">{target.helper}</div>
-                            </div>
-                            <span className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-cyan-200">
-                              Open
-                            </span>
-                          </button>
-                        ))
-                      ) : (
-                        <div className="rounded-[14px] border border-dashed border-white/15 px-3 py-4 text-sm text-slate-200/80">
-                          No page found. Try keywords like <span className="font-semibold text-white">housekeeping</span>,
-                          <span className="font-semibold text-white"> booking</span>, <span className="font-semibold text-white">accounts</span>.
-                        </div>
-                      )}
-                    </div>
+                <div className="space-y-2">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-100 backdrop-blur-md">
+                    <span className="h-2 w-2 rounded-full bg-emerald-300" />
+                    Live Admin Overview
                   </div>
-                ) : null}
-              </div>
-            </div>
+                  <h1 className="max-w-3xl text-[1.35rem] font-black leading-[0.98] tracking-[-0.04em] text-white sm:text-[2.85rem]">
+                    Operational snapshot for today
+                  </h1>
+                  <p className="max-w-3xl text-[12px] leading-5 text-slate-100/88 sm:text-[14px] sm:leading-6">
+                    Track rooms, revenue, arrivals, and restaurant activity from one cleaner dashboard built for daily hotel operations.
+                  </p>
+                </div>
 
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-4">
+                <div className="relative rounded-[24px] border border-white/12 bg-white/10 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_10px_30px_rgba(15,23,42,0.16)] backdrop-blur-md ">
+                  <label className="flex items-center gap-3 rounded-[18px] border border-white/10 bg-slate-950/20 px-4 py-3 text-white/90">
+                    <FaSearch className="text-cyan-200" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(event) => setSearchQuery(event.target.value)}
+                      onFocus={() => setSearchFocused(true)}
+                      onBlur={() => setTimeout(() => setSearchFocused(false), 150)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" && searchResults.length) {
+                          openSearchTarget(searchResults[0]);
+                        }
+                      }}
+                      placeholder="Search page, file, room module or report..."
+                      className="w-full bg-transparent text-sm font-medium text-white outline-none placeholder:text-slate-300/70"
+                    />
+                    {searchQuery ? (
+                      <button
+                        type="button"
+                        onClick={() => setSearchQuery("")}
+                        className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[11px] font-semibold text-white transition hover:bg-white/15"
+                      >
+                        Clear
+                      </button>
+                    ) : null}
+                  </label>
+                  {searchFocused && (searchQuery || searchResults.length) ? (
+                    <div className="absolute left-3 right-3 top-[84px] z-20 overflow-hidden rounded-[18px] border border-white/10 bg-slate-950/90 shadow-[0_20px_40px_rgba(0,0,0,0.28)] backdrop-blur-md">
+                      <div className="max-h-[280px] overflow-y-auto p-2">
+                        {searchResults.length ? (
+                          searchResults.map((target) => (
+                            <button
+                              key={target.route}
+                              type="button"
+                              onMouseDown={(event) => event.preventDefault()}
+                              onClick={() => openSearchTarget(target)}
+                              className="flex w-full items-center justify-between rounded-[14px] border border-white/10 px-3 py-2.5 text-left transition hover:bg-white/10"
+                            >
+                              <div>
+                                <div className="text-sm font-semibold text-white">{target.label}</div>
+                                <div className="text-[11px] text-slate-200/80">{target.helper}</div>
+                              </div>
+                              <span className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-cyan-200">
+                                Open
+                              </span>
+                            </button>
+                          ))
+                        ) : (
+                          <div className="rounded-[14px] border border-dashed border-white/15 px-3 py-4 text-sm text-slate-200/80">
+                            No page found. Try keywords like <span className="font-semibold text-white">housekeeping</span>,
+                            <span className="font-semibold text-white"> booking</span>, <span className="font-semibold text-white">accounts</span>.
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-4">
                 {heroStats.map((item) => (
                   <div
                     key={item.label}
-                    className="rounded-[20px] border border-white/12 bg-white/10 px-4 py-4 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md"
+                    className="rounded-[22px] border border-white/12 bg-[linear-gradient(180deg,rgba(255,255,255,0.16)_0%,rgba(255,255,255,0.08)_100%)] px-4 py-4 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_14px_28px_rgba(15,23,42,0.12)] backdrop-blur-md"
                   >
-                    <span className="text-[11px] text-slate-100/78 sm:text-xs">{item.label}</span>
-                    <div className="mt-3 text-[1.55rem] font-bold leading-none sm:text-[1.8rem]">{item.value}</div>
+                    <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-100/78 sm:text-[11px]">
+                      {item.label}
+                    </span>
+                    <div className="mt-3 text-[1.7rem] font-black leading-none tracking-[-0.03em] sm:text-[2rem]">
+                      {item.value}
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
           </section>
 
-          <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid w-full grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
             {metrics.map((metric) => (
               <MetricCard
                 key={metric.title}
@@ -1316,7 +1338,7 @@ const Dashboard = () => {
           </div>
 
           {activeMetricPanel ? (
-            <div className="mt-4 rounded-[24px] border border-cyan-100 bg-white/88 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
+            <div className="mt-4 rounded-[28px] border border-cyan-100/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(244,251,255,0.94)_100%)] p-4 shadow-[0_24px_60px_rgba(15,23,42,0.1)] backdrop-blur-xl sm:p-5">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-cyan-700">
@@ -1340,7 +1362,7 @@ const Dashboard = () => {
                   activeMetricPanel.items.map((item) => (
                     <div
                       key={`${openMetricPanel}-${item.bookingId}-${item.checkIn}-${item.checkOut}`}
-                      className="rounded-[20px] border border-slate-200 bg-slate-50/80 p-4 shadow-sm"
+                      className="rounded-[22px] border border-slate-200/80 bg-white p-4 shadow-[0_16px_38px_rgba(15,23,42,0.06)]"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
@@ -1390,30 +1412,28 @@ const Dashboard = () => {
           ) : null}
 
           <section className="grid gap-4 xl:grid-cols-[minmax(0,1.62fr)_minmax(280px,0.68fr)]">
-            <div className="rounded-[24px] border border-white/70 bg-white/82 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
+            <div className="rounded-[28px] border border-white/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.95)_0%,rgba(248,251,255,0.92)_100%)] p-4 shadow-[0_24px_58px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
               <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                 <div>
                   <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-cyan-700">
                     Stay Overview
                   </p>
-                  <h2 className="mt-1 text-[1.15rem] font-bold text-slate-900">
-                    Booking master inspired main dashboard
-                  </h2>
+                  
                   <p className="mt-1 text-sm text-slate-500">
-                    Selected date ke liye available, confirmed, pencil, blocked aur checked-in rooms ek saath.
+                  “Shows all room statuses for the selected date.”
                   </p>
                 </div>
 
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    className="rounded-full border border-slate-200 bg-white px-4 py-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-600"
+                    className="rounded-full border border-slate-200 bg-white px-4 py-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-600 transition hover:border-cyan-300 hover:bg-cyan-50 hover:text-cyan-800"
                   >
                     Main Dashboard
                   </button>
                   <button
                     type="button"
-                    className="rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500"
+                    className="rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500 transition hover:border-cyan-300 hover:bg-cyan-50 hover:text-cyan-800"
                   >
                     Room Dashboard
                   </button>
@@ -1430,7 +1450,7 @@ const Dashboard = () => {
               <div className="mt-5 overflow-x-auto">
                 <div className="min-w-[1700px] space-y-3">
                   {stayOverview.map((day) => {
-                    const isExpanded = selectedDate === day.date;
+                    const isExpanded = expandedBoardDay === day.date;
 
                     return (
                       <div
@@ -2095,7 +2115,7 @@ const Dashboard = () => {
                   </div>
 
                   {stayOverview.slice(1).map((day) => {
-                    const isExpanded = selectedDate === day.date;
+                    const isExpanded = expandedBoardDay === day.date;
 
                     return (
                       <button
@@ -2175,8 +2195,8 @@ const Dashboard = () => {
               </div>
             </div>
 
-            <div className="grid gap-4">
-              <div className="rounded-[24px] border border-white/70 bg-white/82 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
+              <div className="grid gap-4">
+              <div className="rounded-[28px] border border-white/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.95)_0%,rgba(249,247,255,0.92)_100%)] p-4 shadow-[0_24px_58px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
                 <div className="mb-4 flex items-center justify-between">
                   <div>
                     <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-violet-500">
@@ -2225,7 +2245,7 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              <div className="rounded-[24px] border border-white/70 bg-white/82 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
+              <div className="rounded-[28px] border border-white/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.95)_0%,rgba(246,251,248,0.92)_100%)] p-4 shadow-[0_24px_58px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
                 <div className="mb-4 flex items-center justify-between">
                   <div>
                     <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-emerald-600">
@@ -2289,7 +2309,7 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              <div className="rounded-[24px] border border-white/70 bg-white/82 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
+              <div className="rounded-[28px] border border-white/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.95)_0%,rgba(255,248,250,0.92)_100%)] p-4 shadow-[0_24px_58px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-rose-500">
                   Front Office Alert
                 </p>
@@ -2314,39 +2334,41 @@ const Dashboard = () => {
             </div>
           </section>
 
-          <div className="grid w-full grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.52fr)_minmax(290px,0.82fr)]">
-            <div className="w-full rounded-[24px] border border-white/70 bg-white/82 px-4 py-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:px-5 sm:py-6">
-              <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-emerald-300">
-                    Revenue Trend
-                  </p>
-                  <h2 className="mt-1 text-[1.1rem] font-bold text-slate-900">Reservation statistics</h2>
+          <div className="grid w-full grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1.38fr)_minmax(280px,0.48fr)]">
+            <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(250px,0.42fr)]">
+              <div className="h-fit w-full self-start rounded-[28px] border border-white/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.95)_0%,rgba(248,252,255,0.92)_100%)] px-4 py-5 shadow-[0_24px_58px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:px-5 sm:py-6">
+                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-emerald-300">
+                      Revenue Trend
+                    </p>
+                    <h2 className="mt-1 text-[1.1rem] font-bold text-slate-900">Reservation statistics</h2>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => navigate("/accounts")}
+                    className="rounded-full bg-gradient-to-r from-teal-600 to-emerald-500 px-4 py-2.5 text-[12px] font-bold text-white shadow-[0_12px_30px_rgba(13,148,136,0.24)] transition hover:-translate-y-0.5"
+                  >
+                    Open Accounts
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => navigate("/accounts")}
-                  className="rounded-full bg-gradient-to-r from-teal-600 to-emerald-500 px-4 py-2.5 text-[12px] font-bold text-white shadow-[0_12px_30px_rgba(13,148,136,0.24)] transition hover:-translate-y-0.5"
-                >
-                  Open Accounts
-                </button>
+                <div className="h-[280px] w-full sm:h-[320px] lg:h-[340px]">
+                  <MonthlyRevenueChart />
+                </div>
               </div>
-              <div className="h-[280px] w-full sm:h-[320px] lg:h-[340px]">
-                <MonthlyRevenueChart />
+
+              <div className="flex min-h-[230px] min-w-0 self-start rounded-[28px] border border-white/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.95)_0%,rgba(255,250,244,0.92)_100%)] p-4 shadow-[0_24px_58px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
+                <FoodSalesChart />
               </div>
             </div>
 
-            <div className="grid gap-4">
-              <div className="min-h-[290px] min-w-0 rounded-[24px] border border-white/70 bg-white/82 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
+            <div className="grid self-start gap-6 xl:max-w-[320px] xl:justify-self-start xl:pr-4">
+              <div className="min-h-[290px] min-w-0 rounded-[28px] border border-white/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.95)_0%,rgba(247,252,249,0.92)_100%)] p-4 shadow-[0_24px_58px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-emerald-300">
                   Room Mix
                 </p>
                 <div className="mb-3 mt-1 text-[1.05rem] font-bold text-slate-900">Occupancy overview</div>
                 <RoomOccupancyChart />
-              </div>
-
-              <div className="flex min-h-[230px] min-w-0 items-center rounded-[24px] border border-white/70 bg-white/82 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
-                <FoodSalesChart />
               </div>
             </div>
           </div>

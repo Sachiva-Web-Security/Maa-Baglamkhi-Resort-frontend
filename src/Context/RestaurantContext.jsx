@@ -1,5 +1,4 @@
 import React, {
-  createContext,
   useCallback,
   useEffect,
   useMemo,
@@ -8,8 +7,7 @@ import React, {
 import API from "../api";
 import { restaurantService } from "../services/restaurantService";
 import { getRestaurantSocket, releaseRestaurantSocket } from "../utils/restaurantSocket";
-
-export const RestaurantContext = createContext();
+import RestaurantContext from "./restaurantContext";
 
 export const RestaurantProvider = ({ children }) => {
   const [tables, setTables] = useState([]);
@@ -120,10 +118,7 @@ export const RestaurantProvider = ({ children }) => {
     return () => {
       unsubscribed = true;
       Promise.resolve(teardownPromise).then((teardown) => teardown && teardown());
-      if (activeSocket) {
-        activeSocket.disconnect();
-        activeSocket = null;
-      }
+      activeSocket = null;
       releaseRestaurantSocket();
     };
   }, [loadTables]);
@@ -138,7 +133,9 @@ export const RestaurantProvider = ({ children }) => {
     if (!normalized) throw new Error("Table number is required");
 
     const existing = tables.find((t) => String(t.name) === normalized);
-    if (existing) return existing;
+   if (existing) {
+  throw new Error("Table already exists");
+}
 
     const tempId = `tmp-${Date.now()}`;
     const optimistic = {
@@ -180,11 +177,14 @@ export const RestaurantProvider = ({ children }) => {
 
       return persisted;
     } catch (err) {
-      console.log("Error adding table:", err);
-      return optimistic;
-    }
-  };
+  console.log("Error adding table:", err);
 
+  // rollback optimistic update
+  setTables((prev) => prev.filter((t) => t.id !== tempId));
+
+  throw err; // frontend ko error dikhega
+}
+  }
   /* ================= ADD MENU ITEM ================= */
   const addMenuItem = async (name, price, category, tableNoParam) => {
     const resolvedTable = tableNoParam || selectedTable;
@@ -251,6 +251,7 @@ export const RestaurantProvider = ({ children }) => {
         prepTimeMinutes,
         items: payload,
       });
+      window.dispatchEvent(new Event("kitchenUpdated"));
 
       await loadTables();
     },

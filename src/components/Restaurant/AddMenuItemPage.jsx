@@ -94,32 +94,43 @@ const AddMenuItemPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#19253c_0%,#1f2d47_100%)] p-4 sm:p-6">
-      <div className="mx-auto max-w-3xl rounded-[30px] border border-white/10 bg-white/95 p-5 shadow-[0_30px_80px_rgba(15,23,42,0.28)]">
-        <div className="mb-4 rounded-[22px] bg-[linear-gradient(135deg,#111827_0%,#1d4ed8_50%,#0f766e_100%)] px-5 py-5 text-white">
-          <div className="text-[11px] uppercase tracking-[0.28em] text-cyan-200">Restaurant Menu Card</div>
-          <div className="mt-2 text-3xl font-black">Add Menu Item</div>
-          <div className="mt-1 text-sm text-white/80">
-            {table ? `Connected table: ${table}` : "No table selected"}
+    <div className="mx-auto max-w-4xl">
+      <div className="mb-4 rounded-[22px] bg-[linear-gradient(135deg,#111827_0%,#1d4ed8_50%,#0f766e_100%)] px-5 py-5 text-white shadow-[0_18px_45px_rgba(15,23,42,0.18)]">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <div className="text-[11px] uppercase tracking-[0.28em] text-cyan-200">Restaurant Menu Card</div>
+            <div className="mt-2 text-3xl font-black">Add Menu Item</div>
+            <div className="mt-1 text-sm text-white/80">
+              {table ? `Connected table: ${table}` : "No table selected"}
+            </div>
           </div>
+          <button
+            type="button"
+            onClick={() => navigate("/restaurant", { replace: true })}
+            className="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white backdrop-blur-md"
+          >
+            Back To Restaurant
+          </button>
         </div>
-
-        <AddMenuItemModal
-          open
-          onClose={() => navigate("/restaurant", { replace: true })}
-          onSubmit={handleSubmit}
-          form={form}
-          setForm={setForm}
-          categories={categories}
-          catalogByCategory={catalogByCategory}
-          expandedCategory={expandedCategory}
-          setExpandedCategory={setExpandedCategory}
-          imagePreview={imagePreview}
-          imageFileName={imageFile?.name || ""}
-          onImageChange={(event) => setImageFile(event.target.files?.[0] || null)}
-          loading={loading}
-        />
       </div>
+
+      <AddMenuItemModal
+        open
+        variant="inline"
+        hideCloseAction
+        onClose={() => navigate("/restaurant", { replace: true })}
+        onSubmit={handleSubmit}
+        form={form}
+        setForm={setForm}
+        categories={categories}
+        catalogByCategory={catalogByCategory}
+        expandedCategory={expandedCategory}
+        setExpandedCategory={setExpandedCategory}
+        imagePreview={imagePreview}
+        imageFileName={imageFile?.name || ""}
+        onImageChange={(event) => setImageFile(event.target.files?.[0] || null)}
+        loading={loading}
+      />
     </div>
   );
 };

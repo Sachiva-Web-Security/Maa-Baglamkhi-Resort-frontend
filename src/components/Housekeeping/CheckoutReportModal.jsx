@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { FaTimes, FaSignOutAlt, FaSyncAlt, FaDownload, FaCheck, FaExclamationTriangle } from "react-icons/fa";
-import axios from "axios";
+import API from "../../api";
 
 export default function CheckoutReportModal({ onClose, apiBase }) {
   const [checkouts, setCheckouts] = useState([]);
@@ -10,7 +10,7 @@ export default function CheckoutReportModal({ onClose, apiBase }) {
   const fetchCheckouts = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${apiBase}/housekeeping/checkout-report`, { params: { date: dateFilter } });
+      const res = await API.get("/housekeeping/checkout-report", { params: { date: dateFilter } });
       setCheckouts(res.data);
     } catch { setCheckouts([]); }
     finally { setLoading(false); }
@@ -20,7 +20,7 @@ export default function CheckoutReportModal({ onClose, apiBase }) {
 
   const handleMarkDirty = async (roomId) => {
     try {
-      await axios.put(`${apiBase}/housekeeping/status/${roomId}`, { status: "Vacant Dirty" });
+      await API.put(`/housekeeping/status/${roomId}`, { status: "Vacant Dirty" });
       fetchCheckouts();
     } catch { /* ignore */ }
   };

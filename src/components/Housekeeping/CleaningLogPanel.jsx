@@ -176,8 +176,7 @@ export default function CleaningLogPanel({
             </p>
             <h3 className="mt-1 text-2xl font-semibold text-white">Cleaning Log</h3>
             <p className="mt-2 max-w-xl text-sm leading-6 text-slate-200">
-              Room-wise cleaning activity, timer status, assignee updates aur reception notes ko ek
-              polished live board me dekhiye.
+         “View room-wise cleaning activity, timer status, assignee updates, and reception notes in a polished live board.”
             </p>
 
             <div className="mt-5 grid gap-3 sm:grid-cols-3">

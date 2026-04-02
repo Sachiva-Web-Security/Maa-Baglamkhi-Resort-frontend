@@ -154,8 +154,7 @@ const OccupancyForecast = () => {
                 Room Availability Calendar
               </h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-100/80">
-                Month-wise occupancy forecast dekho — kaun sa din full hai, kaun
-                sa din available hai.
+                “View the month-wise occupancy forecast — see which days are fully booked and which days are available.”
               </p>
             </div>
             <div className="grid grid-cols-3 gap-3">
@@ -401,7 +400,7 @@ const OccupancyForecast = () => {
                 {!selectedData?.bookings?.length &&
                   !selectedData?.blocks?.length && (
                     <p className="mt-4 rounded-[14px] bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
-                      ✅ Sab rooms available hain is din.
+                      ✅ all room available in this day
                     </p>
                   )}
               </div>
@@ -409,7 +408,7 @@ const OccupancyForecast = () => {
               <div className="rounded-[28px] border-2 border-dashed border-slate-200 py-12 text-center">
                 <div className="text-3xl">📅</div>
                 <p className="mt-3 text-sm font-bold text-slate-500">
-                  Koi din select karo details dekhne ke liye
+“Select any day to view the details.”
                 </p>
               </div>
             )}

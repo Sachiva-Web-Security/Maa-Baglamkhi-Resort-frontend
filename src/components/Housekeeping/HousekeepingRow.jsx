@@ -1,6 +1,7 @@
 const STATUS_OPTIONS = [
   "Vacant Dirty",
   "Vacant Clean",
+  "Vacant Clean Inspected",
   "Occupied Dirty",
   "Cleaning In Progress",
   "Out of Service",
@@ -9,17 +10,92 @@ const STATUS_OPTIONS = [
 const STATUS_TONE = {
   "Vacant Dirty": "bg-amber-100 text-amber-700 border-amber-200",
   "Vacant Clean": "bg-emerald-100 text-emerald-700 border-emerald-200",
+  "Vacant Clean Inspected": "bg-emerald-200 text-emerald-800 border-emerald-300",
   "Occupied Dirty": "bg-rose-100 text-rose-700 border-rose-200",
   "Cleaning In Progress": "bg-violet-100 text-violet-700 border-violet-200",
   "Out of Service": "bg-slate-200 text-slate-700 border-slate-300",
 };
 
-export default function HousekeepingRow({
-  room,
-  housekeepers = [],
-  onStatusChange,
-  onAssigneeChange,
-}) {
+export default function HousekeepingRow(props) {
+  if (props.item) {
+    const {
+      item,
+      visibleColumns = [],
+      onStatusChange,
+      onAssigneeChange,
+      assigneeOptions = [],
+      housekeeperStatuses = {},
+    } = props;
+
+    const itemTone = STATUS_TONE[item.status] || "bg-slate-100 text-slate-700 border-slate-200";
+    const assigneeState = housekeeperStatuses[item.assignee] || "";
+
+    return (
+      <tr className="border-b border-white/5 text-sm text-slate-200 transition hover:bg-white/5">
+        {visibleColumns.includes("type") && (
+          <td className="px-4 py-4">
+            <div className="font-semibold text-white">{item.type || "Accommodation"}</div>
+            <div className="text-xs text-slate-400">Room {item.roomNo}</div>
+          </td>
+        )}
+        {visibleColumns.includes("roomNo") && <td className="px-4 py-4 font-semibold text-white">{item.roomNo}</td>}
+        {visibleColumns.includes("building") && <td className="px-4 py-4 text-slate-300">{item.building || "-"}</td>}
+        {visibleColumns.includes("floor") && <td className="px-4 py-4 text-slate-300">{item.floor || "-"}</td>}
+        {visibleColumns.includes("section") && <td className="px-4 py-4 text-slate-300">{item.section || "-"}</td>}
+        {visibleColumns.includes("guestStatus") && <td className="px-4 py-4 text-slate-300">{item.guestStatus || item.guest || "-"}</td>}
+        {visibleColumns.includes("roomType") && <td className="px-4 py-4 text-slate-300">{item.roomType || "-"}</td>}
+        {visibleColumns.includes("status") && (
+          <td className="px-4 py-4">
+            <select
+              value={item.status || "Vacant Dirty"}
+              onChange={(e) => onStatusChange?.(item.id, e.target.value)}
+              className={`w-full rounded-xl border px-3 py-2 text-xs font-semibold outline-none ${itemTone}`}
+            >
+              {STATUS_OPTIONS.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </select>
+          </td>
+        )}
+        {visibleColumns.includes("assignee") && (
+          <td className="px-4 py-4">
+            <div className="space-y-2">
+              <select
+                value={item.assignee || "No Housekeeper"}
+                onChange={(e) => onAssigneeChange?.(item.id, e.target.value)}
+                className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-semibold text-white outline-none"
+              >
+                {assigneeOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+              {assigneeState ? (
+                <span className="inline-flex rounded-full border border-slate-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-300">
+                  {assigneeState}
+                </span>
+              ) : null}
+            </div>
+          </td>
+        )}
+        {visibleColumns.includes("layout") && <td className="px-4 py-4 text-slate-300">{item.layout || "-"}</td>}
+        {visibleColumns.includes("articles") && <td className="px-4 py-4 text-slate-300">{item.articles || "-"}</td>}
+        {visibleColumns.includes("services") && <td className="px-4 py-4 text-slate-300">{item.services || "-"}</td>}
+        {visibleColumns.includes("notes") && <td className="px-4 py-4 text-slate-300">{item.notes || "-"}</td>}
+      </tr>
+    );
+  }
+
+  const {
+    room,
+    housekeepers = [],
+    onStatusChange,
+    onAssigneeChange,
+  } = props;
+
   const tone = STATUS_TONE[room.status] || "bg-slate-100 text-slate-700 border-slate-200";
 
   return (

@@ -1,4 +1,20 @@
+import { useEffect, useMemo, useState } from "react";
+
+const PAGE_SIZE = 10;
+
 const getColumns = (reportType) => {
+  if (reportType === "room") {
+    return [
+      { key: "date", label: "Date" },
+      { key: "guest", label: "Guest" },
+      { key: "roomNumber", label: "Room No" },
+      { key: "roomType", label: "Room Type" },
+      { key: "status", label: "Status" },
+      { key: "paymentMode", label: "Payment Mode" },
+      { key: "revenue", label: "Revenue" },
+    ];
+  }
+
   if (reportType === "all-bills") {
     return [
       { key: "date", label: "Date" },
@@ -55,14 +71,7 @@ const getColumns = (reportType) => {
     ];
   }
 
-  return [
-    { key: "date", label: "Date" },
-    { key: "guest", label: "Guest" },
-    { key: "roomType", label: "Room" },
-    { key: "status", label: "Status" },
-    { key: "paymentMode", label: "Payment Mode" },
-    { key: "revenue", label: "Revenue" },
-  ];
+  return [];
 };
 
 const formatCell = (key, value) => {
@@ -90,7 +99,52 @@ const getStatusClass = (value) => {
 };
 
 const ReportTable = ({ reportType, rows, loading }) => {
+  const [currentPage, setCurrentPage] = useState(1);
   const columns = getColumns(reportType);
+  const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [reportType, rows.length]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
+  const paginatedRows = useMemo(() => {
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    return rows.slice(startIndex, startIndex + PAGE_SIZE);
+  }, [currentPage, rows]);
+
+  const visibleStart = rows.length ? (currentPage - 1) * PAGE_SIZE + 1 : 0;
+  const visibleEnd = Math.min(currentPage * PAGE_SIZE, rows.length);
+
+  const paginationItems = useMemo(() => {
+    if (totalPages <= 1) return [1];
+
+    const items = [1];
+    const windowStart = Math.max(2, currentPage - 1);
+    const windowEnd = Math.min(totalPages - 1, currentPage + 1);
+
+    if (windowStart > 2) {
+      items.push("start-ellipsis");
+    }
+
+    for (let page = windowStart; page <= windowEnd; page += 1) {
+      items.push(page);
+    }
+
+    if (windowEnd < totalPages - 1) {
+      items.push("end-ellipsis");
+    }
+
+    items.push(totalPages);
+    return items;
+  }, [currentPage, totalPages]);
+
+  const showPagination = rows.length > PAGE_SIZE;
 
   return (
     <div className="rounded-[26px] border border-white/60 bg-white/82 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl">
@@ -120,7 +174,7 @@ const ReportTable = ({ reportType, rows, loading }) => {
             </tr>
           </thead>
           <tbody>
-            {rows.map((row, index) => (
+            {paginatedRows.map((row, index) => (
               <tr
                 key={row.id || `${reportType}-${index}`}
                 className="border-t border-slate-200/80 transition hover:bg-slate-50/80"
@@ -167,6 +221,60 @@ const ReportTable = ({ reportType, rows, loading }) => {
           </tbody>
         </table>
       </div>
+
+      {showPagination ? (
+        <div className="flex flex-col gap-3 border-t border-slate-200/80 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+          <div className="text-sm text-slate-500">
+            Showing <span className="font-semibold text-slate-900">{visibleStart}</span> to{" "}
+            <span className="font-semibold text-slate-900">{visibleEnd}</span> of{" "}
+            <span className="font-semibold text-slate-900">{rows.length}</span> rows
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+              disabled={currentPage === 1}
+              className="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 transition hover:border-emerald-200 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Previous
+            </button>
+
+            {paginationItems.map((item) =>
+              typeof item === "number" ? (
+                <button
+                  key={item}
+                  type="button"
+                  onClick={() => setCurrentPage(item)}
+                  className={`h-10 min-w-10 rounded-full px-3 text-sm font-semibold transition ${
+                    currentPage === item
+                      ? "bg-emerald-500 text-white shadow-[0_10px_25px_rgba(16,185,129,0.25)]"
+                      : "border border-slate-200 bg-white text-slate-600 hover:border-emerald-200 hover:text-emerald-700"
+                  }`}
+                >
+                  {item}
+                </button>
+              ) : (
+                <span
+                  key={item}
+                  className="px-1 text-sm font-semibold tracking-[0.2em] text-slate-400"
+                >
+                  ...
+                </span>
+              )
+            )}
+
+            <button
+              type="button"
+              onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+              disabled={currentPage === totalPages}
+              className="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 transition hover:border-emerald-200 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 };

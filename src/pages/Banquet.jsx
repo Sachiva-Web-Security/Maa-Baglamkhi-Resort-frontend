@@ -3,14 +3,20 @@ import { useLocation, useNavigate } from "react-router-dom";
 import {
   FaBell,
   FaCalendarAlt,
+  FaCheckCircle,
   FaEdit,
   FaEnvelope,
+  FaExclamationTriangle,
+  FaFilter,
   FaGlassCheers,
   FaHeadset,
   FaLightbulb,
   FaMoneyCheckAlt,
   FaPaperPlane,
   FaPlus,
+  FaReceipt,
+  FaSearch,
+  FaSyncAlt,
   FaTrash,
   FaUtensils,
   FaUsers,
@@ -18,87 +24,24 @@ import {
 } from "react-icons/fa";
 
 import BanquetHallCard from "../components/Banquet/BanquetHallCard";
-import BanquetBookingRow from "../components/Banquet/BanquetBookingRow";
 import BanquetBill from "../components/Banquet/BanquetBill";
 import API from "../api";
-
-const formatINR = (amount) =>
-  new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(Number(amount) || 0);
-
-const banquetConfigStorageKey = "banquetPricingConfig";
-const banquetMenuDraftStorageKey = "banquetReservationDraft";
-const defaultMenuPackages = [
-  {
-    id: "standard",
-    name: "Standard Celebration",
-    perGuest: 650,
-    mealLabel: "Veg buffet + snacks",
-    description:
-      "Budget-friendly family functions ke liye balanced buffet plan.",
-    highlights: [
-      "Welcome drinks aur 2 starter options",
-      "2 veg sabzi, dal, rice aur breads",
-      "1 dessert aur standard service setup",
-    ],
-  },
-  {
-    id: "premium",
-    name: "Premium Feast",
-    perGuest: 950,
-    mealLabel: "Veg + live counter",
-    description:
-      "Engagement aur reception events ke liye richer spread with live counter.",
-    highlights: [
-      "Mocktail station aur 3 premium starters",
-      "Paneer specialty, main course buffet aur salads",
-      "Live counter plus 2 dessert selections",
-    ],
-  },
-  {
-    id: "royal",
-    name: "Royal Signature",
-    perGuest: 1250,
-    mealLabel: "Full event dining experience",
-    description:
-      "Large-format celebrations ke liye signature dining experience.",
-    highlights: [
-      "Grand welcome beverages aur chef-curated starters",
-      "Multi-cuisine main course with live counter access",
-      "Premium desserts, service crew aur elegant presentation",
-    ],
-  },
-];
-
-const defaultLightingOptions = [
-  { id: "classic", label: "Classic", price: 8000 },
-  { id: "stage", label: "Stage Focus", price: 15000 },
-  { id: "premium", label: "Premium Intelligent", price: 28000 },
-];
-
-const mealSections = [
-  "Welcome Drinks",
-  "Starters",
-  "Main Course",
-  "Live Counter",
-  "Desserts",
-];
-
-const defaultMealSectionPrices = mealSections.reduce((acc, section, index) => {
-  acc[section] = [60, 140, 260, 220, 120][index] || 0;
-  return acc;
-}, {});
-
-const defaultPricingConfig = {
-  menuPackages: defaultMenuPackages,
-  lightingOptions: defaultLightingOptions,
-  mealSectionPrices: defaultMealSectionPrices,
-  eventSupportFee: 12000,
-  decorServiceFee: 15000,
-};
+import {
+  banquetConfigStorageKey,
+  banquetMenuDraftStorageKey,
+  buildNotesPayload,
+  buildCustomMenuItemsText,
+  calculateBookingGrandTotal,
+  calculateRestaurantMenuCharge,
+  defaultPricingConfig,
+  deriveBookingFinancials,
+  formatINR,
+  getStoredPricingConfig,
+  hoursBetween,
+  mealSections,
+  normalizeCategory,
+  normalizeBooking,
+} from "./banquetUtils";
 
 const quickSections = [
   {
@@ -154,6 +97,7 @@ const defaultWizard = {
   discount: 0,
   gstPercent: 5,
   advance: 0,
+  paymentMode: "Pending",
   paymentReferenceId: "",
   receiptFileName: "",
   receiptFileDataUrl: "",
@@ -170,6 +114,14 @@ const defaultHall = {
   ratePerHour: "",
   is_ac: true,
   status: "Available",
+};
+
+const bookingFilterDefaults = {
+  search: "",
+  eventType: "all",
+  status: "all",
+  dateFrom: "",
+  dateTo: "",
 };
 
 const inputCls =
@@ -268,85 +220,6 @@ function PaginationControls({ page, totalPages, onChange, label }) {
   );
 }
 
-function hoursBetween(start, end) {
-  if (!start || !end) return 0;
-
-  const [sh, sm] = start.split(":").map(Number);
-  const [eh, em] = end.split(":").map(Number);
-  const diff = eh * 60 + em - (sh * 60 + sm);
-
-  if (diff <= 0) return 0;
-
-  return Math.max(1, Math.ceil(diff / 60));
-}
-
-function buildNotesPayload(notes, meta) {
-  return `${notes?.trim() || ""}\n[[BNQ_META]]${JSON.stringify(meta)}[[/BNQ_META]]`.trim();
-}
-
-function extractMeta(notes = "") {
-  const match = notes.match(/\[\[BNQ_META\]\](.*?)\[\[\/BNQ_META\]\]/);
-
-  if (!match?.[1]) return {};
-
-  try {
-    return JSON.parse(match[1]);
-  } catch {
-    return {};
-  }
-}
-
-function stripMeta(notes = "") {
-  return notes.replace(/\s*\[\[BNQ_META\]\].*?\[\[\/BNQ_META\]\]/, "").trim();
-}
-
-function normalizeCategory(value) {
-  return (value || "Other").trim().toLowerCase();
-}
-
-function parseMenuItemsList(value) {
-  if (Array.isArray(value)) {
-    return value
-      .map((item) => String(item || "").trim())
-      .filter(Boolean);
-  }
-
-  return String(value || "")
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
-
-function buildCustomMenuItemsText(selectedItems = [], manualItems = []) {
-  return [...selectedItems, ...manualItems]
-    .map((item) => String(item || "").trim())
-    .filter(Boolean)
-    .filter((item, index, arr) => arr.indexOf(item) === index)
-    .join(", ");
-}
-
-function parseRestaurantMenuSelection(items) {
-  if (!Array.isArray(items)) return [];
-
-  return items
-    .map((item) => ({
-      name: String(item?.name || "").trim(),
-      qty: Number(item?.qty || 0),
-      rate: Number(item?.rate || 0),
-      amount: Number(item?.amount || 0),
-      taxAmount: Number(item?.taxAmount || 0),
-      total: Number(item?.total || 0),
-    }))
-    .filter((item) => item.name);
-}
-
-function calculateRestaurantMenuCharge(items = []) {
-  return parseRestaurantMenuSelection(items).reduce(
-    (sum, item) => sum + (Number(item.total) || 0),
-    0
-  );
-}
-
 function readFileAsDataUrl(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -356,133 +229,63 @@ function readFileAsDataUrl(file) {
   });
 }
 
-function calculateBookingGrandTotal(booking, halls, pricingConfig) {
-  const hall = halls.find((item) => String(item.id) === String(booking.hallId));
-  const menu = pricingConfig.menuPackages.find(
-    (item) => item.id === booking.menuPackageId
-  );
-  const lighting = pricingConfig.lightingOptions.find(
-    (item) => item.id === booking.lightingSystem
-  );
+function formatBookingDate(dateValue) {
+  if (!dateValue) return "Date pending";
 
-  const subtotal =
-    (hall?.ratePerHour || 0) * hoursBetween(booking.startTime, booking.endTime) +
-    (menu?.perGuest || 0) * (Number(booking.guests) || 0) +
-    calculateRestaurantMenuCharge(booking.selectedRestaurantMenuItems) +
-    (Number(booking.eventSupportFee) || 0) +
-    (Number(booking.decorationFee) || 0) +
-    (lighting?.price || 0);
-  const discount = Math.min(subtotal, Number(booking.discount) || 0);
-  const taxable = subtotal - discount;
-  const gst = Math.round((taxable * (Number(booking.gstPercent) || 0)) / 100);
+  const parsed = new Date(dateValue);
+  if (Number.isNaN(parsed.getTime())) return String(dateValue);
 
-  return taxable + gst;
+  return new Intl.DateTimeFormat("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(parsed);
 }
 
-function getStoredPricingConfig() {
-  if (typeof window === "undefined") return defaultPricingConfig;
+function getReservationStatusBadgeClass(status) {
+  const baseClass =
+    "inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em]";
 
-  try {
-    const parsed = JSON.parse(
-      window.localStorage.getItem(banquetConfigStorageKey) || "{}"
-    );
-
-    return {
-      menuPackages:
-        parsed.menuPackages?.length === defaultMenuPackages.length
-          ? parsed.menuPackages
-          : defaultMenuPackages,
-      lightingOptions:
-        parsed.lightingOptions?.length === defaultLightingOptions.length
-          ? parsed.lightingOptions
-          : defaultLightingOptions,
-      mealSectionPrices: {
-        ...defaultMealSectionPrices,
-        ...(parsed.mealSectionPrices || {}),
-      },
-      eventSupportFee: Number(
-        parsed.eventSupportFee ?? defaultPricingConfig.eventSupportFee
-      ),
-      decorServiceFee: Number(
-        parsed.decorServiceFee ?? defaultPricingConfig.decorServiceFee
-      ),
-    };
-  } catch {
-    return defaultPricingConfig;
+  switch (status) {
+    case "Confirmed":
+      return `${baseClass} border-emerald-200 bg-emerald-50 text-emerald-700`;
+    case "Completed":
+      return `${baseClass} border-amber-200 bg-amber-50 text-amber-700`;
+    case "Billed":
+      return `${baseClass} border-cyan-200 bg-cyan-50 text-cyan-700`;
+    case "Cancelled":
+      return `${baseClass} border-rose-200 bg-rose-50 text-rose-700`;
+    case "Refunded":
+      return `${baseClass} border-violet-200 bg-violet-50 text-violet-700`;
+    default:
+      return `${baseClass} border-slate-200 bg-slate-100 text-slate-600`;
   }
 }
 
-function normalizeBooking(raw) {
-  const meta = extractMeta(raw.notes || "");
-  const selectedCustomMenuItems = parseMenuItemsList(
-    meta.selectedCustomMenuItems
-  );
-  const manualCustomMenuItems = parseMenuItemsList(
-    meta.manualCustomMenuItems || raw.customMenuItems || raw.custom_menu_items
-  );
-  const customMenuItemsText = buildCustomMenuItemsText(
-    selectedCustomMenuItems,
-    manualCustomMenuItems
-  );
-  const selectedRestaurantMenuItems = parseRestaurantMenuSelection(
-    meta.selectedRestaurantMenuItems
-  );
-  const advance = Number(raw.advance ?? meta.advance ?? meta.paymentReceived ?? 0);
-  const refundAmount = Number(meta.refundAmount || 0);
+function getPaymentStatusBadgeClass(status) {
+  const baseClass =
+    "inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-bold";
 
-  return {
-    ...raw,
-    hallId: raw.hallId || raw.hall_id,
-    customerName: raw.customerName || raw.customer_name,
-    phone: raw.phone || meta.phone || "",
-    eventType: raw.eventType || raw.event_type || "Event",
-    guests: Number(raw.guests || 0),
-    menuPackageId: raw.menuPackageId || raw.menu_package_id || "standard",
-    decorationFee: Number(raw.decorationFee || raw.decoration_fee || 0),
-    date: raw.date ? String(raw.date).slice(0, 10) : "",
-    startTime: raw.startTime || raw.start_time || "",
-    endTime: raw.endTime || raw.end_time || "",
-    discount: Number(raw.discount || 0),
-    gstPercent: Number(raw.gstPercent || raw.gst_percent || 5),
-    invoiceNo: raw.invoiceNo || raw.invoice_no || "",
-    guestEmail: raw.guestEmail || raw.guest_email || meta.guestEmail || "",
-    eventTitle: raw.eventTitle || raw.event_title || meta.eventTitle || "",
-    mealSection: raw.mealSection || raw.meal_section || meta.mealSection || "",
-    customMenuItems:
-      customMenuItemsText ||
-      meta.customMenuItems ||
-      raw.customMenuItems ||
-      raw.custom_menu_items ||
-      "",
-    selectedCustomMenuItems,
-    selectedRestaurantMenuItems,
-    manualCustomMenuItems,
-    manualMenuEntry: "",
-    lightingSystem:
-      raw.lightingSystem || raw.lighting_system || meta.lightingSystem || "",
-    eventSupportFee: Number(
-      raw.eventSupportFee || meta.eventSupportFee || 0
-    ),
-    advance,
-    paymentReferenceId:
-      raw.paymentReferenceId ||
-      raw.payment_reference_id ||
-      meta.paymentReferenceId ||
-      "",
-    receiptFileName: meta.receiptFileName || "",
-    receiptFileDataUrl: meta.receiptFileDataUrl || "",
-    paymentReceived: advance,
-    refundAmount,
-    netReceived: Math.max(0, advance - refundAmount),
-    balanceDue: 0,
-    notes: stripMeta(raw.notes || ""),
-  };
+  switch (status) {
+    case "Paid":
+      return `${baseClass} border-emerald-200 bg-emerald-50 text-emerald-700`;
+    case "Partial":
+      return `${baseClass} border-amber-200 bg-amber-50 text-amber-700`;
+    case "Refunded":
+      return `${baseClass} border-violet-200 bg-violet-50 text-violet-700`;
+    default:
+      return `${baseClass} border-slate-200 bg-slate-100 text-slate-600`;
+  }
 }
 
 const Banquet = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const restoredMenuStateKeyRef = useRef(null);
+  const processedFocusStateRef = useRef("");
+  const pricingConfigHydratedRef = useRef(false);
+  const skipNextPricingConfigSyncRef = useRef(false);
+  const pricingConfigSyncTimeoutRef = useRef(null);
   const hallsPerPage = 6;
   const bookingsPerPage = 5;
   const [halls, setHalls] = useState([]);
@@ -507,6 +310,12 @@ const Banquet = () => {
   const [isSavingReservation, setIsSavingReservation] = useState(false);
   const [reservationSuccess, setReservationSuccess] = useState(null);
   const [receiptInputKey, setReceiptInputKey] = useState(0);
+  const [bookingFiltersDraft, setBookingFiltersDraft] = useState(() => ({
+    ...bookingFilterDefaults,
+  }));
+  const [bookingFilters, setBookingFilters] = useState(() => ({
+    ...bookingFilterDefaults,
+  }));
   const [wizard, setWizard] = useState(() => ({
     ...defaultWizard,
     eventSupportFee: getStoredPricingConfig().eventSupportFee,
@@ -566,18 +375,20 @@ const Banquet = () => {
 
   const enrichBooking = (booking) => {
     const normalized = normalizeBooking(booking);
-    const grandTotal = calculateBookingGrandTotal(
-      normalized,
-      halls,
-      pricingConfig
-    );
+    const financials = deriveBookingFinancials(normalized, halls, pricingConfig);
 
     return {
       ...normalized,
-      balanceDue:
-        normalized.status === "Cancelled" || normalized.status === "Refunded"
-          ? 0
-          : Math.max(0, grandTotal - (normalized.advance || 0)),
+      hallCharge: financials.hallCharge,
+      mealCharge: financials.mealCharge,
+      customMenuCharge: financials.customMenuCharge,
+      lightingCharge: financials.lightingCharge,
+      subtotalAmount: financials.subtotalAmount,
+      gstAmount: financials.gstAmount,
+      grandTotal: financials.grandTotal,
+      netReceived: financials.netReceived,
+      balanceDue: financials.balanceDue,
+      paymentStatus: financials.paymentStatus,
     };
   };
 
@@ -622,49 +433,179 @@ const Banquet = () => {
     };
   }, [selectedHall, selectedLighting, selectedPackage, wizard, wizardHours]);
 
-  const stats = useMemo(() => {
-    const expectedRevenue = bookings.reduce((sum, booking) => {
-      if (["Cancelled", "Refunded"].includes(booking.status)) {
-        return sum;
+  const eventTypeOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(bookings.map((booking) => booking.eventType).filter(Boolean))
+      ),
+    [bookings]
+  );
+
+  const filteredBookings = useMemo(() => {
+    const normalizedSearch = bookingFilters.search.trim().toLowerCase();
+
+    return bookings.filter((booking) => {
+      const bookingDate = String(booking.date || "").slice(0, 10);
+      const searchableText = [
+        booking.customerName,
+        booking.hallName,
+        booking.guestEmail,
+        booking.phone,
+        booking.eventTitle,
+        booking.eventType,
+        booking.invoiceNo,
+      ]
+        .join(" ")
+        .toLowerCase();
+
+      if (
+        normalizedSearch &&
+        !searchableText.includes(normalizedSearch)
+      ) {
+        return false;
       }
 
-      const hall = halls.find((item) => String(item.id) === String(booking.hallId));
-      const menu = pricingConfig.menuPackages.find(
-        (item) => item.id === booking.menuPackageId
-      );
-      const lighting = pricingConfig.lightingOptions.find(
-        (item) => item.id === booking.lightingSystem
-      );
+      if (
+        bookingFilters.eventType !== "all" &&
+        booking.eventType !== bookingFilters.eventType
+      ) {
+        return false;
+      }
 
-      const total =
-        (hall?.ratePerHour || 0) *
-          hoursBetween(booking.startTime, booking.endTime) +
-        (menu?.perGuest || 0) * (Number(booking.guests) || 0) +
-        calculateRestaurantMenuCharge(booking.selectedRestaurantMenuItems) +
-        (Number(booking.eventSupportFee) || 0) +
-        (Number(booking.decorationFee) || 0) +
-        (lighting?.price || 0);
+      if (
+        bookingFilters.status !== "all" &&
+        booking.status !== bookingFilters.status
+      ) {
+        return false;
+      }
 
-      return sum + total;
-    }, 0);
+      if (bookingFilters.dateFrom && (!bookingDate || bookingDate < bookingFilters.dateFrom)) {
+        return false;
+      }
+
+      if (bookingFilters.dateTo && (!bookingDate || bookingDate > bookingFilters.dateTo)) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [bookingFilters, bookings]);
+
+  const menuPackageNameMap = useMemo(
+    () =>
+      pricingConfig.menuPackages.reduce((acc, pkg) => {
+        acc[pkg.id] = pkg.name;
+        return acc;
+      }, {}),
+    [pricingConfig.menuPackages]
+  );
+
+  const lightingLabelMap = useMemo(
+    () =>
+      pricingConfig.lightingOptions.reduce((acc, option) => {
+        acc[option.id] = option.label;
+        return acc;
+      }, {}),
+    [pricingConfig.lightingOptions]
+  );
+
+  const stats = useMemo(() => {
+    const confirmedCount = bookings.filter(
+      (booking) => booking.status === "Confirmed"
+    ).length;
+    const billedCount = bookings.filter((booking) => booking.invoiceNo).length;
+    const uniqueGuests = new Set(
+      bookings.map(
+        (booking) =>
+          booking.guestEmail ||
+          booking.phone ||
+          booking.customerName
+      )
+    ).size;
 
     return [
       {
-        label: "Active reservations",
-        value: String(
-          bookings.filter(
-            (booking) =>
-              !["Completed", "Cancelled", "Refunded"].includes(booking.status)
-          ).length
-        ),
+        label: "Total events",
+        value: String(bookings.length),
+        tone:
+          "border-white/12 bg-white/10 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]",
       },
       {
-        label: "Banquet halls",
-        value: String(halls.filter((hall) => hall.status !== "Occupied").length),
+        label: "Confirmed",
+        value: String(confirmedCount),
+        tone:
+          "border-cyan-300/20 bg-cyan-400/10 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]",
       },
-      { label: "Expected revenue", value: formatINR(expectedRevenue) },
+      {
+        label: "Billed invoices",
+        value: String(billedCount),
+        tone:
+          "border-violet-300/20 bg-violet-400/10 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]",
+      },
+      {
+        label: "Unique guests",
+        value: String(uniqueGuests),
+        tone:
+          "border-sky-300/20 bg-sky-400/10 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]",
+      },
     ];
-  }, [bookings, halls, pricingConfig]);
+  }, [bookings]);
+
+  const healthSnapshot = useMemo(() => {
+    const activeBookings = bookings.filter(
+      (booking) => !["Cancelled", "Refunded"].includes(booking.status)
+    );
+    const conversionBase = activeBookings.length || bookings.length || 1;
+    const confirmedOrBilled = bookings.filter((booking) =>
+      ["Confirmed", "Completed", "Billed"].includes(booking.status)
+    ).length;
+    const availableHalls = halls.filter(
+      (hall) => hall.status === "Available"
+    ).length;
+    const pendingDueAmount = bookings.reduce(
+      (sum, booking) => sum + (Number(booking.balanceDue) || 0),
+      0
+    );
+
+    return [
+      {
+        label: "Confirmation rate",
+        value: `${Math.round((confirmedOrBilled / conversionBase) * 100)}%`,
+        note: "Healthy mix of confirmed and billed events.",
+        tone:
+          "border-emerald-200 bg-emerald-50/80 text-emerald-900",
+        icon: FaCheckCircle,
+        iconTone: "text-emerald-600",
+      },
+      {
+        label: "Pending collection",
+        value: formatINR(pendingDueAmount),
+        note: "Track unsettled banquet balances before billing.",
+        tone:
+          "border-rose-200 bg-rose-50/80 text-rose-900",
+        icon: FaExclamationTriangle,
+        iconTone: "text-rose-600",
+      },
+      {
+        label: "Available halls",
+        value: `${availableHalls}/${halls.length || 0}`,
+        note: "Venue slots ready for the next reservation.",
+        tone:
+          "border-sky-200 bg-sky-50/80 text-sky-900",
+        icon: FaUsers,
+        iconTone: "text-sky-600",
+      },
+      {
+        label: "Live estimate",
+        value: formatINR(wizardTotals.grandTotal),
+        note: "Current quotation preview from the reservation form.",
+        tone:
+          "border-amber-200 bg-amber-50/80 text-amber-900",
+        icon: FaReceipt,
+        iconTone: "text-amber-600",
+      },
+    ];
+  }, [bookings, halls, wizardTotals.grandTotal]);
 
   const totalHallPages = useMemo(
     () => Math.max(1, Math.ceil(halls.length / hallsPerPage)),
@@ -672,8 +613,8 @@ const Banquet = () => {
   );
 
   const totalBookingPages = useMemo(
-    () => Math.max(1, Math.ceil(bookings.length / bookingsPerPage)),
-    [bookings.length]
+    () => Math.max(1, Math.ceil(filteredBookings.length / bookingsPerPage)),
+    [filteredBookings.length]
   );
 
   const paginatedHalls = useMemo(() => {
@@ -683,36 +624,46 @@ const Banquet = () => {
 
   const paginatedBookings = useMemo(() => {
     const start = (bookingPage - 1) * bookingsPerPage;
-    return bookings.slice(start, start + bookingsPerPage);
-  }, [bookingPage, bookings]);
+    return filteredBookings.slice(start, start + bookingsPerPage);
+  }, [bookingPage, filteredBookings]);
+
+  const hasAppliedBookingFilters = useMemo(
+    () =>
+      Boolean(
+        bookingFilters.search.trim() ||
+          bookingFilters.eventType !== "all" ||
+          bookingFilters.status !== "all" ||
+          bookingFilters.dateFrom ||
+          bookingFilters.dateTo
+      ),
+    [bookingFilters]
+  );
 
   useEffect(() => {
     const load = async () => {
-      const res = await API.get("/banquet");
-      setHalls(res.data?.halls || []);
-      setBookings((res.data?.bookings || []).map(normalizeBooking));
+      try {
+        const res = await API.get("/banquet");
+        if (res.data?.pricingConfig) {
+          skipNextPricingConfigSyncRef.current = true;
+          pricingConfigHydratedRef.current = true;
+          setPricingConfig(res.data.pricingConfig);
+        } else {
+          pricingConfigHydratedRef.current = true;
+        }
+        setHalls(res.data?.halls || []);
+        setBookings(
+          (res.data?.bookings || []).map((booking) => enrichBooking(booking))
+        );
+      } catch {
+        pricingConfigHydratedRef.current = true;
+      }
     };
 
     load();
   }, []);
 
   useEffect(() => {
-    setBookings((prev) =>
-      prev.map((booking) => {
-        const grandTotal = calculateBookingGrandTotal(
-          booking,
-          halls,
-          pricingConfig
-        );
-        return {
-          ...booking,
-          balanceDue:
-            booking.status === "Cancelled" || booking.status === "Refunded"
-              ? 0
-              : Math.max(0, grandTotal - (booking.advance || 0)),
-        };
-      })
-    );
+    setBookings((prev) => prev.map((booking) => enrichBooking(booking)));
   }, [halls, pricingConfig]);
 
   useEffect(() => {
@@ -786,11 +737,57 @@ const Banquet = () => {
   ]);
 
   useEffect(() => {
+    const focusBookingId = location.state?.focusBookingId;
+    if (!focusBookingId || !bookings.length) return;
+
+    const focusKey = `${location.key}:${focusBookingId}:${Boolean(
+      location.state?.openBanquetBill,
+    )}`;
+    if (processedFocusStateRef.current === focusKey) return;
+
+    const booking = bookings.find(
+      (item) => String(item.id) === String(focusBookingId),
+    );
+    if (!booking) return;
+
+    processedFocusStateRef.current = focusKey;
+    setActiveQuickSection("reservations");
+
+    if (location.state?.openBanquetBill && booking.invoiceNo) {
+      setSelectedBooking(booking);
+      setShowBill(true);
+    }
+  }, [bookings, location.key, location.state]);
+
+  useEffect(() => {
     window.localStorage.setItem(
       banquetConfigStorageKey,
       JSON.stringify(pricingConfig)
     );
+
+    if (!pricingConfigHydratedRef.current) return;
+
+    if (skipNextPricingConfigSyncRef.current) {
+      skipNextPricingConfigSyncRef.current = false;
+      return;
+    }
+
+    if (pricingConfigSyncTimeoutRef.current) {
+      window.clearTimeout(pricingConfigSyncTimeoutRef.current);
+    }
+
+    pricingConfigSyncTimeoutRef.current = window.setTimeout(() => {
+      API.put("/banquet/config", pricingConfig).catch(() => {});
+    }, 400);
   }, [pricingConfig]);
+
+  useEffect(() => {
+    return () => {
+      if (pricingConfigSyncTimeoutRef.current) {
+        window.clearTimeout(pricingConfigSyncTimeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (hallPage > totalHallPages) {
@@ -1110,6 +1107,7 @@ const Banquet = () => {
       eventSupportFee: wizard.eventSupportFee,
       phone: wizard.phone,
       advance: wizard.advance,
+      paymentMode: wizard.paymentMode,
       paymentReferenceId: wizard.paymentReferenceId,
       receiptFileName: wizard.receiptFileName,
       refundAmount: Number(wizard.refundAmount || 0),
@@ -1118,8 +1116,24 @@ const Banquet = () => {
     const payload = {
       ...wizard,
       customMenuItems,
+      customMenuCharge: wizardTotals.customMenuCharge,
+      lightingCharge: wizardTotals.lightingCharge,
+      hallCharge: wizardTotals.hallCharge,
+      mealCharge: wizardTotals.mealCharge,
+      eventSupportFee: Number(wizard.eventSupportFee || 0),
+      subtotalAmount: wizardTotals.subtotal,
+      gstAmount: wizardTotals.gst,
+      grandTotal: wizardTotals.grandTotal,
       advance: Number(wizard.advance || 0),
       refundAmount: Number(wizard.refundAmount || 0),
+      paymentMode: wizard.paymentMode || "Pending",
+      paymentStatus:
+        wizardTotals.grandTotal > 0 && wizardTotals.advance >= wizardTotals.grandTotal
+          ? "Paid"
+          : wizardTotals.advance > 0
+          ? "Partial"
+          : "Pending",
+      paymentReferenceNo: wizard.paymentReferenceId || "",
       notes: buildNotesPayload(wizard.notes, reservationMeta),
     };
 
@@ -1270,9 +1284,15 @@ const Banquet = () => {
           ? {
               ...item,
               refundAmount: totalRefund,
-              netReceived: Math.max(0, Number(item.advance || 0) - totalRefund),
+              netReceived: Number(
+                response.data?.netReceived ??
+                  Math.max(0, Number(item.advance || 0) - totalRefund)
+              ),
               status: nextStatus,
-              balanceDue: 0,
+              balanceDue: Number(response.data?.balanceDue ?? item.balanceDue ?? 0),
+              paymentStatus:
+                response.data?.paymentStatus ||
+                (nextStatus === "Refunded" ? "Refunded" : item.paymentStatus),
             }
           : item
       )
@@ -1280,8 +1300,10 @@ const Banquet = () => {
   };
 
   const handleDeleteBooking = async (booking) => {
-    if (booking.status !== "Cancelled") {
-      window.alert("Delete sirf cancelled reservation ke liye available hai.");
+    if (!["Cancelled", "Refunded"].includes(booking.status)) {
+      window.alert(
+        "Delete sirf cancelled ya refunded reservation ke liye available hai."
+      );
       return;
     }
 
@@ -1333,9 +1355,13 @@ const Banquet = () => {
     const subtotal =
       (hall?.ratePerHour || 0) * hoursBetween(booking.startTime, booking.endTime) +
       (pkg?.perGuest || 0) * (Number(booking.guests) || 0) +
+      calculateRestaurantMenuCharge(booking.selectedRestaurantMenuItems) +
       (Number(booking.eventSupportFee) || 0) +
       (Number(booking.decorationFee) || 0) +
       (lighting?.price || 0);
+    const estimatedAmount =
+      Number(booking.grandTotal) ||
+      calculateBookingGrandTotal(booking, halls, pricingConfig);
 
     const quoteLines = [
       `Banquet quotation for ${booking.customerName}`,
@@ -1353,7 +1379,7 @@ const Banquet = () => {
       )}`,
       `Lighting: ${lighting?.label || "Standard"}`,
       `Event support: ${formatINR(booking.eventSupportFee || 0)}`,
-      `Estimated amount: ${formatINR(subtotal)}`,
+      `Estimated amount: ${formatINR(estimatedAmount || subtotal)}`,
       `Paid: ${formatINR(booking.advance || 0)}`,
       `Refunded: ${formatINR(booking.refundAmount || 0)}`,
       `Balance due: ${formatINR(booking.balanceDue || 0)}`,
@@ -1400,6 +1426,10 @@ const Banquet = () => {
         await API.post("/banquet/halls", payload);
       }
       const refreshed = await API.get("/banquet");
+      if (refreshed.data?.pricingConfig) {
+        skipNextPricingConfigSyncRef.current = true;
+        setPricingConfig(refreshed.data.pricingConfig);
+      }
       setHalls(refreshed.data?.halls || []);
       showReservationSuccessPopup({
         title: editingHallId ? "Hall updated" : "Hall added",
@@ -1454,6 +1484,10 @@ const Banquet = () => {
     try {
       await API.delete(`/banquet/halls/${hall.id}`);
       const refreshed = await API.get("/banquet");
+      if (refreshed.data?.pricingConfig) {
+        skipNextPricingConfigSyncRef.current = true;
+        setPricingConfig(refreshed.data.pricingConfig);
+      }
       setHalls(refreshed.data?.halls || []);
       showReservationSuccessPopup({
         title: "Hall deleted",
@@ -1579,7 +1613,7 @@ const Banquet = () => {
               ))
             ) : (
               <div className="rounded-[22px] border border-dashed border-slate-300 bg-white/70 p-6 text-sm text-slate-500 md:col-span-2 xl:col-span-3">
-                Abhi tak koi banquet hall add nahi hua hai. `Add Hall` se naya hall create kijiye.
+         No banquet hall has been added yet. Create a new hall using ‘Add Hall
               </div>
             )}
           </div>
@@ -1817,7 +1851,7 @@ const Banquet = () => {
                         Refund
                       </button>
                     ) : null}
-                    {booking.status === "Cancelled" ? (
+                    {["Cancelled", "Refunded"].includes(booking.status) ? (
                       <button
                         type="button"
                         onClick={() => handleDeleteBooking(booking)}
@@ -1831,7 +1865,7 @@ const Banquet = () => {
               ))
             ) : (
               <div className="rounded-[22px] border border-dashed border-slate-300 bg-white/70 p-6 text-sm text-slate-500">
-                Koi reservation available nahi hai. `Add New` se pehli booking create kijiye.
+      No reservations are available. Create your first booking using ‘Add New.
               </div>
             )}
           </div>
@@ -1954,61 +1988,59 @@ const Banquet = () => {
   };
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-[linear-gradient(135deg,#f5fbff_0%,#f3f8f4_28%,#fff8f1_58%,#f8fafc_100%)] p-4 sm:p-6 lg:p-8">
+    <div className="relative min-h-screen overflow-x-hidden bg-[linear-gradient(180deg,#f8fafc_0%,#eef6ff_32%,#f9fbff_100%)] p-4 sm:p-6 lg:p-8">
       <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute left-[-8%] top-[-6%] h-72 w-72 rounded-full bg-cyan-200/45 blur-3xl sm:h-96 sm:w-96" />
-        <div className="absolute right-[-10%] top-[8%] h-72 w-72 rounded-full bg-amber-200/45 blur-3xl sm:h-[28rem] sm:w-[28rem]" />
-        <div className="absolute bottom-[18%] left-[18%] h-56 w-56 rounded-full bg-emerald-200/30 blur-3xl sm:h-80 sm:w-80" />
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.55)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.45)_1px,transparent_1px)] bg-[size:72px_72px] opacity-25" />
+        <div className="absolute left-[-10%] top-[-8%] h-72 w-72 rounded-full bg-cyan-200/35 blur-3xl sm:h-[28rem] sm:w-[28rem]" />
+        <div className="absolute right-[-12%] top-[6%] h-72 w-72 rounded-full bg-blue-300/30 blur-3xl sm:h-[30rem] sm:w-[30rem]" />
+        <div className="absolute bottom-[12%] left-[20%] h-56 w-56 rounded-full bg-amber-100/40 blur-3xl sm:h-80 sm:w-80" />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.7)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.7)_1px,transparent_1px)] bg-[size:72px_72px] opacity-20" />
       </div>
 
-      <div className="mx-auto max-w-[1260px] space-y-7">
-        <section className="overflow-hidden rounded-[28px] border border-slate-900/10 bg-[linear-gradient(120deg,#071b34_0%,#0d4a53_52%,#162d45_100%)] px-5 py-6 shadow-[0_22px_55px_rgba(15,23,42,0.12)] sm:px-7 sm:py-8">
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.9fr)] lg:items-center">
+      <div className="mx-auto max-w-[1320px] space-y-6">
+        <section className="overflow-hidden rounded-[30px] border border-slate-900/10 bg-[linear-gradient(120deg,#103449_0%,#1b4e78_52%,#2757c8_100%)] px-5 py-6 shadow-[0_22px_55px_rgba(15,23,42,0.16)] sm:px-7 sm:py-8">
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(340px,1fr)] xl:items-end">
             <div className="space-y-4">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-cyan-200">
-                Banquet Control Panel
+              <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-cyan-100">
+                Security And Compliance Style
               </p>
               <div className="space-y-2">
                 <h1 className="text-3xl font-black leading-tight text-white sm:text-4xl">
-                  Attractive banquet dashboard with smarter reservations
+                  Banquet operations dashboard
                 </h1>
                 <p className="max-w-3xl text-sm leading-6 text-slate-100/85 sm:text-base">
-                  Add reservations from one clean form, attach lighting and meal
-                  plans, and send guest quotation instantly by email or WhatsApp.
+             “Reservation activity, hall readiness, menu pricing, and billing actions are presented on an audit-inspired screen so the team can track bookings more efficiently.”
                 </p>
               </div>
               <div className="flex flex-wrap gap-3">
                 <button
                   type="button"
-                  onClick={openCreateReservationForm}
-                  className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-bold text-slate-900 shadow-[0_16px_35px_rgba(255,255,255,0.15)] transition hover:-translate-y-0.5"
+                  onClick={() => window.location.reload()}
+                  className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-bold text-slate-900 shadow-[0_16px_35px_rgba(255,255,255,0.16)] transition hover:-translate-y-0.5"
                 >
-                  <FaPlus className="text-cyan-600" />
-                  Add New Reservation
+                  <FaSyncAlt className="text-cyan-600" />
+                  Refresh dashboard
                 </button>
                 <button
                   type="button"
-                  onClick={() =>
-                    document
-                      .getElementById("reservation-section")
-                      ?.scrollIntoView({ behavior: "smooth", block: "start" })
-                  }
-                  className="rounded-full border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur-md"
+                  onClick={openCreateReservationForm}
+                  className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur-md transition hover:border-white/35"
                 >
-                  Go to Reservations
+                  <FaPlus />
+                  New reservation
                 </button>
               </div>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-2">
               {stats.map((item) => (
                 <div
                   key={item.label}
-                  className="rounded-[22px] border border-white/12 bg-white/10 px-4 py-4 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md"
+                  className={`rounded-[22px] border px-4 py-4 backdrop-blur-md ${item.tone}`}
                 >
-                  <span className="text-[11px] text-slate-100/75">{item.label}</span>
-                  <div className="mt-3 text-2xl font-bold leading-none">
+                  <div className="text-[11px] uppercase tracking-[0.18em] text-white/75">
+                    {item.label}
+                  </div>
+                  <div className="mt-3 text-3xl font-black leading-none">
                     {item.value}
                   </div>
                 </div>
@@ -2017,290 +2049,229 @@ const Banquet = () => {
           </div>
         </section>
 
-        <section className="grid gap-4 xl:grid-cols-[280px_minmax(0,1fr)]">
-          <aside className="h-[560px] rounded-[26px] border border-white/60 bg-white/76 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl xl:sticky xl:top-6 xl:self-start">
-            <div className="mb-4">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
-                Banquet Menu
-              </p>
-              <h2 className="mt-1 text-xl font-bold text-slate-900">
-                Quick sections
-              </h2>
-            </div>                                               
-            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">                                                               
-              {quickSections.map((section) => {     
-                const Icon = section.icon;                                                                    
-
-                return (
-                  <button
-                    key={section.id}
-                    type="button"
-                    onClick={() => setActiveQuickSection(section.id)}
-                    className="flex w-full items-start gap-3 rounded-[20px] border border-slate-200/80 bg-white px-4 py-3 text-left transition hover:-translate-y-0.5 hover:border-cyan-300"
-                  >
-                    <span className="mt-0.5 rounded-2xl bg-cyan-50 p-2 text-cyan-700">
-                      <Icon />
-                    </span>
-                    <span>
-                      <span className="block text-sm font-bold text-slate-900">
-                        {section.label}
-                      </span>
-                      <span className="block text-xs text-slate-500">
-                        {section.desc}
-                      </span>
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </aside>
-
-          <div className="space-y-4">
-            <section
-              id="halls"
-              className="rounded-[26px] border border-white/60 bg-white/78 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5"
-            >
-              <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px]">
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              setBookingFilters({ ...bookingFiltersDraft });
+              setBookingPage(1);
+            }}
+            className="rounded-[26px] border border-white/70 bg-white/90 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5"
+          >
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
-                    Venue Options
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-cyan-600">
+                    Filters
                   </p>
                   <h2 className="mt-1 text-xl font-bold text-slate-900">
-                    Banquet halls
+                    Search banquet reservations
                   </h2>
                 </div>
-                <button
-                  type="button"
-              onClick={() => {
-                setHallFormError("");
-                setEditingHallId(null);
-                setNewHall(defaultHall);
-                setShowAddHall(true);
-              }}
-                  className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-teal-600 to-emerald-500 px-4 py-2.5 text-sm font-bold text-white shadow-[0_12px_30px_rgba(13,148,136,0.24)] transition hover:-translate-y-0.5"
-                >
-                  <FaPlus />
-                  Add Hall
-                </button>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setBookingFiltersDraft({ ...bookingFilterDefaults });
+                      setBookingFilters({ ...bookingFilterDefaults });
+                      setBookingPage(1);
+                    }}
+                    className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-slate-300"
+                  >
+                    Clear
+                  </button>
+                  <button
+                    type="submit"
+                    className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-sky-600 to-cyan-500 px-4 py-2 text-sm font-bold text-white shadow-[0_12px_30px_rgba(14,165,233,0.24)] transition hover:-translate-y-0.5"
+                  >
+                    <FaFilter />
+                    Apply Filters
+                  </button>
+                </div>
               </div>
-              <div className="grid items-stretch gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {paginatedHalls.map((hall) => (
-                  <div key={hall.id} className="flex h-full flex-col gap-2">
-                    <BanquetHallCard
-                      hall={hall}
-                      selected={String(wizard.hallId) === String(hall.id)}
-                      onSelect={() =>
-                        setWizard((prev) => ({
-                          ...prev,
-                          hallId: hall.id,
-                        }))
-                      }
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setDetailHall(hall)}
-                      className="mt-auto text-xs font-semibold text-cyan-700 transition hover:text-cyan-900"
-                    >
-                      View hall details
-                    </button>
-                  </div>
-                ))}
-              </div>
-              <PaginationControls
-                page={hallPage}
-                totalPages={totalHallPages}
-                onChange={setHallPage}
-                label="Halls"
-              />
-            </section>
 
-            <section
-              id="addons"
-              className="grid items-stretch gap-3 w-fullrounded-[26px] border border-white/60 bg-white/78 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:grid-cols-2 lg:grid-cols-[repeat(3,minmax(0,1fr))_minmax(240px,1fr)] sm:p-5"
-            >
-              {[
-                {
-                  icon: FaLightbulb,
-                  title: "Lighting system",
-                  value: "Classic se intelligent stage setup",
-                  info: `Classic ${formatINR(
-                    pricingConfig.lightingOptions[0]?.price
-                  )} | Stage focus ${formatINR(
-                    pricingConfig.lightingOptions[1]?.price
-                  )}`,
-                },
-                {
-                  icon: FaHeadset,
-                  title: "Event support",
-                  value: "DJ desk, sound, mic and service staff",
-                  info: `Current setup price ${formatINR(pricingConfig.eventSupportFee)}.`,
-                },
-                {
-                  icon: FaBell,
-                  title: "Decor and service",
-                  value: "Decoration, floral gate and welcome desk",
-                  info: `Current decor fee ${formatINR(pricingConfig.decorServiceFee)}.`,
-                },
-                {
-                  icon: FaMoneyCheckAlt,
-                  title: "Addon pricing",
-                  value: "Lighting, support aur decor pricing ready",
-                  info: `Estimated addon range ${formatINR(
-                    (pricingConfig.lightingOptions[0]?.price || 0) +
-                      (pricingConfig.eventSupportFee || 0)
-                  )} onwards.`,
-                },
-              ].map((card) => {
+              <div className="grid gap-3 lg:grid-cols-3">
+                <label className="relative block lg:col-span-1">
+                  <FaSearch className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm text-sky-500" />
+                  <input
+                    value={bookingFiltersDraft.search}
+                    onChange={(event) =>
+                      setBookingFiltersDraft((prev) => ({
+                        ...prev,
+                        search: event.target.value,
+                      }))
+                    }
+                    placeholder="Search guest, hall, email, invoice"
+                    className={`${inputCls} pl-11`}
+                  />
+                </label>
+
+                <select
+                  value={bookingFiltersDraft.eventType}
+                  onChange={(event) =>
+                    setBookingFiltersDraft((prev) => ({
+                      ...prev,
+                      eventType: event.target.value,
+                    }))
+                  }
+                  className={inputCls}
+                >
+                  <option value="all">All event types</option>
+                  {eventTypeOptions.map((eventType) => (
+                    <option key={eventType} value={eventType}>
+                      {eventType}
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  value={bookingFiltersDraft.status}
+                  onChange={(event) =>
+                    setBookingFiltersDraft((prev) => ({
+                      ...prev,
+                      status: event.target.value,
+                    }))
+                  }
+                  className={inputCls}
+                >
+                  <option value="all">All statuses</option>
+                  {["Confirmed", "Completed", "Billed", "Cancelled", "Refunded"].map(
+                    (status) => (
+                      <option key={status} value={status}>
+                        {status}
+                      </option>
+                    )
+                  )}
+                </select>
+
+                <label className="relative block lg:col-span-1">
+                  <FaCalendarAlt className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm text-sky-500" />
+                  <input
+                    type="date"
+                    value={bookingFiltersDraft.dateFrom}
+                    onChange={(event) =>
+                      setBookingFiltersDraft((prev) => ({
+                        ...prev,
+                        dateFrom: event.target.value,
+                      }))
+                    }
+                    className={`${inputCls} pl-11`}
+                  />
+                </label>
+
+                <label className="relative block lg:col-span-1">
+                  <FaCalendarAlt className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm text-sky-500" />
+                  <input
+                    type="date"
+                    value={bookingFiltersDraft.dateTo}
+                    onChange={(event) =>
+                      setBookingFiltersDraft((prev) => ({
+                        ...prev,
+                        dateTo: event.target.value,
+                      }))
+                    }
+                    className={`${inputCls} pl-11`}
+                  />
+                </label>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {quickSections.map((section) => {
+                  const Icon = section.icon;
+
+                  return (
+                    <button
+                      key={section.id}
+                      type="button"
+                      onClick={() => setActiveQuickSection(section.id)}
+                      className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-slate-700 transition hover:border-cyan-200 hover:bg-cyan-50 hover:text-cyan-700"
+                    >
+                      <Icon />
+                      {section.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="rounded-[20px] border border-slate-200/80 bg-slate-50 px-4 py-4">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                    Visible Results
+                  </div>
+                  <div className="mt-2 text-2xl font-black text-slate-900">
+                    {filteredBookings.length}
+                  </div>
+                </div>
+                <div className="rounded-[20px] border border-slate-200/80 bg-slate-50 px-4 py-4">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                    Available Halls
+                  </div>
+                  <div className="mt-2 text-2xl font-black text-slate-900">
+                    {halls.filter((hall) => hall.status === "Available").length}
+                  </div>
+                </div>
+                <div className="rounded-[20px] border border-slate-200/80 bg-slate-50 px-4 py-4">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                    Draft Estimate
+                  </div>
+                  <div className="mt-2 text-2xl font-black text-slate-900">
+                    {formatINR(wizardTotals.grandTotal)}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </form>
+
+          <aside className="rounded-[26px] border border-white/70 bg-white/90 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
+            <div className="mb-4">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-amber-500">
+                Snapshot
+              </p>
+              <h2 className="mt-1 text-xl font-bold text-slate-900">
+                Live banquet health
+              </h2>
+            </div>
+            <div className="space-y-3">
+              {healthSnapshot.map((card) => {
                 const Icon = card.icon;
 
                 return (
                   <div
-                    key={card.title}
-                    className="flex min-h-[146px] h-full flex-col rounded-[22px] border border-slate-200/80 bg-white p-4 lg:col-span-1"
+                    key={card.label}
+                    className={`rounded-[20px] border px-4 py-4 ${card.tone}`}
                   >
-                    <div className="mb-3 inline-flex rounded-2xl bg-amber-50 p-3 text-amber-600">
-                        <Icon />
+                    <div className={`inline-flex items-center gap-2 text-xs font-bold ${card.iconTone}`}>
+                      <Icon />
+                      {card.label}
                     </div>
-                    <h3 className="text-sm font-bold text-slate-900">{card.title}</h3>
-                    <p className="mt-2 text-xs leading-5 text-slate-600">{card.value}</p>
-                    <p className="mt-2 text-xs leading-5 text-slate-400">{card.info}</p>
+                    <div className="mt-3 text-3xl font-black leading-none">
+                      {card.value}
+                    </div>
+                    <div className="mt-2 text-xs leading-5 opacity-75">
+                      {card.note}
+                    </div>
                   </div>
                 );
               })}
-            </section>
-
-            <section
-              id="meals"
-              className="rounded-[26px] border border-white/60 bg-white/78 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5"
-            >
-              <div className="mb-5 ">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
-                  Event Dining
-                </p>
-                <h2 className="mt-1 text-xl font-bold text-slate-900">
-                  Meal menu section
-                </h2>
-              </div>
-              <div className="grid items-stretch gap-3 sm:grid-cols-2 lg:grid-cols-[repeat(3,minmax(0,1fr))_minmax(240px,1fr)]">
-                  {pricingConfig.menuPackages.map((menu) => (
-                    <button
-                      type="button"
-                      key={menu.id}
-                      onClick={() => setSelectedMenuPackage(menu)}
-                      className="flex h-full min-h-[256px] flex-col rounded-[18px] border border-slate-200/80 bg-white p-4 text-left transition hover:-translate-y-1 hover:border-cyan-300 hover:shadow-[0_18px_35px_rgba(8,145,178,0.14)]"
-                    >
-                      <div className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-600">
-                        {menu.name}
-                      </div>
-                      <div className="mt-3 text-xl font-black text-slate-900">
-                        {formatINR(menu.perGuest)}
-                      </div>
-                      <div className="mt-1 text-xs text-slate-500">Per guest</div>
-                      <p className="mt-3 text-xs leading-5 text-slate-600">
-                        {menu.mealLabel}
-                      </p>
-                      <div className="mt-3 space-y-1.5">
-                        {menu.highlights.slice(0, 2).map((item) => (
-                          <p
-                            key={item}
-                            className="text-[10px] leading-4 text-slate-400"
-                          >
-                            {item}
-                          </p>
-                        ))}
-                      </div>
-                      <div className="mt-auto pt-5 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-                        Click to view details
-                      </div>
-                    </button>
-                  ))}
-                <div className="flex h-full min-h-[256px] flex-col rounded-[18px] border border-slate-200/80 bg-[linear-gradient(180deg,#f9fdff_0%,#ffffff_100%)] p-4 sm:col-span-2 lg:col-span-1">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="text-xs font-bold text-slate-900">
-                      Meal sections for events
-                    </div>
-                    <span className="rounded-full border border-cyan-100 bg-cyan-50 px-2.5 py-1 text-[10px] font-semibold text-cyan-700">
-                      Flexible planning
-                    </span>
-                  </div>
-                  <div className="mt-3 grid grid-cols-2 gap-2">
-                    <div className="rounded-[16px] border border-slate-200/80 bg-white px-3 py-2.5">
-                      <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-                        Packages
-                      </div>
-                      <div className="mt-2 text-lg font-black text-slate-900">
-                        {pricingConfig.menuPackages.length}
-                      </div>
-                    </div>
-                    <div className="rounded-[16px] border border-slate-200/80 bg-white px-3 py-2.5">
-                      <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-                        Sections
-                      </div>
-                      <div className="mt-2 text-lg font-black text-slate-900">
-                        {mealSections.length}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mt-3 text-xs font-bold text-slate-900">
-                    Available service blocks
-                  </div>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {mealSections.slice(0, 4).map((section) => (
-                      <span
-                        key={section}
-                        className="rounded-full border border-cyan-100 bg-cyan-50 px-2.5 py-1 text-[10px] font-semibold text-cyan-700"
-                      >
-                        {section}
-                      </span>
-                    ))}
-                  </div>
-                  <p className="mt-3 text-[10px] leading-4 text-slate-500">
-                    Reservation form me custom menu items ke saath direct meal
-                    planning easy rahti hai.
-                  </p>
-                  <div className="mt-3 space-y-1.5">
-                    {[
-                      "Package choose karein according to guest budget.",
-                      "Meal sections ya custom items add karein.",
-                    ].map((item, index) => (
-                      <div
-                        key={item}
-                        className="flex items-start gap-2 text-[10px] leading-4 text-slate-500"
-                      >
-                        <span className="mt-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-cyan-50 text-[9px] font-bold text-cyan-700">
-                          {index + 1}
-                        </span>
-                        <span>{item}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-auto pt-3 text-[10px] font-semibold text-cyan-700">
-                    Reservation form se easy selection
-                  </div>
-                </div>
-              </div>
-            </section>
-          </div>
+            </div>
+          </aside>
         </section>
 
         <section
-          id="reservations"
-          className="rounded-[26px] border border-white/60 bg-white/80 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5"
+          id="reservation-section"
+          className="rounded-[26px] border border-white/70 bg-white/92 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5"
         >
-          <div
-            id="reservation-section"
-            className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"
-          >
+          <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
-                Reservation Dashboard
+              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-cyan-600">
+                Reservation Ledger
               </p>
               <h2 className="mt-1 text-xl font-bold text-slate-900">
                 Manage banquet reservations
               </h2>
               <p className="mt-2 text-sm text-slate-500">
-                Add new booking, generate bill, and send quotation from one
-                place.
+                Showing {paginatedBookings.length} of {filteredBookings.length} filtered
+                reservations{hasAppliedBookingFilters ? " with active filters." : "."}
               </p>
             </div>
             <button
@@ -2314,210 +2285,359 @@ const Banquet = () => {
           </div>
 
           <div className="hidden overflow-x-auto lg:block">
-            {bookings.length ? (
+            {filteredBookings.length ? (
               <table className="min-w-full overflow-hidden rounded-[22px] border border-slate-200/80 bg-white">
-                <thead className="bg-slate-50 text-left text-xs uppercase tracking-[0.18em] text-slate-500">
+                <thead className="bg-[linear-gradient(180deg,#f8fbff_0%,#eef4ff_100%)] text-left text-[11px] uppercase tracking-[0.18em] text-slate-500">
                   <tr>
-                    <th className="px-4 py-4">Hall</th>
                     <th className="px-4 py-4">Guest</th>
                     <th className="px-4 py-4">Event</th>
-                    <th className="px-4 py-4">Date</th>
-                    <th className="px-4 py-4">Time</th>
+                    <th className="px-4 py-4">Hall</th>
+                    <th className="px-4 py-4">Slot</th>
                     <th className="px-4 py-4">Payment</th>
                     <th className="px-4 py-4">Status</th>
+                    <th className="px-4 py-4">Menu</th>
+                    <th className="px-4 py-4">Invoice</th>
                     <th className="px-4 py-4">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {paginatedBookings.map((booking) => (
-                    <BanquetBookingRow
-                      key={booking.id}
-                      booking={booking}
-                      formatINR={formatINR}
-                      onComplete={() => handleCompleteBooking(booking.id)}
-                      onCancel={() => handleCancelBooking(booking)}
-                      onEdit={() => handleEditBooking(booking)}
-                      onRefund={() => handleRefundBooking(booking)}
-                      onGenerateBill={() => handleGenerateBill(booking)}
-                      onDelete={() => handleDeleteBooking(booking)}
-                      onView={() => {
-                        setSelectedBooking(booking);
-                        setShowBill(true);
-                      }}
-                      onSendEmail={() => handleSendQuotation(booking, "email")}
-                      onSendWhatsApp={() =>
-                        handleSendQuotation(booking, "whatsapp")
-                      }
-                    />
-                  ))}
+                  {paginatedBookings.map((booking) => {
+                    const customItemsCount =
+                      (booking.selectedRestaurantMenuItems?.length || 0) +
+                      (booking.manualCustomMenuItems?.length || 0) +
+                      (booking.selectedCustomMenuItems?.length || 0);
+
+                    return (
+                      <tr
+                        key={booking.id}
+                        className="border-t border-slate-200/80 align-top transition hover:bg-slate-50/80"
+                      >
+                        <td className="px-4 py-4 text-sm text-slate-700">
+                          <div className="font-bold text-slate-900">
+                            {booking.customerName}
+                          </div>
+                          <div className="mt-1 text-xs text-slate-500">
+                            {booking.guestEmail || booking.phone || "Contact pending"}
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 text-sm text-slate-700">
+                          <div className="font-semibold text-slate-900">
+                            {booking.eventTitle || booking.eventType}
+                          </div>
+                          <div className="mt-1 text-xs text-slate-500">
+                            {booking.eventType || "Event"} • {booking.guests || 0} guests
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 text-sm text-slate-700">
+                          <div className="font-semibold text-slate-900">
+                            {booking.hallName || "Hall pending"}
+                          </div>
+                          <div className="mt-1 text-xs text-slate-500">
+                            {lightingLabelMap[booking.lightingSystem] ||
+                              booking.lightingSystem ||
+                              "Lighting pending"}
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 text-sm text-slate-700">
+                          <div className="font-semibold text-slate-900">
+                            {formatBookingDate(booking.date)}
+                          </div>
+                          <div className="mt-1 text-xs text-slate-500">
+                            {booking.startTime || "--"} - {booking.endTime || "--"}
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 text-sm text-slate-700">
+                          <div className="font-semibold text-slate-900">
+                            {formatINR(booking.grandTotal || 0)}
+                          </div>
+                          <div className="mt-1 text-xs text-emerald-700">
+                            Received {formatINR(booking.netReceived || 0)}
+                          </div>
+                          <div className="mt-1 text-xs text-rose-600">
+                            Due {formatINR(booking.balanceDue || 0)}
+                          </div>
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className="space-y-2">
+                            <span className={getReservationStatusBadgeClass(booking.status)}>
+                              {booking.status}
+                            </span>
+                            <div>
+                              <span className={getPaymentStatusBadgeClass(booking.paymentStatus)}>
+                                {booking.paymentStatus || "Pending"}
+                              </span>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 text-sm text-slate-700">
+                          <div className="font-semibold text-slate-900">
+                            {menuPackageNameMap[booking.menuPackageId] || "Custom package"}
+                          </div>
+                          <div className="mt-1 text-xs text-slate-500">
+                            {booking.mealSection || "Meal section pending"}
+                          </div>
+                          <div className="mt-1 text-xs text-cyan-700">
+                            {customItemsCount} custom selections
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 text-sm text-slate-700">
+                          <div className="font-semibold text-slate-900">
+                            {booking.invoiceNo || "Draft only"}
+                          </div>
+                          <div className="mt-1 text-xs text-slate-500">
+                            {booking.paymentMode || "Pending"}
+                          </div>
+                          {booking.paymentReferenceId ? (
+                            <div className="mt-1 text-xs text-slate-400">
+                              Ref {booking.paymentReferenceId}
+                            </div>
+                          ) : null}
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className="flex min-w-[260px] flex-wrap gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleEditBooking(booking)}
+                              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:border-cyan-200 hover:text-cyan-700"
+                            >
+                              <FaEdit />
+                              Edit
+                            </button>
+                            {booking.status === "Confirmed" ? (
+                              <button
+                                type="button"
+                                onClick={() => handleCancelBooking(booking)}
+                                className="rounded-full bg-rose-500 px-3 py-2 text-xs font-bold text-white transition hover:bg-rose-600"
+                              >
+                                Cancel
+                              </button>
+                            ) : null}
+                            {booking.status === "Confirmed" ? (
+                              <button
+                                type="button"
+                                onClick={() => handleCompleteBooking(booking.id)}
+                                className="rounded-full bg-amber-500 px-3 py-2 text-xs font-bold text-white transition hover:bg-amber-600"
+                              >
+                                Complete
+                              </button>
+                            ) : null}
+                            {["Completed", "Confirmed"].includes(booking.status) ? (
+                              <button
+                                type="button"
+                                onClick={() => handleGenerateBill(booking)}
+                                className="rounded-full bg-emerald-600 px-3 py-2 text-xs font-bold text-white transition hover:bg-emerald-700"
+                              >
+                                Bill
+                              </button>
+                            ) : null}
+                            {booking.invoiceNo ? (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedBooking(booking);
+                                  setShowBill(true);
+                                }}
+                                className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:border-sky-200 hover:text-sky-700"
+                              >
+                                View
+                              </button>
+                            ) : null}
+                            {["Cancelled", "Refunded"].includes(booking.status) &&
+                            Number(booking.advance || 0) >
+                              Number(booking.refundAmount || 0) ? (
+                              <button
+                                type="button"
+                                onClick={() => handleRefundBooking(booking)}
+                                className="rounded-full bg-violet-600 px-3 py-2 text-xs font-bold text-white transition hover:bg-violet-700"
+                              >
+                                Refund
+                              </button>
+                            ) : null}
+                            <button
+                              type="button"
+                              onClick={() => handleSendQuotation(booking, "email")}
+                              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:border-sky-200 hover:text-sky-700"
+                            >
+                              <FaEnvelope />
+                              Email
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleSendQuotation(booking, "whatsapp")}
+                              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:border-emerald-200 hover:text-emerald-700"
+                            >
+                              <FaWhatsapp />
+                              WhatsApp
+                            </button>
+                            {["Cancelled", "Refunded"].includes(booking.status) ? (
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteBooking(booking)}
+                                className="rounded-full border border-rose-200 bg-white px-3 py-2 text-xs font-bold text-rose-600 transition hover:bg-rose-50"
+                              >
+                                Delete
+                              </button>
+                            ) : null}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             ) : (
               <div className="rounded-[22px] border border-dashed border-slate-300 bg-white/70 p-6 text-sm text-slate-500">
-                Koi reservation available nahi hai. `Add New` se pehli booking create kijiye.
+                {hasAppliedBookingFilters
+                  ? "Current filters ke saath koi reservation match nahi hua."
+                  : "No reservations are available. Create your first booking using ‘Add New."}
               </div>
             )}
           </div>
-          <PaginationControls
-            page={bookingPage}
-            totalPages={totalBookingPages}
-            onChange={setBookingPage}
-            label="Reservations"
-          />
+
+          {filteredBookings.length ? (
+            <PaginationControls
+              page={bookingPage}
+              totalPages={totalBookingPages}
+              onChange={setBookingPage}
+              label="Reservations"
+            />
+          ) : null}
 
           <div className="grid gap-4 lg:hidden">
-            {paginatedBookings.map((booking) => (
-              <div
-                key={booking.id}
-                className="rounded-[22px] border border-slate-200/80 bg-white p-4 shadow-sm"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <div className="text-base font-bold text-slate-900">
-                      {booking.hallName}
-                    </div>
-                    <div className="mt-1 text-sm text-slate-500">
-                      {booking.customerName} |{" "}
-                      {booking.eventTitle || booking.eventType}
-                    </div>
-                  </div>
-                  <span className="rounded-full bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-700">
-                    {booking.status}
-                  </span>
-                </div>
-                <div className="mt-4 grid gap-2 text-sm text-slate-600 sm:grid-cols-2">
-                  <div>Date: {booking.date}</div>
-                  <div>
-                    Time: {booking.startTime} - {booking.endTime}
-                  </div>
-                  <div>Guests: {booking.guests}</div>
-                  <div>Meal: {booking.mealSection || "Planned"}</div>
-                  <div>Paid: {formatINR(booking.advance || 0)}</div>
-                  <div>Refunded: {formatINR(booking.refundAmount || 0)}</div>
-                  <div>Due: {formatINR(booking.balanceDue || 0)}</div>
-                </div>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleEditBooking(booking)}
-                    className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700"
-                  >
-                    <FaEdit />
-                    Edit
-                  </button>
-                  {booking.status === "Confirmed" && (
-                    <button
-                      type="button"
-                      onClick={() => handleCancelBooking(booking)}
-                      className="rounded-full bg-rose-500 px-3 py-2 text-xs font-bold text-white"
-                    >
-                      Cancel
-                    </button>
-                  )}
-                  {booking.status === "Confirmed" && (
-                    <button
-                      type="button"
-                      onClick={() => handleCompleteBooking(booking.id)}
-                      className="rounded-full bg-amber-500 px-3 py-2 text-xs font-bold text-white"
-                    >
-                      Mark Completed
-                    </button>
-                  )}
-                  {(booking.status === "Completed" ||
-                    booking.status === "Confirmed") && (
-                    <button
-                      type="button"
-                      onClick={() => handleGenerateBill(booking)}
-                      className="rounded-full bg-emerald-600 px-3 py-2 text-xs font-bold text-white"
-                    >
-                      Generate Bill
-                    </button>
-                  )}
-                  {["Cancelled", "Refunded"].includes(booking.status) &&
-                  Number(booking.advance || 0) >
-                    Number(booking.refundAmount || 0) ? (
-                    <button
-                      type="button"
-                      onClick={() => handleRefundBooking(booking)}
-                      className="rounded-full bg-violet-600 px-3 py-2 text-xs font-bold text-white"
-                    >
-                      Refund
-                    </button>
-                  ) : null}
-                  {booking.status === "Cancelled" ? (
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteBooking(booking)}
-                      className="rounded-full border border-rose-200 px-3 py-2 text-xs font-bold text-rose-600"
-                    >
-                      Delete
-                    </button>
-                  ) : null}
-                  <button
-                    type="button"
-                    onClick={() => handleSendQuotation(booking, "email")}
-                    className="rounded-full border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700"
-                  >
-                    Email Quote
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleSendQuotation(booking, "whatsapp")}
-                    className="rounded-full border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700"
-                  >
-                    WhatsApp Quote
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
+            {filteredBookings.length ? (
+              paginatedBookings.map((booking) => {
+                const customItemsCount =
+                  (booking.selectedRestaurantMenuItems?.length || 0) +
+                  (booking.manualCustomMenuItems?.length || 0) +
+                  (booking.selectedCustomMenuItems?.length || 0);
 
-        <section
-          id="settlement"
-          className="rounded-[26px] border border-white/60 bg-white/80 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5"
-        >
-          <div className="mb-5">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
-              Settlement Report
-            </p>
-            <h2 className="mt-1 text-xl font-bold text-slate-900">
-              Reservation pricing preview
-            </h2>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
-            {[
-            { label: "Hall amount", value: formatINR(wizardTotals.hallCharge) },
-            { label: "Meal amount", value: formatINR(wizardTotals.mealCharge) },
-            {
-              label: "Custom menu",
-              value: formatINR(wizardTotals.customMenuCharge),
-            },
-            {
-              label: "Lighting setup",
-              value: formatINR(wizardTotals.lightingCharge),
-              },
-              {
-                label: "Event support",
-                value: formatINR(wizardTotals.eventSupportCharge),
-              },
-              {
-                label: "Estimated total",
-                value: formatINR(wizardTotals.grandTotal),
-              },
-            ].map((item) => (
-              <div
-                key={item.label}
-                className="rounded-[22px] border border-slate-200/80 bg-white p-5"
-              >
-                <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                  {item.label}
-                </div>
-                <div className="mt-3 text-2xl font-black text-slate-900">
-                  {item.value}
-                </div>
+                return (
+                  <div
+                    key={booking.id}
+                    className="rounded-[22px] border border-slate-200/80 bg-white p-4 shadow-sm"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="text-base font-bold text-slate-900">
+                          {booking.customerName}
+                        </div>
+                        <div className="mt-1 text-sm text-slate-500">
+                          {booking.eventTitle || booking.eventType} • {booking.hallName}
+                        </div>
+                      </div>
+                      <span className={getReservationStatusBadgeClass(booking.status)}>
+                        {booking.status}
+                      </span>
+                    </div>
+
+                    <div className="mt-4 grid gap-2 text-sm text-slate-600 sm:grid-cols-2">
+                      <div>Date: {formatBookingDate(booking.date)}</div>
+                      <div>
+                        Time: {booking.startTime || "--"} - {booking.endTime || "--"}
+                      </div>
+                      <div>Guests: {booking.guests || 0}</div>
+                      <div>Payment: {booking.paymentStatus || "Pending"}</div>
+                      <div>Total: {formatINR(booking.grandTotal || 0)}</div>
+                      <div>Due: {formatINR(booking.balanceDue || 0)}</div>
+                      <div>
+                        Package: {menuPackageNameMap[booking.menuPackageId] || "Custom"}
+                      </div>
+                      <div>Custom items: {customItemsCount}</div>
+                    </div>
+
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleEditBooking(booking)}
+                        className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700"
+                      >
+                        <FaEdit />
+                        Edit
+                      </button>
+                      {booking.status === "Confirmed" ? (
+                        <button
+                          type="button"
+                          onClick={() => handleCancelBooking(booking)}
+                          className="rounded-full bg-rose-500 px-3 py-2 text-xs font-bold text-white"
+                        >
+                          Cancel
+                        </button>
+                      ) : null}
+                      {booking.status === "Confirmed" ? (
+                        <button
+                          type="button"
+                          onClick={() => handleCompleteBooking(booking.id)}
+                          className="rounded-full bg-amber-500 px-3 py-2 text-xs font-bold text-white"
+                        >
+                          Complete
+                        </button>
+                      ) : null}
+                      {["Completed", "Confirmed"].includes(booking.status) ? (
+                        <button
+                          type="button"
+                          onClick={() => handleGenerateBill(booking)}
+                          className="rounded-full bg-emerald-600 px-3 py-2 text-xs font-bold text-white"
+                        >
+                          Bill
+                        </button>
+                      ) : null}
+                      {booking.invoiceNo ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedBooking(booking);
+                            setShowBill(true);
+                          }}
+                          className="rounded-full border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700"
+                        >
+                          View
+                        </button>
+                      ) : null}
+                      {["Cancelled", "Refunded"].includes(booking.status) &&
+                      Number(booking.advance || 0) >
+                        Number(booking.refundAmount || 0) ? (
+                        <button
+                          type="button"
+                          onClick={() => handleRefundBooking(booking)}
+                          className="rounded-full bg-violet-600 px-3 py-2 text-xs font-bold text-white"
+                        >
+                          Refund
+                        </button>
+                      ) : null}
+                      <button
+                        type="button"
+                        onClick={() => handleSendQuotation(booking, "email")}
+                        className="rounded-full border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700"
+                      >
+                        Email
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleSendQuotation(booking, "whatsapp")}
+                        className="rounded-full border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700"
+                      >
+                        WhatsApp
+                      </button>
+                      {["Cancelled", "Refunded"].includes(booking.status) ? (
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteBooking(booking)}
+                          className="rounded-full border border-rose-200 px-3 py-2 text-xs font-bold text-rose-600"
+                        >
+                          Delete
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="rounded-[22px] border border-dashed border-slate-300 bg-white/70 p-6 text-sm text-slate-500">
+                {hasAppliedBookingFilters
+                  ? "Current filters ke saath koi reservation match nahi hua."
+                  : "Koi reservation available nahi hai. `Add New` se pehli booking create kijiye."}
               </div>
-            ))}
+            )}
           </div>
         </section>
       </div>
@@ -2823,19 +2943,41 @@ const Banquet = () => {
                       placeholder="Kitna payment mila hai"
                     />
                   </div>
-                  <div>
-                    <label className={labelCls}>Payment Reference ID</label>
-                    <input
-                      value={wizard.paymentReferenceId}
-                      onChange={(e) =>
-                        setWizard((prev) => ({
-                          ...prev,
-                          paymentReferenceId: e.target.value,
-                        }))
-                      }
-                      className={inputCls}
-                      placeholder="UTR / Txn ID / Reference"
-                    />
+                  <div className="grid gap-4 sm:grid-cols-2 sm:col-span-2">
+                    <div>
+                      <label className={labelCls}>Payment Mode</label>
+                      <select
+                        value={wizard.paymentMode}
+                        onChange={(e) =>
+                          setWizard((prev) => ({
+                            ...prev,
+                            paymentMode: e.target.value,
+                          }))
+                        }
+                        className={inputCls}
+                      >
+                        <option value="Pending">Pending</option>
+                        <option value="Cash">Cash</option>
+                        <option value="UPI">UPI</option>
+                        <option value="Card">Card</option>
+                        <option value="Bank Transfer">Bank Transfer</option>
+                        <option value="Cheque">Cheque</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className={labelCls}>Payment Reference ID</label>
+                      <input
+                        value={wizard.paymentReferenceId}
+                        onChange={(e) =>
+                          setWizard((prev) => ({
+                            ...prev,
+                            paymentReferenceId: e.target.value,
+                          }))
+                        }
+                        className={inputCls}
+                        placeholder="UTR / Txn ID / Reference"
+                      />
+                    </div>
                   </div>
                   {editingBookingId ? (
                     <div>
@@ -2993,7 +3135,7 @@ const Banquet = () => {
                           </button>
                         </div>
                         <div className="text-xs text-slate-500">
-                          Full menu se select bhi kar sakte hain aur yahan se custom item manually bhi add kar sakte hain.
+              “You can select from the full menu or manually add a custom item here.”
                         </div>
                       </div>
                     </div>
@@ -3045,7 +3187,7 @@ const Banquet = () => {
                           </>
                         ) : (
                           <div className="text-sm text-slate-500">
-                            Abhi koi custom menu item select nahi hua hai.
+            “No custom menu item has been selected yet.”
                           </div>
                         )}
                       </div>
@@ -3181,8 +3323,7 @@ const Banquet = () => {
                     After booking
                   </div>
                   <p className="mt-3 text-sm leading-6 text-slate-500">
-                    Booking dashboard se guest ko quotation email ya WhatsApp par
-                    bhejne ke liye action buttons diye gaye hain.
+          “Action buttons are provided on the booking dashboard to send quotations to guests via email or WhatsApp.”
                   </p>
                   <div className="mt-4 flex flex-wrap gap-2">
                     <span className="inline-flex items-center gap-2 rounded-full bg-cyan-50 px-3 py-2 text-xs font-semibold text-cyan-700">

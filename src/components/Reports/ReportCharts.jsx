@@ -35,11 +35,10 @@ const EmptyChartState = ({ title, subtitle }) => (
     <div className="flex h-full items-center justify-center rounded-[22px] border border-dashed border-slate-200 bg-slate-50 px-6 text-center">
       <div>
         <div className="text-base font-bold text-slate-900">
-          Graph abhi available nahi hai
+          graph dosen't available wait for a moment
         </div>
         <p className="mt-2 text-sm leading-6 text-slate-500">
-          Current filters ke liye chart data nahi mila. Date range ya filters ko
-          thoda broad karke dobara check karein.
+          there was no data for a current chart showing 
         </p>
       </div>
     </div>

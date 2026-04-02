@@ -17,6 +17,14 @@ const formatCurrency = (value) =>
     maximumFractionDigits: 2,
   }).format(Number(value) || 0);
 
+const sanitizeBookingPoint = (value) => {
+  const raw = String(value || "").trim();
+  if (!raw) return "-";
+
+  const normalized = raw.replace(/\s*\(ID:\s*\d+\)\s*$/i, "").trim();
+  return normalized || "-";
+};
+
 const Communication = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -100,7 +108,9 @@ const Communication = () => {
   const checkOut = liveBooking?.check_out || guestDraft.checkOut || "-";
   const paymentMode = liveBooking?.payment_mode || advanceDraft.paymentMode || "-";
   const remarks = liveBooking?.remarks || advanceDraft.notes || "-";
-  const bookingPoint = guestDraft.bookingPoint || liveBooking?.booking_point || "-";
+  const bookingPoint = sanitizeBookingPoint(
+    liveBooking?.booking_point || guestDraft.bookingPoint || "",
+  );
   const bookingStatus = liveBooking?.booking_status || guestDraft.bookingStatus || "Pending";
   const arrivalTime = liveBooking?.arrival || guestDraft.arrival || "-";
   const departureTime = liveBooking?.departure || guestDraft.departure || "-";
@@ -118,7 +128,8 @@ const Communication = () => {
     return (
       <div className="p-6">
         <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-10 text-center text-slate-500">
-          Booking data available nahi hai.
+    Booking data cant' be at that time
+    
         </div>
       </div>
     );

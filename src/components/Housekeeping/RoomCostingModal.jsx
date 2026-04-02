@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { FaTimes, FaCalculator, FaPlus, FaSyncAlt, FaDownload } from "react-icons/fa";
-import axios from "axios";
+import API from "../../api";
 
 const DEFAULT_COSTS = {
   staffCostPerHour: 120,
@@ -24,7 +24,7 @@ export default function RoomCostingModal({ rooms, onClose, apiBase }) {
   const fetchLogs = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${apiBase}/housekeeping/costing`);
+      const res = await API.get("/housekeeping/costing");
       setCostLogs(res.data);
     } catch { setCostLogs([]); }
     finally { setLoading(false); }
@@ -34,7 +34,14 @@ export default function RoomCostingModal({ rooms, onClose, apiBase }) {
 
   const calcCostPerClean = (override = {}) => {
     const c = { ...costs, ...override };
-    return (c.staffCostPerHour * c.avgCleaningHours) + c.lineCostPerClean + c.toiletrieCostPerClean + c.miscCostPerClean;
+    return (
+      (c.staffCostPerHour * c.avgCleaningHours) +
+      c.lineCostPerClean +
+      c.toiletrieCostPerClean +
+      c.miscCostPerClean +
+      (c.extraLinen || 0) +
+      (c.extraMisc || 0)
+    );
   };
 
   const totalCostPerClean = calcCostPerClean();
@@ -46,7 +53,7 @@ export default function RoomCostingModal({ rooms, onClose, apiBase }) {
     const costData = { ...costs, ...(roomOverrides[selectedRoom] || {}) };
     const totalCost = calcCostPerClean(roomOverrides[selectedRoom]);
     try {
-      await axios.post(`${apiBase}/housekeeping/costing`, {
+      await API.post("/housekeeping/costing", {
         roomId: selectedRoom,
         roomNo: room?.roomNo,
         ...costData,

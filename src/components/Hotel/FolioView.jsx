@@ -282,7 +282,7 @@ const FolioView = () => {
   if (!bookingId) {
     return (
       <div className="p-8 text-center text-slate-500">
-        Booking ID missing. All Bookings se open kijiye.
+“Booking ID is missing. Please open it from ‘All Bookings.’”
       </div>
     );
   }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   FaBed,
   FaBoxOpen,
@@ -10,6 +10,7 @@ import {
 
 import API from "../api";
 import RoleDashboardShell from "../components/roleDashboards/RoleDashboardShell";
+import useDashboardAutoRefresh from "../hooks/useDashboardAutoRefresh";
 
 const formatINR = (amount) =>
   `Rs. ${Number(amount || 0).toLocaleString("en-IN")}`;
@@ -25,49 +26,44 @@ const ManagerDashboard = () => {
   const [banquets, setBanquets] = useState([]);
   const [attendance, setAttendance] = useState([]);
 
-  useEffect(() => {
-    let mounted = true;
+  const load = useCallback(async (silent = false) => {
+    try {
+      if (!silent) setLoading(true);
+      setError("");
 
-    const load = async () => {
-      try {
-        setLoading(true);
-        setError("");
+      const results = await Promise.allSettled([
+        API.get("/dashboard/metrics"),
+        API.get("/hotel/all-bookings"),
+        API.get("/inventory"),
+        API.get("/banquet"),
+        API.get("/attendance", { params: { date: todayISO() } }),
+      ]);
 
-        const results = await Promise.allSettled([
-          API.get("/dashboard/metrics"),
-          API.get("/hotel/all-bookings"),
-          API.get("/inventory"),
-          API.get("/banquet"),
-          API.get("/attendance", { params: { date: todayISO() } }),
-        ]);
+      const [metricsRes, bookingsRes, inventoryRes, banquetRes, attendanceRes] = results;
 
-        if (!mounted) return;
+      setMetrics(metricsRes.status === "fulfilled" ? metricsRes.value.data || {} : {});
+      setBookings(bookingsRes.status === "fulfilled" ? bookingsRes.value.data || [] : []);
+      setInventory(inventoryRes.status === "fulfilled" ? inventoryRes.value.data || [] : []);
+      setBanquets(banquetRes.status === "fulfilled" ? banquetRes.value.data || [] : []);
+      setAttendance(attendanceRes.status === "fulfilled" ? attendanceRes.value.data || [] : []);
 
-        const [metricsRes, bookingsRes, inventoryRes, banquetRes, attendanceRes] = results;
-
-        setMetrics(metricsRes.status === "fulfilled" ? metricsRes.value.data || {} : {});
-        setBookings(bookingsRes.status === "fulfilled" ? bookingsRes.value.data || [] : []);
-        setInventory(inventoryRes.status === "fulfilled" ? inventoryRes.value.data || [] : []);
-        setBanquets(banquetRes.status === "fulfilled" ? banquetRes.value.data || [] : []);
-        setAttendance(attendanceRes.status === "fulfilled" ? attendanceRes.value.data || [] : []);
-
-        if (
-          metricsRes.status !== "fulfilled" &&
-          bookingsRes.status !== "fulfilled" &&
-          inventoryRes.status !== "fulfilled"
-        ) {
-          setError("Manager dashboard data load nahi ho pa raha.");
-        }
-      } finally {
-        if (mounted) setLoading(false);
+      if (
+        metricsRes.status !== "fulfilled" &&
+        bookingsRes.status !== "fulfilled" &&
+        inventoryRes.status !== "fulfilled"
+      ) {
+        setError("Manager dashboard data load nahi ho pa raha.");
       }
-    };
-
-    load();
-    return () => {
-      mounted = false;
-    };
+    } finally {
+      if (!silent) setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  useDashboardAutoRefresh(load);
 
   const stats = useMemo(() => {
     const totalRooms = Number(metrics.totalRooms) || 0;

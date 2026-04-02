@@ -14,9 +14,11 @@ import LostFoundModal from "./LostFoundModal";
 import ShiftRosterModal from "./ShiftRosterModal";
 import RoomCostingModal from "./RoomCostingModal";
 import CheckoutReportModal from "./CheckoutReportModal";
-import axios from "axios";
+import API from "../../api";
+import { userService } from "../../services/userService";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const rawApiBase = String(API.defaults.baseURL || "/api").replace(/\/$/, "");
+const API_BASE = rawApiBase.endsWith("/api") ? rawApiBase : `${rawApiBase}/api`;
 
 const HOUSEKEEPING_OPTIONS = [
   { key: "parameters",   label: "Parameters",                  icon: FaCog,           color: "text-slate-600" },
@@ -36,7 +38,7 @@ const STATUS_COLORS = {
   "Occupied Clean":         { dot: "bg-blue-400",    badge: "bg-blue-50 text-blue-700 border-blue-200" },
   "Occupied Dirty":         { dot: "bg-orange-400",  badge: "bg-orange-50 text-orange-700 border-orange-200" },
   "Out of Service":         { dot: "bg-rose-500",    badge: "bg-rose-50 text-rose-700 border-rose-200" },
-  "Cleaning":               { dot: "bg-violet-400",  badge: "bg-violet-50 text-violet-700 border-violet-200" },
+  "Cleaning In Progress":   { dot: "bg-violet-400",  badge: "bg-violet-50 text-violet-700 border-violet-200" },
 };
 
 const ALL_COLUMNS = ["type","roomNo","building","floor","section","guestStatus","roomType","status","assignee","layout","articles","services","notes"];
@@ -46,6 +48,8 @@ export default function Housekeeping() {
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [knownHousekeepers, setKnownHousekeepers] = useState([]);
+  const [completedTodayRows, setCompletedTodayRows] = useState([]);
 
   // Filters
   const [filters, setFilters] = useState({ room: "", type: "", status: "", priority: "", floor: "" });
@@ -70,7 +74,7 @@ export default function Housekeeping() {
   const fetchRooms = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${API_BASE}/housekeeping`);
+      const res = await API.get("/housekeeping");
       setRooms(res.data.map(r => ({ ...r, selected: false })));
     } catch (e) {
       setError("Failed to load housekeeping data.");
@@ -79,19 +83,59 @@ export default function Housekeeping() {
     }
   }, []);
 
-  useEffect(() => { fetchRooms(); }, [fetchRooms]);
+  const fetchHousekeepers = useCallback(async () => {
+    try {
+      const users = await userService.getAllUsers();
+      const rows = users
+        .filter((user) => String(user.role || "").toLowerCase().includes("housekeeping"))
+        .map((user) => user.name || user.username || user.email || "")
+        .filter(Boolean);
+      setKnownHousekeepers([...new Set(rows)]);
+    } catch {
+      setKnownHousekeepers([]);
+    }
+  }, []);
+
+  const fetchCompletedCleaningLogs = useCallback(async () => {
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      const res = await API.get("/housekeeping/completed-cleaning", { params: { date: today } });
+      setCompletedTodayRows(
+        Array.isArray(res.data)
+          ? res.data.map((row) => ({
+              id: row.id,
+              roomId: row.room_id,
+              roomNo: row.room_no,
+              assignee: row.assignee,
+              guestStatus: row.guest_status,
+              finalStatus: row.final_status,
+              completedAt: row.completed_at,
+            }))
+          : [],
+      );
+    } catch {
+      setCompletedTodayRows([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchRooms();
+    fetchHousekeepers();
+    fetchCompletedCleaningLogs();
+  }, [fetchCompletedCleaningLogs, fetchHousekeepers, fetchRooms]);
 
   const housekeepers = useMemo(() => {
     const set = new Set();
+    knownHousekeepers.forEach((name) => set.add(name));
     rooms.forEach(r => { if (r.assignee && r.assignee !== "No Housekeeper") set.add(r.assignee); });
     return Array.from(set);
-  }, [rooms]);
+  }, [knownHousekeepers, rooms]);
 
   const housekeeperStatuses = useMemo(() => {
     const map = {};
     rooms.forEach(r => {
       if (r.assignee && r.assignee !== "No Housekeeper") {
-        const isBusy = r.status === "Cleaning" || r.status === "Occupied Dirty" || r.status === "Vacant Dirty";
+        const isBusy = r.status === "Cleaning In Progress" || r.status === "Occupied Dirty" || r.status === "Vacant Dirty";
         if (!map[r.assignee] || isBusy) map[r.assignee] = isBusy ? "BUSY" : "AVAILABLE";
       }
     });
@@ -100,10 +144,10 @@ export default function Housekeeping() {
 
   const filteredRooms = useMemo(() => {
     return rooms.filter(r => {
-      if (filters.room   && String(r.roomNo)   !== filters.room)   return false;
-      if (filters.type   && r.roomType         !== filters.type)   return false;
-      if (filters.status && r.status           !== filters.status) return false;
-      if (filters.floor  && String(r.floor)    !== filters.floor)  return false;
+      if (filters.room && !String(r.roomNo || "").toLowerCase().includes(String(filters.room).toLowerCase())) return false;
+      if (filters.type && !String(r.roomType || "").toLowerCase().includes(String(filters.type).toLowerCase())) return false;
+      if (filters.status && r.status !== filters.status) return false;
+      if (filters.floor && !String(r.floor || "").toLowerCase().includes(String(filters.floor).toLowerCase())) return false;
       return true;
     });
   }, [rooms, filters]);
@@ -145,14 +189,14 @@ export default function Housekeeping() {
 
   const handleStatusChange = async (id, status) => {
     try {
-      await axios.put(`${API_BASE}/housekeeping/status/${id}`, { status });
+      await API.put(`/housekeeping/status/${id}`, { status });
       setRooms(prev => prev.map(r => r.id === id ? { ...r, status } : r));
     } catch { /* ignore */ }
   };
 
   const handleAssigneeChange = async (id, assignee) => {
     try {
-      await axios.put(`${API_BASE}/housekeeping/assignee/${id}`, { assignee });
+      await API.put(`/housekeeping/assignee/${id}`, { assignee });
       setRooms(prev => prev.map(r => r.id === id ? { ...r, assignee } : r));
     } catch { /* ignore */ }
   };
@@ -163,7 +207,14 @@ export default function Housekeeping() {
 
   const handleAddRoom = async () => {
     try {
-      await axios.post(`${API_BASE}/housekeeping`, { roomNumber: newRoom.roomNo, status: newRoom.status, assignee: newRoom.assignee });
+      await API.post("/housekeeping", {
+        roomNumber: newRoom.roomNo,
+        type: newRoom.type,
+        floor: newRoom.floor,
+        roomType: newRoom.roomType,
+        status: newRoom.status,
+        assignee: newRoom.assignee,
+      });
       setShowAddRoom(false);
       setNewRoom({ roomNo: "", type: "Accommodation", floor: "", roomType: "", status: "Vacant Dirty", assignee: "No Housekeeper" });
       fetchRooms();
@@ -174,8 +225,7 @@ export default function Housekeeping() {
     const key = String(room.id || room.roomNo);
     const msg = roomMessageDrafts[key] || "";
     if (!msg.trim()) return;
-    // POST to backend notification endpoint
-    axios.post(`${API_BASE}/housekeeping/message`, { roomId: room.id, roomNo: room.roomNo, message: msg }).catch(() => {});
+    API.post("/housekeeping/message", { roomId: room.id, roomNo: room.roomNo, message: msg }).catch(() => {});
     setRoomMessageDrafts(prev => ({ ...prev, [key]: "" }));
   };
 
@@ -187,6 +237,24 @@ export default function Housekeeping() {
       }
       return [...prev, { roomId: room.id, startedAt: new Date().toISOString(), dueAt: new Date(Date.now() + minutes * 60000).toISOString() }];
     });
+  };
+
+  const handleMarkCleaningComplete = async (room) => {
+    try {
+      await API.put(`/housekeeping/status/${room.id}`, { status: "Vacant Clean" });
+      await API.post("/housekeeping/completed-cleaning", {
+        roomId: room.id,
+        roomNo: room.roomNo,
+        assignee: room.assignee,
+        guestStatus: room.guestStatus || room.guest || null,
+        finalStatus: "Vacant Clean",
+      });
+      setCleaningTasks((prev) => prev.filter((task) => String(task.roomId) !== String(room.id)));
+      await fetchRooms();
+      await fetchCompletedCleaningLogs();
+    } catch {
+      // ignore
+    }
   };
 
   const assigneeOptions = ["No Housekeeper", ...housekeepers];
@@ -371,6 +439,7 @@ export default function Housekeeping() {
         <CleaningLogPanel
           rows={cleaningRows}
           warningRows={warningRows}
+          completedTodayRows={completedTodayRows}
           logSearch={logSearch}
           setLogSearch={setLogSearch}
           logStatus={logStatus}
@@ -382,6 +451,7 @@ export default function Housekeeping() {
           setRoomMessageDrafts={setRoomMessageDrafts}
           onSendCleaningMessage={handleSendMessage}
           onExtendCleaningTime={handleExtendTime}
+          onMarkCleaningComplete={handleMarkCleaningComplete}
         />
       )}
 
@@ -502,9 +572,37 @@ function ParametersForm({ onClose, apiBase }) {
     shiftEndTime: "20:00",
   });
 
+  useEffect(() => {
+    let mounted = true;
+
+    const loadParameters = async () => {
+      try {
+        const response = await API.get("/housekeeping/parameters");
+        if (!mounted || !response.data) return;
+        setParams((prev) => ({
+          ...prev,
+          cleaningTimeMinutes: Number(response.data.cleaning_time_minutes ?? prev.cleaningTimeMinutes),
+          defaultAssignee: response.data.default_assignee ?? prev.defaultAssignee,
+          autoReleaseEnabled: Boolean(response.data.auto_release_enabled ?? prev.autoReleaseEnabled),
+          inspectionRequired: Boolean(response.data.inspection_required ?? prev.inspectionRequired),
+          maxRoomsPerHousekeeper: Number(response.data.max_rooms_per_housekeeper ?? prev.maxRoomsPerHousekeeper),
+          shiftStartTime: response.data.shift_start_time ?? prev.shiftStartTime,
+          shiftEndTime: response.data.shift_end_time ?? prev.shiftEndTime,
+        }));
+      } catch {
+        // ignore
+      }
+    };
+
+    loadParameters();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const handleSave = async () => {
     try {
-      await axios.post(`${apiBase}/housekeeping/parameters`, params);
+      await API.post("/housekeeping/parameters", params);
       onClose();
     } catch { onClose(); }
   };

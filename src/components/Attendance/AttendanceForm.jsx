@@ -6,6 +6,10 @@ const fieldCls =
 const labelCls =
   "mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500";
 
+
+
+
+
 const AttendanceForm = ({ onSubmit, onCancel, initialData = {} }) => {
   const [formData, setFormData] = useState({
     employeeName: initialData.employeeName || "",
@@ -26,6 +30,9 @@ const AttendanceForm = ({ onSubmit, onCancel, initialData = {} }) => {
       [name]: value,
     }));
   };
+
+
+  
 
   const handleSubmit = (e) => {
     e.preventDefault();

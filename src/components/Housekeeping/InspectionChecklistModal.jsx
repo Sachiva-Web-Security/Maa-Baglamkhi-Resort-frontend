@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { FaTimes, FaClipboardList, FaCheck, FaExclamationTriangle, FaSyncAlt, FaDownload } from "react-icons/fa";
-import axios from "axios";
+import API from "../../api";
 
 const INSPECTION_CHECKLIST = [
   {
@@ -48,7 +48,7 @@ export default function InspectionChecklistModal({ rooms, onClose, apiBase }) {
   const fetchHistory = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${apiBase}/housekeeping/inspections`);
+      const res = await API.get("/housekeeping/inspections");
       setHistory(res.data);
     } catch { setHistory([]); }
     finally { setLoading(false); }
@@ -78,7 +78,7 @@ export default function InspectionChecklistModal({ rooms, onClose, apiBase }) {
     if (!selectedRoom) return;
     setSaving(true);
     try {
-      await axios.post(`${apiBase}/housekeeping/inspections`, {
+      await API.post("/housekeeping/inspections", {
         roomId: selectedRoom,
         roomNo: rooms.find(r => String(r.id) === selectedRoom)?.roomNo,
         inspectorName,

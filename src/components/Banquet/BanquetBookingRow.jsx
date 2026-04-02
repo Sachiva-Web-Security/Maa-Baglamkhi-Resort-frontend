@@ -58,18 +58,34 @@ const BanquetBookingRow = ({
         {booking.startTime} - {booking.endTime}
       </td>
       <td className="px-4 py-4 text-sm text-slate-700">
+        <div className="font-semibold text-slate-900">
+          Total {formatINR?.(booking.grandTotal || booking.grand_total || 0)}
+        </div>
         <div className="font-semibold text-emerald-700">
           {formatINR?.(booking.advance || booking.paymentReceived || 0)}
         </div>
         <div className="mt-1 text-xs text-amber-600">
           Refunded {formatINR?.(booking.refundAmount || 0)}
         </div>
+        <div className="mt-1 text-xs text-slate-500">
+          Net {formatINR?.(booking.netReceived || 0)}
+        </div>
         <div className="mt-1 text-xs text-rose-500">
           Due {formatINR?.(booking.balanceDue || 0)}
         </div>
       </td>
       <td className="px-4 py-4">
-        <span className={getStatusBadge(booking.status)}>{booking.status}</span>
+        <div className="space-y-2">
+          <span className={getStatusBadge(booking.status)}>{booking.status}</span>
+          <div className="text-xs text-slate-500">
+            Payment {booking.paymentStatus || "Pending"}
+          </div>
+          {booking.invoiceNo ? (
+            <div className="text-xs font-semibold text-slate-700">
+              {booking.invoiceNo}
+            </div>
+          ) : null}
+        </div>
       </td>
       <td className="px-4 py-4">
         <div className="flex flex-wrap gap-2">
@@ -152,13 +168,15 @@ const BanquetBookingRow = ({
             WhatsApp Quote
           </button>
 
-          <button
-            type="button"
-            onClick={onDelete}
-            className="rounded-full border border-rose-200 bg-white px-3 py-2 text-xs font-bold text-rose-600 transition hover:bg-rose-50"
-          >
-            Delete
-          </button>
+          {["Cancelled", "Refunded"].includes(booking.status) ? (
+            <button
+              type="button"
+              onClick={onDelete}
+              className="rounded-full border border-rose-200 bg-white px-3 py-2 text-xs font-bold text-rose-600 transition hover:bg-rose-50"
+            >
+              Delete
+            </button>
+          ) : null}
         </div>
       </td>
     </tr>

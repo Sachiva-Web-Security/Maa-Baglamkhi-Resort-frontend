@@ -1,7 +1,7 @@
 // src/components/Restaurant/TableCard.jsx
 import React, { useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { RestaurantContext } from "../../Context/RestaurantContext";
+import RestaurantContext from "../../Context/restaurantContext";
 
 const TableCard = ({ table }) => {
   const navigate = useNavigate();

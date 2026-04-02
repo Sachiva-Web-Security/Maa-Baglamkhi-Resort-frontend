@@ -1,10 +1,9 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 
-import { RestaurantContext } from "../../Context/RestaurantContext";
+import RestaurantContext from "../../Context/restaurantContext";
 import API, { getBackendBaseURL } from "../../api";
 import { restaurantService } from "../../services/restaurantService";
-import AddMenuItemModal from "./AddMenuItemModal";
 
 const normalizeCategory = (value) => (value || "Other").trim().toLowerCase();
 const normalizeItemName = (value) => String(value || "").trim().toLowerCase();
@@ -104,25 +103,10 @@ const MenuPage = () => {
       : [],
   );
   const [menu, setMenu] = useState(menuItems);
-  const [menuCatalog, setMenuCatalog] = useState([]);
   const [isLoadingMenu, setIsLoadingMenu] = useState(false);
   const [menuError, setMenuError] = useState(null);
-  const [showAddMenu, setShowAddMenu] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSavingMenuItem, setIsSavingMenuItem] = useState(false);
-  const [newItem, setNewItem] = useState({
-    name: "",
-    price: "",
-    category: "Other",
-    tax: 5,
-    happyHourPrice: "",
-    happyHourStart: "",
-    happyHourEnd: "",
-  });
-  const [newItemImage, setNewItemImage] = useState(null);
-  const [newItemImagePreview, setNewItemImagePreview] = useState("");
-  const [expandedCategory, setExpandedCategory] = useState("Other");
   const [taxByItem, setTaxByItem] = useState({});
   const [prepTimeMinutes, setPrepTimeMinutes] = useState(20);
   const [quickAddQuery, setQuickAddQuery] = useState("");
@@ -184,34 +168,6 @@ const MenuPage = () => {
     return Array.from(deduped.values());
   }, [menu]);
 
-  useEffect(() => {
-    let mounted = true;
-    const loadCatalog = async () => {
-      try {
-        const response = await API.get("/restaurant/menu");
-        if (mounted) setMenuCatalog(Array.isArray(response.data) ? response.data : []);
-      } catch {
-        if (mounted) setMenuCatalog([]);
-      }
-    };
-    loadCatalog();
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!newItemImage) {
-      setNewItemImagePreview("");
-      return undefined;
-    }
-
-    const previewUrl = URL.createObjectURL(newItemImage);
-    setNewItemImagePreview(previewUrl);
-
-    return () => URL.revokeObjectURL(previewUrl);
-  }, [newItemImage]);
-
   const categories = useMemo(() => {
     const set = new Map();
     visibleMenu.forEach((item) => {
@@ -240,27 +196,6 @@ const MenuPage = () => {
       })
       .slice(0, 8);
   }, [quickAddQuery, visibleMenu]);
-
-  const addCategories = useMemo(() => {
-    const defaults = ["Beverages", "Breakfast", "Paneer", "Salad", "Rice", "Starter", "Chicken", "Chinese", "Soup", "Dessert", "Other"];
-    const extra = menuCatalog
-      .map((item) => (item.category || "Other").trim() || "Other")
-      .filter((value, index, arr) => arr.findIndex((v) => normalizeCategory(v) === normalizeCategory(value)) === index);
-    return [...defaults, ...extra].filter(
-      (value, index, arr) => arr.findIndex((v) => normalizeCategory(v) === normalizeCategory(value)) === index,
-    );
-  }, [menuCatalog]);
-
-  const catalogByCategory = useMemo(
-    () =>
-      addCategories.reduce((acc, category) => {
-        acc[category] = menuCatalog.filter(
-          (item) => normalizeCategory(item.category) === normalizeCategory(category),
-        );
-        return acc;
-      }, {}),
-    [addCategories, menuCatalog],
-  );
 
   const handleQtyChange = (id, value) => {
     setQty((prev) => ({ ...prev, [id]: value }));
@@ -359,11 +294,6 @@ const MenuPage = () => {
     return `${getBackendBaseURL()}${imagePath}`;
   };
 
-  const handleNewItemImageChange = (event) => {
-    const file = event.target.files?.[0];
-    setNewItemImage(file || null);
-  };
-
   const subtotal = order.reduce((sum, item) => sum + item.amount, 0);
   const taxTotal = order.reduce((sum, item) => sum + item.taxAmount, 0);
   const grandTotal = subtotal + taxTotal;
@@ -425,6 +355,7 @@ const MenuPage = () => {
         prepTimeMinutes,
         items: order.map(({ name, qty: quantity, rate: price }) => ({ name, quantity, price })),
       });
+      window.dispatchEvent(new Event("kitchenUpdated"));
       window.dispatchEvent(new Event("tokenUpdated"));
       navigate(`/restaurant/edit-token/${table}`, { state: { items: order, entityType, roomData } });
       setOrder([]);
@@ -432,45 +363,6 @@ const MenuPage = () => {
       setSubmitError(err.response?.data?.message || "Failed to submit order");
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  const handleAddMenuItem = async () => {
-    if (!newItem.name || !newItem.price) return alert("Enter item name and price");
-    try {
-      setIsSavingMenuItem(true);
-      const payload = new FormData();
-      payload.append("name", newItem.name);
-      payload.append("price", newItem.price);
-      payload.append("category", newItem.category);
-      payload.append("tableNumber", table);
-      payload.append("tax", String(newItem.tax ?? 5));
-      payload.append("happyHourPrice", newItem.happyHourPrice || "");
-      payload.append("happyHourStart", newItem.happyHourStart || "");
-      payload.append("happyHourEnd", newItem.happyHourEnd || "");
-      if (newItemImage) {
-        payload.append("image", newItemImage);
-      }
-
-      await restaurantService.addMenuItem(payload);
-      const response = await API.get("/restaurant/menu");
-      setMenuCatalog(Array.isArray(response.data) ? response.data : []);
-      setNewItem({
-        name: "",
-        price: "",
-        category: "Other",
-        tax: 5,
-        happyHourPrice: "",
-        happyHourStart: "",
-        happyHourEnd: "",
-      });
-      setNewItemImage(null);
-      setExpandedCategory("Other");
-      setShowAddMenu(false);
-    } catch {
-      alert("Failed to add menu item");
-    } finally {
-      setIsSavingMenuItem(false);
     }
   };
 
@@ -872,34 +764,6 @@ const MenuPage = () => {
         </div>
       </div>
 
-      <AddMenuItemModal
-        open={showAddMenu && !banquetMenuPicker}
-        onClose={() => {
-          setShowAddMenu(false);
-          setNewItem({
-            name: "",
-            price: "",
-            category: "Other",
-            tax: 5,
-            happyHourPrice: "",
-            happyHourStart: "",
-            happyHourEnd: "",
-          });
-          setNewItemImage(null);
-          setExpandedCategory("Other");
-        }}
-        onSubmit={handleAddMenuItem}
-        form={newItem}
-        setForm={setNewItem}
-        categories={addCategories}
-        catalogByCategory={catalogByCategory}
-        expandedCategory={expandedCategory}
-        setExpandedCategory={setExpandedCategory}
-        imagePreview={newItemImagePreview}
-        imageFileName={newItemImage?.name || ""}
-        onImageChange={handleNewItemImageChange}
-        loading={isSavingMenuItem}
-      />
     </div>
   );
 };

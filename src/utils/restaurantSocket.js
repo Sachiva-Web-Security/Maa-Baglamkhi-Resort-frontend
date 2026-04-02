@@ -2,7 +2,10 @@ import { getBackendBaseURL } from "../api";
 
 let socketPromise = null;
 let socketInstance = null;
+let socketUsers = 0;
+let disconnectTimer = null;
 const SOCKET_CLIENT_VERSION = "proxy-ws-v3";
+const SOCKET_RELEASE_DELAY_MS = 750;
 
 const resolveSocketBaseURL = () => {
   const explicitOrigin = import.meta.env.VITE_BACKEND_ORIGIN || import.meta.env.VITE_API_URL || "";
@@ -41,7 +44,32 @@ const loadSocketScript = () =>
     document.head.appendChild(script);
   });
 
+const cancelPendingDisconnect = () => {
+  if (disconnectTimer) {
+    clearTimeout(disconnectTimer);
+    disconnectTimer = null;
+  }
+};
+
+const scheduleDisconnect = () => {
+  cancelPendingDisconnect();
+  disconnectTimer = setTimeout(() => {
+    disconnectTimer = null;
+    if (socketUsers > 0) return;
+
+    if (socketInstance) {
+      socketInstance.disconnect();
+      socketInstance = null;
+    }
+
+    socketPromise = null;
+  }, SOCKET_RELEASE_DELAY_MS);
+};
+
 export const getRestaurantSocket = async () => {
+  socketUsers += 1;
+  cancelPendingDisconnect();
+
   if (!socketPromise) {
     socketPromise = loadSocketScript().then((ioFactory) => {
       if (!ioFactory) return null;
@@ -56,18 +84,22 @@ export const getRestaurantSocket = async () => {
     });
   }
 
-  const socket = await socketPromise;
-  if (socket && socket.disconnected) {
-    socket.connect();
+  try {
+    const socket = await socketPromise;
+    if (socket && socket.disconnected) {
+      socket.connect();
+    }
+    return socket;
+  } catch (error) {
+    socketUsers = Math.max(0, socketUsers - 1);
+    socketPromise = null;
+    throw error;
   }
-  return socket;
 };
 
 export const releaseRestaurantSocket = () => {
-  if (socketInstance) {
-    socketInstance.disconnect();
-    socketInstance = null;
+  socketUsers = Math.max(0, socketUsers - 1);
+  if (socketUsers === 0) {
+    scheduleDisconnect();
   }
-  socketPromise = null;
-  delete window.io;
 };

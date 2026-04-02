@@ -112,7 +112,7 @@ const PaymentBills = () => {
         </p>
         <h2 className="mt-3 text-3xl font-black leading-tight">Payment Bills</h2>
         <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-100/85">
-          Generate bill ke baad customer name, mobile number, amount aur payment status yahan clean card format me show hoga.
+       “After generating the bill, the customer name, mobile number, amount, and payment status will be displayed here in a clean card format.”
         </p>
       </div>
 
@@ -148,7 +148,7 @@ const PaymentBills = () => {
             </div>
           ) : (
             <div className="mt-4 rounded-[20px] border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-sm text-slate-500">
-              Abhi tak koi bill generate nahi hua.
+              “No bill has been generated yet.”
             </div>
           )}
         </div>
@@ -213,7 +213,7 @@ const PaymentBills = () => {
             </div>
           ) : (
             <div className="mt-6 rounded-[20px] border border-dashed border-slate-300 bg-slate-50 px-4 py-10 text-center text-sm text-slate-500">
-              Generate Bill karne ke baad yahan bill card show ho jayega.
+          “After generating the bill, the bill card will appear here.”
             </div>
           )}
         </div>

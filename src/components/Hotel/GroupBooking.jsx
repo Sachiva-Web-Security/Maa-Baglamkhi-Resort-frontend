@@ -246,8 +246,7 @@ const GroupBooking = () => {
             Multi-Room Group Reservation
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-100/80">
-            Ek master guest ke liye multiple rooms ek saath book karo — single
-            payment flow me.
+            “Book multiple rooms at once for a master guest — within a single payment flow.”
           </p>
         </section>
 

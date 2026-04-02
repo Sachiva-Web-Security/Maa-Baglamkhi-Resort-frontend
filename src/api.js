@@ -1,7 +1,12 @@
 import axios from "axios";
 
+const ENV =
+  typeof import.meta !== "undefined" && import.meta.env
+    ? import.meta.env
+    : {};
+
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_ORIGIN || "/api",
+  baseURL: ENV.VITE_API_URL || ENV.VITE_BACKEND_ORIGIN || "/api",
 });
 
 API.interceptors.request.use((req) => {

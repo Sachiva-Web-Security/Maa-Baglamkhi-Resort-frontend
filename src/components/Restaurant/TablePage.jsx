@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiPlusCircle, FiHome, FiGrid, FiRefreshCw } from "react-icons/fi";
 import API from "../../api";
-import { RestaurantContext } from "../../Context/RestaurantContext";
+import RestaurantContext from "../../Context/restaurantContext";
 import AddTableModal from "./AddTableModal";
 import { restaurantService } from "../../services/restaurantService";
 
@@ -11,6 +11,17 @@ const SAVED_INVOICE_KEY = "restaurant-saved-invoice";
 const normalizeInvoiceStatus = (value) => String(value || "").trim().toLowerCase();
 const isOpenInvoiceStatus = (value) => normalizeInvoiceStatus(value) !== "paid";
 const getReusableBill = (bill) => (bill && isOpenInvoiceStatus(bill.invoiceStatus) ? bill : null);
+const isPaidBill = (bill) =>
+  Boolean(
+    bill &&
+      (
+        normalizeInvoiceStatus(bill.invoiceStatus) === "paid" ||
+        bill.account_transaction_id ||
+        bill.accountTransactionId ||
+        bill.payment_id ||
+        bill.paymentId
+      ),
+  );
 const createBillLookupKey = (entityType, tableName, tokenId) =>
   tokenId
     ? `${String(entityType || "Table").toLowerCase()}:token:${Number(tokenId)}`
@@ -149,6 +160,18 @@ const TablePage = () => {
 
   const handleAddTable = async () => {
     if (!tableForm.number.trim()) return;
+
+
+const exists = tables.some(
+  (t) => String(t.name).trim() === tableForm.number.trim()
+);
+
+if (exists) {
+  alert("Table already exists");
+  return;
+}
+
+
     try {
       setSaving(true);
       await addTable(tableForm);
@@ -161,7 +184,7 @@ const TablePage = () => {
       });
       setShowAddTable(false);
     } catch (err) {
-      alert(err.message);
+      alert(err.response?.data?.message || err.message);
     } finally {
       setSaving(false);
     }
@@ -201,9 +224,38 @@ const TablePage = () => {
     }
   };
 
-  const runningTables = tables.filter((t) => getTableStatus(t.name) === "Occupied").length;
-  const blankTables = tables.filter((t) => getTableStatus(t.name) === "Available").length;
-  const pendingInvoice = tables.filter((table) => (tokenSnapshots[table.name]?.items || []).length > 0).length;
+  const displayedTableRows = tables.map((table) => {
+    const snapshot = tokenSnapshots[table.name] || {};
+    const latestTokenBill =
+      billByTable[createBillLookupKey("Table", table.name, snapshot.tokenId || null)] ||
+      null;
+    const latestTableBill =
+      billByTable[createBillLookupKey("Table", table.name, null)] ||
+      null;
+    const relatedBill = latestTokenBill || latestTableBill;
+    const paidBill = isPaidBill(relatedBill);
+    const openBill = Boolean(relatedBill) && !paidBill;
+    const itemCount = (snapshot.items || []).length;
+    const hasMeaningfulToken = itemCount > 0 || openBill;
+    const displaySnapshot = hasMeaningfulToken
+      ? snapshot
+      : { tokenId: null, tokenCode: null, items: [], waiterName: "Waiter" };
+    const status = hasMeaningfulToken ? "Occupied" : "Available";
+
+    return {
+      table,
+      status,
+      occupied: status === "Occupied",
+      snapshot: displaySnapshot,
+      itemCount,
+      relatedBill,
+      showPayNow: openBill,
+    };
+  });
+
+  const runningTables = displayedTableRows.filter((row) => row.occupied).length;
+  const blankTables = displayedTableRows.filter((row) => row.status === "Available").length;
+  const pendingInvoice = displayedTableRows.filter((row) => row.itemCount > 0 && row.showPayNow).length;
 
   const openCreateInvoice = async (tableName) => {
     const snapshot = tokenSnapshots[tableName];
@@ -383,7 +435,7 @@ const TablePage = () => {
           <div className="border-b border-slate-100 px-6 py-5">
             <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-sky-500">Table Management</div>
             <h3 className="mt-2 text-2xl font-black text-slate-900">Restaurant tables in list view</h3>
-            <p className="mt-1 text-sm text-slate-500">Har table ka status, persons count, aur actions yahan row format me manage hoga.</p>
+            <p className="mt-1 text-sm text-slate-500">“Each table’s status, person count, and actions will be managed here in a row format.”</p>
           </div>
 
           <div className="overflow-x-auto">
@@ -399,14 +451,7 @@ const TablePage = () => {
                 </tr>
               </thead>
               <tbody>
-                {tables.map((table) => {
-                  const status = getTableStatus(table.name);
-                  const occupied = status === "Occupied";
-                  const snapshot = tokenSnapshots[table.name] || {};
-                  const itemCount = (snapshot.items || []).length;
-                  const relatedBill =
-                    billByTable[createBillLookupKey("Table", table.name, snapshot.tokenId || null)] || null;
-                  const showPayNow = relatedBill && String(relatedBill.invoiceStatus || "").toLowerCase() !== "paid";
+                {displayedTableRows.map(({ table, status, occupied, snapshot, itemCount, showPayNow }) => {
 
                   return (
                     <tr key={table.id} className="border-t border-slate-100 align-top transition hover:bg-sky-50/30">

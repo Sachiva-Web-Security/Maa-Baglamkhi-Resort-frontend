@@ -49,7 +49,7 @@ const FoodSalesChart = () => {
   }, [fetchCharts]);
 
   return (
-    <div className="w-full min-w-0">
+    <div className="w-full h-103 min-w-0  ">
       <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-300">
         Dining Trend
       </p>

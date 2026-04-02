@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { FiFileText, FiHome, FiPlusCircle } from "react-icons/fi";
 
 import API from "../../api";
-import { RestaurantContext } from "../../Context/RestaurantContext";
+import RestaurantContext from "../../Context/restaurantContext";
 import { restaurantService } from "../../services/restaurantService";
 import {
   expandBookings,

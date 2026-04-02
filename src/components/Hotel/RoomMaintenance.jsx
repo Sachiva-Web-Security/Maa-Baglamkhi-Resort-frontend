@@ -285,8 +285,7 @@ const RoomMaintenance = () => {
                   Room Blocking & Maintenance
                 </h1>
                 <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-100/80">
-                  Rooms ko maintenance window ke dauran block karo taaki koi
-                  booking conflict na ho.
+                  “Block rooms during the maintenance window to avoid any booking conflicts.”
                 </p>
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -341,7 +340,7 @@ const RoomMaintenance = () => {
               <div className="text-4xl">🔧</div>
               <p className="mt-4 font-bold text-slate-500">
                 {filterStatus === "Active"
-                  ? "Koi active maintenance block nahi hai."
+                  ? "There is no active maintenance block."
                   : "No records found."}
               </p>
               <button

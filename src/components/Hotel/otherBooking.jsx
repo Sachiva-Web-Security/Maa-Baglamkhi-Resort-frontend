@@ -288,7 +288,7 @@ const OtherBooking = () => {
             <div className="rounded-[24px] border border-slate-200/80 bg-[linear-gradient(135deg,#f8fdff_0%,#eff8ff_100%)] p-5 shadow-[0_18px_45px_rgba(15,23,42,0.06)]">
               <div className="mt-1 text-xl font-black text-slate-900">Continue Booking</div>
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                Source aur address details save karke next reference section par move karein.
+               Save the source and address details, then move to the next reference section.”
               </p>
               <div className="mt-5 flex flex-col gap-3">
                 <button

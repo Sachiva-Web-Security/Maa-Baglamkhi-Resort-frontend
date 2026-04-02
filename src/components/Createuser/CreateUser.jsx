@@ -4,7 +4,7 @@ import { FaTimes, FaUserPlus } from "react-icons/fa";
 import API from "../../api";
 
 const fieldCls =
-  "w-full rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100";
+  "w-full rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-900 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100";
 
 const CreateUser = ({ onClose, onUserCreated }) => {
   const [form, setForm] = useState({

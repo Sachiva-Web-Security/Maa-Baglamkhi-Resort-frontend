@@ -25,6 +25,46 @@ html, body {
   overflow-x: hidden;
 }
 
+:root {
+  --desktop-ui-scale: 0.67;
+}
+
+.desktop-scale-shell {
+  width: 100%;
+  min-height: 100vh;
+}
+
+.desktop-scale-content {
+  width: 100%;
+  min-height: 100vh;
+}
+
+@media (min-width: 1024px) {
+  .desktop-scale-content {
+    zoom: var(--desktop-ui-scale);
+  }
+
+  .desktop-scale-sidebar {
+    height: calc((100vh - 70px) / var(--desktop-ui-scale)) !important;
+  }
+}
+
+@supports not (zoom: 0.67) {
+  @media (min-width: 1024px) {
+    .desktop-scale-shell {
+      overflow-x: auto;
+      overflow-y: auto;
+    }
+
+    .desktop-scale-content {
+      width: calc(100% / var(--desktop-ui-scale));
+      min-height: calc(100vh / var(--desktop-ui-scale));
+      transform: scale(var(--desktop-ui-scale));
+      transform-origin: top left;
+    }
+  }
+}
+
 /* ─── Scrollbars ─────────────────────────────────────────────────── */
 * {
   scrollbar-width: thin;

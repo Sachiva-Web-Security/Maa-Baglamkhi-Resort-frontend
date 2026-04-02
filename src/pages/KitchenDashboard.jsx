@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   FaCheckCircle,
   FaClipboardList,
@@ -7,6 +7,7 @@ import {
 } from "react-icons/fa";
 
 import RoleDashboardShell from "../components/roleDashboards/RoleDashboardShell";
+import useDashboardAutoRefresh from "../hooks/useDashboardAutoRefresh";
 import { restaurantService } from "../services/restaurantService";
 
 const KitchenDashboard = () => {
@@ -14,31 +15,24 @@ const KitchenDashboard = () => {
   const [error, setError] = useState("");
   const [orders, setOrders] = useState([]);
 
-  useEffect(() => {
-    let mounted = true;
-
-    const load = async () => {
-      try {
-        setLoading(true);
-        setError("");
-        const data = await restaurantService.getKitchenOrders();
-        if (mounted) {
-          setOrders(Array.isArray(data) ? data : []);
-        }
-      } catch (err) {
-        if (mounted) {
-          setError("Kitchen dashboard data load nahi ho pa raha.");
-        }
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
-
-    load();
-    return () => {
-      mounted = false;
-    };
+  const load = useCallback(async (silent = false) => {
+    try {
+      if (!silent) setLoading(true);
+      setError("");
+      const data = await restaurantService.getKitchenOrders();
+      setOrders(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setError("Kitchen dashboard data load nahi ho pa raha.");
+    } finally {
+      if (!silent) setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  useDashboardAutoRefresh(load);
 
   const byStatus = (needle) =>
     orders.filter((item) => String(item.status || "").toLowerCase().includes(needle)).length;

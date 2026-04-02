@@ -7,6 +7,12 @@ import {
   FaArrowRight, FaBell, FaCalendarAlt,
 } from "react-icons/fa";
 import API, { getBackendBaseURL } from "../../api";
+import {
+  createInventoryMasterRecord,
+  deleteInventoryMasterRecord,
+  fetchInventoryMasterRecords,
+  updateInventoryMasterRecord,
+} from "../../services/inventoryMastersService";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -54,6 +60,22 @@ const STORAGE_KEYS = {
   "menu-items": "inventory_menu_items",
   "menu-categories": "inventory_menu_categories",
 };
+
+const INVENTORY_MASTER_API_SECTION_MAP = {
+  "menu-categories": "menu-categories",
+  segments: "segments",
+  vendors: "vendors",
+  units: "units",
+  "unit-conversion": "unit-conversions",
+  "store-kitchen": "locations",
+  "item-groups": "item-groups",
+  gravies: "gravies",
+  ingredients: "ingredients",
+  "purchase-items": "purchase-items",
+  "purchase-services": "purchase-services",
+};
+
+const API_BACKED_MASTER_SECTIONS = new Set(Object.keys(STORAGE_KEYS));
 
 const MENU_ITEM_FIELDS = [
   { key: "name", label: "Dish Name", type: "text", required: true },
@@ -138,6 +160,7 @@ const MASTER_FIELDS = {
     { key: "quantity", label: "Quantity", type: "number", required: true },
     { key: "unit", label: "Unit", type: "text" },
     { key: "approvedBy", label: "Approved By", type: "text" },
+    { key: "notes", label: "Notes", type: "text" },
     { key: "date", label: "Date", type: "date", required: true },
   ],
   "menu-categories": [
@@ -158,7 +181,7 @@ const MASTER_TABLE_COLUMNS = {
   ingredients: ["name", "group", "unit", "status"],
   "purchase-items": ["itemName", "vendor", "quantity", "unit", "ratePerUnit", "amount", "invoiceNo", "date"],
   "purchase-services": ["serviceName", "vendor", "amount", "date", "status"],
-  "stock-transfer": ["itemName", "fromStore", "toStore", "quantity", "unit", "approvedBy", "date"],
+  "stock-transfer": ["itemName", "fromStore", "toStore", "quantity", "unit", "approvedBy", "notes", "date"],
   "menu-categories": ["name", "parent", "status"],
 };
 
@@ -637,6 +660,9 @@ function ItemsSection({ items, form, setForm, editingId, setEditingId, onSave, o
 function GenericMasterSection({ section, records, onSave, onEdit, onDelete, draft, setDraft, editingId, searchQuery, setSearchQuery }) {
   const fields = MASTER_FIELDS[section.id];
   const columns = MASTER_TABLE_COLUMNS[section.id];
+  const subtitle = API_BACKED_MASTER_SECTIONS.has(section.id)
+    ? "Synced with inventory backend API"
+    : "Stored in local inventory workspace";
   const filtered = records.filter((r) =>
     Object.values(r).some((v) => String(v ?? "").toLowerCase().includes(searchQuery.toLowerCase()))
   );
@@ -646,7 +672,7 @@ function GenericMasterSection({ section, records, onSave, onEdit, onDelete, draf
       <div className="grid gap-5 lg:grid-cols-[340px,1fr]">
         <FormPanel
           title={section.label}
-          subtitle="Stored in local inventory workspace"
+          subtitle={subtitle}
           fields={fields}
           draft={draft}
           setDraft={setDraft}
@@ -702,7 +728,7 @@ function MenuItemsSection({ records, draft, setDraft, editingId, onSave, onEdit,
         <div className="space-y-5">
           <FormPanel
             title="Menu Item"
-            subtitle="Inventory module se category-wise dish cards manage karo."
+            subtitle="Manage category-wise dish cards from the inventory module."
             fields={MENU_ITEM_FIELDS.map((field) =>
               field.key === "category" ? { ...field, suggestions: menuCategoryOptions } : field
             )}
@@ -713,16 +739,38 @@ function MenuItemsSection({ records, draft, setDraft, editingId, onSave, onEdit,
             onReset={() => { setDraft(buildInitialForm(MENU_ITEM_FIELDS)); onEdit(null); }}
           />
           {previewImage ? (
-            <div className="overflow-hidden rounded-[28px] border border-white/70 bg-white/90 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-              <div className="aspect-[4/3] w-full overflow-hidden bg-slate-100">
-                <img src={previewImage} alt={draft.name || "Menu preview"} className="h-full w-full object-cover" />
+            <div className="mx-auto w-full max-w-[360px] overflow-hidden rounded-[28px] border border-slate-200/80 bg-white shadow-[0_20px_45px_rgba(15,23,42,0.10)]">
+              <div className="relative h-52 overflow-hidden bg-slate-100 sm:h-56">
+                <img
+                  src={previewImage}
+                  alt={draft.name || "Menu preview"}
+                  className="block h-full w-full object-cover object-center"
+                />
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-slate-950/40 via-slate-950/10 to-transparent" />
+                <div className="absolute left-3 top-3">
+                  <Badge color="cyan">{draft.category || "Menu item"}</Badge>
+                </div>
+                <div className="absolute right-3 top-3">
+                  <Badge color={String(draft.status || "").toLowerCase().includes("out") ? "red" : "green"}>
+                    {draft.status || "Available"}
+                  </Badge>
+                </div>
               </div>
-              <div className="space-y-1 p-4">
-                <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-cyan-500">Image Preview</p>
-                <h4 className="text-sm font-semibold text-slate-900">{draft.name || "Dish image preview"}</h4>
-                <p className="text-xs text-slate-500">
-                  {draft.imageFile instanceof File ? "Selected image upload ke saath save hogi." : "Saved image preview."}
-                </p>
+              <div className="space-y-3 bg-gradient-to-b from-white to-slate-50 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="text-lg font-bold text-slate-900">{draft.name || "Dish image preview"}</div>
+                    <div className="mt-1 min-h-[40px] text-sm leading-5 text-slate-500">
+                      {draft.description || (draft.imageFile instanceof File ? "Selected image upload ke saath save hogi." : "Saved image preview.")}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge color={String(draft.foodType || "").toLowerCase().includes("non") ? "red" : "green"}>
+                    {draft.foodType || "Veg"}
+                  </Badge>
+                  <Badge color="amber">{formatCurrency(draft.price || 0)}</Badge>
+                </div>
               </div>
             </div>
           ) : null}
@@ -753,27 +801,37 @@ function MenuItemsSection({ records, draft, setDraft, editingId, onSave, onEdit,
 
               <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
                 {items.map((item) => (
-                  <div key={item.id} className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_18px_40px_rgba(15,23,42,0.06)]">
-                    <div className="h-44 bg-slate-100">
+                  <div key={item.id} className="group overflow-hidden rounded-[28px] border border-slate-200/80 bg-white shadow-[0_20px_45px_rgba(15,23,42,0.08)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_24px_55px_rgba(15,23,42,0.14)]">
+                    <div className="relative h-52 overflow-hidden bg-slate-100 sm:h-56">
                       {item.imageUrl ? (
-                        <img src={resolveAssetUrl(item.imageUrl)} alt={item.name} className="h-full w-full object-cover" />
+                        <img
+                          src={resolveAssetUrl(item.imageUrl)}
+                          alt={item.name}
+                          className="block h-full w-full object-cover object-center transition duration-500 group-hover:scale-[1.03]"
+                        />
                       ) : (
-                        <div className="flex h-full items-center justify-center bg-[linear-gradient(135deg,#dbeafe_0%,#f8fafc_100%)] text-sm font-semibold text-slate-400">
+                        <div className="flex h-full w-full items-center justify-center bg-[linear-gradient(135deg,#dbeafe_0%,#f8fafc_100%)] text-sm font-semibold text-slate-400">
                           Dish Image
                         </div>
                       )}
-                    </div>
-                    <div className="space-y-3 p-4">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <div className="text-lg font-bold text-slate-900">{item.name}</div>
-                          <div className="mt-1 text-sm text-slate-500">{item.description || "No description added yet."}</div>
-                        </div>
+                      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-slate-950/40 via-slate-950/10 to-transparent" />
+                      <div className="absolute left-3 top-3">
+                        <Badge color="cyan">{item.category || "Menu item"}</Badge>
+                      </div>
+                      <div className="absolute right-3 top-3">
                         <Badge color={String(item.status || "").toLowerCase().includes("out") ? "red" : "green"}>
                           {item.status || "Available"}
                         </Badge>
                       </div>
-                      <div className="flex flex-wrap gap-2">
+                    </div>
+                    <div className="space-y-3 bg-gradient-to-b from-white to-slate-50 p-4">
+                      <div className="space-y-2">
+                        <div>
+                          <div className="text-lg font-bold text-slate-900">{item.name}</div>
+                          <div className="mt-1 min-h-[40px] text-sm leading-5 text-slate-500">{item.description || "No description added yet."}</div>
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
                         <Badge color={String(item.foodType || "").toLowerCase().includes("non") ? "red" : "green"}>
                           {item.foodType || "Veg"}
                         </Badge>
@@ -933,7 +991,7 @@ function WasteLogSection({ records, onSave, onEdit, onDelete, draft, setDraft, e
 
 // ─── Section: Stock Audit ─────────────────────────────────────────────────────
 
-function StockAuditSection({ items }) {
+function StockAuditSection({ items, onSubmit, isSubmitting }) {
   const [auditData, setAuditData] = useState(() =>
     items.map((item) => ({
       id: item.id, name: item.name, category: item.category, branch: item.branch,
@@ -941,6 +999,22 @@ function StockAuditSection({ items }) {
     }))
   );
   const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    setAuditData(
+      items.map((item) => ({
+        id: item.id,
+        name: item.name,
+        category: item.category,
+        branch: item.branch,
+        unit: item.unit,
+        systemStock: item.stock,
+        physicalStock: "",
+        remarks: "",
+      }))
+    );
+    setSubmitted(false);
+  }, [items]);
 
   const handlePhysicalChange = (id, val) => {
     setAuditData((d) => d.map((r) => r.id === id ? { ...r, physicalStock: val } : r));
@@ -957,6 +1031,19 @@ function StockAuditSection({ items }) {
   });
 
   const withVariance = auditResults.filter((r) => r.variance !== null && r.variance !== 0);
+
+  const handleSubmit = async () => {
+    const entries = auditResults.filter((row) => row.physicalStock !== "");
+    if (!entries.length) {
+      alert("Please enter at least one physical count before submitting.");
+      return;
+    }
+
+    const success = await onSubmit(entries);
+    if (success) {
+      setSubmitted(true);
+    }
+  };
 
   return (
     <div className="space-y-5">
@@ -991,9 +1078,9 @@ function StockAuditSection({ items }) {
             <h3 className="text-base font-semibold text-slate-900">Physical Count Sheet</h3>
             <p className="text-xs text-slate-400">{items.length} items to audit</p>
           </div>
-          <button type="button" onClick={() => setSubmitted(true)}
+          <button type="button" onClick={handleSubmit} disabled={isSubmitting}
             className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition">
-            <FaCheckCircle size={13} /> Submit Audit
+            <FaCheckCircle size={13} /> {isSubmitting ? "Submitting..." : "Submit Audit"}
           </button>
         </div>
         <div className="overflow-x-auto">
@@ -1112,7 +1199,9 @@ export default function InventoryDashboard() {
 
   const [masterData, setMasterData] = useState(() =>
     Object.keys(STORAGE_KEYS).reduce((acc, key) => {
-      acc[key] = loadStoredValue(STORAGE_KEYS[key], DEFAULT_MASTER_DATA[key] || []);
+      acc[key] = API_BACKED_MASTER_SECTIONS.has(key)
+        ? []
+        : loadStoredValue(STORAGE_KEYS[key], DEFAULT_MASTER_DATA[key] || []);
       return acc;
     }, {})
   );
@@ -1121,16 +1210,36 @@ export default function InventoryDashboard() {
   const [menuDraft, setMenuDraft] = useState(buildInitialForm(MENU_ITEM_FIELDS));
   const [editingMenuId, setEditingMenuId] = useState(null);
   const [menuItemsData, setMenuItemsData] = useState([]);
+  const [auditReportRows, setAuditReportRows] = useState([]);
+  const [isSubmittingAudit, setIsSubmittingAudit] = useState(false);
 
   // Load inventory items from API
   useEffect(() => {
     const load = async () => {
       try {
         setItemsLoading(true);
-        const [inventoryRes, menuRes] = await Promise.all([
+        const masterSectionEntries = await Promise.all(
+          Object.entries(INVENTORY_MASTER_API_SECTION_MAP).map(async ([sectionKey, apiSectionKey]) => {
+            const records = await fetchInventoryMasterRecords(apiSectionKey);
+            return [sectionKey, records];
+          }),
+        );
+        const [
+          inventoryRes,
+          menuRes,
+          wasteRes,
+          purchaseOrdersRes,
+          transfersRes,
+          auditReportRes,
+        ] = await Promise.all([
           API.get("/inventory"),
           API.get("/restaurant/menu"),
+          API.get("/inventory/waste"),
+          API.get("/inventory/purchase-orders"),
+          API.get("/inventory/transfers"),
+          API.get("/inventory/audit/report"),
         ]);
+        const nextMasterSections = Object.fromEntries(masterSectionEntries);
         setInventoryItems(Array.isArray(inventoryRes.data) ? inventoryRes.data : []);
         setMenuItemsData(
           (Array.isArray(menuRes.data) ? menuRes.data : []).map((item) => ({
@@ -1144,6 +1253,18 @@ export default function InventoryDashboard() {
             status: item.availability_status || item.status || "Available",
           })),
         );
+        setMasterData((cur) => ({
+          ...cur,
+          ...nextMasterSections,
+          "waste-log": Array.isArray(wasteRes.data) ? wasteRes.data : [],
+          "purchase-orders": Array.isArray(purchaseOrdersRes.data)
+            ? purchaseOrdersRes.data
+            : [],
+          "stock-transfer": Array.isArray(transfersRes.data) ? transfersRes.data : [],
+        }));
+        setAuditReportRows(
+          Array.isArray(auditReportRes.data) ? auditReportRes.data : []
+        );
       } catch (err) {
         setItemsError(err.response?.data?.message || "Could not load inventory items.");
       } finally {
@@ -1156,9 +1277,50 @@ export default function InventoryDashboard() {
   // Persist master data to localStorage
   useEffect(() => {
     Object.entries(STORAGE_KEYS).forEach(([key, storageKey]) => {
+      if (API_BACKED_MASTER_SECTIONS.has(key)) return;
       localStorage.setItem(storageKey, JSON.stringify(masterData[key] || []));
     });
   }, [masterData]);
+
+  const refreshWasteLogs = useCallback(async () => {
+    const response = await API.get("/inventory/waste");
+    setMasterData((cur) => ({
+      ...cur,
+      "waste-log": Array.isArray(response.data) ? response.data : [],
+    }));
+  }, []);
+
+  const refreshPurchaseOrders = useCallback(async () => {
+    const response = await API.get("/inventory/purchase-orders");
+    setMasterData((cur) => ({
+      ...cur,
+      "purchase-orders": Array.isArray(response.data) ? response.data : [],
+    }));
+  }, []);
+
+  const refreshTransfers = useCallback(async () => {
+    const response = await API.get("/inventory/transfers");
+    setMasterData((cur) => ({
+      ...cur,
+      "stock-transfer": Array.isArray(response.data) ? response.data : [],
+    }));
+  }, []);
+
+  const refreshAuditReport = useCallback(async () => {
+    const response = await API.get("/inventory/audit/report");
+    setAuditReportRows(Array.isArray(response.data) ? response.data : []);
+  }, []);
+
+  const refreshMasterSection = useCallback(async (sectionKey) => {
+    const apiSectionKey = INVENTORY_MASTER_API_SECTION_MAP[sectionKey];
+    if (!apiSectionKey) return;
+
+    const records = await fetchInventoryMasterRecords(apiSectionKey);
+    setMasterData((cur) => ({
+      ...cur,
+      [sectionKey]: records,
+    }));
+  }, []);
 
   // Reset form on section switch
   useEffect(() => {
@@ -1245,15 +1407,17 @@ export default function InventoryDashboard() {
           totalConsumed: st.reduce((s,r) => s + Number(r.quantity||0),0),
           totalCost: formatCurrency(st.reduce((s,r) => s + Number(r.quantity||0)*25,0)) },
       ],
-      "item-audit": inventoryItems.map((i) => ({
-        item: i.name, branch: i.branch,
-        physicalStock: `${Math.max(0,Number(i.stock||0)-1)} ${i.unit}`,
-        systemStock:   `${i.stock} ${i.unit}`,
-        variance:      `1 ${i.unit}`,
-        status: Number(i.stock||0) < 10 ? "⚠ Review" : "✔ Matched",
+      "item-audit": auditReportRows.map((row) => ({
+        item: row.itemName,
+        auditDate: row.auditDate || "---",
+        physicalStock: `${Number(row.physicalStock || 0)} ${row.unit || ""}`.trim(),
+        systemStock: `${Number(row.systemStock || 0)} ${row.unit || ""}`.trim(),
+        variance: `${Number(row.variance || 0) > 0 ? "+" : ""}${Number(row.variance || 0)} ${row.unit || ""}`.trim(),
+        status: Number(row.variance || 0) === 0 ? "Matched" : "Review",
+        remarks: row.remarks || "---",
       })),
     };
-  }, [inventoryItems, masterData]);
+  }, [auditReportRows, inventoryItems, masterData]);
 
   const reportConfig = {
     "vendor-report": { title:"Vendor Report", subtitle:"Purchase & service cost by vendor",
@@ -1268,32 +1432,101 @@ export default function InventoryDashboard() {
       columns:[{key:"item"},{key:"consumed"},{key:"kitchen"},{key:"cost"}] },
     "total-consumption-report": { title:"Total Consumption Report", subtitle:"Combined usage totals across all records",
       columns:[{key:"group"},{key:"entries"},{key:"totalConsumed"},{key:"totalCost"}] },
-    "item-audit": { title:"Item Audit Report", subtitle:"System vs physical stock comparison",
-      columns:[{key:"item"},{key:"branch"},{key:"physicalStock"},{key:"systemStock"},{key:"variance"},{key:"status"}] },
+    "item-audit": { title:"Item Audit Report", subtitle:"Saved audit report from inventory backend",
+      columns:[{key:"item"},{key:"auditDate"},{key:"physicalStock"},{key:"systemStock"},{key:"variance"},{key:"status"},{key:"remarks"}] },
   };
 
   // ── Master CRUD helpers ───────────────────────────────────
   const saveMasterRecord = useCallback(() => {
-    const fields = MASTER_FIELDS[activeSection] || PO_FIELDS;
-    const isPoSection = activeSection === "purchase-orders";
-    const isWasteSection = activeSection === "waste-log";
-    const relevantFields = isPoSection ? PO_FIELDS : isWasteSection ? WASTE_FIELDS : (MASTER_FIELDS[activeSection] || []);
+    const run = async () => {
+      const isPoSection = activeSection === "purchase-orders";
+      const isWasteSection = activeSection === "waste-log";
+      const isTransferSection = activeSection === "stock-transfer";
+      const inventoryMasterApiSection = INVENTORY_MASTER_API_SECTION_MAP[activeSection];
+      const relevantFields = isPoSection
+        ? PO_FIELDS
+        : isWasteSection
+          ? WASTE_FIELDS
+          : (MASTER_FIELDS[activeSection] || []);
 
-    const missing = relevantFields.some((f) => f.required && !String(masterDraft[f.key] ?? "").trim());
-    if (missing) { alert("Please fill all required fields."); return; }
-
-    const payload = relevantFields.reduce((acc, f) => { acc[f.key] = masterDraft[f.key]; return acc; }, {});
-
-    setMasterData((cur) => {
-      const list = cur[activeSection] || [];
-      if (editingMasterId) {
-        return { ...cur, [activeSection]: list.map((r) => r.id === editingMasterId ? { ...r, ...payload } : r) };
+      const missing = relevantFields.some((f) => f.required && !String(masterDraft[f.key] ?? "").trim());
+      if (missing) {
+        alert("Please fill all required fields.");
+        return;
       }
-      return { ...cur, [activeSection]: [...list, { id: Date.now(), ...payload }] };
-    });
-    setMasterDraft(buildInitialForm(relevantFields));
-    setEditingMasterId(null);
-  }, [activeSection, masterDraft, editingMasterId]);
+
+      const payload = relevantFields.reduce((acc, f) => {
+        acc[f.key] = masterDraft[f.key];
+        return acc;
+      }, {});
+
+      if (isPoSection) {
+        payload.quantity = Number(payload.quantity || 0);
+        payload.rate = Number(payload.rate || 0);
+      }
+      if (isWasteSection || isTransferSection) {
+        payload.quantity = Number(payload.quantity || 0);
+      }
+
+      try {
+        if (isPoSection) {
+          if (editingMasterId) {
+            await API.put(`/inventory/purchase-orders/${editingMasterId}`, payload);
+          } else {
+            await API.post("/inventory/purchase-orders", payload);
+          }
+          await refreshPurchaseOrders();
+        } else if (isWasteSection) {
+          if (editingMasterId) {
+            await API.put(`/inventory/waste/${editingMasterId}`, payload);
+          } else {
+            await API.post("/inventory/waste", payload);
+          }
+          await refreshWasteLogs();
+        } else if (isTransferSection) {
+          if (editingMasterId) {
+            await API.put(`/inventory/transfers/${editingMasterId}`, payload);
+          } else {
+            await API.post("/inventory/transfers", payload);
+          }
+          await refreshTransfers();
+        } else if (inventoryMasterApiSection) {
+          if (editingMasterId) {
+            await updateInventoryMasterRecord(inventoryMasterApiSection, editingMasterId, payload);
+          } else {
+            await createInventoryMasterRecord(inventoryMasterApiSection, payload);
+          }
+          await refreshMasterSection(activeSection);
+        } else {
+          setMasterData((cur) => {
+            const list = cur[activeSection] || [];
+            if (editingMasterId) {
+              return {
+                ...cur,
+                [activeSection]: list.map((r) => r.id === editingMasterId ? { ...r, ...payload } : r),
+              };
+            }
+            return { ...cur, [activeSection]: [...list, { id: Date.now(), ...payload }] };
+          });
+        }
+
+        setMasterDraft(buildInitialForm(relevantFields));
+        setEditingMasterId(null);
+      } catch (err) {
+        alert(err.response?.data?.message || "Record save nahi ho paaya.");
+      }
+    };
+
+    run();
+  }, [
+    activeSection,
+    editingMasterId,
+    masterDraft,
+    refreshMasterSection,
+    refreshPurchaseOrders,
+    refreshTransfers,
+    refreshWasteLogs,
+  ]);
 
   const editMasterRecord = useCallback((record) => {
     if (!record) {
@@ -1309,11 +1542,58 @@ export default function InventoryDashboard() {
   }, [activeSection]);
 
   const deleteMasterRecord = useCallback((id) => {
-    setMasterData((cur) => ({
-      ...cur,
-      [activeSection]: (cur[activeSection] || []).filter((r) => r.id !== id),
+    const run = async () => {
+      try {
+        if (activeSection === "purchase-orders") {
+          await API.delete(`/inventory/purchase-orders/${id}`);
+          await refreshPurchaseOrders();
+        } else if (activeSection === "waste-log") {
+          await API.delete(`/inventory/waste/${id}`);
+          await refreshWasteLogs();
+        } else if (activeSection === "stock-transfer") {
+          await API.delete(`/inventory/transfers/${id}`);
+          await refreshTransfers();
+        } else if (INVENTORY_MASTER_API_SECTION_MAP[activeSection]) {
+          await deleteInventoryMasterRecord(INVENTORY_MASTER_API_SECTION_MAP[activeSection], id);
+          await refreshMasterSection(activeSection);
+        } else {
+          setMasterData((cur) => ({
+            ...cur,
+            [activeSection]: (cur[activeSection] || []).filter((r) => r.id !== id),
+          }));
+        }
+      } catch (err) {
+        alert(err.response?.data?.message || "Record delete nahi ho paaya.");
+      }
+    };
+
+    run();
+  }, [activeSection, refreshMasterSection, refreshPurchaseOrders, refreshTransfers, refreshWasteLogs]);
+
+  const submitInventoryAudit = useCallback(async (entries) => {
+    const payloadEntries = entries.map((entry) => ({
+      itemId: entry.id,
+      itemName: entry.name,
+      systemStock: Number(entry.systemStock || 0),
+      physicalStock: Number(entry.physicalStock || 0),
+      variance: Number(entry.variance || 0),
+      unit: entry.unit || "",
+      remarks: entry.remarks || "",
     }));
-  }, [activeSection]);
+
+    try {
+      setIsSubmittingAudit(true);
+      const response = await API.post("/inventory/audit", { entries: payloadEntries });
+      await refreshAuditReport();
+      alert(response.data?.message || "Audit submitted successfully.");
+      return true;
+    } catch (err) {
+      alert(err.response?.data?.message || "Audit submit nahi ho paaya.");
+      return false;
+    } finally {
+      setIsSubmittingAudit(false);
+    }
+  }, [refreshAuditReport]);
 
   const saveMenuItem = useCallback(() => {
     const run = async () => {
@@ -1369,18 +1649,18 @@ export default function InventoryDashboard() {
 
         const normalizedCategory = String(menuDraft.category || "").trim();
         if (normalizedCategory) {
-          setMasterData((cur) => {
-            const existingCategories = cur["menu-categories"] || [];
-            const hasCategory = existingCategories.some(
-              (item) => String(item.name || "").trim().toLowerCase() === normalizedCategory.toLowerCase(),
-            );
-            return hasCategory
-              ? cur
-              : {
-                  ...cur,
-                  "menu-categories": [...existingCategories, { id: Date.now() + Number(nextId || 0), name: normalizedCategory, parent: "Custom", status: "Active" }],
-                };
-          });
+          const existingCategories = masterData["menu-categories"] || [];
+          const hasCategory = existingCategories.some(
+            (item) => String(item.name || "").trim().toLowerCase() === normalizedCategory.toLowerCase(),
+          );
+          if (!hasCategory) {
+            await createInventoryMasterRecord("menu-categories", {
+              name: normalizedCategory,
+              parent: "Custom",
+              status: "Active",
+            });
+            await refreshMasterSection("menu-categories");
+          }
         }
 
         setMenuDraft(buildInitialForm(MENU_ITEM_FIELDS));
@@ -1391,7 +1671,7 @@ export default function InventoryDashboard() {
     };
 
     run();
-  }, [editingMenuId, menuDraft]);
+  }, [editingMenuId, masterData, menuDraft, refreshMasterSection]);
 
   const editMenuItem = useCallback((record) => {
     if (!record) {
@@ -1504,7 +1784,13 @@ export default function InventoryDashboard() {
     }
 
     if (selectedSection.type === "audit") {
-      return <StockAuditSection items={inventoryItems} />;
+      return (
+        <StockAuditSection
+          items={inventoryItems}
+          onSubmit={submitInventoryAudit}
+          isSubmitting={isSubmittingAudit}
+        />
+      );
     }
 
     if (selectedSection.type === "master") {

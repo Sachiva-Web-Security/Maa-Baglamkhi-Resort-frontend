@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   FaCashRegister,
   FaChair,
@@ -8,6 +8,7 @@ import {
 } from "react-icons/fa";
 
 import RoleDashboardShell from "../components/roleDashboards/RoleDashboardShell";
+import useDashboardAutoRefresh from "../hooks/useDashboardAutoRefresh";
 import { restaurantService } from "../services/restaurantService";
 import { getRestaurantSocket, releaseRestaurantSocket } from "../utils/restaurantSocket";
 
@@ -20,36 +21,29 @@ const RestaurantDashboard = () => {
   const [kitchenOrders, setKitchenOrders] = useState([]);
   const [readyNotification, setReadyNotification] = useState(null);
 
-  useEffect(() => {
-    let mounted = true;
+  const load = useCallback(async (silent = false) => {
+    try {
+      if (!silent) setLoading(true);
+      setError("");
+      const [ordersData, kitchenData] = await Promise.all([
+        restaurantService.getOrders(),
+        restaurantService.getKitchenOrders(),
+      ]);
 
-    const load = async () => {
-      try {
-        setLoading(true);
-        setError("");
-        const [ordersData, kitchenData] = await Promise.all([
-          restaurantService.getOrders(),
-          restaurantService.getKitchenOrders(),
-        ]);
-
-        if (mounted) {
-          setOrders(Array.isArray(ordersData) ? ordersData : []);
-          setKitchenOrders(Array.isArray(kitchenData) ? kitchenData : []);
-        }
-      } catch (err) {
-        if (mounted) {
-          setError("Restaurant dashboard data load nahi ho pa raha.");
-        }
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
-
-    load();
-    return () => {
-      mounted = false;
-    };
+      setOrders(Array.isArray(ordersData) ? ordersData : []);
+      setKitchenOrders(Array.isArray(kitchenData) ? kitchenData : []);
+    } catch (err) {
+      setError("Restaurant dashboard data load nahi ho pa raha.");
+    } finally {
+      if (!silent) setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  useDashboardAutoRefresh(load);
 
   useEffect(() => {
     let activeSocket = null;
@@ -78,6 +72,7 @@ const RestaurantDashboard = () => {
             payload.readyMessage ||
             `${String(payload.entityType || "Table")} ${payload.table || "--"} order ready hai. Serve on the ${String(payload.entityType || "table").toLowerCase()}.`,
         });
+        load(true);
       };
 
       socket.on("kitchen-order-ready", onReady);
@@ -90,12 +85,10 @@ const RestaurantDashboard = () => {
     return () => {
       unsubscribed = true;
       Promise.resolve(teardownPromise).then((teardown) => teardown && teardown());
-      if (activeSocket) {
-        activeSocket.disconnect();
-      }
+      activeSocket = null;
       releaseRestaurantSocket();
     };
-  }, []);
+  }, [load]);
 
   const activeTables = useMemo(
     () =>

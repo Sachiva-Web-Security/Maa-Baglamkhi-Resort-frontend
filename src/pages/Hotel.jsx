@@ -61,8 +61,7 @@ const Hotel = () => {
                 Manage reservations with a cleaner workflow
               </h1>
               <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-100/85 sm:text-base">
-                Guest se communication tak har step ko ek polished front-desk
-                dashboard me organize kiya gaya hai.
+          “Every step, from guest communication to operations, is organized into a polished front-desk dashboard.”
               </p>
             </div>
 

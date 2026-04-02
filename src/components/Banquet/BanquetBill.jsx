@@ -22,31 +22,53 @@ const BanquetBill = ({
     const diff = endMin - startMin;
     const hours = Math.max(1, Math.ceil(diff / 60));
 
-    const hallCharge = hall ? hall.ratePerHour * hours : 0;
-    const foodCharge = (booking.guests || 0) * (menuPackage?.perGuest || 0);
-    const lightingCharge = lighting?.price || 0;
-    const eventSupportCharge = booking.eventSupportFee || 0;
-    const decoration = booking.decorationFee || 0;
-    const discount = booking.discount || 0;
+    const hallCharge =
+      Number(booking.hallCharge || booking.hall_charge) ||
+      (hall ? Number(hall.ratePerHour || 0) * hours : 0);
+    const foodCharge =
+      Number(booking.mealCharge || booking.meal_charge) ||
+      (Number(booking.guests || 0) * Number(menuPackage?.perGuest || 0));
+    const customMenuCharge = Number(booking.customMenuCharge || booking.custom_menu_charge || 0);
+    const lightingCharge =
+      Number(booking.lightingCharge || booking.lighting_charge) ||
+      Number(lighting?.price || 0);
+    const eventSupportCharge = Number(
+      booking.eventSupportFee || booking.event_support_fee || 0,
+    );
+    const decoration = Number(booking.decorationFee || booking.decoration_fee || 0);
+    const discount = Number(booking.discount || 0);
 
     const subTotal =
+      Number(booking.subtotalAmount || booking.subtotal_amount) ||
       hallCharge +
-      foodCharge +
-      lightingCharge +
-      eventSupportCharge +
-      decoration;
+        foodCharge +
+        customMenuCharge +
+        lightingCharge +
+        eventSupportCharge +
+        decoration;
     const taxableAmount = Math.max(0, subTotal - discount);
-    const gst = Math.round(
-      taxableAmount * ((booking.gstPercent || 5) / 100)
-    );
+    const gst =
+      Number(booking.gstAmount || booking.gst_amount) ||
+      Math.round(taxableAmount * ((Number(booking.gstPercent || booking.gst_percent || 5) || 5) / 100));
 
-    const grandTotal = taxableAmount + gst;
-    const advance = booking.advance || 0;
-    const balance = grandTotal - advance;
+    const grandTotal =
+      Number(booking.grandTotal || booking.grand_total || booking.totalAmount || booking.total_amount) ||
+      taxableAmount + gst;
+    const advance = Number(booking.advance || 0);
+    const refundAmount = Number(booking.refundAmount || booking.refund_amount || 0);
+    const netReceived =
+      Number(booking.netReceived || booking.net_received) || Math.max(0, advance - refundAmount);
+    const balance =
+      Number(booking.balanceDue || booking.balance_due) || Math.max(0, grandTotal - netReceived);
+    const paymentMode = booking.paymentMode || booking.payment_mode || "Pending";
+    const paymentStatus = booking.paymentStatus || booking.payment_status || "Pending";
+    const paymentReference =
+      booking.paymentReferenceNo || booking.payment_reference_no || booking.paymentReferenceId || "";
 
     return {
       hallCharge,
       foodCharge,
+      customMenuCharge,
       lightingCharge,
       eventSupportCharge,
       decoration,
@@ -56,8 +78,13 @@ const BanquetBill = ({
       gst,
       grandTotal,
       advance,
+      refundAmount,
+      netReceived,
       balance,
-      hours
+      hours,
+      paymentMode,
+      paymentStatus,
+      paymentReference,
     };
   };
 
@@ -75,7 +102,7 @@ const BanquetBill = ({
         </div>
 
         <div className="text-sm text-gray-500">
-          Date: {new Date().toLocaleDateString()}
+          Date: {booking.billedAt || booking.date || new Date().toLocaleDateString()}
         </div>
       </div>
 
@@ -95,6 +122,14 @@ const BanquetBill = ({
           <div>
             {booking.startTime} - {booking.endTime}
           </div>
+          <div className="mt-2 text-sm text-gray-500">
+            Payment: {totals.paymentMode} | Status: {totals.paymentStatus}
+          </div>
+          {totals.paymentReference ? (
+            <div className="text-sm text-gray-500">
+              Ref: {totals.paymentReference}
+            </div>
+          ) : null}
         </div>
 
       </div>
@@ -122,6 +157,13 @@ const BanquetBill = ({
             <td className="p-2">Food Charges</td>
             <td className="text-right p-2">
               {formatINR(totals.foodCharge)}
+            </td>
+          </tr>
+
+          <tr>
+            <td className="p-2">Custom Menu Charges</td>
+            <td className="text-right p-2">
+              {formatINR(totals.customMenuCharge)}
             </td>
           </tr>
 
@@ -185,6 +227,20 @@ const BanquetBill = ({
             <td className="p-2">Advance Paid</td>
             <td className="text-right p-2 text-green-600">
               {formatINR(totals.advance)}
+            </td>
+          </tr>
+
+          <tr>
+            <td className="p-2">Refunded</td>
+            <td className="text-right p-2 text-amber-600">
+              {formatINR(totals.refundAmount)}
+            </td>
+          </tr>
+
+          <tr>
+            <td className="p-2">Net Received</td>
+            <td className="text-right p-2 text-emerald-700">
+              {formatINR(totals.netReceived)}
             </td>
           </tr>
 

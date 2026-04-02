@@ -168,7 +168,7 @@ const AllBooking = () => {
                 All bookings at a glance
               </h1>
               <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-100/85 sm:text-base">
-                Booking status, received payment, aur pending balance ek hi jagah.
+           “Booking status, received payment, and pending balance in one place.”
               </p>
             </div>
 

@@ -17,6 +17,17 @@ const normalizeInvoiceStatus = (value) => String(value || "").trim().toLowerCase
 const isPaidInvoice = (value) => normalizeInvoiceStatus(value) === "paid";
 const getReusableBill = (bill) => (bill && !isPaidInvoice(bill.invoiceStatus) ? bill : null);
 const formatVisitId = (tokenCode, tokenId) => tokenCode || (tokenId ? `VIS-${String(tokenId).padStart(6, "0")}` : "--");
+const isIgnorablePostPaymentError = (error) => {
+  const status = Number(error?.response?.status || 0);
+  const message = String(error?.response?.data?.message || error?.message || "").toLowerCase();
+
+  return (
+    status === 404 &&
+    (message.includes("no pending order found") ||
+      message.includes("bill already paid") ||
+      message.includes("not found"))
+  );
+};
 
 const formatCurrency = (value) => `Rs. ${Number(value || 0).toLocaleString("en-IN")}`;
 const formatDate = (value) => {
@@ -30,6 +41,260 @@ const formatDate = (value) => {
     hour: "2-digit",
     minute: "2-digit",
   });
+};
+
+const formatReceiptDateOnly = (value) => {
+  if (!value) return "--/--/----";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return "--/--/----";
+  return parsed.toLocaleDateString("en-GB");
+};
+
+const formatReceiptTimeOnly = (value) => {
+  if (!value) return "--:--";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return "--:--";
+  return parsed.toLocaleTimeString("en-IN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+};
+
+const formatReceiptAmount = (value) => Number(value || 0).toFixed(2);
+
+const escapeReceiptHtml = (value) =>
+  String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
+const buildReceiptInvoiceNo = (invoice) => {
+  const billId = Number(invoice?.billId || 0);
+  if (billId > 0) return String(billId).padStart(4, "0");
+  const tokenId = Number(invoice?.tokenId || 0);
+  if (tokenId > 0) return `TMP-${String(tokenId).padStart(4, "0")}`;
+  return "----";
+};
+
+const buildReceiptHtml = ({
+  invoice,
+  entityType,
+  customerName,
+  phone,
+  paymentMethod,
+  cardDetails,
+  personCount,
+  discountAmount,
+  perPersonAmount,
+  computedTotal,
+}) => {
+  const printedAt = invoice?.paidAt || invoice?.printedAt || invoice?.date || new Date().toISOString();
+  const sgstAmount = Number(invoice?.gst || 0) / 2;
+  const cgstAmount = Number(invoice?.gst || 0) / 2;
+  const grandTotal = Number(computedTotal || 0);
+  const netTotal = Math.round(grandTotal);
+  const roundUp = Number((netTotal - grandTotal).toFixed(2));
+  const userName = localStorage.getItem("name") || localStorage.getItem("username") || "POS User";
+  const entityLabel = String(entityType || invoice?.entityType || "Table").toLowerCase() === "room" ? "Room No" : "Table No";
+  const kotNos = invoice?.tokenId ? String(invoice.tokenId) : formatVisitId(invoice?.tokenCode, invoice?.tokenId);
+  const itemRows = (Array.isArray(invoice?.items) ? invoice.items : [])
+    .map((item) => {
+      const qty = Number(item?.qty || 0);
+      const rate = Number(item?.rate || 0);
+      return `
+        <tr>
+          <td class="item-name">${escapeReceiptHtml(item?.name || "Menu Item")}</td>
+          <td class="center">${formatReceiptAmount(qty)}</td>
+          <td class="right">${formatReceiptAmount(rate)}</td>
+          <td class="right">${formatReceiptAmount(qty * rate)}</td>
+        </tr>
+      `;
+    })
+    .join("");
+
+  return `
+    <html>
+      <head>
+        <title>Restaurant Invoice</title>
+        <style>
+          @page { size: 80mm auto; margin: 6mm; }
+          * { box-sizing: border-box; }
+          body {
+            margin: 0 auto;
+            width: 72mm;
+            color: #111827;
+            font-family: "Courier New", monospace;
+            font-size: 11px;
+            line-height: 1.35;
+          }
+          .center { text-align: center; }
+          .right { text-align: right; }
+          .separator {
+            border-top: 1px dashed #6b7280;
+            margin: 7px 0;
+          }
+          .brand {
+            padding-top: 4px;
+          }
+          .brand h1 {
+            margin: 0;
+            font-size: 18px;
+            letter-spacing: 0.04em;
+          }
+          .muted {
+            color: #4b5563;
+          }
+          .title {
+            font-size: 17px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+          }
+          .meta-row,
+          .summary-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin: 2px 0;
+          }
+          .meta-row span:first-child,
+          .summary-row span:first-child {
+            flex: 1 1 auto;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+          }
+          th, td {
+            padding: 3px 0;
+            vertical-align: top;
+          }
+          th {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            border-bottom: 1px dashed #9ca3af;
+          }
+          .item-name {
+            width: 48%;
+            padding-right: 6px;
+          }
+          .center { text-align: center; }
+          .right { text-align: right; }
+          .totals {
+            margin-top: 4px;
+          }
+          .grand {
+            font-weight: 700;
+            font-size: 13px;
+          }
+          .net {
+            font-weight: 700;
+            font-size: 17px;
+          }
+          .footer {
+            margin-top: 8px;
+          }
+          .footer-note {
+            font-size: 10px;
+            color: #374151;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="brand center">
+          <h1>MAA BAGLAMUKHI RESORT</h1>
+          <div class="muted">Restaurant & POS Billing</div>
+          <div class="muted">Thermal receipt invoice</div>
+        </div>
+
+        <div class="separator"></div>
+        <div class="center title">DUPLICATE INVOICE</div>
+        <div class="separator"></div>
+
+        <div class="meta-row">
+          <span>Invoice No: ${escapeReceiptHtml(buildReceiptInvoiceNo(invoice))}</span>
+          <span>Date: ${escapeReceiptHtml(formatReceiptDateOnly(printedAt))}</span>
+        </div>
+        <div class="meta-row">
+          <span>${escapeReceiptHtml(entityLabel)}: ${escapeReceiptHtml(invoice?.table || "--")}</span>
+          <span>Time: ${escapeReceiptHtml(formatReceiptTimeOnly(printedAt))}</span>
+        </div>
+        <div class="meta-row">
+          <span>Captain: ${escapeReceiptHtml(invoice?.waiterName || "Reception")}</span>
+          <span>KOT Nos: ${escapeReceiptHtml(kotNos || "--")}</span>
+        </div>
+        <div class="meta-row">
+          <span>Customer: ${escapeReceiptHtml(customerName || invoice?.customerName || "Walk-in Customer")}</span>
+          <span>Phone: ${escapeReceiptHtml(phone || invoice?.phone || "--")}</span>
+        </div>
+
+        <div class="separator"></div>
+
+        <table>
+          <thead>
+            <tr>
+              <th class="item-name">Item Name</th>
+              <th class="center">Qty</th>
+              <th class="right">Rate</th>
+              <th class="right">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemRows || `<tr><td colspan="4" class="center muted">No items found</td></tr>`}
+          </tbody>
+        </table>
+
+        <div class="separator"></div>
+
+        <div class="totals">
+          <div class="summary-row"><span>Food Total</span><span>${formatReceiptAmount(invoice?.subtotal)}</span></div>
+          <div class="summary-row"><span>SGST @ 2.50%</span><span>${formatReceiptAmount(sgstAmount)}</span></div>
+          <div class="summary-row"><span>CGST @ 2.50%</span><span>${formatReceiptAmount(cgstAmount)}</span></div>
+          ${
+            Number(discountAmount || 0) > 0
+              ? `<div class="summary-row"><span>Discount</span><span>- ${formatReceiptAmount(discountAmount)}</span></div>`
+              : ""
+          }
+          <div class="summary-row grand"><span>Grand Total</span><span>${formatReceiptAmount(grandTotal)}</span></div>
+          <div class="summary-row"><span>Round Up</span><span>${formatReceiptAmount(roundUp)}</span></div>
+          <div class="summary-row net"><span>Net Total</span><span>${formatReceiptAmount(netTotal)}</span></div>
+        </div>
+
+        <div class="separator"></div>
+
+        <div class="meta-row">
+          <span>User: ${escapeReceiptHtml(userName)}</span>
+          <span>Payment: ${escapeReceiptHtml(paymentMethod || "Cash")}</span>
+        </div>
+        <div class="meta-row">
+          <span>Guests: ${escapeReceiptHtml(personCount)}</span>
+          <span>Per Person: ${formatReceiptAmount(perPersonAmount)}</span>
+        </div>
+        ${
+          paymentMethod === "Card"
+            ? `
+              <div class="meta-row">
+                <span>Card: ${escapeReceiptHtml(cardDetails?.cardType || "--")}</span>
+                <span>Last4: ${escapeReceiptHtml(cardDetails?.cardLast4 || "--")}</span>
+              </div>
+              <div class="meta-row">
+                <span>Txn Ref: ${escapeReceiptHtml(cardDetails?.transactionRef || "--")}</span>
+                <span>Holder: ${escapeReceiptHtml(cardDetails?.cardHolderName || "--")}</span>
+              </div>
+            `
+            : ""
+        }
+
+        <div class="footer center">
+          <div class="footer-note">Thank you. Visit again.</div>
+          <div class="footer-note">Powered by Maa Baglamukhi Resort POS</div>
+        </div>
+      </body>
+    </html>
+  `;
 };
 
 const readStoredInvoice = () => {
@@ -656,100 +921,31 @@ const Payment = ({
     return true;
   };
 
-  const handlePrint = () => {
-    if (!invoice) return;
-    const invoiceToPrint = invoice;
+  const handlePrint = (overrideInvoice = null) => {
+    const invoiceToPrint = overrideInvoice || invoice;
+    if (!invoiceToPrint) return;
 
-    const rows = (invoiceToPrint.items || [])
-      .map(
-        (item) => `
-      <tr>
-        <td>${item.name}</td>
-        <td style="text-align:center">${item.qty}</td>
-        <td style="text-align:right">${item.rate}</td>
-        <td style="text-align:right">${(item.qty * item.rate).toFixed(2)}</td>
-      </tr>
-    `,
-      )
-      .join("");
+    const printHTML = buildReceiptHtml({
+      invoice: invoiceToPrint,
+      entityType,
+      customerName,
+      phone,
+      paymentMethod,
+      cardDetails,
+      personCount,
+      discountAmount,
+      perPersonAmount,
+      computedTotal,
+    });
 
-    const printHTML = `
-    <html>
-    <head>
-    <title>Invoice</title>
-    <style>
-    body { font-family: 'Segoe UI', sans-serif; width:320px; margin:auto; color:#0f172a; }
-    .center { text-align:center; }
-    hr { border-top:1px dashed #cbd5e1; }
-    table { width:100%; font-size:13px; }
-    td { padding:4px 0; }
-    .right { text-align:right; }
-    .pill { display:inline-block; padding:4px 10px; border-radius:999px; font-size:11px; background:#eef2ff; color:#4338ca; }
-    </style>
-    </head>
-    <body>
-    <div class="center">
-      <h3>MAA BAGLAMUKHI RESORT</h3>
-      <div>HOTEL & RESTAURANT</div>
-    </div>
-    <hr/>
-    <div>Date : ${invoiceToPrint.date}</div>
-    <div>${entityType} : ${invoiceToPrint.table}</div>
-    <div>Customer : ${customerName || invoiceToPrint.customerName || "Walk-in Customer"}</div>
-    <div>Phone : ${phone || "--"}</div>
-    <div>Persons : ${personCount}</div>
-    <div class="pill" style="margin-top:4px;">Payment Method: ${paymentMethod}</div>
-    ${
-      paymentMethod === "Card"
-        ? `<div>Card Holder : ${cardDetails.cardHolderName || "--"}</div>
-    <div>Card Type : ${cardDetails.cardType || "--"}</div>
-    <div>Card Last 4 : ${cardDetails.cardLast4 || "--"}</div>
-    <div>Txn Ref : ${cardDetails.transactionRef || "--"}</div>`
-        : ""
-    }
-    <hr/>
-    <table>
-      <tr>
-        <td><b>ITEM</b></td>
-        <td align="center"><b>QTY</b></td>
-        <td align="right"><b>RATE</b></td>
-        <td align="right"><b>AMT</b></td>
-      </tr>
-      ${rows}
-    </table>
-    <hr/>
-    <table>
-      <tr>
-        <td>Sub Total</td>
-        <td class="right">${Number(invoiceToPrint.subtotal || 0).toFixed(2)}</td>
-      </tr>
-      <tr>
-        <td>GST</td>
-        <td class="right">${Number(invoiceToPrint.gst || 0).toFixed(2)}</td>
-      </tr>
-      <tr>
-        <td>Discount</td>
-        <td class="right">${Number(discountAmount || 0).toFixed(2)}</td>
-      </tr>
-      <tr>
-        <td>Per Person</td>
-        <td class="right">${Number(perPersonAmount || 0).toFixed(2)}</td>
-      </tr>
-      <tr>
-        <td><b>TOTAL</b></td>
-        <td class="right"><b>${Number(computedTotal || 0).toFixed(2)}</b></td>
-      </tr>
-    </table>
-    <hr/>
-    <div class="center">THANK YOU FOR VISIT</div>
-    </body>
-    </html>
-    `;
-
-    const win = window.open("", "", "width=400,height=600");
+    const win = window.open("", "", "width=420,height=760");
+    if (!win) return;
     win.document.write(printHTML);
     win.document.close();
-    win.print();
+    win.focus();
+    window.setTimeout(() => {
+      win.print();
+    }, 180);
   };
 
   const handlePayment = async () => {
@@ -800,14 +996,33 @@ const Payment = ({
         });
       }
 
-      await API.put(`/restaurant/order/${invoice.table}/pay`);
-      await API.put(`/token/close/${invoice.table}`);
+      const cleanupResults = await Promise.allSettled([
+        API.put(`/restaurant/order/${invoice.table}/pay`),
+        API.put(`/token/close/${invoice.table}`),
+      ]);
+
+      cleanupResults.forEach((result) => {
+        if (result.status !== "rejected") return;
+        if (isIgnorablePostPaymentError(result.reason)) return;
+        console.warn("Post-payment cleanup failed", result.reason);
+      });
 
       window.dispatchEvent(new Event("tokenUpdated"));
       if (typeof onSuccess === "function") onSuccess({ type: "paid", billId: paidBill.id });
 
       alert("Payment Successful!");
-      handlePrint();
+      handlePrint({
+        ...invoice,
+        customerName,
+        phone,
+        paymentMethod,
+        discountAmount,
+        billId: paidBill.id,
+        invoiceStatus: "Paid",
+        total: computedTotal,
+        printedAt: new Date().toISOString(),
+        paidAt: new Date().toISOString(),
+      });
       if (asModal) {
         handleClose();
       }
@@ -954,7 +1169,7 @@ const Payment = ({
                 </div>
               ) : (
                 <div className="mt-6 rounded-[20px] border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-sm text-slate-500">
-                  Abhi koi payment card nahi mila. Create Invoice karke yahan card show hoga.
+               “No payment card found yet. Create an invoice and the card will appear here.”
                 </div>
               )}
             </div>
@@ -963,7 +1178,7 @@ const Payment = ({
           <div className={`w-full ${asModal ? "max-w-[420px]" : ""} ${!asModal ? "flex justify-center" : ""}`}>
             {!invoice ? (
               <div className="w-full max-w-[420px] rounded-[28px] border border-slate-200/70 bg-white/95 p-6 text-sm text-slate-500 shadow-[0_18px_50px_rgba(15,23,42,0.1)]">
-                Payment card select karo. Selected invoice ka full payment form yahin open hoga.
+                “Select a payment card. The full payment form for the selected invoice will open here.”
               </div>
             ) : (
             <div className="rounded-[24px] border border-slate-200/70 bg-white/95 p-4 shadow-[0_14px_36px_rgba(15,23,42,0.09)]">

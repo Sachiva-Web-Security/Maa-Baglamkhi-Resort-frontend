@@ -8,14 +8,20 @@ import { withAudit } from "../utils/auditAction";
 import bgImage from "../assets/bg.jpg";
 
 const ROLE_CREDENTIALS = [
-  { role: "admin", email: "admin@resort.com", label: "Admin" },
-  { role: "manager", email: "manager@resort.com", label: "Manager" },
-  { role: "receptionist", email: "reception@resort.com", label: "Reception" },
-  { role: "waiter", email: "waiter@resort.com", label: "Waiter" },
-  { role: "kitchen", email: "kitchen@resort.com", label: "Kitchen" },
-  { role: "housekeeping", email: "tarun@resort.com", label: "Housekeeping" },
-  { role: "accountant", email: "accounts@resort.com", label: "Accounts" },
+  { role: "admin", email: "admin@test.com", password: "Admin@123", label: "Admin" },
+  { role: "manager", email: "manager@test.com", password: "Manager@123", label: "Manager" },
+  { role: "receptionist", email: "reception@test.com", password: "Staff@123", label: "Reception" },
+  { role: "accountant", email: "accounts@test.com", password: "Staff@123", label: "Accounts" },
+  { role: "housekeeping", email: "hk@test.com", password: "Staff@123", label: "Housekeeping" },
 ];
+
+const LOGIN_EMAIL_ALIASES = {
+  "admin@resort.com": "admin@test.com",
+  "manager@resort.com": "manager@test.com",
+  "reception@resort.com": "reception@test.com",
+  "accounts@resort.com": "accounts@test.com",
+  "tarun@resort.com": "hk@test.com",
+};
 
 const Login = ({ setIsAuthenticated }) => {
   const navigate = useNavigate();
@@ -34,11 +40,34 @@ const Login = ({ setIsAuthenticated }) => {
     setLoading(true);
 
     try {
-      const res = await API.post(
-        "/auth/login",
-        { email, password },
-        withAudit("login"),
-      );
+      const normalizedEmail = String(email || "").trim().toLowerCase();
+      const loginBody = { email: normalizedEmail, password };
+
+      let res;
+      try {
+        res = await API.post(
+          "/auth/login",
+          loginBody,
+          withAudit("login"),
+        );
+      } catch (err) {
+        const aliasEmail = LOGIN_EMAIL_ALIASES[normalizedEmail];
+        const shouldRetryWithAlias =
+          aliasEmail &&
+          err.response?.status === 400 &&
+          /invalid email/i.test(String(err.response?.data?.message || ""));
+
+        if (!shouldRetryWithAlias) {
+          throw err;
+        }
+
+        res = await API.post(
+          "/auth/login",
+          { email: aliasEmail, password },
+          withAudit("login"),
+        );
+      }
+
       const data = res.data;
 
       localStorage.setItem("token", data.token);
@@ -66,9 +95,9 @@ const Login = ({ setIsAuthenticated }) => {
     }
   };
 
-  const quickLogin = (roleEmail) => {
-    setEmail(roleEmail);
-    setPassword("password");
+  const quickLogin = (credential) => {
+    setEmail(credential.email);
+    setPassword(credential.password);
   };
 
   return (
@@ -161,7 +190,7 @@ const Login = ({ setIsAuthenticated }) => {
                 {ROLE_CREDENTIALS.map((rc) => (
                   <button
                     key={rc.role}
-                    onClick={() => quickLogin(rc.email)}
+                    onClick={() => quickLogin(rc)}
                     className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 hover:border-slate-300"
                   >
                     {rc.label}
@@ -169,8 +198,7 @@ const Login = ({ setIsAuthenticated }) => {
                 ))}
               </div>
               <p className="mt-2 text-center text-[10px] text-slate-400">
-                Default password:{" "}
-                <code className="bg-slate-100 px-1 rounded">password</code>
+                Quick login ab current local DB credentials use karta hai.
               </p>
             </div>
           </div>

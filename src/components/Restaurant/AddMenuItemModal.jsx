@@ -15,14 +15,26 @@ const AddMenuItemModal = ({
   imageFileName,
   onImageChange,
   loading = false,
+  variant = "modal",
+  hideCloseAction = false,
 }) => {
   if (!open) return null;
 
+  const isInline = variant === "inline";
+  const outerClassName = isInline
+    ? "rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm"
+    : "fixed inset-0 z-[1000] flex items-center justify-center bg-slate-950/45 p-4";
+  const innerClassName = isInline
+    ? "w-full"
+    : "w-full max-w-xl rounded-[28px] bg-white p-6 shadow-[0_30px_80px_rgba(15,23,42,0.32)]";
+
   return (
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-950/45 p-4">
-      <div className="w-full max-w-xl rounded-[28px] bg-white p-6 shadow-[0_30px_80px_rgba(15,23,42,0.32)]">
+    <div className={outerClassName}>
+      <div className={innerClassName}>
         <div className="text-[11px] uppercase tracking-[0.26em] text-blue-700">Add Menu Item</div>
-        <div className="mt-2 text-3xl font-black text-slate-900">Create a new menu option</div>
+        <div className={`mt-2 font-black text-slate-900 ${isInline ? "text-2xl" : "text-3xl"}`}>
+          Create a new menu option
+        </div>
 
         <div className="mt-5 grid gap-4">
           <input
@@ -147,12 +159,14 @@ const AddMenuItemModal = ({
         </div>
 
         <div className="mt-6 flex justify-end gap-3">
-          <button
-            onClick={onClose}
-            className="rounded-xl border border-slate-200 px-5 py-3 font-bold text-slate-700"
-          >
-            Cancel
-          </button>
+          {!hideCloseAction ? (
+            <button
+              onClick={onClose}
+              className="rounded-xl border border-slate-200 px-5 py-3 font-bold text-slate-700"
+            >
+              {isInline ? "Close" : "Cancel"}
+            </button>
+          ) : null}
           <button
             onClick={onSubmit}
             disabled={loading}

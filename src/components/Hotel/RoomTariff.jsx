@@ -266,7 +266,7 @@ const handleProceed = async () => {
           </>
         ) : (
           <div className="mt-6 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-slate-500">
-            Room tariff ke liye selected room data nahi mila.
+          there was no data availabe for a room tariff
           </div>
         )}
       </div>

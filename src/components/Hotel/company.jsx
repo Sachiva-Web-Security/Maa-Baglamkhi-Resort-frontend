@@ -204,7 +204,7 @@ const handleSkip = () => {
             <div className="rounded-[24px] border border-slate-200/80 bg-[linear-gradient(135deg,#fffaf0_0%,#fff6e5_100%)] p-5 shadow-[0_18px_45px_rgba(15,23,42,0.06)]">
               <div className="text-xl font-black text-slate-900">Go to Room Selection</div>
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                Company data save hone ke baad room inventory section open karein.
+              “After saving the company data, open the room inventory section.”
               </p>
               <div className="mt-5 flex flex-col gap-3">
                 <button

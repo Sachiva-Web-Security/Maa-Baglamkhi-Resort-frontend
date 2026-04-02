@@ -22,12 +22,16 @@ const DESCRIPTION_SUGGESTIONS = {
   ],
 };
 
+const DEPARTMENT_OPTIONS = ["Room", "Restaurant", "Other"];
+
 const TransactionForm = ({ type, onSubmit, onCancel, initialData = {} }) => {
   const [form, setForm] = useState({
     date: initialData.date || todayISO(),
     description: initialData.description || "",
     amount: initialData.amount ?? "",
     paymentMode: initialData.paymentMode || "UPI",
+    department:
+      initialData.department || (type === "Income" ? "Room" : "Other"),
   });
 
   const handleChange = (e) => {
@@ -56,6 +60,8 @@ const TransactionForm = ({ type, onSubmit, onCancel, initialData = {} }) => {
       description: form.description.trim(),
       amount: amountNumber,
       paymentMode: form.paymentMode,
+      department: form.department,
+      sourceModule: "accounts-manual",
     });
   };
 
@@ -69,7 +75,7 @@ const TransactionForm = ({ type, onSubmit, onCancel, initialData = {} }) => {
           <div className="accounts-form__eyebrow">{type} Entry</div>
           <h3 className="accounts-form__title">{title}</h3>
           <p className="accounts-form__subtitle">
-            Description, amount aur payment mode direct accounts ledger me save hoga.
+      “The description, amount, and payment mode will be saved directly in the accounts ledger.”
           </p>
         </div>
         <span className={`accounts-form__badge accounts-form__badge--${type.toLowerCase()}`}>
@@ -176,6 +182,25 @@ const TransactionForm = ({ type, onSubmit, onCancel, initialData = {} }) => {
               <option value="Bank Transfer">Bank Transfer</option>
             </select>
           </div>
+        </div>
+
+        <div className="accounts-form__field">
+          <label className="accounts-form__label" htmlFor="department">
+            Department
+          </label>
+          <select
+            id="department"
+            name="department"
+            className="accounts-form__input"
+            value={form.department}
+            onChange={handleChange}
+          >
+            {DEPARTMENT_OPTIONS.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 

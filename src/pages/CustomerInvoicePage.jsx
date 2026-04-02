@@ -29,6 +29,12 @@ const CustomerInvoicePage = () => {
   const [invoice, setInvoice] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [paymentSettings, setPaymentSettings] = useState([]);
+  const [selectedPaymentMode, setSelectedPaymentMode] = useState("UPI");
+  const [selectedPaymentSettingId, setSelectedPaymentSettingId] = useState("");
+  const [paymentReferenceNo, setPaymentReferenceNo] = useState("");
+  const [paymentNotes, setPaymentNotes] = useState("");
+  const [settlingPayment, setSettlingPayment] = useState(false);
 
   useEffect(() => {
     let ignore = false;
@@ -58,7 +64,66 @@ const CustomerInvoicePage = () => {
     };
   }, [customerId]);
 
+  useEffect(() => {
+    let ignore = false;
+
+    const loadPaymentSettings = async () => {
+      try {
+        const response = await API.get("/accounts/payment-settings");
+        if (!ignore) {
+          setPaymentSettings(Array.isArray(response.data) ? response.data : []);
+        }
+      } catch {
+        if (!ignore) {
+          setPaymentSettings([]);
+        }
+      }
+    };
+
+    loadPaymentSettings();
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
   const itemRows = useMemo(() => (Array.isArray(invoice?.items) ? invoice.items : []), [invoice?.items]);
+  const activePaymentSettings = useMemo(
+    () => (paymentSettings || []).filter((row) => Number(row.is_active) === 1),
+    [paymentSettings],
+  );
+  const paymentModeOptions = ["Cash", "UPI", "Card", "Bank Transfer", "Cheque"];
+  const filteredPaymentSettings = useMemo(
+    () =>
+      activePaymentSettings.filter((row) => {
+        if (selectedPaymentMode === "Cash") return false;
+        return String(row.payment_mode || "").toLowerCase() ===
+          String(selectedPaymentMode || "").toLowerCase();
+      }),
+    [activePaymentSettings, selectedPaymentMode],
+  );
+  const selectedPaymentSetting = useMemo(
+    () =>
+      filteredPaymentSettings.find(
+        (row) => String(row.id) === String(selectedPaymentSettingId),
+      ) || filteredPaymentSettings[0] || null,
+    [filteredPaymentSettings, selectedPaymentSettingId],
+  );
+
+  useEffect(() => {
+    if (selectedPaymentMode === "Cash") {
+      setSelectedPaymentSettingId("");
+      return;
+    }
+
+    setSelectedPaymentSettingId(
+      filteredPaymentSettings[0] ? String(filteredPaymentSettings[0].id) : "",
+    );
+  }, [selectedPaymentMode, filteredPaymentSettings]);
+
+  const reloadInvoice = async () => {
+    const response = await API.get(`/invoice/${customerId}`);
+    setInvoice(response.data || null);
+  };
 
   const handlePrint = () => window.print();
 
@@ -112,6 +177,37 @@ const CustomerInvoicePage = () => {
     });
 
     doc.save(`${invoice.invoiceNo || `invoice-${customerId}`}.pdf`);
+  };
+
+  const handleSettleInvoice = async () => {
+    if (!invoice?.id) return;
+
+    if (selectedPaymentMode !== "Cash" && !selectedPaymentSetting?.id) {
+      return window.alert("Please select an active payment setup for this mode.");
+    }
+
+    if (selectedPaymentMode !== "Cash" && !paymentReferenceNo.trim()) {
+      return window.alert("Please enter the payment reference number.");
+    }
+
+    try {
+      setSettlingPayment(true);
+      await API.post("/accounts/settle-pending-bill", {
+        sourceType: "invoice",
+        sourceId: invoice.id,
+        paymentMode: selectedPaymentMode,
+        paymentSettingId: selectedPaymentSetting?.id || null,
+        referenceNo: paymentReferenceNo.trim(),
+        notes: paymentNotes.trim(),
+      });
+      await reloadInvoice();
+      setPaymentReferenceNo("");
+      setPaymentNotes("");
+    } catch (err) {
+      window.alert(err.response?.data?.message || "Payment could not be saved.");
+    } finally {
+      setSettlingPayment(false);
+    }
   };
 
   if (loading) {
@@ -266,6 +362,146 @@ const CustomerInvoicePage = () => {
               </div>
             </div>
           </div>
+
+          {String(invoice?.paymentStatus || "Pending").toLowerCase() !== "paid" ? (
+            <div className="invoice-no-print mt-6 rounded-[24px] border border-cyan-100 bg-cyan-50/70 p-5">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div>
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-700">
+                    Pending Payment Settlement
+                  </div>
+                  <h3 className="mt-2 text-2xl font-black text-slate-900">
+                    Complete payment from the invoice page
+                  </h3>
+                  <p className="mt-2 max-w-3xl text-sm text-slate-600">
+                    Choose the payment mode, show the saved scanner if required, collect the
+                    payment reference, and mark this invoice as paid.
+                  </p>
+                </div>
+                <div className="rounded-[20px] border border-cyan-200 bg-white px-4 py-3 text-sm text-cyan-800">
+                  Invoice amount: <span className="font-bold">{formatCurrency(invoice?.totalAmount)}</span>
+                </div>
+              </div>
+
+              <div className="mt-5 grid gap-4 lg:grid-cols-[1fr_1.1fr]">
+                <div className="space-y-4">
+                  <label className="block">
+                    <span className="mb-1 block text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                      Payment Mode
+                    </span>
+                    <select
+                      value={selectedPaymentMode}
+                      onChange={(event) => setSelectedPaymentMode(event.target.value)}
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none"
+                    >
+                      {paymentModeOptions.map((mode) => (
+                        <option key={mode} value={mode}>
+                          {mode}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  {selectedPaymentMode !== "Cash" ? (
+                    <>
+                      <label className="block">
+                        <span className="mb-1 block text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                          Payment Setup
+                        </span>
+                        <select
+                          value={selectedPaymentSettingId}
+                          onChange={(event) => setSelectedPaymentSettingId(event.target.value)}
+                          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none"
+                        >
+                          <option value="">Select setup</option>
+                          {filteredPaymentSettings.map((row) => (
+                            <option key={row.id} value={row.id}>
+                              {row.department} - {row.provider_name || row.upi_id || row.bank_name || row.payment_mode}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+
+                      <label className="block">
+                        <span className="mb-1 block text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                          Reference / UTR
+                        </span>
+                        <input
+                          value={paymentReferenceNo}
+                          onChange={(event) => setPaymentReferenceNo(event.target.value)}
+                          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none"
+                          placeholder="Enter transaction reference"
+                        />
+                      </label>
+                    </>
+                  ) : (
+                    <div className="rounded-[20px] border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                      Cash selected. This will mark the invoice as paid without creating a bank
+                      reconciliation row.
+                    </div>
+                  )}
+
+                  <label className="block">
+                    <span className="mb-1 block text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                      Notes
+                    </span>
+                    <textarea
+                      value={paymentNotes}
+                      onChange={(event) => setPaymentNotes(event.target.value)}
+                      rows={3}
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none"
+                      placeholder="Optional payment note"
+                    />
+                  </label>
+
+                  <button
+                    type="button"
+                    onClick={handleSettleInvoice}
+                    disabled={settlingPayment}
+                    className="rounded-xl bg-gradient-to-r from-cyan-600 to-teal-500 px-4 py-3 text-sm font-semibold text-white disabled:opacity-60"
+                  >
+                    {settlingPayment ? "Saving payment..." : `Confirm ${selectedPaymentMode} Payment`}
+                  </button>
+                </div>
+
+                <div className="rounded-[24px] border border-slate-200 bg-white p-4">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    Payment Setup Preview
+                  </div>
+                  {selectedPaymentMode !== "Cash" && selectedPaymentSetting ? (
+                    <div className="mt-4 grid gap-4 md:grid-cols-[180px_1fr] md:items-start">
+                      <div className="rounded-[18px] border border-slate-200 bg-slate-50 p-3">
+                        {selectedPaymentSetting.qr_image_url ? (
+                          <img
+                            src={selectedPaymentSetting.qr_image_url}
+                            alt={`${selectedPaymentMode} QR`}
+                            className="mx-auto h-40 w-40 rounded-xl object-contain"
+                          />
+                        ) : (
+                          <div className="flex h-40 items-center justify-center rounded-xl border border-dashed border-slate-300 text-xs text-slate-500">
+                            No scanner image
+                          </div>
+                        )}
+                      </div>
+                      <div className="space-y-2 text-sm text-slate-700">
+                        <div><span className="font-semibold text-slate-900">Provider:</span> {selectedPaymentSetting.provider_name || "-"}</div>
+                        <div><span className="font-semibold text-slate-900">UPI ID:</span> {selectedPaymentSetting.upi_id || "-"}</div>
+                        <div><span className="font-semibold text-slate-900">Account Holder:</span> {selectedPaymentSetting.account_holder_name || "-"}</div>
+                        <div><span className="font-semibold text-slate-900">Bank:</span> {selectedPaymentSetting.bank_name || "-"}</div>
+                        <div><span className="font-semibold text-slate-900">Department:</span> {selectedPaymentSetting.department || "-"}</div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mt-4 text-sm text-slate-500">
+                      {selectedPaymentMode === "Cash"
+                        ? "No scanner required for cash payment."
+                        : "No active setup available for this payment mode."}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : null}
         </section>
       </div>
     </div>

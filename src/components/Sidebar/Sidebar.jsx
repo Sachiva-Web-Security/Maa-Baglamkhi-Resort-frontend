@@ -67,7 +67,8 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen }) => {
       { id: 9, name: "Assignments", icon: FaTasks, path: "/assignments" },
       { id: 10, name: "Banquet", icon: FaGlassCheers, path: "/banquet" },
       { id: 11, name: "Reports", icon: FaChartBar, path: "/reports" },
-      { id: 12, name: "User Management", icon: FaUserCheck, path: "/user" },
+      { id: 12, name: "Audit Logs", icon: FaHistory, path: "/reports/audit" },
+      { id: 13, name: "User Management", icon: FaUserCheck, path: "/user" },
     ],
     manager: [
       { id: 2, name: "All Bookings", icon: FaHotel, path: "/hotel/all-bookings" },
@@ -84,8 +85,9 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen }) => {
       { id: 3, name: "All Bookings", icon: FaClipboardList, path: "/hotel/all-bookings" },
       { id: 4, name: "Check-In / Out", icon: FaTasks, path: "/hotel/communication" },
       { id: 5, name: "Guest List", icon: FaUserCheck, path: "/hotel/booking-history" },
-      { id: 6, name: "Banquet", icon: FaGlassCheers, path: "/banquet" },
-      { id: 7, name: "Restaurant POS", icon: FaUtensils, path: "/restaurant" },
+      { id: 6, name: "Inventory", icon: FaBoxes, path: "/inventory" },
+      { id: 7, name: "Banquet", icon: FaGlassCheers, path: "/banquet" },
+      { id: 8, name: "Restaurant POS", icon: FaUtensils, path: "/restaurant" },
     ],
     housekeeping: [
       { id: 2, name: "Room Status", icon: FaBroom, path: "/housekeeping" },
@@ -95,9 +97,10 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen }) => {
     ],
     accountant: [
       { id: 2, name: "Accounts", icon: FaWallet, path: "/accounts" },
-      { id: 3, name: "Reports", icon: FaChartBar, path: "/reports" },
-      { id: 4, name: "Inventory", icon: FaBoxes, path: "/inventory" },
-      { id: 5, name: "Audit Logs", icon: FaHistory, path: "/reports/audit" },
+      { id: 3, name: "Assignments", icon: FaTasks, path: "/assignments" },
+      { id: 4, name: "Reports", icon: FaChartBar, path: "/reports" },
+      { id: 5, name: "Inventory", icon: FaBoxes, path: "/inventory" },
+      { id: 6, name: "Audit Logs", icon: FaHistory, path: "/reports/audit" },
     ],
     kitchen: [
       { id: 2, name: "Kitchen Orders", icon: FaFire, path: "/kitchen" },
@@ -155,6 +158,7 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen }) => {
 
       <div
         className={`
+          desktop-scale-sidebar
           fixed left-0 top-[70px] z-40
           flex h-[calc(100vh-70px)] translate-x-0 flex-col justify-between
           border-r border-white/10 bg-[linear-gradient(180deg,#081225_0%,#0b1730_55%,#09101f_100%)]

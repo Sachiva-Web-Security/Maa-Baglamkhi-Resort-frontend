@@ -14,7 +14,21 @@ import {
 import API from "../../api";
 
 const ACTION_OPTIONS = ["", "login", "login_failed", "create", "update", "delete", "update_profile", "update_profile_avatar", "change_password", "update_user", "delete_user"];
-const STATUS_OPTIONS = ["", "200", "201", "400", "401", "403", "404", "500"];
+const STATUS_OPTIONS = ["", "200", "201", "204", "304", "400", "401", "403", "404", "500"];
+
+function getStatusTone(statusCode) {
+  const numericStatus = Number(statusCode);
+
+  if (numericStatus >= 200 && numericStatus < 400) {
+    return "bg-emerald-50 text-emerald-700";
+  }
+
+  if (numericStatus >= 400 && numericStatus < 500) {
+    return "bg-amber-50 text-amber-700";
+  }
+
+  return "bg-rose-50 text-rose-700";
+}
 
 function formatDateTime(value) {
   if (!value) return "--";
@@ -78,6 +92,11 @@ export default function AuditReport() {
     errorCount: 0,
     uniqueUsers: 0,
   });
+  const [liveSummary, setLiveSummary] = useState({
+    total: 0,
+    successCount: 0,
+    errorCount: 0,
+  });
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 12,
@@ -109,6 +128,7 @@ export default function AuditReport() {
 
       setLogs(Array.isArray(res.data?.rows) ? res.data.rows : []);
       setSummary(res.data?.summary || { total: 0, successCount: 0, errorCount: 0, uniqueUsers: 0 });
+      setLiveSummary(res.data?.liveSummary || { total: 0, successCount: 0, errorCount: 0 });
       setPagination((current) => ({
         ...current,
         ...(res.data?.pagination || {}),
@@ -125,9 +145,9 @@ export default function AuditReport() {
   }, []);
 
   const successRate = useMemo(() => {
-    if (!summary.total) return "0%";
-    return `${Math.round((summary.successCount / summary.total) * 100)}%`;
-  }, [summary]);
+    if (!liveSummary.total) return "100%";
+    return `${Math.round((liveSummary.successCount / liveSummary.total) * 100)}%`;
+  }, [liveSummary]);
 
   const handleFilterChange = (key, value) => {
     setFilters((current) => ({
@@ -306,9 +326,12 @@ export default function AuditReport() {
               <div className="rounded-[22px] border border-rose-200 bg-rose-50 p-4">
                 <div className="flex items-center gap-2 text-rose-700">
                   <FaExclamationTriangle />
-                  <span className="text-sm font-bold">Failed / blocked calls</span>
+                  <span className="text-sm font-bold">Failed calls</span>
                 </div>
-                <div className="mt-3 text-3xl font-black text-rose-800">{summary.errorCount}</div>
+                <div className="mt-3 text-3xl font-black text-rose-800">{liveSummary.errorCount}</div>
+                <div className="mt-2 text-xs font-semibold text-rose-700/80">
+                  Latest endpoint state ke hisaab se unresolved failures.
+                </div>
               </div>
               <div className="rounded-[22px] border border-cyan-200 bg-cyan-50 p-4">
                 <div className="flex items-center gap-2 text-cyan-700">
@@ -357,7 +380,7 @@ export default function AuditReport() {
                     </thead>
                     <tbody>
                       {logs.map((log) => {
-                        const isSuccess = Number(log.response_status) >= 200 && Number(log.response_status) < 300;
+                        const statusTone = getStatusTone(log.response_status);
                         return (
                           <tr key={log.id} className="border-t border-slate-100 align-top transition hover:bg-cyan-50/35">
                             <td className="px-4 py-4 font-bold text-slate-900">#{log.id}</td>
@@ -383,7 +406,7 @@ export default function AuditReport() {
                               </span>
                             </td>
                             <td className="px-4 py-4">
-                              <span className={`rounded-full px-3 py-1 text-xs font-bold ${isSuccess ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>
+                              <span className={`rounded-full px-3 py-1 text-xs font-bold ${statusTone}`}>
                                 {log.response_status}
                               </span>
                             </td>

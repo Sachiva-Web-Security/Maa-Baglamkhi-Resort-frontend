@@ -401,6 +401,23 @@ export const getRoomBookingReference = (roomNumber, date, mergedBookings) => {
   return roomBookings[roomBookings.length - 1];
 };
 
+const isDateWithinRange = (date, start, end) => {
+  if (!date || !start || !end) return false;
+  return date >= start && date <= end;
+};
+
+const isRoomBlockedOnDate = (room, date, today) => {
+  if (room.status !== "blocked") return false;
+
+  const blockFrom = formatDateKey(room.blockFrom);
+  const blockTo = formatDateKey(room.blockTo);
+  if (blockFrom && blockTo) {
+    return isDateWithinRange(date, blockFrom, blockTo);
+  }
+
+  return date === today;
+};
+
 export const buildDailyBoard = (rooms, mergedBookings, date, today) => {
   const buckets = {
     available: [],
@@ -411,7 +428,7 @@ export const buildDailyBoard = (rooms, mergedBookings, date, today) => {
     checked_in: [],
   };
 
-  const blockedRooms = rooms.filter((room) => room.status === "blocked");
+  const blockedRooms = rooms.filter((room) => isRoomBlockedOnDate(room, date, today));
   const isHistoricalDate = date < today;
   if (!isHistoricalDate) {
     blockedRooms.forEach((room) => {
@@ -429,8 +446,12 @@ export const buildDailyBoard = (rooms, mergedBookings, date, today) => {
   }
 
   rooms.forEach((room) => {
-    if (room.status === "blocked") return;
+    if (isRoomBlockedOnDate(room, date, today)) return;
     const roomStatus = String(room.status || "").toLowerCase();
+    const roomStayCheckIn = formatDateKey(room.checkIn);
+    const roomStayCheckOut = formatDateKey(room.checkOut);
+    const roomStayActiveOnDate =
+      Boolean(room.guest) && isDateWithinRange(date, roomStayCheckIn, roomStayCheckOut);
 
     const booking = getRoomBookingForDate(room.roomNumber, date, mergedBookings, !isHistoricalDate);
     if (booking) {
@@ -474,16 +495,9 @@ export const buildDailyBoard = (rooms, mergedBookings, date, today) => {
 
     const fallbackBooking = getRoomBookingReference(room.roomNumber, date, mergedBookings);
 
-    const hasCurrentRoomStay =
-      room.guest &&
-      room.checkIn &&
-      room.checkOut &&
-      date >= formatDateKey(room.checkIn) &&
-      date <= formatDateKey(room.checkOut);
-
     if (
       fallbackBooking &&
-      hasCurrentRoomStay &&
+      roomStayActiveOnDate &&
       ["occupied", "reserved", "check_in_confirmed"].includes(roomStatus)
     ) {
       buckets.confirmed.push({
@@ -501,7 +515,7 @@ export const buildDailyBoard = (rooms, mergedBookings, date, today) => {
       return;
     }
 
-    if (roomStatus === "occupied" && room.guest && !isHistoricalDate) {
+    if (roomStatus === "occupied" && room.guest && !isHistoricalDate && roomStayActiveOnDate) {
       buckets.checked_in.push({
         id: `checked-in-room-${room.roomNumber}-${date}`,
         roomId: room.roomId,
@@ -528,7 +542,7 @@ export const buildDailyBoard = (rooms, mergedBookings, date, today) => {
     }
 
     if (room.status === "cleaning") {
-      if (isHistoricalDate) return;
+      if (isHistoricalDate || date !== today) return;
 
       buckets.cleaning.push({
         id: `cleaning-${room.id}`,
@@ -543,7 +557,7 @@ export const buildDailyBoard = (rooms, mergedBookings, date, today) => {
       return;
     }
 
-    if (isHistoricalDate || roomStatus !== "available") return;
+    if (isHistoricalDate || roomStayActiveOnDate) return;
 
     buckets.available.push({
       id: `available-${room.id}`,

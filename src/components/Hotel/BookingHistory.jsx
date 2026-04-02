@@ -55,7 +55,7 @@ const BookingHistory = () => {
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-200">Booking History</p>
           <h1 className="mt-3 text-3xl font-black sm:text-4xl">Checked-out bookings archive</h1>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-100/85 sm:text-base">
-            Yahan checkout ho chuki sari bookings ka complete record milega, including guest details, room id/type/no, email aur billing snapshot.
+       “Book multiple rooms for a single master guest in one payment flow.”
           </p>
         </section>
 

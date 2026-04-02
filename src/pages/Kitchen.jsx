@@ -11,6 +11,7 @@ import API from "../api";
 import { restaurantService } from "../services/restaurantService";
 
 const PREP_TIME_OPTIONS = [10, 15, 20, 30, 45, 60];
+const ORDERS_PER_PAGE = 6;
 
 const toMillis = (value) => {
   if (!value) return null;
@@ -72,12 +73,13 @@ const isOrderOverdue = (order) => {
   const remaining = getRemainingMinutes(order);
   return remaining !== null && remaining < 0;
 };
-
 const Kitchen = () => {
   const [orders, setOrders] = useState([]);
   const [roomRefs, setRoomRefs] = useState(new Set());
   const [etaDrafts, setEtaDrafts] = useState({});
   const [loading, setLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [cancelledPage, setCancelledPage] = useState(1);
   const [, setTicker] = useState(0);
   const orderSound = useRef(null);
   const firstLoad = useRef(true);
@@ -290,6 +292,70 @@ const Kitchen = () => {
   const readyCount = visibleOrders.filter((o) => o.status === "Ready").length;
   const pendingCount = Math.max(0, visibleOrders.length - readyCount);
   const overdueCount = visibleOrders.filter((o) => isOrderOverdue(o)).length;
+  const totalVisiblePages = Math.max(1, Math.ceil(visibleOrders.length / ORDERS_PER_PAGE));
+  const totalCancelledPages = Math.max(1, Math.ceil(cancelledOrders.length / ORDERS_PER_PAGE));
+  const paginatedVisibleOrders = visibleOrders.slice(
+    (currentPage - 1) * ORDERS_PER_PAGE,
+    currentPage * ORDERS_PER_PAGE,
+  );
+  const paginatedCancelledOrders = cancelledOrders.slice(
+    (cancelledPage - 1) * ORDERS_PER_PAGE,
+    cancelledPage * ORDERS_PER_PAGE,
+  );
+
+  useEffect(() => {
+    setCurrentPage((page) => Math.min(page, totalVisiblePages));
+  }, [totalVisiblePages]);
+
+  useEffect(() => {
+    setCancelledPage((page) => Math.min(page, totalCancelledPages));
+  }, [totalCancelledPages]);
+
+  const renderPagination = (page, totalPages, setPage) => {
+    if (totalPages <= 1) return null;
+
+    const pageNumbers = Array.from({ length: totalPages }, (_, index) => index + 1);
+
+    return (
+      <div className="mt-6 flex flex-col gap-3 border-t border-slate-200 pt-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+          Page {page} of {totalPages}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setPage((current) => Math.max(1, current - 1))}
+            disabled={page === 1}
+            className="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Previous
+          </button>
+          {pageNumbers.map((pageNumber) => (
+            <button
+              type="button"
+              key={pageNumber}
+              onClick={() => setPage(pageNumber)}
+              className={`h-9 min-w-9 rounded-full px-3 text-xs font-bold transition ${
+                page === pageNumber
+                  ? "bg-slate-900 text-white shadow-sm"
+                  : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+              }`}
+            >
+              {pageNumber}
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+            disabled={page === totalPages}
+            className="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   if (loading) {
     return (
@@ -387,7 +453,7 @@ const Kitchen = () => {
 
             {visibleOrders.length ? (
               <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(280px,1fr))]">
-                {visibleOrders.map((order) => {
+                {paginatedVisibleOrders.map((order) => {
                   const ref = order.table || order.table_number || order.table_no;
                   const entityType = resolveEntityType(order);
                   const label = `${entityType} ${ref || "--"}`;
@@ -549,10 +615,12 @@ const Kitchen = () => {
                 <FiAlertCircle className="mx-auto mb-3 text-3xl text-slate-400" />
                 <div className="text-lg font-bold text-slate-900">No orders in kitchen queue</div>
                 <div className="mt-2 text-sm">
-                  Restaurant se naye orders aate hi yahan automatically show honge.
+           “New orders from the restaurant will automatically appear here as they come in.”
                 </div>
               </div>
             )}
+
+            {renderPagination(currentPage, totalVisiblePages, setCurrentPage)}
           </div>
         </section>
 
@@ -568,7 +636,7 @@ const Kitchen = () => {
             </div>
 
             <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(280px,1fr))]">
-              {cancelledOrders.map((order) => {
+              {paginatedCancelledOrders.map((order) => {
                 const ref = order.table || order.table_number || order.table_no;
                 const entityType = resolveEntityType(order);
                 const total = (order.items || []).reduce((sum, item) => {
@@ -630,6 +698,8 @@ const Kitchen = () => {
                 );
               })}
             </div>
+
+            {renderPagination(cancelledPage, totalCancelledPages, setCancelledPage)}
           </section>
         ) : null}
       </div>

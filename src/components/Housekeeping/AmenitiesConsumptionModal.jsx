@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { FaTimes, FaPlus, FaBoxOpen, FaSyncAlt, FaDownload, FaTrash } from "react-icons/fa";
-import axios from "axios";
+import API from "../../api";
 
 const AMENITY_CATEGORIES = [
   { label: "Linen & Towels",   items: ["Bath Towel", "Hand Towel", "Face Towel", "Bed Sheet", "Pillow Cover", "Blanket", "Bath Mat"] },
@@ -36,7 +36,7 @@ export default function AmenitiesConsumptionModal({ rooms, onClose, apiBase }) {
       const params = {};
       if (filterRoom) params.roomId = filterRoom;
       if (filterDate) params.date = filterDate;
-      const res = await axios.get(`${apiBase}/housekeeping/amenities`, { params });
+      const res = await API.get("/housekeeping/amenities", { params });
       setRecords(res.data);
     } catch {
       // Fallback mock data for development
@@ -58,7 +58,7 @@ export default function AmenitiesConsumptionModal({ rooms, onClose, apiBase }) {
     if (!selectedRoom || !selectedItem || qty < 1) return;
     setSaving(true);
     try {
-      await axios.post(`${apiBase}/housekeeping/amenities`, {
+      await API.post("/housekeeping/amenities", {
         roomId: selectedRoom,
         roomNo: rooms.find(r => String(r.id) === selectedRoom)?.roomNo,
         category: selectedCategory,
@@ -80,7 +80,7 @@ export default function AmenitiesConsumptionModal({ rooms, onClose, apiBase }) {
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this record?")) return;
     try {
-      await axios.delete(`${apiBase}/housekeeping/amenities/${id}`);
+      await API.delete(`/housekeeping/amenities/${id}`);
       fetchRecords();
     } catch { /* ignore */ }
   };

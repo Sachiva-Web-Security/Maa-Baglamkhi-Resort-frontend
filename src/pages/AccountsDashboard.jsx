@@ -1,15 +1,18 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  FaClipboardCheck,
   FaFileInvoiceDollar,
   FaHistory,
   FaHotel,
   FaMoneyBillWave,
   FaReceipt,
+  FaTasks,
   FaUtensils,
 } from "react-icons/fa";
 
 import API from "../api";
 import RoleDashboardShell from "../components/roleDashboards/RoleDashboardShell";
+import useDashboardAutoRefresh from "../hooks/useDashboardAutoRefresh";
 
 const formatINR = (amount) =>
   `Rs. ${Number(amount || 0).toLocaleString("en-IN")}`;
@@ -20,48 +23,53 @@ const AccountsDashboard = () => {
   const [summary, setSummary] = useState({});
   const [transactions, setTransactions] = useState([]);
   const [bookings, setBookings] = useState([]);
+  const [bookingHistory, setBookingHistory] = useState([]);
   const [banquets, setBanquets] = useState([]);
   const [restaurantBills, setRestaurantBills] = useState([]);
+  const [assignments, setAssignments] = useState([]);
+
+  const load = useCallback(async (silent = false) => {
+    try {
+      if (!silent) setLoading(true);
+      setError("");
+
+      const role = localStorage.getItem("role");
+      const name = localStorage.getItem("name");
+      const results = await Promise.allSettled([
+        API.get("/accounts/summary"),
+        API.get("/accounts/transactions"),
+        API.get("/hotel/all-bookings"),
+        API.get("/hotel/booking-history"),
+        API.get("/banquet"),
+        API.get("/restaurant/bills"),
+        API.get("/assignments", {
+          params: { role, name: name || "" },
+        }),
+      ]);
+
+      const [summaryRes, transactionRes, bookingRes, historyRes, banquetRes, billsRes, assignmentsRes] = results;
+
+      setSummary(summaryRes.status === "fulfilled" ? summaryRes.value.data || {} : {});
+      setTransactions(transactionRes.status === "fulfilled" ? transactionRes.value.data || [] : []);
+      setBookings(bookingRes.status === "fulfilled" ? bookingRes.value.data || [] : []);
+      setBookingHistory(historyRes.status === "fulfilled" ? historyRes.value.data || [] : []);
+      setBanquets(banquetRes.status === "fulfilled" ? banquetRes.value.data || [] : []);
+      setRestaurantBills(billsRes.status === "fulfilled" ? billsRes.value.data || [] : []);
+      setAssignments(assignmentsRes.status === "fulfilled" ? assignmentsRes.value.data || [] : []);
+
+      if (summaryRes.status !== "fulfilled" && transactionRes.status !== "fulfilled") {
+        setError("Accounts dashboard data load nahi ho pa raha.");
+      }
+    } finally {
+      if (!silent) setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    let mounted = true;
-
-    const load = async () => {
-      try {
-        setLoading(true);
-        setError("");
-
-        const results = await Promise.allSettled([
-          API.get("/accounts/summary"),
-          API.get("/accounts/transactions"),
-          API.get("/hotel/all-bookings"),
-          API.get("/banquet"),
-          API.get("/restaurant/bills"),
-        ]);
-
-        if (!mounted) return;
-
-        const [summaryRes, transactionRes, bookingRes, banquetRes, billsRes] = results;
-
-        setSummary(summaryRes.status === "fulfilled" ? summaryRes.value.data || {} : {});
-        setTransactions(transactionRes.status === "fulfilled" ? transactionRes.value.data || [] : []);
-        setBookings(bookingRes.status === "fulfilled" ? bookingRes.value.data || [] : []);
-        setBanquets(banquetRes.status === "fulfilled" ? banquetRes.value.data || [] : []);
-        setRestaurantBills(billsRes.status === "fulfilled" ? billsRes.value.data || [] : []);
-
-        if (summaryRes.status !== "fulfilled" && transactionRes.status !== "fulfilled") {
-          setError("Accounts dashboard data load nahi ho pa raha.");
-        }
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
-
     load();
-    return () => {
-      mounted = false;
-    };
-  }, []);
+  }, [load]);
+
+  useDashboardAutoRefresh(load);
 
   const pendingDues = useMemo(
     () =>
@@ -70,6 +78,32 @@ const AccountsDashboard = () => {
         0
       ),
     [bookings]
+  );
+
+  const billableBookings = useMemo(() => {
+    const merged = [...bookings, ...bookingHistory];
+    const seen = new Set();
+
+    return merged.filter((booking) => {
+      const key = String(booking.bookingId || booking.id || "");
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [bookingHistory, bookings]);
+
+  const pendingAssignments = useMemo(
+    () =>
+      assignments.filter(
+        (item) => !["completed", "cancelled"].includes(String(item.status || "").toLowerCase())
+      ).length,
+    [assignments]
+  );
+
+  const completedAssignments = useMemo(
+    () =>
+      assignments.filter((item) => String(item.status || "").toLowerCase() === "completed").length,
+    [assignments]
   );
 
   const stats = useMemo(() => [
@@ -89,8 +123,8 @@ const AccountsDashboard = () => {
     },
     {
       label: "Guest Billing",
-      value: bookings.length,
-      note: "Bookings visible for billing and reconciliation.",
+      value: billableBookings.length,
+      note: "Active plus checked-out bookings visible for billing and reconciliation.",
       icon: FaHotel,
       tone: "cyan",
     },
@@ -109,13 +143,13 @@ const AccountsDashboard = () => {
       tone: "violet",
     },
     {
-      label: "Payment History",
-      value: transactions.length,
-      note: "Transactions currently visible in the accounts feed.",
-      icon: FaHistory,
+      label: "Assigned Tasks",
+      value: assignments.length,
+      note: "Finance tasks currently assigned to this account.",
+      icon: FaTasks,
       tone: "slate",
     },
-  ], [banquets.length, bookings.length, pendingDues, restaurantBills.length, summary.income, transactions.length]);
+  ], [assignments.length, banquets.length, billableBookings.length, pendingDues, restaurantBills.length, summary.income]);
 
   const insights = useMemo(() => [
     {
@@ -133,22 +167,51 @@ const AccountsDashboard = () => {
       value: formatINR(summary.expense),
       note: "Total expense values posted in the accounts module.",
     },
-  ], [summary]);
+    {
+      label: "Pending Tasks",
+      value: pendingAssignments,
+      note: "Assignments still waiting for action on this accountant login.",
+    },
+    {
+      label: "Completed Tasks",
+      value: completedAssignments,
+      note: "Assignments already closed from this accounts workflow.",
+    },
+  ], [completedAssignments, pendingAssignments, summary]);
 
-  const table = useMemo(() => ({
-    eyebrow: "Accounts Feed",
-    title: "Recent transactions",
-    meta: `${transactions.length} transactions`,
-    columns: [
-      { key: "date", label: "Date" },
-      { key: "type", label: "Type" },
-      { key: "description", label: "Description" },
-      { key: "amount", label: "Amount", render: (row) => formatINR(row.amount) },
-      { key: "paymentMode", label: "Mode" },
-    ],
-    rows: transactions.slice(0, 8),
-    emptyText: "No transactions found for accounts dashboard.",
-  }), [transactions]);
+  const table = useMemo(() => {
+    if (assignments.length) {
+      return {
+        eyebrow: "Assigned Work",
+        title: "Accounts tasks assigned to you",
+        meta: `${assignments.length} tasks`,
+        columns: [
+          { key: "room_number", label: "Room" },
+          { key: "task", label: "Task" },
+          { key: "priority", label: "Priority" },
+          { key: "status", label: "Status" },
+          { key: "assigned_by", label: "Assigned By" },
+        ],
+        rows: assignments.slice(0, 8),
+        emptyText: "No finance assignments found for this account.",
+      };
+    }
+
+    return {
+      eyebrow: "Accounts Feed",
+      title: "Recent transactions",
+      meta: `${transactions.length} transactions`,
+      columns: [
+        { key: "date", label: "Date" },
+        { key: "type", label: "Type" },
+        { key: "description", label: "Description" },
+        { key: "amount", label: "Amount", render: (row) => formatINR(row.amount) },
+        { key: "paymentMode", label: "Mode" },
+      ],
+      rows: transactions.slice(0, 8),
+      emptyText: "No transactions found for accounts dashboard.",
+    };
+  }, [assignments, transactions]);
 
   return (
     <RoleDashboardShell
@@ -158,6 +221,7 @@ const AccountsDashboard = () => {
       stats={stats}
       quickActions={[
         { label: "Open Accounts", helper: "Income, expense aur invoices manage karein.", route: "/accounts", icon: FaMoneyBillWave, tone: "emerald" },
+        { label: "My Assignments", helper: "Manager ya admin ke diye finance tasks dekhein.", route: "/assignments", icon: FaClipboardCheck, tone: "slate" },
         { label: "Reports", helper: "Collections aur finance reports ko review karein.", route: "/reports", icon: FaHistory, tone: "cyan" },
         { label: "Hotel Billing", helper: "Guest booking balances ko reconcile karein.", route: "/hotel/all-bookings", icon: FaHotel, tone: "amber" },
         { label: "Restaurant Bills", helper: "Food billing aur outlet settlement review karein.", route: "/restaurant/payment-bills", icon: FaUtensils, tone: "violet" },

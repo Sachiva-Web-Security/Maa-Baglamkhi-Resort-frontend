@@ -53,7 +53,7 @@ const modalToneClasses = {
 
 const initialGuestForm = {
   agentBooking: false,
-  bookingPoint: "Sumit Test (ID:53)",
+  bookingPoint: "",
   mobile: "",
   guestName: "",
   guestEmail: "",
@@ -280,7 +280,7 @@ const Guest = () => {
     <div className="space-y-6">
       {popup.open && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 px-4 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(14,165,233,0.18),_rgba(15,23,42,0.72)_58%)] px-4 backdrop-blur-md"
           role="dialog"
           aria-modal="true"
           aria-labelledby="guest-popup-title"
@@ -288,18 +288,19 @@ const Guest = () => {
           onClick={closePopup}
         >
           <div
-            className="w-full max-w-md overflow-hidden rounded-[28px] bg-white shadow-[0_28px_80px_rgba(15,23,42,0.28)]"
+            className="w-full max-w-md overflow-hidden rounded-[30px] border border-white/70 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] shadow-[0_30px_90px_rgba(15,23,42,0.28)]"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className={`flex items-start gap-4 bg-gradient-to-r ${modalToneClasses[popup.type].accent} px-6 py-5 text-white`}>
-              <div className="rounded-2xl bg-white/15 p-3">
+            <div className={`relative flex items-start gap-4 bg-gradient-to-r ${modalToneClasses[popup.type].accent} px-6 py-6 text-white`}>
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.24),_transparent_46%)]" />
+              <div className="relative rounded-[20px] border border-white/20 bg-white/15 p-3 shadow-[0_12px_30px_rgba(255,255,255,0.08)]">
                 {popup.type === "success" ? (
                   <FaCheckCircle className="text-xl" />
                 ) : (
                   <FaExclamationTriangle className="text-xl" />
                 )}
               </div>
-              <div className="min-w-0 flex-1">
+              <div className="relative min-w-0 flex-1">
                 <div className={`mb-2 inline-flex rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-[0.22em] ${modalToneClasses[popup.type].badge}`}>
                   {popup.type === "success" ? "Success" : "Validation Error"}
                 </div>
@@ -310,7 +311,7 @@ const Guest = () => {
               <button
                 type="button"
                 onClick={closePopup}
-                className="rounded-full p-2 text-white/85 transition hover:bg-white/10 hover:text-white"
+                className="relative rounded-full border border-white/15 p-2 text-white/85 transition hover:bg-white/10 hover:text-white"
                 aria-label="Close popup"
               >
                 <FaTimes />
@@ -318,17 +319,26 @@ const Guest = () => {
             </div>
 
             <div className="px-6 py-6">
-              <p id="guest-popup-message" className="text-sm leading-6 text-slate-600">
-                {popup.message}
+              <div className="rounded-[22px] border border-slate-200/80 bg-slate-50/80 p-4">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+                  Details
+                </p>
+                <p id="guest-popup-message" className="mt-2 text-sm leading-6 text-slate-600">
+                  {popup.message}
+                </p>
+              </div>
+
+              <p className="mt-4 text-xs leading-5 text-slate-500">
+                Review the information above and continue when you are ready.
               </p>
 
               <div className="mt-6 flex justify-end">
                 <button
                   type="button"
                   onClick={closePopup}
-                  className="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800"
+                  className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-slate-900 to-slate-700 px-5 py-3 text-sm font-bold text-white shadow-[0_14px_30px_rgba(15,23,42,0.18)] transition hover:-translate-y-0.5 hover:from-slate-800 hover:to-slate-700"
                 >
-                  OK
+                  Continue
                 </button>
               </div>
             </div>
@@ -533,40 +543,48 @@ const Guest = () => {
 
       {cancelFlowModal.open ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 px-4 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(244,63,94,0.18),_rgba(15,23,42,0.78)_60%)] px-4 backdrop-blur-md"
           onClick={() => setCancelFlowModal({ open: false, reason: "", submitting: false })}
         >
           <div
-            className="w-full max-w-md overflow-hidden rounded-[28px] bg-white shadow-[0_28px_80px_rgba(15,23,42,0.28)]"
+            className="w-full max-w-lg overflow-hidden rounded-[30px] border border-white/70 bg-[linear-gradient(180deg,#ffffff_0%,#fff7f8_100%)] shadow-[0_30px_90px_rgba(15,23,42,0.28)]"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="flex items-start gap-4 bg-gradient-to-r from-rose-500 to-red-500 px-6 py-5 text-white">
-              <div className="rounded-2xl bg-white/15 p-3">
+            <div className="relative flex items-start gap-4 bg-gradient-to-r from-rose-500 to-red-500 px-6 py-6 text-white">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.22),_transparent_48%)]" />
+              <div className="relative rounded-[20px] border border-white/20 bg-white/15 p-3 shadow-[0_12px_30px_rgba(255,255,255,0.08)]">
                 <FaExclamationTriangle className="text-xl" />
               </div>
-              <div className="min-w-0 flex-1">
+              <div className="relative min-w-0 flex-1">
                 <div className="mb-2 inline-flex rounded-full bg-rose-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.22em] text-rose-700 ring-1 ring-rose-100">
                   {activeBookingId ? "Cancel Booking" : "Discard Draft"}
                 </div>
                 <h2 className="text-lg font-black leading-tight">
-                  {activeBookingId ? "Guest booking cancel karna hai?" : "Current booking draft discard karna hai?"}
+                  {activeBookingId
+                    ? "Do you want to cancel this booking?"
+                    : "Do you want to discard this draft booking?"}
                 </h2>
               </div>
               <button
                 type="button"
                 onClick={() => setCancelFlowModal({ open: false, reason: "", submitting: false })}
-                className="rounded-full p-2 text-white/85 transition hover:bg-white/10 hover:text-white"
+                className="relative rounded-full border border-white/15 p-2 text-white/85 transition hover:bg-white/10 hover:text-white"
               >
                 <FaTimes />
               </button>
             </div>
 
             <div className="px-6 py-6">
-              <p className="text-sm leading-6 text-slate-600">
+              <div className="rounded-[22px] border border-rose-100 bg-rose-50/70 p-4">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-rose-600">
+                  Action Summary
+                </p>
+                <p className="mt-2 text-sm leading-6 text-slate-700">
                 {activeBookingId
-                  ? `Booking #${activeBookingCode || activeBookingId} cancel hogi aur room release ho jayega.`
-                  : "Unsaved draft clear ho jayega aur current booking flow band ho jayega."}
-              </p>
+                  ? `Booking #${activeBookingCode || activeBookingId} will be cancelled and the assigned room will be released.`
+                  : "The unsaved draft will be removed and the current booking flow will be closed."}
+                </p>
+              </div>
 
               {activeBookingId ? (
                 <label className="mt-4 block">
@@ -589,7 +607,7 @@ const Guest = () => {
                 <button
                   type="button"
                   onClick={() => setCancelFlowModal({ open: false, reason: "", submitting: false })}
-                  className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+                  className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 transition hover:-translate-y-0.5 hover:bg-slate-50"
                 >
                   Close
                 </button>
@@ -597,7 +615,7 @@ const Guest = () => {
                   type="button"
                   onClick={handleCancelBookingFlow}
                   disabled={cancelFlowModal.submitting}
-                  className={`inline-flex items-center justify-center rounded-2xl bg-rose-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-rose-700 ${
+                  className={`inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-rose-600 to-red-500 px-5 py-3 text-sm font-bold text-white shadow-[0_14px_30px_rgba(244,63,94,0.22)] transition hover:-translate-y-0.5 hover:from-rose-500 hover:to-red-500 ${
                     cancelFlowModal.submitting ? "cursor-not-allowed opacity-70" : ""
                   }`}
                 >

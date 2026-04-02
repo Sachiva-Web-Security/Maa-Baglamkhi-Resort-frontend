@@ -2,10 +2,11 @@ import { useState, useEffect } from "react";
 import API from "../../../api";
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
+const EMPTY_INITIAL_DATA = Object.freeze({});
 
 const InvoiceForm = ({
   onCancel,
-  initialData = {},
+  initialData = EMPTY_INITIAL_DATA,
   bookingId,
   invoiceId,
   onSuccess

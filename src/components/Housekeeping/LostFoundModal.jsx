@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { FaTimes, FaSearch, FaPlus, FaSyncAlt, FaDownload, FaCheckCircle, FaBoxOpen } from "react-icons/fa";
-import axios from "axios";
+import API from "../../api";
 
 const CATEGORIES = ["Electronics", "Clothing", "Jewellery", "Documents", "Accessories", "Keys", "Cash / Wallet", "Books / Stationery", "Other"];
 const STATUSES = ["Found", "Stored", "Claimed", "Disposed"];
@@ -41,7 +41,7 @@ export default function LostFoundModal({ rooms, onClose, apiBase }) {
   const fetchItems = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${apiBase}/housekeeping/lost-found`);
+      const res = await API.get("/housekeeping/lost-found");
       setItems(res.data);
     } catch { setItems([]); }
     finally { setLoading(false); }
@@ -58,7 +58,7 @@ export default function LostFoundModal({ rooms, onClose, apiBase }) {
 
   const handleStatusUpdate = async (id, status, extra = {}) => {
     try {
-      await axios.put(`${apiBase}/housekeeping/lost-found/${id}`, { status, ...extra });
+      await API.put(`/housekeeping/lost-found/${id}`, { status, ...extra });
       fetchItems();
     } catch { /* ignore */ }
   };
@@ -67,7 +67,7 @@ export default function LostFoundModal({ rooms, onClose, apiBase }) {
     if (!form.description) return;
     setSaving(true);
     try {
-      await axios.post(`${apiBase}/housekeeping/lost-found`, {
+      await API.post("/housekeeping/lost-found", {
         foundDate: form.foundDate,
         roomNo: form.foundRoom,
         roomId: rooms.find(r => r.roomNo === form.foundRoom)?.id,

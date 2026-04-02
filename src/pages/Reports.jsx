@@ -334,7 +334,7 @@ const Reports = () => {
       {
         label: "Visible Rows",
         value: rowsCount,
-        note: "Filters aur search ke baad current visible report rows.",
+        note: "The report rows currently visible after applying filters and search.",
       },
       {
         label: "Primary Total",
@@ -344,12 +344,12 @@ const Reports = () => {
       {
         label: "Active Days",
         value: uniqueDays || "--",
-        note: "Kitne distinct dates ke records abhi screen par dikh rahe hain.",
+        note: "How many distinct dates’ records are currently visible on the screen.",
       },
       {
         label: "Status Mix",
         value: activeStatuses || "--",
-        note: "Selected rows mein unique operational statuses.",
+        note: "Selected rows  unique operational statuses.",
       },
     ];
   }, [filtered, reportType]);
@@ -375,9 +375,7 @@ const Reports = () => {
                   Reports built for faster daily decisions
                 </h1>
                 <p className="max-w-3xl text-sm leading-6 text-slate-100/85 sm:text-base">
-                  Dashboard jaisa clean analytics workspace jahan se room, banquet,
-                  restaurant, housekeeping, accounts aur combined billing reports
-                  ek jagah se manage ho sakein.
+        “A clean, dashboard-style analytics workspace from which room, banquet, restaurant, housekeeping, accounts, and combined billing reports can all be managed in one place.”
                 </p>
               </div>
               <div className="flex flex-wrap gap-4">
