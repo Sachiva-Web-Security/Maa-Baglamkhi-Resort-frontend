@@ -16,7 +16,7 @@ import Reference from "../components/Hotel/Reference";
 import Room from "../components/Hotel/Room";
 import RoomTariff from "../components/Hotel/RoomTariff";
 
-// ─── NEW MISSING FEATURE MODULES ────────────────────────────────────────────
+// â”€â”€â”€ NEW MISSING FEATURE MODULES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 import FolioView from "../components/Hotel/FolioView";
 import GroupBooking from "../components/Hotel/GroupBooking";
 import GuestProfile from "../components/Hotel/GuestProfile";
@@ -47,38 +47,24 @@ const getStepLabel = (pathname) => {
 const Hotel = () => {
   const location = useLocation();
   const currentStep = getStepLabel(location.pathname);
+  const isAllBookingsPage = location.pathname.includes("/all-bookings");
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(14,165,233,0.16),_transparent_24%),linear-gradient(180deg,#f8fbff_0%,#f7fffb_55%,#fff8ef_100%)] p-4 sm:p-6">
-      <div className="mx-auto max-w-7xl space-y-5">
-        <section className="overflow-hidden rounded-[30px] border border-white/70 bg-[linear-gradient(135deg,#020617_0%,#1d4ed8_48%,#0f766e_100%)] px-6 py-7 text-white shadow-[0_22px_70px_rgba(15,23,42,0.2)]">
-          <div className="grid gap-5 lg:grid-cols-[minmax(0,1.25fr)_minmax(260px,0.75fr)] lg:items-center">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.32em] text-cyan-200">
-                Hotel Booking System
-              </p>
-              <h1 className="mt-3 text-3xl font-black sm:text-4xl">
-                Manage reservations with a cleaner workflow
-              </h1>
-              <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-100/85 sm:text-base">
-          “Every step, from guest communication to operations, is organized into a polished front-desk dashboard.”
-              </p>
-            </div>
-
-            <div className="rounded-[24px] border border-white/15 bg-white/10 p-5 backdrop-blur">
-              <div className="text-xs uppercase tracking-[0.24em] text-cyan-100/75">
-                Current Step
-              </div>
-              <div className="mt-2 text-2xl font-black">{currentStep}</div>
-            </div>
-          </div>
-        </section>
+    <div className="min-h-screen w-full bg-[radial-gradient(circle_at_top,_rgba(14,165,233,0.16),_transparent_24%),linear-gradient(180deg,#f8fbff_0%,#f7fffb_55%,#fff8ef_100%)] p-4 sm:p-6">
+      <div className="w-full space-y-5">
+    
 
         <div className="rounded-[28px] border border-white/70 bg-white/80 p-4 shadow-[0_15px_45px_rgba(15,23,42,0.08)] backdrop-blur">
           <BookingSteps />
         </div>
 
-        <div className="rounded-[30px] border border-white/70 bg-white/80 p-4 shadow-[0_18px_55px_rgba(15,23,42,0.08)] backdrop-blur">
+        <div
+          className={
+            isAllBookingsPage
+              ? "w-full"
+              : "rounded-[30px] border border-white/70 bg-white/80 p-4 shadow-[0_18px_55px_rgba(15,23,42,0.08)] backdrop-blur"
+          }
+        >
           <Routes>
             {/* Existing booking wizard */}
             <Route index element={<Navigate to="guest" />} />
@@ -97,7 +83,7 @@ const Hotel = () => {
             <Route path="all-bookings"   element={<AllBooking />} />
             <Route path="edit-booking"   element={<EditBooking />} />
 
-            {/* ── NEW MISSING FEATURE ROUTES ─────────────────────────────── */}
+            {/* â”€â”€ NEW MISSING FEATURE ROUTES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
             {/* Guest Folio / Night Audit */}
             <Route path="folio"              element={<FolioView />} />
 

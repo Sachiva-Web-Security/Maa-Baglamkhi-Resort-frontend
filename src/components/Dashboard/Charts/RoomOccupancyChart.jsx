@@ -59,14 +59,13 @@ const RoomOccupancyChart = () => {
     total > 0
       ? Math.round((occupiedRooms / total) * 100)
       : 0;
-  const availableRooms =
-    normalizedData.find((item) => item.name === "Available")?.value || 0;
 
   return (
     <div className="w-full min-w-0">
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(160px,0.9fr)_minmax(0,1fr)] xl:items-center">
-        <div className="relative mx-auto h-[220px] w-full max-w-[220px] min-w-0">
-            <ResponsiveContainer width="100%" height={220}>
+      <div className="rounded-[24px] bg-[linear-gradient(180deg,rgba(243,250,247,0.9)_0%,rgba(255,255,255,0.96)_100%)] p-3">
+        <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-[minmax(0,120px)_minmax(0,1fr)] min-[420px]:items-center sm:grid-cols-[minmax(0,128px)_minmax(0,1fr)] sm:gap-4">
+          <div className="relative mx-auto h-[128px] w-full max-w-[128px] min-w-0 sm:h-[140px] sm:max-w-[140px]">
+            <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={normalizedData}
@@ -86,50 +85,53 @@ const RoomOccupancyChart = () => {
               </PieChart>
             </ResponsiveContainer>
 
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-              <p className="text-[30px] font-bold leading-none text-slate-900">
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+              <p className="text-[26px] font-bold leading-none text-slate-900 sm:text-[28px]">
                 {percentage}%
               </p>
-              <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+              <p className="mt-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-slate-400 sm:text-[10px]">
                 Occupied
               </p>
-              <p className="mt-2 max-w-[110px] text-[11px] leading-4 text-slate-400">
+              <p className="mt-1.5 max-w-[104px] text-[10px] leading-4 text-slate-400 sm:text-[11px]">
                 {occupiedRooms} of {total} rooms in use
               </p>
             </div>
           </div>
 
-        <div className="grid gap-3">
-          {normalizedData.map((item) => {
-            const itemPercentage =
-              total > 0 ? Math.round((item.value / total) * 100) : 0;
+          <div className="grid min-w-0 gap-2">
+            {normalizedData.map((item) => {
+              const itemPercentage =
+                total > 0 ? Math.round((item.value / total) * 100) : 0;
 
-            return (
-              <div
-                key={item.name}
-                className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3 shadow-sm ring-1 ring-slate-100"
-              >
-                <div className="flex items-center gap-3">
-                  <span
-                    className="h-3 w-3 rounded-full"
-                    style={{ backgroundColor: item.color }}
-                  />
-                  <div>
-                    <p className="text-sm font-semibold text-slate-800">
-                      {item.label}
+              return (
+                <div
+                  key={item.name}
+                  className="flex min-w-0 items-center justify-between gap-2.5 rounded-[18px] border border-slate-200 bg-white/90 px-3 py-2.5 shadow-[0_10px_26px_rgba(15,23,42,0.06)]"
+                >
+                  <div className="flex min-w-0 items-center gap-2.5">
+                    <span
+                      className="h-3 w-3 shrink-0 rounded-full"
+                      style={{ backgroundColor: item.color }}
+                    />
+                    <div className="min-w-0">
+                      <p className="truncate text-[13px] font-semibold text-slate-800 sm:text-sm">
+                        {item.label}
+                      </p>
+                      <p className="text-[10px] text-slate-400 sm:text-[11px]">
+                        {itemPercentage}% of total
+                      </p>
+                    </div>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <p className="text-[15px] font-bold leading-none text-slate-900 sm:text-base">
+                      {item.value}
                     </p>
-                    <p className="text-[11px] text-slate-400">
-                      {itemPercentage}% of total
-                    </p>
+                    <p className="mt-1 text-[10px] text-slate-400">rooms</p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-lg font-bold text-slate-900">{item.value}</p>
-                  <p className="text-[11px] text-slate-400">rooms</p>
-                </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>

@@ -3,8 +3,14 @@ import { FaMapMarkedAlt, FaSnowflake, FaUsers } from "react-icons/fa";
 import { getBackendBaseURL } from "../../api";
 
 const BanquetHallCard = ({ hall, selected, onSelect }) => {
-  const imgSrc = hall.image
-    ? `${getBackendBaseURL()}/uploads/${hall.image}`
+  const rawImage = String(hall.image || "").trim();
+  const imgSrc = rawImage
+    ? rawImage.startsWith("http://") ||
+      rawImage.startsWith("https://") ||
+      rawImage.startsWith("data:") ||
+      rawImage.startsWith("/")
+      ? rawImage
+      : `${getBackendBaseURL()}/uploads/${rawImage}`
     : null;
 
   return (
@@ -37,17 +43,17 @@ const BanquetHallCard = ({ hall, selected, onSelect }) => {
         </div>
       )}
 
-      <div className="flex flex-1 flex-col space-y-4 p-4">
+      <div className="flex flex-1 flex-col gap-4 p-4">
         <div>
           <div
-            className={`text-lg font-black ${
+            className={`line-clamp-2 break-words text-lg font-black leading-tight ${
               selected ? "text-white" : "text-slate-900"
             }`}
           >
             {hall.name}
           </div>
           <div
-            className={`mt-1 text-sm ${
+            className={`mt-1 line-clamp-2 text-sm leading-6 ${
               selected ? "text-slate-200" : "text-slate-500"
             }`}
           >
@@ -67,7 +73,7 @@ const BanquetHallCard = ({ hall, selected, onSelect }) => {
               <FaUsers />
               Capacity
             </div>
-            <div className="mt-2 text-lg font-black">{hall.capacity}</div>
+            <div className="mt-2 break-words text-lg font-black">{hall.capacity}</div>
           </div>
 
           <div
@@ -80,11 +86,11 @@ const BanquetHallCard = ({ hall, selected, onSelect }) => {
             <div className="text-xs font-semibold uppercase tracking-[0.14em]">
               Rate / hour
             </div>
-            <div className="mt-2 text-lg font-black">Rs. {hall.ratePerHour}</div>
+            <div className="mt-2 break-words text-base font-black sm:text-lg">Rs. {hall.ratePerHour}</div>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="mt-auto flex flex-wrap items-center gap-2">
           <span
             className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold ${
               selected

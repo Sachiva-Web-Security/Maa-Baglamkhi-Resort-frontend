@@ -39,9 +39,19 @@ html, body {
   min-height: 100vh;
 }
 
+.auth-route-shell,
+.auth-route-content {
+  min-height: 100vh;
+  background: #020617;
+}
+
 @media (min-width: 1024px) {
   .desktop-scale-content {
     zoom: var(--desktop-ui-scale);
+  }
+
+  .auth-route-content {
+    zoom: 1 !important;
   }
 
   .desktop-scale-sidebar {
@@ -61,6 +71,16 @@ html, body {
       min-height: calc(100vh / var(--desktop-ui-scale));
       transform: scale(var(--desktop-ui-scale));
       transform-origin: top left;
+    }
+
+    .auth-route-shell {
+      overflow: hidden;
+    }
+
+    .auth-route-content {
+      width: 100%;
+      min-height: 100vh;
+      transform: none;
     }
   }
 }

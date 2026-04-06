@@ -21,31 +21,52 @@ test.describe("Accounts page smoke flow", () => {
     await expect(page.getByText("Total Expense").first()).toBeVisible();
     await expect(page.getByText("Net Profit").first()).toBeVisible();
     await expect(page.getByText("GST Payable").first()).toBeVisible();
-    await expect(page.getByText("Combined billed amount for the current filter.")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Add Bank Entry" }).first()).toBeVisible();
-    await expect(page.getByRole("button", { name: "Add Petty Cash" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Save GST Record" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Add Vendor Payment" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Create PO" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Add Payroll" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Add Profit Entry" })).toBeVisible();
+    await expect(page.getByText("Combined Payment Amount")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Accounts Tab" })).toBeVisible();
+    await expect(page.getByText("Total Room Income")).toHaveCount(0);
+    await expect(page.getByText("Pending Reconciliation")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Add Petty Cash" })).toHaveCount(0);
   });
 
-  test("opens pending reconciliation entries from the summary card", async ({ page }) => {
-    await page.getByRole("button", { name: /Pending Reconciliation/i }).click();
+  test("opens bank reconciliation from the hero action", async ({ page }) => {
+    await page.getByRole("button", { name: "Bank Reconciliation" }).click();
 
     await expect(
       page.getByRole("heading", { name: "Billing to bank reconciliation view" }),
     ).toBeVisible();
-    await expect(
-      page.getByText("Showing bank entries that still need reconciliation."),
-    ).toBeVisible();
-    await expect(page.getByRole("button", { name: "Show All" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Reconciliation Data" }).first()).toBeVisible();
+    await expect(page.getByText("Total Room Income")).toBeVisible();
+    await expect(page.getByText("Total Restaurant Income")).toBeVisible();
+    await expect(page.getByText("Total Banquet Income")).toBeVisible();
+    await expect(page.getByText("Petty Cash Balance")).toBeVisible();
+    await expect(page.getByText("GST Pending")).toBeVisible();
+    await expect(page.getByText("Vendor Outstanding")).toBeVisible();
+    await expect(page.getByText("Open POs")).toBeVisible();
+    await expect(page.getByText("Payroll Total")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Form Filling" })).toHaveCount(0);
+  });
+
+  test("opens dedicated accounts tab workspace from the hero actions", async ({ page }) => {
+    await page.getByRole("button", { name: "Accounts Tab" }).click();
+
+    await page.waitForURL(/\/accounts\?view=modules$/, { timeout: 30_000 });
+    await expect(page.getByRole("heading", { name: "Accounts tabs workspace" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Add Petty Cash" }).first()).toBeVisible();
   });
 
   test("creates a bank entry from the UI and shows it in recent records", async ({ page }) => {
     const suffix = Date.now();
     const bankName = `PW Bank ${suffix}`;
+
+    await page.getByRole("button", { name: "Bank Reconciliation" }).click();
+    await expect(
+      page.getByRole("heading", { name: "Billing to bank reconciliation view" }),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "Reconciliation Data" }).first().click();
+    await page.waitForURL(/\/accounts\/reconciliation-data$/, { timeout: 30_000 });
+    await expect(page.getByRole("heading", { name: "Reconciliation data workspace" })).toBeVisible();
+    await page.getByRole("button", { name: "Form Filling" }).click();
+    await expect(page.getByRole("heading", { name: "Form Filling" })).toBeVisible();
 
     await page.locator('input[name="entryDate"]').fill("2026-03-31");
     await page.locator('input[name="bankName"]').fill(bankName);
@@ -64,6 +85,8 @@ test.describe("Accounts page smoke flow", () => {
   test("switches to profit entry tab and creates a backend-connected record", async ({ page }) => {
     const suffix = Date.now();
 
+    await page.getByRole("button", { name: "Accounts Tab" }).click();
+    await expect(page.getByRole("heading", { name: "Accounts tabs workspace" })).toBeVisible();
     await page.getByRole("button", { name: "Add Profit Entry" }).click();
     await expect(page.getByText("Profit Center Split")).toBeVisible();
 

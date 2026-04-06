@@ -47,6 +47,29 @@ const formatCurrency = (amount) =>
   `Rs. ${Number(amount || 0).toLocaleString("en-IN")}`;
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
+const normalizeDate = (value) => {
+  if (!value) return null;
+  const raw = String(value).trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+
+  const parsed = new Date(raw);
+  if (!Number.isNaN(parsed.getTime())) {
+    return parsed.toISOString().slice(0, 10);
+  }
+
+  return raw.slice(0, 10);
+};
+const normalizePaymentMode = (value, fallback = "N/A") => {
+  const normalized = String(value || "").trim();
+  return normalized || fallback;
+};
+const toAmount = (...values) => {
+  for (const value of values) {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed) && parsed !== 0) return parsed;
+  }
+  return Number(values[0]) || 0;
+};
 
 function inDateRange(dateISO, fromISO, toISO) {
   if (!dateISO) return false;
@@ -141,6 +164,171 @@ function getInsight(reportType, rows) {
 
   const active = rows.filter((row) => row.status === "Occupied").length;
   return `${active} room bookings occupied status mein hain within the selected range.`;
+}
+
+async function loadRoomReportRows() {
+  const response = await API.get("/hotel/all-bookings");
+  const rows = Array.isArray(response.data) ? response.data : [];
+
+  return rows.map((row) => ({
+    id: row.bookingId || row.id,
+    date: normalizeDate(row.check_in || row.date),
+    guest: row.guest_name || row.customerName || "Guest",
+    roomNumber: row.rooms || row.roomNo || row.roomNumber || "-",
+    roomType: row.roomType || row.room_type || row.categoryName || row.category_name || "Room",
+    status: row.booking_status || row.bookingStatus || "Confirmed",
+    paymentMode: normalizePaymentMode(row.paymentMode, "Pending"),
+    revenue: Number(row.totalAmount) || 0,
+    checkOut: normalizeDate(row.check_out),
+  }));
+}
+
+async function loadBanquetReportRows() {
+  const response = await API.get("/banquet");
+  const halls = Array.isArray(response.data?.halls) ? response.data.halls : [];
+  const bookings = Array.isArray(response.data?.bookings) ? response.data.bookings : [];
+  const hallLookup = new Map(
+    halls.map((hall) => [String(hall.id), hall.name || hall.hallName || `Hall ${hall.id}`]),
+  );
+
+  return bookings.map((row) => ({
+    id: row.id,
+    date: normalizeDate(row.date),
+    hall:
+      row.hallName ||
+      row.hall ||
+      hallLookup.get(String(row.hallId || row.hall_id || "")) ||
+      "Banquet Hall",
+    status: row.status || "Confirmed",
+    eventType: row.eventType || row.event_type || row.eventTitle || "Banquet Event",
+    guests: Number(row.guests) || 0,
+    amount: toAmount(row.grandTotal, row.totalAmount, row.total, row.amount, row.advance),
+    paymentMode: normalizePaymentMode(row.paymentMode || row.paymentStatus),
+  }));
+}
+
+async function loadRestaurantReportRows() {
+  const response = await API.get("/accounts/restaurant-billing");
+  const rows = Array.isArray(response.data) ? response.data : [];
+
+  return rows.map((row) => ({
+    id: row.id,
+    date: normalizeDate(row.date),
+    table_number: row.locationLabel || row.tableNumber || row.table_number || row.reference || "-",
+    status: row.paymentStatus || row.status || "Pending",
+    paymentMode: normalizePaymentMode(row.paymentMode, "Pending"),
+    amount: Number(row.total) || 0,
+  }));
+}
+
+async function loadHousekeepingReportRows() {
+  const response = await API.get("/housekeeping");
+  const rows = Array.isArray(response.data) ? response.data : [];
+
+  return rows.map((row) => ({
+    id: row.id,
+    date: normalizeDate(row.updated_at || row.created_at || row.date),
+    roomNo: row.roomNo || row.room_number || "-",
+    roomType: row.roomType || row.roomNo || row.room_number || "Room",
+    status: row.status || "Pending",
+    assignee: row.assignee || "Unassigned",
+    rooms: 1,
+  }));
+}
+
+async function loadAccountsReportRows() {
+  const response = await API.get("/accounts/transactions");
+  const rows = Array.isArray(response.data) ? response.data : [];
+
+  return rows.map((row) => ({
+    id: row.id,
+    date: normalizeDate(row.date),
+    type: row.type || "Income",
+    description: row.description || "Accounts transaction",
+    amount: Number(row.amount) || 0,
+    paymentMode: normalizePaymentMode(row.paymentMode, "N/A"),
+    status: "Posted",
+  }));
+}
+
+async function loadAllBillsReportRows() {
+  const [hotelRes, restaurantRes, banquetRes, accountsRes] = await Promise.all([
+    API.get("/accounts/hotel-billing"),
+    API.get("/accounts/restaurant-billing"),
+    API.get("/banquet"),
+    API.get("/accounts/transactions"),
+  ]);
+
+  const hotelRows = (Array.isArray(hotelRes.data) ? hotelRes.data : []).map((row) => ({
+    id: `hotel-${row.bookingId || row.id}`,
+    date: normalizeDate(row.date || row.check_out || row.check_in),
+    source: "Hotel",
+    billNo: row.bookingCode || `HOT-${String(row.bookingId || row.id || "").padStart(6, "0")}`,
+    description: `${row.customerName || row.guest_name || "Guest"} / Room ${row.roomNo || row.rooms || "-"}`,
+    amount: Number(row.totalAmount) || 0,
+    paymentMode: normalizePaymentMode(row.paymentMode, "Pending"),
+    status: row.paymentStatus || row.bookingStatus || "Pending",
+    type: "Income",
+  }));
+
+  const restaurantRows = (Array.isArray(restaurantRes.data) ? restaurantRes.data : []).map((row) => ({
+    id: String(row.id || ""),
+    date: normalizeDate(row.date),
+    source: "Restaurant",
+    billNo: row.reference || `RES-${row.actionId || row.id || ""}`,
+    description: `${row.customerName || "Walk-in"} / ${row.locationLabel || "Restaurant"}`,
+    amount: Number(row.total) || 0,
+    paymentMode: normalizePaymentMode(row.paymentMode, "Pending"),
+    status: row.paymentStatus || "Pending",
+    type: "Income",
+  }));
+
+  const banquetPayload = banquetRes.data || {};
+  const banquetHalls = Array.isArray(banquetPayload.halls) ? banquetPayload.halls : [];
+  const banquetBookings = Array.isArray(banquetPayload.bookings) ? banquetPayload.bookings : [];
+  const banquetHallLookup = new Map(
+    banquetHalls.map((hall) => [String(hall.id), hall.name || hall.hallName || `Hall ${hall.id}`]),
+  );
+  const banquetRows = banquetBookings.map((row) => ({
+    id: `banquet-${row.id}`,
+    date: normalizeDate(row.date),
+    source: "Banquet",
+    billNo: row.invoiceNo || `BNQ-${String(row.id || "").padStart(6, "0")}`,
+    description: `${row.customerName || row.eventType || "Banquet booking"} / ${
+      row.hallName || row.hall || banquetHallLookup.get(String(row.hallId || row.hall_id || "")) || "Banquet Hall"
+    }`,
+    amount: toAmount(row.grandTotal, row.totalAmount, row.total, row.amount, row.advance),
+    paymentMode: normalizePaymentMode(row.paymentMode || row.paymentStatus),
+    status: row.status || "Confirmed",
+    type: "Income",
+  }));
+
+  const accountsRows = (Array.isArray(accountsRes.data) ? accountsRes.data : []).map((row) => ({
+    id: `accounts-${row.id}`,
+    date: normalizeDate(row.date),
+    source: "Accounts",
+    billNo: `ACC-${String(row.id || "").padStart(6, "0")}`,
+    description: row.description || "Accounts transaction",
+    amount: Number(row.amount) || 0,
+    paymentMode: normalizePaymentMode(row.paymentMode, "N/A"),
+    status: "Posted",
+    type: row.type || "Income",
+  }));
+
+  return [...hotelRows, ...restaurantRows, ...banquetRows, ...accountsRows].sort((left, right) => {
+    if (left.date === right.date) return String(right.id).localeCompare(String(left.id));
+    return String(right.date || "").localeCompare(String(left.date || ""));
+  });
+}
+
+async function loadReportRows(reportType) {
+  if (reportType === "room") return loadRoomReportRows();
+  if (reportType === "banquet") return loadBanquetReportRows();
+  if (reportType === "restaurant") return loadRestaurantReportRows();
+  if (reportType === "housekeeping") return loadHousekeepingReportRows();
+  if (reportType === "accounts") return loadAccountsReportRows();
+  if (reportType === "all-bills") return loadAllBillsReportRows();
+  return [];
 }
 
 const SummaryPanel = ({ cards }) => (
@@ -277,26 +465,17 @@ const Reports = () => {
     setError("");
 
     try {
-      const res = await API.get("/reports/data", {
-        params: {
-          type: reportType,
-          dateFrom: filters.dateFrom,
-          dateTo: filters.dateTo,
-          status: filters.status,
-          hall: filters.hall,
-          roomType: filters.roomType,
-          paymentMode: filters.paymentMode,
-        },
-      });
-      setData(res.data || []);
+      const rows = await loadReportRows(reportType);
+      setData(Array.isArray(rows) ? rows : []);
       setLastFetchedAt(new Date());
     } catch (err) {
       console.error("Error fetching report data", err);
-      setError("Report data load nahi ho paya. Please refresh karke dobara try karein.");
+      setData([]);
+      setError("Unable to load report data right now. Please refresh and try again.");
     } finally {
       setLoading(false);
     }
-  }, [filters, reportType]);
+  }, [reportType]);
 
   useEffect(() => {
     fetchData();
@@ -363,7 +542,7 @@ const Reports = () => {
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.55)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.45)_1px,transparent_1px)] bg-[size:72px_72px] opacity-25" />
       </div>
 
-      <div className="mx-auto max-w-[1260px] space-y-7">
+      <div className="w-full space-y-7">
         <section className="overflow-hidden rounded-[28px] border border-slate-900/10 bg-[linear-gradient(120deg,#071b34_0%,#0d4a53_52%,#162d45_100%)] px-5 py-6 shadow-[0_22px_55px_rgba(15,23,42,0.12)] sm:px-7 sm:py-8">
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.9fr)] lg:items-center">
             <div className="space-y-4">

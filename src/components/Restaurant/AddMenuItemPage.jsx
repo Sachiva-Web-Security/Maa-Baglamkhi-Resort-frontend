@@ -93,21 +93,21 @@ const AddMenuItemPage = () => {
     }
   };
 
-  return (
-    <div className="mx-auto max-w-4xl">
+    return (
+      <div className="w-full">
       <div className="mb-4 rounded-[22px] bg-[linear-gradient(135deg,#111827_0%,#1d4ed8_50%,#0f766e_100%)] px-5 py-5 text-white shadow-[0_18px_45px_rgba(15,23,42,0.18)]">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <div className="text-[11px] uppercase tracking-[0.28em] text-cyan-200">Restaurant Menu Card</div>
-            <div className="mt-2 text-3xl font-black">Add Menu Item</div>
-            <div className="mt-1 text-sm text-white/80">
+            <div className="text-sm uppercase tracking-[0.28em] text-cyan-200">Restaurant Menu Card</div>
+            <div className="mt-2 text-4xl font-black">Add Menu Item</div>
+            <div className="mt-1 text-xl text-white/80">
               {table ? `Connected table: ${table}` : "No table selected"}
             </div>
           </div>
           <button
             type="button"
             onClick={() => navigate("/restaurant", { replace: true })}
-            className="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white backdrop-blur-md"
+            className="rounded-xl border border-white/20 bg-white/10 px-5 py-3 text-xl font-semibold text-white backdrop-blur-md"
           >
             Back To Restaurant
           </button>

@@ -20,7 +20,7 @@ import {
 
 import { getRoleHome } from "../../utils/roleHome";
 
-const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen }) => {
+const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, footerOverlap = 0 }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [hoveredItem, setHoveredItem] = useState(null);
@@ -146,6 +146,7 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen }) => {
   };
 
   const showLabels = sidebarOpen;
+  const desktopHeight = "100vh";
 
   return (
     <>
@@ -159,13 +160,17 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen }) => {
       <div
         className={`
           desktop-scale-sidebar
-          fixed left-0 top-[70px] z-40
-          flex h-[calc(100vh-70px)] translate-x-0 flex-col justify-between
+          fixed left-0 top-0 z-40
+          flex translate-x-0 flex-col justify-between
           border-r border-white/10 bg-[linear-gradient(180deg,#081225_0%,#0b1730_55%,#09101f_100%)]
           text-gray-800 shadow-[0_18px_40px_rgba(2,8,23,0.45)]
           transition-all duration-300 ease-in-out
+          pt-[70px]
           ${sidebarOpen ? "w-[250px]" : "w-[88px]"}
         `}
+        style={{
+          height: isMobile ? "150vh" : desktopHeight,
+        }}
       >
         <style>{`
           .sidebar-scroll::-webkit-scrollbar { width: 6px; }

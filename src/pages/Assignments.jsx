@@ -9,7 +9,7 @@ import {
 import API from "../api";
 
 const fieldCls =
-  "w-full rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100";
+  "w-full rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-xl text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100";
 
 const textAreaCls = `${fieldCls} min-h-[112px] resize-y`;
 const managerRoles = new Set(["admin", "manager", "receptionist"]);
@@ -377,40 +377,40 @@ const Assignment = () => {
     { icon: FaCheckCircle, label: "Completed", value: stats.completed || 0 },
   ];
 
-  return (
-    <div className="relative min-h-screen overflow-x-hidden bg-[linear-gradient(135deg,#f5fbff_0%,#f3f8f4_28%,#fff8f1_58%,#f8fafc_100%)] p-4 sm:p-6 lg:p-8">
+    return (
+      <div className="relative min-h-screen w-full overflow-x-hidden bg-[linear-gradient(135deg,#f5fbff_0%,#f3f8f4_28%,#fff8f1_58%,#f8fafc_100%)] p-4 sm:p-6 lg:p-8">
       <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute left-[-8%] top-[-6%] h-72 w-72 rounded-full bg-cyan-200/45 blur-3xl sm:h-96 sm:w-96" />
         <div className="absolute right-[-10%] top-[8%] h-72 w-72 rounded-full bg-amber-200/45 blur-3xl sm:h-[28rem] sm:w-[28rem]" />
         <div className="absolute bottom-[18%] left-[18%] h-56 w-56 rounded-full bg-emerald-200/30 blur-3xl sm:h-80 sm:w-80" />
       </div>
 
-      <div className="mx-auto max-w-[1360px] space-y-7">
+      <div className="w-full space-y-7">
         <section className="overflow-hidden rounded-[28px] border border-slate-900/10 bg-[linear-gradient(120deg,#071b34_0%,#0d4a53_52%,#162d45_100%)] px-5 py-6 shadow-[0_22px_55px_rgba(15,23,42,0.12)] sm:px-7 sm:py-8">
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(360px,1fr)] lg:items-center">
             <div className="space-y-4">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-cyan-200">
+              <p className="text-[15px] font-semibold uppercase tracking-[0.26em] text-cyan-200">
                 Task Assignment
               </p>
-              <h1 className="text-3xl font-black leading-tight text-white sm:text-4xl">
+              <h1 className="text-4xl font-black leading-tight text-white sm:text-4xl">
                 Assignment operations board
               </h1>
-              <p className="max-w-3xl text-sm leading-6 text-slate-100/85 sm:text-base">
+              <p className="max-w-3xl text-3xl  font-semibold leading-6 text-slate-100/85 sm:text-base">
            “Tasks assigned by reception, managers, and admins are shown here in real time. Housekeeping, accounts, and staff teams can start and complete their assigned work.”
               </p>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-3 text-xl sm:grid-cols-2">
               {summaryCards.map((item) => {
                 const Icon = item.icon;
                 return (
                   <div
                     key={item.label}
-                    className="rounded-[22px] border border-white/12 bg-white/10 px-4 py-4 text-white backdrop-blur-md"
+                    className="rounded-[22px] border text-xl border-white/12 bg-white/10 px-4 py-4 text-white backdrop-blur-md"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <span className="text-[11px] text-slate-100/75">{item.label}</span>
+                        <span className="text-[15px] font-bold text-slate-100/75">{item.label}</span>
                         <div className="mt-3 text-2xl font-bold leading-none">{item.value}</div>
                       </div>
                       <span className="rounded-2xl bg-white/10 p-3 text-cyan-100">
@@ -428,14 +428,14 @@ const Assignment = () => {
           <section className="rounded-[26px] border border-white/60 bg-white/82 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
             <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
+                <p className="text-[14px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
                   New Assignment
                 </p>
                 <h2 className="mt-1 text-xl font-bold text-slate-900">
                   Assign task with priority and timing
                 </h2>
               </div>
-              <div className="text-right text-xs text-slate-500">
+              <div className="text-right text-xl text-slate-500">
                 <div>{selectableStaff.length} assignable staff loaded</div>
                 <div>{selectableRooms.length} current rooms loaded</div>
                 <div>{stats.overdue || 0} overdue tasks right now</div>
@@ -559,7 +559,7 @@ const Assignment = () => {
         <section className="rounded-[26px] border border-white/60 bg-white/82 shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
           <div className="overflow-x-auto">
             <table className="min-w-full text-left">
-              <thead className="bg-slate-50 text-xs uppercase tracking-[0.18em] text-slate-500">
+              <thead className="bg-slate-50 text-xl uppercase tracking-[0.18em] text-slate-500">
                 <tr>
                   <th className="px-5 py-4 font-semibold">Staff</th>
                   <th className="px-5 py-4 font-semibold">Room</th>
@@ -578,23 +578,23 @@ const Assignment = () => {
                     key={assignment.id}
                     className="border-t border-slate-200/80 align-top hover:bg-slate-50/80"
                   >
-                    <td className="px-5 py-4 text-sm font-semibold text-slate-900">
+                    <td className="px-5 py-4 text-xl font-semibold text-slate-900">
                       {assignment.staff_name}
                     </td>
-                    <td className="px-5 py-4 text-sm text-slate-600">
+                    <td className="px-5 py-4 text-xl text-slate-600">
                       {assignment.room_number}
                     </td>
-                    <td className="px-5 py-4 text-sm text-slate-600">
+                    <td className="px-5 py-4 text-xl text-slate-600">
                       <div className="font-medium text-slate-700">{assignment.task}</div>
                       {assignment.notes ? (
-                        <div className="mt-2 text-xs leading-5 text-slate-500">
+                        <div className="mt-2 text-xl leading-5 text-slate-500">
                           {assignment.notes}
                         </div>
                       ) : null}
                     </td>
                     <td className="px-5 py-4">
                       <span
-                        className={`inline-flex rounded-full border px-3 py-1 text-xs font-bold ${getPriorityBadge(assignment.priority)}`}
+                        className={`inline-flex rounded-full border px-3 py-1 text-xl font-bold ${getPriorityBadge(assignment.priority)}`}
                       >
                         {assignment.priority || "Normal"}
                       </span>
@@ -604,15 +604,15 @@ const Assignment = () => {
                     </td>
                     <td className="px-5 py-4">
                       <span
-                        className={`inline-flex rounded-full border px-3 py-1 text-xs font-bold ${getStatusBadge(assignment.status)}`}
+                        className={`inline-flex rounded-full border px-3 py-1 text-xl font-bold ${getStatusBadge(assignment.status)}`}
                       >
                         {assignment.status || "Pending"}
                       </span>
                     </td>
-                    <td className="px-5 py-4 hidden text-sm text-slate-600 xl:table-cell">
+                    <td className="px-5 py-4 hidden text-xl text-slate-600 xl:table-cell">
                       {assignment.assigned_by || assignment.created_by_name || "--"}
                     </td>
-                    <td className="px-5 py-4 hidden text-sm text-slate-600 xl:table-cell">
+                    <td className="px-5 py-4 hidden text-xl text-slate-600 xl:table-cell">
                       {formatTimestamp(assignment.updated_at || assignment.created_at)}
                     </td>
                     <td className="px-5 py-4">
@@ -620,7 +620,7 @@ const Assignment = () => {
                         {normalizeLower(assignment.status) === "pending" && (
                           <button
                             onClick={() => updateTaskStatus(assignment.id, "In Progress")}
-                            className="rounded-full bg-sky-600 px-3 py-2 text-xs font-bold text-white"
+                            className="rounded-full bg-sky-600 px-3 py-2 text-xl font-bold text-white"
                           >
                             Start
                           </button>
@@ -628,7 +628,7 @@ const Assignment = () => {
                         {normalizeLower(assignment.status) === "in progress" && (
                           <button
                             onClick={() => updateTaskStatus(assignment.id, "Completed")}
-                            className="rounded-full bg-emerald-600 px-3 py-2 text-xs font-bold text-white"
+                            className="rounded-full bg-emerald-600 px-3 py-2 text-xl font-bold text-white"
                           >
                             Complete
                           </button>
@@ -636,7 +636,7 @@ const Assignment = () => {
                         {canManageAssignments && (
                           <button
                             onClick={() => editTask(assignment)}
-                            className="rounded-full bg-sky-50 px-3 py-2 text-xs font-bold text-sky-700"
+                            className="rounded-full bg-sky-50 px-3 py-2 text-xl font-bold text-sky-700"
                           >
                             Edit
                           </button>
@@ -644,7 +644,7 @@ const Assignment = () => {
                         {canManageAssignments && (
                           <button
                             onClick={() => deleteTask(assignment.id)}
-                            className="rounded-full bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700"
+                            className="rounded-full bg-rose-50 px-3 py-2 text-xl font-bold text-rose-700"
                           >
                             Delete
                           </button>
@@ -658,7 +658,7 @@ const Assignment = () => {
                   <tr>
                     <td
                       colSpan="9"
-                      className="px-5 py-12 text-center text-sm font-semibold text-slate-500"
+                      className="px-5 py-12 text-center text-xl font-semibold text-slate-500"
                     >
                       No tasks assigned yet
                     </td>
@@ -669,7 +669,7 @@ const Assignment = () => {
                   <tr>
                     <td
                       colSpan="9"
-                      className="px-5 py-12 text-center text-sm font-semibold text-slate-500"
+                      className="px-5 py-12 text-center text-xl font-semibold text-slate-500"
                     >
                       Loading assignments...
                     </td>

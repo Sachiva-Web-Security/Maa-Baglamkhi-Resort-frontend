@@ -109,8 +109,8 @@ export default function LostFoundModal({ rooms, onClose, apiBase }) {
               <FaSearch className="text-violet-600" />
             </div>
             <div>
-              <h3 className="text-lg font-black text-slate-900">Lost & Found</h3>
-              <p className="text-xs text-slate-500">Track items found in rooms, manage storage & claims</p>
+              <h3 className="text-xl font-black text-slate-900">Lost & Found</h3>
+              <p className="text-xl text-slate-500">Track items found in rooms, manage storage & claims</p>
             </div>
           </div>
           <button onClick={onClose} className="rounded-full p-2 text-slate-400 hover:bg-slate-100"><FaTimes /></button>
@@ -120,15 +120,15 @@ export default function LostFoundModal({ rooms, onClose, apiBase }) {
           {/* Stats */}
           <div className="mb-5 grid grid-cols-3 gap-3">
             <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-              <div className="text-xs font-semibold text-slate-500">Total Items</div>
+              <div className="text-xl font-semibold text-slate-500">Total Items</div>
               <div className="text-2xl font-black text-slate-900">{stats.total}</div>
             </div>
             <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
-              <div className="text-xs font-semibold text-amber-600">Awaiting Claim</div>
+              <div className="text-xl font-semibold text-amber-600">Awaiting Claim</div>
               <div className="text-2xl font-black text-amber-700">{stats.stored}</div>
             </div>
             <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
-              <div className="text-xs font-semibold text-emerald-600">Claimed</div>
+              <div className="text-xl font-semibold text-emerald-600">Claimed</div>
               <div className="text-2xl font-black text-emerald-700">{stats.claimed}</div>
             </div>
           </div>
@@ -137,7 +137,7 @@ export default function LostFoundModal({ rooms, onClose, apiBase }) {
           <div className="mb-5 flex gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1 w-fit">
             {[{ key: "list", label: "All Items" }, { key: "new", label: "Report Found Item" }].map(t => (
               <button key={t.key} onClick={() => setTab(t.key)}
-                className={`rounded-lg px-4 py-1.5 text-sm font-semibold transition ${tab === t.key ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"}`}>
+                className={`rounded-lg px-4 py-1.5 text-xl font-semibold transition ${tab === t.key ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"}`}>
                 {t.label}
               </button>
             ))}
@@ -148,22 +148,22 @@ export default function LostFoundModal({ rooms, onClose, apiBase }) {
               {/* Filters */}
               <div className="mb-4 flex flex-wrap gap-3">
                 <label className="flex flex-1 min-w-48 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2">
-                  <FaSearch className="text-slate-400 text-xs" />
-                  <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search description, room, guest..." className="w-full bg-transparent text-sm outline-none" />
+                  <FaSearch className="text-slate-400 text-xl" />
+                  <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search description, room, guest..." className="w-full bg-transparent text-xl outline-none" />
                 </label>
-                <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700 outline-none">
+                <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="rounded-xl border border-slate-200 px-3 py-2 text-xl text-slate-700 outline-none">
                   <option value="">All Status</option>
                   {STATUSES.map(s => <option key={s}>{s}</option>)}
                 </select>
-                <select value={filterCategory} onChange={e => setFilterCategory(e.target.value)} className="rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700 outline-none">
+                <select value={filterCategory} onChange={e => setFilterCategory(e.target.value)} className="rounded-xl border border-slate-200 px-3 py-2 text-xl text-slate-700 outline-none">
                   <option value="">All Categories</option>
                   {CATEGORIES.map(c => <option key={c}>{c}</option>)}
                 </select>
-                <button onClick={fetchItems} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
-                  <FaSyncAlt className="text-xs" />
+                <button onClick={fetchItems} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-xl font-semibold text-slate-700 hover:bg-slate-50">
+                  <FaSyncAlt className="text-xl" />
                 </button>
-                <button onClick={exportCSV} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
-                  <FaDownload className="text-xs" />
+                <button onClick={exportCSV} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-xl font-semibold text-slate-700 hover:bg-slate-50">
+                  <FaDownload className="text-xl" />
                 </button>
               </div>
 

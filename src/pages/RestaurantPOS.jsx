@@ -42,19 +42,19 @@ const RestaurantPOS = () => {
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.55)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.45)_1px,transparent_1px)] bg-[size:72px_72px] opacity-25" />
       </div>
 
-      <div className="mx-auto max-w-[1280px] space-y-3">
+      <div className="w-full space-y-3">
         <section className="overflow-hidden rounded-[20px] border border-slate-900/10 bg-[linear-gradient(120deg,#071b34_0%,#0d4a53_52%,#162d45_100%)] px-3 py-2.5 shadow-[0_14px_32px_rgba(15,23,42,0.10)] sm:px-4 sm:py-3">
           <div className="relative z-[1] space-y-2.5">
             <div className="flex flex-col gap-2.5 xl:flex-row xl:items-start xl:justify-between">
               <div className="space-y-2">
-                <p className="text-[7px] font-semibold uppercase tracking-[0.26em] text-cyan-200 sm:text-[10px]">
+                <p className="text-sm font-semibold uppercase tracking-[0.26em] text-cyan-200 sm:text-base">
                 Resort Command Center
                 </p>
                 <div className="space-y-1">
-                  <h1 className="text-[0.98rem] font-black leading-[1.02] text-white sm:text-[1.35rem]">
+                  <h1 className="text-2xl font-black leading-tight text-white sm:text-4xl">
                   Operational snapshot for restaurant
                   </h1>
-                  <p className="max-w-3xl text-[10px] leading-4 text-slate-100/88">
+                  <p className="max-w-3xl text-base leading-6 text-slate-100/88 sm:text-xl sm:leading-8">
                   Track tables, billing flow, room orders, and menu activity
                   from the same dashboard theme used across hotel operations.
                   </p>
@@ -63,7 +63,7 @@ const RestaurantPOS = () => {
                   <button
                     type="button"
                     onClick={() => navigate(activeLink.path)}
-                    className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-[11px] font-bold text-slate-900 shadow-[0_10px_22px_rgba(255,255,255,0.12)] transition hover:-translate-y-0.5"
+                    className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-base font-bold text-slate-900 shadow-[0_10px_22px_rgba(255,255,255,0.12)] transition hover:-translate-y-0.5"
                   >
                     <FaUtensils className="text-cyan-600" />
                     Open Active Section
@@ -71,23 +71,23 @@ const RestaurantPOS = () => {
                   <button
                     type="button"
                     onClick={() => navigate("/kitchen")}
-                    className="rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[11px] font-semibold text-white backdrop-blur-md"
+                    className="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-base font-semibold text-white backdrop-blur-md"
                   >
                     Go To Kitchen
                   </button>
                 </div>
               </div>
 
-              <div className="grid gap-2 sm:grid-cols-3 xl:w-[290px]">
+              <div className="grid w-full gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:w-[480px]">
                 {heroStats.map((item) => (
                   <div
                     key={item.label}
-                    className="rounded-[14px] border border-white/12 bg-white/10 px-3 py-2 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md"
+                    className="min-w-0 rounded-[14px] border border-white/12 bg-white/10 px-3 py-3 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md"
                   >
-                    <span className="text-[10px] text-slate-100/75">
+                    <span className="block text-xs font-medium text-slate-100/75 sm:text-sm">
                       {item.label}
                     </span>
-                    <div className="mt-1 text-[15px] font-bold leading-tight">
+                    <div className="mt-2 break-words text-lg font-bold leading-snug sm:text-xl xl:text-2xl">
                       {item.value}
                     </div>
                   </div>
@@ -97,7 +97,7 @@ const RestaurantPOS = () => {
 
             <div className="rounded-[16px] border border-white/12 bg-white/10 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md">
               <div className="mb-1.5 flex items-center justify-between gap-3">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-cyan-200">
+                <p className="text-base font-semibold uppercase tracking-[0.24em] text-cyan-200">
                   Quick Sections
                 </p>
               </div>
@@ -111,7 +111,7 @@ const RestaurantPOS = () => {
                         key={`${link.path}-${link.label}`}
                         type="button"
                         onClick={() => navigate(link.path)}
-                        className={`flex items-center gap-2 rounded-[12px] border px-2.5 py-1.5 text-left transition hover:-translate-y-0.5 ${
+                        className={`flex items-center gap-2 rounded-[12px] border px-3 py-2 text-left transition hover:-translate-y-0.5 ${
                           active
                             ? "border-cyan-300 bg-cyan-50/90 text-slate-900 shadow-[0_12px_28px_rgba(8,145,178,0.10)]"
                             : "border-white/12 bg-white/90 text-slate-900 hover:border-cyan-300"
@@ -127,10 +127,10 @@ const RestaurantPOS = () => {
                           <Icon />
                         </span>
                         <span>
-                          <span className="block text-xs font-bold leading-tight">
+                          <span className="block text-xl font-bold leading-tight">
                             {link.label}
                           </span>
-                          <span className="block text-[10px] text-slate-500">
+                          <span className="block text-base text-slate-500">
                             {active ? "Currently open" : "Open this section"}
                           </span>
                         </span>

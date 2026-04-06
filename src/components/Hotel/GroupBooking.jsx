@@ -11,6 +11,7 @@
  */
 
 import React, { useEffect, useMemo, useState } from "react";
+import { FaExclamationTriangle, FaTimes } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import API from "../../api";
 import {
@@ -33,9 +34,18 @@ const PAYMENT_MODES = ["Cash", "UPI", "Card", "Bank Transfer"];
 const GST_RATES = [0, 5, 12, 18];
 
 const inputCls =
-  "w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100";
+  "w-full rounded-xl border border-slate-200 px-4 py-3 text-base outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100 xl:text-lg";
 const labelCls =
-  "mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500";
+  "mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500 xl:text-sm";
+
+const modalToneClasses = {
+  error: {
+    accent: "from-rose-500 to-red-500",
+    badge: "bg-rose-50 text-rose-700 ring-1 ring-rose-100",
+    panel: "border-rose-100 bg-rose-50/70",
+    label: "text-rose-600",
+  },
+};
 
 // ─── Step indicator ─────────────────────────────────────────────────────────
 const StepBar = ({ current }) => (
@@ -43,7 +53,7 @@ const StepBar = ({ current }) => (
     {STEPS.map((s, i) => (
       <React.Fragment key={s}>
         <div
-          className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-black transition ${
+          className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-black transition xl:h-10 xl:w-10 xl:text-base ${
             i < current
               ? "bg-emerald-500 text-white"
               : i === current
@@ -54,7 +64,7 @@ const StepBar = ({ current }) => (
           {i < current ? "✓" : i + 1}
         </div>
         <div
-          className={`text-[11px] font-bold mx-1 hidden sm:block ${
+          className={`mx-1 hidden text-[11px] font-bold sm:block xl:text-sm ${
             i === current ? "text-slate-900" : "text-slate-400"
           }`}
         >
@@ -78,6 +88,12 @@ const GroupBooking = () => {
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
   const [resultBooking, setResultBooking] = useState(null);
+  const [feedbackModal, setFeedbackModal] = useState({
+    open: false,
+    type: "error",
+    title: "",
+    message: "",
+  });
 
   // Step 1 — Guest
   const [guest, setGuest] = useState({
@@ -110,6 +126,19 @@ const GroupBooking = () => {
       .then((res) => setInventory(Array.isArray(res.data) ? res.data : []))
       .catch(console.error);
   }, []);
+
+  useEffect(() => {
+    if (!feedbackModal.open) return undefined;
+
+    const handleEscape = (event) => {
+      if (event.key === "Escape") {
+        setFeedbackModal((current) => ({ ...current, open: false }));
+      }
+    };
+
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [feedbackModal.open]);
 
   // When rooms are selected, seed tariff rows
   useEffect(() => {
@@ -190,6 +219,43 @@ const GroupBooking = () => {
     return true;
   };
 
+  const getStepValidationMessage = () => {
+    if (step === 0) {
+      if (!guest.guestName.trim()) return "Please enter the master guest name.";
+      if (!guest.mobile.trim()) return "Please enter the mobile number.";
+      if (!guest.checkIn) return "Please select a check-in date.";
+      if (!guest.checkOut) return "Please select a check-out date.";
+      if (guest.checkIn > guest.checkOut) return "Check-out date cannot be earlier than check-in date.";
+    }
+    if (step === 1 && selectedRooms.length === 0) {
+      return "Please select at least one room to continue.";
+    }
+    if (step === 2 && !tariffs.every((t) => Number(t.tariff) > 0)) {
+      return "Please enter a valid tariff for every selected room.";
+    }
+    return "";
+  };
+
+  const openFeedbackModal = (type, title, message) => {
+    setFeedbackModal({ open: true, type, title, message });
+  };
+
+  const closeFeedbackModal = () => {
+    setFeedbackModal((current) => ({ ...current, open: false }));
+  };
+
+  const handleNextStep = () => {
+    if (!canNext()) {
+      openFeedbackModal(
+        "error",
+        "Required details missing",
+        getStepValidationMessage() || "Please complete the required details before continuing.",
+      );
+      return;
+    }
+    setStep((s) => s + 1);
+  };
+
   // ─── Submit ───────────────────────────────────────────────────────────────
   const handleSubmit = async () => {
     setSaving(true);
@@ -228,24 +294,101 @@ const GroupBooking = () => {
       setStep(4);
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.error || "Booking creation failed");
+      openFeedbackModal(
+        "error",
+        "Booking creation failed",
+        err.response?.data?.error || "Please try again.",
+      );
     } finally {
       setSaving(false);
     }
   };
 
+  const modalTone =
+    modalToneClasses[feedbackModal.type] || modalToneClasses.error;
+
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(99,102,241,0.12),_transparent_30%),linear-gradient(135deg,#f8fbff_0%,#f5f3ff_50%,#fff8ef_100%)] p-4 sm:p-6">
-      <div className="mx-auto max-w-5xl space-y-5">
+    <div className="min-h-screen w-full bg-[radial-gradient(circle_at_top_left,_rgba(99,102,241,0.12),_transparent_30%),linear-gradient(135deg,#f8fbff_0%,#f5f3ff_50%,#fff8ef_100%)] p-4 sm:p-6">
+      <div className="w-full space-y-5">
+        {feedbackModal.open ? (
+          <div
+            className="fixed inset-0 z-[1100] flex items-center justify-center bg-slate-950/55 px-4 backdrop-blur-sm"
+            role="presentation"
+            onClick={closeFeedbackModal}
+          >
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="group-booking-feedback-title"
+              aria-describedby="group-booking-feedback-message"
+              className="w-full max-w-lg overflow-hidden rounded-[32px] border border-white/80 bg-[linear-gradient(180deg,#ffffff_0%,#fff7f8_100%)] shadow-[0_30px_90px_rgba(15,23,42,0.28)]"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className={`relative flex items-start gap-4 bg-gradient-to-r ${modalTone.accent} px-6 py-6 text-white xl:px-7 xl:py-7`}>
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.22),_transparent_48%)]" />
+                <div className="relative rounded-[20px] border border-white/20 bg-white/15 p-3 shadow-[0_12px_30px_rgba(255,255,255,0.08)] xl:p-3.5">
+                  <FaExclamationTriangle className="text-xl xl:text-2xl" />
+                </div>
+                <div className="relative min-w-0 flex-1">
+                  <div className={`mb-2 inline-flex rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-[0.22em] ${modalTone.badge}`}>
+                    Group Booking Notice
+                  </div>
+                  <h2
+                    id="group-booking-feedback-title"
+                    className="text-xl font-black leading-tight xl:text-2xl"
+                  >
+                    {feedbackModal.title}
+                  </h2>
+                  <p className="mt-2 max-w-md text-sm leading-6 text-white/85 xl:text-base">
+                    Please review the highlighted step and continue once the required details are completed.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={closeFeedbackModal}
+                  className="relative rounded-full border border-white/15 p-2 text-white/85 transition hover:bg-white/10 hover:text-white"
+                  aria-label="Close popup"
+                >
+                  <FaTimes />
+                </button>
+              </div>
+
+              <div className="px-6 py-6">
+                <div className={`rounded-[22px] border p-4 xl:p-5 ${modalTone.panel}`}>
+                  <p className={`text-[11px] font-semibold uppercase tracking-[0.22em] ${modalTone.label}`}>
+                    Details
+                  </p>
+                  <p
+                    id="group-booking-feedback-message"
+                    className="mt-2 text-base leading-7 text-slate-700 xl:text-lg"
+                  >
+                    {feedbackModal.message}
+                  </p>
+                </div>
+
+                <div className="mt-6 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={closeFeedbackModal}
+                    className="inline-flex min-w-[160px] items-center justify-center rounded-2xl bg-gradient-to-r from-slate-900 to-slate-700 px-5 py-3 text-sm font-bold text-white shadow-[0_14px_30px_rgba(15,23,42,0.18)] transition hover:-translate-y-0.5 hover:from-slate-800 hover:to-slate-700 xl:text-base"
+                  >
+                    Continue Editing
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
         {/* Header */}
         <section className="overflow-hidden rounded-[32px] border border-white/70 bg-[linear-gradient(135deg,#020617_0%,#4f46e5_48%,#0f766e_100%)] px-6 py-7 text-white shadow-[0_22px_70px_rgba(15,23,42,0.22)]">
-          <p className="text-xs font-semibold uppercase tracking-[0.32em] text-violet-200">
+          <p className="text-xs font-semibold uppercase tracking-[0.32em] text-violet-200 xl:text-sm">
             Group Booking
           </p>
-          <h1 className="mt-3 text-3xl font-black sm:text-4xl">
+          <h1 className="mt-3 text-3xl font-black sm:text-4xl xl:text-5xl">
             Multi-Room Group Reservation
           </h1>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-100/80">
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-100/80 xl:text-lg xl:leading-7">
             “Book multiple rooms at once for a master guest — within a single payment flow.”
           </p>
         </section>
@@ -260,7 +403,7 @@ const GroupBooking = () => {
         {/* ── Step 0: Guest Details ────────────────────────────────────────── */}
         {step === 0 && (
           <div className="rounded-[28px] border border-white/70 bg-white/90 p-6 shadow-[0_12px_40px_rgba(15,23,42,0.08)] backdrop-blur">
-            <h2 className="mb-5 text-2xl font-black text-slate-900">
+            <h2 className="mb-5 text-2xl font-black text-slate-900 xl:text-4xl">
               Master Guest Details
             </h2>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -336,7 +479,9 @@ const GroupBooking = () => {
             </div>
             {nightsFromDates > 0 && (
               <p className="mt-4 rounded-xl bg-sky-50 px-4 py-3 text-sm font-semibold text-sky-700">
+                <span className="xl:text-base">
                 📅 {nightsFromDates} night{nightsFromDates > 1 ? "s" : ""} ka stay
+                </span>
               </p>
             )}
           </div>
@@ -347,9 +492,9 @@ const GroupBooking = () => {
           <div className="rounded-[28px] border border-white/70 bg-white/90 p-6 shadow-[0_12px_40px_rgba(15,23,42,0.08)] backdrop-blur">
             <div className="mb-5 flex items-center justify-between">
               <h2 className="text-2xl font-black text-slate-900">
-                Select Rooms
+                <span className="xl:text-4xl">Select Rooms</span>
               </h2>
-              <span className="rounded-full bg-indigo-100 px-3 py-1 text-sm font-bold text-indigo-700">
+              <span className="rounded-full bg-indigo-100 px-3 py-1 text-sm font-bold text-indigo-700 xl:text-base">
                 {selectedRooms.length} selected
               </span>
             </div>
@@ -357,7 +502,7 @@ const GroupBooking = () => {
             <div className="space-y-4">
               {inventory.map((cat) => (
                 <div key={cat.id}>
-                  <div className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-400">
+                  <div className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-400 xl:text-sm">
                     {cat.name} — ₹{cat.defaultPrice}/night
                   </div>
                   <div className="flex flex-wrap gap-2">
@@ -376,7 +521,7 @@ const GroupBooking = () => {
                               defaultPrice: cat.defaultPrice,
                             })
                           }
-                          className={`rounded-[14px] border px-4 py-2.5 text-sm font-bold transition ${
+                          className={`rounded-[14px] border px-4 py-2.5 text-sm font-bold transition xl:text-base ${
                             isSelected
                               ? "border-indigo-400 bg-indigo-600 text-white shadow-[0_4px_12px_rgba(79,70,229,0.3)]"
                               : "border-slate-200 bg-white text-slate-700 hover:border-indigo-200 hover:bg-indigo-50"
@@ -399,7 +544,9 @@ const GroupBooking = () => {
 
             {selectedRooms.length > 0 && (
               <div className="mt-4 rounded-xl bg-indigo-50 px-4 py-3 text-sm font-semibold text-indigo-700">
+                <span className="xl:text-base">
                 Selected: {selectedRooms.map((r) => r.roomNumber).join(", ")}
+                </span>
               </div>
             )}
           </div>
@@ -408,7 +555,7 @@ const GroupBooking = () => {
         {/* ── Step 2: Tariff per room ──────────────────────────────────────── */}
         {step === 2 && (
           <div className="space-y-4">
-            <h2 className="text-2xl font-black text-slate-900 px-1">
+            <h2 className="px-1 text-2xl font-black text-slate-900 xl:text-4xl">
               Set Tariff for Each Room
             </h2>
             {tariffs.map((t, i) => (
@@ -418,14 +565,14 @@ const GroupBooking = () => {
               >
                 <div className="mb-4 flex items-center justify-between">
                   <div>
-                    <h3 className="text-lg font-black text-slate-900">
+                    <h3 className="text-lg font-black text-slate-900 xl:text-2xl">
                       Room {t.roomNumber}
                     </h3>
-                    <p className="text-xs text-slate-500">{t.categoryName}</p>
+                    <p className="text-xs text-slate-500 xl:text-sm">{t.categoryName}</p>
                   </div>
                   <div className="rounded-xl bg-emerald-50 px-4 py-2 text-right">
                     <div className="text-[10px] text-emerald-600">Room Total</div>
-                    <div className="text-lg font-black text-emerald-800">
+                    <div className="text-lg font-black text-emerald-800 xl:text-2xl">
                       {formatCurrency(roomTotals[i]?.total || 0)}
                     </div>
                   </div>
@@ -474,10 +621,10 @@ const GroupBooking = () => {
               </div>
             ))}
             <div className="rounded-[22px] border border-emerald-200 bg-emerald-50 px-5 py-4 text-right">
-              <span className="text-sm font-bold text-emerald-700">
+              <span className="text-sm font-bold text-emerald-700 xl:text-lg">
                 Grand Total:
               </span>{" "}
-              <span className="text-2xl font-black text-emerald-900">
+              <span className="text-2xl font-black text-emerald-900 xl:text-4xl">
                 {formatCurrency(grandTotal)}
               </span>
             </div>
@@ -487,7 +634,7 @@ const GroupBooking = () => {
         {/* ── Step 3: Payment ──────────────────────────────────────────────── */}
         {step === 3 && (
           <div className="rounded-[28px] border border-white/70 bg-white/90 p-6 shadow-[0_12px_40px_rgba(15,23,42,0.08)] backdrop-blur">
-            <h2 className="mb-5 text-2xl font-black text-slate-900">
+            <h2 className="mb-5 text-2xl font-black text-slate-900 xl:text-4xl">
               Advance Payment
             </h2>
 
@@ -496,7 +643,7 @@ const GroupBooking = () => {
                 <div className="text-[10px] uppercase tracking-wide text-white/60">
                   Total
                 </div>
-                <div className="mt-2 text-xl font-black">
+                <div className="mt-2 text-xl font-black xl:text-3xl">
                   {formatCurrency(grandTotal)}
                 </div>
               </div>
@@ -504,7 +651,7 @@ const GroupBooking = () => {
                 <div className="text-[10px] uppercase tracking-wide text-amber-600">
                   Discount
                 </div>
-                <div className="mt-2 text-xl font-black text-amber-900">
+                <div className="mt-2 text-xl font-black text-amber-900 xl:text-3xl">
                   {formatCurrency(discountAmount)}
                 </div>
               </div>
@@ -521,7 +668,7 @@ const GroupBooking = () => {
                   Remaining
                 </div>
                 <div
-                  className={`mt-2 text-xl font-black ${
+                  className={`mt-2 text-xl font-black xl:text-3xl ${
                     remainingAmount > 0 ? "text-rose-900" : "text-emerald-900"
                   }`}
                 >
@@ -592,15 +739,15 @@ const GroupBooking = () => {
             <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500 text-3xl text-white">
               ✓
             </div>
-            <h2 className="mt-5 text-3xl font-black text-emerald-900">
-              Group Booking Confirmed!
-            </h2>
-            <p className="mt-3 text-slate-600">
+              <h2 className="mt-5 text-3xl font-black text-emerald-900 xl:text-5xl">
+                Group Booking Confirmed!
+              </h2>
+            <p className="mt-3 text-slate-600 xl:text-lg">
               Booking #{resultBooking.bookingId} — {selectedRooms.length} room
               {selectedRooms.length > 1 ? "s" : ""} reserved for{" "}
               {guest.guestName}
             </p>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-slate-500 xl:text-base">
               Total: {formatCurrency(grandTotal)} · Advance: {formatCurrency(paidAmount)}
             </p>
 
@@ -612,7 +759,7 @@ const GroupBooking = () => {
                     state: { bookingId: resultBooking.bookingId },
                   })
                 }
-                className="rounded-full bg-emerald-600 px-6 py-3 text-sm font-bold text-white"
+                className="rounded-full bg-emerald-600 px-6 py-3 text-sm font-bold text-white xl:text-base"
               >
                 View Invoice
               </button>
@@ -622,7 +769,7 @@ const GroupBooking = () => {
                   clearBookingSession();
                   navigate("/hotel/all-bookings");
                 }}
-                className="rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-bold text-slate-700"
+                className="rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-bold text-slate-700 xl:text-base"
               >
                 All Bookings
               </button>
@@ -635,7 +782,7 @@ const GroupBooking = () => {
                   setSelectedRooms([]);
                   setResultBooking(null);
                 }}
-                className="rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-bold text-slate-700"
+                className="rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-bold text-slate-700 xl:text-base"
               >
                 New Group Booking
               </button>
@@ -649,19 +796,18 @@ const GroupBooking = () => {
             <button
               type="button"
               onClick={() =>
-                step === 0 ? navigate("/hotel/all-bookings") : setStep((s) => s - 1)
+                step === 0 ? navigate(-1) : setStep((s) => s - 1)
               }
-              className="rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+              className="rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50 xl:text-base"
             >
-              {step === 0 ? "← Cancel" : "← Back"}
+              ← Back
             </button>
 
             {step < 3 ? (
               <button
                 type="button"
-                disabled={!canNext()}
-                onClick={() => setStep((s) => s + 1)}
-                className="rounded-full bg-gradient-to-r from-indigo-600 to-violet-500 px-6 py-3 text-sm font-bold text-white shadow-[0_10px_24px_rgba(79,70,229,0.22)] transition hover:-translate-y-0.5 disabled:opacity-50"
+                onClick={handleNextStep}
+                className="rounded-full bg-gradient-to-r from-indigo-600 to-violet-500 px-6 py-3 text-sm font-bold text-white shadow-[0_10px_24px_rgba(79,70,229,0.22)] transition hover:-translate-y-0.5 xl:text-base"
               >
                 Next →
               </button>
@@ -670,7 +816,7 @@ const GroupBooking = () => {
                 type="button"
                 onClick={handleSubmit}
                 disabled={saving}
-                className="rounded-full bg-gradient-to-r from-emerald-600 to-teal-500 px-8 py-3 text-sm font-bold text-white shadow-[0_10px_24px_rgba(16,185,129,0.22)] transition hover:-translate-y-0.5 disabled:opacity-60"
+                className="rounded-full bg-gradient-to-r from-emerald-600 to-teal-500 px-8 py-3 text-sm font-bold text-white shadow-[0_10px_24px_rgba(16,185,129,0.22)] transition hover:-translate-y-0.5 disabled:opacity-60 xl:text-base"
               >
                 {saving ? "Booking…" : "Confirm Group Booking"}
               </button>

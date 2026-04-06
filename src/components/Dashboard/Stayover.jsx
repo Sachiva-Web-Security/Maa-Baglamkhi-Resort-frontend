@@ -734,14 +734,14 @@ const Stayover = () => {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[linear-gradient(135deg,#eff8ff_0%,#f6fbf7_42%,#fffaf0_100%)] p-4 sm:p-6 lg:p-8">
+    <div className="relative min-h-screen overflow-hidden bg-[linear-gradient(135deg,#eff8ff_0%,#f6fbf7_42%,#fffaf0_100%)] p-3 sm:p-4 lg:p-5">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute left-[-8%] top-[-10%] h-72 w-72 rounded-full bg-cyan-200/60 blur-3xl sm:h-96 sm:w-96" />
         <div className="absolute right-[-8%] top-[8%] h-72 w-72 rounded-full bg-blue-200/45 blur-3xl sm:h-[28rem] sm:w-[28rem]" />
         <div className="absolute bottom-[-8%] left-[22%] h-72 w-72 rounded-full bg-amber-200/40 blur-3xl sm:h-[26rem] sm:w-[26rem]" />
       </div>
 
-      <div className="relative mx-auto max-w-[1500px] space-y-6">
+      <div className="relative w-full space-y-6">
         <section className="overflow-hidden rounded-[30px] border border-white/70 bg-[linear-gradient(135deg,#08253d_0%,#0e5b6a_50%,#0f3f67_100%)] px-5 py-6 text-white shadow-[0_24px_70px_rgba(15,23,42,0.18)] sm:px-7 lg:px-8">
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(340px,0.8fr)] lg:items-center">
             <div>
@@ -1286,255 +1286,277 @@ const Stayover = () => {
 
       {selectedRoom ? (
         <div
-          className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-950/55 px-4 py-6 backdrop-blur-sm"
+          className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-950/50 px-4 py-5 backdrop-blur-sm"
           onClick={() => setSelectedRoom(null)}
         >
           <div
-            className="w-full max-w-xl rounded-[2rem] border border-white/70 bg-[linear-gradient(180deg,#fbfdff_0%,#f5faf8_100%)] shadow-[0_30px_80px_rgba(15,23,42,0.24)]"
+            className="w-full max-w-5xl overflow-hidden rounded-[32px] border border-white/70 bg-[linear-gradient(135deg,#f8fcff_0%,#f7fbff_38%,#f5fbf7_100%)] shadow-[0_30px_90px_rgba(15,23,42,0.26)]"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-5 py-5 sm:px-6">
+            <div className="relative overflow-hidden border-b border-slate-200 bg-[linear-gradient(135deg,#082f49_0%,#1d4ed8_42%,#0f766e_100%)] px-5 py-5 text-white sm:px-6">
+              <div className="pointer-events-none absolute inset-0 opacity-30">
+                <div className="absolute left-[-8%] top-[-18%] h-40 w-40 rounded-full bg-white/20 blur-3xl" />
+                <div className="absolute right-[-6%] bottom-[-24%] h-44 w-44 rounded-full bg-cyan-200/30 blur-3xl" />
+              </div>
+              <div className="relative flex items-start justify-between gap-4">
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-cyan-700">Room Preview</p>
-                <h3 className="mt-1 text-2xl font-bold text-slate-900">Room {selectedRoom.roomNumber}</h3>
-                <p className="mt-1 text-sm text-slate-500">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-cyan-100">Room Preview</p>
+                <h3 className="mt-1 text-2xl font-black text-white">Room {selectedRoom.roomNumber}</h3>
+                <p className="mt-1 text-sm text-white/80">
                   {selectedRoom.roomData?.categoryName || "Room Type"} | ID {selectedRoom.roomData?.roomId || selectedRoom.roomData?.id || "--"}
                 </p>
+                <div className="mt-3 inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-white/90">
+                  Front Office Live View
+                </div>
               </div>
               <button
                 type="button"
                 onClick={() => setSelectedRoom(null)}
-                className="rounded-full border border-slate-200 bg-white p-2 text-slate-500 transition hover:text-slate-900"
+                className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/15"
               >
                 <FaTimes />
+                Close Preview
               </button>
             </div>
+            </div>
 
-            <div className="space-y-5 p-5 sm:p-6">
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-[1.25rem] border border-slate-200 bg-white px-4 py-4 shadow-sm">
+            <div className="max-h-[78vh] overflow-y-auto p-5 sm:p-6">
+              <div className="space-y-4">
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+                <div className="rounded-[1.4rem] border border-sky-100 bg-[linear-gradient(180deg,#ffffff_0%,#f3faff_100%)] px-4 py-4 shadow-[0_14px_30px_rgba(14,165,233,0.08)]">
                   <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">Status</div>
-                  <div className="mt-2 text-sm font-semibold text-slate-900">
+                  <div className="mt-2 text-base font-black text-slate-900">
                     {selectedRoom.roomData?.status || selectedRoom.roomData?.hotelStatus || "Unknown"}
                   </div>
                 </div>
-                <div className="rounded-[1.25rem] border border-slate-200 bg-white px-4 py-4 shadow-sm">
+                <div className="rounded-[1.4rem] border border-slate-200 bg-white px-4 py-4 shadow-[0_12px_26px_rgba(15,23,42,0.06)]">
                   <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">Category</div>
-                  <div className="mt-2 text-sm font-semibold text-slate-900">{selectedRoom.roomData?.categoryName || "--"}</div>
+                  <div className="mt-2 text-base font-black text-slate-900">{selectedRoom.roomData?.categoryName || "--"}</div>
                 </div>
-                <div className="rounded-[1.25rem] border border-slate-200 bg-white px-4 py-4 shadow-sm">
+                <div className="rounded-[1.4rem] border border-slate-200 bg-white px-4 py-4 shadow-[0_12px_26px_rgba(15,23,42,0.06)]">
                   <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">Room ID</div>
-                  <div className="mt-2 text-sm font-semibold text-slate-900">
+                  <div className="mt-2 text-base font-black text-slate-900">
                     {selectedRoom.roomData?.roomId || selectedRoom.roomData?.id || "--"}
                   </div>
                 </div>
-                <div className="rounded-[1.25rem] border border-slate-200 bg-white px-4 py-4 shadow-sm">
+                <div className="rounded-[1.4rem] border border-emerald-100 bg-[linear-gradient(180deg,#ffffff_0%,#f4fbf7_100%)] px-4 py-4 shadow-[0_14px_30px_rgba(16,185,129,0.08)]">
                   <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">Check-In</div>
-                  <div className="mt-2 text-sm font-semibold text-slate-900">
+                  <div className="mt-2 text-base font-black text-slate-900">
                     {selectedRoom.booking?.checkIn ? formatShortDate(selectedRoom.booking.checkIn) : "--"}
                   </div>
                 </div>
-                <div className="rounded-[1.25rem] border border-slate-200 bg-white px-4 py-4 shadow-sm">
+                <div className="rounded-[1.4rem] border border-amber-100 bg-[linear-gradient(180deg,#ffffff_0%,#fffaf2_100%)] px-4 py-4 shadow-[0_14px_30px_rgba(245,158,11,0.08)]">
                   <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">Check-Out</div>
-                  <div className="mt-2 text-sm font-semibold text-slate-900">
+                  <div className="mt-2 text-base font-black text-slate-900">
                     {selectedRoom.booking?.checkOut ? formatShortDate(selectedRoom.booking.checkOut) : "--"}
                   </div>
                 </div>
               </div>
 
-              {selectedRoom.booking?.bookingId && !String(selectedRoom.booking.bookingId).startsWith("room-") ? (
-                <div className="rounded-[1.5rem] border border-cyan-200 bg-cyan-50/70 p-4 shadow-sm">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <div className="text-sm font-semibold text-slate-900">Stay Dates</div>
-                      <p className="mt-1 text-xs text-slate-600">
-                        Check-in aur check-out ko aage badha sakte hain. Existing date ya aaj se piche nahi ja sakte.
-                      </p>
+              <div className="grid gap-4 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
+                <div className="space-y-4">
+                  {selectedRoom.booking?.bookingId && !String(selectedRoom.booking.bookingId).startsWith("room-") ? (
+                    <div className="rounded-[1.65rem] border border-cyan-200 bg-[linear-gradient(180deg,rgba(236,254,255,0.96)_0%,rgba(240,249,255,0.92)_100%)] p-4 shadow-[0_18px_40px_rgba(6,182,212,0.10)]">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className="text-sm font-semibold text-slate-900">Stay Dates</div>
+                          <p className="mt-1 text-xs text-slate-600">
+                            Check-in aur check-out ko aage badha sakte hain. Existing date ya aaj se piche nahi ja sakte.
+                          </p>
+                        </div>
+                        <div className="rounded-full bg-white px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-cyan-700 shadow-sm">
+                          Live Update
+                        </div>
+                      </div>
+
+                      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                        <label className="space-y-2">
+                          <span className="block text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                            Check-In Date
+                          </span>
+                          <input
+                            type="date"
+                            min={bookingDateLimits.minCheckIn}
+                            value={bookingDateDraft.checkIn}
+                            onChange={(e) => handleBookingDateChange("checkIn", e.target.value)}
+                            className="w-full rounded-xl border border-cyan-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-cyan-400"
+                          />
+                        </label>
+
+                        <label className="space-y-2">
+                          <span className="block text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                            Check-Out Date
+                          </span>
+                          <input
+                            type="date"
+                            min={bookingDateLimits.minCheckOut}
+                            value={bookingDateDraft.checkOut}
+                            onChange={(e) => handleBookingDateChange("checkOut", e.target.value)}
+                            className="w-full rounded-xl border border-cyan-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-cyan-400"
+                          />
+                        </label>
+                      </div>
+
+                      <div className="mt-3 text-[11px] text-slate-500">
+                        Current saved stay: {bookingDateLimits.originalCheckIn ? formatShortDate(bookingDateLimits.originalCheckIn) : "--"} to{" "}
+                        {bookingDateLimits.originalCheckOut ? formatShortDate(bookingDateLimits.originalCheckOut) : "--"}
+                      </div>
+
+                      <div className="mt-3 flex flex-wrap items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={handleSaveBookingDates}
+                          disabled={savingBookingDates}
+                          className={`rounded-xl bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-700 ${
+                            savingBookingDates ? "cursor-not-allowed opacity-70" : ""
+                          }`}
+                        >
+                          {savingBookingDates ? "Saving..." : "Update Stay Dates"}
+                        </button>
+                        <div className="rounded-xl border border-cyan-200 bg-white px-4 py-2.5 text-sm text-slate-700">
+                          Updated dates preview aur booking feed me dikhengi.
+                        </div>
+                      </div>
                     </div>
-                    <div className="rounded-full bg-white px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-cyan-700 shadow-sm">
-                      Live Update
+                  ) : null}
+
+                    <div className="rounded-[1.65rem] border border-violet-200 bg-[linear-gradient(180deg,rgba(245,243,255,0.96)_0%,rgba(250,245,255,0.92)_100%)] p-4 shadow-[0_18px_40px_rgba(124,58,237,0.08)]">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="text-sm font-semibold text-slate-900">Cleaning Task</div>
+                        <p className="mt-1 text-xs text-slate-600">
+                          Housekeeper assign karein aur estimated cleaning time set karein.
+                        </p>
+                      </div>
+                      <div className="rounded-full bg-white px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-violet-700 shadow-sm">
+                        {currentCleaningTask || selectedRoom.roomData?.status === "cleaning" ? "Busy" : "Available"}
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                    <label className="space-y-2">
-                      <span className="block text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
-                        Check-In Date
-                      </span>
-                      <input
-                        type="date"
-                        min={bookingDateLimits.minCheckIn}
-                        value={bookingDateDraft.checkIn}
-                        onChange={(e) => handleBookingDateChange("checkIn", e.target.value)}
-                        className="w-full rounded-xl border border-cyan-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-cyan-400"
-                      />
-                    </label>
+                    <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                      <label className="space-y-2">
+                        <span className="block text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                          Assign Housekeeper
+                        </span>
+                        <select
+                          value={selectedAssignee}
+                          onChange={(e) => setSelectedAssignee(e.target.value)}
+                          className="w-full rounded-xl border border-violet-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-violet-400"
+                        >
+                          <option value="">Select housekeeper</option>
+                          {housekeepers.map((name, index) => {
+                            const isBusy = busyHousekeepers.has(normalizeStaffName(name));
+                            return (
+                              <option key={`${name}-${index}`} value={name} disabled={isBusy && selectedAssignee !== name}>
+                                {name} {isBusy ? "(Busy)" : "(Available)"}
+                              </option>
+                            );
+                          })}
+                        </select>
+                        <div className="text-[11px] text-slate-500">
+                          Busy housekeeper dobara assign nahi hogi jab tak current task complete na ho.
+                        </div>
+                        <div className="text-[11px] font-semibold text-violet-700">
+                          Current task status: {selectedAssigneeBusy ? "Busy" : "Available"}
+                        </div>
+                      </label>
 
-                    <label className="space-y-2">
-                      <span className="block text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
-                        Check-Out Date
-                      </span>
-                      <input
-                        type="date"
-                        min={bookingDateLimits.minCheckOut}
-                        value={bookingDateDraft.checkOut}
-                        onChange={(e) => handleBookingDateChange("checkOut", e.target.value)}
-                        className="w-full rounded-xl border border-cyan-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-cyan-400"
-                      />
-                    </label>
-                  </div>
+                      <label className="space-y-2">
+                        <span className="block text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                          Cleaning Time
+                        </span>
+                        <select
+                          value={selectedCleaningMinutes}
+                          onChange={(e) => setSelectedCleaningMinutes(Number(e.target.value) || 30)}
+                          className="w-full rounded-xl border border-violet-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-violet-400"
+                        >
+                          {[15, 30, 45, 60, 90, 120].map((minutes) => (
+                            <option key={minutes} value={minutes}>
+                              {minutes} minutes
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
 
-                  <div className="mt-3 text-[11px] text-slate-500">
-                    Current saved stay: {bookingDateLimits.originalCheckIn ? formatShortDate(bookingDateLimits.originalCheckIn) : "--"} to{" "}
-                    {bookingDateLimits.originalCheckOut ? formatShortDate(bookingDateLimits.originalCheckOut) : "--"}
-                  </div>
-
-                  <div className="mt-4 flex flex-wrap items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={handleSaveBookingDates}
-                      disabled={savingBookingDates}
-                      className={`rounded-xl bg-cyan-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-cyan-700 ${
-                        savingBookingDates ? "cursor-not-allowed opacity-70" : ""
-                      }`}
-                    >
-                      {savingBookingDates ? "Saving..." : "Update Stay Dates"}
-                    </button>
-                    <div className="rounded-xl border border-cyan-200 bg-white px-4 py-3 text-sm text-slate-700">
-                      Updated dates stay board, preview, booking feed aur active booking list me dikhengi.
+                    <div className="mt-3 flex flex-wrap items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={selectedRoom.roomData?.status === "cleaning" ? handleMarkClean : handleAssignCleaning}
+                        disabled={assigningCleaning}
+                        className={`rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition ${
+                          selectedRoom.roomData?.status === "cleaning"
+                            ? "bg-emerald-600 hover:bg-emerald-700"
+                            : "bg-violet-600 hover:bg-violet-700"
+                        } ${assigningCleaning ? "cursor-not-allowed opacity-70" : ""}`}
+                      >
+                        {assigningCleaning
+                          ? "Saving..."
+                          : selectedRoom.roomData?.status === "cleaning"
+                            ? "Mark Clean"
+                            : "Assign Cleaning"}
+                      </button>
+                      <div className="rounded-xl border border-violet-200 bg-white px-4 py-2.5 text-sm text-slate-700">
+                        ETA: <span className="font-semibold text-slate-900">{selectedCleaningMinutes} min</span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              ) : null}
 
-              <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm">
-                <div className="text-sm font-semibold text-slate-900">Booking snapshot</div>
-                <div className="mt-4 space-y-3 text-sm text-slate-600">
-                  <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2">
-                    <span>Room Type</span>
-                    <span className="font-semibold text-slate-900">{selectedRoom.roomData?.categoryName || selectedRoom.roomType || "--"}</span>
-                  </div>
-                  <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2">
-                    <span>Room ID</span>
-                    <span className="font-semibold text-slate-900">{selectedRoom.roomData?.roomId || selectedRoom.roomData?.id || "--"}</span>
-                  </div>
-                  <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2">
-                    <span>Guest Name</span>
-                    <span className="font-semibold text-slate-900">{selectedRoom.booking?.guestName || "--"}</span>
-                  </div>
-                  <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2">
-                    <span>Contact</span>
-                    <span className="font-semibold text-slate-900">{selectedRoom.booking?.mobile || "--"}</span>
-                  </div>
-                  <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2">
-                    <span>Company</span>
-                    <span className="font-semibold text-slate-900">{selectedRoom.booking?.company || "--"}</span>
-                  </div>
-                  <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2">
-                    <span>Remaining</span>
-                    <span className="font-semibold text-slate-900">
-                      {formatCurrency(selectedRoom.booking?.remainingAmount || 0)}
-                    </span>
-                  </div>
-                  {String(selectedRoom.roomData?.hotelStatus || selectedRoom.roomData?.status || "").toLowerCase().includes("block") ? (
-                    <>
-                      <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2">
-                        <span>Block Reason</span>
-                        <span className="font-semibold text-slate-900">{selectedRoom.roomData?.blockReason || "--"}</span>
+                <div className="space-y-4">
+                  <div className="rounded-[1.65rem] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-4 shadow-[0_18px_36px_rgba(15,23,42,0.07)]">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="text-sm font-semibold text-slate-900">Booking snapshot</div>
+                      <div className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-slate-600">
+                        Guest Profile
                       </div>
-                      <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2">
-                        <span>Block Dates</span>
-                        <span className="font-semibold text-slate-900">
-                          {selectedRoom.roomData?.blockFrom || "--"} to {selectedRoom.roomData?.blockTo || "--"}
+                    </div>
+                    <div className="mt-3 grid gap-2 text-sm text-slate-600">
+                      <div className="flex items-center justify-between rounded-xl bg-white px-3 py-2.5 shadow-sm">
+                        <span>Room Type</span>
+                        <span className="font-semibold text-slate-900">{selectedRoom.roomData?.categoryName || selectedRoom.roomType || "--"}</span>
+                      </div>
+                      <div className="flex items-center justify-between rounded-xl bg-white px-3 py-2.5 shadow-sm">
+                        <span>Room ID</span>
+                        <span className="font-semibold text-slate-900">{selectedRoom.roomData?.roomId || selectedRoom.roomData?.id || "--"}</span>
+                      </div>
+                      <div className="flex items-center justify-between rounded-xl bg-white px-3 py-2.5 shadow-sm">
+                        <span>Guest Name</span>
+                        <span className="font-semibold text-slate-900">{selectedRoom.booking?.guestName || "--"}</span>
+                      </div>
+                      <div className="flex items-center justify-between rounded-xl bg-white px-3 py-2.5 shadow-sm">
+                        <span>Contact</span>
+                        <span className="font-semibold text-slate-900">{selectedRoom.booking?.mobile || "--"}</span>
+                      </div>
+                      <div className="flex items-center justify-between rounded-xl bg-white px-3 py-2.5 shadow-sm">
+                        <span>Company</span>
+                        <span className="font-semibold text-slate-900">{selectedRoom.booking?.company || "--"}</span>
+                      </div>
+                      <div className="flex items-center justify-between rounded-xl bg-white px-3 py-2.5 shadow-sm">
+                        <span>Remaining</span>
+                        <span className="rounded-full bg-emerald-50 px-3 py-1 font-semibold text-emerald-700">
+                          {formatCurrency(selectedRoom.booking?.remainingAmount || 0)}
                         </span>
                       </div>
-                      <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2">
-                        <span>Blocked By</span>
-                        <span className="font-semibold text-slate-900">{selectedRoom.roomData?.blockedBy || "Front Desk"}</span>
-                      </div>
-                    </>
-                  ) : null}
-                </div>
-              </div>
-
-              <div className="rounded-[1.5rem] border border-violet-200 bg-violet-50/70 p-4 shadow-sm">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <div className="text-sm font-semibold text-slate-900">Cleaning Task</div>
-                    <p className="mt-1 text-xs text-slate-600">
-                      Housekeeper assign karein aur estimated cleaning time set karein.
-                    </p>
-                  </div>
-                  <div className="rounded-full bg-white px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-violet-700 shadow-sm">
-                    {currentCleaningTask || selectedRoom.roomData?.status === "cleaning" ? "Busy" : "Available"}
-                  </div>
-                </div>
-
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  <label className="space-y-2">
-                    <span className="block text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
-                      Assign Housekeeper
-                    </span>
-                    <select
-                      value={selectedAssignee}
-                      onChange={(e) => setSelectedAssignee(e.target.value)}
-                      className="w-full rounded-xl border border-violet-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-violet-400"
-                    >
-                      <option value="">Select housekeeper</option>
-                      {housekeepers.map((name, index) => {
-                        const isBusy = busyHousekeepers.has(normalizeStaffName(name));
-                        return (
-                          <option key={`${name}-${index}`} value={name} disabled={isBusy && selectedAssignee !== name}>
-                            {name} {isBusy ? "(Busy)" : "(Available)"}
-                          </option>
-                        );
-                      })}
-                    </select>
-                    <div className="text-[11px] text-slate-500">
-                      Busy housekeeper dobara assign nahi hogi jab tak current task complete na ho.
+                      {String(selectedRoom.roomData?.hotelStatus || selectedRoom.roomData?.status || "").toLowerCase().includes("block") ? (
+                        <>
+                          <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2">
+                            <span>Block Reason</span>
+                            <span className="font-semibold text-slate-900">{selectedRoom.roomData?.blockReason || "--"}</span>
+                          </div>
+                          <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2">
+                            <span>Block Dates</span>
+                            <span className="font-semibold text-slate-900">
+                              {selectedRoom.roomData?.blockFrom || "--"} to {selectedRoom.roomData?.blockTo || "--"}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2">
+                            <span>Blocked By</span>
+                            <span className="font-semibold text-slate-900">{selectedRoom.roomData?.blockedBy || "Front Desk"}</span>
+                          </div>
+                        </>
+                      ) : null}
                     </div>
-                    <div className="text-[11px] font-semibold text-violet-700">
-                      Current task status: {selectedAssigneeBusy ? "Busy" : "Available"}
-                    </div>
-                  </label>
-
-                  <label className="space-y-2">
-                    <span className="block text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
-                      Cleaning Time
-                    </span>
-                    <select
-                      value={selectedCleaningMinutes}
-                      onChange={(e) => setSelectedCleaningMinutes(Number(e.target.value) || 30)}
-                      className="w-full rounded-xl border border-violet-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-violet-400"
-                    >
-                      {[15, 30, 45, 60, 90, 120].map((minutes) => (
-                        <option key={minutes} value={minutes}>
-                          {minutes} minutes
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
-
-                <div className="mt-4 flex flex-wrap items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={selectedRoom.roomData?.status === "cleaning" ? handleMarkClean : handleAssignCleaning}
-                    disabled={assigningCleaning}
-                    className={`rounded-xl px-4 py-3 text-sm font-semibold text-white transition ${
-                      selectedRoom.roomData?.status === "cleaning"
-                        ? "bg-emerald-600 hover:bg-emerald-700"
-                        : "bg-violet-600 hover:bg-violet-700"
-                    } ${assigningCleaning ? "cursor-not-allowed opacity-70" : ""}`}
-                  >
-                    {assigningCleaning
-                      ? "Saving..."
-                      : selectedRoom.roomData?.status === "cleaning"
-                        ? "Mark Clean"
-                        : "Assign Cleaning"}
-                  </button>
-                  <div className="rounded-xl border border-violet-200 bg-white px-4 py-3 text-sm text-slate-700">
-                    ETA: <span className="font-semibold text-slate-900">{selectedCleaningMinutes} min</span>
                   </div>
                 </div>
               </div>
@@ -1550,7 +1572,7 @@ const Stayover = () => {
                           : "check-in",
                       )
                     }
-                    className="rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700"
+                    className="rounded-[1rem] bg-gradient-to-r from-emerald-600 to-teal-500 px-4 py-3 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(16,185,129,0.18)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(16,185,129,0.24)]"
                   >
                     {String(selectedRoom.booking?.bookingStatus || "").toLowerCase().includes("checked in")
                       ? "Check Out"
@@ -1567,7 +1589,7 @@ const Stayover = () => {
                       },
                     })
                   }
-                  className="rounded-xl bg-orange-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-orange-600"
+                  className="rounded-[1rem] bg-gradient-to-r from-orange-500 to-amber-500 px-4 py-3 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(249,115,22,0.18)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(249,115,22,0.24)]"
                 >
                   Order Book
                 </button>
@@ -1582,7 +1604,7 @@ const Stayover = () => {
                       },
                     })
                   }
-                  className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+                  className="rounded-[1rem] bg-gradient-to-r from-slate-900 to-slate-700 px-4 py-3 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(15,23,42,0.18)] transition hover:-translate-y-0.5"
                 >
                   Create / Update Booking
                 </button>
@@ -1596,7 +1618,7 @@ const Stayover = () => {
                         focusRoomNo: selectedRoom.roomNumber,
                       })
                     }
-                    className="rounded-xl bg-cyan-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-cyan-700"
+                    className="rounded-[1rem] bg-gradient-to-r from-cyan-600 to-sky-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-cyan-700"
                   >
                     Extend Booking
                   </button>
@@ -1607,7 +1629,7 @@ const Stayover = () => {
                   <button
                     type="button"
                     onClick={() => setCancelBookingModal({ open: true, reason: "", submitting: false })}
-                    className="rounded-xl bg-rose-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-rose-700"
+                    className="rounded-[1rem] bg-gradient-to-r from-rose-600 to-pink-600 px-4 py-3 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(225,29,72,0.18)] transition hover:-translate-y-0.5"
                   >
                     Cancel Booking
                   </button>
@@ -1615,7 +1637,7 @@ const Stayover = () => {
                 <button
                   type="button"
                   onClick={() => navigate("/dashboard")}
-                  className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                  className="rounded-[1rem] border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50"
                 >
                   Open Main Dashboard
                 </button>
@@ -1628,12 +1650,13 @@ const Stayover = () => {
                         : "block",
                     )
                   }
-                  className="rounded-xl bg-slate-700 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+                  className="rounded-[1rem] bg-gradient-to-r from-slate-700 to-slate-600 px-4 py-3 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(51,65,85,0.16)] transition hover:-translate-y-0.5"
                 >
                   {String(selectedRoom.roomData?.hotelStatus || selectedRoom.roomData?.status || "").toLowerCase().includes("block")
                     ? "Unblock Room"
                     : "Block Room"}
                 </button>
+              </div>
               </div>
             </div>
           </div>

@@ -1,90 +1,94 @@
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 
-// ─── Booking Wizard Steps (sequential) ─────────────────────────────────────
 const WIZARD_STEPS = [
-  { name: "Guest",         path: "/hotel/guest",        icon: "👤" },
-  { name: "Booking Type",  path: "/hotel/other-booking", icon: "📋" },
-  { name: "Reference",     path: "/hotel/reference",    icon: "🔗" },
-  { name: "Company",       path: "/hotel/company",      icon: "🏢" },
-  { name: "Room",          path: "/hotel/room",         icon: "🛏️" },
-  { name: "Pax",           path: "/hotel/pax",          icon: "👥" },
-  { name: "Tariff",        path: "/hotel/room-tariff",  icon: "💰" },
-  { name: "Advance",       path: "/hotel/advance",      icon: "💳" },
-  { name: "Invoice",       path: "/hotel/communication",icon: "🧾" },
+  { name: "Guest", path: "/hotel/guest" },
+  { name: "Booking Type", path: "/hotel/other-booking" },
+  { name: "Reference", path: "/hotel/reference" },
+  { name: "Company", path: "/hotel/company" },
+  { name: "Room", path: "/hotel/room" },
+  { name: "Pax", path: "/hotel/pax" },
+  { name: "Tariff", path: "/hotel/room-tariff" },
+  { name: "Advance", path: "/hotel/advance" },
+  { name: "Invoice", path: "/hotel/communication" },
 ];
 
-// ─── Management / Utility Links ─────────────────────────────────────────────
 const MGMT_LINKS = [
-  { name: "All Bookings",       path: "/hotel/all-bookings",       icon: "📊" },
-  { name: "Booking History",    path: "/hotel/booking-history",    icon: "🕘" },
-  { name: "Group Booking",      path: "/hotel/group-booking",      icon: "🏨" },
-  { name: "Guest Profile",      path: "/hotel/guest-profile",      icon: "👤" },
-  { name: "Folio / Audit",      path: "/hotel/folio",              icon: "📒" },
-  { name: "Room Maintenance",   path: "/hotel/room-maintenance",   icon: "🔧" },
-  { name: "Occupancy Forecast", path: "/hotel/occupancy-forecast", icon: "📅" },
+  { name: "All Bookings", path: "/hotel/all-bookings" },
+  { name: "Booking History", path: "/hotel/booking-history" },
+  { name: "Group Booking", path: "/hotel/group-booking" },
+  { name: "Guest Profile", path: "/hotel/guest-profile" },
+  { name: "Folio / Audit", path: "/hotel/folio" },
+  { name: "Room Maintenance", path: "/hotel/room-maintenance" },
+  { name: "Occupancy Forecast", path: "/hotel/occupancy-forecast" },
 ];
+
+const linkClassName = ({ isActive }) =>
+  `text-sm font-bold leading-none transition xl:text-[15px] 2xl:text-base ${
+    isActive ? "text-sky-600" : "text-slate-700 hover:text-sky-600"
+  }`;
+
+const actionButtonClassName = (isActive) =>
+  `rounded-full border border-sky-200/70 bg-[linear-gradient(135deg,rgba(219,234,254,0.72),rgba(191,219,254,0.38))] px-4 py-2 text-sm font-bold leading-none text-sky-950 shadow-[0_10px_28px_rgba(59,130,246,0.16)] backdrop-blur-md transition xl:px-4.5 xl:py-2.5 xl:text-[15px] 2xl:text-base ${
+    isActive
+      ? "border-sky-300/80 bg-[linear-gradient(135deg,rgba(191,219,254,0.92),rgba(125,211,252,0.52))] text-blue-950 shadow-[0_14px_34px_rgba(37,99,235,0.22)]"
+      : "hover:border-sky-300/80 hover:bg-[linear-gradient(135deg,rgba(219,234,254,0.84),rgba(186,230,253,0.46))] hover:text-blue-950"
+  }`;
 
 const BookingSteps = () => {
   const location = useLocation();
-
-  // Check if currently on wizard steps
-  const isWizardActive = WIZARD_STEPS.some((s) =>
-    location.pathname.includes(s.path.split("/hotel/")[1]),
-  );
+  const navigate = useNavigate();
+  const activeQuickAction =
+    new URLSearchParams(location.search).get("mode") || location.state?.bookingAction || "";
 
   return (
-    <div className="space-y-3 rounded-[22px] bg-white p-4">
-      {/* Wizard Steps Row */}
-      <div>
-        <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
-          New Booking Wizard
-        </p>
-        <div className="flex flex-wrap gap-1.5">
-          {WIZARD_STEPS.map((step, index) => (
+    <div className="mx-auto flex w-full max-w-full flex-col gap-4 xl:flex-row xl:flex-nowrap xl:items-center xl:justify-start xl:gap-2 2xl:gap-3">
+      <div className="min-w-0 xl:flex-[0_1_auto]">
+        <div className="flex flex-nowrap items-center gap-3 whitespace-nowrap xl:justify-start xl:gap-4 2xl:gap-5">
+          {WIZARD_STEPS.map((step) => (
             <NavLink
               key={step.path}
               to={step.path}
               state={location.state}
-              className={({ isActive }) =>
-                `flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition ${
-                  isActive
-                    ? "bg-slate-900 text-white shadow-[0_4px_12px_rgba(15,23,42,0.2)]"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                }`
-              }
+              className={linkClassName}
             >
-              <span className="text-sm leading-none">{step.icon}</span>
-              <span>
-                {index + 1}. {step.name}
-              </span>
+              {step.name}
             </NavLink>
           ))}
         </div>
       </div>
 
-      {/* Separator */}
-      <div className="border-t border-slate-100" />
+      <div className="flex flex-nowrap items-center justify-center gap-2 border-y border-slate-100 py-4 xl:mx-2 xl:ml-24 xl:flex-none xl:border-y-0 xl:border-x xl:px-3 xl:py-0 2xl:ml-28 2xl:px-4">
+        <button
+          type="button"
+          onClick={() =>
+            navigate(
+              { pathname: "/hotel/communication", search: "?mode=check-in" },
+              { state: { bookingAction: "check-in" } },
+            )
+          }
+          className={actionButtonClassName(activeQuickAction === "check-in")}
+        >
+          Check In
+        </button>
+        <button
+          type="button"
+          onClick={() =>
+            navigate(
+              { pathname: "/hotel/communication", search: "?mode=check-out" },
+              { state: { bookingAction: "check-out" } },
+            )
+          }
+          className={actionButtonClassName(activeQuickAction === "check-out")}
+        >
+          Check Out
+        </button>
+      </div>
 
-      {/* Management Links Row */}
-      <div>
-        <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
-          Management
-        </p>
-        <div className="flex flex-wrap gap-1.5">
+      <div className="min-w-0 xl:flex-[1_1_auto]">
+        <div className="flex flex-nowrap items-center gap-3 whitespace-nowrap xl:justify-end xl:gap-4 2xl:gap-5">
           {MGMT_LINKS.map((link) => (
-            <NavLink
-              key={link.path}
-              to={link.path}
-              className={({ isActive }) =>
-                `flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition ${
-                  isActive
-                    ? "bg-blue-600 text-white shadow-[0_4px_12px_rgba(37,99,235,0.2)]"
-                    : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-                }`
-              }
-            >
-              <span className="text-sm leading-none">{link.icon}</span>
-              <span>{link.name}</span>
+            <NavLink key={link.path} to={link.path} className={linkClassName}>
+              {link.name}
             </NavLink>
           ))}
         </div>

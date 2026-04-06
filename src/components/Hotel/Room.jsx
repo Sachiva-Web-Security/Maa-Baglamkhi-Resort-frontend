@@ -29,6 +29,7 @@ const pickerButtonCls =
   "w-full rounded-2xl border border-cyan-200 bg-[linear-gradient(135deg,#f8fdff_0%,#eefaff_100%)] px-4 py-3 text-left text-sm text-slate-900 shadow-[0_10px_24px_rgba(6,182,212,0.08)] outline-none transition hover:border-cyan-300 hover:shadow-[0_14px_30px_rgba(6,182,212,0.14)] focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100";
 
 const formatPriceText = (price, unitLabel) => `Rs ${price} ${unitLabel}`;
+const ROOM_LIST_PAGE_SIZE = 8;
 
 // ─── Room status helpers ───────────────────────────────────────────────────────
 // Returns "blocked" | "occupied" | "booked" | "available"
@@ -66,25 +67,25 @@ const getRoomAvailabilityState = (
 const AVAILABILITY_BADGE = {
   blocked: {
     label:    "Blocked",
-    classes:  "bg-orange-100 text-orange-700",
-    pill:     "border-orange-200 bg-orange-50 text-orange-700",
+    classes:  "bg-red-100 text-red-500",
+    pill:     "border-red-200 bg-red-50 text-red-700",
     disabled: true,
   },
   occupied: {
     label:    "Occupied",
-    classes:  "bg-rose-100 text-rose-700",
-    pill:     "border-rose-200 bg-rose-50 text-rose-700",
+    classes:  "bg-pink-200 text-pink-500",
+    pill:     "border-pink-200 bg-pink-50 text-pink-700",
     disabled: true,
   },
   booked: {
     label:    "Booked",
-    classes:  "bg-rose-100 text-rose-700",
-    pill:     "border-rose-200 bg-rose-50 text-rose-700",
+    classes:  "bg-white/90 text-[#5676d8]",
+    pill:     "border-[#7187cf] bg-[#6d82c7] text-white shadow-[0_10px_24px_rgba(109,130,199,0.18)]",
     disabled: true,
   },
   available: {
     label:    "Available",
-    classes:  "bg-emerald-100 text-emerald-700",
+    classes:  "bg-green-200 text-green-500",
     pill:     "border-slate-200 bg-slate-50 text-slate-700",
     disabled: false,
   },
@@ -108,6 +109,13 @@ const Room = () => {
   const [priceInputs,    setPriceInputs]    = useState(roomDraft.priceInputs   || {});
   const [pickerValues,   setPickerValues]   = useState(roomDraft.pickerValues  || {});
   const [openPickers,    setOpenPickers]    = useState({});
+  const [roomListPages,  setRoomListPages]  = useState(roomDraft.roomListPages || {});
+  const [notice,         setNotice]         = useState({
+    open: false,
+    title: "",
+    message: "",
+    tone: "info",
+  });
 
   // BUG FIX: separate state for all three unavailability sources
   const [activeBookings,       setActiveBookings]       = useState([]);
@@ -240,7 +248,7 @@ const Room = () => {
         setInventoryStatusMap(statusMap);
       } catch (err) {
         console.error("Failed to load room setup", err);
-        alert("Room setup load nahi ho paaya.");
+        showNotice("Unable to load room setup right now. Please try again.", "Setup Error", "error");
       }
     };
 
@@ -256,13 +264,14 @@ const Room = () => {
       inputValue,
       priceInputs,
       pickerValues,
+      roomListPages,
       roomTypeMap: roomCatalog.reduce((acc, room) => {
         acc[String(room.id)] = room.name;
         return acc;
       }, {}),
       roomCatalog,
     });
-  }, [activeRoom, selectedRooms, roomOptions, inputValue, priceInputs, pickerValues, roomCatalog]);
+  }, [activeRoom, selectedRooms, roomOptions, inputValue, priceInputs, pickerValues, roomListPages, roomCatalog]);
 
   // ─── Derived sets ──────────────────────────────────────────────────────────────
   // Set of rooms with active bookings (from room_tariff via getAllBookings)
@@ -305,6 +314,15 @@ const Room = () => {
   const getAvailableRoomsForType = (roomId) =>
     (roomOptions[roomId] || []).filter((item) => !isRoomUnavailable(item));
 
+  const showNotice = useCallback((message, title = "Notice", tone = "info") => {
+    setNotice({
+      open: true,
+      title,
+      message,
+      tone,
+    });
+  }, []);
+
   // ─── Handlers ─────────────────────────────────────────────────────────────────
   const handleAvailability = (index) => {
     setActiveRoom(activeRoom === index ? null : index);
@@ -330,30 +348,35 @@ const Room = () => {
 
     const roomState = getRoomState(value);
     if (roomState === "blocked") {
-      alert(`Room ${value} is blocked for maintenance aur book nahi ho sakta.`);
+      showNotice(`Room ${value} is blocked for maintenance and cannot be booked.`, "Room Unavailable", "error");
       return;
     }
     if (roomState === "occupied" || roomState === "booked") {
-      alert(`Room ${value} already booked hai. Checkout ke baad hi dobara select hoga.`);
+      showNotice(`Room ${value} is already booked. It can be selected again after checkout.`, "Room Unavailable", "error");
       return;
     }
 
     const existingRoom = findExistingRoom(value);
     if (existingRoom) {
-      alert(`Room already exists in ${existingRoom}`);
+      showNotice(`Room ${value} already exists in ${existingRoom}.`, "Duplicate Room", "warning");
       return;
     }
 
     try {
       await API.post("/hotel/rooms", { categoryId: roomId, roomNumber: value });
-      setRoomOptions((prev) => ({
-        ...prev,
-        [roomId]: [...(prev[roomId] || []), value],
-      }));
+      setRoomOptions((prev) => {
+        const nextRooms = [...(prev[roomId] || []), value];
+        const totalPages = Math.max(1, Math.ceil(nextRooms.length / ROOM_LIST_PAGE_SIZE));
+        setRoomListPages((current) => ({ ...current, [roomId]: totalPages }));
+        return {
+          ...prev,
+          [roomId]: nextRooms,
+        };
+      });
       setInputValue((prev) => ({ ...prev, [roomId]: "" }));
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.message || "Room add nahi ho paaya");
+      showNotice(err.response?.data?.message || "Unable to add the room right now.", "Add Room Failed", "error");
     }
   };
 
@@ -371,18 +394,18 @@ const Room = () => {
       );
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.message || "Price update nahi ho paaya");
+      showNotice(err.response?.data?.message || "Unable to update the room price right now.", "Price Update Failed", "error");
     }
   };
 
   const handleSelect = (roomId, value) => {
     const roomState = getRoomState(value);
     if (roomState === "blocked") {
-      alert(`Room ${value} maintenance ke liye blocked hai.`);
+      showNotice(`Room ${value} is blocked for maintenance.`, "Room Unavailable", "error");
       return;
     }
     if (roomState === "occupied" || roomState === "booked") {
-      alert(`Room ${value} already booked hai.`);
+      showNotice(`Room ${value} is already booked.`, "Room Unavailable", "error");
       return;
     }
 
@@ -401,9 +424,7 @@ const Room = () => {
             roomCatalog.find(
               (room) => Number(room.id) === Number(existingSelection[0]),
             )?.name || `Type ${existingSelection[0]}`;
-          alert(
-            `Room ${value} already selected in ${roomTypeName}.`,
-          );
+          showNotice(`Room ${value} is already selected in ${roomTypeName}.`, "Already Selected", "warning");
           return prev;
         }
       }
@@ -418,7 +439,7 @@ const Room = () => {
 
   const handleProceed = () => {
     if (!Object.values(selectedRooms).some((rooms) => rooms.length > 0)) {
-      alert("Please select at least one room");
+      showNotice("Please select at least one room before proceeding.", "Selection Required", "warning");
       return;
     }
 
@@ -462,12 +483,12 @@ const Room = () => {
 
   // ─── Render ────────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-[linear-gradient(135deg,#f4fbff_0%,#f8fff9_42%,#fffaf1_100%)] p-4 sm:p-6">
-      <div className="mx-auto max-w-6xl space-y-6">
+    <div className="min-h-screen w-full bg-[linear-gradient(135deg,#f4fbff_0%,#f8fff9_42%,#fffaf1_100%)] p-4 sm:p-6">
+      <div className="w-full space-y-6">
 
         {/* Header */}
         <section className="overflow-hidden rounded-[28px] border border-white/70 bg-[linear-gradient(135deg,#08253d_0%,#0e5b6a_48%,#0f766e_100%)] px-6 py-7 text-white shadow-[0_24px_70px_rgba(15,23,42,0.18)]">
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_320px] lg:items-center">
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(420px,500px)] lg:items-center">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200">
                 Room Selection
@@ -477,18 +498,18 @@ const Room = () => {
               </h1>
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
-              <div className="rounded-[20px] border border-white/15 bg-white/10 p-4 text-center backdrop-blur">
-                <div className="text-[10px] uppercase tracking-[0.2em] text-cyan-100/75">Booking ID</div>
-                <div className="mt-2 text-xl font-black">{bookingRef || "—"}</div>
+            <div className="grid grid-cols-3 gap-4 lg:gap-5">
+              <div className="min-w-0 rounded-[20px] border border-white/15 bg-white/10 px-4 py-5 text-center backdrop-blur">
+                <div className="text-[12px] uppercase tracking-[0.16em] text-cyan-100/80">Booking ID</div>
+                <div className="mt-3 text-2xl font-black leading-none">{bookingRef || "—"}</div>
               </div>
-              <div className="rounded-[20px] border border-white/15 bg-emerald-900/40 p-4 text-center backdrop-blur">
-                <div className="text-[10px] uppercase tracking-[0.2em] text-emerald-200">Available</div>
-                <div className="mt-2 text-xl font-black text-emerald-100">{availableCount}</div>
+              <div className="min-w-0 rounded-[20px] border border-white/15 bg-emerald-900/40 px-4 py-5 text-center backdrop-blur">
+                <div className="text-[12px] uppercase tracking-[0.16em] text-emerald-200">Available</div>
+                <div className="mt-3 text-2xl font-black leading-none text-emerald-100">{availableCount}</div>
               </div>
-              <div className="rounded-[20px] border border-rose-400/30 bg-rose-900/30 p-4 text-center backdrop-blur">
-                <div className="text-[10px] uppercase tracking-[0.2em] text-rose-200">Unavailable</div>
-                <div className="mt-2 text-xl font-black text-rose-100">{blockedCount}</div>
+              <div className="min-w-0 rounded-[20px] border border-rose-400/30 bg-rose-900/30 px-4 py-5 text-center backdrop-blur">
+                <div className="text-[12px] uppercase tracking-[0.16em] text-rose-200">Unavailable</div>
+                <div className="mt-3 text-2xl font-black leading-none text-rose-100">{blockedCount}</div>
               </div>
             </div>
           </div>
@@ -496,11 +517,11 @@ const Room = () => {
 
         {/* Legend */}
         <div className="flex flex-wrap gap-3 rounded-[18px] border border-white/70 bg-white/80 px-5 py-3 text-xs font-semibold shadow-sm backdrop-blur">
-          <span className="text-slate-400 self-center">Legend:</span>
+          <span className="text-black-400  text-xl font-bold  self-center">Legend:</span>
           {Object.entries(AVAILABILITY_BADGE).map(([state, meta]) => (
             <span
               key={state}
-              className={`rounded-full px-3 py-1 text-[11px] font-bold ${meta.classes}`}
+              className={`rounded-full px-3 py-1 text-[18px] font-bold ${meta.classes}`}
             >
               {meta.label}
             </span>
@@ -513,90 +534,109 @@ const Room = () => {
             {roomCatalog.map((room, index) => (
               <div
                 key={room.id}
-                className="rounded-[24px] border border-slate-200/80 bg-white p-5 shadow-sm"
+                className="overflow-hidden rounded-[28px] border border-sky-100/90 bg-[linear-gradient(135deg,#8cc5e3_0%,#90cbe6_58%,#8fd0e7_100%)] p-5 shadow-[0_24px_55px_rgba(143,208,231,0.16)]"
               >
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                  <div className="flex-1">
-                    <div className="flex flex-wrap items-center gap-3">
-                      <h3 className="text-xl font-black text-slate-900">{room.name}</h3>
-                      <span className="rounded-full bg-sky-50 px-3 py-1 text-sm font-bold text-sky-700">
-                        {selectedRooms[room.id]?.length || 0} selected
-                      </span>
-                      <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-600">
-                        {formatPriceText(room.defaultPrice, room.unitLabel)}
-                      </span>
+                <div className="flex flex-col gap-5">
+                  <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                    <div className="space-y-3">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <h3 className="text-[28px] font-black tracking-[0.01em] text-slate-950">{room.name}</h3>
+                        <span className="rounded-full border border-white/45 bg-white/28 px-3 py-1 text-sm font-black text-sky-700 backdrop-blur-sm">
+                          {selectedRooms[room.id]?.length || 0} selected
+                        </span>
+                        <span className="rounded-full border border-white/45 bg-white/28 px-3 py-1 text-sm font-black text-slate-700 backdrop-blur-sm">
+                          {formatPriceText(room.defaultPrice, room.unitLabel)}
+                        </span>
+                      </div>
+                      <p className="max-w-3xl text-[15px] font-semibold leading-7 text-slate-900/85">
+                        Set the room price first, then open availability to select, review, and add room numbers from one place.
+                      </p>
                     </div>
 
-                    <div className="mt-4 grid gap-3 sm:grid-cols-[180px_140px]">
-                      <input
-                        type="number"
-                        min="0"
-                        value={priceInputs[room.id] ?? room.defaultPrice}
-                        onChange={(e) =>
-                          setPriceInputs((prev) => ({
-                            ...prev,
-                            [room.id]: e.target.value,
-                          }))
-                        }
-                        className={fieldCls}
-                        placeholder="Enter price"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => handlePriceSave(room.id)}
-                        className="rounded-[20px] bg-sky-500 px-4 py-3 text-sm font-bold text-white"
-                      >
-                        Save Price
-                      </button>
+                    <button
+                      type="button"
+                      onClick={() => handleAvailability(index)}
+                      className="inline-flex items-center justify-center rounded-[20px] bg-gradient-to-r from-amber-500 to-orange-500 px-5 py-3 text-sm font-bold text-white shadow-[0_12px_30px_rgba(245,158,11,0.24)] transition hover:-translate-y-0.5"
+                    >
+                      {activeRoom === index ? "Hide Rooms" : "Check Availability"}
+                    </button>
+                  </div>
+
+                  <div className="grid gap-4">
+                    <div className="rounded-[24px] border border-white/45 bg-white/18 p-4 backdrop-blur-sm">
+                      <div className="grid gap-3 sm:grid-cols-3">
+                        <div className="rounded-[22px] border border-white/45 bg-white/26 px-5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-sm">
+                          <div className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-800/70">
+                            Total Rooms
+                          </div>
+                          <div className="mt-3 text-[32px] font-black leading-none text-slate-950">
+                            {(roomOptions[room.id] || []).length}
+                          </div>
+                          <div className="mt-2 text-sm font-semibold text-slate-800/80">
+                            Room inventory
+                          </div>
+                        </div>
+                        <div className="rounded-[22px] border border-white/45 bg-white/26 px-5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-sm">
+                          <div className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-800/70">
+                            Available
+                          </div>
+                          <div className="mt-3 text-[32px] font-black leading-none text-slate-950">
+                            {getAvailableRoomsForType(room.id).length}
+                          </div>
+                          <div className="mt-2 text-sm font-semibold text-slate-800/80">
+                            Ready to assign
+                          </div>
+                        </div>
+                        <div className="rounded-[22px] border border-white/45 bg-white/26 px-5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-sm">
+                          <div className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-800/70">
+                            Selected
+                          </div>
+                          <div className="mt-3 text-[32px] font-black leading-none text-slate-950">
+                            {selectedRooms[room.id]?.length || 0}
+                          </div>
+                          <div className="mt-2 text-sm font-semibold text-slate-800/80">
+                            Chosen for booking
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => handleAvailability(index)}
-                    className="rounded-[20px] bg-gradient-to-r from-amber-500 to-orange-500 px-5 py-3 text-sm font-bold text-white shadow-[0_12px_30px_rgba(245,158,11,0.24)] transition hover:-translate-y-0.5"
-                  >
-                    {activeRoom === index ? "Hide Rooms" : "Check Availability"}
-                  </button>
-                </div>
-
                 {/* Expanded availability panel */}
                 {activeRoom === index && (
-                  <div className="mt-5 border-t border-slate-200 pt-5">
+                  <div className="mt-1 rounded-[22px] border border-sky-100/90 bg-[linear-gradient(135deg,#8cc5e3_0%,#90cbe6_58%,#8fd0e7_100%)] p-5 shadow-[0_22px_48px_rgba(143,208,231,0.18)]">
                     <div className="mb-3 flex items-center justify-between gap-3">
                       <div>
-                        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                        <div className="text-[18px] font-black uppercase tracking-[0.24em] text-slate-950">
                           Room Availability
+
                         </div>
-                        <div className="mt-1 text-sm text-slate-600">
+                        <div className="mt-2 text-base font-semibold text-slate-900/85">
                           {getAvailableRoomsForType(room.id).length} room(s) ready for booking
                         </div>
                       </div>
-                      <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+                      <span className="rounded-full border border-white/45 bg-white/28 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.14em] text-slate-900">
                         {room.name}
                       </span>
                     </div>
 
                     {/* Quick-pick available rooms dropdown */}
-                    <div className="flex flex-col gap-3 sm:flex-row">
-                      <div className="relative flex-1">
+                    <div className="grid gap-3 xl:max-w-[720px] xl:grid-cols-[minmax(0,1fr)_150px_118px] xl:items-stretch">                      <div className="relative">
                         <button
                           type="button"
                           onClick={() =>
                             setOpenPickers((prev) => ({ ...prev, [room.id]: !prev[room.id] }))
                           }
-                          className={pickerButtonCls}
+                          className={`${pickerButtonCls} h-[52px] overflow-hidden border-slate-200/80 bg-white shadow-none hover:border-cyan-300`}
                         >
                           <div className="flex items-center justify-between gap-3">
-                            <div>
-                              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-700">
-                                Available room picker
-                              </div>
-                              <div className="mt-1 text-sm font-bold text-slate-900">
-                                {pickerValues[room.id] || "Select available room"}
+                            <div className="min-w-0 flex-1">
+                             
+                              <div className="truncate text-xl font-semibold text-slate-900">
+                                {pickerValues[room.id] || "Select room"}
                               </div>
                             </div>
-                            <span className="text-lg text-cyan-700">
+                            <span className="shrink-0 text-xl text-cyan-700">
                               {openPickers[room.id] ? "▲" : "▼"}
                             </span>
                           </div>
@@ -646,66 +686,167 @@ const Room = () => {
                         ) : null}
                       </div>
 
-                      <input
-                        value={inputValue[room.id] || ""}
-                        onChange={(e) =>
-                          setInputValue((prev) => ({
-                            ...prev,
-                            [room.id]: e.target.value,
-                          }))
-                        }
-                        placeholder="Enter room number"
-                        className={fieldCls}
-                      />
+                      <div>
+                        <input
+                          value={inputValue[room.id] || ""}
+                          onChange={(e) =>
+                            setInputValue((prev) => ({
+                              ...prev,
+                              [room.id]: e.target.value,
+                            }))
+                          }
+                          placeholder="Room no."
+                          className="h-[55px] w-full rounded-3xl border border-black-200/80 bg-white px-4 py-3 text-xl text-black-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100"
+                        />
+                      </div>
                       <button
                         type="button"
                         onClick={() => handleAddOption(room.id)}
-                        className="rounded-[20px] bg-emerald-500 px-5 py-3 text-sm font-bold text-white"
+                        className="inline-flex min-w-[144px] text-[15px] items-center justify-center rounded-3xl bg-[#3b82f6] px-5 text-[14px] font-bold tracking-[0.01em] text-white shadow-[0_10px_22px_rgba(59,130,246,0.22)] transition hover:bg-[#2563eb]"
                       >
                         Add Room
                       </button>
                     </div>
 
                     {/* Room checkbox grid — BUG FIX: proper state-based badge */}
-                    <div className="mt-4 flex flex-wrap gap-3">
-                      {(roomOptions[room.id] || []).map((item) => {
-                        const roomState  = getRoomState(item);
-                        const meta       = AVAILABILITY_BADGE[roomState];
-                        const isSelected = selectedRooms[room.id]?.includes(item);
-                        const isLocked   = meta.disabled;
+                    <div className="mt-5 rounded-[22px] border border-white/45 bg-white/22 p-4 backdrop-blur-sm">
+                      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                        <div>
+                          <div className="text-[18px] font-black uppercase tracking-[0.24em] text-slate-950">
+                            Room List
+                          </div>
+                          <div className="mt-2 text-base font-semibold text-slate-900/85">
+                            Overall room inventory for this category with price setup.
+                          </div>
+                        </div>
+
+                        <div className="grid gap-3 sm:grid-cols-[minmax(0,170px)_140px]">
+                          <div className="rounded-[18px] border border-white/45 bg-white/24 p-3">
+                            <div className="text-[14px] font-black uppercase tracking-[0.22em] text-slate-950">
+                              Price Setup
+                            </div>
+                            <div className="mt-2">
+                              <input
+                                type="number"
+                                min="0"
+                                value={priceInputs[room.id] ?? room.defaultPrice}
+                                onChange={(e) =>
+                                  setPriceInputs((prev) => ({
+                                    ...prev,
+                                    [room.id]: e.target.value,
+                                  }))
+                                }
+                                className={`${fieldCls} py-2.5`}
+                                placeholder="Enter price"
+                              />
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => handlePriceSave(room.id)}
+                            className="inline-flex h-[54px] items-center justify-center rounded-[18px] bg-sky-500 px-4 text-sm font-bold text-white shadow-[0_12px_30px_rgba(14,165,233,0.18)] transition hover:bg-sky-600"
+                          >
+                            Save Price
+                          </button>
+                        </div>
+                      </div>
+
+                      {(() => {
+                        const rooms = roomOptions[room.id] || [];
+                        const totalPages = Math.max(1, Math.ceil(rooms.length / ROOM_LIST_PAGE_SIZE));
+                        const currentPage = Math.min(roomListPages[room.id] || 1, totalPages);
+                        const startIndex = (currentPage - 1) * ROOM_LIST_PAGE_SIZE;
+                        const visibleRooms = rooms.slice(startIndex, startIndex + ROOM_LIST_PAGE_SIZE);
+                        const showingFrom = rooms.length ? startIndex + 1 : 0;
+                        const showingTo = Math.min(startIndex + visibleRooms.length, rooms.length);
 
                         return (
-                          <label
-                            key={item}
-                            className={`flex cursor-pointer items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition
-                              ${isLocked ? "cursor-not-allowed opacity-70" : "hover:border-sky-300"}
-                              ${isSelected ? "border-sky-200 bg-sky-50 text-sky-700" : meta.pill}
-                            `}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={isSelected || false}
-                              disabled={isLocked}
-                              onChange={() => handleSelect(room.id, item)}
-                            />
-                            {item}
-                            <span
-                              className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] ${meta.classes}`}
-                            >
-                              {meta.label}
-                            </span>
-                          </label>
-                        );
-                      })}
+                          <>
+                            <div className="mt-4 flex flex-wrap gap-3">
+                              {visibleRooms.map((item) => {
+                                const roomState = getRoomState(item);
+                                const meta = AVAILABILITY_BADGE[roomState];
+                                const isSelected = selectedRooms[room.id]?.includes(item);
+                                const isLocked = meta.disabled;
 
-                      {!(roomOptions[room.id] || []).length && (
-                        <p className="text-sm text-slate-400 italic">
+                                return (
+                                  <label
+                                    key={item}
+                                    className={`flex cursor-pointer items-center gap-2.5 rounded-full border px-5 py-3 text-[15px] font-bold transition
+                                      ${isLocked ? "cursor-not-allowed opacity-70" : "hover:border-sky-300"}
+                                      ${isSelected ? "border-sky-200 bg-sky-50 text-sky-700" : meta.pill}
+                                    `}
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={isSelected || false}
+                                      disabled={isLocked}
+                                      onChange={() => handleSelect(room.id, item)}
+                                      className="h-4 w-4"
+                                    />
+                                    {item}
+                                    <span
+                                      className={`rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.16em] ${meta.classes}`}
+                                    >
+                                      {meta.label}
+                                    </span>
+                                  </label>
+                                );
+                              })}
+
+                              {!rooms.length && (
+                                <p className="text-sm italic text-slate-400">
                           No rooms added yet — add room number above.
-                        </p>
-                      )}
+                                </p>
+                              )}
+                            </div>
+
+                            {rooms.length > ROOM_LIST_PAGE_SIZE && (
+                              <div className="mt-4 flex flex-col gap-3 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                                <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                                  Showing {showingFrom}-{showingTo} of {rooms.length} rooms
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setRoomListPages((prev) => ({
+                                        ...prev,
+                                        [room.id]: Math.max(1, currentPage - 1),
+                                      }))
+                                    }
+                                    disabled={currentPage === 1}
+                                    className="rounded-full border border-slate-200 px-3 py-2 text-xs font-bold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                                  >
+                                    Prev
+                                  </button>
+                                  <span className="rounded-full bg-slate-100 px-3 py-2 text-xs font-bold text-slate-600">
+                                    Page {currentPage} / {totalPages}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setRoomListPages((prev) => ({
+                                        ...prev,
+                                        [room.id]: Math.min(totalPages, currentPage + 1),
+                                      }))
+                                    }
+                                    disabled={currentPage === totalPages}
+                                    className="rounded-full border border-slate-200 px-3 py-2 text-xs font-bold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                                  >
+                                    Next
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </>
+                        );
+                      })()}
                     </div>
                   </div>
                 )}
+                </div>
               </div>
             ))}
           </div>
@@ -735,6 +876,45 @@ const Room = () => {
             </button>
           </div>
         </section>
+
+        {notice.open && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-sm">
+            <div className="w-full max-w-md rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_28px_70px_rgba(15,23,42,0.22)]">
+              <div className="flex items-start gap-4">
+                <div
+                  className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-lg font-black ${
+                    notice.tone === "error"
+                      ? "bg-rose-50 text-rose-600"
+                      : notice.tone === "warning"
+                        ? "bg-amber-50 text-amber-600"
+                        : "bg-sky-50 text-sky-600"
+                  }`}
+                >
+                  !
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-xl font-black text-slate-900">{notice.title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">{notice.message}</p>
+                </div>
+              </div>
+
+              <div className="mt-6 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setNotice((prev) => ({
+                      ...prev,
+                      open: false,
+                    }))
+                  }
+                  className="inline-flex min-w-[96px] items-center justify-center rounded-[16px] bg-gradient-to-r from-sky-600 to-blue-500 px-5 py-3 text-sm font-bold text-white shadow-[0_12px_30px_rgba(37,99,235,0.24)] transition hover:-translate-y-0.5"
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

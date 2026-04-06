@@ -109,8 +109,8 @@ export default function InspectionChecklistModal({ rooms, onClose, apiBase }) {
               <FaClipboardList className="text-emerald-600" />
             </div>
             <div>
-              <h3 className="text-lg font-black text-slate-900">Room Inspection Checklist</h3>
-              <p className="text-xs text-slate-500">Quality check before marking room as Inspected</p>
+              <h3 className="text-xl font-black text-slate-900">Room Inspection Checklist</h3>
+              <p className="text-xl text-slate-500">Quality check before marking room as Inspected</p>
             </div>
           </div>
           <button onClick={onClose} className="rounded-full p-2 text-slate-400 hover:bg-slate-100"><FaTimes /></button>
@@ -120,7 +120,7 @@ export default function InspectionChecklistModal({ rooms, onClose, apiBase }) {
           <div className="mb-5 flex gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1 w-fit">
             {[{ key: "new", label: "New Inspection" }, { key: "history", label: "Inspection History" }].map(t => (
               <button key={t.key} onClick={() => setTab(t.key)}
-                className={`rounded-lg px-4 py-1.5 text-sm font-semibold transition ${tab === t.key ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"}`}>
+                className={`rounded-lg px-4 py-1.5 text-xl font-semibold transition ${tab === t.key ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"}`}>
                 {t.label}
               </button>
             ))}
@@ -133,26 +133,26 @@ export default function InspectionChecklistModal({ rooms, onClose, apiBase }) {
                   <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
                     <FaCheck className="text-3xl text-emerald-600" />
                   </div>
-                  <div className="text-lg font-black text-slate-900">Inspection Submitted!</div>
-                  <div className={`text-4xl font-black ${scoreColor}`}>{score}% Pass</div>
+                  <div className="text-xl font-black text-slate-900">Inspection Submitted!</div>
+                  <div className={`text-6xl font-black ${scoreColor}`}>{score}% Pass</div>
                 </div>
               ) : (
                 <>
                   {/* Form Header */}
                   <div className="mb-5 grid grid-cols-3 gap-4">
                     <div>
-                      <label className="mb-1.5 block text-xs font-semibold text-slate-600">Room *</label>
+                      <label className="mb-1.5 block text-xl font-semibold text-slate-600">Room *</label>
                       <select value={selectedRoom} onChange={e => setSelectedRoom(e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none">
                         <option value="">Select Room</option>
                         {rooms.map(r => <option key={r.id} value={r.id}>Room {r.roomNo}</option>)}
                       </select>
                     </div>
                     <div>
-                      <label className="mb-1.5 block text-xs font-semibold text-slate-600">Inspector Name</label>
+                      <label className="mb-1.5 block text-xl font-semibold text-slate-600">Inspector Name</label>
                       <input value={inspectorName} onChange={e => setInspectorName(e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none" />
                     </div>
                     <div>
-                      <label className="mb-1.5 block text-xs font-semibold text-slate-600">Priority</label>
+                      <label className="mb-1.5 block text-xl font-semibold text-slate-600">Priority</label>
                       <select value={priority} onChange={e => setPriority(e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none">
                         {Object.keys(PRIORITY_COLORS).map(p => <option key={p}>{p}</option>)}
                       </select>
@@ -162,30 +162,30 @@ export default function InspectionChecklistModal({ rooms, onClose, apiBase }) {
                   {/* Score Bar */}
                   <div className="mb-5 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-semibold text-slate-700">Inspection Score</span>
-                      <span className={`text-2xl font-black ${scoreColor}`}>{score}%</span>
+                      <span className="text-xl font-semibold text-slate-700">Inspection Score</span>
+                      <span className={`text-4xl font-black ${scoreColor}`}>{score}%</span>
                     </div>
                     <div className="h-3 overflow-hidden rounded-full bg-slate-200">
                       <div className={`h-full rounded-full transition-all duration-500 ${scoreBg}`} style={{ width: `${score}%` }} />
                     </div>
-                    <div className="mt-2 text-xs text-slate-500">{checkedCount} / {totalItems} items checked</div>
+                    <div className="mt-2 text-xl text-slate-500">{checkedCount} / {totalItems} items checked</div>
                   </div>
 
                   {/* Checklist Categories */}
-                  <div className="space-y-4">
+                  <div className="space-y-4 text-xl">
                     {INSPECTION_CHECKLIST.map(cat => {
                       const catChecked = cat.items.filter(i => checkedItems[i]).length;
                       const allChecked = catChecked === cat.items.length;
                       return (
-                        <div key={cat.category} className="rounded-2xl border border-slate-200 overflow-hidden">
-                          <div className="flex items-center justify-between bg-slate-50 px-4 py-3">
+                        <div key={cat.category} className="rounded-2xl text-xl border border-slate-200 overflow-hidden">
+                          <div className="flex items-center text-xl justify-between bg-slate-50 px-4 py-3">
                             <div className="flex items-center gap-3">
-                              <span className="font-semibold text-slate-800">{cat.category}</span>
-                              <span className="text-xs text-slate-400">{catChecked}/{cat.items.length}</span>
+                              <span className="font-semibold text-xl text-slate-800">{cat.category}</span>
+                              <span className="text-xl text-slate-400">{catChecked}/{cat.items.length}</span>
                             </div>
                             <button
                               onClick={() => handleSelectAll(cat.items, !allChecked)}
-                              className="text-xs font-semibold text-slate-500 hover:text-slate-800 transition"
+                              className="text-xl font-semibold text-slate-500 hover:text-slate-800 transition"
                             >
                               {allChecked ? "Uncheck All" : "Check All"}
                             </button>
@@ -194,10 +194,10 @@ export default function InspectionChecklistModal({ rooms, onClose, apiBase }) {
                             {cat.items.map(item => (
                               <label key={item} className="flex cursor-pointer items-center gap-3 px-4 py-3 hover:bg-slate-50 transition">
                                 <div className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md border-2 transition ${checkedItems[item] ? "border-emerald-500 bg-emerald-500" : "border-slate-300 bg-white"}`}>
-                                  {checkedItems[item] && <FaCheck className="text-[10px] text-white" />}
+                                  {checkedItems[item] && <FaCheck className="text-[16px] text-white" />}
                                 </div>
                                 <input type="checkbox" className="sr-only" checked={!!checkedItems[item]} onChange={() => handleToggle(item)} />
-                                <span className="text-sm text-slate-700">{item}</span>
+                                <span className="text-xl text-slate-700">{item}</span>
                               </label>
                             ))}
                           </div>
@@ -207,20 +207,20 @@ export default function InspectionChecklistModal({ rooms, onClose, apiBase }) {
                   </div>
 
                   <div className="mt-5">
-                    <label className="mb-1.5 block text-xs font-semibold text-slate-600">Overall Notes / Issues Found</label>
+                    <label className="mb-1.5 block text-xl font-semibold text-slate-600">Overall Notes / Issues Found</label>
                     <textarea value={overallNotes} onChange={e => setOverallNotes(e.target.value)} rows={3} placeholder="Describe any issues, damage, or special notes..." className="w-full resize-none rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none" />
                   </div>
 
                   <div className="mt-5 flex items-center justify-between">
                     {score < 70 && (
-                      <div className="flex items-center gap-2 text-sm text-amber-700">
+                      <div className="flex items-center gap-2 text-xl text-amber-700">
                         <FaExclamationTriangle /> Score below 70% - room may not meet standards
                       </div>
                     )}
                     <div className="ml-auto flex gap-3">
-                      <button onClick={onClose} className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">Cancel</button>
+                      <button onClick={onClose} className="rounded-xl border border-slate-200 px-4 py-2 text-xl font-semibold text-slate-700">Cancel</button>
                       <button onClick={handleSubmit} disabled={!selectedRoom || saving}
-                        className="rounded-xl bg-emerald-600 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50">
+                        className="rounded-xl bg-emerald-600 px-5 py-2 text-xl font-semibold text-white hover:bg-emerald-700 disabled:opacity-50">
                         {saving ? "Saving..." : "Submit Inspection"}
                       </button>
                     </div>
@@ -234,19 +234,19 @@ export default function InspectionChecklistModal({ rooms, onClose, apiBase }) {
             <>
               <div className="mb-4 flex gap-2">
                 <button onClick={fetchHistory} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
-                  <FaSyncAlt className="text-xs" /> Refresh
+                  <FaSyncAlt className="text-xl" /> Refresh
                 </button>
                 <button onClick={exportCSV} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
-                  <FaDownload className="text-xs" /> Export CSV
+                  <FaDownload className="text-xl" /> Export CSV
                 </button>
               </div>
               {loading ? (
                 <div className="py-8 text-center text-slate-400"><FaSyncAlt className="animate-spin inline mr-2" />Loading...</div>
               ) : history.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-slate-300 py-10 text-center text-slate-400">No inspection records yet.</div>
+                <div className="rounded-2xl border border-dashed border-slate-300 py-10 text-center text-slate-400 text-xl">No inspection records yet.</div>
               ) : (
                 <div className="overflow-x-auto rounded-2xl border border-slate-200">
-                  <table className="w-full text-sm">
+                  <table className="w-full text-xl">
                     <thead className="bg-slate-50">
                       <tr>{["Room", "Inspector", "Score", "Priority", "Date", "Notes"].map(h => <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{h}</th>)}</tr>
                     </thead>
@@ -259,7 +259,7 @@ export default function InspectionChecklistModal({ rooms, onClose, apiBase }) {
                             <span className={`font-black ${parseInt(h.score) >= 90 ? "text-emerald-600" : parseInt(h.score) >= 70 ? "text-amber-600" : "text-rose-600"}`}>{h.score}%</span>
                           </td>
                           <td className="px-4 py-3">
-                            <span className={`rounded-full border px-2 py-0.5 text-xs font-semibold ${PRIORITY_COLORS[h.priority] || ""}`}>{h.priority}</span>
+                            <span className={`rounded-full border px-2 py-0.5 text-xl font-semibold ${PRIORITY_COLORS[h.priority] || ""}`}>{h.priority}</span>
                           </td>
                           <td className="px-4 py-3 text-slate-400">{h.created_at?.slice(0, 10)}</td>
                           <td className="px-4 py-3 text-slate-500 max-w-xs truncate">{h.notes || "-"}</td>

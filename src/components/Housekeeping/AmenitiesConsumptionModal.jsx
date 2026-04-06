@@ -96,27 +96,27 @@ export default function AmenitiesConsumptionModal({ rooms, onClose, apiBase }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white shadow-2xl">
+      <div className="w-full max-w-[940px] max-h-[92vh] overflow-y-auto rounded-[34px] bg-white shadow-2xl">
         {/* Header */}
-        <div className="sticky top-0 z-10 flex items-center justify-between rounded-t-3xl bg-white px-6 py-5 border-b border-slate-100">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100">
-              <FaBoxOpen className="text-amber-600" />
+        <div className="sticky top-0 z-10 flex items-center justify-between rounded-t-[34px] border-b border-slate-100 bg-white px-7 py-6">
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100">
+              <FaBoxOpen className="text-xl text-amber-600" />
             </div>
             <div>
-              <h3 className="text-lg font-black text-slate-900">Amenities Consumption</h3>
-              <p className="text-xs text-slate-500">Track linen, toiletries, minibar usage per room</p>
+              <h3 className="text-2xl font-black text-slate-900">Amenities Consumption</h3>
+              <p className="text-base text-slate-500">Track linen, toiletries, minibar usage per room</p>
             </div>
           </div>
-          <button onClick={onClose} className="rounded-full p-2 text-slate-400 hover:bg-slate-100"><FaTimes /></button>
+          <button onClick={onClose} className="rounded-full p-3 text-slate-400 hover:bg-slate-100"><FaTimes size={20} /></button>
         </div>
 
-        <div className="p-6">
+        <div className="p-7">
           {/* Tabs */}
-          <div className="mb-5 flex gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1 w-fit">
+          <div className="mb-6 flex w-fit gap-1 rounded-2xl border border-slate-200 bg-slate-50 p-1.5">
             {[{ key: "log", label: "Consumption Log" }, { key: "entry", label: "New Entry" }].map(t => (
               <button key={t.key} onClick={() => setTab(t.key)}
-                className={`rounded-lg px-4 py-1.5 text-sm font-semibold transition ${tab === t.key ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}>
+                className={`rounded-xl px-5 py-2.5 text-xl font-semibold transition ${tab === t.key ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}>
                 {t.label}
               </button>
             ))}
@@ -125,45 +125,45 @@ export default function AmenitiesConsumptionModal({ rooms, onClose, apiBase }) {
           {tab === "log" && (
             <>
               {/* Filters */}
-              <div className="mb-4 flex flex-wrap gap-3">
-                <select value={filterRoom} onChange={e => setFilterRoom(e.target.value)} className="rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700 outline-none">
+              <div className="mb-5 flex flex-wrap gap-3">
+                <select value={filterRoom} onChange={e => setFilterRoom(e.target.value)} className="rounded-2xl border border-slate-200 px-4 py-3 text-xl text-slate-700 outline-none">
                   <option value="">All Rooms</option>
                   {rooms.map(r => <option key={r.id} value={r.id}>Room {r.roomNo}</option>)}
                 </select>
-                <input type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} className="rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700 outline-none" />
-                <button onClick={fetchRecords} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
-                  <FaSyncAlt className="text-xs" /> Refresh
+                <input type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} className="rounded-2xl border border-slate-200 px-4 py-3 text-xl text-slate-700 outline-none" />
+                <button onClick={fetchRecords} className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-3 text-xl font-semibold text-slate-700 hover:bg-slate-50">
+                  <FaSyncAlt className="text-sm" /> Refresh
                 </button>
-                <button onClick={exportCSV} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
-                  <FaDownload className="text-xs" /> Export
+                <button onClick={exportCSV} className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-3 text-xl font-semibold text-slate-700 hover:bg-slate-50">
+                  <FaDownload className="text-sm" /> Export
                 </button>
               </div>
 
               {/* Summary */}
-              <div className="mb-4 flex gap-4">
-                <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
-                  <div className="text-xs font-semibold text-amber-700">Total Records</div>
-                  <div className="text-2xl font-black text-amber-900">{records.length}</div>
+              <div className="mb-5 flex gap-4">
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4">
+                  <div className="text-sm font-semibold text-amber-700">Total Records</div>
+                  <div className="text-3xl font-black text-amber-900">{records.length}</div>
                 </div>
-                <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3">
-                  <div className="text-xs font-semibold text-rose-700">Total Cost</div>
+                <div className="rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4">
+                  <div className="text-sm font-semibold text-rose-700">Total Cost</div>
                   <div className="text-2xl font-black text-rose-900">₹{totalCost.toFixed(0)}</div>
                 </div>
               </div>
 
               {loading ? (
-                <div className="py-8 text-center text-slate-400"><FaSyncAlt className="animate-spin inline mr-2" />Loading...</div>
+                <div className="py-10 text-center text-xl text-slate-400"><FaSyncAlt className="animate-spin inline mr-2" />Loading...</div>
               ) : records.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-slate-300 py-10 text-center text-slate-400">
+                <div className="rounded-[26px] border border-dashed border-slate-300 py-14 text-center text-xl text-slate-400">
                   No amenities records found. Add a new entry to get started.
                 </div>
               ) : (
                 <div className="overflow-x-auto rounded-2xl border border-slate-200">
-                  <table className="w-full text-sm">
+                  <table className="w-full text-xl">
                     <thead className="bg-slate-50">
                       <tr>
                         {["Room", "Category", "Item", "Qty", "Unit Cost", "Total", "Date", "By", ""].map(h => (
-                          <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">{h}</th>
+                          <th key={h} className="px-4 py-4 text-left text-sm font-semibold text-slate-500 uppercase tracking-wide">{h}</th>
                         ))}
                       </tr>
                     </thead>
@@ -191,10 +191,10 @@ export default function AmenitiesConsumptionModal({ rooms, onClose, apiBase }) {
           )}
 
           {tab === "entry" && (
-            <div className="max-w-lg space-y-5">
+            <div className="max-w-2xl space-y-6">
               <div>
-                <label className="mb-1.5 block text-xs font-semibold text-slate-600">Room *</label>
-                <select value={selectedRoom} onChange={e => setSelectedRoom(e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none">
+                <label className="mb-2 block text-xl font-semibold text-slate-600">Room *</label>
+                <select value={selectedRoom} onChange={e => setSelectedRoom(e.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-xl outline-none">
                   <option value="">Select Room</option>
                   {rooms.map(r => <option key={r.id} value={r.id}>Room {r.roomNo} - {r.roomType || "N/A"}</option>)}
                 </select>
@@ -202,14 +202,14 @@ export default function AmenitiesConsumptionModal({ rooms, onClose, apiBase }) {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="mb-1.5 block text-xs font-semibold text-slate-600">Category *</label>
-                  <select value={selectedCategory} onChange={e => handleCategoryChange(e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none">
+                  <label className="mb-2 block text-xl font-semibold text-slate-600">Category *</label>
+                  <select value={selectedCategory} onChange={e => handleCategoryChange(e.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-xl outline-none">
                     {AMENITY_CATEGORIES.map(c => <option key={c.label}>{c.label}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-xs font-semibold text-slate-600">Item *</label>
-                  <select value={selectedItem} onChange={e => setSelectedItem(e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none">
+                  <label className="mb-2 block text-xl font-semibold text-slate-600">Item *</label>
+                  <select value={selectedItem} onChange={e => setSelectedItem(e.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-xl outline-none">
                     {(AMENITY_CATEGORIES.find(c => c.label === selectedCategory)?.items || []).map(i => <option key={i}>{i}</option>)}
                   </select>
                 </div>
@@ -217,30 +217,30 @@ export default function AmenitiesConsumptionModal({ rooms, onClose, apiBase }) {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="mb-1.5 block text-xs font-semibold text-slate-600">Quantity *</label>
-                  <input type="number" min="1" value={qty} onChange={e => setQty(+e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none" />
+                  <label className="mb-2 block text-xl font-semibold text-slate-600">Quantity *</label>
+                  <input type="number" min="1" value={qty} onChange={e => setQty(+e.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-xl outline-none" />
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-xs font-semibold text-slate-600">Unit Cost (₹)</label>
-                  <input type="number" min="0" step="0.01" value={unitCost} onChange={e => setUnitCost(e.target.value)} placeholder="0.00" className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none" />
+                  <label className="mb-2 block text-xl font-semibold text-slate-600">Unit Cost (₹)</label>
+                  <input type="number" min="0" step="0.01" value={unitCost} onChange={e => setUnitCost(e.target.value)} placeholder="0.00" className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-xl outline-none" />
                 </div>
               </div>
 
               <div>
-                <label className="mb-1.5 block text-xs font-semibold text-slate-600">Notes</label>
-                <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} placeholder="Additional notes..." className="w-full resize-none rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none" />
+                <label className="mb-2 block text-xl font-semibold text-slate-600">Notes</label>
+                <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3} placeholder="Additional notes..." className="w-full resize-none rounded-2xl border border-slate-200 px-4 py-3 text-xl outline-none" />
               </div>
 
               {unitCost && qty && (
-                <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
-                  <span className="text-sm font-semibold text-amber-800">Estimated Cost: ₹{(parseFloat(unitCost) * qty).toFixed(2)}</span>
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4">
+                  <span className="text-xl font-semibold text-amber-800">Estimated Cost: ₹{(parseFloat(unitCost) * qty).toFixed(2)}</span>
                 </div>
               )}
 
               <div className="flex justify-end gap-3">
-                <button onClick={() => setTab("log")} className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">Cancel</button>
-                <button onClick={handleSubmit} disabled={!selectedRoom || !selectedItem || saving} className="inline-flex items-center gap-2 rounded-xl bg-amber-600 px-5 py-2 text-sm font-semibold text-white hover:bg-amber-700 disabled:opacity-50">
-                  <FaPlus className="text-xs" /> {saving ? "Saving..." : "Log Consumption"}
+                <button onClick={() => setTab("log")} className="rounded-2xl border border-slate-200 px-5 py-3 text-xl font-semibold text-slate-700">Cancel</button>
+                <button onClick={handleSubmit} disabled={!selectedRoom || !selectedItem || saving} className="inline-flex items-center gap-2 rounded-2xl bg-amber-600 px-6 py-3 text-xl font-semibold text-white hover:bg-amber-700 disabled:opacity-50">
+                  <FaPlus className="text-sm" /> {saving ? "Saving..." : "Log Consumption"}
                 </button>
               </div>
             </div>
@@ -250,3 +250,4 @@ export default function AmenitiesConsumptionModal({ rooms, onClose, apiBase }) {
     </div>
   );
 }
+

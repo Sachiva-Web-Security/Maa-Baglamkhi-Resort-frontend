@@ -307,6 +307,29 @@ const User = () => {
     [filteredUsers.length, usersPerPage]
   );
 
+  const paginationItems = useMemo(() => {
+    if (totalPages <= 1) return [1];
+
+    const items = [1];
+    const windowStart = Math.max(2, page - 1);
+    const windowEnd = Math.min(totalPages - 1, page + 1);
+
+    if (windowStart > 2) {
+      items.push("start-ellipsis");
+    }
+
+    for (let pageNumber = windowStart; pageNumber <= windowEnd; pageNumber += 1) {
+      items.push(pageNumber);
+    }
+
+    if (windowEnd < totalPages - 1) {
+      items.push("end-ellipsis");
+    }
+
+    items.push(totalPages);
+    return items;
+  }, [page, totalPages]);
+
   const visibleUsers = useMemo(() => {
     const startIndex = (page - 1) * usersPerPage;
     return filteredUsers.slice(startIndex, startIndex + usersPerPage);
@@ -315,6 +338,12 @@ const User = () => {
   useEffect(() => {
     setPage(1);
   }, [search, users.length, usersPerPage]);
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
 
 
 
@@ -348,7 +377,7 @@ const User = () => {
   };
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-[linear-gradient(135deg,#f5fbff_0%,#f3f8f4_28%,#fff8f1_58%,#f8fafc_100%)] p-4 sm:p-6 lg:p-8">
+    <div className="relative min-h-screen w-full overflow-x-hidden bg-[linear-gradient(135deg,#f5fbff_0%,#f3f8f4_28%,#fff8f1_58%,#f8fafc_100%)] p-4 sm:p-6 lg:p-8">
       <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute left-[-8%] top-[-6%] h-72 w-72 rounded-full bg-cyan-200/45 blur-3xl sm:h-96 sm:w-96" />
         <div className="absolute right-[-10%] top-[8%] h-72 w-72 rounded-full bg-amber-200/45 blur-3xl sm:h-[28rem] sm:w-[28rem]" />
@@ -356,7 +385,7 @@ const User = () => {
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.55)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.45)_1px,transparent_1px)] 7bg-[size:72px_72px] opacity-25" />
       </div>
 
-      <div className="mx-auto max-w-[1260px] space-y-7">
+      <div className="w-full space-y-7">
         <section className="overflow-hidden rounded-[28px] border border-slate-900/10 bg-[linear-gradient(120deg,#071b34_0%,#0d4a53_52%,#162d45_100%)] px-5 py-6 shadow-[0_22px_55px_rgba(15,23,42,0.12)] sm:px-7 sm:py-8">
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.9fr)] lg:items-center">
             <div className="space-y-4">
@@ -620,7 +649,24 @@ const User = () => {
           </div>
 
           {filteredUsers.length > 0 ? (
-            <div className="mt-5 flex justify-end gap-3">
+            <div className="mt-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div className="text-sm text-slate-500">
+                Showing{" "}
+                <span className="font-semibold text-slate-900">
+                  {filteredUsers.length ? (page - 1) * usersPerPage + 1 : 0}
+                </span>{" "}
+                to{" "}
+                <span className="font-semibold text-slate-900">
+                  {Math.min(page * usersPerPage, filteredUsers.length)}
+                </span>{" "}
+                of{" "}
+                <span className="font-semibold text-slate-900">
+                  {filteredUsers.length}
+                </span>{" "}
+                users
+              </div>
+
+              <div className="flex flex-wrap items-center justify-end gap-3">
               <button
                 type="button"
                 onClick={handlePrevPage}
@@ -645,6 +691,36 @@ const User = () => {
                   </button>
                 ))}
               </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                {paginationItems.map((item) =>
+                  typeof item === "number" ? (
+                    <button
+                      key={item}
+                      type="button"
+                      onClick={() => {
+                        setPaginationMessage("");
+                        setPage(item);
+                      }}
+                      className={`h-10 min-w-10 rounded-full px-3 text-sm font-semibold transition ${
+                        page === item
+                          ? "bg-cyan-500 text-white shadow-[0_10px_24px_rgba(14,165,233,0.18)]"
+                          : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-100"
+                      }`}
+                    >
+                      {item}
+                    </button>
+                  ) : (
+                    <span
+                      key={item}
+                      className="px-1 text-sm font-semibold tracking-[0.2em] text-slate-400"
+                    >
+                      ...
+                    </span>
+                  )
+                )}
+              </div>
+
               <button
                 type="button"
                 onClick={handleNextPage}
@@ -653,6 +729,7 @@ const User = () => {
               >
                 Next
               </button>
+              </div>
             </div>
           ) : null}
 

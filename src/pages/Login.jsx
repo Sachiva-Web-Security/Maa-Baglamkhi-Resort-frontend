@@ -102,17 +102,19 @@ const Login = ({ setIsAuthenticated }) => {
 
   return (
     <div
-      className="relative flex min-h-screen items-center justify-center p-4"
+      className="relative flex min-h-screen w-full items-center justify-center overflow-hidden px-4 py-8 sm:px-6"
       style={{
         backgroundImage: `url(${bgImage})`,
         backgroundSize: "cover",
         backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+        minHeight: "100vh",
       }}
     >
       {/* Overlay */}
-      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
+      <div className="pointer-events-none absolute inset-0 bg-slate-900/45 backdrop-blur-[2px]" />
 
-      <div className="relative w-full max-w-md">
+      <div className="relative z-10 w-full max-w-md">
         {/* Card */}
         <div className="overflow-hidden rounded-3xl border border-white/20 bg-white shadow-[0_32px_80px_rgba(15,23,42,0.3)]">
           {/* Header stripe */}

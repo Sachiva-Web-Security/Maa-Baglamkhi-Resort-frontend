@@ -1,4 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+
+const RECONCILIATION_PAGE_SIZE = 10;
 
 const formatINR = (amount) =>
   new Intl.NumberFormat("en-IN", {
@@ -28,6 +30,7 @@ const ReconciliationOverview = ({
 }) => {
   const [selectedLinks, setSelectedLinks] = useState({});
   const [busyKey, setBusyKey] = useState("");
+  const [page, setPage] = useState(1);
 
   const unlinkedLedger = useMemo(
     () =>
@@ -53,6 +56,22 @@ const ReconciliationOverview = ({
         .toLowerCase();
       return entryMode === "manual" || entryMode === itemMode;
     });
+
+  const totalPages = Math.max(1, Math.ceil((items || []).length / RECONCILIATION_PAGE_SIZE));
+  const paginatedItems = (items || []).slice(
+    (page - 1) * RECONCILIATION_PAGE_SIZE,
+    page * RECONCILIATION_PAGE_SIZE,
+  );
+
+  useEffect(() => {
+    setPage(1);
+  }, [sourceFilter, matchFilter, items]);
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
 
   const handleLink = async (item) => {
     const key = toKey(item);
@@ -81,13 +100,13 @@ const ReconciliationOverview = ({
     <section className="rounded-[26px] border border-white/60 bg-white/82 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-700">
+          <div className="text-lg font-semibold uppercase tracking-[0.18em] text-cyan-700">
             Linked Reconciliation Flow
           </div>
-          <h2 className="mt-2 text-2xl font-black text-slate-900">
+          <h2 className="mt-2 text-4xl font-black text-slate-900">
             Billing to bank reconciliation view
           </h2>
-          <p className="mt-2 max-w-3xl text-sm text-slate-500">
+          <p className="mt-3 max-w-3xl text-xl leading-8 text-slate-500">
             Match paid hotel invoices, restaurant bills, banquet invoices, and vendor payouts with
             bank ledger rows so the accounts team can verify what is billed, what reached the bank,
             and what still needs action.
@@ -103,12 +122,12 @@ const ReconciliationOverview = ({
           ].map((card) => (
             <div
               key={card.label}
-              className="min-w-[180px] rounded-[20px] border border-slate-200 bg-slate-50 px-4 py-3"
+              className="min-w-[180px] rounded-[20px] border border-slate-200 bg-slate-50 px-5 py-4"
             >
-              <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+              <div className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">
                 {card.label}
               </div>
-              <div className={`mt-3 text-2xl font-black ${card.tone}`}>{card.value}</div>
+              <div className={`mt-3 text-3xl font-black ${card.tone}`}>{card.value}</div>
             </div>
           ))}
         </div>
@@ -116,13 +135,13 @@ const ReconciliationOverview = ({
 
       <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         <label className="block">
-          <span className="mb-1 block text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+          <span className="mb-2 block text-sm font-semibold uppercase tracking-[0.14em] text-slate-500">
             Source Filter
           </span>
           <select
             value={sourceFilter}
             onChange={(event) => onSourceFilterChange(event.target.value)}
-            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none"
+            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-lg text-slate-900 outline-none"
           >
             <option value="all">All Sources</option>
             <option value="invoice">Hotel Invoices</option>
@@ -133,13 +152,13 @@ const ReconciliationOverview = ({
         </label>
 
         <label className="block">
-          <span className="mb-1 block text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+          <span className="mb-2 block text-sm font-semibold uppercase tracking-[0.14em] text-slate-500">
             Match Filter
           </span>
           <select
             value={matchFilter}
             onChange={(event) => onMatchFilterChange(event.target.value)}
-            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none"
+            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-lg text-slate-900 outline-none"
           >
             <option value="all">All Match States</option>
             <option value="unmatched">Unmatched</option>
@@ -149,11 +168,11 @@ const ReconciliationOverview = ({
           </select>
         </label>
 
-        <div className="rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-          <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+        <div className="rounded-[18px] border border-slate-200 bg-slate-50 px-5 py-4 text-lg text-slate-600">
+          <div className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">
             Flow Hint
           </div>
-          <div className="mt-2">
+          <div className="mt-2 leading-7">
             Paid billing rows should be linked with a bank ledger entry. Cash rows can remain
             outside bank reconciliation.
           </div>
@@ -161,57 +180,57 @@ const ReconciliationOverview = ({
       </div>
 
       <div className="mt-5 overflow-x-auto rounded-[18px] border border-slate-200">
-        <table className="min-w-full text-left text-sm">
-          <thead className="bg-slate-50 text-[11px] uppercase tracking-[0.14em] text-slate-500">
+        <table className="min-w-full text-left text-base">
+          <thead className="bg-slate-50 text-sm uppercase tracking-[0.14em] text-slate-500">
             <tr>
-              <th className="px-3 py-3">Source</th>
-              <th className="px-3 py-3">Reference</th>
-              <th className="px-3 py-3">Party</th>
-              <th className="px-3 py-3">Label</th>
-              <th className="px-3 py-3">Payment Mode</th>
-              <th className="px-3 py-3">Billed</th>
-              <th className="px-3 py-3">Bank</th>
-              <th className="px-3 py-3">Difference</th>
-              <th className="px-3 py-3">Match</th>
-              <th className="px-3 py-3">Reconciliation</th>
-              <th className="px-3 py-3">Action</th>
+              <th className="px-3 py-4">Source</th>
+              <th className="px-3 py-4">Reference</th>
+              <th className="px-3 py-4">Party</th>
+              <th className="px-3 py-4">Label</th>
+              <th className="px-3 py-4">Payment Mode</th>
+              <th className="px-3 py-4">Billed</th>
+              <th className="px-3 py-4">Bank</th>
+              <th className="px-3 py-4">Difference</th>
+              <th className="px-3 py-4">Match</th>
+              <th className="px-3 py-4">Reconciliation</th>
+              <th className="px-3 py-4">Action</th>
             </tr>
           </thead>
           <tbody>
-            {(items || []).slice(0, 10).map((item) => {
+            {paginatedItems.map((item) => {
               const key = toKey(item);
               const candidates = getCandidates(item);
               const busy = busyKey === key;
 
               return (
                 <tr key={key} className="border-t border-slate-200">
-                  <td className="px-3 py-3 text-slate-700">{item.sourceType}</td>
-                  <td className="px-3 py-3 font-semibold text-slate-900">{item.sourceReference}</td>
-                  <td className="px-3 py-3 text-slate-700">{item.partyName || "-"}</td>
-                  <td className="px-3 py-3 text-slate-700">{item.sourceLabel || "-"}</td>
-                  <td className="px-3 py-3 text-slate-700">{item.paymentMode || "-"}</td>
-                  <td className="px-3 py-3 font-semibold text-slate-900">
+                  <td className="px-3 py-4 text-base text-slate-700">{item.sourceType}</td>
+                  <td className="px-3 py-4 text-lg font-semibold text-slate-900">{item.sourceReference}</td>
+                  <td className="px-3 py-4 text-base text-slate-700">{item.partyName || "-"}</td>
+                  <td className="px-3 py-4 text-base text-slate-700">{item.sourceLabel || "-"}</td>
+                  <td className="px-3 py-4 text-base text-slate-700">{item.paymentMode || "-"}</td>
+                  <td className="px-3 py-4 text-lg font-semibold text-slate-900">
                     {formatINR(item.sourceAmount)}
                   </td>
-                  <td className="px-3 py-3 text-slate-700">{formatINR(item.bankAmount)}</td>
-                  <td className="px-3 py-3 text-slate-700">{formatINR(item.difference)}</td>
-                  <td className="px-3 py-3">
-                    <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-bold text-slate-700">
+                  <td className="px-3 py-4 text-base text-slate-700">{formatINR(item.bankAmount)}</td>
+                  <td className="px-3 py-4 text-base text-slate-700">{formatINR(item.difference)}</td>
+                  <td className="px-3 py-4">
+                    <span className="rounded-full border border-slate-200 bg-slate-50 px-3.5 py-1.5 text-sm font-bold text-slate-700">
                       {item.matchStatus}
                     </span>
                   </td>
-                  <td className="px-3 py-3">
-                    <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-bold text-slate-700">
+                  <td className="px-3 py-4">
+                    <span className="rounded-full border border-slate-200 bg-slate-50 px-3.5 py-1.5 text-sm font-bold text-slate-700">
                       {item.reconciliationStatus}
                     </span>
                   </td>
-                  <td className="px-3 py-3">
+                  <td className="px-3 py-4">
                     {item.linkedBankLedgerId ? (
                       <button
                         type="button"
                         disabled={busy}
                         onClick={() => handleUnlink(item)}
-                        className="rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-700 disabled:opacity-60"
+                        className="rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-bold text-rose-700 disabled:opacity-60"
                       >
                         Unlink
                       </button>
@@ -222,7 +241,7 @@ const ReconciliationOverview = ({
                           onChange={(event) =>
                             setSelectedLinks((prev) => ({ ...prev, [key]: event.target.value }))
                           }
-                          className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none"
+                          className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none"
                         >
                           <option value="">Select bank row</option>
                           {candidates.map((entry) => (
@@ -235,13 +254,13 @@ const ReconciliationOverview = ({
                           type="button"
                           disabled={busy || !selectedLinks[key]}
                           onClick={() => handleLink(item)}
-                          className="rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1.5 text-xs font-bold text-cyan-700 disabled:opacity-60"
+                          className="rounded-full border border-cyan-200 bg-cyan-50 px-4 py-2 text-sm font-bold text-cyan-700 disabled:opacity-60"
                         >
                           Link
                         </button>
                       </div>
                     ) : (
-                      <span className="text-xs text-slate-500">No free bank row</span>
+                      <span className="text-sm text-slate-500">No free bank row</span>
                     )}
                   </td>
                 </tr>
@@ -249,7 +268,7 @@ const ReconciliationOverview = ({
             })}
             {!items?.length ? (
               <tr>
-                <td colSpan={11} className="px-3 py-6 text-center text-slate-500">
+                <td colSpan={11} className="px-3 py-8 text-center text-lg text-slate-500">
                   No reconciliation items for the selected filters.
                 </td>
               </tr>
@@ -257,6 +276,64 @@ const ReconciliationOverview = ({
           </tbody>
         </table>
       </div>
+
+      {(items || []).length > RECONCILIATION_PAGE_SIZE ? (
+        <div className="mt-4 flex flex-col gap-3 rounded-[18px] border border-slate-200 bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="text-base text-slate-500">
+            Showing{" "}
+            <span className="font-semibold text-slate-900">
+              {(page - 1) * RECONCILIATION_PAGE_SIZE + 1}
+            </span>{" "}
+            to{" "}
+            <span className="font-semibold text-slate-900">
+              {Math.min(page * RECONCILIATION_PAGE_SIZE, (items || []).length)}
+            </span>{" "}
+            of{" "}
+            <span className="font-semibold text-slate-900">{(items || []).length}</span>{" "}
+            reconciliation rows
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setPage((current) => Math.max(1, current - 1))}
+              disabled={page === 1}
+              className="rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Previous
+            </button>
+
+            {Array.from({ length: totalPages }, (_, index) => {
+              const pageNumber = index + 1;
+              const isActive = pageNumber === page;
+
+              return (
+                <button
+                  key={`reconciliation-page-${pageNumber}`}
+                  type="button"
+                  onClick={() => setPage(pageNumber)}
+                  className={`h-10 min-w-[40px] rounded-full border px-3 text-sm font-bold transition ${
+                    isActive
+                      ? "border-cyan-600 bg-cyan-600 text-white shadow-[0_10px_24px_rgba(8,145,178,0.18)]"
+                      : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                  }`}
+                >
+                  {pageNumber}
+                </button>
+              );
+            })}
+
+            <button
+              type="button"
+              onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+              disabled={page === totalPages}
+              className="rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 };

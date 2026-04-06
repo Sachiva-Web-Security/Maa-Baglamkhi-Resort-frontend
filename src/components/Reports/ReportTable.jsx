@@ -144,7 +144,7 @@ const ReportTable = ({ reportType, rows, loading }) => {
     return items;
   }, [currentPage, totalPages]);
 
-  const showPagination = rows.length > PAGE_SIZE;
+  const showPagination = rows.length > 0;
 
   return (
     <div className="rounded-[26px] border border-white/60 bg-white/82 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl">

@@ -4,7 +4,7 @@ import {
   FaFilter, FaFire, FaLayerGroup, FaListAlt, FaPlus, FaSearch,
   FaStore, FaTimes, FaTruck, FaUtensils, FaWarehouse, FaExclamationTriangle,
   FaCheckCircle, FaTrash, FaEdit, FaShoppingCart, FaFlask, FaChartBar,
-  FaArrowRight, FaBell, FaCalendarAlt,
+  FaArrowRight, FaBell, FaCalendarAlt, FaChevronDown,
 } from "react-icons/fa";
 import API, { getBackendBaseURL } from "../../api";
 import {
@@ -41,6 +41,57 @@ const INVENTORY_SECTIONS = [
   { id: "item-consumption-report",label:"Consumption Report",icon:FaFlask,        type: "report" },
   { id: "total-consumption-report",label:"Total Consumption",icon:FaListAlt,      type: "report" },
   { id: "item-audit",         label: "Item Audit Report",   icon: FaListAlt,      type: "report" },
+];
+
+const NAVIGATION_GROUPS = [
+  {
+    label: "Stock",
+    helper: "Core stock controls and movement",
+    ids: ["items", "menu-items", "stock-transfer", "stock-audit", "waste-log"],
+    activeButton: "border-cyan-300 bg-[linear-gradient(135deg,#06b6d4_0%,#3b82f6_100%)] text-white shadow-[0_18px_36px_rgba(14,165,233,0.28)]",
+    idleButton: "border-cyan-100 bg-[linear-gradient(135deg,#ecfeff_0%,#eff6ff_100%)] text-cyan-950 hover:border-cyan-200",
+    dropdown: "border-cyan-200/80 bg-[linear-gradient(180deg,rgba(236,254,255,0.98)_0%,rgba(239,246,255,0.98)_100%)]",
+    itemActive: "border-cyan-200 bg-white text-cyan-900 shadow-[0_14px_28px_rgba(8,145,178,0.10)]",
+    itemIdle: "border-cyan-100/80 bg-white/90 text-slate-700 hover:border-cyan-200 hover:bg-white",
+    iconTone: "bg-white/20 text-white",
+    iconIdleTone: "bg-cyan-100 text-cyan-700",
+  },
+  {
+    label: "Masters",
+    helper: "Base masters and inventory setup",
+    ids: ["menu-categories", "segments", "vendors", "units", "unit-conversion", "store-kitchen", "item-groups", "gravies", "ingredients"],
+    activeButton: "border-violet-400 bg-[linear-gradient(135deg,#5b21b6_0%,#1d4ed8_100%)] text-white shadow-[0_18px_36px_rgba(91,33,182,0.30)]",
+    idleButton: "border-violet-200 bg-[linear-gradient(135deg,#ede9fe_0%,#dbeafe_100%)] text-violet-950 hover:border-violet-300",
+    dropdown: "border-violet-300/90 bg-[linear-gradient(180deg,rgba(237,233,254,0.99)_0%,rgba(219,234,254,0.99)_100%)]",
+    itemActive: "border-violet-300 bg-white text-violet-950 shadow-[0_14px_28px_rgba(91,33,182,0.14)]",
+    itemIdle: "border-violet-200/90 bg-white/95 text-slate-800 hover:border-violet-300 hover:bg-white",
+    iconTone: "bg-white/20 text-white",
+    iconIdleTone: "bg-violet-200 text-violet-900",
+  },
+  {
+    label: "Purchases",
+    helper: "Purchase entries, services and orders",
+    ids: ["purchase-items", "purchase-services", "purchase-orders"],
+    activeButton: "border-amber-400 bg-[linear-gradient(135deg,#c2410c_0%,#d97706_100%)] text-white shadow-[0_18px_36px_rgba(194,65,12,0.30)]",
+    idleButton: "border-amber-200 bg-[linear-gradient(135deg,#ffedd5_0%,#fef3c7_100%)] text-amber-950 hover:border-amber-300",
+    dropdown: "border-amber-300/90 bg-[linear-gradient(180deg,rgba(255,237,213,0.99)_0%,rgba(254,243,199,0.99)_100%)]",
+    itemActive: "border-amber-300 bg-white text-amber-950 shadow-[0_14px_28px_rgba(194,65,12,0.14)]",
+    itemIdle: "border-amber-200/90 bg-white/95 text-slate-800 hover:border-amber-300 hover:bg-white",
+    iconTone: "bg-white/20 text-white",
+    iconIdleTone: "bg-amber-200 text-amber-900",
+  },
+  {
+    label: "Reports",
+    helper: "Operational and inventory reporting",
+    ids: ["vendor-report", "stock-report", "closing-stock-report", "item-report", "item-consumption-report", "total-consumption-report", "item-audit"],
+    activeButton: "border-emerald-400 bg-[linear-gradient(135deg,#047857_0%,#0f766e_100%)] text-white shadow-[0_18px_36px_rgba(4,120,87,0.30)]",
+    idleButton: "border-emerald-200 bg-[linear-gradient(135deg,#d1fae5_0%,#ccfbf1_100%)] text-emerald-950 hover:border-emerald-300",
+    dropdown: "border-emerald-300/90 bg-[linear-gradient(180deg,rgba(209,250,229,0.99)_0%,rgba(204,251,241,0.99)_100%)]",
+    itemActive: "border-emerald-300 bg-white text-emerald-950 shadow-[0_14px_28px_rgba(4,120,87,0.14)]",
+    itemIdle: "border-emerald-200/90 bg-white/95 text-slate-800 hover:border-emerald-300 hover:bg-white",
+    iconTone: "bg-white/20 text-white",
+    iconIdleTone: "bg-emerald-200 text-emerald-900",
+  },
 ];
 
 const STORAGE_KEYS = {
@@ -300,6 +351,56 @@ const DEFAULT_MASTER_DATA = {
     { id: 2, name: "Veg Thali", category: "Combos", price: 250, imageUrl: "", description: "Complete thali with sabzi, dal, rice and roti.", foodType: "Veg", status: "Available" },
   ],
 };
+const PRESET_MENU_CATEGORY_OPTIONS = Array.from(
+  new Set(
+    [
+      ...(DEFAULT_MASTER_DATA["menu-categories"] || []).flatMap((item) => [
+        String(item.name || "").trim(),
+        String(item.parent || "").trim(),
+      ]),
+      "Starters",
+      "Veg Starters",
+      "Non Veg Starters",
+      "Soups",
+      "Salads",
+      "Main Course",
+      "Main Course Veg",
+      "Main Course Non Veg",
+      "Breads",
+      "Rice",
+      "Rice & Biryani",
+      "Dal Specials",
+      "Tandoor",
+      "Chinese",
+      "South Indian",
+      "North Indian",
+      "Punjabi",
+      "Jain Food",
+      "Breakfast",
+      "Snacks",
+      "Fast Food",
+      "Street Food",
+      "Quick Bites",
+      "Meals",
+      "Combos",
+      "Thali",
+      "Desserts",
+      "Sweets",
+      "Ice Cream",
+      "Bakery",
+      "Beverage",
+      "Beverages",
+      "Cold Beverages",
+      "Hot Beverages",
+      "Mocktails",
+      "Tea & Coffee",
+      "Shakes",
+      "Juices",
+      "Kids Menu",
+      "Chef Specials",
+    ].filter(Boolean),
+  ),
+).sort((a, b) => a.localeCompare(b));
 
 // ─── Utility Functions ────────────────────────────────────────────────────────
 
@@ -360,7 +461,7 @@ function isLowStock(item) {
 // ─── Small Shared Components ──────────────────────────────────────────────────
 
 function FormInput({ field, value, onChange }) {
-  const cls = "w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100 transition";
+  const cls = "w-full rounded-xl border border-slate-200 bg-white px-4 py-4 text-xl text-slate-900 outline-none transition placeholder:text-xl placeholder:text-slate-400 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100";
   if (field.type === "select") {
     return (
       <select value={value} onChange={(e) => onChange(field.key, e.target.value)} className={cls}>
@@ -400,7 +501,7 @@ function SearchBar({ value, onChange, placeholder }) {
       <FaSearch className="shrink-0 text-cyan-500" size={13} />
       <input value={value} onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400" />
+        className="w-full bg-transparent text-xl outline-none placeholder:text-lg placeholder:text-slate-400" />
     </label>
   );
 }
@@ -415,7 +516,7 @@ function Badge({ children, color = "gray" }) {
     orange: "bg-orange-100 text-orange-700",
   };
   return (
-    <span className={`inline-block rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${colors[color]}`}>
+    <span className={`inline-block rounded-full px-4 py-1.5 text-base font-semibold ${colors[color]}`}>
       {children}
     </span>
   );
@@ -432,9 +533,9 @@ function MetricCard({ label, value, sub, tone = "default" }) {
   return (
     <div className={`relative overflow-hidden rounded-[24px] border bg-gradient-to-br px-4 py-4 ${tones[tone]}`}>
       <div className="absolute right-0 top-0 h-20 w-20 rounded-full bg-white/40 blur-2xl" />
-      <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-500">{label}</p>
-      <p className="mt-1.5 text-2xl font-bold text-slate-900">{value}</p>
-      {sub && <p className="mt-0.5 text-xs text-slate-400">{sub}</p>}
+      <p className="text-sm font-semibold uppercase tracking-widest text-slate-500">{label}</p>
+      <p className="mt-1.5 text-3xl font-bold text-slate-900">{value}</p>
+      {sub && <p className="mt-0.5 text-base text-slate-400">{sub}</p>}
     </div>
   );
 }
@@ -447,14 +548,14 @@ function FormPanel({ title, subtitle, fields, draft, setDraft, editingId, onSave
       <div className="mb-5 rounded-[24px] bg-[linear-gradient(135deg,#0f172a_0%,#155e75_48%,#0f766e_100%)] px-4 py-4 text-white">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h3 className="text-base font-semibold">
+            <h3 className="text-3xl font-semibold">
               {editingId ? `Edit ${title}` : `Add ${title}`}
             </h3>
-            {subtitle && <p className="mt-1 text-xs text-white/75">{subtitle}</p>}
+            {subtitle && <p className="mt-1 text-xl text-white/75">{subtitle}</p>}
           </div>
           {editingId && (
             <button type="button" onClick={onReset}
-              className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium text-white transition hover:bg-white/20">
+              className="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xl font-medium text-white transition hover:bg-white/20">
               Cancel Edit
             </button>
           )}
@@ -463,7 +564,7 @@ function FormPanel({ title, subtitle, fields, draft, setDraft, editingId, onSave
       <div className="space-y-3">
         {fields.map((field) => (
           <div key={field.key}>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+            <label className="mb-2 block text-xl font-semibold uppercase tracking-[0.18em] text-slate-500">
               {field.label} {field.required && <span className="text-red-400">*</span>}
             </label>
             <FormInput field={field} value={draft[field.key] ?? ""}
@@ -472,7 +573,7 @@ function FormPanel({ title, subtitle, fields, draft, setDraft, editingId, onSave
         ))}
       </div>
       <button type="button" onClick={onSave}
-        className="mt-5 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 via-sky-500 to-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-[0_18px_30px_rgba(37,99,235,0.25)] hover:-translate-y-0.5 transition">
+        className="mt-5 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 via-sky-500 to-blue-600 px-6 py-3.5 text-xl font-semibold text-white shadow-[0_18px_30px_rgba(37,99,235,0.25)] transition hover:-translate-y-0.5">
         <FaPlus size={12} />
         {editingId ? "Update" : "Save"}
       </button>
@@ -481,20 +582,38 @@ function FormPanel({ title, subtitle, fields, draft, setDraft, editingId, onSave
 }
 
 function DataTable({ columns, rows, onEdit, onDelete, emptyMessage }) {
+  const DATA_TABLE_PAGE_SIZE = 10;
+  const [page, setPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(rows.length / DATA_TABLE_PAGE_SIZE));
+  const paginatedRows = rows.slice(
+    (page - 1) * DATA_TABLE_PAGE_SIZE,
+    page * DATA_TABLE_PAGE_SIZE,
+  );
+
+  useEffect(() => {
+    setPage(1);
+  }, [rows, columns]);
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
+
   return (
     <div className="overflow-hidden rounded-[26px] border border-slate-200/80 bg-white shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
       <div className="overflow-x-auto">
-      <table className="min-w-full text-sm text-slate-700">
-        <thead className="bg-[linear-gradient(180deg,#f8fafc_0%,#eef2ff_100%)] text-left text-[11px] font-semibold uppercase tracking-widest text-slate-500">
+      <table className="min-w-full text-base text-slate-700">
+        <thead className="bg-[linear-gradient(180deg,#f8fafc_0%,#eef2ff_100%)] text-left text-sm font-semibold uppercase tracking-widest text-slate-500">
           <tr>
             {columns.map((col) => (
-              <th key={col} className="px-4 py-3">{formatLabel(col)}</th>
+              <th key={col} className="px-4 py-4">{formatLabel(col)}</th>
             ))}
-            {(onEdit || onDelete) && <th className="px-4 py-3">Actions</th>}
+            {(onEdit || onDelete) && <th className="px-4 py-4">Actions</th>}
           </tr>
         </thead>
         <tbody>
-          {rows.length ? rows.map((row) => (
+          {rows.length ? paginatedRows.map((row) => (
             <tr key={row.id} className="border-t border-slate-100 hover:bg-cyan-50/40 transition">
               {columns.map((col) => (
                 <td key={col} className="px-4 py-3 text-slate-700">{row[col] ?? "—"}</td>
@@ -504,13 +623,13 @@ function DataTable({ columns, rows, onEdit, onDelete, emptyMessage }) {
                   <div className="flex gap-2">
                     {onEdit && (
                       <button type="button" onClick={() => onEdit(row)}
-                        className="inline-flex items-center gap-1 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-700 hover:bg-cyan-100 transition">
+                        className="inline-flex items-center gap-1 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1.5 text-sm font-semibold text-cyan-700 transition hover:bg-cyan-100">
                         <FaEdit size={10} /> Edit
                       </button>
                     )}
                     {onDelete && (
                       <button type="button" onClick={() => onDelete(row.id)}
-                        className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-600 hover:bg-red-100 transition">
+                        className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-sm font-semibold text-red-600 transition hover:bg-red-100">
                         <FaTrash size={10} /> Delete
                       </button>
                     )}
@@ -520,13 +639,105 @@ function DataTable({ columns, rows, onEdit, onDelete, emptyMessage }) {
             </tr>
           )) : (
             <tr>
-              <td colSpan={columns.length + 1} className="px-4 py-12 text-center text-sm text-slate-400">
+              <td colSpan={columns.length + 1} className="px-4 py-12 text-center text-base text-slate-400">
                 {emptyMessage || "No records found."}
               </td>
             </tr>
           )}
         </tbody>
       </table>
+      </div>
+
+      {rows.length > DATA_TABLE_PAGE_SIZE ? (
+        <div className="flex flex-col gap-3 border-t border-slate-200 bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="text-base text-slate-500">
+            Showing{" "}
+            <span className="font-semibold text-slate-900">
+              {(page - 1) * DATA_TABLE_PAGE_SIZE + 1}
+            </span>{" "}
+            to{" "}
+            <span className="font-semibold text-slate-900">
+              {Math.min(page * DATA_TABLE_PAGE_SIZE, rows.length)}
+            </span>{" "}
+            of <span className="font-semibold text-slate-900">{rows.length}</span> records
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setPage((current) => Math.max(1, current - 1))}
+              disabled={page === 1}
+              className="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Previous
+            </button>
+
+            {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
+              <button
+                key={pageNumber}
+                type="button"
+                onClick={() => setPage(pageNumber)}
+                className={`rounded-full px-3 py-2 text-sm font-semibold transition ${
+                  pageNumber === page
+                    ? "bg-slate-900 text-white"
+                    : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                }`}
+              >
+                {pageNumber}
+              </button>
+            ))}
+
+            <button
+              type="button"
+              onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+              disabled={page === totalPages}
+              className="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function SectionTabs({
+  activeTab,
+  onChange,
+  listLabel,
+  listHelper,
+  formLabel,
+  formHelper,
+}) {
+  return (
+    <div className="overflow-hidden rounded-[28px] border border-white/70 bg-white/90 p-3 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+      <div className="flex flex-wrap gap-3">
+        {[
+          { id: "list", label: listLabel, helper: listHelper },
+          { id: "form", label: formLabel, helper: formHelper },
+        ].map((tab) => {
+          const active = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => onChange(tab.id)}
+              className={`min-w-[220px] rounded-[22px] border px-5 py-4 text-left transition ${
+                active
+                  ? "border-cyan-300 bg-[linear-gradient(135deg,#ecfeff_0%,#dbeafe_100%)] shadow-[0_18px_35px_rgba(14,165,233,0.16)]"
+                  : "border-slate-200 bg-white hover:border-cyan-200 hover:bg-cyan-50/60"
+              }`}
+            >
+              <div className={`text-2xl font-black uppercase tracking-[0.18em] ${active ? "text-cyan-700" : "text-slate-700"}`}>
+                {tab.label}
+              </div>
+              <div className={`mt-1 text-xl ${active ? "text-cyan-700/80" : "text-slate-500"}`}>
+                {tab.helper}
+              </div>
+            </button>
+          );
+        })}
       </div>
     </div>
   );
@@ -535,7 +746,9 @@ function DataTable({ columns, rows, onEdit, onDelete, emptyMessage }) {
 // ─── Section: Items ───────────────────────────────────────────────────────────
 
 function ItemsSection({ items, form, setForm, editingId, setEditingId, onSave, onDelete, searchQuery, setSearchQuery, categoryFilter, setCategoryFilter, categories }) {
-  const today = new Date();
+  const ITEMS_LEDGER_PAGE_SIZE = 10;
+  const [ledgerPage, setLedgerPage] = useState(1);
+  const [stockTab, setStockTab] = useState("list");
 
   const visibleItems = items.filter((item) => {
     const matchCat = categoryFilter === "All" || item.category === categoryFilter;
@@ -546,33 +759,119 @@ function ItemsSection({ items, form, setForm, editingId, setEditingId, onSave, o
     return matchCat && matchSearch;
   });
 
+  const totalLedgerPages = Math.max(1, Math.ceil(visibleItems.length / ITEMS_LEDGER_PAGE_SIZE));
+  const paginatedItems = visibleItems.slice(
+    (ledgerPage - 1) * ITEMS_LEDGER_PAGE_SIZE,
+    ledgerPage * ITEMS_LEDGER_PAGE_SIZE,
+  );
+
+  useEffect(() => {
+    setLedgerPage(1);
+  }, [searchQuery, categoryFilter, items]);
+
+  useEffect(() => {
+    if (ledgerPage > totalLedgerPages) {
+      setLedgerPage(totalLedgerPages);
+    }
+  }, [ledgerPage, totalLedgerPages]);
+
+  useEffect(() => {
+    if (editingId) {
+      setStockTab("add");
+    }
+  }, [editingId]);
+
+  const resetStockForm = () => {
+    setForm(buildInitialForm(ITEMS_FORM));
+    setEditingId(null);
+    setStockTab("list");
+  };
+
+  const handleSaveStock = async () => {
+    const saved = await onSave();
+    if (saved) {
+      setStockTab("list");
+    }
+  };
+
+  const handleEditStock = (item) => {
+    setEditingId(item.id);
+    setForm({
+      name: item.name || "",
+      category: item.category || "",
+      stock: item.stock || "",
+      unit: item.unit || "",
+      price: item.price || "",
+      reorderPoint: item.reorderPoint || "",
+      expiry: item.expiry ? String(item.expiry).split("T")[0] : "",
+      branch: item.branch || "",
+    });
+    setStockTab("add");
+  };
+
   return (
     <div className="space-y-5">
-      <div className="grid gap-5 lg:grid-cols-[340px,1fr]">
+      <div className="overflow-hidden rounded-[28px] border border-white/70 bg-white/90 p-3 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+        <div className="flex flex-wrap gap-3">
+          {[
+            { id: "list", label: "Stock List", helper: "Current stock table and records" },
+            {
+              id: "add",
+              label: editingId ? "Edit Stock" : "Add Stock",
+              helper: editingId ? "Update the selected stock item" : "Open form to add new stock",
+            },
+          ].map((tab) => {
+            const active = stockTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setStockTab(tab.id)}
+                className={`min-w-[220px] rounded-[22px] border px-5 py-4 text-left transition ${
+                  active
+                    ? "border-cyan-300 bg-[linear-gradient(135deg,#ecfeff_0%,#dbeafe_100%)] shadow-[0_18px_35px_rgba(14,165,233,0.16)]"
+                    : "border-slate-200 bg-white hover:border-cyan-200 hover:bg-cyan-50/60"
+                }`}
+              >
+                <div className={`text-lg font-black uppercase tracking-[0.18em] ${active ? "text-cyan-700" : "text-slate-700"}`}>
+                  {tab.label}
+                </div>
+                <div className={`mt-1 text-sm ${active ? "text-cyan-700/80" : "text-slate-500"}`}>
+                  {tab.helper}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+      <div className="grid gap-5 lg:grid-cols-1">
+        {stockTab === "add" ? (
         <FormPanel
-          title="Inventory Item"
-          subtitle="Connected to backend API — real-time sync"
+          title="Stock Item"
+          subtitle="Use this tab to add or update inventory stock"
           fields={ITEMS_FORM}
           draft={form}
           setDraft={setForm}
           editingId={editingId}
-          onSave={onSave}
-          onReset={() => { setForm(buildInitialForm(ITEMS_FORM)); setEditingId(null); }}
+          onSave={handleSaveStock}
+          onReset={resetStockForm}
         />
+        ) : null}
 
+        {stockTab === "list" ? (
         <div className="overflow-hidden rounded-[28px] border border-white/70 bg-white/90 p-5 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h3 className="text-base font-semibold text-slate-900">Items Ledger</h3>
-              <p className="text-xs text-slate-400">{items.length} total items loaded from backend</p>
+              <h3 className="text-2xl font-semibold text-slate-900">Items Ledger</h3>
+              <p className="text-lg text-slate-400">{items.length} total items loaded from backend</p>
             </div>
             <div className="flex flex-col gap-2 sm:flex-row">
               <div className="w-full sm:w-60">
                 <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Search item / store" />
               </div>
-              <label className="flex items-center gap-2 rounded-2xl border border-white/70 bg-white px-4 py-3 text-sm text-slate-700 shadow-[0_16px_35px_rgba(15,23,42,0.06)]">
+              <label className="flex items-center gap-2 rounded-2xl border border-white/70 bg-white px-4 py-3 text-lg text-slate-700 shadow-[0_16px_35px_rgba(15,23,42,0.06)]">
                 <FaFilter size={12} className="text-cyan-500" />
-                <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} className="bg-transparent outline-none text-sm">
+                <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} className="bg-transparent text-lg outline-none">
                   <option value="All">All Categories</option>
                   {categories.map((c) => <option key={c} value={c}>{c}</option>)}
                 </select>
@@ -581,8 +880,8 @@ function ItemsSection({ items, form, setForm, editingId, setEditingId, onSave, o
           </div>
 
           <div className="overflow-hidden rounded-[26px] border border-slate-200/80">
-            <table className="min-w-full text-sm">
-              <thead className="bg-[linear-gradient(180deg,#f8fafc_0%,#eef2ff_100%)] text-left text-[11px] font-semibold uppercase tracking-widest text-slate-500">
+            <table className="min-w-full text-lg">
+              <thead className="bg-[linear-gradient(180deg,#f8fafc_0%,#eef2ff_100%)] text-left text-base font-semibold uppercase tracking-widest text-slate-500">
                 <tr>
                   <th className="px-4 py-3">Item</th>
                   <th className="px-4 py-3">Category</th>
@@ -591,52 +890,43 @@ function ItemsSection({ items, form, setForm, editingId, setEditingId, onSave, o
                   <th className="px-4 py-3">Price</th>
                   <th className="px-4 py-3">Expiry</th>
                   <th className="px-4 py-3">Store</th>
-                  <th className="px-4 py-3">Actions</th>
+                  <th className="px-4 py-4">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {visibleItems.length ? visibleItems.map((item) => {
+                {visibleItems.length ? paginatedItems.map((item) => {
                   const low = isLowStock(item);
                   const expStatus = getExpiryStatus(item.expiry);
                   return (
                     <tr key={item.id} className={`border-t border-slate-100 hover:bg-cyan-50/40 transition ${low ? "bg-amber-50/40" : ""}`}>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-4">
                         <div className="flex items-center gap-2">
-                          <span className="font-semibold text-slate-900">{item.name}</span>
+                          <span className="text-xl font-semibold text-slate-900">{item.name}</span>
                           {low && <FaExclamationTriangle className="text-amber-500" size={11} title="Low stock" />}
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-slate-600">{item.category}</td>
-                      <td className="px-4 py-3">
-                        <span className={`font-semibold ${low ? "text-amber-600" : "text-slate-900"}`}>
-                          {item.stock} <span className="font-normal text-slate-400 text-xs">{item.unit}</span>
+                      <td className="px-4 py-4 text-lg text-slate-600">{item.category}</td>
+                      <td className="px-4 py-4">
+                        <span className={`text-lg font-semibold ${low ? "text-amber-600" : "text-slate-900"}`}>
+                          {item.stock} <span className="text-base font-normal text-slate-400">{item.unit}</span>
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-slate-500 text-xs">{item.reorderPoint || 10} {item.unit}</td>
-                      <td className="px-4 py-3 text-slate-700">{formatCurrency(item.price)}</td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-4 text-base text-slate-500">{item.reorderPoint || 10} {item.unit}</td>
+                      <td className="px-4 py-4 text-lg text-slate-700">{formatCurrency(item.price)}</td>
+                      <td className="px-4 py-4">
                         {expStatus
-                          ? <span className={`inline-block rounded-full border px-2 py-0.5 text-[11px] font-semibold ${expStatus.color}`}>{expStatus.label}</span>
-                          : item.expiry ? <span className="text-xs text-slate-400">{String(item.expiry).split("T")[0]}</span> : <span className="text-slate-300 text-xs">—</span>}
+                          ? <span className={`inline-block rounded-full border px-3 py-1.5 text-base font-semibold ${expStatus.color}`}>{expStatus.label}</span>
+                          : item.expiry ? <span className="text-base text-slate-400">{String(item.expiry).split("T")[0]}</span> : <span className="text-base text-slate-300">—</span>}
                       </td>
-                      <td className="px-4 py-3 text-slate-600">{item.branch}</td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-4 text-lg text-slate-600">{item.branch}</td>
+                      <td className="px-4 py-4">
                         <div className="flex gap-2">
-                          <button type="button" onClick={() => {
-                            setEditingId(item.id);
-                            setForm({
-                              name: item.name || "", category: item.category || "",
-                              stock: item.stock || "", unit: item.unit || "",
-                              price: item.price || "", reorderPoint: item.reorderPoint || "",
-                              expiry: item.expiry ? String(item.expiry).split("T")[0] : "",
-                              branch: item.branch || "",
-                            });
-                          }}
-                            className="inline-flex items-center gap-1 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-700 hover:bg-cyan-100 transition">
+                          <button type="button" onClick={() => handleEditStock(item)}
+                            className="inline-flex items-center gap-1 rounded-full border border-cyan-200 bg-cyan-50 px-4 py-2 text-base font-semibold text-cyan-700 transition hover:bg-cyan-100">
                             <FaEdit size={10} /> Edit
                           </button>
                           <button type="button" onClick={() => onDelete(item.id)}
-                            className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-600 hover:bg-red-100 transition">
+                            className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-4 py-2 text-base font-semibold text-red-600 transition hover:bg-red-100">
                             <FaTrash size={10} /> Delete
                           </button>
                         </div>
@@ -644,12 +934,64 @@ function ItemsSection({ items, form, setForm, editingId, setEditingId, onSave, o
                     </tr>
                   );
                 }) : (
-                  <tr><td colSpan={8} className="px-4 py-12 text-center text-sm text-slate-400">No matching inventory items.</td></tr>
+                  <tr><td colSpan={8} className="px-4 py-12 text-center text-lg text-slate-400">No matching inventory items.</td></tr>
                 )}
               </tbody>
             </table>
           </div>
+
+          {visibleItems.length > ITEMS_LEDGER_PAGE_SIZE ? (
+            <div className="mt-4 flex flex-col gap-3 border-t border-slate-200 pt-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="text-base text-slate-500">
+                Showing{" "}
+                <span className="font-semibold text-slate-900">
+                  {(ledgerPage - 1) * ITEMS_LEDGER_PAGE_SIZE + 1}
+                </span>{" "}
+                to{" "}
+                <span className="font-semibold text-slate-900">
+                  {Math.min(ledgerPage * ITEMS_LEDGER_PAGE_SIZE, visibleItems.length)}
+                </span>{" "}
+                of <span className="font-semibold text-slate-900">{visibleItems.length}</span> items
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setLedgerPage((current) => Math.max(1, current - 1))}
+                  disabled={ledgerPage === 1}
+                  className="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Previous
+                </button>
+
+                {Array.from({ length: totalLedgerPages }, (_, index) => index + 1).map((pageNumber) => (
+                  <button
+                    key={pageNumber}
+                    type="button"
+                    onClick={() => setLedgerPage(pageNumber)}
+                    className={`rounded-full px-3 py-2 text-sm font-semibold transition ${
+                      pageNumber === ledgerPage
+                        ? "bg-slate-900 text-white"
+                        : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                    }`}
+                  >
+                    {pageNumber}
+                  </button>
+                ))}
+
+                <button
+                  type="button"
+                  onClick={() => setLedgerPage((current) => Math.min(totalLedgerPages, current + 1))}
+                  disabled={ledgerPage === totalLedgerPages}
+                  className="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          ) : null}
         </div>
+        ) : null}
       </div>
     </div>
   );
@@ -660,6 +1002,7 @@ function ItemsSection({ items, form, setForm, editingId, setEditingId, onSave, o
 function GenericMasterSection({ section, records, onSave, onEdit, onDelete, draft, setDraft, editingId, searchQuery, setSearchQuery }) {
   const fields = MASTER_FIELDS[section.id];
   const columns = MASTER_TABLE_COLUMNS[section.id];
+  const [activeTab, setActiveTab] = useState("form");
   const subtitle = API_BACKED_MASTER_SECTIONS.has(section.id)
     ? "Synced with inventory backend API"
     : "Stored in local inventory workspace";
@@ -667,9 +1010,45 @@ function GenericMasterSection({ section, records, onSave, onEdit, onDelete, draf
     Object.values(r).some((v) => String(v ?? "").toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
+  useEffect(() => {
+    setActiveTab("form");
+  }, [section.id]);
+
+  useEffect(() => {
+    if (editingId) {
+      setActiveTab("form");
+    }
+  }, [editingId]);
+
+  const handleSave = async () => {
+    const saved = await onSave();
+    if (saved) {
+      setActiveTab("list");
+    }
+  };
+
+  const handleReset = () => {
+    setDraft(buildInitialForm(fields));
+    onEdit(null);
+    setActiveTab("list");
+  };
+
+  const handleEdit = (record) => {
+    onEdit(record);
+    setActiveTab("form");
+  };
+
   return (
     <div className="space-y-5">
-      <div className="grid gap-5 lg:grid-cols-[340px,1fr]">
+      <SectionTabs
+        activeTab={activeTab}
+        onChange={setActiveTab}
+        listLabel={`${section.label} Register`}
+        listHelper={`View all ${section.label.toLowerCase()} records`}
+        formLabel={editingId ? `Edit ${section.label}` : `Add ${section.label}`}
+        formHelper={editingId ? "Update selected record" : "Open form to create a new record"}
+      />
+      {activeTab === "form" ? (
         <FormPanel
           title={section.label}
           subtitle={subtitle}
@@ -677,22 +1056,24 @@ function GenericMasterSection({ section, records, onSave, onEdit, onDelete, draf
           draft={draft}
           setDraft={setDraft}
           editingId={editingId}
-          onSave={onSave}
-          onReset={() => { setDraft(buildInitialForm(fields)); onEdit(null); }}
+          onSave={handleSave}
+          onReset={handleReset}
         />
+      ) : null}
+      {activeTab === "list" ? (
         <div className="overflow-hidden rounded-[28px] border border-white/70 bg-white/90 p-5 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
           <div className="mb-4 flex items-center justify-between gap-3">
             <div>
-              <h3 className="text-base font-semibold text-slate-900">{section.label} Register</h3>
-              <p className="text-xs text-slate-400">{records.length} records</p>
+              <h3 className="text-xl font-semibold text-slate-900">{section.label} Register</h3>
+              <p className="text-base text-slate-400">{records.length} records</p>
             </div>
             <div className="w-64">
               <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder={`Search ${section.label.toLowerCase()}`} />
             </div>
           </div>
-          <DataTable columns={columns} rows={filtered} onEdit={onEdit} onDelete={onDelete} emptyMessage="No matching records found." />
+          <DataTable columns={columns} rows={filtered} onEdit={handleEdit} onDelete={onDelete} emptyMessage="No matching records found." />
         </div>
-      </div>
+      ) : null}
     </div>
   );
 }
@@ -700,9 +1081,12 @@ function GenericMasterSection({ section, records, onSave, onEdit, onDelete, draf
 // ─── Section: Purchase Orders (PO / GRN) ─────────────────────────────────────
 
 function MenuItemsSection({ records, draft, setDraft, editingId, onSave, onEdit, onDelete, searchQuery, setSearchQuery, menuCategoryOptions }) {
+  const MENU_LIBRARY_PAGE_SIZE = 8;
+  const [activeTab, setActiveTab] = useState("form");
   const filtered = records.filter((record) =>
     Object.values(record).some((value) => String(value ?? "").toLowerCase().includes(searchQuery.toLowerCase()))
   );
+  const [menuPages, setMenuPages] = useState({});
   const previewImage = useMemo(() => {
     if (draft.imageFile instanceof File) {
       return URL.createObjectURL(draft.imageFile);
@@ -715,6 +1099,34 @@ function MenuItemsSection({ records, draft, setDraft, editingId, onSave, onEdit,
     return () => URL.revokeObjectURL(previewImage);
   }, [draft.imageFile, previewImage]);
 
+  useEffect(() => {
+    setMenuPages({});
+  }, [records, searchQuery]);
+
+  useEffect(() => {
+    if (editingId) {
+      setActiveTab("form");
+    }
+  }, [editingId]);
+
+  const handleSave = async () => {
+    const saved = await onSave();
+    if (saved) {
+      setActiveTab("list");
+    }
+  };
+
+  const handleReset = () => {
+    setDraft(buildInitialForm(MENU_ITEM_FIELDS));
+    onEdit(null);
+    setActiveTab("list");
+  };
+
+  const handleEdit = (record) => {
+    onEdit(record);
+    setActiveTab("form");
+  };
+
   const grouped = filtered.reduce((acc, item) => {
     const key = item.category || "Uncategorized";
     if (!acc[key]) acc[key] = [];
@@ -724,19 +1136,40 @@ function MenuItemsSection({ records, draft, setDraft, editingId, onSave, onEdit,
 
   return (
     <div className="space-y-5">
-      <div className="grid gap-5 xl:grid-cols-[360px,1fr]">
+      <SectionTabs
+        activeTab={activeTab}
+        onChange={setActiveTab}
+        listLabel="Menu Library"
+        listHelper="Browse saved menu cards"
+        formLabel={editingId ? "Edit Menu Item" : "Add Menu Item"}
+        formHelper={editingId ? "Update the selected dish card" : "Open form to create a new menu item"}
+      />
+      {activeTab === "form" ? (
         <div className="space-y-5">
           <FormPanel
             title="Menu Item"
             subtitle="Manage category-wise dish cards from the inventory module."
             fields={MENU_ITEM_FIELDS.map((field) =>
-              field.key === "category" ? { ...field, suggestions: menuCategoryOptions } : field
+              field.key === "category"
+                ? {
+                    ...field,
+                    type: "select",
+                    options: Array.from(
+                      new Set(
+                        [
+                          ...menuCategoryOptions,
+                          String(draft.category || "").trim(),
+                        ].filter(Boolean),
+                      ),
+                    ).sort((a, b) => a.localeCompare(b)),
+                  }
+                : field
             )}
             draft={draft}
             setDraft={setDraft}
             editingId={editingId}
-            onSave={onSave}
-            onReset={() => { setDraft(buildInitialForm(MENU_ITEM_FIELDS)); onEdit(null); }}
+            onSave={handleSave}
+            onReset={handleReset}
           />
           {previewImage ? (
             <div className="mx-auto w-full max-w-[360px] overflow-hidden rounded-[28px] border border-slate-200/80 bg-white shadow-[0_20px_45px_rgba(15,23,42,0.10)]">
@@ -775,104 +1208,230 @@ function MenuItemsSection({ records, draft, setDraft, editingId, onSave, onEdit,
             </div>
           ) : null}
         </div>
+      ) : null}
 
+      {activeTab === "list" ? (
         <div className="space-y-5">
           <div className="overflow-hidden rounded-[28px] border border-white/70 bg-white/90 p-5 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <h3 className="text-base font-semibold text-slate-900">Menu card library</h3>
-                <p className="text-xs text-slate-400">{records.length} dishes ready to manage</p>
+                <h3 className="text-3xl font-semibold text-slate-900">Menu card library</h3>
+                <p className="text-xl text-slate-400">{records.length} dishes ready to manage</p>
               </div>
-              <div className="w-72">
+              <div className="w-80">
                 <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Search dish / category / food type" />
               </div>
             </div>
           </div>
 
-          {Object.keys(grouped).length ? Object.entries(grouped).map(([category, items]) => (
-            <div key={category} className="overflow-hidden rounded-[28px] border border-white/70 bg-white/90 p-5 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <div>
-                  <div className="text-[10px] font-bold uppercase tracking-[0.24em] text-cyan-500">Category</div>
-                  <h3 className="mt-1 text-lg font-semibold text-slate-900">{category}</h3>
-                </div>
-                <Badge color="cyan">{items.length} items</Badge>
-              </div>
+          {Object.keys(grouped).length ? Object.entries(grouped).map(([category, items]) => {
+            const currentPage = menuPages[category] || 1;
+            const totalPages = Math.max(1, Math.ceil(items.length / MENU_LIBRARY_PAGE_SIZE));
+            const paginatedItems = items.slice(
+              (currentPage - 1) * MENU_LIBRARY_PAGE_SIZE,
+              currentPage * MENU_LIBRARY_PAGE_SIZE,
+            );
 
-              <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
-                {items.map((item) => (
-                  <div key={item.id} className="group overflow-hidden rounded-[28px] border border-slate-200/80 bg-white shadow-[0_20px_45px_rgba(15,23,42,0.08)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_24px_55px_rgba(15,23,42,0.14)]">
-                    <div className="relative h-52 overflow-hidden bg-slate-100 sm:h-56">
-                      {item.imageUrl ? (
-                        <img
-                          src={resolveAssetUrl(item.imageUrl)}
-                          alt={item.name}
-                          className="block h-full w-full object-cover object-center transition duration-500 group-hover:scale-[1.03]"
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-[linear-gradient(135deg,#dbeafe_0%,#f8fafc_100%)] text-sm font-semibold text-slate-400">
-                          Dish Image
-                        </div>
-                      )}
-                      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-slate-950/40 via-slate-950/10 to-transparent" />
-                      <div className="absolute left-3 top-3">
-                        <Badge color="cyan">{item.category || "Menu item"}</Badge>
-                      </div>
-                      <div className="absolute right-3 top-3">
-                        <Badge color={String(item.status || "").toLowerCase().includes("out") ? "red" : "green"}>
-                          {item.status || "Available"}
-                        </Badge>
-                      </div>
-                    </div>
-                    <div className="space-y-3 bg-gradient-to-b from-white to-slate-50 p-4">
-                      <div className="space-y-2">
-                        <div>
-                          <div className="text-lg font-bold text-slate-900">{item.name}</div>
-                          <div className="mt-1 min-h-[40px] text-sm leading-5 text-slate-500">{item.description || "No description added yet."}</div>
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Badge color={String(item.foodType || "").toLowerCase().includes("non") ? "red" : "green"}>
-                          {item.foodType || "Veg"}
-                        </Badge>
-                        <Badge color="amber">{formatCurrency(item.price)}</Badge>
-                      </div>
-                      <div className="flex gap-2">
-                        <button type="button" onClick={() => onEdit(item)}
-                          className="inline-flex items-center gap-1 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-700 hover:bg-cyan-100 transition">
-                          <FaEdit size={10} /> Edit
-                        </button>
-                        <button type="button" onClick={() => onDelete(item.id)}
-                          className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-600 hover:bg-red-100 transition">
-                          <FaTrash size={10} /> Delete
-                        </button>
-                      </div>
-                    </div>
+            return (
+              <div key={category} className="overflow-hidden rounded-[28px] border border-white/70 bg-white/90 p-5 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-bold uppercase tracking-[0.24em] text-cyan-500">Category</div>
+                    <h3 className="mt-1 text-2xl font-semibold text-slate-900">{category}</h3>
                   </div>
-                ))}
+                  <Badge color="cyan">{items.length} items</Badge>
+                </div>
+
+                <div className="overflow-hidden rounded-[22px] border border-slate-200">
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full bg-white text-left text-lg">
+                      <thead className="bg-slate-50 text-sm uppercase tracking-[0.16em] text-slate-500">
+                        <tr>
+                          <th className="px-4 py-4">Image</th>
+                          <th className="px-4 py-4">Item</th>
+                          <th className="px-4 py-4">Category</th>
+                          <th className="px-4 py-4">Food Type</th>
+                          <th className="px-4 py-4">Price</th>
+                          <th className="px-4 py-4">Status</th>
+                          <th className="px-4 py-4 text-center">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {paginatedItems.map((item) => (
+                          <tr key={item.id} className="border-t border-slate-200 align-top">
+                            <td className="px-4 py-4">
+                              <div className="flex justify-center">
+                                {item.imageUrl ? (
+                                  <img
+                                    src={resolveAssetUrl(item.imageUrl)}
+                                    alt={item.name}
+                                    className="h-20 w-20 rounded-2xl border border-slate-200 object-cover object-center shadow-sm"
+                                  />
+                                ) : (
+                                  <div className="flex h-20 w-20 items-center justify-center rounded-2xl border border-dashed border-cyan-200 bg-[linear-gradient(135deg,#dbeafe_0%,#f8fafc_100%)] text-base font-semibold text-slate-400">
+                                    No Image
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-4 py-4">
+                              <div className="text-xl font-bold text-slate-900">{item.name}</div>
+                              <div className="mt-1 max-w-[320px] text-base leading-6 text-slate-500">
+                                {item.description || "No description added yet."}
+                              </div>
+                            </td>
+                            <td className="px-4 py-4 text-slate-700">{item.category || "Menu item"}</td>
+                            <td className="px-4 py-4">
+                              <Badge color={String(item.foodType || "").toLowerCase().includes("non") ? "red" : "green"}>
+                                {item.foodType || "Veg"}
+                              </Badge>
+                            </td>
+                            <td className="px-4 py-4 font-bold text-slate-900">{formatCurrency(item.price)}</td>
+                            <td className="px-4 py-4">
+                              <Badge color={String(item.status || "").toLowerCase().includes("out") ? "red" : "green"}>
+                                {item.status || "Available"}
+                              </Badge>
+                            </td>
+                            <td className="px-4 py-4">
+                              <div className="flex justify-center gap-2">
+                                <button type="button" onClick={() => handleEdit(item)}
+                                  className="inline-flex items-center gap-1 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-2 text-base font-semibold text-cyan-700 hover:bg-cyan-100 transition">
+                                  <FaEdit size={10} /> Edit
+                                </button>
+                                <button type="button" onClick={() => onDelete(item.id)}
+                                  className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-3 py-2 text-base font-semibold text-red-600 hover:bg-red-100 transition">
+                                  <FaTrash size={10} /> Delete
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {items.length > MENU_LIBRARY_PAGE_SIZE ? (
+                    <div className="flex flex-col gap-3 border-t border-slate-200 bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="text-xl text-slate-500">
+                        Showing{" "}
+                        <span className="font-semibold text-slate-900">
+                          {(currentPage - 1) * MENU_LIBRARY_PAGE_SIZE + 1}
+                        </span>{" "}
+                        to{" "}
+                        <span className="font-semibold text-slate-900">
+                          {Math.min(currentPage * MENU_LIBRARY_PAGE_SIZE, items.length)}
+                        </span>{" "}
+                        of <span className="font-semibold text-slate-900">{items.length}</span> items
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setMenuPages((current) => ({
+                              ...current,
+                              [category]: Math.max(1, (current[category] || 1) - 1),
+                            }))
+                          }
+                          disabled={currentPage === 1}
+                          className="rounded-full border border-slate-200 bg-white px-4 py-2.5 text-base font-semibold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          Previous
+                        </button>
+
+                        {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
+                          <button
+                            key={pageNumber}
+                            type="button"
+                            onClick={() =>
+                              setMenuPages((current) => ({
+                                ...current,
+                                [category]: pageNumber,
+                              }))
+                            }
+                            className={`rounded-full px-4 py-2.5 text-base font-semibold transition ${
+                              pageNumber === currentPage
+                                ? "bg-slate-900 text-white"
+                                : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                            }`}
+                          >
+                            {pageNumber}
+                          </button>
+                        ))}
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setMenuPages((current) => ({
+                              ...current,
+                              [category]: Math.min(totalPages, (current[category] || 1) + 1),
+                            }))
+                          }
+                          disabled={currentPage === totalPages}
+                          className="rounded-full border border-slate-200 bg-white px-4 py-2.5 text-base font-semibold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          Next
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
               </div>
-            </div>
-          )) : (
+            );
+          }) : (
             <div className="rounded-[28px] border border-dashed border-slate-300 bg-white/80 px-6 py-14 text-center text-sm text-slate-500 shadow-[0_24px_60px_rgba(15,23,42,0.07)]">
               No menu items yet. Left side form se first dish save karo.
             </div>
           )}
         </div>
-      </div>
+      ) : null}
     </div>
   );
 }
 
 function PurchaseOrderSection({ records, onSave, onEdit, onDelete, draft, setDraft, editingId, searchQuery, setSearchQuery }) {
+  const [activeTab, setActiveTab] = useState("form");
   const filtered = records.filter((r) =>
     Object.values(r).some((v) => String(v ?? "").toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   const poColumns = ["poNumber", "vendor", "itemName", "quantity", "unit", "rate", "expectedDate", "status"];
 
+  useEffect(() => {
+    if (editingId) {
+      setActiveTab("form");
+    }
+  }, [editingId]);
+
+  const handleSave = async () => {
+    const saved = await onSave();
+    if (saved) {
+      setActiveTab("list");
+    }
+  };
+
+  const handleReset = () => {
+    setDraft(buildInitialForm(PO_FIELDS));
+    onEdit(null);
+    setActiveTab("list");
+  };
+
+  const handleEdit = (record) => {
+    onEdit(record);
+    setActiveTab("form");
+  };
+
   return (
     <div className="space-y-5">
-      <div className="grid gap-5 lg:grid-cols-[340px,1fr]">
+      <SectionTabs
+        activeTab={activeTab}
+        onChange={setActiveTab}
+        listLabel="PO Register"
+        listHelper="View purchase order history"
+        formLabel={editingId ? "Edit PO" : "Add PO"}
+        formHelper={editingId ? "Update selected purchase order" : "Open form to create a purchase order"}
+      />
+      {activeTab === "form" ? (
         <FormPanel
           title="Purchase Order"
           subtitle="Create PO → Send to vendor → Mark GRN Received"
@@ -880,25 +1439,27 @@ function PurchaseOrderSection({ records, onSave, onEdit, onDelete, draft, setDra
           draft={draft}
           setDraft={setDraft}
           editingId={editingId}
-          onSave={onSave}
-          onReset={() => { setDraft(buildInitialForm(PO_FIELDS)); onEdit(null); }}
+          onSave={handleSave}
+          onReset={handleReset}
         />
+      ) : null}
+      {activeTab === "list" ? (
         <div className="overflow-hidden rounded-[28px] border border-white/70 bg-white/90 p-5 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
           <div className="mb-4 flex items-center justify-between gap-3">
             <div>
-              <h3 className="text-base font-semibold text-slate-900">Purchase Order Register</h3>
-              <p className="text-xs text-slate-400">{records.length} purchase orders</p>
+              <h3 className="text-3xl font-semibold text-slate-900">Purchase Order Register</h3>
+              <p className="text-xl text-slate-400">{records.length} purchase orders</p>
             </div>
-            <div className="w-64">
+            <div className="w-80">
               <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Search PO / vendor" />
             </div>
           </div>
           <div className="overflow-x-auto rounded-2xl border border-slate-200">
-            <table className="min-w-full text-sm">
-              <thead className="bg-slate-50 text-[11px] font-semibold uppercase tracking-widest text-slate-400 text-left">
+            <table className="min-w-full text-lg">
+              <thead className="bg-slate-50 text-sm font-semibold uppercase tracking-widest text-slate-400 text-left">
                 <tr>
-                  {poColumns.map((col) => <th key={col} className="px-4 py-3">{formatLabel(col)}</th>)}
-                  <th className="px-4 py-3">Actions</th>
+                  {poColumns.map((col) => <th key={col} className="px-4 py-4">{formatLabel(col)}</th>)}
+                  <th className="px-4 py-4">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -909,24 +1470,24 @@ function PurchaseOrderSection({ records, onSave, onEdit, onDelete, draft, setDra
                   };
                   return (
                     <tr key={row.id} className="border-t border-slate-100 hover:bg-slate-50 transition">
-                      <td className="px-4 py-3 font-semibold text-slate-900">{row.poNumber}</td>
-                      <td className="px-4 py-3 text-slate-700">{row.vendor}</td>
-                      <td className="px-4 py-3 text-slate-700">{row.itemName}</td>
-                      <td className="px-4 py-3">{row.quantity}</td>
-                      <td className="px-4 py-3 text-slate-500">{row.unit}</td>
-                      <td className="px-4 py-3">{formatCurrency(row.rate)}</td>
-                      <td className="px-4 py-3 text-slate-500 text-xs">{row.expectedDate || "—"}</td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-4 font-semibold text-slate-900">{row.poNumber}</td>
+                      <td className="px-4 py-4 text-slate-700">{row.vendor}</td>
+                      <td className="px-4 py-4 text-slate-700">{row.itemName}</td>
+                      <td className="px-4 py-4">{row.quantity}</td>
+                      <td className="px-4 py-4 text-slate-500">{row.unit}</td>
+                      <td className="px-4 py-4">{formatCurrency(row.rate)}</td>
+                      <td className="px-4 py-4 text-base text-slate-500">{row.expectedDate || "—"}</td>
+                      <td className="px-4 py-4">
                         <Badge color={statusColors[row.status] || "gray"}>{row.status}</Badge>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-4">
                         <div className="flex gap-2">
-                          <button type="button" onClick={() => onEdit(row)}
-                            className="inline-flex items-center gap-1 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-700 hover:bg-cyan-100 transition">
+                          <button type="button" onClick={() => handleEdit(row)}
+                            className="inline-flex items-center gap-1 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-2 text-base font-semibold text-cyan-700 hover:bg-cyan-100 transition">
                             <FaEdit size={10} /> Edit
                           </button>
                           <button type="button" onClick={() => onDelete(row.id)}
-                            className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-600 hover:bg-red-100 transition">
+                            className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-3 py-2 text-base font-semibold text-red-600 hover:bg-red-100 transition">
                             <FaTrash size={10} /> Delete
                           </button>
                         </div>
@@ -934,13 +1495,13 @@ function PurchaseOrderSection({ records, onSave, onEdit, onDelete, draft, setDra
                     </tr>
                   );
                 }) : (
-                  <tr><td colSpan={9} className="px-4 py-12 text-center text-sm text-slate-400">No purchase orders found. Create your first PO above.</td></tr>
+                  <tr><td colSpan={9} className="px-4 py-12 text-center text-xl text-slate-400">No purchase orders found. Create your first PO above.</td></tr>
                 )}
               </tbody>
             </table>
           </div>
         </div>
-      </div>
+      ) : null}
     </div>
   );
 }
@@ -948,11 +1509,36 @@ function PurchaseOrderSection({ records, onSave, onEdit, onDelete, draft, setDra
 // ─── Section: Waste / Spoilage Log ────────────────────────────────────────────
 
 function WasteLogSection({ records, onSave, onEdit, onDelete, draft, setDraft, editingId, searchQuery, setSearchQuery }) {
+  const [activeTab, setActiveTab] = useState("form");
   const filtered = records.filter((r) =>
     Object.values(r).some((v) => String(v ?? "").toLowerCase().includes(searchQuery.toLowerCase()))
   );
   const wasteColumns = ["itemName", "quantity", "unit", "reason", "store", "remarks", "date"];
   const totalWaste = records.reduce((sum, r) => sum + Number(r.quantity || 0), 0);
+
+  useEffect(() => {
+    if (editingId) {
+      setActiveTab("form");
+    }
+  }, [editingId]);
+
+  const handleSave = async () => {
+    const saved = await onSave();
+    if (saved) {
+      setActiveTab("list");
+    }
+  };
+
+  const handleReset = () => {
+    setDraft(buildInitialForm(WASTE_FIELDS));
+    onEdit(null);
+    setActiveTab("list");
+  };
+
+  const handleEdit = (record) => {
+    onEdit(record);
+    setActiveTab("form");
+  };
 
   return (
     <div className="space-y-5">
@@ -961,7 +1547,15 @@ function WasteLogSection({ records, onSave, onEdit, onDelete, draft, setDraft, e
         <MetricCard label="Total Qty Wasted" value={totalWaste} sub="units across all items" tone="amber" />
         <MetricCard label="Top Reason" value={records.length ? records.reduce((acc, r) => { acc[r.reason] = (acc[r.reason] || 0) + 1; return acc; }, {}) && Object.entries(records.reduce((acc, r) => { acc[r.reason] = (acc[r.reason] || 0) + 1; return acc; }, {})).sort((a,b)=>b[1]-a[1])[0]?.[0] || "—" : "—"} tone="default" />
       </div>
-      <div className="grid gap-5 lg:grid-cols-[340px,1fr]">
+      <SectionTabs
+        activeTab={activeTab}
+        onChange={setActiveTab}
+        listLabel="Waste Register"
+        listHelper="View all waste and spoilage entries"
+        formLabel={editingId ? "Edit Waste" : "Add Waste"}
+        formHelper={editingId ? "Update selected waste entry" : "Open form to log a new waste entry"}
+      />
+      {activeTab === "form" ? (
         <FormPanel
           title="Waste / Spoilage Entry"
           subtitle="Log expired, damaged or wasted items"
@@ -969,22 +1563,24 @@ function WasteLogSection({ records, onSave, onEdit, onDelete, draft, setDraft, e
           draft={draft}
           setDraft={setDraft}
           editingId={editingId}
-          onSave={onSave}
-          onReset={() => { setDraft(buildInitialForm(WASTE_FIELDS)); onEdit(null); }}
+          onSave={handleSave}
+          onReset={handleReset}
         />
+      ) : null}
+      {activeTab === "list" ? (
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="mb-4 flex items-center justify-between gap-3">
             <div>
-              <h3 className="text-base font-semibold text-slate-900">Waste Log Register</h3>
-              <p className="text-xs text-slate-400">{records.length} entries recorded</p>
+              <h3 className="text-xl font-semibold text-slate-900">Waste Log Register</h3>
+              <p className="text-base text-slate-400">{records.length} entries recorded</p>
             </div>
             <div className="w-64">
               <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Search waste entry" />
             </div>
           </div>
-          <DataTable columns={wasteColumns} rows={filtered} onEdit={onEdit} onDelete={onDelete} emptyMessage="No waste entries recorded." />
+          <DataTable columns={wasteColumns} rows={filtered} onEdit={handleEdit} onDelete={onDelete} emptyMessage="No waste entries recorded." />
         </div>
-      </div>
+      ) : null}
     </div>
   );
 }
@@ -999,6 +1595,7 @@ function StockAuditSection({ items, onSubmit, isSubmitting }) {
     }))
   );
   const [submitted, setSubmitted] = useState(false);
+  const [showValidationNotice, setShowValidationNotice] = useState(false);
 
   useEffect(() => {
     setAuditData(
@@ -1014,9 +1611,13 @@ function StockAuditSection({ items, onSubmit, isSubmitting }) {
       }))
     );
     setSubmitted(false);
+    setShowValidationNotice(false);
   }, [items]);
 
   const handlePhysicalChange = (id, val) => {
+    if (showValidationNotice && val !== "") {
+      setShowValidationNotice(false);
+    }
     setAuditData((d) => d.map((r) => r.id === id ? { ...r, physicalStock: val } : r));
   };
   const handleRemarks = (id, val) => {
@@ -1035,10 +1636,11 @@ function StockAuditSection({ items, onSubmit, isSubmitting }) {
   const handleSubmit = async () => {
     const entries = auditResults.filter((row) => row.physicalStock !== "");
     if (!entries.length) {
-      alert("Please enter at least one physical count before submitting.");
+      setShowValidationNotice(true);
       return;
     }
 
+    setShowValidationNotice(false);
     const success = await onSubmit(entries);
     if (success) {
       setSubmitted(true);
@@ -1050,17 +1652,17 @@ function StockAuditSection({ items, onSubmit, isSubmitting }) {
       <div className="rounded-[26px] border border-amber-200/80 bg-[linear-gradient(135deg,#fff7ed_0%,#fef3c7_100%)] px-5 py-4 shadow-[0_18px_40px_rgba(245,158,11,0.12)] flex items-start gap-3">
         <FaExclamationTriangle className="text-amber-500 mt-0.5 shrink-0" />
         <div>
-          <p className="text-sm font-semibold text-amber-800">Physical Stock Audit Mode</p>
-          <p className="text-xs text-amber-600 mt-0.5">Enter physical count for each item. System will calculate variance automatically.</p>
+          <p className="text-base font-semibold text-amber-800">Physical Stock Audit Mode</p>
+          <p className="mt-0.5 text-sm text-amber-600">Enter physical count for each item. System will calculate variance automatically.</p>
         </div>
       </div>
 
       {submitted && withVariance.length > 0 && (
         <div className="rounded-2xl border border-red-200 bg-red-50 p-4">
-          <p className="text-sm font-semibold text-red-700 mb-2">{withVariance.length} variance(s) detected</p>
+          <p className="mb-2 text-base font-semibold text-red-700">{withVariance.length} variance(s) detected</p>
           <div className="space-y-1">
             {withVariance.map((r) => (
-              <div key={r.id} className="flex items-center gap-2 text-xs text-red-600">
+              <div key={r.id} className="flex items-center gap-2 text-sm text-red-600">
                 <FaArrowRight size={10} />
                 <span className="font-medium">{r.name}</span>: System {r.systemStock} {r.unit} vs Physical {r.physicalStock} {r.unit}
                 <span className={`font-bold ${r.variance < 0 ? "text-red-700" : "text-emerald-600"}`}>
@@ -1075,17 +1677,17 @@ function StockAuditSection({ items, onSubmit, isSubmitting }) {
       <div className="overflow-hidden rounded-[28px] border border-white/70 bg-white/90 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
         <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
           <div>
-            <h3 className="text-base font-semibold text-slate-900">Physical Count Sheet</h3>
-            <p className="text-xs text-slate-400">{items.length} items to audit</p>
+            <h3 className="text-xl font-semibold text-slate-900">Physical Count Sheet</h3>
+            <p className="text-base text-slate-400">{items.length} items to audit</p>
           </div>
           <button type="button" onClick={handleSubmit} disabled={isSubmitting}
-            className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition">
+            className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 px-5 py-3 text-base font-semibold text-white transition hover:opacity-90">
             <FaCheckCircle size={13} /> {isSubmitting ? "Submitting..." : "Submit Audit"}
           </button>
         </div>
         <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead className="bg-slate-50 text-[11px] font-semibold uppercase tracking-widest text-slate-400 text-left">
+          <table className="min-w-full text-lg">
+            <thead className="bg-slate-50 text-sm font-semibold uppercase tracking-widest text-slate-400 text-left">
               <tr>
                 <th className="px-4 py-3">Item</th>
                 <th className="px-4 py-3">Category</th>
@@ -1131,6 +1733,66 @@ function StockAuditSection({ items, onSubmit, isSubmitting }) {
           </table>
         </div>
       </div>
+
+      {showValidationNotice ? (
+        <div
+          className="fixed inset-0 z-[1200] flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm"
+          onClick={() => setShowValidationNotice(false)}
+        >
+          <div
+            className="relative w-full max-w-md overflow-hidden rounded-[30px] border border-amber-200/80 bg-white shadow-[0_32px_90px_rgba(15,23,42,0.28)]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="bg-[radial-gradient(circle_at_top_left,#fef3c7_0%,#fff7ed_42%,#ffffff_100%)] px-6 pb-5 pt-6">
+              <button
+                type="button"
+                onClick={() => setShowValidationNotice(false)}
+                className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/80 bg-white/80 text-slate-500 shadow-sm transition hover:text-slate-700"
+              >
+                <FaTimes />
+              </button>
+
+              <div className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-white/80 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.24em] text-amber-700">
+                <FaExclamationTriangle className="text-amber-500" />
+                Audit Notice
+              </div>
+
+              <div className="mt-5 flex items-start gap-4">
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[22px] bg-[linear-gradient(135deg,#f59e0b_0%,#f97316_100%)] text-white shadow-[0_20px_40px_rgba(249,115,22,0.28)]">
+                  <FaClipboardList size={24} />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black text-slate-900">Physical count missing</h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">
+                    Submit karne se pehle kam se kam ek item ka physical count enter kijiye. Tabhi audit variance calculate hoga.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="px-6 pb-6 pt-4">
+              <div className="rounded-[22px] border border-amber-100 bg-[linear-gradient(135deg,#fffbeb_0%,#fff7ed_100%)] p-4">
+                <div className="text-sm font-bold uppercase tracking-[0.2em] text-amber-700">Quick fix</div>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  Table me kisi bhi row ke <span className="font-semibold text-slate-800">Physical Count</span> field ko fill karke dubara
+                  <span className="font-semibold text-slate-800"> Submit Audit</span> dabaiye.
+                </p>
+              </div>
+
+              <div className="mt-5 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowValidationNotice(false)}
+                  className="inline-flex items-center gap-2 rounded-full bg-[linear-gradient(135deg,#f59e0b_0%,#f97316_100%)] px-5 py-3 text-sm font-bold text-white shadow-[0_18px_30px_rgba(249,115,22,0.24)] transition hover:scale-[1.01] hover:shadow-[0_22px_36px_rgba(249,115,22,0.28)]"
+                >
+                  <FaCheckCircle size={14} />
+                  OK, I'll add count
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -1141,8 +1803,8 @@ function ReportSection({ title, subtitle, columns, rows }) {
   return (
     <div className="overflow-hidden rounded-[28px] border border-white/70 bg-white/90 p-5 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
       <div className="mb-4">
-        <h3 className="text-base font-semibold text-slate-900">{title}</h3>
-        {subtitle && <p className="mt-0.5 text-xs text-slate-400">{subtitle}</p>}
+        <h3 className="text-xl font-semibold text-slate-900">{title}</h3>
+        {subtitle && <p className="mt-0.5 text-base text-slate-400">{subtitle}</p>}
       </div>
       <DataTable columns={columns.map((c) => c.key)} rows={rows.map((r, i) => ({ id: i, ...r }))} emptyMessage="No report data available." />
     </div>
@@ -1164,17 +1826,17 @@ function LowStockAlerts({ items }) {
     <div className="rounded-[26px] border border-amber-200/80 bg-[linear-gradient(135deg,#fff8eb_0%,#fef3c7_100%)] p-4 shadow-[0_18px_40px_rgba(245,158,11,0.12)]">
       <div className="flex items-center gap-2 mb-3">
         <FaBell className="text-amber-600" />
-        <h4 className="text-sm font-semibold text-amber-800">Inventory Alerts</h4>
+        <h4 className="text-lg font-semibold text-amber-800">Inventory Alerts</h4>
       </div>
       <div className="flex flex-wrap gap-2">
         {lowItems.map((item) => (
-          <span key={item.id} className="inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-white px-3 py-1 text-xs font-medium text-amber-700">
+          <span key={item.id} className="inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-white px-3 py-1 text-sm font-medium text-amber-700">
             <FaExclamationTriangle size={10} />
             {item.name}: {item.stock} {item.unit} left
           </span>
         ))}
         {expiredItems.map((item) => (
-          <span key={`exp-${item.id}`} className="inline-flex items-center gap-1.5 rounded-full border border-red-300 bg-white px-3 py-1 text-xs font-medium text-red-700">
+          <span key={`exp-${item.id}`} className="inline-flex items-center gap-1.5 rounded-full border border-red-300 bg-white px-3 py-1 text-sm font-medium text-red-700">
             <FaCalendarAlt size={10} />
             {item.name}: Expired
           </span>
@@ -1212,6 +1874,7 @@ export default function InventoryDashboard() {
   const [menuItemsData, setMenuItemsData] = useState([]);
   const [auditReportRows, setAuditReportRows] = useState([]);
   const [isSubmittingAudit, setIsSubmittingAudit] = useState(false);
+  const [openNavGroup, setOpenNavGroup] = useState(NAVIGATION_GROUPS[0]?.label || "");
 
   // Load inventory items from API
   useEffect(() => {
@@ -1336,17 +1999,36 @@ export default function InventoryDashboard() {
     setSectionSearch("");
   }, [activeSection]);
 
+  useEffect(() => {
+    const parentGroup = NAVIGATION_GROUPS.find((group) => group.ids.includes(activeSection));
+    if (!parentGroup) return;
+    setOpenNavGroup(parentGroup.label);
+  }, [activeSection]);
+
   const categories = useMemo(
     () => [...new Set(inventoryItems.map((i) => i.category).filter(Boolean))].sort(),
     [inventoryItems]
   );
 
-  const menuCategoryOptions = useMemo(
-    () =>
-      [...new Set((masterData["menu-categories"] || []).map((item) => String(item.name || "").trim()).filter(Boolean))]
-        .sort((a, b) => a.localeCompare(b)),
-    [masterData],
-  );
+  const menuCategoryOptions = useMemo(() => {
+    const optionMap = new Map();
+
+    [
+      ...PRESET_MENU_CATEGORY_OPTIONS,
+      ...(masterData["menu-categories"] || []).map((item) => String(item.name || "").trim()),
+      ...menuItemsData.map((item) => String(item.category || "").trim()),
+      String(menuDraft.category || "").trim(),
+    ]
+      .filter(Boolean)
+      .forEach((category) => {
+        const key = category.toLowerCase();
+        if (!optionMap.has(key)) {
+          optionMap.set(key, category);
+        }
+      });
+
+    return Array.from(optionMap.values()).sort((a, b) => a.localeCompare(b));
+  }, [masterData, menuDraft.category, menuItemsData]);
 
   const totalStockValue = inventoryItems.reduce((s, i) => s + Number(i.stock || 0) * Number(i.price || 0), 0);
   const lowStockCount  = inventoryItems.filter(isLowStock).length;
@@ -1452,7 +2134,7 @@ export default function InventoryDashboard() {
       const missing = relevantFields.some((f) => f.required && !String(masterDraft[f.key] ?? "").trim());
       if (missing) {
         alert("Please fill all required fields.");
-        return;
+        return false;
       }
 
       const payload = relevantFields.reduce((acc, f) => {
@@ -1512,12 +2194,14 @@ export default function InventoryDashboard() {
 
         setMasterDraft(buildInitialForm(relevantFields));
         setEditingMasterId(null);
+        return true;
       } catch (err) {
         alert(err.response?.data?.message || "Record save nahi ho paaya.");
+        return false;
       }
     };
 
-    run();
+    return run();
   }, [
     activeSection,
     editingMasterId,
@@ -1603,7 +2287,7 @@ export default function InventoryDashboard() {
       });
       if (missing) {
         alert("Please fill all required menu item fields.");
-        return;
+        return false;
       }
 
       const formData = new FormData();
@@ -1665,12 +2349,14 @@ export default function InventoryDashboard() {
 
         setMenuDraft(buildInitialForm(MENU_ITEM_FIELDS));
         setEditingMenuId(null);
+        return true;
       } catch (err) {
         alert(err.response?.data?.message || "Menu item save nahi ho paaya.");
+        return false;
       }
     };
 
-    run();
+    return run();
   }, [editingMenuId, masterData, menuDraft, refreshMasterSection]);
 
   const editMenuItem = useCallback((record) => {
@@ -1698,7 +2384,7 @@ export default function InventoryDashboard() {
   // ── Inventory items CRUD ──────────────────────────────────
   const saveInventoryItem = async () => {
     const missing = ITEMS_FORM.some((f) => f.required && !String(itemsForm[f.key] ?? "").trim());
-    if (missing) { setItemsError("Please fill all required fields."); return; }
+    if (missing) { setItemsError("Please fill all required fields."); return false; }
 
     const payload = { ...itemsForm, stock: Number(itemsForm.stock), price: Number(itemsForm.price), reorderPoint: Number(itemsForm.reorderPoint || 10) };
 
@@ -1713,8 +2399,10 @@ export default function InventoryDashboard() {
       setItemsForm(buildInitialForm(ITEMS_FORM));
       setEditingItemId(null);
       setItemsError("");
+      return true;
     } catch (err) {
       setItemsError(err.response?.data?.message || "Could not save item. Check role permissions.");
+      return false;
     }
   };
 
@@ -1814,13 +2502,6 @@ export default function InventoryDashboard() {
   };
 
   // ── Sidebar section groups ────────────────────────────────
-  const sectionGroups = [
-    { label: "Stock", ids: ["items", "menu-items", "stock-transfer", "stock-audit", "waste-log"] },
-    { label: "Masters", ids: ["menu-categories","segments","vendors","units","unit-conversion","store-kitchen","item-groups","gravies","ingredients"] },
-    { label: "Purchases", ids: ["purchase-items","purchase-services","purchase-orders"] },
-    { label: "Reports", ids: ["vendor-report","stock-report","closing-stock-report","item-report","item-consumption-report","total-consumption-report","item-audit"] },
-  ];
-
   return (
     <div className="min-h-screen bg-[linear-gradient(135deg,#f6fbff_0%,#eef6f8_28%,#fff8ef_58%,#f8fafc_100%)] p-4 sm:p-5">
       {/* Header */}
@@ -1833,9 +2514,9 @@ export default function InventoryDashboard() {
         <div className="relative z-[1]">
         <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-cyan-300/80">Baglamukhi Resort</p>
-            <h1 className="mt-1 text-2xl font-bold text-white md:text-3xl">Inventory Management</h1>
-            <p className="mt-1.5 max-w-xl text-sm text-slate-300">
+            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-300/80">Baglamukhi Resort</p>
+            <h1 className="mt-1 text-3xl font-bold text-white md:text-4xl">Inventory Management</h1>
+            <p className="mt-1.5 max-w-xl text-lg text-slate-300">
               Full-stack inventory workspace — items, POs, waste logs, stock audits, inter-department transfers and reports.
             </p>
           </div>
@@ -1847,73 +2528,140 @@ export default function InventoryDashboard() {
               { l: "Expired",        v: expiredCount,                   c: "border-red-400/40 bg-red-500/20 text-red-200" },
             ].map(({ l, v, c }) => (
               <div key={l} className={`rounded-2xl border px-4 py-3 ${c}`}>
-                <p className="text-[10px] font-semibold uppercase tracking-wider opacity-70">{l}</p>
-                <p className="mt-1 text-xl font-bold">{itemsLoading && l === "Total Items" ? "..." : v}</p>
+                <p className="text-sm font-semibold uppercase tracking-wider opacity-70">{l}</p>
+                <p className="mt-1 text-2xl font-bold">{itemsLoading && l === "Total Items" ? "..." : v}</p>
               </div>
             ))}
           </div>
         </div>
 
         {itemsError && (
-          <div className="mt-4 rounded-xl border border-red-400/30 bg-red-500/15 px-4 py-3 text-sm text-red-200">
+          <div className="mt-4 rounded-xl border border-red-400/30 bg-red-500/15 px-4 py-3 text-base text-red-200">
             {itemsError}
           </div>
         )}
         </div>
       </div>
 
-      <div className="flex gap-5">
-        {/* Sidebar */}
-        <aside className="hidden w-[230px] shrink-0 xl:block">
-          <div className="sticky top-4 rounded-[28px] border border-white/70 bg-white/85 p-3 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-            <p className="mb-3 px-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">Navigation</p>
-            <div className="space-y-4">
-              {sectionGroups.map((group) => (
-                <div key={group.label}>
-                  <p className="mb-1.5 px-2 text-[10px] font-bold uppercase tracking-wider text-slate-300">{group.label}</p>
-                  <div className="space-y-0.5">
-                    {group.ids.map((id) => {
-                      const sec = INVENTORY_SECTIONS.find((s) => s.id === id);
-                      if (!sec) return null;
-                      const Icon = sec.icon;
-                      const active = activeSection === id;
-                      return (
-                        <button key={id} type="button" onClick={() => setActiveSection(id)}
-                          className={`flex w-full items-center gap-2.5 rounded-2xl px-3 py-3 text-left text-sm font-medium transition ${
-                            active ? "border border-cyan-200 bg-[linear-gradient(135deg,#ecfeff_0%,#dbeafe_100%)] text-cyan-900 shadow-[0_16px_30px_rgba(8,145,178,0.12)]" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                          }`}>
-                          <Icon size={13} className={active ? "text-cyan-600" : "text-slate-400"} />
-                          <span>{sec.label}</span>
-                        </button>
-                      );
-                    })}
+      <div className="space-y-5">
+        <section className="rounded-[28px] border border-white/70 bg-white/90 p-4 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+          <p className="mb-3 px-1 text-sm font-bold uppercase tracking-widest text-slate-400">Navigation</p>
+          <div className="grid gap-3 lg:grid-cols-4">
+            {NAVIGATION_GROUPS.map((group) => {
+              const isOpen = openNavGroup === group.label;
+              const isActiveGroup = group.ids.includes(activeSection);
+
+              return (
+                <button
+                  key={group.label}
+                  type="button"
+                  onClick={() => {
+                    setOpenNavGroup(group.label);
+                    setActiveSection(group.ids[0]);
+                  }}
+                  className={`flex min-h-[68px] items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left transition ${
+                    isOpen || isActiveGroup ? group.activeButton : group.idleButton
+                  }`}
+                >
+                  <div className="flex min-w-0 flex-1 items-center gap-3">
+                    <span
+                      className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
+                        isOpen || isActiveGroup ? group.iconTone : group.iconIdleTone
+                      }`}
+                    >
+                      <FaFilter size={13} />
+                    </span>
+                    <div className="min-w-0">
+                      <div className="text-lg font-black uppercase tracking-[0.24em]">
+                        {group.label}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <span
+                      className={`rounded-full border px-3 py-1 text-sm font-bold uppercase tracking-[0.18em] ${
+                        isOpen || isActiveGroup
+                          ? "border-white/20 bg-white/15 text-white"
+                          : "border-slate-200 bg-white/80 text-slate-500"
+                      }`}
+                    >
+                      {group.ids.length} items
+                    </span>
+                    <span
+                      className={`inline-flex h-9 w-9 items-center justify-center rounded-full border transition ${
+                        isOpen || isActiveGroup
+                          ? "border-white/20 bg-white/15 text-white"
+                          : "border-slate-200 bg-white/80 text-slate-500"
+                      } ${isOpen ? "rotate-180" : ""}`}
+                    >
+                      <FaChevronDown size={13} />
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
           </div>
-        </aside>
+
+          {openNavGroup ? (
+            <div className="mt-4">
+              {(() => {
+                const group = NAVIGATION_GROUPS.find((entry) => entry.label === openNavGroup);
+                if (!group) return null;
+
+                return (
+                  <div
+                    className={`w-full rounded-[24px] border p-4 text-left ${group.dropdown}`}
+                  >
+                    <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <div className="text-xl font-black uppercase tracking-[0.24em] text-slate-900">
+                          {group.label} Navigation
+                        </div>
+                        <div className="mt-1.5 text-xl text-slate-600">{group.helper}</div>
+                      </div>
+                      <div className="rounded-full border border-white/70 bg-white/70 px-4 py-2 text-base font-bold uppercase tracking-[0.18em] text-slate-600">
+                        Click any button to open module
+                      </div>
+                    </div>
+                    <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-4">
+                      {group.ids.map((id) => {
+                        const sec = INVENTORY_SECTIONS.find((section) => section.id === id);
+                        if (!sec) return null;
+
+                        const Icon = sec.icon;
+                        const active = activeSection === id;
+
+                        return (
+                          <button
+                            key={id}
+                            type="button"
+                            onClick={() => setActiveSection(id)}
+                            className={`inline-flex cursor-pointer items-center gap-4 rounded-2xl border px-5 py-4 text-left text-lg font-semibold transition ${
+                              active ? group.itemActive : group.itemIdle
+                            }`}
+                          >
+                            <span
+                              className={`inline-flex h-11 w-11 items-center justify-center rounded-xl ${
+                                active ? "bg-slate-900 text-white" : "bg-white text-slate-500"
+                              }`}
+                            >
+                              <Icon size={16} />
+                            </span>
+                            <span className="truncate">{sec.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          ) : null}
+        </section>
 
         {/* Main content */}
-        <main className="min-w-0 flex-1 space-y-5">
+        <main className="min-w-0 space-y-5">
           {/* Mobile section picker */}
-          <div className="xl:hidden">
-            <label className="flex items-center gap-2 rounded-2xl border border-white/70 bg-white/90 px-4 py-3 shadow-[0_18px_40px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-              <FaFilter className="text-cyan-500" size={13} />
-              <select value={activeSection} onChange={(e) => setActiveSection(e.target.value)} className="w-full bg-transparent text-sm font-medium text-slate-800 outline-none">
-                {sectionGroups.map((g) => (
-                  <optgroup key={g.label} label={g.label}>
-                    {g.ids.map((id) => {
-                      const sec = INVENTORY_SECTIONS.find((s) => s.id === id);
-                      return sec ? <option key={id} value={id}>{sec.label}</option> : null;
-                    })}
-                  </optgroup>
-                ))}
-              </select>
-            </label>
-          </div>
-
-          {/* Low stock alerts */}
           {activeSection === "items" && <LowStockAlerts items={inventoryItems} />}
 
           {/* Section content */}
@@ -1922,7 +2670,7 @@ export default function InventoryDashboard() {
               <div className="flex items-center justify-center rounded-[28px] border border-white/70 bg-white/90 py-20 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
                 <div className="text-center">
                   <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-cyan-200 border-t-cyan-600" />
-                  <p className="mt-3 text-sm text-slate-400">Loading inventory...</p>
+                  <p className="mt-3 text-base text-slate-400">Loading inventory...</p>
                 </div>
               </div>
             ) : renderContent()}
@@ -1932,3 +2680,4 @@ export default function InventoryDashboard() {
     </div>
   );
 }
+

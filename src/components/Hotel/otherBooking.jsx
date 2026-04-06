@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Select } from "antd";
 import { GetCity, GetCountries, GetState } from "react-country-state-city";
+
 import API from "../../api";
 import BookingCancelAction from "./BookingCancelAction";
 import {
@@ -13,10 +14,18 @@ import {
 } from "./bookingSession";
 
 const fieldCls =
-  "w-full rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100";
+  "w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-xl font-semibold text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] outline-none transition placeholder:text-lg placeholder:text-slate-400 focus:border-sky-400 focus:ring-4 focus:ring-sky-100";
 
-const labelCls =
-  "mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500";
+const labelCls = "mb-2 block text-2xl font-bold text-slate-900";
+
+const panelCls =
+  "rounded-[30px] border border-slate-200/80 bg-white p-6 shadow-[0_24px_60px_rgba(15,23,42,0.06)] sm:p-7";
+
+const sectionCls =
+  "rounded-[26px] text-4xl border border-slate-200/80 bg-slate-50/70 p-5 sm:p-6";
+
+const selectCls =
+  "w-full h-[68px] font-bold text-4xl [&_.ant-select-selector]:!h-[68px] [&_.ant-select-selector]:!rounded-full [&_.ant-select-selector]:!border-slate-200 [&_.ant-select-selector]:!bg-white [&_.ant-select-selector]:!px-4 [&_.ant-select-selector]:!shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] [&_.ant-select-selector]:hover:!border-sky-400 [&_.ant-select-selection-placeholder]:!text-xl [&_.ant-select-selection-placeholder]:!font-semibold [&_.ant-select-selection-placeholder]:!text-slate-500 [&_.ant-select-selection-item]:!text-xl [&_.ant-select-selection-item]:!font-semibold [&_.ant-select-selection-item]:!text-black-900";
 
 const OtherBooking = () => {
   const navigate = useNavigate();
@@ -102,39 +111,19 @@ const OtherBooking = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(135deg,#f5fbff_0%,#f8fff8_42%,#fffaf3_100%)] p-4 sm:p-6">
-      <div className="mx-auto max-w-6xl space-y-6">
-        <section className="overflow-hidden rounded-[28px] border border-white/70 bg-[linear-gradient(135deg,#08253d_0%,#0e5b6a_55%,#0f3f67_100%)] px-6 py-7 text-white shadow-[0_24px_70px_rgba(15,23,42,0.18)]">
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_320px] lg:items-center">
-            
-
-            <div className="space-y-3 rounded-[24px] border border-white/15 bg-white/10 p-5 backdrop-blur">
-              <div>
-                <div className="text-xs uppercase tracking-[0.2em] text-cyan-100/80">
-                  Booking ID
-                </div>
-                <div className="mt-1 text-2xl font-black">{bookingCode || bookingId || "Pending"}</div>
-              </div>
-              <div>
-                <div className="text-xs uppercase tracking-[0.2em] text-cyan-100/80">
-                  Source
-                </div>
-                <div className="mt-1 text-lg font-bold">
-                  {formData.bookingSource || "Not selected"}
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(300px,0.85fr)]">
-          <div className="rounded-[26px] border border-slate-200/80 bg-white/90 p-6 shadow-[0_18px_45px_rgba(15,23,42,0.06)]">
-            <div className="grid gap-6">
-              <div className="rounded-[24px] border border-slate-200/80 bg-white p-5">
-                <div className="mb-4 text-lg font-bold text-slate-900">
+    <div
+      className="min-h-screen w-full bg-[radial-gradient(circle_at_top,_rgba(219,234,254,0.55),_rgba(255,255,255,0.96)_36%,_rgba(248,250,252,1)_100%)] p-4 sm:p-6"
+      style={{ fontFamily: '"Segoe UI", "Helvetica Neue", Arial, sans-serif' }}
+    >
+      <div className="mx-auto w-full max-w-9xl rounded-[36px] border border-white/70 bg-[linear-gradient(180deg,#fafdff_0%,#ffffff_40%,#fffdf8_100%)] p-4 shadow-[0_30px_80px_rgba(148,163,184,0.18)] sm:p-6">
+        <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+          <div className={panelCls}>
+            <div className="space-y-6">
+              <div className={sectionCls}>
+                <div className="mb-5 text-2xl font-[700] tracking-[-0.02em] text-slate-900">
                   Booking Source Details
                 </div>
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-5 md:grid-cols-2">
                   <div>
                     <label className={labelCls}>Booking Type</label>
                     <select
@@ -161,7 +150,6 @@ const OtherBooking = () => {
                       <option value="">Select</option>
                       <option value="Front Office">Front Office</option>
                       <option value="Walk in">Walk in</option>
-                    
                       <option value="Office">Office</option>
                       <option value="Go ibibo">Go ibibo</option>
                       <option value="Makemytrip">Makemytrip</option>
@@ -181,11 +169,11 @@ const OtherBooking = () => {
                 </div>
               </div>
 
-              <div className="rounded-[24px] border border-slate-200/80 bg-white p-5">
-                <div className="mb-4 text-lg font-bold text-slate-900">
+              <div className={sectionCls}>
+                <div className="mb-5 text-2xl font-[700] tracking-[-0.02em] text-slate-900">
                   Address Details
                 </div>
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-5 md:grid-cols-2">
                   <div className="md:col-span-2">
                     <label className={labelCls}>Address</label>
                     <textarea
@@ -193,56 +181,52 @@ const OtherBooking = () => {
                       value={formData.address}
                       onChange={(e) => updateForm({ address: e.target.value })}
                       placeholder="Enter full address"
-                      className={fieldCls}
+                      className={`${fieldCls} min-h-[116px] resize-none`}
                     />
                   </div>
 
                   <div>
                     <label className={labelCls}>Country</label>
-                    <Select options={countries} 
-                     showSearch
-                    onChange={onCountrySelect}
-                     placeholder="Select country"
-                      className="w-full"
-                   filterOption={(input, option) =>
-  (option?.label ?? "")
-    .toString()
-    .toLowerCase()
-    .includes(input.toLowerCase())
-}
-                      />
+                    <Select
+                      options={countries}
+                      value={countries.find((country) => country.label === formData.country)?.value}
+                      showSearch
+                      onChange={onCountrySelect}
+                      placeholder="Select country"
+                      className={selectCls}
+                      filterOption={(input, option) =>
+                        (option?.label ?? "").toString().toLowerCase().includes(input.toLowerCase())
+                      }
+                    />
                   </div>
 
                   <div>
                     <label className={labelCls}>State</label>
-                    <Select options={states} 
-                     showSearch
-                    onChange={onStateSelect} 
-                    placeholder="Select state"
-                     className="w-full" 
-                 filterOption={(input, option) =>
-  (option?.label ?? "")
-    .toString()
-    .toLowerCase()
-    .includes(input.toLowerCase())
-}
-                     />
+                    <Select
+                      options={states}
+                      value={states.find((state) => state.label === formData.state)?.value}
+                      showSearch
+                      onChange={onStateSelect}
+                      placeholder="Select state"
+                      className={selectCls}
+                      filterOption={(input, option) =>
+                        (option?.label ?? "").toString().toLowerCase().includes(input.toLowerCase())
+                      }
+                    />
                   </div>
 
                   <div>
                     <label className={labelCls}>City</label>
                     <Select
-                     showSearch
+                      showSearch
                       options={cities}
+                      value={formData.city || undefined}
                       onChange={(value) => updateForm({ city: value })}
                       placeholder="Select city"
-                      className="w-full"
-                   filterOption={(input, option) =>
-  (option?.label ?? "")
-    .toString()
-    .toLowerCase()
-    .includes(input.toLowerCase())
-}
+                      className={selectCls}
+                      filterOption={(input, option) =>
+                        (option?.label ?? "").toString().toLowerCase().includes(input.toLowerCase())
+                      }
                     />
                   </div>
 
@@ -256,60 +240,84 @@ const OtherBooking = () => {
                       className={fieldCls}
                     />
                   </div>
+
+                  <div className="md:col-span-2">
+                    <div className="flex w-full flex-col items-end justify-end gap-3 pt-2 text-right sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
+                      <button
+                        onClick={handleSubmit}
+                        className="inline-flex min-w-[170px] items-center justify-center rounded-[22px] bg-[linear-gradient(180deg,#39a6eb_0%,#2a8fd4_100%)] px-6 py-4 text-sm font-bold text-white shadow-[0_16px_35px_rgba(14,165,233,0.24)] transition hover:brightness-105"
+                      >
+                        Save & Next
+                      </button>
+
+                      <button
+                        onClick={() => navigate("/hotel/guest", { state: { resetBookingDraft: true } })}
+                        className="inline-flex min-w-[170px] items-center justify-center rounded-[22px] border border-slate-200 bg-white px-6 py-4 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+                      >
+                        Go Back
+                      </button>
+
+                      <BookingCancelAction
+                        bookingId={bookingId}
+                        bookingCode={bookingCode}
+                        buttonClassName="min-w-[170px] !px-6 !py-4 !text-sm !font-bold"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
           <div className="space-y-4">
-            <div className="rounded-[24px] border border-slate-200/80 bg-white/90 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.06)]">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-sky-700">
+            <div className={panelCls}>
+              <div className="text-[15px] font-semibold uppercase tracking-[0.24em] text-sky-700">
                 Quick Summary
               </div>
-              <div className="mt-4 space-y-3 text-sm text-slate-600">
+              <div className="mt-5 space-y-4 text-sm text-slate-600">
                 <div className="rounded-2xl bg-slate-50 p-4">
-                  <div className="text-xs uppercase tracking-wide text-slate-500">Type</div>
-                  <div className="mt-1 font-bold text-slate-900">
+                  <div className="text-[15px] font-bold uppercase tracking-[0.18em] text-slate-500">
+                    Booking ID
+                  </div>
+                  <div className="mt-2 text-lg font-bold text-slate-900">
+                    {bookingCode || bookingId || "Pending"}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl bg-slate-50 p-4">
+                  <div className="text-[15px] font-bold uppercase tracking-[0.18em] text-slate-500">
+                    Source
+                  </div>
+                  <div className="mt-2 text-lg font-bold text-slate-900">
+                    {formData.bookingSource || "Not selected"}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl bg-slate-50 p-4">
+                  <div className="text-[15px] font-bold uppercase tracking-[0.18em] text-slate-500">
+                    Type
+                  </div>
+                  <div className="mt-2 text-lg font-bold text-slate-900">
                     {formData.bookingType || "Not selected"}
                   </div>
                 </div>
+
                 <div className="rounded-2xl bg-slate-50 p-4">
-                  <div className="text-xs uppercase tracking-wide text-slate-500">Location</div>
-                  <div className="mt-1 font-bold text-slate-900">
-                    {[formData.city, formData.state, formData.country].filter(Boolean).join(", ") || "Pending"}
+                  <div className="text-[15px] font-bold uppercase tracking-[0.18em] text-slate-500">
+                    Location
                   </div>
-                  <div className="mt-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                    {formData.pincode ? `PIN Code: ${formData.pincode}` : "PIN Code pending"}
+                  <div className="mt-2 text-lg font-bold text-slate-900">
+                    {[formData.city, formData.state, formData.country].filter(Boolean).join(", ") ||
+                      "Pending"}
+                  </div>
+                  <div className="mt-2 text-[15px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    {formData.pincode ? `PIN Code ${formData.pincode}` : "PIN Code Pending"}
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="rounded-[24px] border border-slate-200/80 bg-[linear-gradient(135deg,#f8fdff_0%,#eff8ff_100%)] p-5 shadow-[0_18px_45px_rgba(15,23,42,0.06)]">
-              <div className="mt-1 text-xl font-black text-slate-900">Continue Booking</div>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
-               Save the source and address details, then move to the next reference section.”
-              </p>
-              <div className="mt-5 flex flex-col gap-3">
-                <button
-                  onClick={handleSubmit}
-                  className="inline-flex w-full items-center justify-center rounded-[22px] bg-gradient-to-r from-sky-600 to-cyan-500 px-5 py-4 text-sm font-bold text-white shadow-[0_16px_35px_rgba(14,165,233,0.24)] transition hover:-translate-y-0.5"
-                >
-                  Save & Next
-                </button>
-                <button
-                  onClick={() => navigate("/hotel/guest", { state: { resetBookingDraft: true } })}
-                  className="inline-flex w-full items-center justify-center rounded-[22px] border border-slate-200 bg-white px-5 py-4 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
-                >
-                  Go Back
-                </button>
-                <BookingCancelAction
-                  bookingId={bookingId}
-                  bookingCode={bookingCode}
-                  fullWidth
-                />
-              </div>
-            </div>
+           
           </div>
         </section>
       </div>

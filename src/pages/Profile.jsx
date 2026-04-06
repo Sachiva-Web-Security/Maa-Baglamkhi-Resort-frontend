@@ -241,9 +241,9 @@ const Profile = () => {
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.55)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.45)_1px,transparent_1px)] bg-[size:72px_72px] opacity-25" />
       </div>
 
-      <div className="mx-auto max-w-[1260px] space-y-7">
+      <div className="w-full space-y-7">
         <section className="overflow-hidden rounded-[28px] border border-slate-900/10 bg-[linear-gradient(120deg,#071b34_0%,#0d4a53_52%,#162d45_100%)] px-5 py-6 shadow-[0_22px_55px_rgba(15,23,42,0.12)] sm:px-7 sm:py-8">
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.9fr)] lg:items-center">
+          <div className="space-y-4">
             <div className="space-y-4">
               <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-cyan-200">
                 Personal Workspace
@@ -257,22 +257,6 @@ const Profile = () => {
                   email overview aur password update ko ek cleaner screen par manage kar sakein.
                 </p>
               </div>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
-              {[
-               
-              ].map((item) => (
-                <div
-                  key={item.label}
-                  className="rounded-[22px] border border-white/12 bg-white/10 px-4 py-4 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md"
-                >
-                  <span className="text-[11px] text-slate-100/75">{item.label}</span>
-                  <div className="mt-3 break-words text-lg font-bold leading-tight">
-                    {item.value}
-                  </div>
-                </div>
-              ))}
             </div>
           </div>
         </section>

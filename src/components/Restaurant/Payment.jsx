@@ -13,6 +13,7 @@ import {
 
 const ACTIVE_INVOICE_KEY = "restaurant-active-invoice";
 const SAVED_INVOICE_KEY = "restaurant-saved-invoice";
+const PAYMENT_CARD_PAGE_SIZE = 8;
 const normalizeInvoiceStatus = (value) => String(value || "").trim().toLowerCase();
 const isPaidInvoice = (value) => normalizeInvoiceStatus(value) === "paid";
 const getReusableBill = (bill) => (bill && !isPaidInvoice(bill.invoiceStatus) ? bill : null);
@@ -603,6 +604,7 @@ const Payment = ({
   const [invoice, setInvoice] = useState(() => externalInvoice || routeInvoice || readStoredInvoice());
   const [invoiceCards, setInvoiceCards] = useState([]);
   const [loadingCards, setLoadingCards] = useState(false);
+  const [invoiceCardPage, setInvoiceCardPage] = useState(1);
   const [paymentMethod, setPaymentMethod] = useState("Cash");
   const [customerName, setCustomerName] = useState("");
   const [phone, setPhone] = useState("");
@@ -682,6 +684,25 @@ const Payment = ({
       phone: invoice.phone || "",
     }));
   }, [invoice]);
+
+  const totalInvoiceCardPages = Math.max(
+    1,
+    Math.ceil(invoiceCards.length / PAYMENT_CARD_PAGE_SIZE),
+  );
+  const paginatedInvoiceCards = invoiceCards.slice(
+    (invoiceCardPage - 1) * PAYMENT_CARD_PAGE_SIZE,
+    invoiceCardPage * PAYMENT_CARD_PAGE_SIZE,
+  );
+
+  useEffect(() => {
+    setInvoiceCardPage(1);
+  }, [invoiceCards]);
+
+  useEffect(() => {
+    if (invoiceCardPage > totalInvoiceCardPages) {
+      setInvoiceCardPage(totalInvoiceCardPages);
+    }
+  }, [invoiceCardPage, totalInvoiceCardPages]);
 
   useEffect(() => {
     if (!invoice?.tokenId || Array.isArray(invoice?.items) && invoice.items.length) return undefined;
@@ -1088,136 +1109,217 @@ const Payment = ({
 
   return (
     <div className={shellClassName}>
-      <div className={`mx-auto ${asModal ? "max-w-[460px]" : "max-w-[1380px] space-y-6"}`}>
+      <div className={`${asModal ? "w-full max-w-[460px]" : "w-full space-y-6"}`}>
         {!asModal ? (
           <section className="rounded-[28px] border border-white/10 bg-[linear-gradient(135deg,#0f172a_0%,#1d4ed8_50%,#0f766e_100%)] px-6 py-6 text-white shadow-[0_24px_70px_rgba(15,23,42,0.25)]">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-cyan-200">Restaurant Payment</p>
-                <h1 className="mt-2 text-3xl font-black">Row-wise bill review and payment card</h1>
-                <p className="mt-2 text-sm text-white/80">{invoiceHeading}</p>
+                <p className="text-sm font-semibold uppercase tracking-[0.28em] text-cyan-200">Restaurant Payment</p>
+                <h1 className="mt-2 text-4xl font-black">Row-wise bill review and payment card</h1>
+                <p className="mt-2 text-lg text-white/80">{invoiceHeading}</p>
               </div>
               <div className="rounded-[22px] border border-white/15 bg-white/10 px-5 py-4 backdrop-blur">
-                <div className="text-xs uppercase tracking-[0.18em] text-cyan-100/80">Token</div>
-                <div className="mt-2 text-2xl font-black">{formatVisitId(invoice?.tokenCode, invoice?.tokenId)}</div>
+                <div className="text-sm uppercase tracking-[0.18em] text-cyan-100/80">Token</div>
+                <div className="mt-2 text-3xl font-black">{formatVisitId(invoice?.tokenCode, invoice?.tokenId)}</div>
               </div>
             </div>
           </section>
         ) : null}
 
-        <section className={asModal || !showCardList ? "flex justify-center" : "grid gap-4 xl:grid-cols-[300px_minmax(0,1fr)]"}>
+        <section className={asModal || !showCardList ? "flex justify-center" : "grid gap-4 xl:grid-cols-[minmax(560px,0.98fr)_minmax(420px,0.88fr)] 2xl:grid-cols-[minmax(640px,1fr)_minmax(460px,0.84fr)]"}>
           {!asModal && showCardList ? (
             <div className="rounded-[24px] border border-slate-200/70 bg-white/95 p-4 shadow-[0_14px_36px_rgba(15,23,42,0.09)]">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-sky-500">Payment Cards</p>
-                  <h3 className="mt-1.5 text-xl font-black text-slate-900">All restaurant payments in one page</h3>
+                  <p className="text-sm font-semibold uppercase tracking-[0.28em] text-sky-500">Payment Cards</p>
+                  <h3 className="mt-1.5 text-2xl font-black text-slate-900">All restaurant payments in one page</h3>
                 </div>
-                <div className="rounded-full bg-slate-100 px-4 py-2 text-xs font-bold text-slate-600">
+                <div className="rounded-full bg-slate-100 px-4 py-2 text-sm font-bold text-slate-600">
                   {invoiceCards.length} Cards
                 </div>
               </div>
 
               {loadingCards ? (
-                <div className="mt-6 rounded-[20px] border border-slate-200 bg-slate-50 px-4 py-8 text-sm font-semibold text-slate-500">
+                <div className="mt-6 rounded-[20px] border border-slate-200 bg-slate-50 px-4 py-8 text-base font-semibold text-slate-500">
                   Payment cards loading...
                 </div>
               ) : invoiceCards.length ? (
-                <div className="mt-4 space-y-3">
-                  {invoiceCards.map((card) => {
-                    const active = invoice && createBoardCardKey(card) === createBoardCardKey(invoice);
-                    const isPaid = String(card.invoiceStatus || "").toLowerCase() === "paid";
-                    const status = isPaid ? "Paid" : "Pending";
-                    return (
-                      <button
-                        key={createBoardCardKey(card)}
-                        type="button"
-                        onClick={() => setInvoice(card)}
-                        className={`w-full rounded-[20px] border px-3 py-3 text-left transition ${
-                          active
-                            ? "border-cyan-300 bg-cyan-50 shadow-[0_16px_35px_rgba(8,145,178,0.12)]"
-                            : "border-slate-200 bg-white hover:border-cyan-200 hover:bg-slate-50"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between gap-3">
-                          <div>
-                            <div className="text-base font-black text-slate-900">
-                              {String(card.entityType || "Table").toLowerCase() === "room" ? "Room" : "Table"} {card.table}
-                            </div>
-                            <div className="mt-1 text-xs text-slate-500">
-                              {formatDate(card.date)} | Visit ID {formatVisitId(card.tokenCode, card.tokenId)}
-                            </div>
-                          </div>
-                          <span className={`rounded-full px-3 py-1 text-xs font-bold ${isPaid ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
-                            {status}
-                          </span>
-                        </div>
-                        <div className="mt-3 grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
-                          <div className="rounded-xl bg-slate-50 px-3 py-2.5">
-                            <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500">Customer</div>
-                            <div className="mt-1 font-bold text-slate-900">{getCustomerDisplay(card).name}</div>
-                            <div className="mt-1 text-xs text-slate-500">{getCustomerDisplay(card).phone}</div>
-                          </div>
-                          <div className="rounded-xl bg-slate-50 px-3 py-2.5">
-                            <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500">Total</div>
-                            <div className="mt-1 font-black text-emerald-600">{formatCurrency(card.total)}</div>
-                          </div>
-                        </div>
-                      </button>
-                    );
-                  })}
+                <div className="mt-4 overflow-hidden rounded-[20px] border border-slate-200">
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full bg-white text-left text-base">
+                      <thead className="bg-slate-50 text-sm uppercase tracking-[0.16em] text-slate-500">
+                        <tr>
+                          <th className="px-4 py-3">Table</th>
+                          <th className="px-4 py-3">Customer</th>
+                          <th className="px-4 py-3">Visit ID</th>
+                          <th className="px-4 py-3">Date</th>
+                          <th className="px-4 py-3">Total</th>
+                          <th className="px-4 py-3">Status</th>
+                          <th className="px-4 py-3 text-center">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {paginatedInvoiceCards.map((card) => {
+                          const active =
+                            invoice &&
+                            createBoardCardKey(card) === createBoardCardKey(invoice);
+                          const isPaid = String(card.invoiceStatus || "").toLowerCase() === "paid";
+                          const status = isPaid ? "Paid" : "Pending";
+                          const customer = getCustomerDisplay(card);
+
+                          return (
+                            <tr
+                              key={createBoardCardKey(card)}
+                              className={`border-t border-slate-200 ${
+                                active ? "bg-cyan-50" : "bg-white"
+                              }`}
+                            >
+                              <td className="px-4 py-4 font-bold text-slate-900">
+                                {String(card.entityType || "Table").toLowerCase() === "room"
+                                  ? "Room"
+                                  : "Table"}{" "}
+                                {card.table}
+                              </td>
+                              <td className="px-4 py-4">
+                                <div className="font-semibold text-slate-900">{customer.name}</div>
+                                <div className="mt-1 text-sm text-slate-500">{customer.phone}</div>
+                              </td>
+                              <td className="px-4 py-4 text-slate-600">
+                                {formatVisitId(card.tokenCode, card.tokenId)}
+                              </td>
+                              <td className="px-4 py-4 text-slate-600">
+                                {formatDate(card.date)}
+                              </td>
+                              <td className="px-4 py-4 font-bold text-emerald-600">
+                                {formatCurrency(card.total)}
+                              </td>
+                              <td className="px-4 py-4">
+                                <span className={`rounded-full px-3 py-1.5 text-sm font-bold ${isPaid ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
+                                  {status}
+                                </span>
+                              </td>
+                              <td className="px-4 py-4 text-center">
+                                <button
+                                  type="button"
+                                  onClick={() => setInvoice(card)}
+                                  className={`rounded-full px-4 py-2 text-sm font-bold transition ${
+                                    active
+                                      ? "bg-cyan-600 text-white"
+                                      : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                                  }`}
+                                >
+                                  {active ? "Selected" : "Open"}
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {invoiceCards.length > PAYMENT_CARD_PAGE_SIZE ? (
+                    <div className="flex flex-col gap-3 border-t border-slate-200 bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="text-base text-slate-500">
+                        Showing{" "}
+                        <span className="font-semibold text-slate-900">
+                          {(invoiceCardPage - 1) * PAYMENT_CARD_PAGE_SIZE + 1}
+                        </span>{" "}
+                        to{" "}
+                        <span className="font-semibold text-slate-900">
+                          {Math.min(invoiceCardPage * PAYMENT_CARD_PAGE_SIZE, invoiceCards.length)}
+                        </span>{" "}
+                        of <span className="font-semibold text-slate-900">{invoiceCards.length}</span> payments
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setInvoiceCardPage((current) => Math.max(1, current - 1))}
+                          disabled={invoiceCardPage === 1}
+                          className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          Previous
+                        </button>
+
+                        {Array.from({ length: totalInvoiceCardPages }, (_, index) => index + 1).map((pageNumber) => (
+                          <button
+                            key={pageNumber}
+                            type="button"
+                            onClick={() => setInvoiceCardPage(pageNumber)}
+                            className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                              pageNumber === invoiceCardPage
+                                ? "bg-slate-900 text-white"
+                                : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                            }`}
+                          >
+                            {pageNumber}
+                          </button>
+                        ))}
+
+                        <button
+                          type="button"
+                          onClick={() => setInvoiceCardPage((current) => Math.min(totalInvoiceCardPages, current + 1))}
+                          disabled={invoiceCardPage === totalInvoiceCardPages}
+                          className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          Next
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
               ) : (
-                <div className="mt-6 rounded-[20px] border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-sm text-slate-500">
+                <div className="mt-6 rounded-[20px] border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-base text-slate-500">
                “No payment card found yet. Create an invoice and the card will appear here.”
                 </div>
               )}
             </div>
           ) : null}
 
-          <div className={`w-full ${asModal ? "max-w-[420px]" : ""} ${!asModal ? "flex justify-center" : ""}`}>
+          <div className={`w-full ${asModal ? "max-w-[420px]" : ""}`}>
             {!invoice ? (
-              <div className="w-full max-w-[420px] rounded-[28px] border border-slate-200/70 bg-white/95 p-6 text-sm text-slate-500 shadow-[0_18px_50px_rgba(15,23,42,0.1)]">
+              <div className="w-full max-w-[420px] rounded-[28px] border border-slate-200/70 bg-white/95 p-6 text-base text-slate-500 shadow-[0_18px_50px_rgba(15,23,42,0.1)]">
                 “Select a payment card. The full payment form for the selected invoice will open here.”
               </div>
             ) : (
             <div className="rounded-[24px] border border-slate-200/70 bg-white/95 p-4 shadow-[0_14px_36px_rgba(15,23,42,0.09)]">
-              <div className="flex items-center justify-between gap-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+              <div className="flex items-center justify-between gap-3 text-sm font-semibold uppercase tracking-[0.22em] text-slate-400">
                 <span>{asModal ? "Invoice Popup" : "Secure Payment"}</span>
                 <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-700">Restaurant POS</span>
               </div>
 
             <div className="mt-3 text-center">
-                <div className="text-xl font-black text-slate-900">Payment</div>
-                <div className="mt-1 text-sm font-semibold text-slate-500">{entityType}</div>
-                <div className="text-lg font-bold text-slate-900">{invoice.table}</div>
-                <div className="mt-2 text-3xl font-black text-emerald-600">{formatCurrency(computedTotal)}</div>
-                <div className="mt-1 text-xs text-slate-500">
+                <div className="text-2xl font-black text-slate-900">Payment</div>
+                <div className="mt-1 text-base font-semibold text-slate-500">{entityType}</div>
+                <div className="text-xl font-bold text-slate-900">{invoice.table}</div>
+                <div className="mt-2 text-4xl font-black text-emerald-600">{formatCurrency(computedTotal)}</div>
+                <div className="mt-1 text-sm text-slate-500">
                   Subtotal {formatCurrency(invoice.subtotal)} | Tax {formatCurrency(invoice.gst)}
                 </div>
-                <div className="mt-1.5 text-xs font-semibold text-slate-600">
+                <div className="mt-1.5 text-sm font-semibold text-slate-600">
                   {personCount} Person{personCount > 1 ? "s" : ""} | Per Person {formatCurrency(perPersonAmount)}
                 </div>
               </div>
 
               <div className="mt-4 rounded-[20px] border border-slate-200 bg-[linear-gradient(135deg,#f8fbff_0%,#ffffff_100%)] p-3.5">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-700">Selected Row Card</div>
+                <div className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-700">Selected Row Card</div>
                 {selectedItem ? (
                   <div className="mt-3 space-y-3">
                     <div className="rounded-[16px] bg-white px-3.5 py-3.5 shadow-sm">
-                      <div className="text-base font-black text-slate-900">{selectedItem.name}</div>
+                      <div className="text-xl font-black text-slate-900">{selectedItem.name}</div>
                       <div className="mt-2 grid gap-2 sm:grid-cols-3">
                         <div className="rounded-[14px] bg-slate-50 px-3 py-2.5">
                           <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500">Qty</div>
-                          <div className="mt-1 text-sm font-black text-slate-900">{selectedItem.qty}</div>
+                          <div className="mt-1 text-base font-black text-slate-900">{selectedItem.qty}</div>
                         </div>
                         <div className="rounded-[14px] bg-slate-50 px-3 py-2.5">
                           <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500">Rate</div>
-                          <div className="mt-1 text-sm font-black text-slate-900">{formatCurrency(selectedItem.rate)}</div>
+                          <div className="mt-1 text-base font-black text-slate-900">{formatCurrency(selectedItem.rate)}</div>
                         </div>
                         <div className="rounded-[14px] bg-slate-50 px-3 py-2.5">
                           <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500">Amount</div>
-                          <div className="mt-1 text-sm font-black text-slate-900">
+                          <div className="mt-1 text-base font-black text-slate-900">
                             {formatCurrency(Number(selectedItem.qty || 0) * Number(selectedItem.rate || 0))}
                           </div>
                         </div>
@@ -1225,7 +1327,7 @@ const Payment = ({
                     </div>
 
                     <div className="rounded-[16px] bg-white px-3.5 py-3.5 shadow-sm">
-                      <div className="space-y-2 text-sm text-slate-700">
+                      <div className="space-y-2 text-base text-slate-700">
                         <div className="flex justify-between">
                           <span>Subtotal</span>
                           <span>{formatCurrency(invoice.subtotal)}</span>
@@ -1242,39 +1344,39 @@ const Payment = ({
                           <span>Per Person</span>
                           <span>{formatCurrency(perPersonAmount)}</span>
                         </div>
-                        <div className="flex justify-between text-base font-black text-slate-900">
+                        <div className="flex justify-between text-lg font-black text-slate-900">
                           <span>Total</span>
                           <span>{formatCurrency(computedTotal)}</span>
                         </div>
                         {invoice.tokenId ? (
-                          <div className="text-xs text-slate-500">Visit ID: {formatVisitId(invoice.tokenCode, invoice.tokenId)}</div>
+                          <div className="text-sm text-slate-500">Visit ID: {formatVisitId(invoice.tokenCode, invoice.tokenId)}</div>
                         ) : null}
                       </div>
                     </div>
                   </div>
                 ) : (
-                  <div className="mt-4 rounded-[18px] bg-white px-4 py-5 text-sm text-slate-500 shadow-sm">
+                  <div className="mt-4 rounded-[18px] bg-white px-4 py-5 text-base text-slate-500 shadow-sm">
                     Koi row select nahi hai.
                   </div>
                 )}
               </div>
 
               <div className="mt-4 rounded-[20px] border border-slate-200 bg-white p-3.5">
-                <div className="text-sm font-semibold text-slate-700">Customer Details</div>
+                <div className="text-lg font-semibold text-slate-700">Customer Details</div>
                 <div className="mt-3 space-y-2.5">
                   <input
                     type="text"
                     value={customerName}
                     onChange={(event) => handleCustomerNameChange(event.target.value)}
                     placeholder="Customer Name"
-                    className={`w-full rounded-xl border px-3 py-2.5 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 ${
+                    className={`w-full rounded-xl border px-3 py-3 text-lg text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 ${
                       fieldErrors.customerName
                         ? "border-rose-400 bg-rose-50 focus:ring-rose-400"
                         : "border-slate-200 focus:ring-blue-500"
                     }`}
                   />
                   {fieldErrors.customerName ? (
-                    <div className="text-sm font-semibold text-rose-600">{fieldErrors.customerName}</div>
+                    <div className="text-base font-semibold text-rose-600">{fieldErrors.customerName}</div>
                   ) : null}
                   <input
                     type="tel"
@@ -1283,24 +1385,24 @@ const Payment = ({
                     placeholder="Phone Number"
                     inputMode="numeric"
                     maxLength="10"
-                    className={`w-full rounded-xl border px-3 py-2.5 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 ${
+                    className={`w-full rounded-xl border px-3 py-3 text-lg text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 ${
                       fieldErrors.phone
                         ? "border-rose-400 bg-rose-50 focus:ring-rose-400"
                         : "border-slate-200 focus:ring-blue-500"
                     }`}
                   />
                   {fieldErrors.phone ? (
-                    <div className="text-sm font-semibold text-rose-600">{fieldErrors.phone}</div>
+                    <div className="text-base font-semibold text-rose-600">{fieldErrors.phone}</div>
                   ) : null}
                 </div>
               </div>
 
               <div className="mt-4 rounded-[20px] border border-slate-200 bg-white p-3.5">
-                <div className="text-sm font-semibold text-slate-700">Payment Method</div>
+                <div className="text-lg font-semibold text-slate-700">Payment Method</div>
                 <select
                   value={paymentMethod}
                   onChange={(event) => handlePaymentMethodChange(event.target.value)}
-                  className="mt-3 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="mt-3 w-full rounded-xl border border-slate-200 px-3 py-3 text-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="Cash">Cash</option>
                   <option value="Card">Card</option>
@@ -1309,7 +1411,7 @@ const Payment = ({
               </div>
 
               <div className="mt-4 rounded-[20px] border border-slate-200 bg-white p-3.5">
-                <div className="text-sm font-semibold text-slate-700">Discount</div>
+                <div className="text-lg font-semibold text-slate-700">Discount</div>
                 <div className="mt-3 grid gap-3">
                   <input
                     type="number"
@@ -1318,9 +1420,9 @@ const Payment = ({
                     value={discountAmount}
                     onChange={(event) => handleDiscountChange(event.target.value)}
                     placeholder="Enter discount amount"
-                    className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-xl border border-slate-200 px-3 py-3 text-lg text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
-                  <div className="rounded-xl bg-amber-50 px-3 py-2.5 text-sm font-semibold text-amber-800">
+                  <div className="rounded-xl bg-amber-50 px-3 py-2.5 text-base font-semibold text-amber-800">
                     Discount {formatCurrency(discountAmount)} | Final Total {formatCurrency(computedTotal)}
                   </div>
                 </div>
@@ -1328,20 +1430,20 @@ const Payment = ({
 
               {paymentMethod === "Card" ? (
                 <div className="mt-4 rounded-[20px] border border-slate-200 bg-white p-3.5">
-                  <div className="text-sm font-semibold text-slate-700">Card Details</div>
+                  <div className="text-lg font-semibold text-slate-700">Card Details</div>
                   <div className="mt-3 grid gap-3">
                     <input
                       type="text"
                       value={cardDetails.cardHolderName}
                       onChange={(event) => updateCardDetails({ cardHolderName: event.target.value })}
                       placeholder="Card Holder Name"
-                      className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full rounded-xl border border-slate-200 px-3 py-3 text-lg text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                     <div className="grid grid-cols-2 gap-3">
                       <select
                         value={cardDetails.cardType}
                         onChange={(event) => updateCardDetails({ cardType: event.target.value })}
-                        className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full rounded-xl border border-slate-200 px-3 py-3 text-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         <option value="Credit Card">Credit Card</option>
                         <option value="Debit Card">Debit Card</option>
@@ -1354,7 +1456,7 @@ const Payment = ({
                         value={cardDetails.cardLast4}
                         onChange={(event) => updateCardDetails({ cardLast4: event.target.value.replace(/\D/g, "").slice(0, 4) })}
                         placeholder="Last 4 Digits"
-                        className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full rounded-xl border border-slate-200 px-3 py-3 text-lg text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
                     <input
@@ -1362,14 +1464,14 @@ const Payment = ({
                       value={cardDetails.transactionRef}
                       onChange={(event) => updateCardDetails({ transactionRef: event.target.value })}
                       placeholder="Transaction / Approval Ref"
-                      className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full rounded-xl border border-slate-200 px-3 py-3 text-lg text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                 </div>
               ) : null}
 
               <div className="mt-4 rounded-[20px] border border-slate-200 bg-white p-3.5">
-                <div className="text-sm font-semibold text-slate-700">Person-wise Bill</div>
+                <div className="text-lg font-semibold text-slate-700">Person-wise Bill</div>
                 <div className="mt-3 flex items-center gap-3">
                   <input
                     type="number"
@@ -1377,19 +1479,19 @@ const Payment = ({
                     max="10"
                     value={splitCount}
                     onChange={(event) => handleSplitCountChange(event.target.value)}
-                    className="w-24 rounded-xl border border-slate-200 px-3 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-24 rounded-xl border border-slate-200 px-3 py-3 text-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <button
                     onClick={handleCreateSplitBill}
                     disabled={submitting}
-                    className="rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg disabled:opacity-60"
+                    className="rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-600 px-4 py-3 text-base font-semibold text-white shadow-lg disabled:opacity-60"
                   >
                     Save Split Bill
                   </button>
                 </div>
                 <div className="mt-3 space-y-2">
                   {splitPreview.map((split) => (
-                    <div key={split.splitNo} className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2.5 text-sm text-slate-700">
+                    <div key={split.splitNo} className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-3 text-base text-slate-700">
                       <span>Person {split.splitNo}</span>
                       <span className="font-bold text-slate-900">{formatCurrency(split.total)}</span>
                     </div>
@@ -1400,7 +1502,7 @@ const Payment = ({
               <div className="mt-4 flex flex-col gap-2.5">
                 {generatedBill?.id ? (
                   <div
-                    className={`rounded-xl px-4 py-3 text-sm font-semibold ${
+                    className={`rounded-xl px-4 py-3 text-base font-semibold ${
                       isCurrentBillPaid
                         ? "border border-emerald-200 bg-emerald-50 text-emerald-800"
                         : "border border-amber-200 bg-amber-50 text-amber-800"
@@ -1411,14 +1513,14 @@ const Payment = ({
                 ) : null}
                 <button
                   onClick={handleClose}
-                    className="w-full rounded-xl bg-slate-200 px-4 py-2.5 font-semibold text-slate-700"
+                    className="w-full rounded-xl bg-slate-200 px-4 py-3 text-lg font-semibold text-slate-700"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handlePayment}
                   disabled={submitting || hasCustomerValidationErrors || isCurrentBillPaid}
-                  className="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 px-4 py-2.5 font-semibold text-white shadow-lg disabled:opacity-60"
+                   className="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 px-4 py-3 text-lg font-semibold text-white shadow-lg disabled:opacity-60"
                 >
                   {submitting
                     ? "Processing..."
@@ -1430,7 +1532,7 @@ const Payment = ({
                 </button>
                 <button
                   onClick={handlePrint}
-                  className="w-full rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-2.5 font-semibold text-white shadow-lg"
+                   className="w-full rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-3 text-lg font-semibold text-white shadow-lg"
                 >
                   Print Bill
                 </button>

@@ -183,7 +183,7 @@ export default function AuditReport() {
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.52)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.35)_1px,transparent_1px)] bg-[size:72px_72px] opacity-25" />
       </div>
 
-      <div className="mx-auto max-w-[1380px] space-y-6">
+      <div className="w-full space-y-6">
         <section className="overflow-hidden rounded-[30px] border border-slate-900/10 bg-[linear-gradient(120deg,#071b34_0%,#0d4a53_52%,#1d4ed8_100%)] px-5 py-6 shadow-[0_28px_70px_rgba(15,23,42,0.16)] sm:px-7 sm:py-8">
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.95fr)] lg:items-end">
             <div className="space-y-4">
@@ -224,8 +224,8 @@ export default function AuditReport() {
           </div>
         </section>
 
-        <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
-          <div className="rounded-[28px] border border-white/70 bg-white/88 p-5 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+        <section className="grid gap-4 xl:grid-cols-2">
+          <div className="h-full rounded-[28px] border border-white/70 bg-white/88 p-5 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
             <div className="mb-4 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-500">
@@ -252,8 +252,8 @@ export default function AuditReport() {
               </div>
             </div>
 
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-              <label className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm xl:col-span-2">
+            <div className="grid gap-3 md:grid-cols-2 2xl:grid-cols-5">
+              <label className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm md:col-span-2 2xl:col-span-2">
                 <FaSearch className="text-cyan-500" />
                 <input
                   value={filters.search}
@@ -285,7 +285,7 @@ export default function AuditReport() {
                 ))}
               </select>
 
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-2 xl:col-span-5">
+              <div className="grid gap-3 sm:grid-cols-2 md:col-span-2 2xl:col-span-5">
                 <label className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm">
                   <FaCalendarAlt className="text-cyan-500" />
                   <input
@@ -308,37 +308,39 @@ export default function AuditReport() {
             </div>
           </div>
 
-          <div className="rounded-[28px] border border-white/70 bg-white/88 p-5 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-            <div className="space-y-4">
+          <div className="h-full rounded-[28px] border border-white/70 bg-white/88 p-5 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+            <div className="flex h-full flex-col gap-4">
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-amber-500">
                   Snapshot
                 </p>
                 <h2 className="mt-1 text-xl font-bold text-slate-900">Live audit health</h2>
               </div>
-              <div className="rounded-[22px] border border-emerald-200 bg-emerald-50 p-4">
-                <div className="flex items-center gap-2 text-emerald-700">
-                  <FaCheckCircle />
-                  <span className="text-sm font-bold">Success rate</span>
+              <div className="grid flex-1 gap-3 sm:grid-cols-2 2xl:grid-cols-3">
+                <div className="flex h-full flex-col rounded-[22px] border border-emerald-200 bg-emerald-50 p-4">
+                  <div className="flex items-center gap-2 text-emerald-700">
+                    <FaCheckCircle />
+                    <span className="text-sm font-bold">Success rate</span>
+                  </div>
+                  <div className="mt-3 text-3xl font-black text-emerald-800">{successRate}</div>
                 </div>
-                <div className="mt-3 text-3xl font-black text-emerald-800">{successRate}</div>
-              </div>
-              <div className="rounded-[22px] border border-rose-200 bg-rose-50 p-4">
-                <div className="flex items-center gap-2 text-rose-700">
-                  <FaExclamationTriangle />
-                  <span className="text-sm font-bold">Failed calls</span>
+                <div className="flex h-full flex-col rounded-[22px] border border-rose-200 bg-rose-50 p-4">
+                  <div className="flex items-center gap-2 text-rose-700">
+                    <FaExclamationTriangle />
+                    <span className="text-sm font-bold">Failed calls</span>
+                  </div>
+                  <div className="mt-3 text-3xl font-black text-rose-800">{liveSummary.errorCount}</div>
+                  <div className="mt-2 text-xs font-semibold text-rose-700/80">
+                    Latest endpoint state ke hisaab se unresolved failures.
+                  </div>
                 </div>
-                <div className="mt-3 text-3xl font-black text-rose-800">{liveSummary.errorCount}</div>
-                <div className="mt-2 text-xs font-semibold text-rose-700/80">
-                  Latest endpoint state ke hisaab se unresolved failures.
+                <div className="flex h-full flex-col rounded-[22px] border border-cyan-200 bg-cyan-50 p-4">
+                  <div className="flex items-center gap-2 text-cyan-700">
+                    <FaUserShield />
+                    <span className="text-sm font-bold">Traced users</span>
+                  </div>
+                  <div className="mt-3 text-3xl font-black text-cyan-800">{summary.uniqueUsers}</div>
                 </div>
-              </div>
-              <div className="rounded-[22px] border border-cyan-200 bg-cyan-50 p-4">
-                <div className="flex items-center gap-2 text-cyan-700">
-                  <FaUserShield />
-                  <span className="text-sm font-bold">Traced users</span>
-                </div>
-                <div className="mt-3 text-3xl font-black text-cyan-800">{summary.uniqueUsers}</div>
               </div>
             </div>
           </div>

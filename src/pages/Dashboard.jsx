@@ -48,6 +48,7 @@ import {
 
 const boardOrder = ["available", "confirmed", "cleaning", "pencil", "blocked", "checked_in"];
 const CLEANING_TIME_OPTIONS = [15, 30, 45, 60, 90, 120];
+const METRIC_PANEL_PAGE_SIZE = 6;
 const AVAILABLE_ROOM_TYPE_ORDER = [
   "AC ROOM",
   "NON-AC ROOM",
@@ -140,6 +141,7 @@ const Dashboard = () => {
   const [boardStartDate, setBoardStartDate] = useState(todayISO());
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [openMetricPanel, setOpenMetricPanel] = useState("");
+  const [metricPanelPage, setMetricPanelPage] = useState(1);
   const [bucketOpen, setBucketOpen] = useState(() =>
     boardOrder.reduce((acc, key) => {
       acc[key] = true;
@@ -529,6 +531,15 @@ const Dashboard = () => {
     },
   };
   const activeMetricPanel = metricPanelData[openMetricPanel] || null;
+  const activeMetricPanelTotalPages = activeMetricPanel
+    ? Math.max(1, Math.ceil(activeMetricPanel.items.length / METRIC_PANEL_PAGE_SIZE))
+    : 1;
+  const paginatedMetricPanelItems = activeMetricPanel
+    ? activeMetricPanel.items.slice(
+        (metricPanelPage - 1) * METRIC_PANEL_PAGE_SIZE,
+        metricPanelPage * METRIC_PANEL_PAGE_SIZE,
+      )
+    : [];
 
   const metrics = [
     {
@@ -758,6 +769,16 @@ const Dashboard = () => {
       setAvailableTypeOpen("");
     }
   }, [expandedBoardDay, selectedDate, stayOverview]);
+
+  useEffect(() => {
+    setMetricPanelPage(1);
+  }, [openMetricPanel]);
+
+  useEffect(() => {
+    if (metricPanelPage > activeMetricPanelTotalPages) {
+      setMetricPanelPage(activeMetricPanelTotalPages);
+    }
+  }, [activeMetricPanelTotalPages, metricPanelPage]);
 
   const jumpBoardWindow = (nextDate) => {
     setBoardStartDate(nextDate);
@@ -1222,12 +1243,12 @@ const Dashboard = () => {
           <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.5)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.36)_1px,transparent_1px)] bg-[size:72px_72px] opacity-20" />
         </div>
 
-        <div className="mt-10 max-w-full space-y-5">
-          <section className="relative overflow-hidden rounded-[30px] border border-slate-900/10 bg-[linear-gradient(130deg,#0b1733_0%,#133a59_42%,#125f67_100%)] px-4 py-5 shadow-[0_30px_90px_rgba(15,23,42,0.18)] sm:px-6 sm:py-6 lg:px-8">
+        <div className="mt-2 max-w-full space-y-5 sm:mt-3">
+          <section className="relative overflow-visible rounded-[30px] border border-slate-900/10 bg-[linear-gradient(130deg,#0b1733_0%,#133a59_42%,#125f67_100%)] px-4 py-5 shadow-[0_30px_90px_rgba(15,23,42,0.18)] sm:px-6 sm:py-6 lg:px-8">
             <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.08)_0%,transparent_28%,rgba(255,255,255,0.05)_56%,transparent_100%)]" />
             <div className="pointer-events-none absolute -left-16 top-4 h-48 w-48 rounded-full bg-cyan-300/15 blur-3xl" />
             <div className="pointer-events-none absolute right-0 top-0 h-56 w-56 rounded-full bg-sky-300/10 blur-3xl" />
-            <div className="relative z-[1] grid gap-5 lg:grid-cols-[minmax(0,1.5fr)_minmax(300px,0.8fr)] lg:items-center">
+            <div className="relative z-[1] grid gap-5 lg:grid-cols-[minmax(0,1.6fr)_minmax(360px,0.82fr)] lg:items-start">
               <div className="space-y-4">
                 <p className="text-[7px] font-semibold uppercase tracking-[0.26em] text-cyan-200 sm:text-[10px]">
                   Resort Command Center
@@ -1245,9 +1266,9 @@ const Dashboard = () => {
                   </p>
                 </div>
 
-                <div className="relative rounded-[24px] border border-white/12 bg-white/10 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_10px_30px_rgba(15,23,42,0.16)] backdrop-blur-md ">
-                  <label className="flex items-center gap-3 rounded-[18px] border border-white/10 bg-slate-950/20 px-4 py-3 text-white/90">
-                    <FaSearch className="text-cyan-200" />
+                <div className="relative z-[70] w-full max-w-[920px] pb-5 pt-3">
+                  <label className="relative block">
+                    <FaSearch className="pointer-events-none absolute left-5 top-1/2 z-[1] -translate-y-1/2 text-[1rem] text-slate-600 sm:left-6 sm:text-[1.1rem]" />
                     <input
                       type="text"
                       value={searchQuery}
@@ -1259,22 +1280,24 @@ const Dashboard = () => {
                           openSearchTarget(searchResults[0]);
                         }
                       }}
-                      placeholder="Search page, file, room module or report..."
-                      className="w-full bg-transparent text-sm font-medium text-white outline-none placeholder:text-slate-300/70"
+                      placeholder="Search..."
+                      className="block min-h-[62px] w-full rounded-full border-[2px] border-slate-950 bg-white pl-14 pr-14 text-[1rem] font-semibold tracking-[-0.02em] text-slate-950 shadow-[0_16px_32px_rgba(15,23,42,0.2)] outline-none transition placeholder:font-bold placeholder:text-slate-400 focus:-translate-y-0.5 focus:border-slate-950 focus:ring-0 focus:shadow-[0_22px_42px_rgba(15,23,42,0.24)] sm:pl-15 sm:pr-15 sm:text-[1.12rem]"
                     />
                     {searchQuery ? (
                       <button
                         type="button"
+                        onMouseDown={(event) => event.preventDefault()}
                         onClick={() => setSearchQuery("")}
-                        className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[11px] font-semibold text-white transition hover:bg-white/15"
+                        className="absolute right-4 top-1/2 z-[1] flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition hover:bg-slate-200 hover:text-slate-700"
                       >
-                        Clear
+                        <FaTimes className="text-[12px]" />
                       </button>
                     ) : null}
                   </label>
+
                   {searchFocused && (searchQuery || searchResults.length) ? (
-                    <div className="absolute left-3 right-3 top-[84px] z-20 overflow-hidden rounded-[18px] border border-white/10 bg-slate-950/90 shadow-[0_20px_40px_rgba(0,0,0,0.28)] backdrop-blur-md">
-                      <div className="max-h-[280px] overflow-y-auto p-2">
+                    <div className="absolute left-0 right-0 top-full z-[90] mt-3 overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_28px_60px_rgba(15,23,42,0.28)]">
+                      <div className="max-h-[320px] overflow-y-auto p-2.5">
                         {searchResults.length ? (
                           searchResults.map((target) => (
                             <button
@@ -1282,21 +1305,21 @@ const Dashboard = () => {
                               type="button"
                               onMouseDown={(event) => event.preventDefault()}
                               onClick={() => openSearchTarget(target)}
-                              className="flex w-full items-center justify-between rounded-[14px] border border-white/10 px-3 py-2.5 text-left transition hover:bg-white/10"
+                              className="flex w-full items-center justify-between rounded-[20px] border border-slate-200/80 px-4 py-3.5 text-left transition hover:border-sky-200 hover:bg-sky-50/60"
                             >
                               <div>
-                                <div className="text-sm font-semibold text-white">{target.label}</div>
-                                <div className="text-[11px] text-slate-200/80">{target.helper}</div>
+                                <div className="text-sm font-bold text-slate-900">{target.label}</div>
+                                <div className="mt-1 text-xs text-slate-500">{target.helper}</div>
                               </div>
-                              <span className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-cyan-200">
+                              <span className="rounded-full border border-slate-300 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-700">
                                 Open
                               </span>
                             </button>
                           ))
                         ) : (
-                          <div className="rounded-[14px] border border-dashed border-white/15 px-3 py-4 text-sm text-slate-200/80">
-                            No page found. Try keywords like <span className="font-semibold text-white">housekeeping</span>,
-                            <span className="font-semibold text-white"> booking</span>, <span className="font-semibold text-white">accounts</span>.
+                          <div className="rounded-[20px] border border-dashed border-slate-300 px-4 py-4 text-sm text-slate-600">
+                            No page found. Try keywords like <span className="font-semibold text-slate-900">housekeeping</span>,
+                            <span className="font-semibold text-slate-900"> booking</span>, <span className="font-semibold text-slate-900">accounts</span>.
                           </div>
                         )}
                       </div>
@@ -1305,16 +1328,16 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-4">
+              <div className="grid grid-cols-2 gap-2.5 pt-1 sm:grid-cols-4 lg:pt-0">
                 {heroStats.map((item) => (
                   <div
                     key={item.label}
-                    className="rounded-[22px] border border-white/12 bg-[linear-gradient(180deg,rgba(255,255,255,0.16)_0%,rgba(255,255,255,0.08)_100%)] px-4 py-4 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_14px_28px_rgba(15,23,42,0.12)] backdrop-blur-md"
+                    className="flex min-h-[86px] max-w-[165px] flex-col justify-between rounded-[20px] border border-white/12 bg-[linear-gradient(180deg,rgba(255,255,255,0.16)_0%,rgba(255,255,255,0.08)_100%)] px-3.5 py-3 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_12px_24px_rgba(15,23,42,0.12)] backdrop-blur-md"
                   >
-                    <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-100/78 sm:text-[11px]">
+                    <span className="max-w-[12ch] text-[9px] font-semibold uppercase tracking-[0.16em] text-slate-100/78 sm:text-[10px]">
                       {item.label}
                     </span>
-                    <div className="mt-3 text-[1.7rem] font-black leading-none tracking-[-0.03em] sm:text-[2rem]">
+                    <div className="mt-1.5 text-[1.45rem] font-black leading-none tracking-[-0.03em] sm:text-[1.65rem]">
                       {item.value}
                     </div>
                   </div>
@@ -1359,7 +1382,7 @@ const Dashboard = () => {
 
               <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 {activeMetricPanel.items.length ? (
-                  activeMetricPanel.items.map((item) => (
+                  paginatedMetricPanelItems.map((item) => (
                     <div
                       key={`${openMetricPanel}-${item.bookingId}-${item.checkIn}-${item.checkOut}`}
                       className="rounded-[22px] border border-slate-200/80 bg-white p-4 shadow-[0_16px_38px_rgba(15,23,42,0.06)]"
@@ -1408,6 +1431,68 @@ const Dashboard = () => {
                   </div>
                 )}
               </div>
+
+              {activeMetricPanel.items.length > METRIC_PANEL_PAGE_SIZE ? (
+                <div className="mt-4 flex flex-col gap-3 rounded-[20px] border border-slate-200 bg-white px-4 py-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+                  <div className="text-sm text-slate-500">
+                    Showing{" "}
+                    <span className="font-semibold text-slate-900">
+                      {(metricPanelPage - 1) * METRIC_PANEL_PAGE_SIZE + 1}
+                    </span>{" "}
+                    to{" "}
+                    <span className="font-semibold text-slate-900">
+                      {Math.min(metricPanelPage * METRIC_PANEL_PAGE_SIZE, activeMetricPanel.items.length)}
+                    </span>{" "}
+                    of{" "}
+                    <span className="font-semibold text-slate-900">
+                      {activeMetricPanel.items.length}
+                    </span>{" "}
+                    entries
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setMetricPanelPage((current) => Math.max(1, current - 1))}
+                      disabled={metricPanelPage === 1}
+                      className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      Previous
+                    </button>
+
+                    {Array.from({ length: activeMetricPanelTotalPages }, (_, index) => {
+                      const page = index + 1;
+                      const isActive = page === metricPanelPage;
+
+                      return (
+                        <button
+                          key={`metric-page-${page}`}
+                          type="button"
+                          onClick={() => setMetricPanelPage(page)}
+                          className={`h-9 min-w-[36px] rounded-full border px-3 text-xs font-bold transition ${
+                            isActive
+                              ? "border-cyan-600 bg-cyan-600 text-white shadow-[0_10px_24px_rgba(8,145,178,0.22)]"
+                              : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      );
+                    })}
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setMetricPanelPage((current) => Math.min(activeMetricPanelTotalPages, current + 1))
+                      }
+                      disabled={metricPanelPage === activeMetricPanelTotalPages}
+                      className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              ) : null}
             </div>
           ) : null}
 
@@ -2334,8 +2419,8 @@ const Dashboard = () => {
             </div>
           </section>
 
-          <div className="grid w-full grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1.38fr)_minmax(280px,0.48fr)]">
-            <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(250px,0.42fr)]">
+          <div className="grid w-full grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1.18fr)_minmax(620px,0.82fr)]">
+            <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,0.88fr)_minmax(360px,0.72fr)]">
               <div className="h-fit w-full self-start rounded-[28px] border border-white/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.95)_0%,rgba(248,252,255,0.92)_100%)] px-4 py-5 shadow-[0_24px_58px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:px-5 sm:py-6">
                 <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
@@ -2362,13 +2447,15 @@ const Dashboard = () => {
               </div>
             </div>
 
-            <div className="grid self-start gap-6 xl:max-w-[320px] xl:justify-self-start xl:pr-4">
-              <div className="min-h-[290px] min-w-0 rounded-[28px] border border-white/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.95)_0%,rgba(247,252,249,0.92)_100%)] p-4 shadow-[0_24px_58px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-emerald-300">
-                  Room Mix
-                </p>
-                <div className="mb-3 mt-1 text-[1.05rem] font-bold text-slate-900">Occupancy overview</div>
-                <RoomOccupancyChart />
+            <div className="grid w-full self-start gap-6 xl:w-[620px] xl:max-w-[620px] xl:justify-self-end xl:pl-4">
+              <div className="flex min-h-[230px] min-w-0 self-start rounded-[28px] border border-white/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.95)_0%,rgba(247,252,249,0.92)_100%)] p-4 shadow-[0_24px_58px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
+                <div className="w-full">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-emerald-300">
+                    Room Mix
+                  </p>
+                  <div className="mb-3 mt-1 text-[1.05rem] font-bold text-slate-900">Occupancy overview</div>
+                  <RoomOccupancyChart />
+                </div>
               </div>
             </div>
           </div>

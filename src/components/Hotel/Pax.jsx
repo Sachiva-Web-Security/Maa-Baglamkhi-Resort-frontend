@@ -12,7 +12,7 @@ import {
 } from "./bookingSession";
 
 const fieldCls =
-  "w-full rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100";
+  "w-full rounded-2xl border border-slate-200/80 bg-white px-5 py-4 text-xl font-semibold text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100";
 
 const Pax = () => {
   const navigate = useNavigate();
@@ -45,6 +45,21 @@ const Pax = () => {
   );
 
   const [paxData, setPaxData] = useState(getBookingDraft("pax")?.paxData || {});
+  const [notice, setNotice] = useState({
+    open: false,
+    title: "",
+    message: "",
+    tone: "info",
+  });
+
+  const showNotice = (message, title = "Notice", tone = "info") => {
+    setNotice({
+      open: true,
+      title,
+      message,
+      tone,
+    });
+  };
 
   useEffect(() => {
     if (bookingId) {
@@ -90,7 +105,7 @@ const Pax = () => {
 
   const handleProceed = async () => {
     if (!bookingId) {
-      alert("Booking ID missing hai.");
+      showNotice("Booking ID is missing. Please return to the previous step and try again.", "Booking Required", "warning");
       return;
     }
 
@@ -111,13 +126,13 @@ const Pax = () => {
       });
     } catch (error) {
       console.error(error);
-      alert(error.response?.data?.message || "Error saving pax");
+      showNotice(error.response?.data?.message || "Unable to save guest details right now. Please try again.", "Save Failed", "error");
     }
   };
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(135deg,#f4fbff_0%,#f8fff9_42%,#fffaf1_100%)] p-4 sm:p-6">
-      <div className="mx-auto max-w-6xl space-y-6">
+    <div className="min-h-screen w-full bg-[linear-gradient(135deg,#f4fbff_0%,#f8fff9_42%,#fffaf1_100%)] p-4 sm:p-6">
+      <div className="w-full space-y-6">
         <section className="overflow-hidden rounded-[28px] border border-white/70 bg-[linear-gradient(135deg,#08253d_0%,#0e7490_55%,#164e63_100%)] px-6 py-7 text-white shadow-[0_24px_70px_rgba(15,23,42,0.18)]">
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_320px] lg:items-center">
             
@@ -140,7 +155,7 @@ const Pax = () => {
         </section>
 
         <section className="rounded-[26px] border border-slate-200/80 bg-white/90 p-6 shadow-[0_18px_45px_rgba(15,23,42,0.06)]">
-          <div className="grid gap-4 md:grid-cols-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+          <div className="grid gap-4 md:grid-cols-4 text-[15px] font-black uppercase tracking-[0.22em] text-slate-900">
             <div>Room No.</div>
             <div>Adults</div>
             <div>Children</div>
@@ -151,11 +166,11 @@ const Pax = () => {
             {rooms.map((room, index) => (
               <div
                 key={`${room.name}-${index}`}
-                className="grid gap-4 rounded-[22px] border border-slate-200/80 bg-white p-4 md:grid-cols-4 md:items-center"
+                className="grid gap-4 rounded-[22px] border border-slate-200/80 bg-white p-5 md:grid-cols-4 md:items-center"
               >
                 <div>
-                  <div className="text-lg font-black text-slate-900">{room.name}</div>
-                  <div className="text-sm text-slate-500">{room.roomTypeName}</div>
+                  <div className="text-[30px] font-black leading-none text-slate-950">{room.name}</div>
+                  <div className="mt-2 text-lg font-semibold text-slate-700">{room.roomTypeName}</div>
                 </div>
 
                 <input
@@ -176,9 +191,9 @@ const Pax = () => {
                   className={fieldCls}
                 />
 
-                <div className="rounded-[18px] bg-sky-50 px-4 py-4 text-center">
-                  <div className="text-xs uppercase tracking-wide text-sky-700">Total</div>
-                  <div className="mt-1 text-2xl font-black text-sky-900">
+                <div className="rounded-[18px] bg-sky-50 px-5 py-5 text-center">
+                  <div className="text-[14px] font-black uppercase tracking-[0.18em] text-slate-900">Total</div>
+                  <div className="mt-2 text-[34px] font-black leading-none text-slate-950">
                     {getTotal(room.name)}
                   </div>
                 </div>
@@ -189,7 +204,7 @@ const Pax = () => {
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-end">
             <button
               onClick={() => navigate("/hotel/room")}
-              className="rounded-[22px] border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+              className="rounded-[22px] border border-slate-200 bg-white px-6 py-4 text-lg font-black text-slate-800 transition hover:bg-slate-50"
             >
               Go Back
             </button>
@@ -200,12 +215,52 @@ const Pax = () => {
             />
             <button
               onClick={handleProceed}
-              className="rounded-[22px] bg-gradient-to-r from-sky-600 to-cyan-500 px-6 py-3 text-sm font-bold text-white shadow-[0_16px_35px_rgba(14,165,233,0.24)] transition hover:-translate-y-0.5"
+              className="rounded-[22px] bg-gradient-to-r from-sky-600 to-cyan-500 px-7 py-4 text-lg font-black text-white shadow-[0_16px_35px_rgba(14,165,233,0.24)] transition hover:-translate-y-0.5"
             >
               Save & Proceed
             </button>
           </div>
         </section>
+
+        {notice.open && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-sm">
+            <div className="w-full max-w-md rounded-[30px] border border-white/70 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-6 shadow-[0_28px_80px_rgba(15,23,42,0.24)]">
+              <div className="flex items-start gap-4">
+                <div
+                  className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-xl font-black shadow-sm ${
+                    notice.tone === "error"
+                      ? "bg-rose-50 text-rose-600"
+                      : notice.tone === "warning"
+                        ? "bg-amber-50 text-amber-600"
+                        : "bg-sky-50 text-sky-600"
+                  }`}
+                >
+                  !
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <div className="text-[22px] font-black text-slate-950">{notice.title}</div>
+                  <p className="mt-2 text-base leading-7 text-slate-700">{notice.message}</p>
+                </div>
+              </div>
+
+              <div className="mt-7 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setNotice((prev) => ({
+                      ...prev,
+                      open: false,
+                    }))
+                  }
+                  className="inline-flex min-w-[112px] items-center justify-center rounded-[18px] bg-gradient-to-r from-sky-600 to-blue-500 px-6 py-3.5 text-base font-black text-white shadow-[0_14px_35px_rgba(37,99,235,0.24)] transition hover:-translate-y-0.5"
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

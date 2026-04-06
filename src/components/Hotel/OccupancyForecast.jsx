@@ -7,6 +7,7 @@ const MONTHS = [
   "Jul","Aug","Sep","Oct","Nov","Dec",
 ];
 const DAYS_SHORT = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const SELECTED_DATE_PAGE_SIZE = 5;
 
 const formatDate = (y, m, d) => {
   const mm = String(m + 1).padStart(2, "0");
@@ -27,6 +28,7 @@ const OccupancyForecast = () => {
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedDatePage, setSelectedDatePage] = useState(1);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -117,6 +119,25 @@ const OccupancyForecast = () => {
     return occupancyMap[selectedDate] || { bookings: [], blocks: [] };
   }, [selectedDate, occupancyMap]);
 
+  const totalSelectedDatePages = Math.max(
+    1,
+    Math.ceil((selectedData?.bookings?.length || 0) / SELECTED_DATE_PAGE_SIZE),
+  );
+  const paginatedSelectedBookings = (selectedData?.bookings || []).slice(
+    (selectedDatePage - 1) * SELECTED_DATE_PAGE_SIZE,
+    selectedDatePage * SELECTED_DATE_PAGE_SIZE,
+  );
+
+  useEffect(() => {
+    setSelectedDatePage(1);
+  }, [selectedDate]);
+
+  useEffect(() => {
+    if (selectedDatePage > totalSelectedDatePages) {
+      setSelectedDatePage(totalSelectedDatePages);
+    }
+  }, [selectedDatePage, totalSelectedDatePages]);
+
   const prevMonth = () => {
     if (month === 0) { setYear(y => y - 1); setMonth(11); }
     else setMonth(m => m - 1);
@@ -140,9 +161,9 @@ const OccupancyForecast = () => {
     return "bg-rose-50 border-rose-200 hover:border-rose-400";
   };
 
-  return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(245,158,11,0.1),_transparent_30%),linear-gradient(135deg,#f8fbff_0%,#fffbeb_50%,#fff8ef_100%)] p-4 sm:p-6">
-      <div className="mx-auto max-w-6xl space-y-5">
+    return (
+      <div className="min-h-screen w-full bg-[radial-gradient(circle_at_top,_rgba(245,158,11,0.1),_transparent_30%),linear-gradient(135deg,#f8fbff_0%,#fffbeb_50%,#fff8ef_100%)] p-4 sm:p-6">
+        <div className="w-full space-y-5">
         {/* Header */}
         <section className="overflow-hidden rounded-[32px] border border-white/70 bg-[linear-gradient(135deg,#292524_0%,#92400e_45%,#0f766e_100%)] px-6 py-7 text-white shadow-[0_22px_70px_rgba(15,23,42,0.22)]">
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(300px,0.8fr)] lg:items-center">
@@ -185,9 +206,9 @@ const OccupancyForecast = () => {
         </section>
 
         {/* Calendar + Sidebar */}
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1.3fr)_320px]">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(340px,0.36fr)] xl:grid-cols-[minmax(0,1fr)_minmax(390px,0.4fr)] 2xl:grid-cols-[minmax(0,1fr)_minmax(430px,0.42fr)] xl:items-start">
           {/* Calendar */}
-          <div className="rounded-[28px] border border-white/70 bg-white/90 p-5 shadow-[0_12px_40px_rgba(15,23,42,0.08)] backdrop-blur">
+          <div className="w-full min-w-0 rounded-[28px] border border-white/70 bg-white/90 p-5 shadow-[0_12px_40px_rgba(15,23,42,0.08)] backdrop-blur">
             {/* Month Nav */}
             <div className="mb-5 flex items-center justify-between">
               <button
@@ -298,9 +319,9 @@ const OccupancyForecast = () => {
           </div>
 
           {/* Sidebar Detail */}
-          <div className="space-y-4">
+          <div className="w-full min-w-0 space-y-4">
             {selectedDate ? (
-              <div className="rounded-[28px] border border-white/70 bg-white/90 p-5 shadow-[0_12px_40px_rgba(15,23,42,0.08)] backdrop-blur">
+              <div className="w-full rounded-[28px] border border-white/70 bg-white/90 p-5 shadow-[0_12px_40px_rgba(15,23,42,0.08)] backdrop-blur">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-sky-600">
                   Selected Date
                 </p>
@@ -340,17 +361,17 @@ const OccupancyForecast = () => {
                     <p className="mb-2 text-xs font-bold text-slate-500">
                       Active Bookings
                     </p>
-                    <div className="space-y-2">
-                      {selectedData.bookings.map((b) => (
+                    <div className="space-y-2.5">
+                      {paginatedSelectedBookings.map((b) => (
                         <div
                           key={b.bookingId}
-                          className="flex items-center justify-between rounded-[14px] bg-sky-50 px-3 py-2"
+                          className="flex items-start justify-between gap-3 rounded-[16px] bg-sky-50 px-3.5 py-3"
                         >
-                          <div>
-                            <div className="text-sm font-bold text-slate-800">
+                          <div className="min-w-0 flex-1">
+                            <div className="break-words text-sm font-bold leading-5 text-slate-800">
                               {b.guest_name || "Walk-in"}
                             </div>
-                            <div className="text-[11px] text-slate-500">
+                            <div className="mt-1 break-words text-[11px] leading-4 text-slate-500">
                               Room: {b.rooms || "—"}
                             </div>
                           </div>
@@ -361,13 +382,75 @@ const OccupancyForecast = () => {
                                 state: { bookingId: b.bookingId },
                               })
                             }
-                            className="rounded-full bg-sky-600 px-3 py-1 text-[11px] font-bold text-white"
+                            className="shrink-0 rounded-full bg-sky-600 px-3 py-1 text-[11px] font-bold text-white"
                           >
                             View
                           </button>
                         </div>
                       ))}
                     </div>
+
+                    {selectedData.bookings.length > SELECTED_DATE_PAGE_SIZE ? (
+                      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3">
+                        <div className="text-[11px] font-semibold text-slate-500">
+                          Showing{" "}
+                          <span className="text-slate-900">
+                            {(selectedDatePage - 1) * SELECTED_DATE_PAGE_SIZE + 1}
+                          </span>{" "}
+                          to{" "}
+                          <span className="text-slate-900">
+                            {Math.min(
+                              selectedDatePage * SELECTED_DATE_PAGE_SIZE,
+                              selectedData.bookings.length,
+                            )}
+                          </span>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setSelectedDatePage((current) => Math.max(1, current - 1))
+                            }
+                            disabled={selectedDatePage === 1}
+                            className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            Prev
+                          </button>
+
+                          {Array.from(
+                            { length: totalSelectedDatePages },
+                            (_, index) => index + 1,
+                          ).map((pageNumber) => (
+                            <button
+                              key={pageNumber}
+                              type="button"
+                              onClick={() => setSelectedDatePage(pageNumber)}
+                              className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition ${
+                                pageNumber === selectedDatePage
+                                  ? "bg-sky-600 text-white"
+                                  : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                              }`}
+                            >
+                              {pageNumber}
+                            </button>
+                          ))}
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setSelectedDatePage((current) =>
+                                Math.min(totalSelectedDatePages, current + 1),
+                              )
+                            }
+                            disabled={selectedDatePage === totalSelectedDatePages}
+                            className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            Next
+                          </button>
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
                 )}
 

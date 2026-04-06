@@ -16,6 +16,7 @@ import {
 
 const ACTIVE_INVOICE_KEY = "restaurant-active-invoice";
 const SAVED_INVOICE_KEY = "restaurant-saved-invoice";
+const ROOM_PAGE_SIZE = 6;
 const normalizeInvoiceStatus = (value) => String(value || "").trim().toLowerCase();
 const getReusableBill = (bill) => (normalizeInvoiceStatus(bill?.invoiceStatus) === "paid" ? null : bill);
 const createBillLookupKey = (entityType, tableName, tokenId) =>
@@ -33,6 +34,7 @@ const Roomitem = () => {
   const [loading, setLoading] = useState(true);
   const [tokenSnapshots, setTokenSnapshots] = useState({});
   const [billByRoom, setBillByRoom] = useState({});
+  const [roomPage, setRoomPage] = useState(1);
 
   const focusRoomNo = String(location.state?.focusRoomNo || "");
 
@@ -147,6 +149,24 @@ const Roomitem = () => {
         }),
     [rooms, mergedBookings, today],
   );
+
+  const totalRoomPages = Math.max(1, Math.ceil(activeRoomCards.length / ROOM_PAGE_SIZE));
+  const paginatedRooms = useMemo(
+    () =>
+      activeRoomCards.slice(
+        (roomPage - 1) * ROOM_PAGE_SIZE,
+        roomPage * ROOM_PAGE_SIZE,
+      ),
+    [activeRoomCards, roomPage],
+  );
+  const visibleRoomStart = activeRoomCards.length ? (roomPage - 1) * ROOM_PAGE_SIZE + 1 : 0;
+  const visibleRoomEnd = Math.min(roomPage * ROOM_PAGE_SIZE, activeRoomCards.length);
+
+  useEffect(() => {
+    if (roomPage > totalRoomPages) {
+      setRoomPage(totalRoomPages);
+    }
+  }, [roomPage, totalRoomPages]);
 
   useEffect(() => {
     const loadTokenSnapshots = async () => {
@@ -376,90 +396,189 @@ const Roomitem = () => {
 
       {loading ? <div className="mt-6 text-sm text-slate-500">Loading hotel rooms...</div> : null}
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 mt-6">
-        {activeRoomCards.map(({ room, booking }) => {
-          const hotelStatus = String(room.hotelStatus || room.status || "");
-          const isFocused = focusRoomNo && String(room.roomNo) === focusRoomNo;
-          const guestName = room.guest || booking?.guestName || "No active guest";
-          const stayCheckIn = room.checkIn || booking?.checkIn || "--";
-          const stayCheckOut = room.checkOut || booking?.checkOut || "--";
-          const hasMenuItems = (tokenSnapshots[String(room.roomNo)]?.items || []).length > 0;
-          const relatedBill =
-            billByRoom[
-              createBillLookupKey("Room", String(room.roomNo), tokenSnapshots[String(room.roomNo)]?.tokenId || null)
-            ] || null;
-          const showPayNow = relatedBill && String(relatedBill.invoiceStatus || "").toLowerCase() !== "paid";
-          return (
-            <div
-              key={`${room.roomId}-${room.roomNo}`}
-              className={`rounded-3xl border bg-white shadow-[0_10px_30px_rgba(15,23,42,0.12)] transition ${
-                isFocused
-                  ? "border-blue-400 ring-2 ring-blue-200 shadow-[0_18px_44px_rgba(59,130,246,0.18)]"
-                  : "border-slate-100 hover:shadow-[0_18px_44px_rgba(59,130,246,0.18)]"
-              }`}
-            >
-              <div className="p-4 space-y-2">
-                <div className="flex justify-between items-start gap-3">
-                  <div>
-                    <div className="font-semibold text-slate-900 text-lg">Room {room.roomNo}</div>
-                    <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                      {room.categoryName || "Hotel Room"}
-                    </div>
-                    <div className="text-xs text-slate-500">ID {room.roomId || "--"}</div>
-                  </div>
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-bold tracking-wide border ${
-                      hotelStatus.toLowerCase() === "occupied"
-                        ? "bg-rose-50 text-rose-700 border-rose-200"
-                        : "bg-emerald-50 text-emerald-700 border-emerald-200"
+      <div className="mt-6 overflow-hidden rounded-[30px] border border-slate-200 bg-white shadow-[0_20px_45px_rgba(15,23,42,0.08)]">
+        <div className="border-b border-slate-100 px-6 py-5">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-sky-500">Room Service Board</div>
+          <h3 className="mt-2 text-2xl font-black text-slate-900">Occupied rooms in data table view</h3>
+          <p className="mt-1 text-sm text-slate-500">
+            Room, guest stay, token readiness, aur billing actions ko ek hi table layout me manage kariye.
+          </p>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="min-w-[1180px] w-full border-collapse">
+            <thead className="bg-slate-50">
+              <tr className="text-left">
+                <th className="px-5 py-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Room</th>
+                <th className="px-5 py-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Status</th>
+                <th className="px-5 py-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Guest</th>
+                <th className="px-5 py-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Stay</th>
+                <th className="px-5 py-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Token</th>
+                <th className="px-5 py-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Billing</th>
+                <th className="px-5 py-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedRooms.length ? (
+                paginatedRooms.map(({ room, booking }) => {
+                  const hotelStatus = String(room.hotelStatus || room.status || "");
+                  const isFocused = focusRoomNo && String(room.roomNo) === focusRoomNo;
+                  const guestName = room.guest || booking?.guestName || "No active guest";
+                  const stayCheckIn = room.checkIn || booking?.checkIn || "--";
+                  const stayCheckOut = room.checkOut || booking?.checkOut || "--";
+                  const snapshot = tokenSnapshots[String(room.roomNo)] || { tokenId: null, tokenCode: null, items: [] };
+                  const hasMenuItems = (snapshot.items || []).length > 0;
+                  const relatedBill =
+                    billByRoom[createBillLookupKey("Room", String(room.roomNo), snapshot.tokenId || null)] || null;
+                  const showPayNow = relatedBill && String(relatedBill.invoiceStatus || "").toLowerCase() !== "paid";
+
+                  return (
+                    <tr
+                      key={`${room.roomId}-${room.roomNo}`}
+                      className={`border-t border-slate-100 align-top transition ${
+                        isFocused ? "bg-blue-50/70" : "hover:bg-sky-50/30"
+                      }`}
+                    >
+                      <td className="px-5 py-4">
+                        <div className="text-lg font-black text-slate-900">Room {room.roomNo}</div>
+                        <div className="mt-1 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                          {room.categoryName || "Hotel Room"}
+                        </div>
+                        <div className="mt-1 text-xs text-slate-500">ID #{room.roomId || "--"}</div>
+                      </td>
+                      <td className="px-5 py-4">
+                        <span
+                          className={`inline-flex rounded-full border px-3 py-1 text-xs font-bold ${
+                            hotelStatus.toLowerCase() === "occupied"
+                              ? "border-rose-200 bg-rose-50 text-rose-700"
+                              : "border-emerald-200 bg-emerald-50 text-emerald-700"
+                          }`}
+                        >
+                          {hotelStatus || "Available"}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="text-sm font-semibold text-slate-800">{guestName}</div>
+                        <div className="mt-1 text-xs text-slate-500">
+                          Booking {booking?.bookingCode || booking?.bookingId || "--"}
+                        </div>
+                      </td>
+                      <td className="px-5 py-4 text-sm text-slate-600">
+                        <div>{stayCheckIn}</div>
+                        <div className="mt-1 text-xs text-slate-500">to {stayCheckOut}</div>
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="text-sm font-semibold text-slate-800">{snapshot.tokenCode || "No active token"}</div>
+                        <div className="mt-1 text-xs text-slate-500">
+                          {(snapshot.items || []).length
+                            ? `${(snapshot.items || []).length} menu items added`
+                            : "No items yet"}
+                        </div>
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="text-sm font-semibold text-slate-800">
+                          {relatedBill?.invoiceStatus || (hasMenuItems ? "Ready for invoice" : "Pending token")}
+                        </div>
+                        <div className="mt-1 text-xs text-slate-500">
+                          {showPayNow ? "Payment action available" : "No active settlement"}
+                        </div>
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            className="rounded-xl bg-gradient-to-r from-teal-500 to-cyan-500 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:shadow-md"
+                            onClick={() => openRoomFlow(room, "token")}
+                          >
+                            + Token
+                          </button>
+
+                          {hasMenuItems ? (
+                            <button
+                              className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:shadow-md"
+                              onClick={() => openRoomInvoice(room)}
+                            >
+                              Create Invoice
+                            </button>
+                          ) : null}
+
+                          {showPayNow ? (
+                            <button
+                              className="rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:shadow-md"
+                              onClick={() => openPayNow(room)}
+                            >
+                              Pay Now
+                            </button>
+                          ) : null}
+
+                          <button
+                            className="rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:shadow-md"
+                            onClick={() => openRoomFlow(room, "items")}
+                          >
+                            Room Items
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan={7} className="px-5 py-12 text-center text-sm text-slate-500">
+                    No occupied rooms with active booking found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="flex flex-col gap-3 border-t border-slate-200 px-6 py-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="text-sm text-slate-500">
+            Showing <span className="font-semibold text-slate-900">{visibleRoomStart}</span>-
+            <span className="font-semibold text-slate-900">{visibleRoomEnd}</span> of{" "}
+            <span className="font-semibold text-slate-900">{activeRoomCards.length}</span> occupied rooms
+          </div>
+
+          {totalRoomPages > 1 ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setRoomPage((current) => Math.max(1, current - 1))}
+                disabled={roomPage === 1}
+                className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-sky-200 hover:text-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Previous
+              </button>
+
+              {Array.from({ length: totalRoomPages }, (_, index) => index + 1).map((pageNumber) => {
+                const isActive = pageNumber === roomPage;
+                return (
+                  <button
+                    key={`room-page-${pageNumber}`}
+                    type="button"
+                    onClick={() => setRoomPage(pageNumber)}
+                    className={`h-10 min-w-10 rounded-full px-3 text-sm font-bold transition ${
+                      isActive
+                        ? "bg-slate-900 text-white shadow-[0_12px_24px_rgba(15,23,42,0.14)]"
+                        : "border border-slate-200 bg-white text-slate-600 hover:border-sky-200 hover:text-sky-700"
                     }`}
                   >
-                  {hotelStatus || "Available"}
-                  </span>
-                </div>
-
-                <div className="rounded-2xl bg-slate-50 p-3 text-xs text-slate-600">
-                  <div>Guest: {guestName}</div>
-                  <div>Stay: {stayCheckIn} to {stayCheckOut}</div>
-                </div>
-              </div>
-
-              <div className="px-4 pb-4 flex flex-col gap-2.5">
-                <button
-                  className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 text-white py-2.5 rounded-xl text-sm font-semibold shadow-md hover:shadow-lg transition"
-                  onClick={() => openRoomFlow(room, "token")}
-                >
-                  + Token
-                </button>
-
-                {hasMenuItems ? (
-                  <button
-                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2.5 rounded-xl text-sm font-semibold shadow-md hover:shadow-lg transition"
-                    onClick={() => openRoomInvoice(room)}
-                  >
-                    Create Invoice
+                    {pageNumber}
                   </button>
-                ) : null}
+                );
+              })}
 
-                {showPayNow ? (
-                  <button
-                    className="w-full bg-gradient-to-r from-emerald-500 to-green-600 text-white py-2.5 rounded-xl text-sm font-semibold shadow-md hover:shadow-lg transition"
-                    onClick={() => openPayNow(room)}
-                  >
-                    Pay Now
-                  </button>
-                ) : null}
-
-                <button
-                  className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-2.5 rounded-xl text-sm font-semibold shadow-md hover:shadow-lg transition"
-                  onClick={() => openRoomFlow(room, "items")}
-                >
-                  Room Items
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => setRoomPage((current) => Math.min(totalRoomPages, current + 1))}
+                disabled={roomPage === totalRoomPages}
+                className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-sky-200 hover:text-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Next
+              </button>
             </div>
-          );
-        })}
+          ) : null}
+        </div>
       </div>
 
     </div>

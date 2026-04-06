@@ -10,7 +10,9 @@ import {
   FaFilter,
   FaGlassCheers,
   FaHeadset,
+  FaImage,
   FaLightbulb,
+  FaLink,
   FaMoneyCheckAlt,
   FaPaperPlane,
   FaPlus,
@@ -18,14 +20,14 @@ import {
   FaSearch,
   FaSyncAlt,
   FaTrash,
+  FaUpload,
   FaUtensils,
   FaUsers,
   FaWhatsapp,
 } from "react-icons/fa";
 
-import BanquetHallCard from "../components/Banquet/BanquetHallCard";
 import BanquetBill from "../components/Banquet/BanquetBill";
-import API from "../api";
+import API, { getBackendBaseURL } from "../api";
 import {
   banquetConfigStorageKey,
   banquetMenuDraftStorageKey,
@@ -112,6 +114,7 @@ const defaultHall = {
   name: "",
   capacity: "",
   ratePerHour: "",
+  image: "",
   is_ac: true,
   status: "Available",
 };
@@ -190,15 +193,54 @@ function useDelayedValue(value, delay = 1000) {
   return delayedValue;
 }
 
-function PaginationControls({ page, totalPages, onChange, label }) {
-  if (totalPages <= 1) return null;
+function PaginationControls({
+  page,
+  totalPages,
+  onChange,
+  label,
+  totalItems = 0,
+  pageSize = 0,
+  pageSizeOptions = null,
+  onPageSizeChange,
+}) {
+  if (totalPages <= 1 && !pageSizeOptions) return null;
+
+  const startItem =
+    totalItems && pageSize ? (page - 1) * pageSize + 1 : null;
+  const endItem =
+    totalItems && pageSize ? Math.min(page * pageSize, totalItems) : null;
+  const visiblePages = Array.from({ length: totalPages }, (_, index) => index + 1)
+    .filter((pageNumber) => {
+      if (totalPages <= 5) return true;
+      if (pageNumber === 1 || pageNumber === totalPages) return true;
+      return Math.abs(pageNumber - page) <= 1;
+    });
 
   return (
-    <div className="flex flex-col gap-3 rounded-[22px] border border-slate-200/80 bg-white/80 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-      <div className="text-sm font-semibold text-slate-600">
-        {label} Page {page} of {totalPages}
+    <div className="flex flex-col gap-3 rounded-[22px] border border-slate-200/80 bg-white/80 px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+        <div className="text-sm font-semibold text-slate-600">
+          {label} Page {page} of {totalPages}
+          {startItem && endItem ? ` • Showing ${startItem}-${endItem} of ${totalItems}` : ""}
+        </div>
+        {pageSizeOptions?.length && onPageSizeChange ? (
+          <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+            Rows
+            <select
+              value={pageSize}
+              onChange={(event) => onPageSizeChange(Number(event.target.value))}
+              className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 outline-none transition focus:border-cyan-300"
+            >
+              {pageSizeOptions.map((option) => (
+                <option key={option} value={option}>
+                  {option} / page
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : null}
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
           onClick={() => onChange(Math.max(1, page - 1))}
@@ -207,6 +249,29 @@ function PaginationControls({ page, totalPages, onChange, label }) {
         >
           Previous
         </button>
+        {visiblePages.map((pageNumber, index) => {
+          const previousPage = visiblePages[index - 1];
+          const shouldShowGap = previousPage && pageNumber - previousPage > 1;
+
+          return (
+            <div key={pageNumber} className="flex items-center gap-2">
+              {shouldShowGap ? (
+                <span className="px-1 text-sm font-bold text-slate-300">...</span>
+              ) : null}
+              <button
+                type="button"
+                onClick={() => onChange(pageNumber)}
+                className={`h-10 min-w-[40px] rounded-full px-3 text-sm font-bold transition ${
+                  pageNumber === page
+                    ? "bg-slate-900 text-white shadow-[0_10px_25px_rgba(15,23,42,0.18)]"
+                    : "border border-slate-200 bg-white text-slate-700 hover:border-cyan-300 hover:text-cyan-700"
+                }`}
+              >
+                {pageNumber}
+              </button>
+            </div>
+          );
+        })}
         <button
           type="button"
           onClick={() => onChange(Math.min(totalPages, page + 1))}
@@ -240,6 +305,15 @@ function formatBookingDate(dateValue) {
     month: "short",
     year: "numeric",
   }).format(parsed);
+}
+
+function resolveBanquetHallImage(image) {
+  const raw = String(image || "").trim();
+  if (!raw) return null;
+  if (raw.startsWith("http://") || raw.startsWith("https://") || raw.startsWith("data:") || raw.startsWith("/")) {
+    return raw;
+  }
+  return `${getBackendBaseURL()}/uploads/${raw}`;
 }
 
 function getReservationStatusBadgeClass(status) {
@@ -286,7 +360,7 @@ const Banquet = () => {
   const pricingConfigHydratedRef = useRef(false);
   const skipNextPricingConfigSyncRef = useRef(false);
   const pricingConfigSyncTimeoutRef = useRef(null);
-  const hallsPerPage = 6;
+  const [hallsPerPage, setHallsPerPage] = useState(2);
   const bookingsPerPage = 5;
   const [halls, setHalls] = useState([]);
   const [bookings, setBookings] = useState([]);
@@ -295,10 +369,11 @@ const Banquet = () => {
   const [showReservationForm, setShowReservationForm] = useState(false);
   const [showAddHall, setShowAddHall] = useState(false);
   const [detailHall, setDetailHall] = useState(null);
+  const [hallDeleteTarget, setHallDeleteTarget] = useState(null);
   const [showBill, setShowBill] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [selectedMenuPackage, setSelectedMenuPackage] = useState(null);
-  const [activeQuickSection, setActiveQuickSection] = useState(null);
+  const [activeQuickSection, setActiveQuickSection] = useState("halls");
   const [pricingConfig, setPricingConfig] = useState(getStoredPricingConfig);
   const [menuCatalog, setMenuCatalog] = useState([]);
   const [hallFormError, setHallFormError] = useState("");
@@ -322,18 +397,29 @@ const Banquet = () => {
     decorationFee: getStoredPricingConfig().decorServiceFee,
   }));
   const [newHall, setNewHall] = useState(defaultHall);
+  const [hallImageMode, setHallImageMode] = useState("upload");
+  const [hallImageFile, setHallImageFile] = useState(null);
+  const [hallImagePreview, setHallImagePreview] = useState("");
   const delayedShowReservationForm = useDelayedValue(showReservationForm);
   const delayedShowAddHall = useDelayedValue(showAddHall);
   const delayedDetailHall = useDelayedValue(detailHall);
+  const delayedHallDeleteTarget = useDelayedValue(hallDeleteTarget);
   const delayedShowBill = useDelayedValue(showBill);
   const delayedSelectedMenuPackage = useDelayedValue(selectedMenuPackage);
-  const delayedActiveQuickSection = useDelayedValue(activeQuickSection);
   const delayedReservationSuccess = useDelayedValue(reservationSuccess);
 
   const selectedHall = useMemo(
     () => halls.find((hall) => String(hall.id) === String(wizard.hallId)),
     [halls, wizard.hallId]
   );
+
+  useEffect(() => {
+    return () => {
+      if (hallImagePreview && hallImagePreview.startsWith("blob:")) {
+        URL.revokeObjectURL(hallImagePreview);
+      }
+    };
+  }, [hallImagePreview]);
 
   const selectedPackage = useMemo(
     () =>
@@ -609,7 +695,7 @@ const Banquet = () => {
 
   const totalHallPages = useMemo(
     () => Math.max(1, Math.ceil(halls.length / hallsPerPage)),
-    [halls.length]
+    [halls.length, hallsPerPage]
   );
 
   const totalBookingPages = useMemo(
@@ -620,7 +706,7 @@ const Banquet = () => {
   const paginatedHalls = useMemo(() => {
     const start = (hallPage - 1) * hallsPerPage;
     return halls.slice(start, start + hallsPerPage);
-  }, [hallPage, halls]);
+  }, [hallPage, halls, hallsPerPage]);
 
   const paginatedBookings = useMemo(() => {
     const start = (bookingPage - 1) * bookingsPerPage;
@@ -806,10 +892,10 @@ const Banquet = () => {
       delayedShowReservationForm ||
       delayedShowAddHall ||
       Boolean(delayedDetailHall) ||
+      Boolean(delayedHallDeleteTarget) ||
       delayedShowBill ||
       Boolean(delayedReservationSuccess) ||
-      Boolean(delayedSelectedMenuPackage) ||
-      Boolean(delayedActiveQuickSection);
+      Boolean(delayedSelectedMenuPackage);
 
     if (!hasOpenModal) return undefined;
 
@@ -835,6 +921,10 @@ const Banquet = () => {
         setDetailHall(null);
         return;
       }
+      if (hallDeleteTarget) {
+        setHallDeleteTarget(null);
+        return;
+      }
       if (showAddHall) {
         setHallFormError("");
         setShowAddHall(false);
@@ -843,9 +933,6 @@ const Banquet = () => {
       if (showReservationForm) {
         resetWizard();
         return;
-      }
-      if (activeQuickSection) {
-        setActiveQuickSection(null);
       }
     };
 
@@ -856,15 +943,15 @@ const Banquet = () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [
-    delayedActiveQuickSection,
     delayedDetailHall,
+    delayedHallDeleteTarget,
     delayedReservationSuccess,
     delayedSelectedMenuPackage,
     delayedShowAddHall,
     delayedShowBill,
     delayedShowReservationForm,
-    activeQuickSection,
     detailHall,
+    hallDeleteTarget,
     reservationSuccess,
     selectedMenuPackage,
     showAddHall,
@@ -894,6 +981,34 @@ const Banquet = () => {
       decorationFee: pricingConfig.decorServiceFee,
     });
     setShowReservationForm(true);
+  };
+
+  const openAddHallForm = () => {
+    setHallFormError("");
+    setEditingHallId(null);
+    setNewHall(defaultHall);
+    setHallImageMode("upload");
+    setHallImageFile(null);
+    setHallImagePreview("");
+    setActiveQuickSection("halls");
+    setShowAddHall(true);
+  };
+
+  const handleHallImageFileChange = (event) => {
+    const file = event.target.files?.[0] || null;
+    setHallImageFile(file);
+
+    if (hallImagePreview && hallImagePreview.startsWith("blob:")) {
+      URL.revokeObjectURL(hallImagePreview);
+    }
+
+    if (file) {
+      setHallImagePreview(URL.createObjectURL(file));
+      setHallImageMode("upload");
+      return;
+    }
+
+    setHallImagePreview("");
   };
 
   const handleEditBooking = (booking) => {
@@ -1406,10 +1521,11 @@ const Banquet = () => {
       name: newHall.name.trim(),
       capacity: Number(newHall.capacity),
       ratePerHour: Number(newHall.ratePerHour),
+      image: String(newHall.image || "").trim(),
     };
 
     if (!payload.name || payload.capacity <= 0 || payload.ratePerHour <= 0) {
-      setHallFormError("Hall name, capacity aur rate per hour sahi bharna zaroori hai.");
+      setHallFormError("Please enter a valid hall name, capacity, and hourly rate.");
       return;
     }
 
@@ -1417,13 +1533,34 @@ const Banquet = () => {
     setHallFormError("");
 
     try {
+      const requestBody = hallImageFile
+        ? (() => {
+            const formData = new FormData();
+            formData.append("name", payload.name);
+            formData.append("capacity", String(payload.capacity));
+            formData.append("ratePerHour", String(payload.ratePerHour));
+            formData.append("is_ac", payload.is_ac ? "true" : "false");
+            formData.append("image", hallImageFile);
+            if (editingHallId) {
+              formData.append("status", newHall.status || "Available");
+            }
+            return formData;
+          })()
+        : {
+            ...payload,
+            image: hallImageMode === "url" ? payload.image : "",
+          };
+
       if (editingHallId) {
-        await API.put(`/banquet/halls/${editingHallId}`, {
-          ...payload,
-          status: newHall.status || "Available",
-        });
+        await API.put(`/banquet/halls/${editingHallId}`, hallImageFile
+          ? requestBody
+          : {
+              ...requestBody,
+              status: newHall.status || "Available",
+            }
+        );
       } else {
-        await API.post("/banquet/halls", payload);
+        await API.post("/banquet/halls", requestBody);
       }
       const refreshed = await API.get("/banquet");
       if (refreshed.data?.pricingConfig) {
@@ -1443,15 +1580,18 @@ const Banquet = () => {
         subjectLabel: "Hall",
       });
       setNewHall(defaultHall);
+      setHallImageMode("upload");
+      setHallImageFile(null);
+      setHallImagePreview("");
       setEditingHallId(null);
       setShowAddHall(false);
-      setActiveQuickSection(null);
+      setActiveQuickSection("halls");
     } catch (error) {
       setHallFormError(
         error.response?.data?.message ||
           (editingHallId
-            ? "Banquet hall update nahi ho paaya."
-            : "Banquet hall add nahi ho paaya.")
+            ? "Unable to update the banquet hall."
+            : "Unable to add the banquet hall.")
       );
     } finally {
       setIsAddingHall(false);
@@ -1465,24 +1605,28 @@ const Banquet = () => {
       name: hall.name || "",
       capacity: String(hall.capacity || ""),
       ratePerHour: String(hall.ratePerHour || ""),
+      image: hall.image || "",
       is_ac: Boolean(hall.is_ac),
       status: hall.status || "Available",
     });
+    setHallImageMode(hall.image ? "url" : "upload");
+    setHallImageFile(null);
+    setHallImagePreview("");
     setDetailHall(null);
     setShowAddHall(true);
   };
 
   const handleDeleteHall = async (hall) => {
-    const confirmed = window.confirm(
-      `${hall.name} hall ko delete karna hai? Ye action undo nahi hoga.`
-    );
-    if (!confirmed) return;
+    setHallDeleteTarget(hall);
+  };
 
+  const confirmDeleteHall = async () => {
+    if (!hallDeleteTarget?.id) return;
     setIsDeletingHall(true);
     setHallFormError("");
 
     try {
-      await API.delete(`/banquet/halls/${hall.id}`);
+      await API.delete(`/banquet/halls/${hallDeleteTarget.id}`);
       const refreshed = await API.get("/banquet");
       if (refreshed.data?.pricingConfig) {
         skipNextPricingConfigSyncRef.current = true;
@@ -1493,18 +1637,19 @@ const Banquet = () => {
         title: "Hall deleted",
         eyebrow: "Hall Deleted",
         message: "hall has been deleted successfully.",
-        customerName: hall.name,
-        hallName: `${hall.capacity} guests capacity`,
-        detail: `Rate ${formatINR(hall.ratePerHour)} per hour`,
+        customerName: hallDeleteTarget.name,
+        hallName: `${hallDeleteTarget.capacity} guests capacity`,
+        detail: `Rate ${formatINR(hallDeleteTarget.ratePerHour)} per hour`,
         subjectLabel: "Hall",
       });
+      setHallDeleteTarget(null);
       setDetailHall(null);
-      if (String(wizard.hallId) === String(hall.id)) {
+      if (String(wizard.hallId) === String(hallDeleteTarget.id)) {
         setWizard((prev) => ({ ...prev, hallId: "" }));
       }
     } catch (error) {
       setHallFormError(
-        error.response?.data?.message || "Banquet hall delete nahi ho paaya."
+        error.response?.data?.message || "Unable to delete the banquet hall."
       );
     } finally {
       setIsDeletingHall(false);
@@ -1558,62 +1703,146 @@ const Banquet = () => {
             </div>
             <button
               type="button"
-              onClick={() => {
-                setHallFormError("");
-                setEditingHallId(null);
-                setNewHall(defaultHall);
-                setShowAddHall(true);
-              }}
+              onClick={openAddHallForm}
               className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-teal-600 to-emerald-500 px-4 py-2.5 text-sm font-bold text-white"
             >
               <FaPlus />
               Add Hall
             </button>
           </div>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="overflow-hidden rounded-[24px] border border-slate-200/80 bg-white shadow-[0_18px_60px_rgba(148,163,184,0.12)]">
             {halls.length ? (
-              paginatedHalls.map((hall) => (
-                <div key={hall.id} className="space-y-2">
-                  <BanquetHallCard
-                    hall={hall}
-                    selected={String(wizard.hallId) === String(hall.id)}
-                    onSelect={() =>
-                      setWizard((prev) => ({
-                        ...prev,
-                        hallId: hall.id,
-                      }))
-                    }
-                  />
-                  <div className="flex flex-wrap items-center gap-3 text-sm font-semibold">
-                    <button
-                      type="button"
-                      onClick={() => setDetailHall(hall)}
-                      className="text-cyan-700"
-                    >
-                      View hall details
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleEditHall(hall)}
-                      className="inline-flex items-center gap-1 text-amber-700"
-                    >
-                      <FaEdit />
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteHall(hall)}
-                      className="inline-flex items-center gap-1 text-rose-700"
-                    >
-                      <FaTrash />
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              ))
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-left text-sm">
+                  <thead className="bg-[linear-gradient(180deg,#f8fbff_0%,#eef6ff_100%)] text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    <tr>
+                      <th className="px-4 py-4">Image</th>
+                      <th className="px-4 py-4">Hall Name</th>
+                      <th className="px-4 py-4">Capacity</th>
+                      <th className="px-4 py-4">Rate / Hour</th>
+                      <th className="px-4 py-4">Type</th>
+                      <th className="px-4 py-4">Status</th>
+                      <th className="px-4 py-4">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedHalls.map((hall) => {
+                      const hallImage = resolveBanquetHallImage(hall.image);
+                      const isSelected =
+                        String(wizard.hallId) === String(hall.id);
+
+                      return (
+                        <tr
+                          key={hall.id}
+                          className={`border-t border-slate-200 transition ${
+                            isSelected ? "bg-cyan-50/70" : "bg-white"
+                          }`}
+                        >
+                          <td className="px-4 py-4 align-top">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setWizard((prev) => ({
+                                  ...prev,
+                                  hallId: hall.id,
+                                }))
+                              }
+                              className="flex h-[76px] w-[76px] items-center justify-center overflow-hidden rounded-[20px] border border-slate-200 bg-slate-50 shadow-sm transition hover:border-cyan-300 hover:shadow-[0_12px_30px_rgba(34,211,238,0.16)]"
+                            >
+                              {hallImage ? (
+                                <img
+                                  src={hallImage}
+                                  alt={hall.name || "Banquet hall"}
+                                  className="h-full w-full object-cover"
+                                />
+                              ) : (
+                                <div className="flex h-full w-full items-center justify-center bg-[linear-gradient(135deg,#dff7ff_0%,#eef6ff_50%,#fff4df_100%)] text-cyan-700">
+                                  <FaGlassCheers className="text-2xl" />
+                                </div>
+                              )}
+                            </button>
+                          </td>
+                          <td className="px-4 py-4 align-top">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setWizard((prev) => ({
+                                  ...prev,
+                                  hallId: hall.id,
+                                }))
+                              }
+                              className="text-left"
+                            >
+                              <div className="font-bold text-slate-900 transition hover:text-cyan-700">
+                                {hall.name || "Unnamed Hall"}
+                              </div>
+                            </button>
+                            <p className="mt-1 max-w-[34ch] text-xs leading-5 text-slate-500">
+                              Elegant venue setup for weddings, celebrations,
+                              conferences and premium social events.
+                            </p>
+                          </td>
+                          <td className="px-4 py-4 align-top font-semibold text-slate-900">
+                            {hall.capacity || 0}
+                          </td>
+                          <td className="px-4 py-4 align-top font-semibold text-slate-900">
+                            {formatINR(hall.ratePerHour)}
+                          </td>
+                          <td className="px-4 py-4 align-top">
+                            <span className="inline-flex rounded-full bg-cyan-50 px-3 py-1 text-xs font-bold text-cyan-700">
+                              {hall.is_ac ? "AC Hall" : "Non-AC Hall"}
+                            </span>
+                          </td>
+                          <td className="px-4 py-4 align-top">
+                            <span
+                              className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${
+                                hall.status === "Available"
+                                  ? "bg-emerald-50 text-emerald-700"
+                                  : hall.status === "Maintenance"
+                                    ? "bg-rose-50 text-rose-700"
+                                    : "bg-amber-50 text-amber-700"
+                              }`}
+                            >
+                              {hall.status || "Available"}
+                            </span>
+                          </td>
+                          <td className="px-4 py-4 align-top">
+                            <div className="flex flex-wrap gap-2">
+                              <button
+                                type="button"
+                                onClick={() => setDetailHall(hall)}
+                                className="rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1.5 text-xs font-bold text-cyan-700 transition hover:border-cyan-300 hover:bg-cyan-100"
+                              >
+                                View
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleEditHall(hall)}
+                                className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-700 transition hover:border-amber-300 hover:bg-amber-100"
+                              >
+                                <FaEdit />
+                                Edit
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteHall(hall)}
+                                className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-700 transition hover:border-rose-300 hover:bg-rose-100"
+                              >
+                                <FaTrash />
+                                Delete
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             ) : (
-              <div className="rounded-[22px] border border-dashed border-slate-300 bg-white/70 p-6 text-sm text-slate-500 md:col-span-2 xl:col-span-3">
-         No banquet hall has been added yet. Create a new hall using ‘Add Hall
+              <div className="p-6 text-sm text-slate-500">
+                No banquet hall has been added yet. Create a new hall using Add
+                Hall.
               </div>
             )}
           </div>
@@ -1622,6 +1851,13 @@ const Banquet = () => {
             totalPages={totalHallPages}
             onChange={setHallPage}
             label="Halls"
+            totalItems={halls.length}
+            pageSize={hallsPerPage}
+            pageSizeOptions={[2, 5, 10]}
+            onPageSizeChange={(value) => {
+              setHallsPerPage(value);
+              setHallPage(1);
+            }}
           />
         </div>
       );
@@ -1874,6 +2110,8 @@ const Banquet = () => {
             totalPages={totalBookingPages}
             onChange={setBookingPage}
             label="Reservations"
+            totalItems={filteredBookings.length}
+            pageSize={bookingsPerPage}
           />
         </div>
       );
@@ -1988,7 +2226,7 @@ const Banquet = () => {
   };
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-[linear-gradient(180deg,#f8fafc_0%,#eef6ff_32%,#f9fbff_100%)] p-4 sm:p-6 lg:p-8">
+    <div className="relative min-h-screen w-full overflow-x-hidden bg-[linear-gradient(180deg,#f8fafc_0%,#eef6ff_32%,#f9fbff_100%)] p-4 sm:p-6 lg:p-8">
       <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute left-[-10%] top-[-8%] h-72 w-72 rounded-full bg-cyan-200/35 blur-3xl sm:h-[28rem] sm:w-[28rem]" />
         <div className="absolute right-[-12%] top-[6%] h-72 w-72 rounded-full bg-blue-300/30 blur-3xl sm:h-[30rem] sm:w-[30rem]" />
@@ -1996,7 +2234,7 @@ const Banquet = () => {
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.7)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.7)_1px,transparent_1px)] bg-[size:72px_72px] opacity-20" />
       </div>
 
-      <div className="mx-auto max-w-[1320px] space-y-6">
+      <div className="w-full space-y-6">
         <section className="overflow-hidden rounded-[30px] border border-slate-900/10 bg-[linear-gradient(120deg,#103449_0%,#1b4e78_52%,#2757c8_100%)] px-5 py-6 shadow-[0_22px_55px_rgba(15,23,42,0.16)] sm:px-7 sm:py-8">
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(340px,1fr)] xl:items-end">
             <div className="space-y-4">
@@ -2019,6 +2257,14 @@ const Banquet = () => {
                 >
                   <FaSyncAlt className="text-cyan-600" />
                   Refresh dashboard
+                </button>
+                <button
+                  type="button"
+                  onClick={openAddHallForm}
+                  className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur-md transition hover:border-white/35"
+                >
+                  <FaPlus />
+                  Add hall
                 </button>
                 <button
                   type="button"
@@ -2256,6 +2502,29 @@ const Banquet = () => {
             </div>
           </aside>
         </section>
+
+        {activeQuickSection ? (
+          <section className="rounded-[26px] border border-white/70 bg-white/92 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
+            <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
+                  Section Preview
+                </p>
+                <h2 className="mt-1 text-2xl font-black text-slate-900">
+                  Banquet Quick View
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveQuickSection(null)}
+                className={modalCloseBtnCls}
+              >
+                Close
+              </button>
+            </div>
+            {renderQuickSectionModal()}
+          </section>
+        ) : null}
 
         <section
           id="reservation-section"
@@ -2500,6 +2769,8 @@ const Banquet = () => {
               totalPages={totalBookingPages}
               onChange={setBookingPage}
               label="Reservations"
+              totalItems={filteredBookings.length}
+              pageSize={bookingsPerPage}
             />
           ) : null}
 
@@ -2641,18 +2912,6 @@ const Banquet = () => {
           </div>
         </section>
       </div>
-
-      {delayedActiveQuickSection && (
-        <ModalShell
-          title="Banquet Quick View"
-          eyebrow="Section Preview"
-          onClose={() => setActiveQuickSection(null)}
-          widthClass="max-w-6xl"
-          heightClass="h-[min(88vh,820px)]"
-        >
-          {renderQuickSectionModal()}
-        </ModalShell>
-      )}
 
       {delayedShowReservationForm && (
         <ModalShell
@@ -3373,45 +3632,150 @@ const Banquet = () => {
             setHallFormError("");
             setEditingHallId(null);
             setNewHall(defaultHall);
+            setHallImageMode("upload");
+            setHallImageFile(null);
+            setHallImagePreview("");
             setShowAddHall(false);
           }}
           widthClass="max-w-xl"
           heightClass="h-[min(78vh,560px)]"
         >
           <div className="grid gap-4">
-              <input
-                className={inputCls}
-                placeholder="Hall name"
-                value={newHall.name}
-                onChange={(e) =>
-                  setNewHall((prev) => ({ ...prev, name: e.target.value }))
-                }
-              />
-              <div className="grid gap-4 sm:grid-cols-2">
-                <input
-                  className={inputCls}
-                  placeholder="Capacity"
-                  type="number"
-                  value={newHall.capacity}
-                  onChange={(e) =>
-                    setNewHall((prev) => ({
-                      ...prev,
-                      capacity: e.target.value,
-                    }))
-                  }
-                />
-                <input
-                  className={inputCls}
-                  placeholder="Rate per hour"
-                  type="number"
-                  value={newHall.ratePerHour}
-                  onChange={(e) =>
-                    setNewHall((prev) => ({
-                      ...prev,
-                      ratePerHour: e.target.value,
-                    }))
-                  }
-                />
+            <div className="grid gap-5 md:grid-cols-[140px_minmax(0,1fr)]">
+              <div>
+                <label className={labelCls}>Hall Image</label>
+                <div className="flex aspect-square w-full max-w-[140px] items-center justify-center overflow-hidden rounded-[24px] border border-dashed border-slate-300 bg-slate-50">
+                  {hallImagePreview || newHall.image ? (
+                    <img
+                      src={hallImagePreview || resolveBanquetHallImage(newHall.image)}
+                      alt={newHall.name || "Hall preview"}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-[linear-gradient(135deg,#dff7ff_0%,#eef6ff_50%,#fff4df_100%)] text-cyan-700">
+                      <FaGlassCheers className="text-3xl" />
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className={labelCls}>Hall Name</label>
+                  <input
+                    className={inputCls}
+                    placeholder="Enter hall name"
+                    value={newHall.name}
+                    onChange={(e) =>
+                      setNewHall((prev) => ({ ...prev, name: e.target.value }))
+                    }
+                  />
+                </div>
+                <div>
+                  <label className={labelCls}>Image Source</label>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setHallImageMode("upload");
+                        setNewHall((prev) => ({ ...prev, image: "" }));
+                      }}
+                      className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition ${
+                        hallImageMode === "upload"
+                          ? "bg-slate-900 text-white"
+                          : "border border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+                      }`}
+                    >
+                      <FaUpload />
+                      Upload
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (hallImagePreview && hallImagePreview.startsWith("blob:")) {
+                          URL.revokeObjectURL(hallImagePreview);
+                        }
+                        setHallImageFile(null);
+                        setHallImagePreview("");
+                        setHallImageMode("url");
+                      }}
+                      className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition ${
+                        hallImageMode === "url"
+                          ? "bg-slate-900 text-white"
+                          : "border border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+                      }`}
+                    >
+                      <FaLink />
+                      URL
+                    </button>
+                  </div>
+                </div>
+                {hallImageMode === "upload" ? (
+                  <div>
+                    <label className={labelCls}>Upload Image</label>
+                    <label className="flex cursor-pointer items-center gap-3 rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-600 transition hover:border-cyan-300 hover:bg-cyan-50/60">
+                      <FaImage className="text-slate-500" />
+                      <span className="min-w-0 flex-1 truncate">
+                        {hallImageFile
+                          ? hallImageFile.name
+                          : "Choose a square or landscape image"}
+                      </span>
+                      <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-slate-700 shadow-sm">
+                        Browse
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleHallImageFileChange}
+                      />
+                    </label>
+                  </div>
+                ) : (
+                  <div>
+                    <label className={labelCls}>Image URL</label>
+                    <input
+                      className={inputCls}
+                      placeholder="Paste image URL or /uploads/file-name.jpg"
+                      value={newHall.image || ""}
+                      onChange={(e) =>
+                        setNewHall((prev) => ({ ...prev, image: e.target.value }))
+                      }
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className={labelCls}>Capacity</label>
+                  <input
+                    className={inputCls}
+                    placeholder="Enter capacity"
+                    type="number"
+                    value={newHall.capacity}
+                    onChange={(e) =>
+                      setNewHall((prev) => ({
+                        ...prev,
+                        capacity: e.target.value,
+                      }))
+                    }
+                  />
+                </div>
+                <div>
+                  <label className={labelCls}>Rate Per Hour</label>
+                  <input
+                    className={inputCls}
+                    placeholder="Enter hourly rate"
+                    type="number"
+                    value={newHall.ratePerHour}
+                    onChange={(e) =>
+                      setNewHall((prev) => ({
+                        ...prev,
+                        ratePerHour: e.target.value,
+                      }))
+                    }
+                  />
+                </div>
               </div>
               {editingHallId ? (
                 <div>
@@ -3528,6 +3892,91 @@ const Banquet = () => {
                   {isDeletingHall ? "Deleting..." : "Delete Hall"}
                 </button>
               </div>
+          </div>
+        </ModalShell>
+      )}
+
+      {delayedHallDeleteTarget && (
+        <ModalShell
+          title="Delete Banquet Hall"
+          eyebrow="Delete Confirmation"
+          onClose={() => setHallDeleteTarget(null)}
+          widthClass="max-w-2xl"
+          heightClass="h-auto"
+        >
+          <div className="space-y-5">
+            <div className="grid gap-5 md:grid-cols-[150px_minmax(0,1fr)]">
+              <div className="flex aspect-square w-full max-w-[150px] items-center justify-center overflow-hidden rounded-[24px] border border-slate-200 bg-slate-50">
+                {delayedHallDeleteTarget.image ? (
+                  <img
+                    src={resolveBanquetHallImage(delayedHallDeleteTarget.image)}
+                    alt={delayedHallDeleteTarget.name}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-[linear-gradient(135deg,#dff7ff_0%,#eef6ff_50%,#fff4df_100%)] text-cyan-700">
+                    <FaGlassCheers className="text-4xl" />
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-4">
+                <div className="rounded-[22px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm leading-6 text-rose-700">
+                  Are you sure you want to permanently delete this banquet hall? This action cannot be undone.
+                </div>
+
+                <div className="overflow-hidden rounded-[22px] border border-slate-200">
+                  <table className="min-w-full text-sm">
+                    <tbody>
+                      <tr className="border-b border-slate-200 bg-slate-50">
+                        <td className="px-4 py-3 font-semibold text-slate-500">Hall Name</td>
+                        <td className="px-4 py-3 font-bold text-slate-900">{delayedHallDeleteTarget.name || "-"}</td>
+                      </tr>
+                      <tr className="border-b border-slate-200">
+                        <td className="px-4 py-3 font-semibold text-slate-500">Capacity</td>
+                        <td className="px-4 py-3 font-semibold text-slate-900">{delayedHallDeleteTarget.capacity || "-"}</td>
+                      </tr>
+                      <tr className="border-b border-slate-200 bg-slate-50">
+                        <td className="px-4 py-3 font-semibold text-slate-500">Rate Per Hour</td>
+                        <td className="px-4 py-3 font-semibold text-slate-900">{formatINR(delayedHallDeleteTarget.ratePerHour || 0)}</td>
+                      </tr>
+                      <tr className="border-b border-slate-200">
+                        <td className="px-4 py-3 font-semibold text-slate-500">Cooling</td>
+                        <td className="px-4 py-3 font-semibold text-slate-900">{delayedHallDeleteTarget.is_ac ? "Air Conditioned" : "Non Air Conditioned"}</td>
+                      </tr>
+                      <tr className="bg-slate-50">
+                        <td className="px-4 py-3 font-semibold text-slate-500">Status</td>
+                        <td className="px-4 py-3 font-semibold text-slate-900">{delayedHallDeleteTarget.status || "Available"}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            {hallFormError ? (
+              <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+                {hallFormError}
+              </div>
+            ) : null}
+
+            <div className="flex flex-wrap justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setHallDeleteTarget(null)}
+                className={modalCloseBtnCls}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteHall}
+                disabled={isDeletingHall}
+                className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-rose-600 to-rose-500 px-5 py-2.5 text-sm font-bold text-white shadow-[0_14px_30px_rgba(244,63,94,0.22)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isDeletingHall ? "Deleting..." : "Delete Hall"}
+              </button>
+            </div>
           </div>
         </ModalShell>
       )}
@@ -3695,3 +4144,4 @@ const Banquet = () => {
 };
 
 export default Banquet;
+

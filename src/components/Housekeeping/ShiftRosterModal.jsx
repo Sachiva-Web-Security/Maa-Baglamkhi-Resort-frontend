@@ -4,11 +4,11 @@ import API from "../../api";
 
 const SHIFTS = ["Morning (6am-2pm)", "Afternoon (2pm-10pm)", "Night (10pm-6am)", "Day (8am-8pm)", "Off"];
 const SHIFT_COLORS = {
-  "Morning (6am-2pm)":   "bg-amber-100 text-amber-800 border-amber-300",
-  "Afternoon (2pm-10pm)":"bg-blue-100 text-blue-800 border-blue-300",
-  "Night (10pm-6am)":    "bg-indigo-100 text-indigo-800 border-indigo-300",
-  "Day (8am-8pm)":       "bg-emerald-100 text-emerald-800 border-emerald-300",
-  "Off":                 "bg-slate-100 text-slate-400 border-slate-200",
+  "Morning (6am-2pm)":   "bg-amber-100 text-amber-800 border-amber-300 text-xl",
+  "Afternoon (2pm-10pm)":"bg-blue-100 text-blue-800 border-blue-300 text-xl",
+  "Night (10pm-6am)":    "bg-indigo-100 text-indigo-800 border-indigo-300 text-xl",
+  "Day (8am-8pm)":       "bg-emerald-100 text-emerald-800 border-emerald-300 text-xl",
+  "Off":                 "bg-slate-100 text-slate-400 border-slate-200 text-xl",
 };
 
 function getWeekDates(weekOffset = 0) {
@@ -97,8 +97,8 @@ export default function ShiftRosterModal({ housekeepers, onClose, apiBase }) {
               <FaBroom className="text-orange-600" />
             </div>
             <div>
-              <h3 className="text-lg font-black text-slate-900">Shift / Duty Roster</h3>
-              <p className="text-xs text-slate-500">Weekly schedule for housekeeping staff</p>
+              <h3 className="text-xl font-black text-slate-900">Shift / Duty Roster</h3>
+              <p className="text-xl text-slate-500">Weekly schedule for housekeeping staff</p>
             </div>
           </div>
           <button onClick={onClose} className="rounded-full p-2 text-slate-400 hover:bg-slate-100"><FaTimes /></button>
@@ -111,25 +111,25 @@ export default function ShiftRosterModal({ housekeepers, onClose, apiBase }) {
               <button onClick={() => setWeekOffset(w => w - 1)} className="rounded-xl border border-slate-200 p-2 text-slate-600 hover:bg-slate-50">
                 <FaChevronLeft />
               </button>
-              <div className="text-sm font-semibold text-slate-800">
+              <div className="text-xl font-semibold text-slate-800">
                 {weekDates[0]?.toLocaleDateString("en-IN", { day: "2-digit", month: "short" })} – {weekDates[6]?.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
               </div>
               <button onClick={() => setWeekOffset(w => w + 1)} className="rounded-xl border border-slate-200 p-2 text-slate-600 hover:bg-slate-50">
                 <FaChevronRight />
               </button>
               {weekOffset !== 0 && (
-                <button onClick={() => setWeekOffset(0)} className="text-xs text-slate-400 hover:text-slate-700 underline">Today's Week</button>
+                <button onClick={() => setWeekOffset(0)} className="text-xl text-slate-400 hover:text-slate-700 underline">Today's Week</button>
               )}
             </div>
             <div className="flex items-center gap-3">
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xl font-semibold text-emerald-700">
                 {workingToday} working today
               </div>
-              <button onClick={fetchRoster} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
-                <FaSyncAlt className="text-xs" />
+              <button onClick={fetchRoster} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-xl font-semibold text-slate-700 hover:bg-slate-50">
+                <FaSyncAlt className="text-xl" />
               </button>
-              <button onClick={exportCSV} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
-                <FaDownload className="text-xs" /> CSV
+              <button onClick={exportCSV} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-xl font-semibold text-slate-700 hover:bg-slate-50">
+                <FaDownload className="text-xl" /> CSV
               </button>
             </div>
           </div>
@@ -152,11 +152,11 @@ export default function ShiftRosterModal({ housekeepers, onClose, apiBase }) {
               <table className="w-full text-sm">
                 <thead className="bg-slate-50">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase sticky left-0 bg-slate-50 min-w-36">Staff</th>
+                    <th className="px-4 py-3 text-left text-xl font-semibold text-slate-500 uppercase sticky left-0 bg-slate-50 min-w-36">Staff</th>
                     {weekDates.map((d, i) => {
                       const isToday = d.toISOString().slice(0, 10) === new Date().toISOString().slice(0, 10);
                       return (
-                        <th key={i} className={`px-2 py-3 text-center text-xs font-semibold uppercase min-w-36 ${isToday ? "text-indigo-600 bg-indigo-50" : "text-slate-500"}`}>
+                        <th key={i} className={`px-2 py-3 text-center text-xl font-semibold uppercase min-w-36 ${isToday ? "text-indigo-600 bg-indigo-50" : "text-slate-500"}`}>
                           <div>{DAY_NAMES[i]}</div>
                           <div className="font-normal text-[10px] text-slate-400">{d.getDate()}/{d.getMonth() + 1}</div>
                         </th>
@@ -191,8 +191,8 @@ export default function ShiftRosterModal({ housekeepers, onClose, apiBase }) {
           )}
 
           <div className="mt-5 flex justify-end gap-3">
-            <button onClick={onClose} className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">Close</button>
-            <button onClick={handleSave} disabled={saving || housekeepers.length === 0} className="rounded-xl bg-orange-600 px-5 py-2 text-sm font-semibold text-white hover:bg-orange-700 disabled:opacity-50">
+            <button onClick={onClose} className="rounded-xl border border-slate-200 px-4 py-2 text-xl font-semibold text-slate-700">Close</button>
+            <button onClick={handleSave} disabled={saving || housekeepers.length === 0} className="rounded-xl bg-orange-600 px-5 py-2 text-xl font-semibold text-white hover:bg-orange-700 disabled:opacity-50">
               {saving ? "Saving..." : "Save Roster"}
             </button>
           </div>

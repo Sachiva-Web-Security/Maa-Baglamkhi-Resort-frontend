@@ -85,6 +85,8 @@ const buildMenuPlaceholder = (item) => {
   };
 };
 
+const MENU_ITEMS_PAGE_SIZE = 8;
+
 const MenuPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -113,6 +115,7 @@ const MenuPage = () => {
   const [quickAddQty, setQuickAddQty] = useState("1");
   const [quickAddItemId, setQuickAddItemId] = useState("");
   const [showQuickAddSuggestions, setShowQuickAddSuggestions] = useState(false);
+  const [menuPage, setMenuPage] = useState(1);
 
   useEffect(() => {
     if (banquetMenuPicker) return;
@@ -184,6 +187,22 @@ const MenuPage = () => {
       (item) => normalizeCategory(item.category) === normalizeCategory(selectedCategory),
     );
   }, [visibleMenu, selectedCategory]);
+
+  const totalMenuPages = Math.max(1, Math.ceil(filteredItems.length / MENU_ITEMS_PAGE_SIZE));
+  const paginatedMenuItems = filteredItems.slice(
+    (menuPage - 1) * MENU_ITEMS_PAGE_SIZE,
+    menuPage * MENU_ITEMS_PAGE_SIZE,
+  );
+
+  useEffect(() => {
+    setMenuPage(1);
+  }, [selectedCategory, visibleMenu]);
+
+  useEffect(() => {
+    if (menuPage > totalMenuPages) {
+      setMenuPage(totalMenuPages);
+    }
+  }, [menuPage, totalMenuPages]);
 
   const quickAddMatches = useMemo(() => {
     const query = quickAddQuery.trim().toLowerCase();
@@ -378,7 +397,7 @@ const MenuPage = () => {
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#19253c_0%,#1f2d47_100%)] p-4 lg:p-6">
-      <div className="mx-auto max-w-[1580px] rounded-[26px] border border-white/10 bg-white/95 p-4 shadow-[0_30px_80px_rgba(15,23,42,0.28)] lg:p-5">
+      <div className="w-full rounded-[26px] border border-white/10 bg-white/95 p-4 shadow-[0_30px_80px_rgba(15,23,42,0.28)] lg:p-5">
         <div className="mb-4 rounded-[22px] bg-[linear-gradient(135deg,#111827_0%,#1d4ed8_50%,#0f766e_100%)] px-4 py-4 text-white lg:px-5">
           <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
             <div className="min-w-0 flex-1">
@@ -485,8 +504,8 @@ const MenuPage = () => {
 
         <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
           <div className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm">
-            <div className="hidden bg-slate-100 px-3 py-3 text-xs font-bold uppercase tracking-[0.16em] text-slate-600 xl:grid xl:grid-cols-[64px_minmax(180px,1.4fr)_96px_82px_118px_96px]">
-              <div>Image</div>
+            <div className="hidden bg-slate-100 px-4 py-3 text-xs font-bold uppercase tracking-[0.16em] text-slate-600 xl:grid xl:grid-cols-[88px_minmax(260px,1.35fr)_120px_110px_150px_130px] xl:items-center">
+              <div className="text-center">Image</div>
               <div>Item</div>
               <div className="text-center">Rate</div>
               <div className="text-center">Tax</div>
@@ -498,7 +517,7 @@ const MenuPage = () => {
                 {isLoadingMenu ? <div className="p-6 text-center text-slate-500">Loading menu...</div> : null}
                 {menuError ? <div className="p-6 text-center text-rose-600">{menuError}</div> : null}
                 {!isLoadingMenu && !menuError && !filteredItems.length ? <div className="p-6 text-center text-slate-500">No items in this category.</div> : null}
-                {!isLoadingMenu && !menuError && filteredItems.map((item, index) => {
+                {!isLoadingMenu && !menuError && paginatedMenuItems.map((item, index) => {
                   const quantity = Number(qty[item.id] || 0);
                   const effectivePrice = Number(
                     item.effectivePrice ?? item.effective_price ?? item.price ?? 0,
@@ -595,17 +614,17 @@ const MenuPage = () => {
                         </button>
                       </div>
 
-                      <div className="hidden xl:grid xl:grid-cols-[64px_minmax(180px,1.4fr)_96px_82px_118px_96px] xl:items-center xl:gap-2.5 xl:px-3 xl:py-3">
+                      <div className="hidden xl:grid xl:grid-cols-[88px_minmax(260px,1.35fr)_120px_110px_150px_130px] xl:items-center xl:gap-3 xl:px-4 xl:py-3">
                         <div className="flex justify-center">
                           {itemImageSrc ? (
                             <img
                               src={itemImageSrc}
                               alt={item.name}
-                              className="h-12 w-12 rounded-2xl border border-slate-200 object-cover shadow-sm"
+                              className="h-14 w-14 rounded-2xl border border-slate-200 object-cover shadow-sm"
                               loading="lazy"
                             />
                           ) : (
-                            <div className="flex h-12 w-12 flex-col items-center justify-center rounded-2xl border border-dashed border-cyan-200 bg-[linear-gradient(135deg,#ecfeff_0%,#eff6ff_55%,#f8fafc_100%)] px-1 text-center shadow-sm">
+                            <div className="flex h-14 w-14 flex-col items-center justify-center rounded-2xl border border-dashed border-cyan-200 bg-[linear-gradient(135deg,#ecfeff_0%,#eff6ff_55%,#f8fafc_100%)] px-1 text-center shadow-sm">
                               <span className="text-xs font-black leading-none text-cyan-700">
                                 {placeholder.initials}
                               </span>
@@ -615,9 +634,9 @@ const MenuPage = () => {
                             </div>
                           )}
                         </div>
-                        <div className="min-w-0 pr-1">
-                          <div className="truncate text-[14px] font-bold leading-5 text-slate-900">{item.name}</div>
-                          <div className="mt-1 truncate text-xs text-slate-500">
+                        <div className="min-w-0 pr-2">
+                          <div className="truncate text-[16px] font-bold leading-5 text-slate-900">{item.name}</div>
+                          <div className="mt-1 truncate text-[12px] text-slate-500">
                             {item.category || "Other"}
                             {item.happyHourActive ? ` | Happy hour ${item.happy_hour_start?.slice(0, 5)}-${item.happy_hour_end?.slice(0, 5)}` : ""}
                           </div>
@@ -639,21 +658,71 @@ const MenuPage = () => {
                             step="0.1"
                             value={taxByItem[item.id] ?? item.tax ?? 5}
                             onChange={(e) => handleTaxChange(item.id, e.target.value)}
-                            className="w-14 rounded-xl border border-slate-200 px-1.5 py-2 text-center text-sm"
+                            className="w-16 rounded-xl border border-slate-200 px-2 py-2 text-center text-sm"
                           />
                           <span className="text-sm text-slate-600">%</span>
                         </div>
                         <div className="flex items-center justify-center gap-2">
-                          <input type="number" min="1" value={qty[item.id] || ""} onChange={(e) => handleQtyChange(item.id, e.target.value)} className="w-16 rounded-xl border border-slate-200 px-1.5 py-2 text-center text-sm" />
-                          <button onClick={() => handleAdd(item)} className="rounded-xl bg-emerald-500 px-3 py-2 text-sm font-bold text-white shadow-sm">Add</button>
+                          <input type="number" min="1" value={qty[item.id] || ""} onChange={(e) => handleQtyChange(item.id, e.target.value)} className="w-16 rounded-xl border border-slate-200 px-2 py-2 text-center text-sm" />
+                          <button onClick={() => handleAdd(item)} className="rounded-xl bg-emerald-500 px-4 py-2 text-sm font-bold text-white shadow-sm">Add</button>
                         </div>
-                        <div className="text-center font-bold text-slate-800">Rs. {(amount || 0).toFixed(2)}</div>
+                        <div className="text-center text-[15px] font-bold text-slate-800">Rs. {(amount || 0).toFixed(2)}</div>
                       </div>
                     </div>
                   );
                 })}
               </div>
             </div>
+            {!isLoadingMenu && !menuError && filteredItems.length > MENU_ITEMS_PAGE_SIZE ? (
+              <div className="flex flex-col gap-3 border-t border-slate-200 bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="text-sm text-slate-500">
+                  Showing{" "}
+                  <span className="font-semibold text-slate-900">
+                    {(menuPage - 1) * MENU_ITEMS_PAGE_SIZE + 1}
+                  </span>{" "}
+                  to{" "}
+                  <span className="font-semibold text-slate-900">
+                    {Math.min(menuPage * MENU_ITEMS_PAGE_SIZE, filteredItems.length)}
+                  </span>{" "}
+                  of <span className="font-semibold text-slate-900">{filteredItems.length}</span> items
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setMenuPage((current) => Math.max(1, current - 1))}
+                    disabled={menuPage === 1}
+                    className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Previous
+                  </button>
+
+                  {Array.from({ length: totalMenuPages }, (_, index) => index + 1).map((pageNumber) => (
+                    <button
+                      key={pageNumber}
+                      type="button"
+                      onClick={() => setMenuPage(pageNumber)}
+                      className={`rounded-full px-3 py-2 text-xs font-semibold transition ${
+                        pageNumber === menuPage
+                          ? "bg-slate-900 text-white"
+                          : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                      }`}
+                    >
+                      {pageNumber}
+                    </button>
+                  ))}
+
+                  <button
+                    type="button"
+                    onClick={() => setMenuPage((current) => Math.min(totalMenuPages, current + 1))}
+                    disabled={menuPage === totalMenuPages}
+                    className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            ) : null}
           </div>
 
           <div className="space-y-4">

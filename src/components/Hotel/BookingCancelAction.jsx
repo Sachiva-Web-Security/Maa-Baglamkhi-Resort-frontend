@@ -82,11 +82,11 @@ const BookingCancelAction = ({
                 <FaExclamationTriangle className="text-xl" />
               </div>
               <div className="min-w-0 flex-1">
-                <div className="mb-2 inline-flex rounded-full bg-rose-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.22em] text-rose-700 ring-1 ring-rose-100">
+                <div className="mb-2 inline-flex rounded-full bg-rose-50 px-3 py-1 text-[17px] font-bold uppercase tracking-[0.22em] text-rose-700 ring-1 ring-rose-100">
                   {bookingId ? "Cancel Booking" : "Discard Draft"}
                 </div>
                 <h2 className="text-lg font-black leading-tight">
-                  {bookingId ? "Guest ne booking mana kar di?" : "Current booking draft discard karna hai?"}
+                  {bookingId ? "guest can't interested in this time?" : "do you want to discard this booking  draft?"}
                 </h2>
               </div>
               <button

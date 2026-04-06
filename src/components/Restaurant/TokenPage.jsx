@@ -71,8 +71,8 @@ const TokenPage = () => {
   );
 
   return (
-    <div className="bg-[linear-gradient(135deg,#eef6ff_0%,#f8fbff_38%,#fff8ef_100%)] p-3 sm:p-4">
-      <div className="mx-auto max-w-6xl space-y-3">
+      <div className="w-full bg-[linear-gradient(135deg,#eef6ff_0%,#f8fbff_38%,#fff8ef_100%)] p-3 sm:p-4">
+        <div className="w-full space-y-3">
         <section className="overflow-hidden rounded-[20px] border border-white/70 bg-[linear-gradient(125deg,#111827_0%,#1d4ed8_48%,#0f766e_100%)] px-4 py-2.5 text-white shadow-[0_12px_28px_rgba(15,23,42,0.14)]">
           <div className="grid gap-2 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-center">
             <div className="max-w-2xl">

@@ -1,9 +1,16 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { FaChartLine, FaMoneyBillWave, FaPlus, FaReceipt } from "react-icons/fa";
+import { useLocation, useNavigate } from "react-router-dom";
+import {
+  FaArrowLeft,
+  FaChartLine,
+  FaFileInvoiceDollar,
+  FaMoneyBillWave,
+  FaPlus,
+  FaReceipt,
+  FaThLarge,
+} from "react-icons/fa";
 
 import PaymentSettingsManager from "../components/Accounts/PaymentSettingsManager";
-import ReconciliationOverview from "../components/Accounts/ReconciliationOverview";
 import InvoiceForm from "../components/Accounts/forms/InvoiceForm";
 import TransactionForm from "../components/Accounts/forms/TransactionForm";
 import API from "../api";
@@ -16,6 +23,9 @@ const formatINR = (amount) =>
   }).format(Number(amount) || 0);
 
 const toNumber = (value) => Number(value || 0);
+const TRANSACTION_PAGE_SIZE = 10;
+const BILLING_PAGE_SIZE = 10;
+const ACCOUNTS_MODULE_PAGE_SIZE = 10;
 
 const getInvoiceRoomValue = (invoice) =>
   String(invoice.room_no || invoice.roomNo || invoice.roomNumber || "").trim();
@@ -131,7 +141,7 @@ const splitInvoiceAmounts = (invoice) => {
 };
 
 const fieldClass =
-  "w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-cyan-200";
+  "w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-lg font-semibold text-slate-900 outline-none focus:ring-2 focus:ring-cyan-200";
 
 const moduleColumns = {
   bankLedger: [
@@ -218,12 +228,28 @@ const AccountsModuleCard = ({
   const [form, setForm] = useState(initialState);
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [page, setPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil((rows || []).length / ACCOUNTS_MODULE_PAGE_SIZE));
+  const paginatedRows = (rows || []).slice(
+    (page - 1) * ACCOUNTS_MODULE_PAGE_SIZE,
+    page * ACCOUNTS_MODULE_PAGE_SIZE,
+  );
 
   useEffect(() => {
     if (!editingId) {
       setForm(initialState);
     }
   }, [editingId]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [rows, filterNote]);
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -260,15 +286,19 @@ const AccountsModuleCard = ({
 
   return (
     <div className="rounded-[24px] border border-white/60 bg-white/82 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
-      <div>
-        <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-700">{title}</div>
-        <div className="mt-2 text-sm text-slate-500">{subtitle}</div>
-      </div>
+        <div>
+          <div className="text-base font-bold uppercase tracking-[0.18em] text-cyan-700">{title}</div>
+          <div className="mt-2 text-lg font-medium leading-7 text-slate-500">{subtitle}</div>
+        </div>
 
-      <form onSubmit={handleSubmit} className="mt-4 grid gap-3">
-        {fields.map((field) => (
-          <label key={field.name} className="block">
-            <span className="mb-1 block text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+      <form onSubmit={handleSubmit} className="mt-4 grid gap-4 md:grid-cols-2">
+        {fields.map((field) => {
+          const isWideField =
+            field.type === "textarea" || field.name === "description" || field.name === "notes";
+
+          return (
+          <label key={field.name} className={isWideField ? "block md:col-span-2" : "block"}>
+            <span className="mb-2 block text-base font-bold uppercase tracking-[0.14em] text-slate-500">
               {field.label}
             </span>
             {field.type === "select" ? (
@@ -305,11 +335,12 @@ const AccountsModuleCard = ({
               />
             )}
           </label>
-        ))}
+          );
+        })}
         <button
           type="submit"
           disabled={saving}
-          className="rounded-xl bg-gradient-to-r from-cyan-600 to-teal-500 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+          className="rounded-xl bg-gradient-to-r from-cyan-600 to-teal-500 px-5 py-3 text-lg font-bold text-white disabled:opacity-60 md:col-span-2"
         >
           {saving ? "Saving..." : editingId ? editLabel || "Update Entry" : submitLabel}
         </button>
@@ -320,7 +351,7 @@ const AccountsModuleCard = ({
               setEditingId(null);
               setForm(initialState);
             }}
-            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700"
+            className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-lg font-bold text-slate-700 md:col-span-2"
           >
             Cancel Edit
           </button>
@@ -328,13 +359,13 @@ const AccountsModuleCard = ({
       </form>
 
       {filterNote ? (
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-lg font-medium text-amber-800">
           <span>{filterNote}</span>
           {onClearFilter ? (
             <button
               type="button"
               onClick={onClearFilter}
-              className="rounded-full border border-amber-300 bg-white px-3 py-1.5 text-xs font-bold text-amber-700"
+              className="rounded-full border border-amber-300 bg-white px-4 py-2 text-base font-bold text-amber-700"
             >
               Show All
             </button>
@@ -343,36 +374,36 @@ const AccountsModuleCard = ({
       ) : null}
 
       <div className="mt-5 overflow-x-auto rounded-[18px] border border-slate-200">
-        <table className="min-w-full text-left text-sm">
-          <thead className="bg-slate-50 text-[11px] uppercase tracking-[0.14em] text-slate-500">
+        <table className="min-w-full text-left text-lg">
+          <thead className="bg-slate-50 text-lg font-bold uppercase tracking-[0.14em] text-slate-500">
             <tr>
               {columns.map((column) => (
-                <th key={column.key} className="px-3 py-3">{column.label}</th>
+                <th key={column.key} className="px-3 py-4">{column.label}</th>
               ))}
-              <th className="px-3 py-3">Actions</th>
+              <th className="px-3 py-4">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {(rows || []).slice(0, 4).map((row) => (
+            {paginatedRows.map((row) => (
               <tr key={row.id} className="border-t border-slate-200">
                 {columns.map((column) => (
-                  <td key={column.key} className="px-3 py-3 text-slate-700">
+                  <td key={column.key} className="px-3 py-4 text-lg font-semibold text-slate-700">
                     {renderModuleValue(row[column.key], column.key)}
                   </td>
                 ))}
-                <td className="px-3 py-3">
+                <td className="px-3 py-4">
                   <div className="flex flex-wrap gap-2">
                     <button
                       type="button"
                       onClick={() => handleEdit(row)}
-                      className="rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1.5 text-xs font-bold text-cyan-700"
+                      className="rounded-full border border-cyan-200 bg-cyan-50 px-5 py-2.5 text-lg font-bold text-cyan-700"
                     >
                       Edit
                     </button>
                     <button
                       type="button"
                       onClick={() => handleDeleteClick(row)}
-                      className="rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-700"
+                      className="rounded-full border border-rose-200 bg-rose-50 px-5 py-2.5 text-lg font-bold text-rose-700"
                     >
                       Delete
                     </button>
@@ -382,7 +413,7 @@ const AccountsModuleCard = ({
             ))}
             {!rows?.length ? (
               <tr>
-                <td colSpan={columns.length + 1} className="px-3 py-6 text-center text-slate-500">
+                <td colSpan={columns.length + 1} className="px-3 py-8 text-center text-xl font-medium text-slate-500">
                   No records yet.
                 </td>
               </tr>
@@ -390,13 +421,72 @@ const AccountsModuleCard = ({
           </tbody>
         </table>
       </div>
+
+      {(rows || []).length > ACCOUNTS_MODULE_PAGE_SIZE ? (
+        <div className="mt-4 flex flex-col gap-3 rounded-[18px] border border-slate-200 bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="text-lg font-medium text-slate-500">
+            Showing{" "}
+            <span className="font-semibold text-slate-900">
+              {(page - 1) * ACCOUNTS_MODULE_PAGE_SIZE + 1}
+            </span>{" "}
+            to{" "}
+            <span className="font-semibold text-slate-900">
+              {Math.min(page * ACCOUNTS_MODULE_PAGE_SIZE, (rows || []).length)}
+            </span>{" "}
+            of{" "}
+            <span className="font-semibold text-slate-900">{(rows || []).length}</span>{" "}
+            records
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setPage((current) => Math.max(1, current - 1))}
+              disabled={page === 1}
+              className="rounded-full border border-slate-200 bg-white px-5 py-3 text-lg font-bold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Previous
+            </button>
+
+            {Array.from({ length: totalPages }, (_, index) => {
+              const pageNumber = index + 1;
+              const isActive = pageNumber === page;
+
+              return (
+                <button
+                  key={`${title}-page-${pageNumber}`}
+                  type="button"
+                  onClick={() => setPage(pageNumber)}
+                  className={`h-11 min-w-[44px] rounded-full border px-3 text-lg font-bold transition ${
+                    isActive
+                      ? "border-cyan-600 bg-cyan-600 text-white shadow-[0_10px_24px_rgba(8,145,178,0.18)]"
+                      : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                  }`}
+                >
+                  {pageNumber}
+                </button>
+              );
+            })}
+
+            <button
+              type="button"
+              onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+              disabled={page === totalPages}
+              className="rounded-full border border-slate-200 bg-white px-5 py-3 text-lg font-bold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 };
 
 const Accounts = () => {
+  const location = useLocation();
   const navigate = useNavigate();
-  const [activeAccountsModule, setActiveAccountsModule] = useState("bank-ledger");
+  const [activeAccountsModule, setActiveAccountsModule] = useState("petty-cash");
   const [records, setRecords] = useState([]);
   const [customerInvoices, setCustomerInvoices] = useState([]);
   const [hotelBookings, setHotelBookings] = useState([]);
@@ -407,14 +497,6 @@ const Accounts = () => {
     expense: 0,
     net: 0,
     gstPayable: 0,
-  });
-  const [departmentTotals, setDepartmentTotals] = useState({
-    roomIncome: 0,
-    restaurantIncome: 0,
-    banquetIncome: 0,
-    roomExpense: 0,
-    restaurantExpense: 0,
-    banquetExpense: 0,
   });
   const [extendedSummary, setExtendedSummary] = useState({
     pendingBankReconciliation: 0,
@@ -457,6 +539,8 @@ const Accounts = () => {
   const [selectedRestaurantTable, setSelectedRestaurantTable] = useState("all");
   const [selectedBanquetHall, setSelectedBanquetHall] = useState("all");
   const [selectedPaymentMode, setSelectedPaymentMode] = useState("all");
+  const [transactionPage, setTransactionPage] = useState(1);
+  const [billingPage, setBillingPage] = useState(1);
   const [bankLedgerStatusFilter, setBankLedgerStatusFilter] = useState("all");
   const [selectedReconciliationSource, setSelectedReconciliationSource] = useState("all");
   const [selectedReconciliationMatch, setSelectedReconciliationMatch] = useState("all");
@@ -465,6 +549,7 @@ const Accounts = () => {
   const refreshInFlightRef = useRef(false);
   const pendingRefreshRef = useRef(false);
   const accountsModuleSectionRef = useRef(null);
+  const isAccountsModulesPage = new URLSearchParams(location.search).get("view") === "modules";
 
   const isAbortedRequest = (error) =>
     error?.code === "ERR_CANCELED" ||
@@ -494,31 +579,6 @@ const Accounts = () => {
     } catch (err) {
       if (isAbortedRequest(err)) return;
       console.error("Error loading accounts summary", err);
-    }
-  };
-
-  const fetchDepartmentSummary = async () => {
-    try {
-      const res = await API.get("/accounts/department-summary");
-      setDepartmentTotals({
-        roomIncome: Number(res.data?.roomIncome) || 0,
-        restaurantIncome: Number(res.data?.restaurantIncome) || 0,
-        banquetIncome: Number(res.data?.banquetIncome) || 0,
-        roomExpense: Number(res.data?.roomExpense) || 0,
-        restaurantExpense: Number(res.data?.restaurantExpense) || 0,
-        banquetExpense: Number(res.data?.banquetExpense) || 0,
-      });
-    } catch (err) {
-      if (isAbortedRequest(err)) return;
-      console.error("Error loading department summary", err);
-      setDepartmentTotals({
-        roomIncome: 0,
-        restaurantIncome: 0,
-        banquetIncome: 0,
-        roomExpense: 0,
-        restaurantExpense: 0,
-        banquetExpense: 0,
-      });
     }
   };
 
@@ -654,7 +714,6 @@ const Accounts = () => {
         await Promise.all([
           fetchRecords(),
           fetchSummary(),
-          fetchDepartmentSummary(),
           loadExpandedAccounts(),
           fetchInvoices(),
           fetchHotelBookings(),
@@ -882,109 +941,7 @@ const Accounts = () => {
     }
   };
 
-  const visibleBankLedger =
-    bankLedgerStatusFilter === "all"
-      ? bankLedger
-      : bankLedger.filter((entry) => {
-          const status = normalizeReconciliationStatus(entry.reconciliation_status);
-
-          if (bankLedgerStatusFilter === "needs-reconciliation") {
-            return status !== "reconciled";
-          }
-
-          return status === normalizeReconciliationStatus(bankLedgerStatusFilter);
-        });
-
   const accountsModuleConfigs = [
-    {
-      key: "bank-ledger",
-      title: "Bank Reconciliation",
-      subtitle: "Track the daily bank ledger and reconciliation status.",
-      fields: [
-        { name: "entryDate", label: "Entry Date", type: "date", required: true },
-        { name: "bankName", label: "Bank Name", required: true },
-        { name: "bankAccount", label: "Bank Account" },
-        { name: "referenceNo", label: "Reference No" },
-        { name: "description", label: "Description", required: true },
-        {
-          name: "paymentMode",
-          label: "Payment Mode",
-          type: "select",
-          defaultValue: "Bank Transfer",
-          options: ["Bank Transfer", "UPI", "Card", "Cheque", "Cash", "Manual"],
-        },
-        { name: "amount", label: "Amount", type: "number", defaultValue: 0 },
-        {
-          name: "direction",
-          label: "Direction",
-          type: "select",
-          defaultValue: "in",
-          options: ["in", "out"],
-        },
-        { name: "debit", label: "Debit", type: "number", defaultValue: 0 },
-        { name: "credit", label: "Credit", type: "number", defaultValue: 0 },
-        {
-          name: "sourceType",
-          label: "Source Type",
-          type: "select",
-          defaultValue: "",
-          options: ["", "invoice", "restaurant_bill", "vendor_payment"],
-        },
-        { name: "sourceId", label: "Source ID", type: "number" },
-        {
-          name: "reconciliationStatus",
-          label: "Status",
-          type: "select",
-          required: true,
-          defaultValue: "Pending",
-          options: ["Pending", "Paid", "Reconciled", "Mismatch"],
-        },
-        {
-          name: "matchStatus",
-          label: "Match Status",
-          type: "select",
-          defaultValue: "unmatched",
-          options: ["unmatched", "partial", "matched", "reconciled"],
-        },
-        { name: "statementRef", label: "Statement Ref" },
-        { name: "statementDate", label: "Statement Date", type: "date" },
-        { name: "notes", label: "Notes", type: "textarea" },
-      ],
-      onSubmit: handleCreateBankLedger,
-      onUpdate: (id, form) => updateModuleEntry("/accounts/bank-ledger", id, form),
-      onDelete: (id) => deleteModuleEntry("/accounts/bank-ledger", id),
-      rows: visibleBankLedger,
-      columns: moduleColumns.bankLedger,
-      submitLabel: "Add Bank Entry",
-      editLabel: "Update Bank Entry",
-      filterNote:
-        bankLedgerStatusFilter === "all"
-          ? null
-          : bankLedgerStatusFilter === "needs-reconciliation"
-            ? "Showing bank entries that still need reconciliation."
-            : `Showing only ${String(bankLedgerStatusFilter).toLowerCase()} reconciliation entries.`,
-      onClearFilter:
-        bankLedgerStatusFilter === "all" ? null : () => setBankLedgerStatusFilter("all"),
-      toFormState: (row) => ({
-        entryDate: formatInputDate(row.entry_date),
-        bankName: row.bank_name || "",
-        bankAccount: row.bank_account || "",
-        referenceNo: row.reference_no || "",
-        description: row.description || "",
-        paymentMode: row.payment_mode || "Bank Transfer",
-        amount: row.amount || row.credit || row.debit || 0,
-        direction: row.direction || (Number(row.debit || 0) > 0 ? "out" : "in"),
-        debit: row.debit || 0,
-        credit: row.credit || 0,
-        sourceType: row.source_type || "",
-        sourceId: row.source_id || "",
-        reconciliationStatus: row.reconciliation_status || "Pending",
-        matchStatus: row.match_status || "unmatched",
-        statementRef: row.statement_ref || "",
-        statementDate: formatInputDate(row.statement_date),
-        notes: row.notes || "",
-      }),
-    },
     {
       key: "petty-cash",
       title: "Petty Cash",
@@ -1254,6 +1211,11 @@ const Accounts = () => {
     selectedPaymentMode === "all"
       ? records
       : records.filter((record) => normalizePaymentMode(record.paymentMode) === selectedPaymentMode);
+  const transactionTotalPages = Math.max(1, Math.ceil(filteredRecords.length / TRANSACTION_PAGE_SIZE));
+  const paginatedTransactionRecords = filteredRecords.slice(
+    (transactionPage - 1) * TRANSACTION_PAGE_SIZE,
+    transactionPage * TRANSACTION_PAGE_SIZE,
+  );
   const roomFilterOptions = Array.from(
     new Set(
       [
@@ -1447,6 +1409,11 @@ const Accounts = () => {
       raw: booking,
     })),
   ].sort((left, right) => String(right.date).localeCompare(String(left.date)));
+  const billingTotalPages = Math.max(1, Math.ceil(combinedBillingRecords.length / BILLING_PAGE_SIZE));
+  const paginatedBillingRecords = combinedBillingRecords.slice(
+    (billingPage - 1) * BILLING_PAGE_SIZE,
+    billingPage * BILLING_PAGE_SIZE,
+  );
   const paymentModeSummary = {
     recordsCount: filteredRecords.length,
     recordsAmount: filteredRecords.reduce((sum, record) => sum + toNumber(record.amount), 0),
@@ -1458,16 +1425,154 @@ const Accounts = () => {
   paymentModeSummary.combinedAmount =
     paymentModeSummary.recordsAmount + paymentModeSummary.invoiceAmount;
 
-  const openPendingReconciliation = () => {
-    setActiveAccountsModule("bank-ledger");
-    setBankLedgerStatusFilter("needs-reconciliation");
-    window.setTimeout(() => {
-      accountsModuleSectionRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    }, 60);
+  useEffect(() => {
+    setTransactionPage(1);
+  }, [selectedPaymentMode]);
+
+  useEffect(() => {
+    setBillingPage(1);
+  }, [
+    selectedBillingSource,
+    selectedInvoiceRoom,
+    selectedRestaurantTable,
+    selectedBanquetHall,
+    selectedPaymentMode,
+  ]);
+
+  useEffect(() => {
+    if (transactionPage > transactionTotalPages) {
+      setTransactionPage(transactionTotalPages);
+    }
+  }, [transactionPage, transactionTotalPages]);
+
+  useEffect(() => {
+    if (billingPage > billingTotalPages) {
+      setBillingPage(billingTotalPages);
+    }
+  }, [billingPage, billingTotalPages]);
+
+  useEffect(() => {
+    if (!isAccountsModulesPage) return;
+
+    setActiveAccountsModule("petty-cash");
+    setShowIncome(false);
+    setShowExpense(false);
+    setShowInvoice(false);
+    setShowView(false);
+  }, [isAccountsModulesPage]);
+
+  const openBankReconciliationModule = () => {
+    navigate("/accounts/bank-reconciliation");
   };
+
+  const openCustomerInvoicesPage = () => {
+    navigate("/accounts/customer-invoices");
+  };
+
+  const openAccountsTabsPage = () => {
+    navigate("/accounts?view=modules");
+  };
+
+  const accountsModulesSection = (
+    <section ref={accountsModuleSectionRef} className="space-y-5">
+      <div className="rounded-[26px] border border-white/60 bg-white/82 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
+        <div className="text-sm font-semibold uppercase tracking-[0.18em] text-cyan-700">
+          Accounts Tabs
+        </div>
+        <h3 className="mt-2 text-3xl font-black text-slate-900">
+          Open any finance module from one click
+        </h3>
+        <p className="mt-3 max-w-3xl text-[15px] leading-7 text-slate-500">
+          Click any tab to open the related
+          form and its latest saved records.
+        </p>
+
+        <div className="mt-5 flex flex-wrap gap-3">
+          {accountsModuleConfigs.map((module) => {
+            const isActive = module.key === activeModule?.key;
+            return (
+              <button
+                key={module.key}
+                type="button"
+                onClick={() => setActiveAccountsModule(module.key)}
+                className={`rounded-full px-5 py-3 text-[15px] font-bold transition ${
+                  isActive
+                    ? "bg-gradient-to-r from-cyan-600 to-teal-500 text-white shadow-[0_14px_30px_rgba(8,145,178,0.2)]"
+                    : "border border-slate-200 bg-white text-slate-700 hover:border-cyan-200 hover:text-cyan-700"
+                }`}
+              >
+                {module.submitLabel}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {activeModule.key === "payment-settings" ? (
+        <PaymentSettingsManager
+          rows={paymentSettings}
+          onSubmit={handleCreatePaymentSetting}
+          onUpdate={handleUpdatePaymentSetting}
+          onDelete={handleDeletePaymentSetting}
+        />
+      ) : (
+        <AccountsModuleCard
+          key={activeModule.key}
+          title={activeModule.title}
+          subtitle={activeModule.subtitle}
+          fields={activeModule.fields}
+          onSubmit={activeModule.onSubmit}
+          onUpdate={activeModule.onUpdate}
+          onDelete={activeModule.onDelete}
+          rows={activeModule.rows}
+          columns={activeModule.columns}
+          submitLabel={activeModule.submitLabel}
+          editLabel={activeModule.editLabel}
+          toFormState={activeModule.toFormState}
+          filterNote={activeModule.filterNote}
+          onClearFilter={activeModule.onClearFilter}
+        />
+      )}
+    </section>
+  );
+
+  if (isAccountsModulesPage) {
+    return (
+      <div className="relative min-h-screen overflow-x-hidden bg-[linear-gradient(135deg,#f5fbff_0%,#f3f8f4_28%,#fff8f1_58%,#f8fafc_100%)] p-4 sm:p-6 lg:p-8">
+        <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+          <div className="absolute left-[-8%] top-[-6%] h-72 w-72 rounded-full bg-cyan-200/45 blur-3xl sm:h-96 sm:w-96" />
+          <div className="absolute right-[-10%] top-[8%] h-72 w-72 rounded-full bg-amber-200/45 blur-3xl sm:h-[28rem] sm:w-[28rem]" />
+        </div>
+
+        <div className="w-full space-y-7">
+          <section className="overflow-hidden rounded-[28px] border border-slate-900/10 bg-[linear-gradient(120deg,#071b34_0%,#0d4a53_52%,#162d45_100%)] px-5 py-6 text-white shadow-[0_22px_55px_rgba(15,23,42,0.12)] sm:px-7 sm:py-8">
+            <div className="space-y-4">
+              <button
+                type="button"
+                onClick={() => navigate("/accounts")}
+                className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-bold text-white backdrop-blur-md transition hover:border-cyan-200 hover:text-cyan-100"
+              >
+                <FaArrowLeft className="text-cyan-200" />
+                Back to Accounts Workspace
+              </button>
+              <p className="text-sm font-semibold uppercase tracking-[0.26em] text-cyan-200">
+                Finance Center
+              </p>
+              <h1 className="text-4xl font-black leading-tight sm:text-5xl">
+                Accounts tabs workspace
+              </h1>
+              <p className="max-w-3xl text-lg leading-8 text-slate-100/85 sm:text-xl">
+                Petty cash, GST, vendor payment, payroll aur scanner setup ko
+                yahan alag screen par open karke manage karein.
+              </p>
+            </div>
+          </section>
+
+          {accountsModulesSection}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-[linear-gradient(135deg,#f5fbff_0%,#f3f8f4_28%,#fff8f1_58%,#f8fafc_100%)] p-4 sm:p-6 lg:p-8">
@@ -1476,50 +1581,71 @@ const Accounts = () => {
         <div className="absolute right-[-10%] top-[8%] h-72 w-72 rounded-full bg-amber-200/45 blur-3xl sm:h-[28rem] sm:w-[28rem]" />
       </div>
 
-      <div className="mx-auto max-w-[1260px] space-y-7">
+      <div className="w-full space-y-7">
         <section className="overflow-hidden rounded-[28px] border border-slate-900/10 bg-[linear-gradient(120deg,#071b34_0%,#0d4a53_52%,#162d45_100%)] px-5 py-6 text-white shadow-[0_22px_55px_rgba(15,23,42,0.12)] sm:px-7 sm:py-8">
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.9fr)] lg:items-center">
             <div className="space-y-4">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-cyan-200">
+              <p className="text-sm font-semibold uppercase tracking-[0.26em] text-cyan-200">
                 Finance Center
               </p>
-              <h1 className="text-3xl font-black leading-tight sm:text-4xl">
+              <h1 className="text-4xl font-black leading-tight sm:text-5xl">
                 Accounts workspace in dashboard style
               </h1>
-              <p className="max-w-3xl text-sm leading-6 text-slate-100/85 sm:text-base">
+              <p className="max-w-3xl text-lg leading-8 text-slate-100/85 sm:text-xl">
                 Manage income, expenses, invoices, and transaction records from
                 one attractive and responsive finance dashboard.
               </p>
               <div className="flex flex-wrap gap-3">
                 <button
-                  className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-bold text-slate-900 shadow-[0_16px_35px_rgba(255,255,255,0.15)]"
+                  className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-base font-bold text-slate-900 shadow-[0_16px_35px_rgba(255,255,255,0.15)]"
                   onClick={() => setShowIncome(true)}
                 >
                   <FaPlus className="text-cyan-600" />
                   Add Income
                 </button>
                 <button
-                  className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur-md"
+                  className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-3 text-base font-semibold text-white backdrop-blur-md"
                   onClick={() => setShowExpense(true)}
                 >
                   <FaMoneyBillWave />
                   Add Expense
                 </button>
                 <button
-                  className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur-md"
+                  className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-3 text-base font-semibold text-white backdrop-blur-md"
                   onClick={() => setShowInvoice(true)}
                 >
                   <FaReceipt />
                   Invoice
                 </button>
+                <button
+                  className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-3 text-base font-bold text-white backdrop-blur-md transition hover:border-cyan-200 hover:text-cyan-100"
+                  onClick={openAccountsTabsPage}
+                >
+                  <FaThLarge className="text-cyan-200" />
+                  Accounts Tab
+                </button>
+                <button
+                  className="inline-flex items-center gap-2 rounded-full border border-cyan-200/40 bg-cyan-400/15 px-5 py-3 text-base font-bold text-white backdrop-blur-md transition hover:border-cyan-200 hover:bg-cyan-400/20"
+                  onClick={openBankReconciliationModule}
+                >
+                  <FaChartLine className="text-cyan-200" />
+                  Bank Reconciliation
+                </button>
+                <button
+                  className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-3 text-base font-bold text-white backdrop-blur-md transition hover:border-cyan-200 hover:text-cyan-100"
+                  onClick={openCustomerInvoicesPage}
+                >
+                  <FaFileInvoiceDollar className="text-cyan-200" />
+                  Customer Invoices
+                </button>
                 <label className="min-w-[220px] rounded-[20px] border border-white/15 bg-white/10 px-4 py-3 text-left backdrop-blur-md">
-                  <span className="block text-[10px] font-semibold uppercase tracking-[0.2em] text-cyan-100/80">
+                  <span className="block text-sm font-semibold uppercase tracking-[0.2em] text-cyan-100/80">
                     Payment Filter
                   </span>
                   <select
                     value={selectedPaymentMode}
                     onChange={(event) => setSelectedPaymentMode(event.target.value)}
-                    className="mt-2 w-full bg-transparent text-sm font-semibold text-white outline-none"
+                    className="mt-2 w-full bg-transparent text-base font-semibold text-white outline-none"
                   >
                     {paymentModeOptions.map((mode) => (
                       <option key={mode} value={mode} className="text-slate-900">
@@ -1537,8 +1663,8 @@ const Accounts = () => {
                 { label: "GST Payable", value: formatINR(totals.gstPayable) },
               ].map((item) => (
                 <div key={item.label} className="rounded-[22px] border border-white/12 bg-white/10 px-4 py-4 backdrop-blur-md">
-                  <span className="text-[11px] text-slate-100/75">{item.label}</span>
-                  <div className="mt-3 text-2xl font-bold leading-none">{item.value}</div>
+                  <span className="text-sm text-slate-100/75">{item.label}</span>
+                  <div className="mt-3 text-3xl font-bold leading-none">{item.value}</div>
                 </div>
               ))}
             </div>
@@ -1573,11 +1699,11 @@ const Accounts = () => {
             },
           ].map((item) => (
             <div key={item.label} className="rounded-[24px] border border-white/60 bg-white/82 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+              <div className="text-base font-semibold uppercase tracking-[0.18em] text-slate-500">
                 {item.label}
               </div>
-              <div className={`mt-3 text-2xl font-black ${item.tone}`}>{item.value}</div>
-              <div className="mt-2 text-xs text-slate-500">{item.note}</div>
+              <div className={`mt-3 text-4xl font-black ${item.tone}`}>{item.value}</div>
+              <div className="mt-2 text-lg text-slate-500">{item.note}</div>
             </div>
           ))}
         </section>
@@ -1602,8 +1728,8 @@ const Accounts = () => {
               <div key={card.label} className="rounded-[24px] border border-white/60 bg-white/82 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{card.label}</div>
-                    <div className="mt-3 text-3xl font-black text-slate-900">{card.value}</div>
+                    <div className="text-base font-semibold uppercase tracking-[0.18em] text-slate-500">{card.label}</div>
+                    <div className="mt-3 text-5xl font-black text-slate-900">{card.value}</div>
                   </div>
                   <span className={`rounded-2xl border p-3 ${toneClass}`}>
                     <Icon />
@@ -1617,7 +1743,7 @@ const Accounts = () => {
         <section className="rounded-[26px] border border-white/60 bg-white/82 shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
           <div className="overflow-x-auto">
             <table className="min-w-full text-left">
-              <thead className="bg-slate-50 text-xs uppercase tracking-[0.18em] text-slate-500">
+              <thead className="bg-slate-50 text-base uppercase tracking-[0.18em] text-slate-500">
                 <tr>
                   <th className="px-5 py-4 font-semibold">Date</th>
                   <th className="px-5 py-4 font-semibold">Type</th>
@@ -1628,20 +1754,20 @@ const Accounts = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredRecords.map((r) => (
+                {paginatedTransactionRecords.map((r) => (
                   <tr key={r.id} className="border-t border-slate-200/80 hover:bg-slate-50/80">
-                    <td className="px-5 py-4 text-sm text-slate-600">{r.date}</td>
+                    <td className="px-5 py-4 text-lg text-slate-600">{r.date}</td>
                     <td className="px-5 py-4">
-                      <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-bold ${r.type === "Income" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-rose-200 bg-rose-50 text-rose-700"}`}>
+                      <span className={`inline-flex rounded-full border px-4 py-2 text-base font-bold ${r.type === "Income" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-rose-200 bg-rose-50 text-rose-700"}`}>
                         {r.type}
                       </span>
                     </td>
-                    <td className="px-5 py-4 text-sm text-slate-600">{r.description}</td>
-                    <td className="px-5 py-4 text-sm font-bold text-slate-900">{formatINR(r.amount)}</td>
-                    <td className="px-5 py-4 text-sm text-slate-600">{r.paymentMode}</td>
+                    <td className="px-5 py-4 text-lg text-slate-600">{r.description}</td>
+                    <td className="px-5 py-4 text-lg font-bold text-slate-900">{formatINR(r.amount)}</td>
+                    <td className="px-5 py-4 text-lg text-slate-600">{r.paymentMode}</td>
                     <td className="px-5 py-4">
                       <button
-                        className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700"
+                        className="rounded-full border border-slate-200 bg-white px-5 py-2.5 text-base font-bold text-slate-700"
                         onClick={() => {
                           setSelectedRecord(r);
                           setShowView(true);
@@ -1662,23 +1788,82 @@ const Accounts = () => {
               </tbody>
             </table>
           </div>
+
+          {filteredRecords.length > TRANSACTION_PAGE_SIZE ? (
+            <div className="flex flex-col gap-3 border-t border-slate-200/80 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="text-sm text-slate-500">
+                Showing{" "}
+                <span className="font-semibold text-slate-900">
+                  {(transactionPage - 1) * TRANSACTION_PAGE_SIZE + 1}
+                </span>{" "}
+                to{" "}
+                <span className="font-semibold text-slate-900">
+                  {Math.min(transactionPage * TRANSACTION_PAGE_SIZE, filteredRecords.length)}
+                </span>{" "}
+                of{" "}
+                <span className="font-semibold text-slate-900">{filteredRecords.length}</span>{" "}
+                records
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setTransactionPage((current) => Math.max(1, current - 1))}
+                  disabled={transactionPage === 1}
+                  className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Previous
+                </button>
+
+                {Array.from({ length: transactionTotalPages }, (_, index) => {
+                  const page = index + 1;
+                  const isActive = page === transactionPage;
+
+                  return (
+                    <button
+                      key={`transaction-page-${page}`}
+                      type="button"
+                      onClick={() => setTransactionPage(page)}
+                      className={`h-9 min-w-[36px] rounded-full border px-3 text-xs font-bold transition ${
+                        isActive
+                          ? "border-cyan-600 bg-cyan-600 text-white shadow-[0_10px_24px_rgba(8,145,178,0.18)]"
+                          : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  );
+                })}
+
+                <button
+                  type="button"
+                  onClick={() => setTransactionPage((current) => Math.min(transactionTotalPages, current + 1))}
+                  disabled={transactionPage === transactionTotalPages}
+                  className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          ) : null}
         </section>
 
+        {false ? (
         <section className="rounded-[26px] border border-white/60 bg-white/82 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
           <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-700">
+              <div className="text-base font-semibold uppercase tracking-[0.18em] text-cyan-700">
                 Customer Invoices
               </div>
-              <h2 className="mt-2 text-2xl font-black text-slate-900">
+              <h2 className="mt-2 text-5xl font-black text-slate-900">
                 Hotel + restaurant + banquet billing records
               </h2>
-              <p className="mt-2 text-sm text-slate-500">
+              <p className="mt-2 text-xl text-slate-500">
         “Hotel invoices, restaurant bills, and banquet invoices are displayed here together so the Accounts team can track source-wise billing, totals, and payment status.”
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              <div className="rounded-full bg-slate-100 px-4 py-2 text-xs font-bold text-slate-600">
+              <div className="rounded-full bg-slate-100 px-5 py-2.5 text-base font-bold text-slate-600">
                 {combinedBillingRecords.length} billing records
               </div>
             </div>
@@ -1686,13 +1871,13 @@ const Accounts = () => {
 
           <div className="mb-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <label className="flex flex-col gap-1">
-              <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                <span className="text-base font-semibold uppercase tracking-[0.16em] text-slate-500">
                 Billing Source
               </span>
               <select
                 value={selectedBillingSource}
                 onChange={(event) => setSelectedBillingSource(event.target.value)}
-                className={fieldClass}
+                className={`${fieldClass} py-3.5 text-lg`}
               >
                 {billingSourceOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -1703,13 +1888,13 @@ const Accounts = () => {
             </label>
 
             <label className="flex flex-col gap-1">
-              <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                <span className="text-base font-semibold uppercase tracking-[0.16em] text-slate-500">
                 Filter By Room
               </span>
               <select
                 value={selectedInvoiceRoom}
                 onChange={(event) => setSelectedInvoiceRoom(event.target.value)}
-                className={fieldClass}
+                className={`${fieldClass} py-3.5 text-lg`}
               >
                 <option value="all">All Rooms</option>
                 {roomFilterOptions.map((room) => (
@@ -1721,13 +1906,13 @@ const Accounts = () => {
             </label>
 
             <label className="flex flex-col gap-1">
-              <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                <span className="text-base font-semibold uppercase tracking-[0.16em] text-slate-500">
                 Filter By Restaurant Table
               </span>
               <select
                 value={selectedRestaurantTable}
                 onChange={(event) => setSelectedRestaurantTable(event.target.value)}
-                className={fieldClass}
+                className={`${fieldClass} py-3.5 text-lg`}
               >
                 <option value="all">All Tables</option>
                 {restaurantTableOptions.map((tableNo) => (
@@ -1739,13 +1924,13 @@ const Accounts = () => {
             </label>
 
             <label className="flex flex-col gap-1">
-              <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                <span className="text-base font-semibold uppercase tracking-[0.16em] text-slate-500">
                 Filter By Banquet Hall
               </span>
               <select
                 value={selectedBanquetHall}
                 onChange={(event) => setSelectedBanquetHall(event.target.value)}
-                className={fieldClass}
+                className={`${fieldClass} py-3.5 text-lg`}
               >
                 <option value="all">All Halls</option>
                 {banquetHallOptions.map((hallName) => (
@@ -1759,13 +1944,13 @@ const Accounts = () => {
 
           <div className="mb-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <div className="rounded-[22px] border border-emerald-100 bg-emerald-50/80 p-4">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-700">
+              <div className="text-sm font-semibold uppercase tracking-[0.16em] text-emerald-700">
                 Filtered Room Total
               </div>
-              <div className="mt-2 text-2xl font-black text-emerald-800">
+              <div className="mt-2 text-3xl font-black text-emerald-800">
                 {formatINR(filteredBillingTotals.roomAmount)}
               </div>
-              <div className="mt-1 text-xs text-emerald-700/80">
+              <div className="mt-1 text-base text-emerald-700/80">
                 {selectedInvoiceRoom === "all"
                   ? "Room share across all invoice records."
                   : `Room share for Room ${selectedInvoiceRoom}.`}
@@ -1773,45 +1958,45 @@ const Accounts = () => {
             </div>
 
             <div className="rounded-[22px] border border-cyan-100 bg-cyan-50/80 p-4">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-cyan-700">
+              <div className="text-sm font-semibold uppercase tracking-[0.16em] text-cyan-700">
                 Filtered Restaurant Total
               </div>
-              <div className="mt-2 text-2xl font-black text-cyan-800">
+              <div className="mt-2 text-3xl font-black text-cyan-800">
                 {formatINR(filteredBillingTotals.restaurantAmount)}
               </div>
-              <div className="mt-1 text-xs text-cyan-700/80">
+              <div className="mt-1 text-base text-cyan-700/80">
                 Restaurant bills plus room-service order totals.
               </div>
             </div>
 
             <div className="rounded-[22px] border border-violet-100 bg-violet-50/80 p-4">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-violet-700">
+              <div className="text-sm font-semibold uppercase tracking-[0.16em] text-violet-700">
                 Filtered Banquet Total
               </div>
-              <div className="mt-2 text-2xl font-black text-violet-800">
+              <div className="mt-2 text-3xl font-black text-violet-800">
                 {formatINR(filteredBillingTotals.banquetAmount)}
               </div>
-              <div className="mt-1 text-xs text-violet-700/80">
+              <div className="mt-1 text-base text-violet-700/80">
                 Real banquet booking totals from the banquet module.
               </div>
             </div>
 
             <div className="rounded-[22px] border border-slate-200 bg-slate-50/90 p-4">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+              <div className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">
                 Filtered Combined Total
               </div>
-              <div className="mt-2 text-2xl font-black text-slate-900">
+              <div className="mt-2 text-3xl font-black text-slate-900">
                 {formatINR(filteredBillingTotals.finalAmount)}
               </div>
-              <div className="mt-1 text-xs text-slate-500">
+              <div className="mt-1 text-base text-slate-500">
                 Combined billed amount for the current filter.
               </div>
             </div>
           </div>
 
           <div className="overflow-x-auto rounded-[22px] border border-slate-200">
-            <table className="min-w-full text-left text-sm">
-              <thead className="bg-slate-50 text-[11px] uppercase tracking-[0.16em] text-slate-500">
+            <table className="min-w-full text-left text-base">
+              <thead className="bg-slate-50 text-sm uppercase tracking-[0.16em] text-slate-500">
                 <tr>
                   <th className="px-4 py-3">Source</th>
                   <th className="px-4 py-3">Reference</th>
@@ -1825,10 +2010,10 @@ const Accounts = () => {
                 </tr>
               </thead>
               <tbody>
-                {combinedBillingRecords.map((record) => (
+                {paginatedBillingRecords.map((record) => (
                   <tr key={record.id} className="border-t border-slate-200">
                     <td className="px-4 py-4">
-                      <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-bold ${
+                      <span className={`inline-flex rounded-full border px-4 py-1.5 text-sm font-bold ${
                         record.source === "Restaurant"
                           ? "border-cyan-200 bg-cyan-50 text-cyan-700"
                           : record.source === "Banquet"
@@ -1838,14 +2023,14 @@ const Accounts = () => {
                         {record.source}
                       </span>
                     </td>
-                    <td className="px-4 py-4 font-semibold text-slate-900">{record.reference}</td>
-                    <td className="px-4 py-4 text-slate-700">{record.customerName}</td>
-                    <td className="px-4 py-4 text-slate-700">{record.locationLabel}</td>
-                    <td className="px-4 py-4 text-slate-700">{record.date}</td>
-                    <td className="px-4 py-4 font-bold text-slate-900">{formatINR(record.total)}</td>
-                    <td className="px-4 py-4 text-slate-700">{record.paymentMode}</td>
+                    <td className="px-4 py-4 text-lg font-semibold text-slate-900">{record.reference}</td>
+                    <td className="px-4 py-4 text-lg text-slate-700">{record.customerName}</td>
+                    <td className="px-4 py-4 text-lg text-slate-700">{record.locationLabel}</td>
+                    <td className="px-4 py-4 text-lg text-slate-700">{record.date}</td>
+                    <td className="px-4 py-4 text-lg font-bold text-slate-900">{formatINR(record.total)}</td>
+                    <td className="px-4 py-4 text-lg text-slate-700">{record.paymentMode}</td>
                     <td className="px-4 py-4">
-                      <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-bold ${
+                      <span className={`inline-flex rounded-full border px-4 py-1.5 text-sm font-bold ${
                         String(record.paymentStatus).toLowerCase() === "paid"
                           ? "border-emerald-200 bg-emerald-50 text-emerald-700"
                           : "border-amber-200 bg-amber-50 text-amber-700"
@@ -1859,7 +2044,7 @@ const Accounts = () => {
                           <button
                             type="button"
                             onClick={() => navigate(`/invoice/${record.actionId}`)}
-                            className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700"
+                            className="rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700"
                           >
                             Open Invoice
                           </button>
@@ -1871,7 +2056,7 @@ const Accounts = () => {
                                 state: { bookingId: record.actionId },
                               })
                             }
-                            className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700"
+                            className="rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-bold text-emerald-700"
                           >
                             Open Payment History
                           </button>
@@ -1886,12 +2071,12 @@ const Accounts = () => {
                                 },
                               })
                             }
-                            className="rounded-full border border-violet-200 bg-violet-50 px-3 py-2 text-xs font-bold text-violet-700"
+                            className="rounded-full border border-violet-200 bg-violet-50 px-4 py-2.5 text-sm font-bold text-violet-700"
                           >
                             Open Banquet
                           </button>
                         ) : (
-                          <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-500">
+                          <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-500">
                             Restaurant bill record
                           </span>
                         )}
@@ -1909,141 +2094,88 @@ const Accounts = () => {
               </tbody>
             </table>
           </div>
-        </section>
 
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {[
-            {
-              label: "Total Room Income",
-              value: formatINR(departmentTotals.roomIncome),
-              tone: "text-emerald-700",
-            },
-            {
-              label: "Total Restaurant Income",
-              value: formatINR(departmentTotals.restaurantIncome),
-              tone: "text-cyan-700",
-            },
-            {
-              label: "Total Banquet Income",
-              value: formatINR(departmentTotals.banquetIncome),
-              tone: "text-violet-700",
-            },
-            {
-              label: "Room Expense",
-              value: formatINR(departmentTotals.roomExpense),
-              tone: "text-rose-700",
-            },
-            {
-              label: "Restaurant Expense",
-              value: formatINR(departmentTotals.restaurantExpense),
-              tone: "text-amber-700",
-            },
-            {
-              label: "Banquet Expense",
-              value: formatINR(departmentTotals.banquetExpense),
-              tone: "text-fuchsia-700",
-            },
-          ].map((item) => (
-            <div key={item.label} className="rounded-[24px] border border-white/60 bg-white/82 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                {item.label}
+          {combinedBillingRecords.length > BILLING_PAGE_SIZE ? (
+            <div className="flex flex-col gap-3 border-t border-slate-200 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="text-sm text-slate-500">
+                Showing{" "}
+                <span className="font-semibold text-slate-900">
+                  {(billingPage - 1) * BILLING_PAGE_SIZE + 1}
+                </span>{" "}
+                to{" "}
+                <span className="font-semibold text-slate-900">
+                  {Math.min(billingPage * BILLING_PAGE_SIZE, combinedBillingRecords.length)}
+                </span>{" "}
+                of{" "}
+                <span className="font-semibold text-slate-900">{combinedBillingRecords.length}</span>{" "}
+                billing records
               </div>
-              <div className={`mt-3 text-2xl font-black ${item.tone}`}>{item.value}</div>
-              <div className="mt-2 text-xs text-slate-500">
-                Live backend summary from invoices, restaurant bills, and department-tagged expenses.
+
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setBillingPage((current) => Math.max(1, current - 1))}
+                  disabled={billingPage === 1}
+                  className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Previous
+                </button>
+
+                {Array.from({ length: billingTotalPages }, (_, index) => {
+                  const page = index + 1;
+                  const isActive = page === billingPage;
+
+                  return (
+                    <button
+                      key={`billing-page-${page}`}
+                      type="button"
+                      onClick={() => setBillingPage(page)}
+                      className={`h-9 min-w-[36px] rounded-full border px-3 text-xs font-bold transition ${
+                        isActive
+                          ? "border-cyan-600 bg-cyan-600 text-white shadow-[0_10px_24px_rgba(8,145,178,0.18)]"
+                          : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  );
+                })}
+
+                <button
+                  type="button"
+                  onClick={() => setBillingPage((current) => Math.min(billingTotalPages, current + 1))}
+                  disabled={billingPage === billingTotalPages}
+                  className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Next
+                </button>
               </div>
             </div>
-          ))}
+          ) : null}
         </section>
-
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {[
-            {
-              label: "Pending Reconciliation",
-              value: extendedSummary.pendingBankReconciliation,
-              tone: "text-cyan-700",
-              onClick: openPendingReconciliation,
-              helper: "Click to open bank entries that still need reconciliation.",
-            },
-            {
-              label: "Petty Cash Balance",
-              value: formatINR(extendedSummary.pettyCashBalance),
-              tone: "text-emerald-700",
-            },
-            {
-              label: "GST Pending",
-              value: formatINR(extendedSummary.gstPendingPayable),
-              tone: "text-amber-700",
-            },
-            {
-              label: "Vendor Outstanding",
-              value: formatINR(extendedSummary.vendorOutstanding),
-              tone: "text-rose-700",
-            },
-            {
-              label: "Open POs",
-              value: extendedSummary.openPurchaseOrders,
-              tone: "text-indigo-700",
-            },
-            {
-              label: "Payroll Total",
-              value: formatINR(extendedSummary.payrollTotal),
-              tone: "text-fuchsia-700",
-            },
-          ].map((item) => (
-            <button
-              key={item.label}
-              type="button"
-              onClick={item.onClick}
-              disabled={!item.onClick}
-              className={`rounded-[24px] border border-white/60 bg-white/82 p-5 text-left shadow-[0_18px_45px_rgba(15,23,42,0.08)] ${
-                item.onClick
-                  ? "transition hover:-translate-y-0.5 hover:border-cyan-200 hover:shadow-[0_20px_50px_rgba(8,145,178,0.12)]"
-                  : "cursor-default"
-              }`}
-            >
-              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{item.label}</div>
-              <div className={`mt-3 text-2xl font-black ${item.tone}`}>{item.value}</div>
-              {item.helper ? (
-                <div className="mt-2 text-xs text-slate-500">{item.helper}</div>
-              ) : null}
-            </button>
-          ))}
-        </section>
-
-        <ReconciliationOverview
-          summary={reconciliationSummary}
-          items={reconciliationItems}
-          bankLedger={bankLedger}
-          sourceFilter={selectedReconciliationSource}
-          onSourceFilterChange={setSelectedReconciliationSource}
-          matchFilter={selectedReconciliationMatch}
-          onMatchFilterChange={setSelectedReconciliationMatch}
-          onLink={handleLinkBankLedger}
-          onUnlink={handleUnlinkBankLedger}
-        />
+        ) : null}
 
         <section className="rounded-[26px] border border-white/60 bg-white/82 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-700">
+              <div className="text-sm font-semibold uppercase tracking-[0.18em] text-cyan-700">
                 Full Accounts Flow
               </div>
-              <h2 className="mt-2 text-2xl font-black text-slate-900">Extended accounts controls</h2>
-              <p className="mt-2 max-w-3xl text-sm text-slate-500">
+              <h2 className="mt-2 text-4xl font-black text-slate-900">Extended accounts controls</h2>
+              <p className="mt-3 max-w-3xl text-[15px] leading-7 text-slate-500">
           “Along with the existing transaction and invoice workflow, bank, petty cash, GST, vendor, purchase, payroll, and profit-center entries are also managed within this module.”
               </p>
             </div>
             <div className="rounded-[22px] border border-slate-200 bg-slate-50 px-4 py-3">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+              <div className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
                 Profit Center Net
               </div>
-              <div className="mt-3 space-y-2 text-sm text-slate-700">
+              <div className="mt-3 space-y-2 text-[15px] text-slate-700">
                 {(extendedSummary.profitCenters || []).length ? (
                   extendedSummary.profitCenters.map((center) => (
                     <div key={center.centerName} className="flex items-center justify-between gap-4">
                       <span>{center.centerName}</span>
-                      <span className="font-bold text-slate-900">{formatINR(center.net)}</span>
+                      <span className="text-lg font-bold text-slate-900">{formatINR(center.net)}</span>
                     </div>
                   ))
                 ) : (
@@ -2052,67 +2184,6 @@ const Accounts = () => {
               </div>
             </div>
           </div>
-        </section>
-
-        <section ref={accountsModuleSectionRef} className="space-y-5">
-          <div className="rounded-[26px] border border-white/60 bg-white/82 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
-            <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-700">
-              Accounts Tabs
-            </div>
-            <h3 className="mt-2 text-xl font-black text-slate-900">
-              Open any finance module from one click
-            </h3>
-            <p className="mt-2 max-w-3xl text-sm text-slate-500">
-               Click any tab to open the related
-              form and its latest saved records.
-            </p>
-
-            <div className="mt-5 flex flex-wrap gap-3">
-              {accountsModuleConfigs.map((module) => {
-                const isActive = module.key === activeModule?.key;
-                return (
-                  <button
-                    key={module.key}
-                    type="button"
-                    onClick={() => setActiveAccountsModule(module.key)}
-                    className={`rounded-full px-4 py-3 text-sm font-bold transition ${
-                      isActive
-                        ? "bg-gradient-to-r from-cyan-600 to-teal-500 text-white shadow-[0_14px_30px_rgba(8,145,178,0.2)]"
-                        : "border border-slate-200 bg-white text-slate-700 hover:border-cyan-200 hover:text-cyan-700"
-                    }`}
-                  >
-                    {module.submitLabel}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {activeModule.key === "payment-settings" ? (
-            <PaymentSettingsManager
-              rows={paymentSettings}
-              onSubmit={handleCreatePaymentSetting}
-              onUpdate={handleUpdatePaymentSetting}
-              onDelete={handleDeletePaymentSetting}
-            />
-          ) : (
-            <AccountsModuleCard
-              key={activeModule.key}
-              title={activeModule.title}
-              subtitle={activeModule.subtitle}
-              fields={activeModule.fields}
-              onSubmit={activeModule.onSubmit}
-              onUpdate={activeModule.onUpdate}
-              onDelete={activeModule.onDelete}
-              rows={activeModule.rows}
-              columns={activeModule.columns}
-              submitLabel={activeModule.submitLabel}
-              editLabel={activeModule.editLabel}
-              toFormState={activeModule.toFormState}
-              filterNote={activeModule.filterNote}
-              onClearFilter={activeModule.onClearFilter}
-            />
-          )}
         </section>
 
         {showIncome && (

@@ -272,34 +272,34 @@ const RoomMaintenance = () => {
         />
       )}
 
-      <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,_rgba(79,70,229,0.12),_transparent_30%),linear-gradient(135deg,#f8fbff_0%,#f7f5ff_50%,#fff8ef_100%)] p-4 sm:p-6">
-        <div className="mx-auto max-w-6xl space-y-5">
+      <div className="min-h-screen w-full bg-[radial-gradient(circle_at_top_right,_rgba(79,70,229,0.12),_transparent_30%),linear-gradient(135deg,#f8fbff_0%,#f7f5ff_50%,#fff8ef_100%)] p-4 sm:p-6">
+        <div className="w-full space-y-5">
           {/* Header */}
           <section className="overflow-hidden rounded-[32px] border border-white/70 bg-[linear-gradient(135deg,#1e1b4b_0%,#4338ca_45%,#0f766e_100%)] px-6 py-7 text-white shadow-[0_22px_70px_rgba(15,23,42,0.22)]">
             <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(280px,0.8fr)] lg:items-center">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.32em] text-violet-200">
+                <p className="text-sm font-semibold uppercase tracking-[0.32em] text-violet-200 sm:text-base">
                   Maintenance Scheduler
                 </p>
-                <h1 className="mt-3 text-3xl font-black sm:text-4xl">
+                <h1 className="mt-3 text-4xl font-black sm:text-5xl">
                   Room Blocking & Maintenance
                 </h1>
-                <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-100/80">
+                <p className="mt-3 max-w-2xl text-base leading-7 text-slate-100/80 sm:text-lg">
                   “Block rooms during the maintenance window to avoid any booking conflicts.”
                 </p>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-[20px] border border-white/10 bg-white/10 p-4 backdrop-blur">
-                  <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/65">
+                  <div className="text-xs font-semibold uppercase tracking-[0.24em] text-white/65 sm:text-sm">
                     Total Rooms
                   </div>
-                  <div className="mt-2 text-3xl font-black">{rooms.length}</div>
+                  <div className="mt-2 text-4xl font-black sm:text-5xl">{rooms.length}</div>
                 </div>
                 <div className="rounded-[20px] border border-rose-400/30 bg-rose-900/40 p-4 backdrop-blur">
-                  <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-rose-200">
+                  <div className="text-xs font-semibold uppercase tracking-[0.24em] text-rose-200 sm:text-sm">
                     Currently Blocked
                   </div>
-                  <div className="mt-2 text-3xl font-black">{activeCount}</div>
+                  <div className="mt-2 text-4xl font-black sm:text-5xl">{activeCount}</div>
                 </div>
               </div>
             </div>
@@ -313,7 +313,7 @@ const RoomMaintenance = () => {
                   key={s}
                   type="button"
                   onClick={() => setFilterStatus(s)}
-                  className={`rounded-full px-4 py-2 text-xs font-bold transition ${
+                  className={`rounded-full px-4 py-2.5 text-sm font-bold transition sm:px-5 ${
                     filterStatus === s
                       ? "bg-slate-900 text-white"
                       : "bg-slate-100 text-slate-600 hover:bg-slate-200"
@@ -326,7 +326,7 @@ const RoomMaintenance = () => {
             <button
               type="button"
               onClick={() => setShowModal(true)}
-              className="rounded-full bg-gradient-to-r from-violet-600 to-indigo-500 px-5 py-2.5 text-sm font-bold text-white shadow-[0_8px_20px_rgba(79,70,229,0.2)] transition hover:-translate-y-0.5"
+              className="rounded-full bg-gradient-to-r from-violet-600 to-indigo-500 px-6 py-3 text-base font-bold text-white shadow-[0_8px_20px_rgba(79,70,229,0.2)] transition hover:-translate-y-0.5"
             >
               + Block Room
             </button>
@@ -338,7 +338,7 @@ const RoomMaintenance = () => {
           ) : filteredBlocks.length === 0 ? (
             <div className="rounded-[28px] border-2 border-dashed border-slate-200 p-14 text-center">
               <div className="text-4xl">🔧</div>
-              <p className="mt-4 font-bold text-slate-500">
+              <p className="mt-4 text-lg font-bold text-slate-500 sm:text-xl">
                 {filterStatus === "Active"
                   ? "There is no active maintenance block."
                   : "No records found."}
@@ -346,7 +346,7 @@ const RoomMaintenance = () => {
               <button
                 type="button"
                 onClick={() => setShowModal(true)}
-                className="mt-5 rounded-full bg-violet-600 px-6 py-3 text-sm font-bold text-white"
+                className="mt-5 rounded-full bg-violet-600 px-7 py-3.5 text-base font-bold text-white"
               >
                 Schedule First Block
               </button>

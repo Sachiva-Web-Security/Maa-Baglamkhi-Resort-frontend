@@ -81,9 +81,15 @@ const Kitchen = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [cancelledPage, setCancelledPage] = useState(1);
   const [, setTicker] = useState(0);
+  const [confirmModal, setConfirmModal] = useState({ open: false, type: "", order: null });
+  const [noticeModal, setNoticeModal] = useState({ open: false, type: "success", message: "" });
   const orderSound = useRef(null);
   const firstLoad = useRef(true);
   const seenOrderIds = useRef(new Set());
+
+  const showNotice = (type, message) => {
+    setNoticeModal({ open: true, type, message });
+  };
 
   const fetchOrders = async () => {
     if (firstLoad.current) setLoading(true);
@@ -170,17 +176,14 @@ const Kitchen = () => {
     };
   }, []);
 
-  const cancelOrder = async (id) => {
-    const confirmCancel = window.confirm("Cancel this kitchen order?");
-    if (!confirmCancel) return;
-
+  const cancelOrder = async (order) => {
     try {
-      const response = await restaurantService.cancelKitchenOrder(id);
+      const response = await restaurantService.cancelKitchenOrder(order.id);
       fetchOrders();
-      window.alert(response?.message || "Order cancelled successfully.");
+      showNotice("success", response?.message || "Order cancelled successfully.");
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.message || "Failed to cancel order");
+      showNotice("error", err.response?.data?.message || "Failed to cancel order");
     }
   };
 
@@ -192,24 +195,21 @@ const Kitchen = () => {
         readyMessage: "",
       });
       fetchOrders();
-      window.alert("Cancelled order wapas kitchen queue me aa gaya hai.");
+      showNotice("success", "Cancelled order wapas kitchen queue me aa gaya hai.");
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.message || "Order restore nahi ho paaya.");
+      showNotice("error", err.response?.data?.message || "Order restore nahi ho paaya.");
     }
   };
 
   const removeCancelledOrder = async (order) => {
-    const confirmed = window.confirm("Is cancelled order ko list se hatana hai?");
-    if (!confirmed) return;
-
     try {
       const response = await restaurantService.removeKitchenOrder(order.id);
       fetchOrders();
-      window.alert(response?.message || "Cancelled order permanently remove ho gaya.");
+      showNotice("success", response?.message || "Cancelled order permanently remove ho gaya.");
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.message || "Cancelled order remove nahi ho paaya.");
+      showNotice("error", err.response?.data?.message || "Cancelled order remove nahi ho paaya.");
     }
   };
 
@@ -222,7 +222,7 @@ const Kitchen = () => {
       fetchOrders();
     } catch (err) {
       console.error(err);
-      alert("ETA update nahi ho paaya.");
+      showNotice("error", "ETA update nahi ho paaya.");
     }
   };
 
@@ -237,7 +237,34 @@ const Kitchen = () => {
       fetchOrders();
     } catch (err) {
       console.error(err);
-      alert("Order ready mark nahi ho paaya.");
+      showNotice("error", "Order ready mark nahi ho paaya.");
+    }
+  };
+
+  const openCancelOrderModal = (order) => {
+    setConfirmModal({ open: true, type: "cancel-order", order });
+  };
+
+  const openRemoveOrderModal = (order) => {
+    setConfirmModal({ open: true, type: "remove-order", order });
+  };
+
+  const closeConfirmModal = () => {
+    setConfirmModal({ open: false, type: "", order: null });
+  };
+
+  const handleConfirmAction = async () => {
+    const { type, order } = confirmModal;
+    closeConfirmModal();
+    if (!order) return;
+
+    if (type === "cancel-order") {
+      await cancelOrder(order);
+      return;
+    }
+
+    if (type === "remove-order") {
+      await removeCancelledOrder(order);
     }
   };
 
@@ -360,7 +387,7 @@ const Kitchen = () => {
   if (loading) {
     return (
       <div className="relative isolate min-h-screen w-full overflow-x-hidden bg-[linear-gradient(135deg,#f5fbff_0%,#f3f8f4_28%,#fff8f1_58%,#f8fafc_100%)] p-4 transition-all duration-300 sm:p-6 lg:p-8">
-        <div className="mx-auto max-w-[1280px] space-y-6 animate-pulse">
+        <div className="w-full space-y-6 animate-pulse">
           <div className="h-52 rounded-[28px] bg-slate-200/70" />
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             {[...Array(3)].map((_, index) => (
@@ -381,18 +408,18 @@ const Kitchen = () => {
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.55)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.45)_1px,transparent_1px)] bg-[size:72px_72px] opacity-25" />
       </div>
 
-      <div className="mx-auto max-w-[1280px] space-y-7">
+      <div className="w-full space-y-7">
         <section className="overflow-hidden rounded-[26px] border border-slate-900/10 bg-[linear-gradient(120deg,#071b34_0%,#0d4a53_52%,#162d45_100%)] px-4 py-5 shadow-[0_22px_55px_rgba(15,23,42,0.12)] sm:px-6 sm:py-6 lg:px-8">
           <div className="relative z-[1] grid gap-5 lg:grid-cols-[minmax(0,1.5fr)_minmax(300px,0.8fr)] lg:items-center">
             <div className="space-y-3">
-              <p className="text-[7px] font-semibold uppercase tracking-[0.26em] text-cyan-200 sm:text-[10px]">
+              <p className="text-sm font-semibold uppercase tracking-[0.26em] text-cyan-200 sm:text-base">
                 Resort Command Center
               </p>
               <div className="space-y-1">
-                <h1 className="text-[1.25rem] font-black leading-[1.02] text-white sm:text-[2.4rem]">
+                <h1 className="text-3xl font-black leading-tight text-white sm:text-5xl">
                   Operational snapshot for kitchen
                 </h1>
-                <p className="max-w-3xl text-[12px] leading-5 text-slate-100/88 sm:text-[14px] sm:leading-6">
+                <p className="max-w-3xl text-base leading-6 text-slate-100/88 sm:text-xl sm:leading-8">
                   Track order queues, ready movement, ETA promises, and warning alerts in one flow.
                 </p>
               </div>
@@ -400,12 +427,12 @@ const Kitchen = () => {
                 <button
                   type="button"
                   onClick={fetchOrders}
-                  className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-bold text-slate-900 shadow-[0_16px_35px_rgba(255,255,255,0.15)] transition hover:-translate-y-0.5"
+                  className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-base font-bold text-slate-900 shadow-[0_16px_35px_rgba(255,255,255,0.15)] transition hover:-translate-y-0.5"
                 >
                   <FaSyncAlt className="text-cyan-600" />
                   Refresh Queue
                 </button>
-                <div className="rounded-full border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur-md">
+                <div className="rounded-full border border-white/20 bg-white/10 px-5 py-3 text-base font-semibold text-white backdrop-blur-md">
                   Auto refresh every 4 seconds
                 </div>
               </div>
@@ -422,8 +449,8 @@ const Kitchen = () => {
                   key={item.label}
                   className="rounded-[22px] border border-white/12 bg-white/10 px-4 py-4 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md"
                 >
-                  <span className="text-[11px] text-slate-100/75">{item.label}</span>
-                  <div className="mt-3 text-2xl font-bold leading-none">{item.value}</div>
+                  <span className="text-sm text-slate-100/75">{item.label}</span>
+                  <div className="mt-3 text-3xl font-bold leading-none">{item.value}</div>
                 </div>
               ))}
             </div>
@@ -434,17 +461,17 @@ const Kitchen = () => {
           <div className="rounded-[26px] border border-white/60 bg-white/80 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
             <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
+                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-emerald-400">
                   Live Kitchen Queue
                 </p>
-                <h2 className="mt-1 text-lg font-bold text-slate-900 sm:text-xl">
+                <h2 className="mt-1 text-2xl font-bold text-slate-900 sm:text-3xl">
                   Kitchen orders
                 </h2>
               </div>
               <button
                 type="button"
                 onClick={fetchOrders}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-sky-600 to-cyan-500 px-4 py-2.5 text-sm font-bold text-white shadow-[0_12px_30px_rgba(14,165,233,0.24)] transition hover:-translate-y-0.5 sm:w-auto"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-sky-600 to-cyan-500 px-5 py-3 text-base font-bold text-white shadow-[0_12px_30px_rgba(14,165,233,0.24)] transition hover:-translate-y-0.5 sm:w-auto"
               >
                 <FaSyncAlt />
                 Refresh Now
@@ -452,169 +479,167 @@ const Kitchen = () => {
             </div>
 
             {visibleOrders.length ? (
-              <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(280px,1fr))]">
-                {paginatedVisibleOrders.map((order) => {
-                  const ref = order.table || order.table_number || order.table_no;
-                  const entityType = resolveEntityType(order);
-                  const label = `${entityType} ${ref || "--"}`;
-                  const status = order.status || "Pending";
-                  const overdue = isOrderOverdue(order);
-                  const remainingMinutes = getRemainingMinutes(order);
-                  const total = (order.items || []).reduce((sum, item) => {
-                    const qty = Number(item.qty ?? item.quantity ?? 0);
-                    return sum + Number(item.price || 0) * qty;
-                  }, 0);
+              <div className="overflow-hidden rounded-[22px] border border-slate-200 bg-white">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full text-left text-base">
+                    <thead className="bg-slate-50 text-sm uppercase tracking-[0.16em] text-slate-500">
+                      <tr>
+                        <th className="px-4 py-3">Reference</th>
+                        <th className="px-4 py-3">Status</th>
+                        <th className="px-4 py-3">Kitchen ETA</th>
+                        <th className="px-4 py-3">Ready Window</th>
+                        <th className="px-4 py-3">Items</th>
+                        <th className="px-4 py-3">Total</th>
+                        <th className="px-4 py-3 text-center">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {paginatedVisibleOrders.map((order) => {
+                        const ref = order.table || order.table_number || order.table_no;
+                        const entityType = resolveEntityType(order);
+                        const label = `${entityType} ${ref || "--"}`;
+                        const status = order.status || "Pending";
+                        const overdue = isOrderOverdue(order);
+                        const remainingMinutes = getRemainingMinutes(order);
+                        const total = (order.items || []).reduce((sum, item) => {
+                          const qty = Number(item.qty ?? item.quantity ?? 0);
+                          return sum + Number(item.price || 0) * qty;
+                        }, 0);
 
-                  return (
-                    <div
-                      key={order.id}
-                      className={`rounded-[24px] border bg-white p-4 shadow-sm sm:p-5 ${
-                        overdue
-                          ? "border-rose-300 shadow-[0_20px_45px_rgba(244,63,94,0.12)]"
-                          : "border-slate-200/80"
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                            Reference
-                          </div>
-                          <div className="mt-2 text-base font-black text-slate-900 sm:text-lg">
-                            {label}
-                          </div>
-                          <div className="mt-1 text-xs text-slate-500 sm:text-sm">
-                            Order #{order.id}
-                          </div>
-                        </div>
-                        <span
-                          className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                            status === "Ready"
-                              ? "bg-emerald-50 text-emerald-700"
-                              : overdue
-                              ? "bg-rose-50 text-rose-700"
-                              : "bg-amber-50 text-amber-700"
-                          }`}
-                        >
-                          {overdue ? "Overdue" : status}
-                        </span>
-                      </div>
-
-                      <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                        <div className={`rounded-[18px] border px-3 py-3 ${overdue ? "border-rose-200 bg-rose-50" : "border-slate-200 bg-slate-50"}`}>
-                          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                            Kitchen ETA
-                          </div>
-                          <div className="mt-2 flex items-center gap-2">
-                            <select
-                              value={etaDrafts[order.id] ?? order.prepTimeMinutes ?? 20}
-                              onChange={(event) =>
-                                setEtaDrafts((current) => ({
-                                  ...current,
-                                  [order.id]: Number(event.target.value),
-                                }))
-                              }
-                              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700"
-                            >
-                              {PREP_TIME_OPTIONS.map((minutes) => (
-                                <option key={minutes} value={minutes}>
-                                  {minutes} min
-                                </option>
-                              ))}
-                            </select>
-                            <button
-                              type="button"
-                              onClick={() => updateEta(order)}
-                              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700"
-                            >
-                              Set
-                            </button>
-                          </div>
-                        </div>
-
-                        <div className={`rounded-[18px] border px-3 py-3 ${overdue ? "border-rose-200 bg-rose-50" : "border-slate-200 bg-slate-50"}`}>
-                          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                            Ready Window
-                          </div>
-                          <div className="mt-2 flex items-center gap-2 text-sm font-bold text-slate-900">
-                            <FiClock className={overdue ? "text-rose-600" : "text-cyan-600"} />
-                            {formatCountdown(getRemainingSeconds(order))}
-                          </div>
-                          <div className={`mt-1 text-xs ${overdue ? "text-rose-700" : "text-slate-500"}`}>
-                            {status === "Ready"
-                              ? "Order ready for service"
-                              : remainingMinutes === null
-                              ? "ETA not set"
-                              : remainingMinutes > 0
-                              ? `${remainingMinutes} min left`
-                              : "Time up"}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="mt-4 space-y-2 rounded-[20px] border border-slate-200/70 bg-slate-50 p-3 sm:p-4">
-                        {(order.items || []).map((item, index) => (
-                          <div key={index} className="flex items-center justify-between gap-3 text-xs sm:text-sm">
-                            <div>
-                              <div className="font-semibold text-slate-900">
-                                {item.name || item.item_name}
-                              </div>
-                              <div className="text-slate-500">
-                                Qty: {item.qty ?? item.quantity ?? "-"}
-                              </div>
-                            </div>
-                            <div className="font-bold text-slate-700">Rs. {item.price}</div>
-                          </div>
-                        ))}
-                      </div>
-
-                      {order.readyMessage ? (
-                        <div className="mt-3 rounded-[16px] border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700">
-                          {order.readyMessage}
-                        </div>
-                      ) : null}
-
-                      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="text-sm text-slate-600">
-                          Total: <span className="font-black text-slate-900">Rs. {total}</span>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          {status !== "Ready" ? (
-                            <button
-                              type="button"
-                              onClick={() => markOrderReady(order)}
-                              className="inline-flex items-center gap-2 rounded-full bg-emerald-500 px-4 py-2 text-xs font-bold text-white transition hover:-translate-y-0.5"
-                            >
-                              <FiCheckCircle />
-                              Order Ready
-                            </button>
-                          ) : null}
-                          <button
-                            type="button"
-                            onClick={() => cancelOrder(order.id)}
-                            className="inline-flex items-center gap-2 rounded-full bg-rose-500 px-4 py-2 text-xs font-bold text-white transition hover:-translate-y-0.5"
+                        return (
+                          <tr
+                            key={order.id}
+                            className={`border-t border-slate-200 align-top ${
+                              overdue ? "bg-rose-50/35" : "bg-white"
+                            }`}
                           >
-                            <FiXCircle />
-                            Cancel Order
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => printBill(order)}
-                            className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-xs font-bold text-slate-700"
-                          >
-                            <FiPrinter />
-                            Print
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+                            <td className="px-4 py-4">
+                              <div className="text-xl font-black text-slate-900">{label}</div>
+                              <div className="mt-1 text-sm text-slate-500">Order #{order.id}</div>
+                              {order.readyMessage ? (
+                                <div className="mt-2 rounded-[12px] border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700">
+                                  {order.readyMessage}
+                                </div>
+                              ) : null}
+                            </td>
+                            <td className="px-4 py-4">
+                              <span
+                                className={`rounded-full px-4 py-1.5 text-sm font-semibold ${
+                                  status === "Ready"
+                                    ? "bg-emerald-50 text-emerald-700"
+                                    : overdue
+                                    ? "bg-rose-50 text-rose-700"
+                                    : "bg-amber-50 text-amber-700"
+                                }`}
+                              >
+                                {overdue ? "Overdue" : status}
+                              </span>
+                            </td>
+                            <td className="px-4 py-4">
+                              <div className="flex min-w-[160px] items-center gap-2">
+                                <select
+                                  value={etaDrafts[order.id] ?? order.prepTimeMinutes ?? 20}
+                                  onChange={(event) =>
+                                    setEtaDrafts((current) => ({
+                                      ...current,
+                                      [order.id]: Number(event.target.value),
+                                    }))
+                                  }
+                                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-base font-semibold text-slate-700"
+                                >
+                                  {PREP_TIME_OPTIONS.map((minutes) => (
+                                    <option key={minutes} value={minutes}>
+                                      {minutes} min
+                                    </option>
+                                  ))}
+                                </select>
+                                <button
+                                  type="button"
+                                  onClick={() => updateEta(order)}
+                                  className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700"
+                                >
+                                  Set
+                                </button>
+                              </div>
+                            </td>
+                            <td className="px-4 py-4">
+                              <div className="flex items-center gap-2 text-xl font-bold text-slate-900">
+                                <FiClock className={overdue ? "text-rose-600" : "text-cyan-600"} />
+                                {formatCountdown(getRemainingSeconds(order))}
+                              </div>
+                              <div className={`mt-1 text-sm ${overdue ? "text-rose-700" : "text-slate-500"}`}>
+                                {status === "Ready"
+                                  ? "Order ready for service"
+                                  : remainingMinutes === null
+                                  ? "ETA not set"
+                                  : remainingMinutes > 0
+                                  ? `${remainingMinutes} min left`
+                                  : "Time up"}
+                              </div>
+                            </td>
+                            <td className="px-4 py-4">
+                              <div className="min-w-[220px] space-y-2">
+                                {(order.items || []).map((item, index) => (
+                                  <div
+                                    key={index}
+                                    className="flex items-center justify-between gap-3 rounded-[14px] bg-slate-50 px-3 py-2"
+                                  >
+                                    <div>
+                                      <div className="text-lg font-semibold text-slate-900">
+                                        {item.name || item.item_name}
+                                      </div>
+                                      <div className="text-sm text-slate-500">
+                                        Qty: {item.qty ?? item.quantity ?? "-"}
+                                      </div>
+                                    </div>
+                                    <div className="text-lg font-bold text-slate-700">Rs. {item.price}</div>
+                                  </div>
+                                ))}
+                              </div>
+                            </td>
+                            <td className="px-4 py-4 text-xl font-black text-slate-900">Rs. {total}</td>
+                            <td className="px-4 py-4">
+                              <div className="flex min-w-[180px] flex-col gap-2">
+                                {status !== "Ready" ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => markOrderReady(order)}
+                                    className="inline-flex items-center justify-center gap-2 rounded-full bg-emerald-500 px-4 py-2.5 text-sm font-bold text-white transition hover:-translate-y-0.5"
+                                  >
+                                    <FiCheckCircle />
+                                    Order Ready
+                                  </button>
+                                ) : null}
+                                <button
+                                  type="button"
+                                  onClick={() => openCancelOrderModal(order)}
+                                  className="inline-flex items-center justify-center gap-2 rounded-full bg-rose-500 px-4 py-2.5 text-sm font-bold text-white transition hover:-translate-y-0.5"
+                                >
+                                  <FiXCircle />
+                                  Cancel Order
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => printBill(order)}
+                                  className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-700"
+                                >
+                                  <FiPrinter />
+                                  Print
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             ) : (
               <div className="rounded-[22px] border border-dashed border-slate-300 bg-white/70 p-8 text-center text-slate-500 sm:p-10">
                 <FiAlertCircle className="mx-auto mb-3 text-3xl text-slate-400" />
-                <div className="text-lg font-bold text-slate-900">No orders in kitchen queue</div>
-                <div className="mt-2 text-sm">
+                <div className="text-2xl font-bold text-slate-900">No orders in kitchen queue</div>
+                <div className="mt-2 text-lg">
            “New orders from the restaurant will automatically appear here as they come in.”
                 </div>
               </div>
@@ -627,10 +652,10 @@ const Kitchen = () => {
         {cancelledOrders.length ? (
           <section className="rounded-[26px] border border-rose-100 bg-white/80 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
             <div className="mb-5">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-rose-400">
+              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-rose-400">
                 Cancelled Orders
               </p>
-              <h2 className="mt-1 text-lg font-bold text-slate-900 sm:text-xl">
+              <h2 className="mt-1 text-2xl font-bold text-slate-900 sm:text-3xl">
                 Cancelled kitchen records
               </h2>
             </div>
@@ -651,29 +676,29 @@ const Kitchen = () => {
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-rose-500">
+                        <div className="text-sm font-semibold uppercase tracking-[0.18em] text-rose-500">
                           Reference
                         </div>
-                        <div className="mt-2 text-base font-black text-slate-900 sm:text-lg">
+                        <div className="mt-2 text-xl font-black text-slate-900 sm:text-2xl">
                           {entityType} {ref || "--"}
                         </div>
-                        <div className="mt-1 text-xs text-slate-500 sm:text-sm">
+                        <div className="mt-1 text-sm text-slate-500 sm:text-base">
                           Order #{order.id}
                         </div>
                       </div>
-                      <span className="rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-700">
+                      <span className="rounded-full bg-rose-100 px-4 py-1.5 text-sm font-semibold text-rose-700">
                         Cancelled
                       </span>
                     </div>
 
-                    <div className="mt-4 rounded-[18px] border border-rose-200 bg-white/70 px-4 py-4 text-sm text-slate-700">
+                    <div className="mt-4 rounded-[18px] border border-rose-200 bg-white/70 px-4 py-4 text-base text-slate-700">
                       {order.readyMessage || `${entityType} ${ref || "--"} order cancelled.`}
                     </div>
 
-                    <div className="mt-4 text-sm text-slate-600">
-                      Total: <span className="font-black text-slate-900">Rs. {total}</span>
+                    <div className="mt-4 text-base text-slate-600">
+                      Total: <span className="text-xl font-black text-slate-900">Rs. {total}</span>
                     </div>
-                    <div className="mt-2 text-xs font-semibold text-rose-700">
+                    <div className="mt-2 text-sm font-semibold text-rose-700">
                       Cancelled orders ka amount accounts me add nahi hota.
                     </div>
                     <div className="mt-4">
@@ -681,14 +706,14 @@ const Kitchen = () => {
                         <button
                           type="button"
                           onClick={() => restoreOrder(order)}
-                          className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-xs font-bold text-white transition hover:-translate-y-0.5"
+                          className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2.5 text-sm font-bold text-white transition hover:-translate-y-0.5"
                         >
                           Restore Order
                         </button>
                         <button
                           type="button"
-                          onClick={() => removeCancelledOrder(order)}
-                          className="inline-flex items-center gap-2 rounded-full bg-rose-500 px-4 py-2 text-xs font-bold text-white transition hover:-translate-y-0.5"
+                          onClick={() => openRemoveOrderModal(order)}
+                          className="inline-flex items-center gap-2 rounded-full bg-rose-500 px-4 py-2.5 text-sm font-bold text-white transition hover:-translate-y-0.5"
                         >
                           Remove Order
                         </button>
@@ -703,6 +728,103 @@ const Kitchen = () => {
           </section>
         ) : null}
       </div>
+
+      {confirmModal.open ? (
+        <div
+          className="fixed inset-0 z-[1100] flex items-center justify-center bg-slate-950/45 px-4 backdrop-blur-sm"
+          onClick={closeConfirmModal}
+        >
+          <div
+            className="w-full max-w-md overflow-hidden rounded-[30px] border border-white/70 bg-[linear-gradient(180deg,#ffffff_0%,#fff7f7_100%)] shadow-[0_30px_90px_rgba(15,23,42,0.28)]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="border-b border-rose-100 bg-[linear-gradient(135deg,#7f1d1d_0%,#be123c_48%,#ea580c_100%)] px-6 py-5 text-white">
+              <div className="inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-sm font-bold uppercase tracking-[0.18em] text-white/90">
+                Confirm Action
+              </div>
+              <h3 className="mt-3 text-3xl font-black">
+                {confirmModal.type === "remove-order" ? "Remove cancelled order?" : "Cancel this kitchen order?"}
+              </h3>
+              <p className="mt-2 text-base text-white/80">
+                {confirmModal.type === "remove-order"
+                  ? "Ye order permanently list se remove ho jayega."
+                  : "Order queue se hata diya jayega aur active service flow stop ho jayega."}
+              </p>
+            </div>
+
+            <div className="space-y-5 px-6 py-6">
+              <div className="rounded-[22px] border border-rose-100 bg-rose-50/80 p-4">
+                <div className="text-sm font-bold uppercase tracking-[0.18em] text-rose-700">Order Reference</div>
+                <div className="mt-2 text-2xl font-black text-slate-900">
+                  {resolveEntityType(confirmModal.order || {})}{" "}
+                  {confirmModal.order?.table || confirmModal.order?.table_number || confirmModal.order?.table_no || "--"}
+                </div>
+                <div className="mt-1 text-base text-slate-600">Order #{confirmModal.order?.id || "--"}</div>
+              </div>
+
+              <div className="flex flex-wrap justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={closeConfirmModal}
+                  className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-base font-semibold text-slate-700 transition hover:bg-slate-50"
+                >
+                  Keep Order
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmAction}
+                  className="rounded-xl bg-gradient-to-r from-rose-600 to-orange-500 px-5 py-3 text-base font-semibold text-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg"
+                >
+                  {confirmModal.type === "remove-order" ? "Remove Permanently" : "Yes, Cancel Order"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {noticeModal.open ? (
+        <div
+          className="fixed inset-0 z-[1110] flex items-center justify-center bg-slate-950/35 px-4 backdrop-blur-sm"
+          onClick={() => setNoticeModal((current) => ({ ...current, open: false }))}
+        >
+          <div
+            className={`w-full max-w-sm overflow-hidden rounded-[28px] border bg-white shadow-[0_30px_90px_rgba(15,23,42,0.24)] ${
+              noticeModal.type === "error" ? "border-rose-200" : "border-emerald-200"
+            }`}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div
+              className={`px-5 py-4 text-white ${
+                noticeModal.type === "error"
+                  ? "bg-[linear-gradient(135deg,#991b1b_0%,#e11d48_100%)]"
+                  : "bg-[linear-gradient(135deg,#065f46_0%,#0f766e_100%)]"
+              }`}
+            >
+              <div className="text-sm font-bold uppercase tracking-[0.18em] text-white/85">
+                {noticeModal.type === "error" ? "Action Failed" : "Action Complete"}
+              </div>
+              <div className="mt-2 text-2xl font-black">
+                {noticeModal.type === "error" ? "Something went wrong" : "Kitchen updated"}
+              </div>
+            </div>
+            <div className="px-5 py-5">
+              <p className="text-base text-slate-700">{noticeModal.message}</p>
+              <div className="mt-5 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setNoticeModal((current) => ({ ...current, open: false }))}
+                  className={`rounded-xl px-4 py-2.5 text-base font-semibold text-white ${
+                    noticeModal.type === "error" ? "bg-rose-600 hover:bg-rose-700" : "bg-emerald-600 hover:bg-emerald-700"
+                  }`}
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 };

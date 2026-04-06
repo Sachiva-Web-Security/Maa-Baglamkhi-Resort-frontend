@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import API from "../../api";
 import BookingCancelAction from "./BookingCancelAction";
@@ -11,10 +11,19 @@ import {
 } from "./bookingSession";
 
 const fieldCls =
-  "w-full rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100";
+  "w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:ring-4 focus:ring-sky-100";
 
 const labelCls =
-  "mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500";
+  "mb-2 block text-sm font-semibold text-slate-800";
+
+const panelCls =
+  "rounded-[30px] border border-slate-200/80 bg-white p-6 shadow-[0_24px_60px_rgba(15,23,42,0.06)] sm:p-7";
+
+const sectionCls =
+  "rounded-[26px] border border-slate-200/80 bg-slate-50/70 p-5 sm:p-6";
+
+const overviewCardCls =
+  "rounded-2xl bg-white p-4 shadow-[0_10px_30px_rgba(15,23,42,0.04)]";
 
 const Reference = () => {
   const navigate = useNavigate();
@@ -22,6 +31,8 @@ const Reference = () => {
   const bookingId = location.state?.bookingId || getStoredBookingId();
   const bookingCode = location.state?.bookingCode || getStoredBookingCode();
   const bookingRef = bookingCode || bookingId;
+  const guestDraft = getBookingDraft("guest") || {};
+  const otherBookingDraft = getBookingDraft("otherBooking") || {};
 
   const [formData, setFormData] = useState(
     getBookingDraft("reference") || {
@@ -54,16 +65,46 @@ const Reference = () => {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-[linear-gradient(135deg,#f6fbff_0%,#fcfff8_45%,#fff9f3_100%)] p-4 sm:p-6">
-      <div className="mx-auto max-w-6xl space-y-6">
-      
+  const locationSummary = useMemo(
+    () =>
+      [otherBookingDraft.city, otherBookingDraft.state, otherBookingDraft.country]
+        .filter(Boolean)
+        .join(", "),
+    [otherBookingDraft.city, otherBookingDraft.country, otherBookingDraft.state],
+  );
 
-        <section className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(300px,0.85fr)]">
-          <div className="rounded-[26px] border border-slate-200/80 bg-white/90 p-6 shadow-[0_18px_45px_rgba(15,23,42,0.06)]">
-            <div className="grid gap-6">
-              <div className="rounded-[24px] border border-slate-200/80 bg-white p-5">
-                <div className="mb-4 text-lg font-bold text-slate-900">
+  return (
+    <div
+      className="min-h-screen w-full bg-[radial-gradient(circle_at_top,_rgba(219,234,254,0.55),_rgba(255,255,255,0.96)_36%,_rgba(248,250,252,1)_100%)] p-4 sm:p-6"
+      style={{ fontFamily: '"Segoe UI", "Helvetica Neue", Arial, sans-serif' }}
+    >
+      <div className="mx-auto max-w-[2000px] rounded-[36px] border border-white/70 bg-[linear-gradient(180deg,#fafdff_0%,#ffffff_40%,#fffdf8_100%)] p-4 shadow-[0_30px_80px_rgba(148,163,184,0.18)] sm:p-6">
+        <section className="px-2 py-2">
+          <div className="grid gap-4 md:max-w-3xl">
+            <div className="grid grid-cols-[140px_minmax(0,1fr)] items-center gap-4">
+              <div className="text-xs font-medium uppercase tracking-[0.28em] text-slate-500">
+                Booking ID
+              </div>
+              <div className="text-2xl font-[800] tracking-[-0.03em] text-slate-900">
+                {bookingRef || "Pending"}
+              </div>
+            </div>
+            <div className="grid grid-cols-[140px_minmax(0,1fr)] items-center gap-4">
+              <div className="text-xs font-medium uppercase tracking-[0.28em] text-slate-500">
+                Source
+              </div>
+              <div className="text-2xl font-[800] tracking-[-0.03em] text-slate-900">
+                {otherBookingDraft.bookingSource || "Not selected"}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+          <div className={panelCls}>
+            <div className="space-y-6">
+              <div className={sectionCls}>
+                <div className="mb-5 text-2xl font-[700] tracking-[-0.02em] text-slate-900">
                   Guest Classification
                 </div>
                 <div>
@@ -82,9 +123,11 @@ const Reference = () => {
                 </div>
               </div>
 
-              <div className="rounded-[24px] border border-slate-200/80 bg-white p-5">
-                <div className="mb-4 text-lg font-bold text-slate-900">Notes</div>
-                <div className="grid gap-4">
+              <div className={sectionCls}>
+                <div className="mb-5 text-2xl font-[700] tracking-[-0.02em] text-slate-900">
+                  Notes
+                </div>
+                <div className="grid gap-5">
                   <div>
                     <label className={labelCls}>Guest Notes</label>
                     <textarea
@@ -92,7 +135,7 @@ const Reference = () => {
                       value={formData.guestNotes}
                       onChange={(e) => updateForm({ guestNotes: e.target.value })}
                       placeholder="Preferences, requests, special arrangements..."
-                      className={fieldCls}
+                      className={`${fieldCls} min-h-[136px] resize-none`}
                     />
                   </div>
                   <div>
@@ -102,54 +145,142 @@ const Reference = () => {
                       value={formData.internalNotes}
                       onChange={(e) => updateForm({ internalNotes: e.target.value })}
                       placeholder="Internal reminders for front desk or operations..."
-                      className={fieldCls}
+                      className={`${fieldCls} min-h-[136px] resize-none`}
                     />
+                  </div>
+                </div>
+              </div>
+
+              <div className={sectionCls}>
+                <div className="mb-4 text-xl font-bold text-slate-900">
+                  Booking Overview
+                </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className={overviewCardCls}>
+                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                      Booking ID
+                    </div>
+                    <div className="mt-2 text-lg font-bold text-slate-900">
+                      {bookingRef || "Pending"}
+                    </div>
+                  </div>
+
+                  <div className={overviewCardCls}>
+                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                      Source
+                    </div>
+                    <div className="mt-2 text-lg font-bold text-slate-900">
+                      {otherBookingDraft.bookingSource || "Not selected"}
+                    </div>
+                  </div>
+
+                  <div className={overviewCardCls}>
+                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                      Guest Name
+                    </div>
+                    <div className="mt-2 text-lg font-bold text-slate-900">
+                      {guestDraft.guestName || "Not entered"}
+                    </div>
+                  </div>
+
+                  <div className={overviewCardCls}>
+                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                      Guest Type
+                    </div>
+                    <div className="mt-2 text-lg font-bold text-slate-900">
+                      {formData.guestType || "Not selected"}
+                    </div>
+                  </div>
+
+                  <div className={overviewCardCls}>
+                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                      Booking Type
+                    </div>
+                    <div className="mt-2 text-lg font-bold text-slate-900">
+                      {otherBookingDraft.bookingType || "Not selected"}
+                    </div>
+                  </div>
+
+                  <div className={overviewCardCls}>
+                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                      Location
+                    </div>
+                    <div className="mt-2 text-lg font-bold text-slate-900">
+                      {locationSummary || "Pending"}
+                    </div>
+                    <div className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                      {otherBookingDraft.pincode
+                        ? `PIN Code ${otherBookingDraft.pincode}`
+                        : "PIN Code Pending"}
+                    </div>
+                  </div>
+
+                  <div className="md:col-span-2 rounded-2xl bg-white p-4 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
+                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                      Notes
+                    </div>
+                    <div className="mt-2 text-sm font-semibold text-slate-700">
+                      {formData.guestNotes || "No guest notes added yet."}
+                    </div>
+                    <div className="mt-3 border-t border-slate-200 pt-3 text-sm text-slate-600">
+                      {formData.internalNotes || "No internal notes added yet."}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="space-y-4">
-            <div className="rounded-[24px] border border-slate-200/80 bg-white/90 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.06)]">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-violet-700">
+          <div className="space-y-4 xl:flex xl:flex-col xl:items-start">
+            <div className="w-full rounded-[24px] border border-slate-200/80 bg-white/90 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.06)]">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-violet-700">
                 Snapshot
               </div>
               <div className="mt-4 space-y-3">
                 <div className="rounded-2xl bg-slate-50 p-4">
-                  <div className="text-xs uppercase tracking-wide text-slate-500">Booking ID</div>
-                  <div className="mt-1 font-black text-slate-900">{bookingRef || "Pending"}</div>
+                  <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    Booking ID
+                  </div>
+                  <div className="mt-2 text-lg font-bold text-slate-900">
+                    {bookingRef || "Pending"}
+                  </div>
                 </div>
+
                 <div className="rounded-2xl bg-slate-50 p-4">
-                  <div className="text-xs uppercase tracking-wide text-slate-500">Guest Type</div>
-                  <div className="mt-1 font-black text-slate-900">
-                    {formData.guestType || "Not selected"}
+                  <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    Source
+                  </div>
+                  <div className="mt-2 text-lg font-bold text-slate-900">
+                    {otherBookingDraft.bookingSource || "Not selected"}
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="rounded-[24px] border border-slate-200/80 bg-[linear-gradient(135deg,#fdf9ff_0%,#f7f3ff_100%)] p-5 shadow-[0_18px_45px_rgba(15,23,42,0.06)]">
-              <div className="text-xl font-black text-slate-900">Move to Company</div>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
-“Save guest classification and notes, then open the company section.”
+            <div className="w-full rounded-[28px] border border-violet-100/80 bg-[linear-gradient(180deg,#f8f4ff_0%,#f3eeff_52%,#efe9ff_100%)] p-6 shadow-[0_26px_70px_rgba(109,76,246,0.10)] xl:max-w-[320px]">
+              <div className="text-2xl font-[900] tracking-[-0.03em] text-slate-900">
+                Move to Company
+              </div>
+              <p className="mt-4 text-[14px] leading-7 text-slate-600">
+                Save guest classification and notes, then open the company section.
               </p>
-              <div className="mt-5 flex flex-col gap-3">
+              <div className="mt-7 flex flex-col gap-3">
                 <button
                   onClick={handleSubmit}
-                  className="inline-flex w-full items-center justify-center rounded-[22px] bg-gradient-to-r from-indigo-600 to-violet-500 px-5 py-4 text-sm font-bold text-white shadow-[0_16px_35px_rgba(99,102,241,0.24)] transition hover:-translate-y-0.5"
+                  className="inline-flex w-full items-center justify-center rounded-[24px] bg-[linear-gradient(90deg,#6e49f6_0%,#6d44f2_55%,#6b46ef_100%)] px-5 py-4 text-lg font-extrabold text-white shadow-[0_20px_40px_rgba(109,76,246,0.22)] transition hover:brightness-105"
                 >
                   Save & Next
                 </button>
                 <button
-                  onClick={() => navigate("/hotel/other-booking")}
-                  className="inline-flex w-full items-center justify-center rounded-[22px] border border-slate-200 bg-white px-5 py-4 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+                  onClick={() => navigate("/hotel/other-booking", { state: { bookingId, bookingCode } })}
+                  className="inline-flex w-full items-center justify-center rounded-[24px] border border-slate-200/90 bg-white px-5 py-4 text-base font-bold text-slate-700 transition hover:bg-slate-50"
                 >
                   Go Back
                 </button>
                 <BookingCancelAction
                   bookingId={bookingId}
                   bookingCode={bookingCode}
+                  buttonClassName="!rounded-[24px] !border-rose-200 !bg-rose-50/80 !py-4 !text-base !font-bold !text-rose-700 hover:!bg-rose-100"
                   fullWidth
                 />
               </div>
