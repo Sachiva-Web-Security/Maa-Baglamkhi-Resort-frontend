@@ -2236,7 +2236,7 @@ const Banquet = () => {
 
       <div className="w-full space-y-6">
         <section className="overflow-hidden rounded-[30px] border border-slate-900/10 bg-[linear-gradient(120deg,#103449_0%,#1b4e78_52%,#2757c8_100%)] px-5 py-6 shadow-[0_22px_55px_rgba(15,23,42,0.16)] sm:px-7 sm:py-8">
-          <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(340px,1fr)] xl:items-end">
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(340px,1fr)] xl:items-start">
             <div className="space-y-4">
               <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-cyan-100">
                 Security And Compliance Style
@@ -2249,11 +2249,11 @@ const Banquet = () => {
              “Reservation activity, hall readiness, menu pricing, and billing actions are presented on an audit-inspired screen so the team can track bookings more efficiently.”
                 </p>
               </div>
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
                   onClick={() => window.location.reload()}
-                  className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-bold text-slate-900 shadow-[0_16px_35px_rgba(255,255,255,0.16)] transition hover:-translate-y-0.5"
+                  className="shrink-0 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2.5 text-sm font-bold text-slate-900 shadow-[0_16px_35px_rgba(255,255,255,0.16)] transition hover:-translate-y-0.5"
                 >
                   <FaSyncAlt className="text-cyan-600" />
                   Refresh dashboard
@@ -2261,7 +2261,7 @@ const Banquet = () => {
                 <button
                   type="button"
                   onClick={openAddHallForm}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur-md transition hover:border-white/35"
+                  className="shrink-0 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur-md transition hover:border-white/35"
                 >
                   <FaPlus />
                   Add hall
@@ -2269,24 +2269,39 @@ const Banquet = () => {
                 <button
                   type="button"
                   onClick={openCreateReservationForm}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur-md transition hover:border-white/35"
+                  className="shrink-0 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur-md transition hover:border-white/35"
                 >
                   <FaPlus />
                   New reservation
                 </button>
+                {quickSections.map((section) => {
+                  const Icon = section.icon;
+
+                  return (
+                    <button
+                      key={section.id}
+                      type="button"
+                      onClick={() => setActiveQuickSection(section.id)}
+                      className="shrink-0 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur-md transition hover:border-white/35 hover:bg-white/15"
+                    >
+                      <Icon />
+                      {section.label}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
               {stats.map((item) => (
                 <div
                   key={item.label}
-                  className={`rounded-[22px] border px-4 py-4 backdrop-blur-md ${item.tone}`}
+                  className={`min-h-[92px] rounded-[18px] border px-3 py-3 backdrop-blur-md ${item.tone}`}
                 >
-                  <div className="text-[11px] uppercase tracking-[0.18em] text-white/75">
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/80">
                     {item.label}
                   </div>
-                  <div className="mt-3 text-3xl font-black leading-none">
+                  <div className="mt-2 text-2xl font-black leading-none">
                     {item.value}
                   </div>
                 </div>
@@ -2419,24 +2434,6 @@ const Banquet = () => {
                     className={`${inputCls} pl-11`}
                   />
                 </label>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                {quickSections.map((section) => {
-                  const Icon = section.icon;
-
-                  return (
-                    <button
-                      key={section.id}
-                      type="button"
-                      onClick={() => setActiveQuickSection(section.id)}
-                      className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-slate-700 transition hover:border-cyan-200 hover:bg-cyan-50 hover:text-cyan-700"
-                    >
-                      <Icon />
-                      {section.label}
-                    </button>
-                  );
-                })}
               </div>
 
               <div className="grid gap-3 sm:grid-cols-3">
