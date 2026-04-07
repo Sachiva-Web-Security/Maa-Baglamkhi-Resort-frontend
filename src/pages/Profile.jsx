@@ -233,7 +233,7 @@ const Profile = () => {
       : "Role";
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-[linear-gradient(135deg,#f5fbff_0%,#f3f8f4_28%,#fff8f1_58%,#f8fafc_100%)] p-4 sm:p-6 lg:p-8">
+    <div className="profile-page relative min-h-screen overflow-x-hidden bg-[linear-gradient(135deg,#f5fbff_0%,#f3f8f4_28%,#fff8f1_58%,#f8fafc_100%)] p-5 sm:p-7 lg:p-10">
       <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute left-[-8%] top-[-6%] h-72 w-72 rounded-full bg-cyan-200/45 blur-3xl sm:h-96 sm:w-96" />
         <div className="absolute right-[-10%] top-[8%] h-72 w-72 rounded-full bg-amber-200/45 blur-3xl sm:h-[28rem] sm:w-[28rem]" />
@@ -242,17 +242,17 @@ const Profile = () => {
       </div>
 
       <div className="w-full space-y-7">
-        <section className="overflow-hidden rounded-[28px] border border-slate-900/10 bg-[linear-gradient(120deg,#071b34_0%,#0d4a53_52%,#162d45_100%)] px-5 py-6 shadow-[0_22px_55px_rgba(15,23,42,0.12)] sm:px-7 sm:py-8">
-          <div className="space-y-4">
-            <div className="space-y-4">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-cyan-200">
+        <section className="profile-hero overflow-hidden rounded-[28px] border border-slate-900/10 bg-[linear-gradient(120deg,#071b34_0%,#0d4a53_52%,#162d45_100%)] px-6 py-7 shadow-[0_22px_55px_rgba(15,23,42,0.12)] sm:px-8 sm:py-10">
+          <div className="space-y-5">
+            <div className="space-y-5">
+              <p className="profile-hero-text text-xl font-semibold uppercase tracking-[0.3em]">
                 Personal Workspace
               </p>
-              <div className="space-y-2">
-                <h1 className="text-3xl font-black leading-tight text-white sm:text-4xl">
+              <div className="space-y-3">
+                <h1 className="profile-hero-title profile-hero-text max-w-3xl font-black">
                   Profile and security settings
                 </h1>
-                <p className="max-w-3xl text-sm leading-6 text-slate-100/85 sm:text-base">
+                <p className="profile-body-lg profile-hero-text max-w-3xl">
                   Dashboard style personal profile jahan se aap profile picture,
                   email overview aur password update ko ek cleaner screen par manage kar sakein.
                 </p>
@@ -263,10 +263,10 @@ const Profile = () => {
 
         <section className="grid gap-4 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,1.2fr)]">
           <div className="space-y-4">
-            <div className="rounded-[26px] border border-white/60 bg-white/82 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-              <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+            <div className="profile-card rounded-[26px] border border-white/60 bg-white/82 p-6 backdrop-blur-xl">
+              <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
                 <div className="relative mx-auto sm:mx-0">
-                  <div className="flex h-32 w-32 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-sky-500 to-cyan-500 text-4xl font-black text-white shadow-[0_16px_35px_rgba(14,165,233,0.25)]">
+                  <div className="flex h-36 w-36 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-sky-500 to-cyan-500 text-5xl font-black text-white shadow-[0_16px_35px_rgba(14,165,233,0.25)]">
                     {avatarUrl ? (
                       <img
                         src={avatarUrl}
@@ -280,19 +280,19 @@ const Profile = () => {
                 </div>
 
                 <div className="min-w-0 flex-1 text-center sm:text-left">
-                  <div className="text-2xl font-black text-slate-900">
+                  <div className="profile-section-title text-slate-900">
                     {name || "User"}
                   </div>
-                  <div className="mt-2 inline-flex items-center gap-2 rounded-full bg-cyan-50 px-3 py-1.5 text-xs font-bold text-cyan-700">
+                  <div className="profile-chip mt-3 inline-flex items-center gap-2 rounded-full bg-cyan-50 px-4 py-2 font-bold text-cyan-700">
                     <FaUserCircle />
                     {prettyRole}
                   </div>
-                  <div className="mt-3 flex flex-col gap-2 text-sm text-slate-500">
-                    <span className="inline-flex items-center gap-2 justify-center sm:justify-start">
+                  <div className="mt-4 flex flex-col gap-2 text-base text-slate-600">
+                    <span className="inline-flex items-center justify-center gap-2 sm:justify-start">
                       <FaEnvelope className="text-slate-400" />
                       {email || "Email not set"}
                     </span>
-                    <span className="inline-flex items-center gap-2 justify-center sm:justify-start">
+                    <span className="inline-flex items-center justify-center gap-2 sm:justify-start">
                       <FaShieldAlt className="text-slate-400" />
                       Secure profile controls available
                     </span>
@@ -301,12 +301,12 @@ const Profile = () => {
               </div>
             </div>
 
-            <div className="rounded-[26px] border border-white/60 bg-white/82 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-              <div className="mb-4">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
+            <div className="profile-card rounded-[26px] border border-white/60 bg-white/82 p-6 backdrop-blur-xl">
+              <div className="mb-5">
+                <p className="profile-label text-emerald-400">
                   Profile Picture
                 </p>
-                <h2 className="mt-1 text-xl font-bold text-slate-900">
+                <h2 className="profile-section-title mt-2 text-slate-900">
                   Update avatar
                 </h2>
               </div>
@@ -316,21 +316,21 @@ const Profile = () => {
                   type="file"
                   accept="image/png,image/jpeg,image/webp"
                   onChange={handleAvatarChange}
-                  className="w-full rounded-[20px] border border-slate-200/80 bg-white px-4 py-3 text-sm text-slate-600 file:mr-3 file:rounded-full file:border-0 file:bg-sky-600 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-sky-700"
+                  className="profile-input w-full rounded-[20px] border border-slate-200/80 bg-white px-4 py-4 text-base text-slate-700 file:mr-3 file:rounded-full file:border-0 file:bg-sky-600 file:px-4 file:py-3 file:text-sm file:font-semibold file:text-white hover:file:bg-sky-700"
                 />
 
                 <div className="space-y-3">
                   <button
                     type="button"
                     onClick={handleStartCamera}
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-[20px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-700 transition hover:border-cyan-200 hover:text-cyan-700"
+                    className="profile-action inline-flex w-full items-center justify-center gap-2 rounded-[20px] border border-slate-200 bg-slate-50 px-5 py-4 font-bold text-slate-700 transition hover:border-cyan-200 hover:text-cyan-700"
                   >
                     <FaCamera />
                     Open Camera
                   </button>
 
                   {cameraError ? (
-                    <div className="rounded-[18px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+                    <div className="rounded-[18px] border border-rose-200 bg-rose-50 px-4 py-3 text-base font-semibold text-rose-700">
                       {cameraError}
                     </div>
                   ) : null}
@@ -358,7 +358,7 @@ const Profile = () => {
                 <button
                   type="submit"
                   disabled={loadingAvatar || !avatarFile}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-[22px] bg-gradient-to-r from-sky-600 to-cyan-500 px-5 py-4 text-sm font-bold text-white shadow-[0_16px_35px_rgba(14,165,233,0.24)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="profile-primary inline-flex w-full items-center justify-center gap-2 rounded-[22px] bg-gradient-to-r from-sky-600 to-cyan-500 px-5 py-4 font-bold text-white shadow-[0_16px_35px_rgba(14,165,233,0.24)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <FaUpload />
                   {loadingAvatar ? "Uploading..." : "Update Profile Picture"}
@@ -368,74 +368,74 @@ const Profile = () => {
           </div>
 
           <div className="space-y-4">
-            <div className="rounded-[26px] border border-white/60 bg-white/82 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+            <div className="profile-card rounded-[26px] border border-white/60 bg-white/82 p-6 backdrop-blur-xl">
               <div className="mb-4 flex items-start gap-3">
                 <span className="rounded-2xl bg-amber-50 p-3 text-amber-600">
                   <FaLock />
                 </span>
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
+                  <p className="profile-label text-emerald-400">
                     Security Center
                   </p>
-                  <h2 className="mt-1 text-xl font-bold text-slate-900">
+                  <h2 className="profile-section-title mt-2 text-slate-900">
                     Change password
                   </h2>
                 </div>
               </div>
 
-              <p className="mb-4 text-sm leading-6 text-slate-500">
+              <p className="profile-body-lg mb-5 text-slate-600">
                 Yahan se aap apna password safely update kar sakte hain. Current
                 credentials screen par expose nahi honge aur update directly account security ke liye use hoga.
               </p>
 
               {error ? (
-                <div className="mb-4 rounded-[18px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+                <div className="mb-4 rounded-[18px] border border-rose-200 bg-rose-50 px-4 py-3 text-base font-semibold text-rose-700">
                   {error}
                 </div>
               ) : null}
 
               {message ? (
-                <div className="mb-4 rounded-[18px] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+                <div className="mb-4 rounded-[18px] border border-emerald-200 bg-emerald-50 px-4 py-3 text-base font-semibold text-emerald-700">
                   {message}
                 </div>
               ) : null}
 
               <form onSubmit={handlePasswordChange} className="space-y-4">
                 <div>
-                  <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  <label className="profile-label mb-2 block font-semibold uppercase text-slate-500">
                     Current Password
                   </label>
                   <input
                     type="password"
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
-                    className="w-full rounded-[20px] border border-slate-200/80 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100"
+                    className="profile-input w-full rounded-[20px] border border-slate-200/80 bg-white px-4 py-4 text-base text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100"
                     placeholder="Enter current password"
                   />
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  <label className="profile-label mb-2 block font-semibold uppercase text-slate-500">
                     New Password
                   </label>
                   <input
                     type="password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full rounded-[20px] border border-slate-200/80 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100"
+                    className="profile-input w-full rounded-[20px] border border-slate-200/80 bg-white px-4 py-4 text-base text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100"
                     placeholder="Enter new password"
                   />
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  <label className="profile-label mb-2 block font-semibold uppercase text-slate-500">
                     Confirm Password
                   </label>
                   <input
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full rounded-[20px] border border-slate-200/80 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100"
+                    className="profile-input w-full rounded-[20px] border border-slate-200/80 bg-white px-4 py-4 text-base text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100"
                     placeholder="Re-enter new password"
                   />
                 </div>
@@ -443,7 +443,7 @@ const Profile = () => {
                 <button
                   type="submit"
                   disabled={loadingPassword}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-[22px] bg-gradient-to-r from-sky-600 to-cyan-500 px-5 py-4 text-sm font-bold text-white shadow-[0_16px_35px_rgba(14,165,233,0.24)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="profile-primary inline-flex w-full items-center justify-center gap-2 rounded-[22px] bg-gradient-to-r from-sky-600 to-cyan-500 px-5 py-4 font-bold text-white shadow-[0_16px_35px_rgba(14,165,233,0.24)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <FaLock />
                   {loadingPassword ? "Updating..." : "Update Password"}
@@ -451,35 +451,35 @@ const Profile = () => {
               </form>
             </div>
 
-            <div className="rounded-[26px] border border-white/60 bg-white/82 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
+            <div className="profile-card rounded-[26px] border border-white/60 bg-white/82 p-6 backdrop-blur-xl">
+              <p className="profile-label font-semibold uppercase text-emerald-400">
                 Profile Status
               </p>
-              <h2 className="mt-1 text-xl font-bold text-slate-900">
+              <h2 className="profile-section-title mt-2 text-slate-900">
                 Account overview
               </h2>
 
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 <div className="rounded-[20px] border border-slate-200/80 bg-slate-50 p-4">
-                  <div className="text-xs font-semibold uppercase tracking-[0.15em] text-slate-500">
+                  <div className="profile-label font-semibold uppercase text-slate-500">
                     Role
                   </div>
-                  <div className="mt-2 text-lg font-black text-slate-900">
+                  <div className="profile-value mt-2">
                     {prettyRole}
                   </div>
                 </div>
                 <div className="rounded-[20px] border border-slate-200/80 bg-slate-50 p-4">
-                  <div className="text-xs font-semibold uppercase tracking-[0.15em] text-slate-500">
+                  <div className="profile-label font-semibold uppercase text-slate-500">
                     Email
                   </div>
-                  <div className="mt-2 break-all text-sm font-bold text-slate-900">
+                  <div className="mt-2 break-all text-base font-bold text-slate-900">
                     {email || "Not set"}
                   </div>
                 </div>
               </div>
 
               {loadingProfile ? (
-                <p className="mt-4 text-sm font-semibold text-slate-500">
+                <p className="profile-body-lg mt-4 font-semibold text-slate-500">
                   Profile details load ho rahe hain...
                 </p>
               ) : null}
