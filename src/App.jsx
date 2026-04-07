@@ -141,7 +141,10 @@ function Layout({ children, setIsAuthenticated }) {
         }}
       >
         <Header setIsAuthenticated={setIsAuthenticated} />
-        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto pt-[70px]">
+        <div
+          ref={scrollContainerRef}
+          className="flex-1 overflow-y-auto pt-[70px]"
+        >
           <div className="p-3 sm:p-4 lg:p-5">{children}</div>
         </div>
       </div>

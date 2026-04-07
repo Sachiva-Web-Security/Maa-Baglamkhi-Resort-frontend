@@ -1,7 +1,6 @@
 import { useNavigate } from "react-router-dom";
-import { FaBuilding } from "react-icons/fa";
 
-const Header = ({ setIsAuthenticated }) => {
+const Header = ({ setIsAuthenticated, sidebarOffset = 0, isMobile = false }) => {
   const navigate = useNavigate();
   const userName = localStorage.getItem("name") || "User";
 
@@ -20,40 +19,41 @@ const Header = ({ setIsAuthenticated }) => {
 
   return (
     <header
-      className="fixed top-0 left-0 right-0 h-22 
-bg-slate-900
-shadow-md flex items-center justify-between px-6 z-50 text-white backdrop-blur-md"
+      className="fixed top-0 z-50 flex h-[70px] items-center justify-between border-b border-slate-200/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,250,252,0.96))] px-4 text-slate-900 shadow-[0_8px_30px_rgba(15,23,42,0.06)] backdrop-blur-xl sm:px-6"
+      style={{
+        left: isMobile ? 0 : sidebarOffset,
+        width: isMobile ? "100%" : `calc(100% - ${sidebarOffset}px)`,
+      }}
     >
-      {/* LEFT SIDE - Mobile Menu Button + Logo */}
       <div className="flex items-center gap-3">
-  <h1 className="flex items-center gap-2 text-2xl font-semibold">
-    
-    <div className="w-17 h-17 rounded-full bg-blue-700 flex items-center justify-center overflow-hidden">
-      <img
-        className="w-full h-full object-cover rounded-full"
-        src="https://www.maabaglamukhinalkehda.com/assets/images/maa2.jpg"
-        alt="Logo"
-      />
-    </div>
+        <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl bg-slate-900 shadow-lg ring-1 ring-slate-900/10">
+          <img
+            className="h-full w-full object-cover"
+            src="https://www.maabaglamukhinalkehda.com/assets/images/maa2.jpg"
+            alt="Logo"
+          />
+        </div>
+        <div className="leading-tight">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-sky-600">
+            Resort operations
+          </p>
+          <h1 className="text-lg font-semibold text-slate-900 sm:text-xl">
+            Maa Baglamukhi Resort
+          </h1>
+        </div>
+      </div>
 
-    Maa Baglamukhi Resort
-  </h1>
-</div>
-
-      {/* RIGHT SIDE - User Info + Logout */}
-
-      <div className="flex items-center gap-4">
-        <span className="hidden sm:inline text-xl font-medium">
+      <div className="flex items-center gap-3 sm:gap-4">
+        <span className="hidden rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 sm:inline-flex">
           Welcome, {userName}
         </span>
 
         <button
           onClick={handleLogout}
-          className="bg-blue-500 h-10 hover:bg-red-900 text-white px-4 py-1 rounded-md text-sm backdrop-blur-md"
+          className="inline-flex h-10 items-center justify-center rounded-full bg-slate-900 px-4 text-sm font-semibold text-white transition hover:bg-sky-700"
         >
           Logout
         </button>
-        {/* test v2 */}
       </div>
     </header>
   );

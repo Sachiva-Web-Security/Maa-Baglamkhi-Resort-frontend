@@ -2235,33 +2235,34 @@ const Banquet = () => {
       </div>
 
       <div className="w-full space-y-6">
-        <section className="overflow-hidden rounded-[30px] border border-slate-900/10 bg-[linear-gradient(120deg,#103449_0%,#1b4e78_52%,#2757c8_100%)] px-5 py-6 shadow-[0_22px_55px_rgba(15,23,42,0.16)] sm:px-7 sm:py-8">
+        <section className="overflow-hidden rounded-[30px] border border-slate-200/80 bg-white/95 px-5 py-6 shadow-[0_22px_55px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:px-7 sm:py-8">
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(340px,1fr)] xl:items-start">
             <div className="space-y-4">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-cyan-100">
-                Security And Compliance Style
+              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-sky-500">
+                Dashboard
               </p>
               <div className="space-y-2">
-                <h1 className="text-3xl font-black leading-tight text-white sm:text-4xl">
+                <h1 className="text-3xl font-semibold leading-tight text-slate-950 sm:text-4xl">
                   Banquet operations dashboard
                 </h1>
-                <p className="max-w-3xl text-sm leading-6 text-slate-100/85 sm:text-base">
-             “Reservation activity, hall readiness, menu pricing, and billing actions are presented on an audit-inspired screen so the team can track bookings more efficiently.”
+                <p className="max-w-3xl text-sm leading-6 text-slate-500 sm:text-base">
+                  Reservation activity, hall readiness, menu pricing, and billing actions are
+                  shown in a clean workspace so the team can scan information faster.
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
                   onClick={() => window.location.reload()}
-                  className="shrink-0 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2.5 text-sm font-bold text-slate-900 shadow-[0_16px_35px_rgba(255,255,255,0.16)] transition hover:-translate-y-0.5"
+                  className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_12px_28px_rgba(15,23,42,0.16)] transition hover:-translate-y-0.5 hover:bg-slate-800"
                 >
-                  <FaSyncAlt className="text-cyan-600" />
-                  Refresh dashboard
+                  <FaSyncAlt />
+                  Refresh
                 </button>
                 <button
                   type="button"
                   onClick={openAddHallForm}
-                  className="shrink-0 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur-md transition hover:border-white/35"
+                  className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
                 >
                   <FaPlus />
                   Add hall
@@ -2269,7 +2270,7 @@ const Banquet = () => {
                 <button
                   type="button"
                   onClick={openCreateReservationForm}
-                  className="shrink-0 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur-md transition hover:border-white/35"
+                  className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
                 >
                   <FaPlus />
                   New reservation
@@ -2282,7 +2283,7 @@ const Banquet = () => {
                       key={section.id}
                       type="button"
                       onClick={() => setActiveQuickSection(section.id)}
-                      className="shrink-0 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur-md transition hover:border-white/35 hover:bg-white/15"
+                      className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-white"
                     >
                       <Icon />
                       {section.label}
@@ -2292,18 +2293,19 @@ const Banquet = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               {stats.map((item) => (
                 <div
                   key={item.label}
-                  className={`min-h-[92px] rounded-[18px] border px-3 py-3 backdrop-blur-md ${item.tone}`}
+                  className="rounded-[24px] border border-slate-200/80 bg-slate-50/90 p-4 shadow-[0_10px_24px_rgba(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:shadow-[0_14px_32px_rgba(15,23,42,0.08)]"
                 >
-                  <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/80">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
                     {item.label}
                   </div>
-                  <div className="mt-2 text-2xl font-black leading-none">
+                  <div className="mt-3 text-[30px] font-semibold leading-none text-slate-950">
                     {item.value}
                   </div>
+                  <div className="mt-2 h-1.5 w-12 rounded-full bg-sky-200" />
                 </div>
               ))}
             </div>

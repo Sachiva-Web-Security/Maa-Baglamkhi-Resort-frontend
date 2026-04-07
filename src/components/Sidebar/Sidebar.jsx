@@ -146,7 +146,6 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, footerOverlap = 0 }) =
   };
 
   const showLabels = sidebarOpen;
-  const desktopHeight = "100vh";
 
   return (
     <>
@@ -160,16 +159,18 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, footerOverlap = 0 }) =
       <div
         className={`
           desktop-scale-sidebar
-          fixed left-0 top-0 z-40
-          flex translate-x-0 flex-col justify-between
-          border-r border-white/10 bg-[linear-gradient(180deg,#081225_0%,#0b1730_55%,#09101f_100%)]
+          fixed left-0 top-[70px] z-40
+          flex translate-x-0 flex-col
+          border-r border-slate-800/80 bg-[linear-gradient(180deg,#07111f_0%,#0b1728_52%,#09101b_100%)]
           text-gray-800 shadow-[0_18px_40px_rgba(2,8,23,0.45)]
           transition-all duration-300 ease-in-out
-          pt-[70px]
+          overflow-hidden
           ${sidebarOpen ? "w-[250px]" : "w-[88px]"}
         `}
         style={{
-          height: isMobile ? "150vh" : desktopHeight,
+          height: isMobile
+            ? "145vh"
+            : `calc(100dvh - 70px - ${Math.max(0, footerOverlap)}px)`,
         }}
       >
         <style>{`
@@ -181,7 +182,7 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, footerOverlap = 0 }) =
 
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.22),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(14,165,233,0.14),transparent_30%)]" />
 
-        <div className={`relative border-b border-white/10 ${showLabels ? "px-4 py-4" : "px-3 py-4"}`}>
+        <div className={`relative mt-4 shrink-0 border-b border-white/10 ${showLabels ? "px-4 pt-2 pb-3" : "px-3 py-4"}`}>
           <button
             type="button"
             aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
@@ -212,7 +213,7 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, footerOverlap = 0 }) =
           </button>
         </div>
 
-        <nav className={`sidebar-scroll relative flex-1 space-y-2 overflow-y-auto font-bold ${showLabels ? "px-4 py-4" : "px-3 py-4"}`}>
+        <nav className={`sidebar-scroll relative min-h-0 flex-1 space-y-2.5 overflow-y-auto font-bold ${showLabels ? "px-4 py-3" : "px-3 py-3"}`}>
           {menuItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.path);
@@ -236,7 +237,7 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, footerOverlap = 0 }) =
                 onTouchEnd={clearHoveredStates}
                 onTouchCancel={clearHoveredStates}
                 title={!showLabels ? item.name : undefined}
-                className={`
+                  className={`
                   group flex w-full cursor-pointer items-center rounded-2xl border transition-all duration-300
                   ${showLabels ? "justify-start gap-3 px-4 py-3" : "justify-center px-3 py-3"}
                   ${
@@ -266,7 +267,7 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, footerOverlap = 0 }) =
           })}
         </nav>
 
-        <div className={`relative border-t border-white/10 bg-black/10 p-3 backdrop-blur-md ${showLabels ? "" : "flex justify-center"}`}>
+        <div className={`relative mt-6 shrink-0 bg-transparent px-3 pb-3 pt-2 ${showLabels ? "" : "flex justify-center"}`}>
           <button
             type="button"
             onClick={() => setSidebarOpen((prev) => !prev)}
@@ -292,7 +293,7 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, footerOverlap = 0 }) =
                 : ""
             }`}
           >
-            <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-slate-700 to-slate-900 text-white ring-1 ring-white/10">
+            <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-slate-700 to-slate-900 text-white ring-1 ring-white/10">
               {avatarUrl ? (
                 <img
                   src={avatarUrl}
@@ -307,9 +308,9 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, footerOverlap = 0 }) =
               )}
             </div>
             {showLabels ? (
-              <div>
-                <p className="text-lg font-semibold leading-tight text-white">{userName}</p>
-                <p className="text-sm font-medium uppercase tracking-[0.08em] text-blue-200/90">
+              <div className="min-w-0 flex-1">
+                <p className="text-base font-semibold leading-tight text-white">{userName}</p>
+                <p className="text-xs font-medium uppercase tracking-[0.08em] text-blue-200/90">
                   {role ? role.charAt(0).toUpperCase() + role.slice(1) : "User"}
                 </p>
               </div>
