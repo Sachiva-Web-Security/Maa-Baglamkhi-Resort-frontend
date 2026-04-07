@@ -388,17 +388,16 @@ const User = () => {
       <div className="w-full space-y-7">
         <section className="overflow-hidden rounded-[28px] border border-slate-900/10 bg-[linear-gradient(120deg,#071b34_0%,#0d4a53_52%,#162d45_100%)] px-5 py-6 shadow-[0_22px_55px_rgba(15,23,42,0.12)] sm:px-7 sm:py-8">
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.9fr)] lg:items-center">
-            <div className="space-y-4">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-cyan-200">
+            <div className="space-y-7">
+              <p className="text-xl  font-semibold uppercase tracking-[0.29em] text-cyan-200">
                 Team Directory
               </p>
               <div className="space-y-2">
                 <h1 className="text-3xl font-black leading-tight text-white sm:text-4xl">
                   User management made cleaner and faster
                 </h1>
-                <p className="max-w-3xl text-sm leading-6 text-slate-100/85 sm:text-base">
-                  Dashboard style user directory jahan se aap team members ko
-                  search, review aur onboard kar sakte hain with better clarity.
+                <p className="max-w-3xl text-2xl leading-6 text-slate-100/85 sm:text-base">
+                 Dashboard-style user directory where you can search, review, and onboard team members with better clarity.
                 </p>
               </div>
               <div className="flex flex-wrap gap-3">
@@ -406,7 +405,7 @@ const User = () => {
                   type="button"
                   onClick={() => setShowCreateModal(true)}
                   disabled={!isAdmin}
-                  className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-bold text-slate-900 shadow-[0_16px_35px_rgba(255,255,255,0.15)] transition hover:-translate-y-0.5"
+                  className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-xl font-bold text-slate-900 shadow-[0_16px_35px_rgba(255,255,255,0.15)] transition hover:-translate-y-0.5"
                 >
                   <FaUserPlus className="text-cyan-600" />
                   Add New User
@@ -424,8 +423,8 @@ const User = () => {
                   key={item.label}
                   className="rounded-[22px] border border-white/12 bg-white/10 px-4 py-4 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md"
                 >
-                  <span className="text-[11px] text-slate-100/75">{item.label}</span>
-                  <div className="mt-3 text-2xl font-bold leading-none">
+                  <span className="text-[18px] text-slate-100/75">{item.label}</span>
+                  <div className="mt-3 text-3xl font-bold leading-none">
                     {item.value}
                   </div>
                 </div>
@@ -438,13 +437,13 @@ const User = () => {
           <div>
             <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
+                <p className="text-[16px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
                   User Directory
                 </p>
-                <h2 className="mt-1 text-xl font-bold text-slate-900">
+                <h2 className="mt-1 text-2xl font-bold text-slate-900">
                   Search and manage staff
                 </h2>
-                <p className="mt-2 text-sm text-slate-500">
+                <p className="mt-2 text-xl text-slate-500">
                   Name, email ya role se quickly search karein aur onboarding ko easy banayein.
                 </p>
               </div>
@@ -452,7 +451,7 @@ const User = () => {
                 type="button"
                 onClick={() => setShowCreateModal(true)}
                 disabled={!isAdmin}
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-sky-600 to-cyan-500 px-4 py-2.5 text-sm font-bold text-white shadow-[0_12px_30px_rgba(14,165,233,0.24)] transition hover:-translate-y-0.5"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-sky-600 to-cyan-500 px-4 py-2.5 text-xl font-bold text-white shadow-[0_12px_30px_rgba(14,165,233,0.24)] transition hover:-translate-y-0.5"
               >
                 <FaUserPlus />
                 Add User
@@ -464,7 +463,7 @@ const User = () => {
               <input
                 type="text"
                 placeholder="Search users by name, email or role..."
-                className="w-full rounded-[20px] border border-slate-200/80 bg-white py-3 pl-11 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100"
+                className="w-full rounded-[20px] border border-slate-200/80 bg-white py-3 pl-11 pr-4 text-[19px] text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -477,15 +476,15 @@ const User = () => {
             ) : null}
 
             {!isAdmin ? (
-              <div className="mt-4 rounded-[18px] border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-700">
-                Edit, create aur delete action sirf admin account se allowed hain.
+              <div className="mt-4 rounded-[18px] border border-amber-200 bg-amber-50 px-4 py-3 text-xl font-semibold text-amber-700">
+         Edit, create, and delete actions are allowed only for the admin account.
               </div>
             ) : null}
           </div>
 
           <div className="mt-5 hidden overflow-x-auto rounded-[22px] border border-slate-200/80 bg-white lg:block">
             <table className="min-w-full text-left">
-              <thead className="bg-slate-50 text-xs uppercase tracking-[0.18em] text-slate-500">
+              <thead className="bg-slate-50 text-xl uppercase tracking-[0.18em] text-slate-500">
                 <tr>
                   <th className="px-5 py-4 font-semibold">#</th>
                   <th className="px-5 py-4 font-semibold">Profile</th>
@@ -508,7 +507,7 @@ const User = () => {
                         key={user.id || user._id || index}
                         className="border-t border-slate-200/80 transition hover:bg-slate-50/80"
                       >
-                        <td className="px-5 py-4 text-sm font-semibold text-slate-700">
+                        <td className="px-5 py-4 text-xl font-semibold text-slate-700">
                           {meta.index}
                         </td>
                         <td className="px-5 py-4">
@@ -526,14 +525,14 @@ const User = () => {
                             )}
                           </div>
                         </td>
-                        <td className="px-5 py-4 text-sm font-semibold text-slate-900">
+                        <td className="px-5 py-4 text-xl font-semibold text-slate-900">
                           {meta.displayName}
                         </td>
-                        <td className="px-5 py-4 text-sm text-slate-600">
+                        <td className="px-5 py-4 text-xl text-slate-600">
                           {meta.email}
                         </td>
                         <td className="px-5 py-4">
-                          <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+                          <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xl font-bold text-emerald-700">
                             {meta.role}
                           </span>
                         </td>
@@ -543,7 +542,7 @@ const User = () => {
                               type="button"
                               onClick={() => openEditUser(user)}
                               disabled={!isAdmin}
-                              className="inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-2 text-xs font-bold text-cyan-700 transition hover:bg-cyan-100"
+                              className="inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-2 text-xl font-bold text-cyan-700 transition hover:bg-cyan-100"
                             >
                               <FaEdit />
                               Edit
@@ -552,7 +551,7 @@ const User = () => {
                               type="button"
                               onClick={() => handleDeleteUser(user)}
                               disabled={!isAdmin}
-                              className="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700 transition hover:bg-rose-100"
+                              className="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-3 py-2 text-xl font-bold text-rose-700 transition hover:bg-rose-100"
                             >
                               <FaTrash />
                               Delete
@@ -566,7 +565,7 @@ const User = () => {
                   <tr>
                     <td
                       colSpan="6"
-                      className="px-5 py-12 text-center text-sm font-semibold text-slate-500"
+                      className="px-5 py-12 text-center text-xl font-semibold text-slate-500"
                     >
                       No users found
                     </td>
@@ -604,19 +603,19 @@ const User = () => {
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="truncate text-base font-bold text-slate-900">
+                      <div className="truncate text-xl font-bold text-slate-900">
                         {meta.displayName}
                       </div>
-                      <div className="truncate text-sm text-slate-500">
+                      <div className="truncate text-xl text-slate-500">
                         {meta.email}
                       </div>
                     </div>
                   </div>
                   <div className="mt-4 flex items-center justify-between">
-                    <span className="text-xs font-semibold text-slate-500">
+                    <span className="text-xl font-semibold text-slate-500">
                       User #{meta.index}
                     </span>
-                    <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+                    <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xl font-bold text-emerald-700">
                       {meta.role}
                     </span>
                   </div>
@@ -624,7 +623,7 @@ const User = () => {
                     type="button"
                     onClick={() => openEditUser(user)}
                     disabled={!isAdmin}
-                    className="mt-4 inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-2 text-xs font-bold text-cyan-700 transition hover:bg-cyan-100"
+                    className="mt-4 inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-2 text-xl font-bold text-cyan-700 transition hover:bg-cyan-100"
                   >
                     <FaEdit />
                     Edit User
@@ -633,7 +632,7 @@ const User = () => {
                     type="button"
                     onClick={() => handleDeleteUser(user)}
                     disabled={!isAdmin}
-                    className="mt-4 inline-flex items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700 transition hover:bg-rose-100"
+                    className="mt-4 inline-flex items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-3 py-2 text-xl font-bold text-rose-700 transition hover:bg-rose-100"
                   >
                     <FaTrash />
                     Delete User
@@ -642,7 +641,7 @@ const User = () => {
               );
             })
           ) : (
-            <div className="rounded-[24px] border border-white/60 bg-white/82 px-4 py-10 text-center text-sm font-semibold text-slate-500 shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
+            <div className="rounded-[24px] border border-white/60 bg-white/82 px-4 py-10 text-center text-xl font-semibold text-slate-500 shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
               No users found
             </div>
           )}
@@ -650,7 +649,7 @@ const User = () => {
 
           {filteredUsers.length > 0 ? (
             <div className="mt-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-              <div className="text-sm text-slate-500">
+              <div className="text-xl text-slate-500">
                 Showing{" "}
                 <span className="font-semibold text-slate-900">
                   {filteredUsers.length ? (page - 1) * usersPerPage + 1 : 0}
@@ -671,7 +670,7 @@ const User = () => {
                 type="button"
                 onClick={handlePrevPage}
                 disabled={page === 1}
-                className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center justify-center rounded-full border border-slate-600 bg-white px-5 py-3 text-xl font-bold text-slate-700 transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Prev
               </button>
@@ -681,7 +680,7 @@ const User = () => {
                     key={size}
                     type="button"
                     onClick={() => handleUsersPerPageChange(size)}
-                    className={`rounded-full px-3 py-1.5 text-xs font-bold transition ${
+                    className={`rounded-full px-3 py-1.5 text-xl font-bold transition ${
                       usersPerPage === size
                         ? "bg-cyan-500 text-white shadow-[0_10px_24px_rgba(14,165,233,0.18)]"
                         : "text-slate-600 hover:bg-slate-100"
@@ -702,7 +701,7 @@ const User = () => {
                         setPaginationMessage("");
                         setPage(item);
                       }}
-                      className={`h-10 min-w-10 rounded-full px-3 text-sm font-semibold transition ${
+                      className={`h-10 min-w-10 rounded-full px-3 text-xl font-semibold transition ${
                         page === item
                           ? "bg-cyan-500 text-white shadow-[0_10px_24px_rgba(14,165,233,0.18)]"
                           : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-100"
@@ -713,7 +712,7 @@ const User = () => {
                   ) : (
                     <span
                       key={item}
-                      className="px-1 text-sm font-semibold tracking-[0.2em] text-slate-400"
+                      className="px-1 text-xl font-semibold tracking-[0.2em] text-slate-400"
                     >
                       ...
                     </span>
@@ -725,7 +724,7 @@ const User = () => {
                 type="button"
                 onClick={handleNextPage}
                 disabled={page === totalPages}
-                className="inline-flex items-center justify-center rounded-full border border-cyan-200 bg-white px-5 py-3 text-sm font-bold text-cyan-700 shadow-[0_12px_30px_rgba(14,165,233,0.12)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center justify-center rounded-full border border-cyan-200 bg-white px-5 py-3 text-xl font-bold text-cyan-700 shadow-[0_12px_30px_rgba(14,165,233,0.12)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Next
               </button>
@@ -735,7 +734,7 @@ const User = () => {
 
           {paginationMessage ? (
             <div className="mt-3 flex justify-end">
-              <div className="rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-xs font-semibold text-amber-700">
+              <div className="rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-xl font-semibold text-amber-700">
                 {paginationMessage}
               </div>
             </div>
@@ -754,13 +753,13 @@ const User = () => {
             <div className="w-full max-w-xl rounded-[30px] border border-white/50 bg-[linear-gradient(180deg,#fafdff_0%,#f8fbff_100%)] p-6 shadow-[0_24px_80px_rgba(15,23,42,0.25)] sm:p-7">
               <div className="mb-6 flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
+                  <p className="text-[19px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
                     User Update
                   </p>
                   <h2 className="mt-1 text-2xl font-black text-slate-900">
                     Edit user
                   </h2>
-                  <p className="mt-2 text-sm text-slate-500">
+                  <p className="mt-2 text-xl text-slate-500">
                     Name, email, role aur optional password update karein.
                   </p>
                 </div>
@@ -794,7 +793,7 @@ const User = () => {
                   required
                   value={editForm.email}
                   onChange={handleEditChange}
-                  className="w-full rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100"
+                  className="w-full rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-xl text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100"
                 />
 
                 <input
@@ -849,13 +848,13 @@ const User = () => {
                   OK
                 </div>
               </div>
-              <p className="mt-5 text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
+              <p className="mt-5 text-[18px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
                 User Created
               </p>
               <h3 className="mt-2 text-2xl font-black text-slate-900">
                 {successMessage}
               </h3>
-              <p className="mt-3 text-sm leading-6 text-slate-500">
+              <p className="mt-3 text-xl leading-6 text-slate-500">
                 New team member ko directory mein successfully add kar diya gaya hai.
               </p>
               <button
@@ -884,7 +883,7 @@ const User = () => {
                 {deleteMessage}
               </h3>
               <p className="mt-3 text-sm leading-6 text-slate-500">
-                Selected user ko directory se successfully remove kar diya gaya hai.
+              The selected user has been successfully removed from the directory.
               </p>
               <button
                 type="button"
