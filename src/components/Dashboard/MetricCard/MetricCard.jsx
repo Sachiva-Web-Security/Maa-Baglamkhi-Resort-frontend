@@ -22,10 +22,10 @@ const MetricCard = ({ title, value, subtitle, icon: Icon, gradient, onClick }) =
             <span className={`block h-1.5 w-1.5 rounded-full ${gradient}`} />
             <span className="max-w-[11ch] truncate">{title}</span>
           </div>
-          <h2 className="mt-3 break-words text-[1.75rem] font-black leading-none tracking-[-0.04em] text-slate-900 sm:text-[2.05rem] xl:text-[2.2rem]">
+          <h2 className="dash-metric-value mt-3 break-words">
             {value}
           </h2>
-          <p className="mt-2.5 text-[12px] leading-5 text-slate-900/80 sm:text-[13px] xl:text-[14px]">{subtitle}</p>
+          <p className="dash-metric-copy mt-2.5">{subtitle}</p>
         </div>
 
         <div

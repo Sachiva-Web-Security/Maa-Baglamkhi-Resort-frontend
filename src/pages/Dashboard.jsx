@@ -1226,13 +1226,13 @@ const Dashboard = () => {
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-4">
             <div className="h-16 w-16 animate-spin rounded-full border-4 border-white/30 border-t-white" />
-            <p className="text-lg font-semibold text-white">Loading Dashboard...</p>
+            <p className="text-lg font-semibold text-slate-900">Loading Dashboard...</p>
           </div>
         </div>
       ) : null}
 
       <div
-        className={`relative isolate min-h-screen w-full overflow-x-hidden bg-[radial-gradient(circle_at_top_left,#dff6ff_0%,transparent_22%),radial-gradient(circle_at_top_right,#fff1c7_0%,transparent_24%),linear-gradient(135deg,#f3f8ff_0%,#f6fbf8_32%,#fff9f2_60%,#f8fbff_100%)] p-4 transition-all duration-300 sm:p-6 lg:p-8 ${
+        className={`dashboard-typography relative isolate min-h-fit w-full overflow-x-hidden bg-[radial-gradient(circle_at_top_left,#dff6ff_0%,transparent_22%),radial-gradient(circle_at_top_right,#fff1c7_0%,transparent_24%),linear-gradient(135deg,#f3f8ff_0%,#f6fbf8_32%,#fff9f2_60%,#f8fbff_100%)] p-4 transition-all duration-300 sm:p-6 lg:p-8 ${
           blurBg ? "blur-[6px]" : ""
         }`}
       >
@@ -1244,24 +1244,24 @@ const Dashboard = () => {
         </div>
 
         <div className="mt-2 max-w-full space-y-5 sm:mt-3">
-          <section className="relative overflow-visible rounded-[30px] border border-slate-900/10 bg-[linear-gradient(130deg,#0b1733_0%,#133a59_42%,#125f67_100%)] px-4 py-5 shadow-[0_30px_90px_rgba(15,23,42,0.18)] sm:px-6 sm:py-6 lg:px-8">
-            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.08)_0%,transparent_28%,rgba(255,255,255,0.05)_56%,transparent_100%)]" />
-            <div className="pointer-events-none absolute -left-16 top-4 h-48 w-48 rounded-full bg-cyan-300/15 blur-3xl" />
-            <div className="pointer-events-none absolute right-0 top-0 h-56 w-56 rounded-full bg-sky-300/10 blur-3xl" />
+          <section className="relative overflow-visible rounded-[30px] border border-slate-200 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(247,250,255,0.96)_100%)] px-4 py-5 shadow-[0_30px_90px_rgba(15,23,42,0.08)] sm:px-6 sm:py-6 lg:px-8">
+            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,rgba(15,23,42,0.02)_0%,transparent_28%,rgba(15,23,42,0.015)_56%,transparent_100%)]" />
+            <div className="pointer-events-none absolute -left-16 top-4 h-48 w-48 rounded-full bg-cyan-300/10 blur-3xl" />
+            <div className="pointer-events-none absolute right-0 top-0 h-56 w-56 rounded-full bg-sky-300/8 blur-3xl" />
             <div className="relative z-[1] grid gap-5 lg:grid-cols-[minmax(0,1.6fr)_minmax(360px,0.82fr)] lg:items-start">
               <div className="space-y-4">
-                <p className="text-[7px] font-semibold uppercase tracking-[0.26em] text-cyan-200 sm:text-[10px]">
+                <p className="dash-label text-2xl font-black">
                   Resort Command Center
                 </p>
                 <div className="space-y-2">
-                  <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-100 backdrop-blur-md">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-[15px] font-semibold uppercase tracking-[0.18em] text-slate-800 backdrop-blur-md">
                     <span className="h-2 w-2 rounded-full bg-emerald-300" />
                     Live Admin Overview
                   </div>
-                  <h1 className="max-w-3xl text-[1.35rem] font-black leading-[0.98] tracking-[-0.04em] text-white sm:text-[2.85rem]">
+                  <h1 className="dash-title max-w-3xl text-black">
                     Operational snapshot for today
                   </h1>
-                  <p className="max-w-3xl text-[12px] leading-5 text-slate-100/88 sm:text-[14px] sm:leading-6">
+                  <p className="dash-subtitle   text-4xl font-black text-black/80">
                     Track rooms, revenue, arrivals, and restaurant activity from one cleaner dashboard built for daily hotel operations.
                   </p>
                 </div>
@@ -1332,12 +1332,12 @@ const Dashboard = () => {
                 {heroStats.map((item) => (
                   <div
                     key={item.label}
-                    className="flex min-h-[86px] max-w-[165px] flex-col justify-between rounded-[20px] border border-white/12 bg-[linear-gradient(180deg,rgba(255,255,255,0.16)_0%,rgba(255,255,255,0.08)_100%)] px-3.5 py-3 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_12px_24px_rgba(15,23,42,0.12)] backdrop-blur-md"
+                    className="flex min-h-[86px] max-w-[165px] flex-col justify-between rounded-[20px] border border-slate-200 bg-white/90 px-3.5 py-3 text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_12px_24px_rgba(15,23,42,0.08)] backdrop-blur-md"
                   >
-                    <span className="max-w-[12ch] text-[9px] font-semibold uppercase tracking-[0.16em] text-slate-100/78 sm:text-[10px]">
+                    <span className="dash-label max-w-[12ch] text-slate-700">
                       {item.label}
                     </span>
-                    <div className="mt-1.5 text-[1.45rem] font-black leading-none tracking-[-0.03em] sm:text-[1.65rem]">
+                    <div className="dash-stat mt-1.5">
                       {item.value}
                     </div>
                   </div>
@@ -1500,11 +1500,11 @@ const Dashboard = () => {
             <div className="rounded-[28px] border border-white/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.95)_0%,rgba(248,251,255,0.92)_100%)] p-4 shadow-[0_24px_58px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
               <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-cyan-700">
+                  <p className="text-[19px] font-semibold uppercase tracking-[0.26em] text-slate-800">
                     Stay Overview
                   </p>
                   
-                  <p className="mt-1 text-sm text-slate-500">
+                  <p className="mt-1 text-[20px]  text-xl text-black">
                   “Shows all room statuses for the selected date.”
                   </p>
                 </div>
@@ -1512,15 +1512,9 @@ const Dashboard = () => {
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    className="rounded-full border border-slate-200 bg-white px-4 py-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-600 transition hover:border-cyan-300 hover:bg-cyan-50 hover:text-cyan-800"
+                    className="rounded-full border border-slate-200 bg-white px-4 py-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-900 transition hover:border-cyan-300 hover:bg-cyan-50 hover:text-slate-900"
                   >
                     Main Dashboard
-                  </button>
-                  <button
-                    type="button"
-                    className="rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500 transition hover:border-cyan-300 hover:bg-cyan-50 hover:text-cyan-800"
-                  >
-                    Room Dashboard
                   </button>
                   <button
                     type="button"
@@ -1601,652 +1595,6 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              <div className="hidden mt-5 overflow-x-auto">
-                <div className="min-w-[1700px] space-y-3">
-                  <div className="grid grid-cols-[150px_minmax(230px,1.25fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)] overflow-hidden rounded-[22px] border border-slate-200">
-                    <div className="border-r border-slate-200 bg-slate-100 px-4 py-4 text-sm font-bold text-slate-700">
-                      {selectedBoardDay ? formatDateLabel(selectedBoardDay.date) : "Selected Date"}
-                    </div>
-                    {boardOrder.map((key) => {
-                      const meta = BOARD_BUCKET_META[key];
-                      const items = selectedDaySnapshot[key] || [];
-                      const isOpen = bucketOpen[key] !== false;
-                      return (
-                        <div key={key} className="border-r border-slate-200 bg-white last:border-r-0">
-                          <div className={`h-1.5 w-full ${meta.bar}`} />
-                          <div className="flex h-[320px] flex-col px-3 py-3">
-                            <button
-                              type="button"
-                              onClick={() => toggleBucket(key)}
-                              className="flex items-center justify-between gap-2 text-left"
-                            >
-                              <div className="text-sm font-bold text-slate-900">
-                                {meta.label} ({items.length})
-                              </div>
-                              <span
-                                className={`flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition-transform duration-500 ease-out ${
-                                  isOpen ? "rotate-180" : "rotate-0"
-                                }`}
-                              >
-                                <FaChevronDown className="text-xs transition-transform duration-500 ease-out" />
-                              </span>
-                            </button>
-
-                            <div
-                              style={{ gridTemplateRows: isOpen ? "1fr" : "0fr" }}
-                              className="mt-3 grid min-h-0 flex-1 transition-[grid-template-rows] duration-500 ease-out"
-                            >
-                              <div
-                                className={`min-h-0 overflow-hidden transition-all duration-500 ease-out ${
-                                  isOpen ? "opacity-100 translate-y-0" : "pointer-events-none opacity-0 translate-y-2"
-                                }`}
-                              >
-                                {key === "available" ? (
-                                  <div className="max-h-[270px] space-y-3 overflow-y-auto pr-1">
-                                    {availableRoomGroups.length ? (
-                                      availableRoomGroups.map((group) => {
-                                        const typeKey = `${selectedBoardDay?.date || "today"}-available-${group.label}`;
-                                        const isTypeOpen = availableTypeOpen === typeKey;
-
-                                        return (
-                                          <div key={group.label} className="relative w-full overflow-visible">
-                                            <span className="absolute -right-1 -top-2 z-20 flex h-7 w-7 items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 text-[11px] font-black text-emerald-700 shadow-[0_8px_20px_rgba(16,185,129,0.18)]">
-                                              {group.items.length}
-                                            </span>
-                                            <div className="overflow-hidden rounded-[18px] border border-emerald-200 bg-white shadow-[0_10px_24px_rgba(16,185,129,0.08)]">
-                                            <button
-                                              type="button"
-                                              onClick={() => toggleAvailableType(typeKey)}
-                                              className="flex w-full items-center justify-between gap-3 border-b border-emerald-100 px-3 py-3 text-left"
-                                            >
-                                              <div className="min-w-0">
-                                                <div className="text-sm font-black uppercase tracking-[0.12em] text-emerald-900">
-                                                  {group.label}
-                                                </div>
-                                                <div className="mt-1 text-[11px] font-medium text-emerald-700">
-                                                  {group.items.length} room(s) available
-                                                </div>
-                                              </div>
-                                              <span
-                                                className={`flex h-8 w-8 items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 text-emerald-600 shadow-sm transition-transform duration-500 ease-out ${
-                                                  isTypeOpen ? "rotate-180" : "rotate-0"
-                                                }`}
-                                              >
-                                                <FaChevronDown className="text-xs" />
-                                              </span>
-                                            </button>
-
-                                            <div
-                                              style={{ gridTemplateRows: isTypeOpen ? "1fr" : "0fr" }}
-                                              className="grid transition-[grid-template-rows] duration-500 ease-out"
-                                            >
-                                              <div
-                                                className={`overflow-hidden px-3 pb-3 transition-all duration-500 ease-out ${
-                                                  isTypeOpen ? "opacity-100 translate-y-0" : "pointer-events-none opacity-0 translate-y-2"
-                                                }`}
-                                              >
-                                                <div className="space-y-2 pt-2">
-                                                  {group.items.length ? (
-                                                    group.items.map((item) => (
-                                                      <button
-                                                        type="button"
-                                                        key={item.id}
-                                                        onClick={() => openRoomPreview(item)}
-                                                        className="w-full rounded-[14px] border border-emerald-200 bg-emerald-50/70 px-2.5 py-2 text-left text-xs shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-                                                      >
-                                                        {item.statusLabel ? (
-                                                          <div className="mb-1 flex justify-end">
-                                                            <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-700">
-                                                              {item.statusLabel}
-                                                            </span>
-                                                          </div>
-                                                        ) : null}
-                                                        <div className="font-black text-emerald-900">Room {item.roomNumber}</div>
-                                                        <div className="mt-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-700">
-                                                          ID {item.roomId || "--"}
-                                                        </div>
-                                                      </button>
-                                                    ))
-                                                  ) : (
-                                                    <div className="rounded-[14px] border border-dashed border-emerald-200 bg-white px-3 py-4 text-center text-xs text-emerald-500">
-                                                      No rooms
-                                                    </div>
-                                                  )}
-                                                </div>
-                                              </div>
-                                            </div>
-                                            </div>
-                                          </div>
-                                        );
-                                      })
-                                    ) : (
-                                      <div className="rounded-[16px] border border-dashed border-slate-200 px-3 py-6 text-center text-xs text-slate-400">
-                                        No rooms
-                                      </div>
-                                    )}
-                                  </div>
-                                ) : key === "confirmed" ? (
-                                  <div className="max-h-[270px] space-y-3 overflow-y-auto pr-1">
-                                    {confirmedRoomGroups.length ? (
-                                      confirmedRoomGroups.map((group) => {
-                                        const typeKey = `${selectedBoardDay?.date || "today"}-confirmed-${group.label}`;
-                                        const isTypeOpen = availableTypeOpen === typeKey;
-
-                                        return (
-                                          <div key={group.label} className="relative w-full overflow-visible">
-                                            <span className="absolute -right-1 -top-2 z-20 flex h-7 w-7 items-center justify-center rounded-full border border-orange-200 bg-orange-50 text-[11px] font-black text-orange-700 shadow-[0_8px_20px_rgba(249,115,22,0.18)]">
-                                              {group.items.length}
-                                            </span>
-                                            <div className="overflow-hidden rounded-[18px] border border-orange-200 bg-white shadow-[0_10px_24px_rgba(249,115,22,0.08)]">
-                                            <button
-                                              type="button"
-                                              onClick={() => toggleAvailableType(typeKey)}
-                                              className="flex w-full items-center justify-between gap-3 border-b border-orange-100 px-3 py-3 text-left"
-                                            >
-                                              <div className="min-w-0">
-                                                <div className="text-sm font-black uppercase tracking-[0.12em] text-orange-900">
-                                                  {group.label}
-                                                </div>
-                                                <div className="mt-1 text-[11px] font-medium text-orange-700">
-                                                  {group.items.length} room(s) confirmed
-                                                </div>
-                                              </div>
-                                              <span
-                                                className={`flex h-8 w-8 items-center justify-center rounded-full border border-orange-200 bg-orange-50 text-orange-600 shadow-sm transition-transform duration-500 ease-out ${
-                                                  isTypeOpen ? "rotate-180" : "rotate-0"
-                                                }`}
-                                              >
-                                                <FaChevronDown className="text-xs" />
-                                              </span>
-                                            </button>
-
-                                            <div
-                                              style={{ gridTemplateRows: isTypeOpen ? "1fr" : "0fr" }}
-                                              className="grid transition-[grid-template-rows] duration-500 ease-out"
-                                            >
-                                              <div
-                                                className={`overflow-hidden px-3 pb-3 transition-all duration-500 ease-out ${
-                                                  isTypeOpen ? "opacity-100 translate-y-0" : "pointer-events-none opacity-0 translate-y-2"
-                                                }`}
-                                              >
-                                                <div className="space-y-2 pt-2">
-                                                  {group.items.length ? (
-                                                    group.items.map((item) => (
-                                                      <button
-                                                        type="button"
-                                                        key={item.id}
-                                                        onClick={() => openRoomPreview(item)}
-                                                        className="w-full rounded-[14px] border border-orange-200 bg-orange-50/70 px-2.5 py-2 text-left text-xs shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-                                                      >
-                                                        {item.statusLabel ? (
-                                                          <div className="mb-1 flex justify-end">
-                                                            <span className="rounded-full border border-orange-200 bg-orange-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-orange-700">
-                                                              {item.statusLabel}
-                                                            </span>
-                                                          </div>
-                                                        ) : null}
-                                                        <div className="font-black text-orange-900">
-                                                          {item.booking?.guestName || `Room ${item.roomNumber}`}
-                                                        </div>
-                                                        <div className="mt-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-orange-700">
-                                                          Room {item.roomNumber} | ID {item.roomId || "--"}
-                                                        </div>
-                                                        <div className="mt-1 text-[11px] text-orange-800">
-                                                          {item.booking?.mobile || item.subtitle || "Confirmed booking"}
-                                                        </div>
-                                                      </button>
-                                                    ))
-                                                  ) : (
-                                                    <div className="rounded-[14px] border border-dashed border-orange-200 bg-white px-3 py-4 text-center text-xs text-orange-500">
-                                                      No rooms
-                                                    </div>
-                                                  )}
-                                                </div>
-                                              </div>
-                                            </div>
-                                            </div>
-                                          </div>
-                                        );
-                                      })
-                                    ) : (
-                                      <div className="rounded-[16px] border border-dashed border-slate-200 px-3 py-6 text-center text-xs text-slate-400">
-                                        No rooms
-                                      </div>
-                                    )}
-                                  </div>
-                                ) : key === "cleaning" ? (
-                                  <div className="max-h-[270px] space-y-3 overflow-y-auto pr-1">
-                                    {cleaningRoomGroups.length ? (
-                                      cleaningRoomGroups.map((group) => {
-                                        const typeKey = `${selectedBoardDay?.date || "today"}-cleaning-${group.label}`;
-                                        const isTypeOpen = availableTypeOpen === typeKey;
-
-                                        return (
-                                          <div key={group.label} className="relative w-full overflow-visible">
-                                            <span className="absolute -right-1 -top-2 z-20 flex h-7 w-7 items-center justify-center rounded-full border border-violet-200 bg-violet-50 text-[11px] font-black text-violet-700 shadow-[0_8px_20px_rgba(124,58,237,0.18)]">
-                                              {group.items.length}
-                                            </span>
-                                            <div className="overflow-hidden rounded-[18px] border border-violet-200 bg-white shadow-[0_10px_24px_rgba(124,58,237,0.08)]">
-                                            <button
-                                              type="button"
-                                              onClick={() => toggleAvailableType(typeKey)}
-                                              className="flex w-full items-center justify-between gap-3 border-b border-violet-100 px-3 py-3 text-left"
-                                            >
-                                              <div className="min-w-0">
-                                                <div className="text-sm font-black uppercase tracking-[0.12em] text-violet-900">
-                                                  {group.label}
-                                                </div>
-                                                <div className="mt-1 text-[11px] font-medium text-violet-700">
-                                                  {group.items.length} room(s) cleaning
-                                                </div>
-                                              </div>
-                                              <span
-                                                className={`flex h-8 w-8 items-center justify-center rounded-full border border-violet-200 bg-violet-50 text-violet-600 shadow-sm transition-transform duration-500 ease-out ${
-                                                  isTypeOpen ? "rotate-180" : "rotate-0"
-                                                }`}
-                                              >
-                                                <FaChevronDown className="text-xs" />
-                                              </span>
-                                            </button>
-
-                                            <div
-                                              style={{ gridTemplateRows: isTypeOpen ? "1fr" : "0fr" }}
-                                              className="grid transition-[grid-template-rows] duration-500 ease-out"
-                                            >
-                                              <div
-                                                className={`overflow-hidden px-3 pb-3 transition-all duration-500 ease-out ${
-                                                  isTypeOpen ? "opacity-100 translate-y-0" : "pointer-events-none opacity-0 translate-y-2"
-                                                }`}
-                                              >
-                                                <div className="space-y-2 pt-2">
-                                                  {group.items.length ? (
-                                                    group.items.map((item) => (
-                                                      <button
-                                                        type="button"
-                                                        key={item.id}
-                                                        onClick={() => openRoomPreview(item)}
-                                                        className="w-full rounded-[14px] border border-violet-200 bg-violet-50/70 px-2.5 py-2 text-left text-xs shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-                                                      >
-                                                        {item.statusLabel ? (
-                                                          <div className="mb-1 flex justify-end">
-                                                            <span className="rounded-full border border-violet-200 bg-violet-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-violet-700">
-                                                              {item.statusLabel}
-                                                            </span>
-                                                          </div>
-                                                        ) : null}
-                                                        <div className="font-black text-violet-900">Room {item.roomNumber}</div>
-                                                        <div className="mt-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-violet-700">
-                                                          ID {item.roomId || "--"}
-                                                        </div>
-                                                      </button>
-                                                    ))
-                                                  ) : (
-                                                    <div className="rounded-[14px] border border-dashed border-violet-200 bg-white px-3 py-4 text-center text-xs text-violet-500">
-                                                      No rooms
-                                                    </div>
-                                                  )}
-                                                </div>
-                                              </div>
-                                            </div>
-                                            </div>
-                                          </div>
-                                        );
-                                      })
-                                    ) : (
-                                      <div className="rounded-[16px] border border-dashed border-slate-200 px-3 py-6 text-center text-xs text-slate-400">
-                                        No rooms
-                                      </div>
-                                    )}
-                                  </div>
-                                ) : key === "pencil" ? (
-                                  <div className="max-h-[270px] space-y-3 overflow-y-auto pr-1">
-                                    {pencilRoomGroups.length ? (
-                                      pencilRoomGroups.map((group) => {
-                                        const typeKey = `${selectedBoardDay?.date || "today"}-pencil-${group.label}`;
-                                        const isTypeOpen = availableTypeOpen === typeKey;
-
-                                        return (
-                                          <div key={group.label} className="relative w-full overflow-visible">
-                                            <span className="absolute -right-1 -top-2 z-20 flex h-7 w-7 items-center justify-center rounded-full border border-amber-200 bg-amber-50 text-[11px] font-black text-amber-700 shadow-[0_8px_20px_rgba(245,158,11,0.18)]">
-                                              {group.items.length}
-                                            </span>
-                                            <div className="overflow-hidden rounded-[18px] border border-amber-200 bg-white shadow-[0_10px_24px_rgba(245,158,11,0.08)]">
-                                            <button
-                                              type="button"
-                                              onClick={() => toggleAvailableType(typeKey)}
-                                              className="flex w-full items-center justify-between gap-3 border-b border-amber-100 px-3 py-3 text-left"
-                                            >
-                                              <div className="min-w-0">
-                                                <div className="text-sm font-black uppercase tracking-[0.12em] text-amber-900">
-                                                  {group.label}
-                                                </div>
-                                                <div className="mt-1 text-[11px] font-medium text-amber-700">
-                                                  {group.items.length} room(s) pencil
-                                                </div>
-                                              </div>
-                                              <span
-                                                className={`flex h-8 w-8 items-center justify-center rounded-full border border-amber-200 bg-amber-50 text-amber-600 shadow-sm transition-transform duration-500 ease-out ${
-                                                  isTypeOpen ? "rotate-180" : "rotate-0"
-                                                }`}
-                                              >
-                                                <FaChevronDown className="text-xs" />
-                                              </span>
-                                            </button>
-
-                                            <div
-                                              style={{ gridTemplateRows: isTypeOpen ? "1fr" : "0fr" }}
-                                              className="grid transition-[grid-template-rows] duration-500 ease-out"
-                                            >
-                                              <div
-                                                className={`overflow-hidden px-3 pb-3 transition-all duration-500 ease-out ${
-                                                  isTypeOpen ? "opacity-100 translate-y-0" : "pointer-events-none opacity-0 translate-y-2"
-                                                }`}
-                                              >
-                                                <div className="space-y-2 pt-2">
-                                                  {group.items.length ? (
-                                                    group.items.map((item) => (
-                                                      <button
-                                                        type="button"
-                                                        key={item.id}
-                                                        onClick={() => openRoomPreview(item)}
-                                                        className="w-full rounded-[14px] border border-amber-200 bg-amber-50/70 px-2.5 py-2 text-left text-xs shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-                                                      >
-                                                        {item.statusLabel ? (
-                                                          <div className="mb-1 flex justify-end">
-                                                            <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-amber-700">
-                                                              {item.statusLabel}
-                                                            </span>
-                                                          </div>
-                                                        ) : null}
-                                                        <div className="font-black text-amber-900">
-                                                          {item.booking?.guestName || `Room ${item.roomNumber}`}
-                                                        </div>
-                                                        <div className="mt-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-amber-700">
-                                                          Room {item.roomNumber} | ID {item.roomId || "--"}
-                                                        </div>
-                                                        <div className="mt-1 text-[11px] text-amber-800">
-                                                          {item.booking?.mobile || item.statusLabel || "Awaiting confirmation"}
-                                                        </div>
-                                                      </button>
-                                                    ))
-                                                  ) : (
-                                                    <div className="rounded-[14px] border border-dashed border-amber-200 bg-white px-3 py-4 text-center text-xs text-amber-500">
-                                                      No rooms
-                                                    </div>
-                                                  )}
-                                                </div>
-                                              </div>
-                                            </div>
-                                            </div>
-                                          </div>
-                                        );
-                                      })
-                                    ) : (
-                                      <div className="rounded-[16px] border border-dashed border-slate-200 px-3 py-6 text-center text-xs text-slate-400">
-                                        No rooms
-                                      </div>
-                                    )}
-                                  </div>
-                                ) : key === "blocked" ? (
-                                  <div className="max-h-[270px] space-y-3 overflow-y-auto pr-1">
-                                    {blockedRoomGroups.length ? (
-                                      blockedRoomGroups.map((group) => {
-                                        const typeKey = `${selectedBoardDay?.date || "today"}-blocked-${group.label}`;
-                                        const isTypeOpen = availableTypeOpen === typeKey;
-
-                                        return (
-                                          <div key={group.label} className="relative w-full overflow-visible">
-                                            <span className="absolute -right-1 -top-2 z-20 flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-[11px] font-black text-slate-700 shadow-[0_8px_20px_rgba(71,85,105,0.18)]">
-                                              {group.items.length}
-                                            </span>
-                                            <div className="overflow-hidden rounded-[18px] border border-slate-300 bg-white shadow-[0_10px_24px_rgba(71,85,105,0.08)]">
-                                            <button
-                                              type="button"
-                                              onClick={() => toggleAvailableType(typeKey)}
-                                              className="flex w-full items-center justify-between gap-3 border-b border-slate-200 px-3 py-3 text-left"
-                                            >
-                                              <div className="min-w-0">
-                                                <div className="text-sm font-black uppercase tracking-[0.12em] text-slate-900">
-                                                  {group.label}
-                                                </div>
-                                                <div className="mt-1 text-[11px] font-medium text-slate-600">
-                                                  {group.items.length} blocked room(s)
-                                                </div>
-                                              </div>
-                                              <span
-                                                className={`flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-600 shadow-sm transition-transform duration-500 ease-out ${
-                                                  isTypeOpen ? "rotate-180" : "rotate-0"
-                                                }`}
-                                              >
-                                                <FaChevronDown className="text-xs" />
-                                              </span>
-                                            </button>
-
-                                            <div
-                                              style={{ gridTemplateRows: isTypeOpen ? "1fr" : "0fr" }}
-                                              className="grid transition-[grid-template-rows] duration-500 ease-out"
-                                            >
-                                              <div
-                                                className={`overflow-hidden px-3 pb-3 transition-all duration-500 ease-out ${
-                                                  isTypeOpen ? "opacity-100 translate-y-0" : "pointer-events-none opacity-0 translate-y-2"
-                                                }`}
-                                              >
-                                                <div className="space-y-2 pt-2">
-                                                  {group.items.length ? (
-                                                    group.items.map((item) => (
-                                                      <button
-                                                        type="button"
-                                                        key={item.id}
-                                                        onClick={() => openRoomPreview(item)}
-                                                        className="w-full rounded-[14px] border border-slate-200 bg-slate-50/80 px-2.5 py-2 text-left text-xs shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-                                                      >
-                                                        {item.statusLabel ? (
-                                                          <div className="mb-1 flex justify-end">
-                                                            <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-700">
-                                                              {item.statusLabel}
-                                                            </span>
-                                                          </div>
-                                                        ) : null}
-                                                        <div className="font-black text-slate-900">Room {item.roomNumber}</div>
-                                                        <div className="mt-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">
-                                                          ID {item.roomId || "--"}
-                                                        </div>
-                                                      </button>
-                                                    ))
-                                                  ) : (
-                                                    <div className="rounded-[14px] border border-dashed border-slate-200 bg-white px-3 py-4 text-center text-xs text-slate-500">
-                                                      No rooms
-                                                    </div>
-                                                  )}
-                                                </div>
-                                              </div>
-                                            </div>
-                                            </div>
-                                          </div>
-                                        );
-                                      })
-                                    ) : (
-                                      <div className="rounded-[16px] border border-dashed border-slate-200 px-3 py-6 text-center text-xs text-slate-400">
-                                        No rooms
-                                      </div>
-                                    )}
-                                  </div>
-                                ) : key === "checked_in" ? (
-                                  <div className="max-h-[270px] space-y-3 overflow-y-auto pr-1">
-                                    {checkedInRoomGroups.length ? (
-                                      checkedInRoomGroups.map((group) => {
-                                        const typeKey = `${selectedBoardDay?.date || "today"}-checked-in-${group.label}`;
-                                        const isTypeOpen = availableTypeOpen === typeKey;
-
-                                        return (
-                                          <div key={group.label} className="relative w-full overflow-visible">
-                                            <span className="absolute -right-1 -top-2 z-20 flex h-7 w-7 items-center justify-center rounded-full border border-sky-200 bg-sky-50 text-[11px] font-black text-sky-700 shadow-[0_8px_20px_rgba(14,165,233,0.18)]">
-                                              {group.items.length}
-                                            </span>
-                                            <div className="overflow-hidden rounded-[18px] border border-sky-200 bg-white shadow-[0_10px_24px_rgba(14,165,233,0.08)]">
-                                            <button
-                                              type="button"
-                                              onClick={() => toggleAvailableType(typeKey)}
-                                              className="flex w-full items-center justify-between gap-3 border-b border-sky-100 px-3 py-3 text-left"
-                                            >
-                                              <div className="min-w-0">
-                                                <div className="text-sm font-black uppercase tracking-[0.12em] text-sky-900">
-                                                  {group.label}
-                                                </div>
-                                                <div className="mt-1 text-[11px] font-medium text-sky-700">
-                                                  {group.items.length} room(s) checked in
-                                                </div>
-                                              </div>
-                                              <span
-                                                className={`flex h-8 w-8 items-center justify-center rounded-full border border-sky-200 bg-sky-50 text-sky-600 shadow-sm transition-transform duration-500 ease-out ${
-                                                  isTypeOpen ? "rotate-180" : "rotate-0"
-                                                }`}
-                                              >
-                                                <FaChevronDown className="text-xs" />
-                                              </span>
-                                            </button>
-
-                                            <div
-                                              style={{ gridTemplateRows: isTypeOpen ? "1fr" : "0fr" }}
-                                              className="grid transition-[grid-template-rows] duration-500 ease-out"
-                                            >
-                                              <div
-                                                className={`overflow-hidden px-3 pb-3 transition-all duration-500 ease-out ${
-                                                  isTypeOpen ? "opacity-100 translate-y-0" : "pointer-events-none opacity-0 translate-y-2"
-                                                }`}
-                                              >
-                                                <div className="space-y-2 pt-2">
-                                                  {group.items.length ? (
-                                                    group.items.map((item) => (
-                                                      <button
-                                                        type="button"
-                                                        key={item.id}
-                                                        onClick={() => openRoomPreview(item)}
-                                                        className="w-full rounded-[14px] border border-sky-200 bg-sky-50/70 px-2.5 py-2 text-left text-xs shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-                                                      >
-                                                        {item.statusLabel ? (
-                                                          <div className="mb-1 flex justify-end">
-                                                            <span className="rounded-full border border-sky-200 bg-sky-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-sky-700">
-                                                              {item.statusLabel}
-                                                            </span>
-                                                          </div>
-                                                        ) : null}
-                                                        <div className="font-black text-sky-900">Room {item.roomNumber}</div>
-                                                        <div className="mt-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-sky-700">
-                                                          ID {item.roomId || "--"}
-                                                        </div>
-                                                      </button>
-                                                    ))
-                                                  ) : (
-                                                    <div className="rounded-[14px] border border-dashed border-sky-200 bg-white px-3 py-4 text-center text-xs text-sky-500">
-                                                      No rooms
-                                                    </div>
-                                                  )}
-                                                </div>
-                                              </div>
-                                            </div>
-                                            </div>
-                                          </div>
-                                        );
-                                      })
-                                    ) : (
-                                      <div className="rounded-[16px] border border-dashed border-slate-200 px-3 py-6 text-center text-xs text-slate-400">
-                                        No rooms
-                                      </div>
-                                    )}
-                                  </div>
-                                ) : (
-                                  <div className="space-y-2">
-                                    {items.length ? (
-                                      items.slice(0, 6).map((item) => (
-                                        <button
-                                          type="button"
-                                          key={item.id}
-                                          onClick={() => openRoomPreview(item)}
-                                          className={`w-full rounded-[16px] border px-3 py-2 text-left text-xs shadow-sm ${meta.soft}`}
-                                        >
-                                          {item.statusLabel ? (
-                                            <div className="mb-1 flex justify-end">
-                                              <span className="rounded-full border border-white/60 bg-white/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-600">
-                                                {item.statusLabel}
-                                              </span>
-                                            </div>
-                                          ) : null}
-                                          <div className="font-black">Room {item.roomNumber}</div>
-                                          <div className="mt-1 text-[11px] font-semibold uppercase tracking-[0.14em]">
-                                            {item.roomType || "Room Type"} | ID {item.roomId || "--"}
-                                          </div>
-                                          <div className="mt-1 line-clamp-2">{item.title}</div>
-                                        </button>
-                                      ))
-                                    ) : (
-                                      <div className="rounded-[16px] border border-dashed border-slate-200 px-3 py-6 text-center text-xs text-slate-400">
-                                        No rooms
-                                      </div>
-                                    )}
-                                    {items.length > 6 ? (
-                                      <div className="text-xs font-semibold text-slate-500">
-                                        +{items.length - 6} more rooms
-                                      </div>
-                                    ) : null}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {stayOverview.slice(1).map((day) => {
-                    const isExpanded = expandedBoardDay === day.date;
-
-                    return (
-                      <button
-                        type="button"
-                        key={day.date}
-                        onClick={() => toggleBoardDay(day.date)}
-                        className={`grid w-full grid-cols-[150px_minmax(230px,1.25fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)] overflow-hidden rounded-[18px] border text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
-                          isExpanded
-                            ? "border-cyan-300 bg-cyan-50/70 shadow-[0_14px_30px_rgba(8,145,178,0.12)]"
-                            : "border-slate-200 bg-white"
-                        }`}
-                      >
-                        <div
-                          className={`flex items-center justify-between gap-3 border-r px-4 py-3 text-sm font-bold ${
-                            isExpanded
-                              ? "border-cyan-200 bg-cyan-100/70 text-cyan-900"
-                              : "border-slate-200 bg-slate-50 text-slate-700"
-                          }`}
-                        >
-                          <span>{formatDateLabel(day.date)}</span>
-                          <span
-                            className={`flex h-8 w-8 items-center justify-center rounded-full border bg-white text-slate-500 shadow-sm transition-transform duration-500 ease-out ${
-                              isExpanded ? "rotate-180 border-cyan-200 text-cyan-700" : "rotate-0 border-slate-200"
-                            }`}
-                          >
-                            <FaChevronDown className="text-xs" />
-                          </span>
-                        </div>
-                        {boardOrder.map((key) => (
-                          <div
-                            key={`${day.date}-${key}`}
-                            className={`border-r px-3 py-3 text-center text-sm last:border-r-0 ${
-                              isExpanded ? "border-cyan-200" : "border-slate-200"
-                            }`}
-                          >
-                            <div className="font-bold text-slate-900">{BOARD_BUCKET_META[key].label}</div>
-                            <div className={`mt-1 text-xs ${isExpanded ? "text-cyan-700" : "text-slate-500"}`}>
-                              {day.board[key].length} rooms
-                            </div>
-                          </div>
-                        ))}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
 
               <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="inline-flex flex-wrap items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 shadow-sm">
