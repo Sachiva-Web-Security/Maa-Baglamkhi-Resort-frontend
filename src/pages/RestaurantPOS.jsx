@@ -47,7 +47,7 @@ const RestaurantPOS = () => {
           <div className="relative z-[1] space-y-2.5">
             <div className="flex flex-col gap-2.5 xl:flex-row xl:items-start xl:justify-between">
               <div className="space-y-2">
-                <p className="text-sm font-semibold uppercase tracking-[0.26em] text-cyan-200 sm:text-base">
+                <p className="text-xl font-bold uppercase tracking-[0.26em] text-cyan-200 sm:text-base   text-3xl">
                 Resort Command Center
                 </p>
                 <div className="space-y-1">

@@ -765,16 +765,16 @@ const AllBooking = () => {
               <button
                 type="button"
                 onClick={() => navigate("/hotel/occupancy-forecast")}
-                className="inline-flex items-center gap-2 rounded-full bg-amber-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-amber-600"
+                className="inline-flex items-center gap-2 rounded-full bg-amber-500 px-4 py-2.5 text-xl font-semibold text-white transition hover:bg-amber-600"
               >
-                <FaCalendarAlt className="text-xs" />
+                <FaCalendarAlt className="text-xl" />
                 Occupancy
               </button>
               <button
                 type="button"
                 onClick={fetchBookings}
                 disabled={loading}
-                className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white   px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <FaRedoAlt className={`text-xs ${loading ? "animate-spin" : ""}`} />
                 {loading ? "Refreshing" : "Refresh"}

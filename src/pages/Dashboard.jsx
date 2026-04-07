@@ -152,6 +152,7 @@ const Dashboard = () => {
   const [searchFocused, setSearchFocused] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [availableTypeOpen, setAvailableTypeOpen] = useState("");
+  const [activeDashboardTab, setActiveDashboardTab] = useState("main");
   const [housekeepers, setHousekeepers] = useState([]);
   const [selectedAssignee, setSelectedAssignee] = useState("");
   const [selectedCleaningMinutes, setSelectedCleaningMinutes] = useState(30);
@@ -515,19 +516,19 @@ const Dashboard = () => {
       title: "Expected Arrivals",
       subtitle: "Guests expected to arrive today with booking date details.",
       items: apiMetrics.expectedArrivalDetails || [],
-      empty: "Aaj ke liye koi expected arrival nahi mila.",
+      empty: "there was no expected arrival today.",
     },
     expected_checkouts: {
       title: "Expected Check-outs",
       subtitle: "Guests scheduled to check out today.",
       items: apiMetrics.expectedCheckoutDetails || [],
-      empty: "Aaj ke liye koi expected check-out nahi mila.",
+      empty: "there was no expected checkout today.",
     },
     today_checkins: {
       title: "Today's Check-ins",
       subtitle: "Guests who are already marked as checked in today.",
       items: apiMetrics.todayCheckinDetails || [],
-      empty: "Aaj abhi tak koi checked-in arrival record nahi mila.",
+      empty: "there was no checked-in arrival record today.",
     },
   };
   const activeMetricPanel = metricPanelData[openMetricPanel] || null;
@@ -887,7 +888,7 @@ const Dashboard = () => {
 
               return (
                 <div key={group.label} className="relative w-full overflow-visible">
-                  <span className={`absolute -right-1 -top-2 z-20 flex h-7 w-7 items-center justify-center rounded-full border text-[11px] font-black ${tone.badge}`}>
+                  <span className={`absolute -right-1 -top-2 z-20 flex h-8 w-8 items-center justify-center rounded-full border text-sm font-black ${tone.badge}`}>
                     {group.items.length}
                   </span>
                   <div className={`overflow-hidden rounded-[18px] border bg-white shadow-sm ${tone.border}`}>
@@ -897,19 +898,19 @@ const Dashboard = () => {
                       className={`flex w-full items-center justify-between gap-3 border-b px-3 py-3 text-left ${tone.button}`}
                     >
                       <div className="min-w-0">
-                        <div className={`text-sm font-black uppercase tracking-[0.12em] ${tone.title}`}>
+                        <div className={`text-base font-black uppercase tracking-[0.12em] ${tone.title}`}>
                           {group.label}
                         </div>
-                        <div className={`mt-1 text-[11px] font-medium ${tone.sub}`}>
+                        <div className={`mt-1 text-sm font-medium ${tone.sub}`}>
                           {group.items.length} room(s) {subtitleMap[key]}
                         </div>
                       </div>
                       <span
-                        className={`flex h-8 w-8 items-center justify-center rounded-full border shadow-sm transition-transform duration-500 ease-out ${
+                        className={`flex h-9 w-9 items-center justify-center rounded-full border shadow-sm transition-transform duration-500 ease-out ${
                           isTypeOpen ? "rotate-180" : "rotate-0"
                         } ${tone.dot}`}
                       >
-                        <FaChevronDown className="text-xs" />
+                        <FaChevronDown className="text-sm" />
                       </span>
                     </button>
 
@@ -925,38 +926,38 @@ const Dashboard = () => {
                         <div className="space-y-2 pt-2">
                           {group.items.length ? (
                             group.items.map((item) => (
-                              <button
-                                type="button"
-                                key={item.id}
-                                onClick={() => openRoomPreview(item)}
-                                className={`w-full rounded-[14px] border px-2.5 py-2 text-left text-xs shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${tone.border} ${tone.soft}`}
-                              >
-                                {item.statusLabel ? (
-                                  <div className="mb-1 flex justify-end">
-                                    <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] ${tone.pill}`}>
-                                      {item.statusLabel}
-                                    </span>
-                                  </div>
-                                ) : null}
-                                <div className={`font-black ${tone.title}`}>
-                                  {key === "confirmed" || key === "pencil"
-                                    ? item.booking?.guestName || `Room ${item.roomNumber}`
-                                    : `Room ${item.roomNumber}`}
+                            <button
+                              type="button"
+                              key={item.id}
+                              onClick={() => openRoomPreview(item)}
+                              className={`w-full rounded-[14px] border px-3 py-2.5 text-left text-sm shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${tone.border} ${tone.soft}`}
+                            >
+                              {item.statusLabel ? (
+                                <div className="mb-1 flex justify-end">
+                                  <span className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold uppercase tracking-[0.14em] ${tone.pill}`}>
+                                    {item.statusLabel}
+                                  </span>
                                 </div>
-                                <div className={`mt-1 text-[11px] font-semibold uppercase tracking-[0.14em] ${tone.sub}`}>
-                                  {key === "confirmed" || key === "pencil"
-                                    ? `Room ${item.roomNumber} | ID ${item.roomId || "--"}`
-                                    : `ID ${item.roomId || "--"}`}
+                              ) : null}
+                              <div className={`text-base font-black ${tone.title}`}>
+                                {key === "confirmed" || key === "pencil"
+                                  ? item.booking?.guestName || `Room ${item.roomNumber}`
+                                  : `Room ${item.roomNumber}`}
+                              </div>
+                              <div className={`mt-1 text-sm font-semibold uppercase tracking-[0.14em] ${tone.sub}`}>
+                                {key === "confirmed" || key === "pencil"
+                                  ? `Room ${item.roomNumber} | ID ${item.roomId || "--"}`
+                                  : `ID ${item.roomId || "--"}`}
+                              </div>
+                              {key === "confirmed" || key === "pencil" ? (
+                                <div className={`mt-1 text-sm ${tone.title}`}>
+                                  {item.booking?.mobile || item.subtitle || item.statusLabel || "Booking details"}
                                 </div>
-                                {key === "confirmed" || key === "pencil" ? (
-                                  <div className={`mt-1 text-[11px] ${tone.title}`}>
-                                    {item.booking?.mobile || item.subtitle || item.statusLabel || "Booking details"}
-                                  </div>
-                                ) : null}
-                              </button>
-                            ))
-                          ) : (
-                            <div className={`rounded-[14px] border px-3 py-4 text-center text-xs ${tone.empty}`}>
+                              ) : null}
+                            </button>
+                          ))
+                        ) : (
+                            <div className={`rounded-[14px] border px-3 py-4 text-center text-sm ${tone.empty}`}>
                               No rooms
                             </div>
                           )}
@@ -968,7 +969,7 @@ const Dashboard = () => {
               );
             })
           ) : (
-            <div className="rounded-[16px] border border-dashed border-slate-200 px-3 py-6 text-center text-xs text-slate-400">
+            <div className="rounded-[16px] border border-dashed border-slate-200 px-3 py-6 text-center text-sm text-slate-400">
               No rooms
             </div>
           )}
@@ -1007,7 +1008,7 @@ const Dashboard = () => {
           </div>
         )}
         {items.length > 6 ? (
-          <div className="text-xs font-semibold text-slate-500">
+          <div className="text-sm font-semibold text-slate-500">
             +{items.length - 6} more rooms
           </div>
         ) : null}
@@ -1244,13 +1245,16 @@ const Dashboard = () => {
         </div>
 
         <div className="mt-2 max-w-full space-y-5 sm:mt-3">
-          <section className="relative overflow-visible rounded-[30px] border border-slate-200 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(247,250,255,0.96)_100%)] px-4 py-5 shadow-[0_30px_90px_rgba(15,23,42,0.08)] sm:px-6 sm:py-6 lg:px-8">
+          <section
+            id="dashboard-main-panel"
+            className="relative overflow-visible rounded-[30px] border border-slate-200 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(247,250,255,0.96)_100%)] px-4 py-5 shadow-[0_30px_90px_rgba(15,23,42,0.08)] sm:px-6 sm:py-6 lg:px-8"
+          >
             <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,rgba(15,23,42,0.02)_0%,transparent_28%,rgba(15,23,42,0.015)_56%,transparent_100%)]" />
             <div className="pointer-events-none absolute -left-16 top-4 h-48 w-48 rounded-full bg-cyan-300/10 blur-3xl" />
             <div className="pointer-events-none absolute right-0 top-0 h-56 w-56 rounded-full bg-sky-300/8 blur-3xl" />
             <div className="relative z-[1] grid gap-5 lg:grid-cols-[minmax(0,1.6fr)_minmax(360px,0.82fr)] lg:items-start">
               <div className="space-y-4">
-                <p className="dash-label text-2xl font-black">
+                <p className="  text-xl   font-black">
                   Resort Command Center
                 </p>
                 <div className="space-y-2">
@@ -1261,7 +1265,7 @@ const Dashboard = () => {
                   <h1 className="dash-title max-w-3xl text-black">
                     Operational snapshot for today
                   </h1>
-                  <p className="dash-subtitle   text-4xl font-black text-black/80">
+                  <p className="   text-[19px] font-semibold text-gray">
                     Track rooms, revenue, arrivals, and restaurant activity from one cleaner dashboard built for daily hotel operations.
                   </p>
                 </div>
@@ -1346,7 +1350,7 @@ const Dashboard = () => {
             </div>
           </section>
 
-          <div className="grid w-full grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
+          <div className="grid w-full  grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
             {metrics.map((metric) => (
               <MetricCard
                 key={metric.title}
@@ -1496,30 +1500,42 @@ const Dashboard = () => {
             </div>
           ) : null}
 
-          <section className="grid gap-4 xl:grid-cols-[minmax(0,1.62fr)_minmax(280px,0.68fr)]">
+          <section
+            id="dashboard-stay-overview"
+            className="grid gap-4 xl:grid-cols-[minmax(0,1.62fr)_minmax(280px,0.68fr)]"
+          >
             <div className="rounded-[28px] border border-white/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.95)_0%,rgba(248,251,255,0.92)_100%)] p-4 shadow-[0_24px_58px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
               <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                 <div>
-                  <p className="text-[19px] font-semibold uppercase tracking-[0.26em] text-slate-800">
+                  <p className="text-xl font-semibold uppercase tracking-[0.22em] text-slate-900 sm:text-[1.25rem]">
                     Stay Overview
                   </p>
-                  
-                  <p className="mt-1 text-[20px]  text-xl text-black">
-                  “Shows all room statuses for the selected date.”
+
+                  <p className="mt-2 text-lg font-medium leading-relaxed text-slate-900 sm:text-2xl">
+                    "Shows all room statuses for the selected date."
                   </p>
                 </div>
 
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    className="rounded-full border border-slate-200 bg-white px-4 py-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-900 transition hover:border-cyan-300 hover:bg-cyan-50 hover:text-slate-900"
+                    onClick={() => navigate("/dashboard")}
+                    className={`rounded-full border px-4 py-2 text-[11px] font-bold uppercase tracking-[0.18em] transition ${
+                      activeDashboardTab === "main"
+                        ? "border-slate-900 bg-slate-900 text-white shadow-[0_12px_30px_rgba(15,23,42,0.18)]"
+                        : "border-slate-200 bg-white text-slate-900 hover:border-blue-500 hover:bg-blue-600 hover:text-white"
+                    }`}
                   >
                     Main Dashboard
                   </button>
                   <button
                     type="button"
                     onClick={() => navigate("/stayover")}
-                    className="rounded-full bg-gradient-to-r from-cyan-600 to-blue-500 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.18em] text-white shadow-[0_12px_30px_rgba(37,99,235,0.22)]"
+                    className={`rounded-full px-4 py-2 text-[11px] font-bold uppercase tracking-[0.18em] transition ${
+                      activeDashboardTab === "stay"
+                        ? "bg-gradient-to-r from-cyan-600 to-blue-500 text-white shadow-[0_12px_30px_rgba(37,99,235,0.22)]"
+                        : "border border-cyan-200 bg-white text-cyan-700 hover:border-blue-500 hover:bg-blue-600 hover:text-white"
+                    }`}
                   >
                     Stay Overview
                   </button>
@@ -1546,7 +1562,7 @@ const Dashboard = () => {
                           className="grid w-full grid-cols-[150px_minmax(230px,1.25fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)] text-left"
                         >
                           <div
-                            className={`flex items-center justify-between gap-3 border-r px-4 py-4 text-sm font-bold ${
+                            className={`flex items-center justify-between gap-3 border-r px-4 py-4 text-lg font-bold ${
                               isExpanded
                                 ? "border-cyan-200 bg-cyan-100/80 text-cyan-900"
                                 : "border-slate-200 bg-slate-50 text-slate-700"
@@ -1554,23 +1570,23 @@ const Dashboard = () => {
                           >
                             <span>{formatDateLabel(day.date)}</span>
                             <span
-                              className={`flex h-8 w-8 items-center justify-center rounded-full border bg-white text-slate-500 shadow-sm transition-transform duration-500 ease-out ${
+                              className={`flex h-10 w-10 items-center justify-center rounded-full border bg-white text-slate-500 shadow-sm transition-transform duration-500 ease-out ${
                                 isExpanded ? "rotate-180 border-cyan-200 text-cyan-700" : "rotate-0 border-slate-200"
                               }`}
                             >
-                              <FaChevronDown className="text-xs" />
+                              <FaChevronDown className="text-base" />
                             </span>
                           </div>
 
                           {boardOrder.map((key) => (
                             <div
                               key={`inline-${day.date}-${key}`}
-                              className={`border-r px-3 py-3 text-center text-sm last:border-r-0 ${
+                              className={`border-r px-3 py-3 text-center text-lg last:border-r-0 ${
                                 isExpanded ? "border-cyan-200 bg-cyan-50/40" : "border-slate-200 bg-white"
                               }`}
                             >
-                              <div className="font-bold text-slate-900">{BOARD_BUCKET_META[key].label}</div>
-                              <div className={`mt-1 text-xs ${isExpanded ? "text-cyan-700" : "text-slate-500"}`}>
+                              <div className="text-lg font-black text-slate-900">{BOARD_BUCKET_META[key].label}</div>
+                              <div className={`mt-1 text-base font-semibold ${isExpanded ? "text-cyan-700" : "text-slate-500"}`}>
                                 {day.board[key].length} rooms
                               </div>
                             </div>

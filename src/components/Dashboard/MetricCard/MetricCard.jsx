@@ -18,9 +18,9 @@ const MetricCard = ({ title, value, subtitle, icon: Icon, gradient, onClick }) =
 
       <div className="relative grid h-full grid-cols-[minmax(0,1fr)_auto] items-start gap-3 sm:gap-3.5">
         <div className="min-w-0">
-          <div className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-900 sm:text-[11px]">
+          <div className="flex w-full max-w-full items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-900 sm:text-[11px]">
             <span className={`block h-1.5 w-1.5 rounded-full ${gradient}`} />
-            <span className="max-w-[11ch] truncate">{title}</span>
+            <span className="min-w-0 whitespace-normal break-words leading-tight">{title}</span>
           </div>
           <h2 className="dash-metric-value mt-3 break-words">
             {value}

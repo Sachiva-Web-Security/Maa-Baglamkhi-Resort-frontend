@@ -80,7 +80,7 @@ html, body {
   font-weight: 600;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: #6b7280;
+  color: #000000;
 }
 
 .dashboard-typography .dash-caption {
@@ -92,7 +92,7 @@ html, body {
 .dashboard-typography .dash-stat {
   font-size: clamp(1.5rem, 2vw, 2.25rem);
   line-height: 1.05;
-  font-weight: 700;
+  font-weight: 600;
   color: #1a1a1a;
   letter-spacing: -0.04em;
 }
@@ -106,9 +106,11 @@ html, body {
 }
 
 .dashboard-typography .dash-metric-copy {
-  font-size: 13px;
-  line-height: 1.45;
-  color: #6b7280;
+  font-size: clamp(1rem, 1.15vw, 1.5rem);
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: #475569;
 }
 
 .profile-page {
