@@ -1613,7 +1613,10 @@ const Dashboard = () => {
 
 
               <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="inline-flex flex-wrap items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 shadow-sm">
+                <div className="text-xs font-semibold text-slate-500">
+                  Selected date: {formatDateLabel(selectedDate)}
+                </div>
+                <div className="inline-flex flex-wrap items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 shadow-sm sm:ml-auto">
                   <button
                     type="button"
                     onClick={() => jumpBoardWindow(addDays(boardStartDate, -1))}
@@ -1634,29 +1637,26 @@ const Dashboard = () => {
                     type="button"
                     onClick={() => jumpBoardWindow(addDays(boardStartDate, 1))}
                     className="inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-cyan-600 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-white shadow-sm transition hover:bg-cyan-700"
-                  >
+                    >
                     Next
                   </button>
-                </div>
-                <div className="text-xs font-semibold text-slate-500">
-                  Selected date: {formatDateLabel(selectedDate)}
                 </div>
               </div>
             </div>
 
-              <div className="grid gap-4">
-              <div className="rounded-[28px] border border-white/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.95)_0%,rgba(249,247,255,0.92)_100%)] p-4 shadow-[0_24px_58px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
+              <div className="grid gap-4 self-start">
+              <div className="h-fit rounded-[28px] border border-white/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.95)_0%,rgba(249,247,255,0.92)_100%)] p-4 shadow-[0_24px_58px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
                 <div className="mb-4 flex items-center justify-between">
                   <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-violet-500">
+                    <p className="text-[16px] font-semibold uppercase tracking-[0.26em] text-violet-500">
                       Notifications
                     </p>
-                    <h3 className="mt-1 text-lg font-bold text-slate-900">Messages and updates</h3>
+                    <h3 className="mt-1 text-2xl font-bold text-slate-900">Messages and updates</h3>
                   </div>
                   <button
                     type="button"
                     onClick={() => setNotificationOpen(true)}
-                    className="flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700 transition hover:bg-violet-100"
+                    className="flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-3 py-1 text-xl font-semibold text-violet-700 transition hover:bg-violet-100"
                   >
                     <FaBell />
                     {dashboardNotifications.length}
@@ -1674,10 +1674,10 @@ const Dashboard = () => {
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div>
-                            <div className="text-sm font-semibold text-slate-900">{item.title}</div>
-                            <div className="mt-1 text-xs leading-5 text-slate-500">{item.message}</div>
+                            <div className="text-xl font-semibold text-slate-900">{item.title}</div>
+                            <div className="mt-1 text-[14px] leading-5 text-slate-500">{item.message}</div>
                           </div>
-                          <div className="rounded-full bg-slate-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+                          <div className="rounded-full bg-slate-50 px-2.5 py-1 text-[15px] font-semibold uppercase tracking-[0.16em] text-slate-400">
                             {new Date(item.createdAt || Date.now()).toLocaleTimeString("en-IN", {
                               hour: "2-digit",
                               minute: "2-digit",
@@ -1697,10 +1697,10 @@ const Dashboard = () => {
               <div className="rounded-[28px] border border-white/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.95)_0%,rgba(246,251,248,0.92)_100%)] p-4 shadow-[0_24px_58px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
                 <div className="mb-4 flex items-center justify-between">
                   <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-emerald-600">
+                    <p className="text-[16px] font-semibold uppercase tracking-[0.24em] text-emerald-600">
                       Quick Actions
                     </p>
-                    <h3 className="mt-1 text-lg font-bold text-slate-900">Daily shortcuts</h3>
+                    <h3 className="mt-1 text-2xl font-bold text-slate-900">Daily shortcuts</h3>
                   </div>
                   <button
                     type="button"
@@ -1730,7 +1730,7 @@ const Dashboard = () => {
                         className="relative flex w-full items-center justify-between overflow-visible rounded-[18px] border border-slate-200 bg-white px-4 py-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
                       >
                         {item.label === "Cleaning Log" ? (
-                          <span className="absolute -right-2 -top-2 z-20 flex h-7 w-7 items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 text-[11px] font-black text-emerald-700 shadow-[0_8px_20px_rgba(16,185,129,0.18)]">
+                          <span className="absolute -right-2 -top-2 z-20 flex h-7 w-7 items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 text-[18px] font-black text-emerald-700 shadow-[0_8px_20px_rgba(16,185,129,0.18)]">
                             {selectedDaySnapshot.cleaning.length}
                           </span>
                         ) : null}
@@ -1739,16 +1739,16 @@ const Dashboard = () => {
                             <Icon />
                           </span>
                           <div className="min-w-0">
-                            <div className="text-sm font-semibold text-slate-900">{item.label}</div>
-                            <div className="text-xs text-slate-500">{item.helper}</div>
-                            <div className="mt-1 text-[11px] font-semibold text-slate-700">
+                            <div className="text-base font-semibold text-slate-900 sm:text-lg">{item.label}</div>
+                            <div className="text-2xl text-slate-500">{item.helper}</div>
+                            <div className="mt-1 text-sm font-semibold text-slate-700 sm:text-[15px]">
                               {item.detail}
                             </div>
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-sm font-black text-slate-900">{item.liveValue}</div>
-                          <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+                          <div className="text-base font-black text-slate-900 sm:text-lg">{item.liveValue}</div>
+                          <div className="text-[15px] font-semibold uppercase tracking-[0.16em] text-slate-400">
                             {item.liveLabel}
                           </div>
                         </div>
@@ -1758,22 +1758,22 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              <div className="rounded-[28px] border border-white/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.95)_0%,rgba(255,248,250,0.92)_100%)] p-4 shadow-[0_24px_58px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-rose-500">
+              <div className="rounded-[28px] border border-white/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.95)_0%,rgba(255,248,250,0.92)_100%)] p-5 shadow-[0_24px_58px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-6">
+                <p className="text-[17px] font-semibold uppercase tracking-[0.22em] text-rose-500">
                   Front Office Alert
                 </p>
-                <h3 className="mt-1 text-lg font-bold text-slate-900">Actionable room issues</h3>
-                <div className="mt-4 space-y-3">
+                <h3 className="mt-2 text-2xl font-bold text-slate-900 sm:text-[26px]">Actionable room issues</h3>
+                <div className="mt-5 space-y-3.5">
                   {actionableAlerts.map((item) => (
                     <div
                       key={item.key}
-                      className={`rounded-[18px] border px-4 py-3 ${item.tone}`}
+                      className={`rounded-[18px] border px-4 py-4 sm:px-5 ${item.tone}`}
                     >
-                      <div className="flex items-start gap-3">
-                        <FaExclamationTriangle className={`mt-0.5 ${item.iconClass}`} />
+                      <div className="flex items-start gap-3.5">
+                        <FaExclamationTriangle className={`mt-0.5 text-lg ${item.iconClass}`} />
                         <div>
-                          <div className="text-sm font-semibold text-slate-900">{item.title}</div>
-                          <div className="text-xs text-slate-600">{item.detail}</div>
+                          <div className="text-base font-semibold text-slate-900 sm:text-lg">{item.title}</div>
+                          <div className="text-sm text-slate-600 sm:text-[15px]">{item.detail}</div>
                         </div>
                       </div>
                     </div>
@@ -1783,43 +1783,39 @@ const Dashboard = () => {
             </div>
           </section>
 
-          <div className="grid w-full grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1.18fr)_minmax(620px,0.82fr)]">
-            <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,0.88fr)_minmax(360px,0.72fr)]">
-              <div className="h-fit w-full self-start rounded-[28px] border border-white/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.95)_0%,rgba(248,252,255,0.92)_100%)] px-4 py-5 shadow-[0_24px_58px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:px-5 sm:py-6">
-                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-emerald-300">
-                      Revenue Trend
-                    </p>
-                    <h2 className="mt-1 text-[1.1rem] font-bold text-slate-900">Reservation statistics</h2>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => navigate("/accounts")}
-                    className="rounded-full bg-gradient-to-r from-teal-600 to-emerald-500 px-4 py-2.5 text-[12px] font-bold text-white shadow-[0_12px_30px_rgba(13,148,136,0.24)] transition hover:-translate-y-0.5"
-                  >
-                    Open Accounts
-                  </button>
+          <div className="grid w-full grid-cols-1 gap-6 xl:grid-cols-3 xl:items-stretch">
+            <div className="flex h-full min-w-0 flex-col rounded-[28px] border border-white/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.95)_0%,rgba(248,252,255,0.92)_100%)] px-4 py-5 shadow-[0_24px_58px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:px-5 sm:py-6">
+              <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-[15px] font-semibold uppercase tracking-[0.26em] text-emerald-300">
+                    Revenue Trend
+                  </p>
+                  <h2 className="mt-1 text-[1.25rem] font-bold text-slate-900">Reservation statistics</h2>
                 </div>
-                <div className="h-[280px] w-full sm:h-[320px] lg:h-[340px]">
-                  <MonthlyRevenueChart />
-                </div>
+                <button
+                  type="button"
+                  onClick={() => navigate("/accounts")}
+                  className="rounded-full bg-gradient-to-r from-teal-600 to-emerald-500 px-4 py-2.5 text-[12px] font-bold text-white shadow-[0_12px_30px_rgba(13,148,136,0.24)] transition hover:-translate-y-0.5"
+                >
+                  Open Accounts
+                </button>
               </div>
-
-              <div className="flex min-h-[230px] min-w-0 self-start rounded-[28px] border border-white/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.95)_0%,rgba(255,250,244,0.92)_100%)] p-4 shadow-[0_24px_58px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
-                <FoodSalesChart />
+              <div className="min-h-0 flex-1">
+                <MonthlyRevenueChart />
               </div>
             </div>
 
-            <div className="grid w-full self-start gap-6 xl:w-[620px] xl:max-w-[620px] xl:justify-self-end xl:pl-4">
-              <div className="flex min-h-[230px] min-w-0 self-start rounded-[28px] border border-white/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.95)_0%,rgba(247,252,249,0.92)_100%)] p-4 shadow-[0_24px_58px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
-                <div className="w-full">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-emerald-300">
-                    Room Mix
-                  </p>
-                  <div className="mb-3 mt-1 text-[1.05rem] font-bold text-slate-900">Occupancy overview</div>
-                  <RoomOccupancyChart />
-                </div>
+            <div className="flex h-full min-w-0 flex-col rounded-[28px] border border-white/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.95)_0%,rgba(255,250,244,0.92)_100%)] p-4 shadow-[0_24px_58px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
+              <FoodSalesChart />
+            </div>
+
+            <div className="flex h-full min-w-0 flex-col rounded-[28px] border border-white/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.95)_0%,rgba(247,252,249,0.92)_100%)] p-4 shadow-[0_24px_58px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
+              <div className="w-full">
+                <p className="text-[15px] font-semibold uppercase tracking-[0.26em] text-emerald-300">
+                  Room Mix
+                </p>
+                <div className="mb-3 mt-1 text-[15px] font-bold text-slate-900">Occupancy overview</div>
+                <RoomOccupancyChart />
               </div>
             </div>
           </div>
@@ -1878,7 +1874,7 @@ const Dashboard = () => {
                 ))
               ) : (
                 <div className="rounded-[18px] border border-dashed border-slate-200 bg-slate-50 px-4 py-5 text-sm text-slate-500">
-                  Abhi koi notification nahi hai.
+       there was no notification at that time
                 </div>
               )}
             </div>
