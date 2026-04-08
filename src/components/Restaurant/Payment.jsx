@@ -16,7 +16,9 @@ const SAVED_INVOICE_KEY = "restaurant-saved-invoice";
 const PAYMENT_CARD_PAGE_SIZE = 8;
 const normalizeInvoiceStatus = (value) => String(value || "").trim().toLowerCase();
 const isPaidInvoice = (value) => normalizeInvoiceStatus(value) === "paid";
-const getReusableBill = (bill) => (bill && !isPaidInvoice(bill.invoiceStatus) ? bill : null);
+const isPostedToRoomInvoice = (value) => normalizeInvoiceStatus(value) === "posted to room";
+const isSettledInvoice = (value) => isPaidInvoice(value) || isPostedToRoomInvoice(value);
+const getReusableBill = (bill) => (bill && !isSettledInvoice(bill.invoiceStatus) ? bill : null);
 const formatVisitId = (tokenCode, tokenId) => tokenCode || (tokenId ? `VIS-${String(tokenId).padStart(6, "0")}` : "--");
 const isIgnorablePostPaymentError = (error) => {
   const status = Number(error?.response?.status || 0);
@@ -27,6 +29,14 @@ const isIgnorablePostPaymentError = (error) => {
     (message.includes("no pending order found") ||
       message.includes("bill already paid") ||
       message.includes("not found"))
+  );
+};
+const isActiveInHouseBookingStatus = (value) => {
+  const normalized = normalizeInvoiceStatus(value);
+  return (
+    normalized.includes("checked in") ||
+    normalized.includes("occupied") ||
+    normalized.includes("in house")
   );
 };
 
@@ -305,7 +315,7 @@ const readStoredInvoice = () => {
       const raw = localStorage.getItem(key);
       if (!raw) continue;
       const parsed = JSON.parse(raw);
-      if (parsed?.table && Array.isArray(parsed?.items) && !isPaidInvoice(parsed?.invoiceStatus)) {
+      if (parsed?.table && Array.isArray(parsed?.items) && !isSettledInvoice(parsed?.invoiceStatus)) {
         return parsed;
       }
     } catch {}
@@ -320,7 +330,7 @@ const clearPersistedInvoice = () => {
 
 const persistInvoice = (invoice) => {
   if (!invoice) return;
-  if (isPaidInvoice(invoice.invoiceStatus)) {
+  if (isSettledInvoice(invoice.invoiceStatus)) {
     clearPersistedInvoice();
     return;
   }
@@ -396,6 +406,13 @@ const toBillInvoice = (bill) => ({
   paymentMethod: bill.paymentMethod || "Cash",
   personCount: Math.max(1, Number(bill.split_count || 1)),
   splitCount: Math.max(1, Number(bill.split_count || 1)),
+  postedToRoom: Boolean(bill.postedToRoom),
+  postedRoomNumber: bill.postedRoomNumber || "",
+  roomBookingId: bill.roomBookingId || null,
+  roomBookingCode: bill.roomBookingCode || "",
+  folioEntryId: bill.folioEntryId || null,
+  sourceTableNumber: bill.sourceTableNumber || "",
+  postedAt: bill.postedAt || null,
 });
 
 const mapTokenItemsToInvoiceItems = (items) =>
@@ -410,6 +427,39 @@ const getCustomerDisplay = (invoice) => ({
   name: String(invoice?.customerName || "").trim() || "Walk-in Customer",
   phone: String(invoice?.phone || "").trim() || "--",
 });
+
+const buildChargeableRooms = (roomRows, bookingRows) => {
+  const normalizedRooms = normalizeRooms(roomRows);
+  const mergedBookings = mergeBookingsWithRooms(expandBookings(bookingRows), normalizedRooms);
+  const today = todayISO();
+
+  return normalizedRooms
+    .map((room) => {
+      const roomNumber = String(room.roomNo || room.roomNumber || "").trim();
+      const activeBooking =
+        getRoomBookingForDate(roomNumber, today, mergedBookings, false) ||
+        getRoomBookingReference(roomNumber, today, mergedBookings);
+
+      return {
+        roomNumber,
+        room,
+        activeBooking,
+        roomStatus: String(room.status || room.hotelStatus || "").toLowerCase(),
+      };
+    })
+    .filter(({ roomNumber, activeBooking, roomStatus }) =>
+      Boolean(roomNumber) && Boolean(activeBooking) && roomStatus === "occupied" && isActiveInHouseBookingStatus(activeBooking?.bookingStatus),
+    )
+    .map(({ roomNumber, room, activeBooking }) => ({
+      roomNumber,
+      bookingId: activeBooking?.bookingId || null,
+      bookingCode: activeBooking?.bookingCode || "",
+      guestName: activeBooking?.guestName || room.guest || "",
+      mobile: activeBooking?.mobile || "",
+      roomType: room.categoryName || room.roomType || "Room",
+    }))
+    .sort((left, right) => left.roomNumber.localeCompare(right.roomNumber, undefined, { numeric: true }));
+};
 
 const loadPaymentBoard = async () => {
   const [tables, bills, roomRows, bookingRows] = await Promise.all([
@@ -619,6 +669,9 @@ const Payment = ({
   const [generatedBill, setGeneratedBill] = useState(null);
   const [isAutoSavingBill, setIsAutoSavingBill] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
+  const [chargeableRooms, setChargeableRooms] = useState([]);
+  const [roomChargeQuery, setRoomChargeQuery] = useState("");
+  const [selectedRoomNumber, setSelectedRoomNumber] = useState("");
 
   useEffect(() => {
     const nextInvoice = externalInvoice || routeInvoice || readStoredInvoice();
@@ -683,7 +736,30 @@ const Payment = ({
       customerName: invoice.customerName || "",
       phone: invoice.phone || "",
     }));
+    setSelectedRoomNumber(invoice.selectedRoomNumber || invoice.postedRoomNumber || "");
   }, [invoice]);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadChargeableRooms = async () => {
+      try {
+        const [roomsResponse, bookingsResponse] = await Promise.all([
+          API.get("/housekeeping"),
+          API.get("/hotel/all-bookings"),
+        ]);
+        if (!active) return;
+        setChargeableRooms(buildChargeableRooms(roomsResponse.data, bookingsResponse.data));
+      } catch {
+        if (active) setChargeableRooms([]);
+      }
+    };
+
+    loadChargeableRooms();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const totalInvoiceCardPages = Math.max(
     1,
@@ -829,6 +905,30 @@ const Payment = ({
   const isCurrentBillPaid = isPaidInvoice(
     generatedBill?.invoiceStatus || invoice?.invoiceStatus,
   );
+  const isCurrentBillPostedToRoom = isPostedToRoomInvoice(
+    generatedBill?.invoiceStatus || invoice?.invoiceStatus,
+  );
+  const selectedChargeRoom = useMemo(
+    () => chargeableRooms.find((room) => String(room.roomNumber) === String(selectedRoomNumber)),
+    [chargeableRooms, selectedRoomNumber],
+  );
+  const filteredChargeableRooms = useMemo(() => {
+    const query = String(roomChargeQuery || "").trim().toLowerCase();
+    if (!query) return chargeableRooms;
+    return chargeableRooms.filter((room) => {
+      const haystack = [
+        room.roomNumber,
+        room.guestName,
+        room.mobile,
+        room.bookingCode,
+        room.roomType,
+      ]
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(query);
+    });
+  }, [chargeableRooms, roomChargeQuery]);
+  const isRoomChargeMode = paymentMethod === "Charge To Room";
 
   const saveInvoiceState = (patch = {}) => {
     setInvoice((current) => {
@@ -882,6 +982,24 @@ const Payment = ({
     saveInvoiceState({ paymentMethod: value });
   };
 
+  const handleRoomSelection = (roomNumber) => {
+    setSelectedRoomNumber(roomNumber);
+    const selectedRoom = chargeableRooms.find((room) => String(room.roomNumber) === String(roomNumber));
+    saveInvoiceState({
+      selectedRoomNumber: roomNumber || "",
+      roomBookingId: selectedRoom?.bookingId || null,
+      roomBookingCode: selectedRoom?.bookingCode || "",
+    });
+    if (!selectedRoom) return;
+
+    if (!String(customerName || "").trim()) {
+      handleCustomerNameChange(selectedRoom.guestName || "");
+    }
+    if (!String(phone || "").trim()) {
+      handlePhoneChange(selectedRoom.mobile || "");
+    }
+  };
+
   const updateCardDetails = (patch) => {
     setCardDetails((current) => {
       const next = { ...current, ...patch };
@@ -915,11 +1033,34 @@ const Payment = ({
     entityType,
   });
 
+  const buildRoomChargePayload = () => ({
+    ...buildBillPayload(),
+    roomNumber: selectedChargeRoom?.roomNumber || "",
+    bookingId: selectedChargeRoom?.bookingId || null,
+    bookingCode: selectedChargeRoom?.bookingCode || "",
+    sourceTableNumber: invoice?.table || "",
+    createdBy: localStorage.getItem("name") || localStorage.getItem("username") || "Restaurant POS",
+  });
+
   const validatePaymentDetails = () => {
     const nextFieldErrors = getCustomerFieldErrors({ customerName, phone });
     if (Object.keys(nextFieldErrors).length) {
       setFieldErrors(nextFieldErrors);
       return false;
+    }
+
+    if (isRoomChargeMode) {
+      if (String(entityType || "").toLowerCase() === "room") {
+        alert("Room invoice ko dobara room par post nahi kiya ja sakta.");
+        return false;
+      }
+
+      if (!selectedChargeRoom) {
+        alert("Charge karne ke liye occupied in-house room select kijiye.");
+        return false;
+      }
+
+      return true;
     }
 
     if (paymentMethod !== "Card") return true;
@@ -975,6 +1116,48 @@ const Payment = ({
 
     try {
       setSubmitting(true);
+
+      if (isRoomChargeMode) {
+        const roomChargeResponse = await restaurantService.chargeBillToRoom(buildRoomChargePayload());
+        const postedBill = {
+          id: roomChargeResponse.billId || generatedBill?.id || invoice.billId || null,
+          invoiceStatus: "Posted To Room",
+        };
+
+        setGeneratedBill(postedBill);
+        saveInvoiceState({
+          customerName,
+          phone,
+          paymentMethod: "Charge To Room",
+          discountAmount,
+          personCount,
+          splitCount: personCount,
+          billId: postedBill.id,
+          invoiceStatus: "Posted To Room",
+          total: computedTotal,
+          postedToRoom: true,
+          postedRoomNumber: roomChargeResponse.roomNumber || selectedChargeRoom?.roomNumber || "",
+          roomBookingId: roomChargeResponse.bookingId || selectedChargeRoom?.bookingId || null,
+          roomBookingCode: roomChargeResponse.bookingCode || selectedChargeRoom?.bookingCode || "",
+          folioEntryId: roomChargeResponse.folioEntryId || null,
+          sourceTableNumber: invoice?.table || "",
+          postedAt: new Date().toISOString(),
+        });
+
+        window.dispatchEvent(new Event("tokenUpdated"));
+        if (typeof onSuccess === "function") {
+          onSuccess({
+            type: "posted_to_room",
+            billId: postedBill.id,
+            roomNumber: roomChargeResponse.roomNumber || selectedChargeRoom?.roomNumber || "",
+          });
+        }
+
+        alert(`Bill Room ${roomChargeResponse.roomNumber || selectedChargeRoom?.roomNumber || ""} folio me post ho gaya.`);
+        handleClose();
+        return;
+      }
+
       const paymentResponse = await restaurantService.payBill(buildBillPayload());
       const paidBill = {
         id: paymentResponse.billId || generatedBill?.id || invoice.billId || null,
@@ -1111,16 +1294,16 @@ const Payment = ({
     <div className={shellClassName}>
       <div className={`${asModal ? "w-full max-w-[460px]" : "w-full space-y-6"}`}>
         {!asModal ? (
-          <section className="rounded-[28px] border border-white/10 bg-[linear-gradient(135deg,#0f172a_0%,#1d4ed8_50%,#0f766e_100%)] px-6 py-6 text-white shadow-[0_24px_70px_rgba(15,23,42,0.25)]">
+          <section className="rounded-[28px] border border-white/10 bg-[linear-gradient(135deg,#0f172a_0%,#1d4ed8_50%,#0f766e_100%)] px-7 py-7 text-white shadow-[0_24px_70px_rgba(15,23,42,0.25)]">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.28em] text-cyan-200">Restaurant Payment</p>
-                <h1 className="mt-2 text-4xl font-black">Row-wise bill review and payment card</h1>
-                <p className="mt-2 text-lg text-white/80">{invoiceHeading}</p>
+                <p className="text-base font-semibold uppercase tracking-[0.28em] text-cyan-200">Restaurant Payment</p>
+                <h1 className="mt-2 text-5xl font-black leading-tight">Row-wise bill review and payment card</h1>
+                <p className="mt-2 text-xl text-white/80">{invoiceHeading}</p>
               </div>
               <div className="rounded-[22px] border border-white/15 bg-white/10 px-5 py-4 backdrop-blur">
-                <div className="text-sm uppercase tracking-[0.18em] text-cyan-100/80">Token</div>
-                <div className="mt-2 text-3xl font-black">{formatVisitId(invoice?.tokenCode, invoice?.tokenId)}</div>
+                <div className="text-base uppercase tracking-[0.18em] text-cyan-100/80">Token</div>
+                <div className="mt-2 text-4xl font-black">{formatVisitId(invoice?.tokenCode, invoice?.tokenId)}</div>
               </div>
             </div>
           </section>
@@ -1131,10 +1314,10 @@ const Payment = ({
             <div className="rounded-[24px] border border-slate-200/70 bg-white/95 p-4 shadow-[0_14px_36px_rgba(15,23,42,0.09)]">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-sm font-semibold uppercase tracking-[0.28em] text-sky-500">Payment Cards</p>
-                  <h3 className="mt-1.5 text-2xl font-black text-slate-900">All restaurant payments in one page</h3>
+                  <p className="text-base font-semibold uppercase tracking-[0.28em] text-sky-500">Payment Cards</p>
+                  <h3 className="mt-1.5 text-3xl font-black text-slate-900">All restaurant payments in one page</h3>
                 </div>
-                <div className="rounded-full bg-slate-100 px-4 py-2 text-sm font-bold text-slate-600">
+                <div className="rounded-full bg-slate-100 px-4 py-2 text-base font-bold text-slate-600">
                   {invoiceCards.length} Cards
                 </div>
               </div>
@@ -1146,8 +1329,8 @@ const Payment = ({
               ) : invoiceCards.length ? (
                 <div className="mt-4 overflow-hidden rounded-[20px] border border-slate-200">
                   <div className="overflow-x-auto">
-                    <table className="min-w-full bg-white text-left text-base">
-                      <thead className="bg-slate-50 text-sm uppercase tracking-[0.16em] text-slate-500">
+                    <table className="min-w-full bg-white text-left text-lg">
+                      <thead className="bg-slate-50 text-base uppercase tracking-[0.16em] text-slate-500">
                         <tr>
                           <th className="px-4 py-3">Table</th>
                           <th className="px-4 py-3">Customer</th>
@@ -1163,8 +1346,10 @@ const Payment = ({
                           const active =
                             invoice &&
                             createBoardCardKey(card) === createBoardCardKey(invoice);
-                          const isPaid = String(card.invoiceStatus || "").toLowerCase() === "paid";
-                          const status = isPaid ? "Paid" : "Pending";
+                          const normalizedStatus = normalizeInvoiceStatus(card.invoiceStatus);
+                          const isPaid = normalizedStatus === "paid";
+                          const isPostedToRoom = normalizedStatus === "posted to room";
+                          const status = isPaid ? "Paid" : isPostedToRoom ? "Posted To Room" : "Pending";
                           const customer = getCustomerDisplay(card);
 
                           return (
@@ -1182,7 +1367,7 @@ const Payment = ({
                               </td>
                               <td className="px-4 py-4">
                                 <div className="font-semibold text-slate-900">{customer.name}</div>
-                                <div className="mt-1 text-sm text-slate-500">{customer.phone}</div>
+                                <div className="mt-1 text-base text-slate-500">{customer.phone}</div>
                               </td>
                               <td className="px-4 py-4 text-slate-600">
                                 {formatVisitId(card.tokenCode, card.tokenId)}
@@ -1194,7 +1379,13 @@ const Payment = ({
                                 {formatCurrency(card.total)}
                               </td>
                               <td className="px-4 py-4">
-                                <span className={`rounded-full px-3 py-1.5 text-sm font-bold ${isPaid ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
+                                <span className={`rounded-full px-3 py-1.5 text-base font-bold ${
+                                  isPaid
+                                    ? "bg-emerald-50 text-emerald-700"
+                                    : isPostedToRoom
+                                      ? "bg-sky-50 text-sky-700"
+                                      : "bg-amber-50 text-amber-700"
+                                }`}>
                                   {status}
                                 </span>
                               </td>
@@ -1202,7 +1393,7 @@ const Payment = ({
                                 <button
                                   type="button"
                                   onClick={() => setInvoice(card)}
-                                  className={`rounded-full px-4 py-2 text-sm font-bold transition ${
+                                  className={`rounded-full px-4 py-2 text-base font-bold transition ${
                                     active
                                       ? "bg-cyan-600 text-white"
                                       : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
@@ -1220,7 +1411,7 @@ const Payment = ({
 
                   {invoiceCards.length > PAYMENT_CARD_PAGE_SIZE ? (
                     <div className="flex flex-col gap-3 border-t border-slate-200 bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="text-base text-slate-500">
+                      <div className="text-lg text-slate-500">
                         Showing{" "}
                         <span className="font-semibold text-slate-900">
                           {(invoiceCardPage - 1) * PAYMENT_CARD_PAGE_SIZE + 1}
@@ -1237,7 +1428,7 @@ const Payment = ({
                           type="button"
                           onClick={() => setInvoiceCardPage((current) => Math.max(1, current - 1))}
                           disabled={invoiceCardPage === 1}
-                          className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                          className="rounded-full border border-slate-200 bg-white px-4 py-2 text-base font-semibold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           Previous
                         </button>
@@ -1247,7 +1438,7 @@ const Payment = ({
                             key={pageNumber}
                             type="button"
                             onClick={() => setInvoiceCardPage(pageNumber)}
-                            className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                            className={`rounded-full px-4 py-2 text-base font-semibold transition ${
                               pageNumber === invoiceCardPage
                                 ? "bg-slate-900 text-white"
                                 : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
@@ -1261,7 +1452,7 @@ const Payment = ({
                           type="button"
                           onClick={() => setInvoiceCardPage((current) => Math.min(totalInvoiceCardPages, current + 1))}
                           disabled={invoiceCardPage === totalInvoiceCardPages}
-                          className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                          className="rounded-full border border-slate-200 bg-white px-4 py-2 text-base font-semibold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           Next
                         </button>
@@ -1326,8 +1517,8 @@ const Payment = ({
                       </div>
                     </div>
 
-                    <div className="rounded-[16px] bg-white px-3.5 py-3.5 shadow-sm">
-                      <div className="space-y-2 text-base text-slate-700">
+                <div className="rounded-[16px] bg-white px-4 py-4 shadow-sm">
+                  <div className="space-y-2 text-base text-slate-700">
                         <div className="flex justify-between">
                           <span>Subtotal</span>
                           <span>{formatCurrency(invoice.subtotal)}</span>
@@ -1349,7 +1540,7 @@ const Payment = ({
                           <span>{formatCurrency(computedTotal)}</span>
                         </div>
                         {invoice.tokenId ? (
-                          <div className="text-sm text-slate-500">Visit ID: {formatVisitId(invoice.tokenCode, invoice.tokenId)}</div>
+                          <div className="text-base text-slate-500">Visit ID: {formatVisitId(invoice.tokenCode, invoice.tokenId)}</div>
                         ) : null}
                       </div>
                     </div>
@@ -1362,21 +1553,21 @@ const Payment = ({
               </div>
 
               <div className="mt-4 rounded-[20px] border border-slate-200 bg-white p-3.5">
-                <div className="text-lg font-semibold text-slate-700">Customer Details</div>
+                <div className="text-xl font-semibold text-slate-700">Customer Details</div>
                 <div className="mt-3 space-y-2.5">
                   <input
                     type="text"
                     value={customerName}
                     onChange={(event) => handleCustomerNameChange(event.target.value)}
                     placeholder="Customer Name"
-                    className={`w-full rounded-xl border px-3 py-3 text-lg text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 ${
+                    className={`w-full rounded-xl border px-4 py-3.5 text-xl text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 ${
                       fieldErrors.customerName
                         ? "border-rose-400 bg-rose-50 focus:ring-rose-400"
                         : "border-slate-200 focus:ring-blue-500"
                     }`}
                   />
                   {fieldErrors.customerName ? (
-                    <div className="text-base font-semibold text-rose-600">{fieldErrors.customerName}</div>
+                    <div className="text-lg font-semibold text-rose-600">{fieldErrors.customerName}</div>
                   ) : null}
                   <input
                     type="tel"
@@ -1385,33 +1576,72 @@ const Payment = ({
                     placeholder="Phone Number"
                     inputMode="numeric"
                     maxLength="10"
-                    className={`w-full rounded-xl border px-3 py-3 text-lg text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 ${
+                    className={`w-full rounded-xl border px-4 py-3.5 text-xl text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 ${
                       fieldErrors.phone
                         ? "border-rose-400 bg-rose-50 focus:ring-rose-400"
                         : "border-slate-200 focus:ring-blue-500"
                     }`}
                   />
                   {fieldErrors.phone ? (
-                    <div className="text-base font-semibold text-rose-600">{fieldErrors.phone}</div>
+                    <div className="text-lg font-semibold text-rose-600">{fieldErrors.phone}</div>
                   ) : null}
                 </div>
               </div>
 
               <div className="mt-4 rounded-[20px] border border-slate-200 bg-white p-3.5">
-                <div className="text-lg font-semibold text-slate-700">Payment Method</div>
+                <div className="text-xl font-semibold text-slate-700">Payment Method</div>
                 <select
                   value={paymentMethod}
                   onChange={(event) => handlePaymentMethodChange(event.target.value)}
-                  className="mt-3 w-full rounded-xl border border-slate-200 px-3 py-3 text-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="mt-3 w-full rounded-xl border border-slate-200 px-4 py-3.5 text-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="Cash">Cash</option>
                   <option value="Card">Card</option>
                   <option value="UPI">UPI</option>
+                  {String(entityType || "").toLowerCase() !== "room" ? (
+                    <option value="Charge To Room">Charge To Room</option>
+                  ) : null}
                 </select>
               </div>
 
+              {isRoomChargeMode ? (
+                <div className="mt-4 rounded-[20px] border border-slate-200 bg-white p-3.5">
+                  <div className="text-xl font-semibold text-slate-700">Charge To Room</div>
+                  <div className="mt-3 grid gap-3">
+                    <input
+                      type="text"
+                      value={roomChargeQuery}
+                      onChange={(event) => setRoomChargeQuery(event.target.value)}
+                      placeholder="Search room / guest / booking"
+                      className="w-full rounded-xl border border-slate-200 px-4 py-3.5 text-xl text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <select
+                      value={selectedRoomNumber}
+                      onChange={(event) => handleRoomSelection(event.target.value)}
+                      className="w-full rounded-xl border border-slate-200 px-4 py-3.5 text-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Select occupied room</option>
+                      {filteredChargeableRooms.map((room) => (
+                        <option key={`${room.roomNumber}-${room.bookingId || "active"}`} value={room.roomNumber}>
+                          {`Room ${room.roomNumber} | ${room.guestName || "Guest"} | ${room.bookingCode || "No Code"}`}
+                        </option>
+                      ))}
+                    </select>
+                    {selectedChargeRoom ? (
+                      <div className="rounded-xl bg-sky-50 px-4 py-3.5 text-lg font-semibold text-sky-900">
+                        Room {selectedChargeRoom.roomNumber} | {selectedChargeRoom.guestName || "Guest"} | Booking {selectedChargeRoom.bookingCode || "--"}
+                      </div>
+                    ) : (
+                      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-lg font-semibold text-amber-800">
+                        Sirf occupied aur checked-in rooms ko yahan room-charge ke liye allow kiya gaya hai.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : null}
+
               <div className="mt-4 rounded-[20px] border border-slate-200 bg-white p-3.5">
-                <div className="text-lg font-semibold text-slate-700">Discount</div>
+                <div className="text-xl font-semibold text-slate-700">Discount</div>
                 <div className="mt-3 grid gap-3">
                   <input
                     type="number"
@@ -1420,9 +1650,9 @@ const Payment = ({
                     value={discountAmount}
                     onChange={(event) => handleDiscountChange(event.target.value)}
                     placeholder="Enter discount amount"
-                    className="w-full rounded-xl border border-slate-200 px-3 py-3 text-lg text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-xl border border-slate-200 px-4 py-3.5 text-xl text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
-                  <div className="rounded-xl bg-amber-50 px-3 py-2.5 text-base font-semibold text-amber-800">
+                  <div className="rounded-xl bg-amber-50 px-4 py-3 text-lg font-semibold text-amber-800">
                     Discount {formatCurrency(discountAmount)} | Final Total {formatCurrency(computedTotal)}
                   </div>
                 </div>
@@ -1430,20 +1660,20 @@ const Payment = ({
 
               {paymentMethod === "Card" ? (
                 <div className="mt-4 rounded-[20px] border border-slate-200 bg-white p-3.5">
-                  <div className="text-lg font-semibold text-slate-700">Card Details</div>
+                  <div className="text-xl font-semibold text-slate-700">Card Details</div>
                   <div className="mt-3 grid gap-3">
                     <input
                       type="text"
                       value={cardDetails.cardHolderName}
                       onChange={(event) => updateCardDetails({ cardHolderName: event.target.value })}
                       placeholder="Card Holder Name"
-                      className="w-full rounded-xl border border-slate-200 px-3 py-3 text-lg text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full rounded-xl border border-slate-200 px-4 py-3.5 text-xl text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                     <div className="grid grid-cols-2 gap-3">
                       <select
                         value={cardDetails.cardType}
                         onChange={(event) => updateCardDetails({ cardType: event.target.value })}
-                        className="w-full rounded-xl border border-slate-200 px-3 py-3 text-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full rounded-xl border border-slate-200 px-4 py-3.5 text-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         <option value="Credit Card">Credit Card</option>
                         <option value="Debit Card">Debit Card</option>
@@ -1456,7 +1686,7 @@ const Payment = ({
                         value={cardDetails.cardLast4}
                         onChange={(event) => updateCardDetails({ cardLast4: event.target.value.replace(/\D/g, "").slice(0, 4) })}
                         placeholder="Last 4 Digits"
-                        className="w-full rounded-xl border border-slate-200 px-3 py-3 text-lg text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full rounded-xl border border-slate-200 px-4 py-3.5 text-xl text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
                     <input
@@ -1464,14 +1694,14 @@ const Payment = ({
                       value={cardDetails.transactionRef}
                       onChange={(event) => updateCardDetails({ transactionRef: event.target.value })}
                       placeholder="Transaction / Approval Ref"
-                      className="w-full rounded-xl border border-slate-200 px-3 py-3 text-lg text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full rounded-xl border border-slate-200 px-4 py-3.5 text-xl text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                 </div>
               ) : null}
 
               <div className="mt-4 rounded-[20px] border border-slate-200 bg-white p-3.5">
-                <div className="text-lg font-semibold text-slate-700">Person-wise Bill</div>
+                <div className="text-xl font-semibold text-slate-700">Person-wise Bill</div>
                 <div className="mt-3 flex items-center gap-3">
                   <input
                     type="number"
@@ -1479,19 +1709,19 @@ const Payment = ({
                     max="10"
                     value={splitCount}
                     onChange={(event) => handleSplitCountChange(event.target.value)}
-                    className="w-24 rounded-xl border border-slate-200 px-3 py-3 text-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-28 rounded-xl border border-slate-200 px-4 py-3.5 text-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <button
                     onClick={handleCreateSplitBill}
                     disabled={submitting}
-                    className="rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-600 px-4 py-3 text-base font-semibold text-white shadow-lg disabled:opacity-60"
+                    className="rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-600 px-5 py-3.5 text-lg font-semibold text-white shadow-lg disabled:opacity-60"
                   >
                     Save Split Bill
                   </button>
                 </div>
                 <div className="mt-3 space-y-2">
                   {splitPreview.map((split) => (
-                    <div key={split.splitNo} className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-3 text-base text-slate-700">
+                    <div key={split.splitNo} className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3.5 text-lg text-slate-700">
                       <span>Person {split.splitNo}</span>
                       <span className="font-bold text-slate-900">{formatCurrency(split.total)}</span>
                     </div>
@@ -1502,37 +1732,43 @@ const Payment = ({
               <div className="mt-4 flex flex-col gap-2.5">
                 {generatedBill?.id ? (
                   <div
-                    className={`rounded-xl px-4 py-3 text-base font-semibold ${
+                    className={`rounded-xl px-4 py-3.5 text-lg font-semibold ${
                       isCurrentBillPaid
                         ? "border border-emerald-200 bg-emerald-50 text-emerald-800"
-                        : "border border-amber-200 bg-amber-50 text-amber-800"
+                        : isCurrentBillPostedToRoom
+                          ? "border border-sky-200 bg-sky-50 text-sky-800"
+                          : "border border-amber-200 bg-amber-50 text-amber-800"
                     }`}
                   >
-                    Bill #{generatedBill.id} {isCurrentBillPaid ? "payment already done" : "pending"}.
+                    Bill #{generatedBill.id} {isCurrentBillPaid ? "payment already done" : isCurrentBillPostedToRoom ? "room folio me posted hai" : "pending"}.
                   </div>
                 ) : null}
                 <button
                   onClick={handleClose}
-                    className="w-full rounded-xl bg-slate-200 px-4 py-3 text-lg font-semibold text-slate-700"
+                    className="w-full rounded-xl bg-slate-200 px-4 py-3.5 text-xl font-semibold text-slate-700"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handlePayment}
-                  disabled={submitting || hasCustomerValidationErrors || isCurrentBillPaid}
-                   className="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 px-4 py-3 text-lg font-semibold text-white shadow-lg disabled:opacity-60"
+                  disabled={submitting || hasCustomerValidationErrors || isCurrentBillPaid || isCurrentBillPostedToRoom}
+                   className="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 px-4 py-3.5 text-xl font-semibold text-white shadow-lg disabled:opacity-60"
                 >
                   {submitting
                     ? "Processing..."
                     : isCurrentBillPaid
                       ? "Payment Already Done"
+                      : isCurrentBillPostedToRoom
+                        ? "Already Posted To Room"
+                        : isRoomChargeMode
+                          ? "Post To Room Folio"
                       : generatedBill?.id
                         ? "Pay Now"
                         : "Pay Now & Save Bill"}
                 </button>
                 <button
                   onClick={handlePrint}
-                   className="w-full rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-3 text-lg font-semibold text-white shadow-lg"
+                   className="w-full rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-3.5 text-xl font-semibold text-white shadow-lg"
                 >
                   Print Bill
                 </button>

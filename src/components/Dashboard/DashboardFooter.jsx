@@ -15,11 +15,11 @@ const DashboardFooter = ({ contentOffset = 0 }) => {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(20,184,166,0.18),transparent_26%),radial-gradient(circle_at_top_right,rgba(59,130,246,0.18),transparent_24%)]" />
       <div className="relative mx-auto flex min-h-[74px] w-full max-w-7xl items-center justify-between gap-4">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-emerald-300">
-            Dashboard footer
-          </p>
-          <p className="mt-1 text-sm font-medium text-slate-200">
-            Maa Baglamukhi Resort operations at a glance
+          
+          <p className=" ml-14 text-xl font-semibold text-slate-200">
+    Website secured and maintained by Sachiva Web & Security
+
+© 2026 All copyright reserved for sachiva web and security
           </p>
         </div>
 

@@ -18,7 +18,11 @@ const ACTIVE_INVOICE_KEY = "restaurant-active-invoice";
 const SAVED_INVOICE_KEY = "restaurant-saved-invoice";
 const ROOM_PAGE_SIZE = 6;
 const normalizeInvoiceStatus = (value) => String(value || "").trim().toLowerCase();
-const getReusableBill = (bill) => (normalizeInvoiceStatus(bill?.invoiceStatus) === "paid" ? null : bill);
+const isSettledInvoiceStatus = (value) => {
+  const normalized = normalizeInvoiceStatus(value);
+  return normalized === "paid" || normalized === "posted to room";
+};
+const getReusableBill = (bill) => (isSettledInvoiceStatus(bill?.invoiceStatus) ? null : bill);
 const createBillLookupKey = (entityType, tableName, tokenId) =>
   tokenId
     ? `${String(entityType || "Table").toLowerCase()}:token:${Number(tokenId)}`
@@ -430,7 +434,7 @@ const Roomitem = () => {
                   const hasMenuItems = (snapshot.items || []).length > 0;
                   const relatedBill =
                     billByRoom[createBillLookupKey("Room", String(room.roomNo), snapshot.tokenId || null)] || null;
-                  const showPayNow = relatedBill && String(relatedBill.invoiceStatus || "").toLowerCase() !== "paid";
+                  const showPayNow = relatedBill && !isSettledInvoiceStatus(relatedBill.invoiceStatus);
 
                   return (
                     <tr

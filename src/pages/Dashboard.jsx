@@ -462,7 +462,7 @@ const Dashboard = () => {
           id: `notif-checkin-${selectedDate}`,
           title: `${selectedDaySnapshot.checked_in.length} checked-in rooms`,
           message: `In-house occupied rooms for ${formatDateLabel(selectedDate)} from active stay data.`,
-          route: "/hotel/all-bookings",
+          route: "/stayover",
           createdAt: `${selectedDate}T06:00:00`,
         },
         {
@@ -549,7 +549,7 @@ const Dashboard = () => {
       subtitle: "Calm inventory overview",
       icon: FaBed,
       gradient: "bg-[linear-gradient(180deg,#89E85D_0%,#42D37D_34%,#15B58B_66%,#0A727D_100%)]",
-      route: "/hotel",
+      route: "/hotel/all-bookings",
     },
     {
       title: "Occupied Rooms",
@@ -557,7 +557,7 @@ const Dashboard = () => {
       subtitle: "Live stay activity",
       icon: FaKey,
       gradient: "bg-[linear-gradient(135deg,#2452D6_0%,#2E67E7_50%,#5B9AF1_100%)]",
-      route: "/hotel",
+      route: "/stayover",
     },
     {
       title: "Today's Revenue",
@@ -1368,11 +1368,11 @@ const Dashboard = () => {
             <div className="mt-4 rounded-[28px] border border-cyan-100/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(244,251,255,0.94)_100%)] p-4 shadow-[0_24px_60px_rgba(15,23,42,0.1)] backdrop-blur-xl sm:p-5">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-cyan-700">
+                  <p className="text-sm font-bold uppercase tracking-[0.3em] text-cyan-700">
                     Live Details
                   </p>
-                  <h3 className="mt-1 text-lg font-bold text-slate-900">{activeMetricPanel.title}</h3>
-                  <p className="mt-1 text-sm text-slate-500">{activeMetricPanel.subtitle}</p>
+                  <h3 className="mt-1 text-3xl font-black text-slate-900">{activeMetricPanel.title}</h3>
+                  <p className="mt-1 text-lg font-semibold text-slate-600">{activeMetricPanel.subtitle}</p>
                 </div>
                 <button
                   type="button"
@@ -1393,44 +1393,44 @@ const Dashboard = () => {
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <div className="text-sm font-bold text-slate-900">{item.guestName || "Guest"}</div>
-                          <div className="mt-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                          <div className="text-lg font-black text-slate-900">{item.guestName || "Guest"}</div>
+                          <div className="mt-1 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
                             {item.bookingCode || "Direct Booking"}
                           </div>
                         </div>
-                        <span className="rounded-full border border-cyan-200 bg-cyan-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-cyan-700">
+                        <span className="rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-cyan-700">
                           {item.bookingStatus || "Confirmed"}
                         </span>
                       </div>
 
-                      <div className="mt-4 grid grid-cols-2 gap-3 text-xs">
+                      <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
                         <div className="rounded-[16px] border border-slate-200 bg-white px-3 py-3">
-                          <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">Check-In</div>
-                          <div className="mt-1 font-bold text-slate-900">
+                          <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Check-In</div>
+                          <div className="mt-1 text-base font-bold text-slate-900">
                             {item.checkIn ? formatShortDate(item.checkIn) : "--"}
                           </div>
                         </div>
                         <div className="rounded-[16px] border border-slate-200 bg-white px-3 py-3">
-                          <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">Check-Out</div>
-                          <div className="mt-1 font-bold text-slate-900">
+                          <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Check-Out</div>
+                          <div className="mt-1 text-base font-bold text-slate-900">
                             {item.checkOut ? formatShortDate(item.checkOut) : "--"}
                           </div>
                         </div>
                       </div>
 
                       <div className="mt-3 rounded-[16px] border border-dashed border-slate-200 bg-white px-3 py-3">
-                        <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">Rooms</div>
-                        <div className="mt-1 text-sm font-semibold text-slate-800">
+                        <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Rooms</div>
+                        <div className="mt-1 text-base font-semibold text-slate-800">
                           {item.rooms || "Room not linked"}
                         </div>
                         {item.mobile ? (
-                          <div className="mt-2 text-xs text-slate-500">Contact: {item.mobile}</div>
+                          <div className="mt-2 text-sm text-slate-500">Contact: {item.mobile}</div>
                         ) : null}
                       </div>
                     </div>
                   ))
                 ) : (
-                  <div className="rounded-[20px] border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-sm text-slate-500 sm:col-span-2 xl:col-span-3">
+                  <div className="rounded-[20px] border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-lg font-semibold text-slate-600 sm:col-span-2 xl:col-span-3">
                     {activeMetricPanel.empty}
                   </div>
                 )}

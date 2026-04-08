@@ -95,33 +95,33 @@ const AddEntryModal = ({ bookingId, onClose, onSaved }) => {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="bg-[linear-gradient(135deg,#0f172a_0%,#1e40af_55%,#0f766e_100%)] px-6 py-5 text-white">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-200">
+          <p className="text-sm font-bold uppercase tracking-[0.3em] text-sky-200">
             Folio Entry
           </p>
-          <h2 className="mt-2 text-2xl font-black">Add New Charge</h2>
+          <h2 className="mt-2 text-3xl font-black">Add New Charge</h2>
         </div>
 
         <div className="space-y-4 p-6">
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+              <label className="mb-1 block text-sm font-bold uppercase tracking-[0.16em] text-slate-600">
                 Date
               </label>
               <input
                 type="date"
                 value={form.entry_date}
                 onChange={(e) => set("entry_date", e.target.value)}
-                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
+                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-base font-semibold text-slate-900 outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
               />
             </div>
             <div>
-              <label className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+              <label className="mb-1 block text-sm font-bold uppercase tracking-[0.16em] text-slate-600">
                 Entry Type
               </label>
               <select
                 value={form.entry_type}
                 onChange={(e) => set("entry_type", e.target.value)}
-                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
+                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-base font-semibold text-slate-900 outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
               >
                 {ENTRY_TYPES.map((t) => (
                   <option key={t}>{t}</option>
@@ -131,13 +131,13 @@ const AddEntryModal = ({ bookingId, onClose, onSaved }) => {
           </div>
 
           <div>
-            <label className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+            <label className="mb-1 block text-sm font-bold uppercase tracking-[0.16em] text-slate-600">
               Category
             </label>
             <select
               value={form.category}
               onChange={(e) => set("category", e.target.value)}
-              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
+              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-base font-semibold text-slate-900 outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
             >
               {CATEGORIES.map((c) => (
                 <option key={c}>{c}</option>
@@ -146,7 +146,7 @@ const AddEntryModal = ({ bookingId, onClose, onSaved }) => {
           </div>
 
           <div>
-            <label className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+            <label className="mb-1 block text-sm font-bold uppercase tracking-[0.16em] text-slate-600">
               Description
             </label>
             <input
@@ -154,13 +154,13 @@ const AddEntryModal = ({ bookingId, onClose, onSaved }) => {
               placeholder="E.g. 2 Bottles of Water — ₹120 each"
               value={form.description}
               onChange={(e) => set("description", e.target.value)}
-              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
+              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-base font-semibold text-slate-900 outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
             />
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+              <label className="mb-1 block text-sm font-bold uppercase tracking-[0.16em] text-slate-600">
                 Amount (₹)
               </label>
               <input
@@ -169,18 +169,18 @@ const AddEntryModal = ({ bookingId, onClose, onSaved }) => {
                 placeholder="0"
                 value={form.amount}
                 onChange={(e) => set("amount", e.target.value)}
-                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
+                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-base font-semibold text-slate-900 outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
               />
             </div>
             <div>
-              <label className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+              <label className="mb-1 block text-sm font-bold uppercase tracking-[0.16em] text-slate-600">
                 Created By
               </label>
               <input
                 type="text"
                 value={form.created_by}
                 onChange={(e) => set("created_by", e.target.value)}
-                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
+                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-base font-semibold text-slate-900 outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
               />
             </div>
           </div>
@@ -189,13 +189,13 @@ const AddEntryModal = ({ bookingId, onClose, onSaved }) => {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="flex-1 rounded-full bg-gradient-to-r from-blue-600 to-cyan-500 py-3 text-sm font-bold text-white shadow-[0_12px_30px_rgba(37,99,235,0.22)] transition hover:-translate-y-0.5 disabled:opacity-60"
+              className="flex-1 rounded-full bg-gradient-to-r from-blue-600 to-cyan-500 py-3 text-base font-bold text-white shadow-[0_12px_30px_rgba(37,99,235,0.22)] transition hover:-translate-y-0.5 disabled:opacity-60"
             >
               {saving ? "Saving…" : "Save Entry"}
             </button>
             <button
               onClick={onClose}
-              className="rounded-full border border-slate-200 bg-slate-50 px-6 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-100"
+              className="rounded-full border border-slate-200 bg-slate-50 px-6 py-3 text-base font-bold text-slate-700 transition hover:bg-slate-100"
             >
               Cancel
             </button>
@@ -305,13 +305,13 @@ const FolioView = () => {
           <section className="overflow-hidden rounded-[32px] border border-white/70 bg-[linear-gradient(135deg,#020617_0%,#1e3a8a_45%,#0f766e_100%)] px-6 py-7 text-white shadow-[0_22px_70px_rgba(15,23,42,0.22)]">
             <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)] lg:items-center">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.32em] text-cyan-200">
+                <p className="text-sm font-bold uppercase tracking-[0.32em] text-cyan-200">
                   Guest Folio — Night Audit
                 </p>
-                <h1 className="mt-3 text-3xl font-black sm:text-4xl">
+                <h1 className="mt-3 text-4xl font-black sm:text-5xl">
                   Booking #{bookingRef}
                 </h1>
-                <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-100/80">
+                <p className="mt-3 max-w-2xl text-base font-medium leading-7 text-slate-100/85">
                   Har din ke room charges, extra charges (minibar, laundry, etc.)
                   aur payments ka itemised ledger.
                 </p>
@@ -331,10 +331,10 @@ const FolioView = () => {
                     key={c.label}
                     className={`${c.tone} rounded-[20px] border border-white/10 p-4 backdrop-blur`}
                   >
-                    <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/65">
+                    <div className="text-sm font-bold uppercase tracking-[0.2em] text-white/70">
                       {c.label}
                     </div>
-                    <div className="mt-2 text-xl font-black text-white">
+                    <div className="mt-2 text-2xl font-black text-white">
                       {c.value}
                     </div>
                   </div>
@@ -345,7 +345,7 @@ const FolioView = () => {
 
           {/* Guest Info Bar */}
           {booking && (
-            <div className="flex flex-wrap items-center gap-3 rounded-[22px] border border-slate-200 bg-white/90 px-5 py-4 text-sm shadow-sm">
+            <div className="flex flex-wrap items-center gap-3 rounded-[22px] border border-slate-200 bg-white/90 px-5 py-4 text-base shadow-sm">
               <span className="font-black text-slate-900">{booking.guest_name || "Guest"}</span>
               <span className="text-slate-400">•</span>
               <span className="text-slate-600">Room: {booking.rooms?.map((r) => r.room_number).join(", ") || "—"}</span>
@@ -353,7 +353,7 @@ const FolioView = () => {
               <span className="text-slate-600">
                 {formatDate(booking.check_in)} → {formatDate(booking.check_out)}
               </span>
-              <span className="ml-auto rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700">
+              <span className="ml-auto rounded-full bg-emerald-100 px-3 py-1 text-sm font-bold text-emerald-700">
                 {booking.booking_status || "Active"}
               </span>
             </div>
@@ -367,7 +367,7 @@ const FolioView = () => {
                   key={t}
                   type="button"
                   onClick={() => setFilterType(t)}
-                  className={`rounded-full px-4 py-2 text-xs font-bold transition ${
+                  className={`rounded-full px-4 py-2 text-sm font-bold transition ${
                     filterType === t
                       ? "bg-slate-900 text-white"
                       : "bg-slate-100 text-slate-600 hover:bg-slate-200"
@@ -381,14 +381,14 @@ const FolioView = () => {
               <button
                 type="button"
                 onClick={() => setShowAdd(true)}
-                className="rounded-full bg-gradient-to-r from-blue-600 to-cyan-500 px-5 py-2.5 text-sm font-bold text-white shadow-[0_8px_20px_rgba(37,99,235,0.2)] transition hover:-translate-y-0.5"
+                className="rounded-full bg-gradient-to-r from-blue-600 to-cyan-500 px-5 py-2.5 text-base font-bold text-white shadow-[0_8px_20px_rgba(37,99,235,0.2)] transition hover:-translate-y-0.5"
               >
                 + Add Charge
               </button>
               <button
                 type="button"
                 onClick={() => navigate("/hotel/all-bookings")}
-                className="rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+                className="rounded-full border border-slate-200 bg-white px-5 py-2.5 text-base font-bold text-slate-700 transition hover:bg-slate-50"
               >
                 All Bookings
               </button>
@@ -398,17 +398,17 @@ const FolioView = () => {
           {/* Folio Ledger */}
           <section className="rounded-[28px] border border-white/70 bg-white/88 shadow-[0_18px_55px_rgba(15,23,42,0.08)] backdrop-blur">
             {loading ? (
-              <div className="p-12 text-center text-slate-400">Loading folio…</div>
+              <div className="p-12 text-center text-lg font-bold text-slate-400">Loading folio…</div>
             ) : groupedByDate.length === 0 ? (
               <div className="rounded-[28px] border-2 border-dashed border-slate-200 p-14 text-center">
-                <div className="text-4xl">📋</div>
-                <p className="mt-4 font-bold text-slate-500">
+                <div className="text-5xl">📋</div>
+                <p className="mt-4 text-xl font-black text-slate-500">
                   Abhi koi folio entry nahi hai.
                 </p>
                 <button
                   type="button"
                   onClick={() => setShowAdd(true)}
-                  className="mt-5 rounded-full bg-blue-600 px-6 py-3 text-sm font-bold text-white"
+                  className="mt-5 rounded-full bg-blue-600 px-6 py-3 text-base font-bold text-white"
                 >
                   Add First Entry
                 </button>
@@ -428,37 +428,37 @@ const FolioView = () => {
                     <div key={date} className="px-5 py-4">
                       <div className="mb-3 flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <span className="rounded-full bg-slate-900 px-3 py-1 text-xs font-bold text-white">
+                          <span className="rounded-full bg-slate-900 px-3 py-1 text-sm font-bold text-white">
                             {formatDate(date)}
                           </span>
-                          <span className="text-xs text-slate-500">
+                          <span className="text-sm font-medium text-slate-500">
                             {dayEntries.length} entries
                           </span>
                         </div>
                         {dayTotal > 0 && (
-                          <span className="text-sm font-bold text-slate-700">
+                          <span className="text-base font-bold text-slate-700">
                             Day Charges: {formatCurrency(dayTotal)}
                           </span>
                         )}
                       </div>
 
                       <div className="overflow-hidden rounded-[20px] border border-slate-100">
-                        <table className="w-full text-sm">
-                          <thead className="bg-slate-50 text-left text-xs text-slate-500">
+                        <table className="w-full text-base">
+                          <thead className="bg-slate-50 text-left text-sm text-slate-500">
                             <tr>
-                              <th className="px-4 py-3 font-semibold uppercase tracking-[0.12em]">
+                              <th className="px-4 py-3 font-bold uppercase tracking-[0.12em]">
                                 Type
                               </th>
-                              <th className="px-4 py-3 font-semibold uppercase tracking-[0.12em]">
+                              <th className="px-4 py-3 font-bold uppercase tracking-[0.12em]">
                                 Category
                               </th>
-                              <th className="px-4 py-3 font-semibold uppercase tracking-[0.12em]">
+                              <th className="px-4 py-3 font-bold uppercase tracking-[0.12em]">
                                 Description
                               </th>
-                              <th className="px-4 py-3 text-right font-semibold uppercase tracking-[0.12em]">
+                              <th className="px-4 py-3 text-right font-bold uppercase tracking-[0.12em]">
                                 Amount
                               </th>
-                              <th className="px-4 py-3 font-semibold uppercase tracking-[0.12em]">
+                              <th className="px-4 py-3 font-bold uppercase tracking-[0.12em]">
                                 By
                               </th>
                             </tr>
@@ -467,11 +467,11 @@ const FolioView = () => {
                             {dayEntries.map((entry) => (
                               <tr
                                 key={entry.id}
-                                className="border-t border-slate-100 hover:bg-slate-50/50"
+                                className="border-t border-slate-100 text-lg hover:bg-slate-50/50"
                               >
                                 <td className="px-4 py-3">
                                   <span
-                                    className={`rounded-full border px-3 py-1 text-[11px] font-bold ${
+                                    className={`rounded-full border px-3 py-1 text-sm font-bold ${
                                       TYPE_COLORS[entry.entry_type] ||
                                       "bg-slate-100 text-slate-600 border-slate-200"
                                     }`}
@@ -479,10 +479,10 @@ const FolioView = () => {
                                     {entry.entry_type}
                                   </span>
                                 </td>
-                                <td className="px-4 py-3 text-slate-600">
+                                <td className="px-4 py-3 font-medium text-slate-600">
                                   {entry.category || "—"}
                                 </td>
-                                <td className="px-4 py-3 font-medium text-slate-800">
+                                <td className="px-4 py-3 font-semibold text-slate-800">
                                   {entry.description}
                                 </td>
                                 <td
@@ -501,7 +501,7 @@ const FolioView = () => {
                                     : ""}
                                   {formatCurrency(entry.amount)}
                                 </td>
-                                <td className="px-4 py-3 text-slate-400">
+                                <td className="px-4 py-3 font-medium text-slate-400">
                                   {entry.created_by || "—"}
                                 </td>
                               </tr>
@@ -520,39 +520,39 @@ const FolioView = () => {
           <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
             <div className="grid gap-4 sm:grid-cols-4 text-center">
               <div>
-                <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <div className="text-sm font-bold uppercase tracking-wide text-slate-500">
                   Total Charges
                 </div>
-                <div className="mt-2 text-2xl font-black text-slate-900">
+                <div className="mt-2 text-3xl font-black text-slate-900">
                   {formatCurrency(totals.charges)}
                 </div>
               </div>
               <div>
-                <div className="text-xs font-semibold uppercase tracking-wide text-amber-600">
+                <div className="text-sm font-bold uppercase tracking-wide text-amber-600">
                   Discounts
                 </div>
-                <div className="mt-2 text-2xl font-black text-amber-800">
+                <div className="mt-2 text-3xl font-black text-amber-800">
                   − {formatCurrency(totals.discounts)}
                 </div>
               </div>
               <div>
-                <div className="text-xs font-semibold uppercase tracking-wide text-emerald-600">
+                <div className="text-sm font-bold uppercase tracking-wide text-emerald-600">
                   Payments
                 </div>
-                <div className="mt-2 text-2xl font-black text-emerald-800">
+                <div className="mt-2 text-3xl font-black text-emerald-800">
                   − {formatCurrency(totals.payments)}
                 </div>
               </div>
               <div className={`rounded-[18px] p-3 ${netBalance > 0 ? "bg-rose-50" : "bg-emerald-50"}`}>
                 <div
-                  className={`text-xs font-semibold uppercase tracking-wide ${
+                  className={`text-sm font-bold uppercase tracking-wide ${
                     netBalance > 0 ? "text-rose-600" : "text-emerald-600"
                   }`}
                 >
                   Net Balance
                 </div>
                 <div
-                  className={`mt-2 text-2xl font-black ${
+                  className={`mt-2 text-3xl font-black ${
                     netBalance > 0 ? "text-rose-800" : "text-emerald-800"
                   }`}
                 >

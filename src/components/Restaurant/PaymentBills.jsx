@@ -31,13 +31,17 @@ const createBillCardKey = (bill) =>
       ].join("|");
 
 const getStatusMeta = (bill) => {
-  const isPaid = String(bill?.invoiceStatus || "").toLowerCase() === "paid";
+  const normalizedStatus = String(bill?.invoiceStatus || "").toLowerCase();
+  const isPaid = normalizedStatus === "paid";
+  const isPostedToRoom = normalizedStatus === "posted to room";
   return {
-    label: isPaid ? "Paid" : "Pending",
-    billStage: isPaid ? "Payment Completed" : "Bill Generated",
+    label: isPaid ? "Paid" : isPostedToRoom ? "Posted To Room" : "Pending",
+    billStage: isPaid ? "Payment Completed" : isPostedToRoom ? "Shifted To Folio" : "Bill Generated",
     classes: isPaid
       ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-      : "border-amber-200 bg-amber-50 text-amber-700",
+      : isPostedToRoom
+        ? "border-sky-200 bg-sky-50 text-sky-700"
+        : "border-amber-200 bg-amber-50 text-amber-700",
   };
 };
 

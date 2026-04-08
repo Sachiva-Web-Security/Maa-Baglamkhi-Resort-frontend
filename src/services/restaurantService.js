@@ -105,6 +105,15 @@ export const restaurantService = {
     return response.data;
   },
 
+  async chargeBillToRoom(payload) {
+    const billId = payload?.billId;
+    const endpoint = billId
+      ? `/restaurant/bill/${billId}/charge-to-room`
+      : "/restaurant/bill/charge-to-room";
+    const response = await API.post(endpoint, payload);
+    return response.data;
+  },
+
   async createKitchenOrder(payload) {
     const response = await API.post("/kitchen/order", payload);
     return response.data;

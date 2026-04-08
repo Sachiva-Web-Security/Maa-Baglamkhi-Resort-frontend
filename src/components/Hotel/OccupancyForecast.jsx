@@ -168,36 +168,36 @@ const OccupancyForecast = () => {
         <section className="overflow-hidden rounded-[32px] border border-white/70 bg-[linear-gradient(135deg,#292524_0%,#92400e_45%,#0f766e_100%)] px-6 py-7 text-white shadow-[0_22px_70px_rgba(15,23,42,0.22)]">
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(300px,0.8fr)] lg:items-center">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.32em] text-amber-200">
-                Occupancy Forecast
+              <p className="text-sm font-bold uppercase tracking-[0.32em] text-amber-200">
+               Occ Forecast
               </p>
-              <h1 className="mt-3 text-3xl font-black sm:text-4xl">
+              <h1 className="mt-3 text-4xl font-black tracking-[-0.03em] sm:text-5xl">
                 Room Availability Calendar
               </h1>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-100/80">
+              <p className="mt-3 max-w-2xl text-base font-medium leading-7 text-slate-100/80 sm:text-lg">
                 “View the month-wise occupancy forecast — see which days are fully booked and which days are available.”
               </p>
             </div>
             <div className="grid grid-cols-3 gap-3">
               <div className="rounded-[18px] border border-white/10 bg-white/10 p-3 text-center backdrop-blur">
-                <div className="text-[10px] font-semibold uppercase tracking-wide text-white/65">
+                <div className="text-sm font-bold uppercase tracking-wide text-white/65">
                   Total Rooms
                 </div>
-                <div className="mt-2 text-2xl font-black">{totalRooms}</div>
+                <div className="mt-2 text-3xl font-black">{totalRooms}</div>
               </div>
               <div className="rounded-[18px] border border-white/10 bg-amber-800/40 p-3 text-center backdrop-blur">
-                <div className="text-[10px] font-semibold uppercase tracking-wide text-amber-200">
+                <div className="text-sm font-bold uppercase tracking-wide text-amber-200">
                   Avg Occ.
                 </div>
-                <div className="mt-2 text-2xl font-black">
+                <div className="mt-2 text-3xl font-black">
                   {monthStats.avgOccupancy}%
                 </div>
               </div>
               <div className="rounded-[18px] border border-rose-400/30 bg-rose-900/30 p-3 text-center backdrop-blur">
-                <div className="text-[10px] font-semibold uppercase tracking-wide text-rose-200">
+                <div className="text-sm font-bold uppercase tracking-wide text-rose-200">
                   Peak Day
                 </div>
-                <div className="mt-2 text-2xl font-black">
+                <div className="mt-2 text-3xl font-black">
                   {monthStats.peakOccupancy}
                 </div>
               </div>
@@ -214,24 +214,24 @@ const OccupancyForecast = () => {
               <button
                 type="button"
                 onClick={prevMonth}
-                className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+                className="rounded-full border border-slate-200 bg-white px-4 py-2 text-base font-bold text-slate-700 transition hover:bg-slate-50"
               >
                 ← Prev
               </button>
-              <h2 className="text-xl font-black text-slate-900">
+              <h2 className="text-2xl font-black tracking-[-0.03em] text-slate-900">
                 {MONTHS[month]} {year}
               </h2>
               <button
                 type="button"
                 onClick={nextMonth}
-                className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+                className="rounded-full border border-slate-200 bg-white px-4 py-2 text-base font-bold text-slate-700 transition hover:bg-slate-50"
               >
                 Next →
               </button>
             </div>
 
             {/* Legend */}
-            <div className="mb-4 flex flex-wrap gap-3 text-xs font-semibold">
+            <div className="mb-4 flex flex-wrap gap-3 text-sm font-bold text-slate-600">
               {[
                 { color: "bg-white border border-slate-200", label: "Empty" },
                 { color: "bg-emerald-100", label: "< 30%" },
@@ -251,7 +251,7 @@ const OccupancyForecast = () => {
               {DAYS_SHORT.map((d) => (
                 <div
                   key={d}
-                  className="py-2 text-[11px] font-bold uppercase tracking-wide text-slate-400"
+                  className="py-2 text-sm font-bold uppercase tracking-wide text-slate-500"
                 >
                   {d}
                 </div>
@@ -260,7 +260,9 @@ const OccupancyForecast = () => {
 
             {/* Calendar Grid */}
             {loading ? (
-              <div className="py-16 text-center text-slate-400">Loading…</div>
+              <div className="py-16 text-center text-base font-bold text-slate-400">
+                Loading…
+              </div>
             ) : (
               <div className="grid grid-cols-7 gap-1">
                 {/* Empty cells for first week */}
@@ -297,14 +299,14 @@ const OccupancyForecast = () => {
                       } ${isToday ? "border-sky-400 ring-1 ring-sky-200" : ""}`}
                     >
                       <div
-                        className={`text-sm font-black ${
+                        className={`text-base font-black ${
                           isToday ? "text-sky-600" : "text-slate-800"
                         }`}
                       >
                         {d}
                       </div>
                       {occupied > 0 && (
-                        <div className="mt-0.5 text-[10px] font-bold text-slate-600">
+                        <div className="mt-0.5 text-sm font-bold text-slate-600">
                           {occupied}/{totalRooms}
                         </div>
                       )}
@@ -322,10 +324,10 @@ const OccupancyForecast = () => {
           <div className="w-full min-w-0 space-y-4">
             {selectedDate ? (
               <div className="w-full rounded-[28px] border border-white/70 bg-white/90 p-5 shadow-[0_12px_40px_rgba(15,23,42,0.08)] backdrop-blur">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-sky-600">
+                <p className="text-sm font-bold uppercase tracking-[0.22em] text-sky-600">
                   Selected Date
                 </p>
-                <h3 className="mt-2 text-xl font-black text-slate-900">
+                <h3 className="mt-2 text-2xl font-black tracking-[-0.03em] text-slate-900">
                   {new Date(selectedDate + "T00:00:00").toLocaleDateString(
                     "en-IN",
                     { weekday: "long", day: "2-digit", month: "long" },
@@ -349,7 +351,7 @@ const OccupancyForecast = () => {
                     }}
                   />
                 </div>
-                <p className="mt-2 text-xs text-slate-500">
+                <p className="mt-2 text-base font-semibold text-slate-500">
                   {(selectedData?.bookings?.length || 0) +
                     (selectedData?.blocks?.length || 0)}{" "}
                   / {totalRooms} rooms occupied
@@ -358,7 +360,7 @@ const OccupancyForecast = () => {
                 {/* Bookings on that day */}
                 {selectedData?.bookings?.length > 0 && (
                   <div className="mt-4">
-                    <p className="mb-2 text-xs font-bold text-slate-500">
+                    <p className="mb-2 text-sm font-bold text-slate-500">
                       Active Bookings
                     </p>
                     <div className="space-y-2.5">
@@ -368,10 +370,10 @@ const OccupancyForecast = () => {
                           className="flex items-start justify-between gap-3 rounded-[16px] bg-sky-50 px-3.5 py-3"
                         >
                           <div className="min-w-0 flex-1">
-                            <div className="break-words text-sm font-bold leading-5 text-slate-800">
+                            <div className="break-words text-base font-bold leading-6 text-slate-800">
                               {b.guest_name || "Walk-in"}
                             </div>
-                            <div className="mt-1 break-words text-[11px] leading-4 text-slate-500">
+                            <div className="mt-1 break-words text-sm leading-5 text-slate-500">
                               Room: {b.rooms || "—"}
                             </div>
                           </div>
@@ -382,7 +384,7 @@ const OccupancyForecast = () => {
                                 state: { bookingId: b.bookingId },
                               })
                             }
-                            className="shrink-0 rounded-full bg-sky-600 px-3 py-1 text-[11px] font-bold text-white"
+                            className="shrink-0 rounded-full bg-sky-600 px-3 py-1 text-sm font-bold text-white"
                           >
                             View
                           </button>
@@ -392,7 +394,7 @@ const OccupancyForecast = () => {
 
                     {selectedData.bookings.length > SELECTED_DATE_PAGE_SIZE ? (
                       <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3">
-                        <div className="text-[11px] font-semibold text-slate-500">
+                        <div className="text-base font-semibold text-slate-500">
                           Showing{" "}
                           <span className="text-slate-900">
                             {(selectedDatePage - 1) * SELECTED_DATE_PAGE_SIZE + 1}
@@ -413,7 +415,7 @@ const OccupancyForecast = () => {
                               setSelectedDatePage((current) => Math.max(1, current - 1))
                             }
                             disabled={selectedDatePage === 1}
-                            className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-sm font-bold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
                           >
                             Prev
                           </button>
@@ -426,7 +428,7 @@ const OccupancyForecast = () => {
                               key={pageNumber}
                               type="button"
                               onClick={() => setSelectedDatePage(pageNumber)}
-                              className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition ${
+                              className={`rounded-full px-2.5 py-1 text-sm font-bold transition ${
                                 pageNumber === selectedDatePage
                                   ? "bg-sky-600 text-white"
                                   : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
@@ -444,7 +446,7 @@ const OccupancyForecast = () => {
                               )
                             }
                             disabled={selectedDatePage === totalSelectedDatePages}
-                            className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-sm font-bold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
                           >
                             Next
                           </button>
@@ -457,7 +459,7 @@ const OccupancyForecast = () => {
                 {/* Maintenance blocks on that day */}
                 {selectedData?.blocks?.length > 0 && (
                   <div className="mt-4">
-                    <p className="mb-2 text-xs font-bold text-slate-500">
+                    <p className="mb-2 text-sm font-bold text-slate-500">
                       Maintenance Blocks
                     </p>
                     <div className="space-y-2">
@@ -466,11 +468,11 @@ const OccupancyForecast = () => {
                           key={bl.id}
                           className="rounded-[14px] bg-violet-50 px-3 py-2"
                         >
-                          <div className="text-sm font-bold text-violet-800">
+                          <div className="text-base font-bold text-violet-800">
                             Room {bl.room_number} — {bl.block_type}
                           </div>
                           {bl.reason && (
-                            <div className="text-[11px] text-violet-500">
+                            <div className="text-base font-semibold text-violet-500">
                               {bl.reason}
                             </div>
                           )}
@@ -482,7 +484,7 @@ const OccupancyForecast = () => {
 
                 {!selectedData?.bookings?.length &&
                   !selectedData?.blocks?.length && (
-                    <p className="mt-4 rounded-[14px] bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+                    <p className="mt-4 rounded-[14px] bg-emerald-50 px-4 py-3 text-base font-bold text-emerald-700">
                       ✅ all room available in this day
                     </p>
                   )}
@@ -490,7 +492,7 @@ const OccupancyForecast = () => {
             ) : (
               <div className="rounded-[28px] border-2 border-dashed border-slate-200 py-12 text-center">
                 <div className="text-3xl">📅</div>
-                <p className="mt-3 text-sm font-bold text-slate-500">
+                <p className="mt-3 text-base font-bold text-slate-500">
 “Select any day to view the details.”
                 </p>
               </div>
@@ -498,31 +500,31 @@ const OccupancyForecast = () => {
 
             {/* Month Summary */}
             <div className="rounded-[28px] border border-white/70 bg-white/90 p-5 shadow-[0_12px_40px_rgba(15,23,42,0.08)] backdrop-blur">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+              <p className="text-sm font-bold uppercase tracking-[0.22em] text-slate-500">
                 {MONTHS[month]} {year} Summary
               </p>
               <div className="mt-4 space-y-3">
                 <div className="flex justify-between rounded-xl bg-slate-50 px-4 py-3">
-                  <span className="text-sm font-semibold text-slate-600">
+                  <span className="text-base font-bold text-slate-600">
                     Total Active Bookings
                   </span>
-                  <span className="font-black text-slate-900">
+                  <span className="text-lg font-black text-slate-900">
                     {bookings.length}
                   </span>
                 </div>
                 <div className="flex justify-between rounded-xl bg-slate-50 px-4 py-3">
-                  <span className="text-sm font-semibold text-slate-600">
+                  <span className="text-base font-bold text-slate-600">
                     Maintenance Blocks
                   </span>
-                  <span className="font-black text-violet-700">
+                  <span className="text-lg font-black text-violet-700">
                     {blocks.filter((b) => b.status === "Active").length}
                   </span>
                 </div>
                 <div className="flex justify-between rounded-xl bg-amber-50 px-4 py-3">
-                  <span className="text-sm font-semibold text-amber-700">
+                  <span className="text-base font-bold text-amber-700">
                     Avg Monthly Occ.
                   </span>
-                  <span className="font-black text-amber-900">
+                  <span className="text-lg font-black text-amber-900">
                     {monthStats.avgOccupancy}%
                   </span>
                 </div>
@@ -532,7 +534,7 @@ const OccupancyForecast = () => {
             <button
               type="button"
               onClick={() => navigate("/hotel/room-maintenance")}
-              className="w-full rounded-[22px] border border-violet-200 bg-violet-50 px-5 py-3.5 text-sm font-bold text-violet-700 transition hover:bg-violet-100"
+              className="w-full rounded-[22px] border border-violet-200 bg-violet-50 px-5 py-3.5 text-base font-bold text-violet-700 transition hover:bg-violet-100"
             >
               🔧 Manage Maintenance Blocks
             </button>
@@ -543,7 +545,7 @@ const OccupancyForecast = () => {
           <button
             type="button"
             onClick={() => navigate("/hotel/all-bookings")}
-            className="rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+            className="rounded-full border border-slate-200 bg-white px-5 py-2.5 text-base font-bold text-slate-700 transition hover:bg-slate-50"
           >
             ← All Bookings
           </button>

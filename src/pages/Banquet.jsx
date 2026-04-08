@@ -128,13 +128,13 @@ const bookingFilterDefaults = {
 };
 
 const inputCls =
-  "w-full rounded-2xl border border-slate-200/80 bg-white/88 px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100";
+  "w-full rounded-2xl border border-slate-200/80 bg-white/88 px-4 py-3 text-base font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100 sm:text-lg";
 
 const labelCls =
-  "mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500";
+  "mb-2 block text-sm font-bold uppercase tracking-[0.18em] text-slate-600 sm:text-base";
 
 const modalCloseBtnCls =
-  "rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-cyan-200 hover:text-cyan-700";
+  "rounded-full border border-slate-200 bg-white px-4 py-2 text-base font-bold text-slate-700 transition hover:border-cyan-200 hover:text-cyan-700";
 
 function ModalShell({
   title,
@@ -153,12 +153,12 @@ function ModalShell({
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               {eyebrow ? (
-                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
+                <p className="text-sm font-bold uppercase tracking-[0.24em] text-emerald-400">
                   {eyebrow}
                 </p>
               ) : null}
               {title ? (
-                <h3 className="mt-1 text-2xl font-black text-slate-900">
+                <h3 className="mt-1 text-3xl font-black text-slate-900 sm:text-4xl">
                   {title}
                 </h3>
               ) : null}
@@ -217,19 +217,19 @@ function PaginationControls({
     });
 
   return (
-    <div className="flex flex-col gap-3 rounded-[22px] border border-slate-200/80 bg-white/80 px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
+    <div className="flex flex-col gap-3 rounded-[22px] border border-slate-200/80 bg-white/80 px-4 py-4 lg:flex-row lg:items-center lg:justify-between">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
-        <div className="text-sm font-semibold text-slate-600">
+        <div className="text-base font-bold text-slate-600">
           {label} Page {page} of {totalPages}
           {startItem && endItem ? ` • Showing ${startItem}-${endItem} of ${totalItems}` : ""}
         </div>
         {pageSizeOptions?.length && onPageSizeChange ? (
-          <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+          <label className="flex items-center gap-2 text-base font-bold uppercase tracking-[0.14em] text-slate-500">
             Rows
             <select
               value={pageSize}
               onChange={(event) => onPageSizeChange(Number(event.target.value))}
-              className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 outline-none transition focus:border-cyan-300"
+              className="rounded-full border border-slate-200 bg-white px-3 py-2 text-base font-bold text-slate-700 outline-none transition focus:border-cyan-300"
             >
               {pageSizeOptions.map((option) => (
                 <option key={option} value={option}>
@@ -245,7 +245,7 @@ function PaginationControls({
           type="button"
           onClick={() => onChange(Math.max(1, page - 1))}
           disabled={page === 1}
-          className="rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-full border border-slate-200 px-4 py-2.5 text-base font-bold text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Previous
         </button>
@@ -256,12 +256,12 @@ function PaginationControls({
           return (
             <div key={pageNumber} className="flex items-center gap-2">
               {shouldShowGap ? (
-                <span className="px-1 text-sm font-bold text-slate-300">...</span>
+                <span className="px-1 text-base font-bold text-slate-300">...</span>
               ) : null}
               <button
                 type="button"
                 onClick={() => onChange(pageNumber)}
-                className={`h-10 min-w-[40px] rounded-full px-3 text-sm font-bold transition ${
+                className={`h-10 min-w-[40px] rounded-full px-3 text-base font-bold transition ${
                   pageNumber === page
                     ? "bg-slate-900 text-white shadow-[0_10px_25px_rgba(15,23,42,0.18)]"
                     : "border border-slate-200 bg-white text-slate-700 hover:border-cyan-300 hover:text-cyan-700"
@@ -276,7 +276,7 @@ function PaginationControls({
           type="button"
           onClick={() => onChange(Math.min(totalPages, page + 1))}
           disabled={page === totalPages}
-          className="rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-full border border-slate-200 px-4 py-2.5 text-base font-bold text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Next
         </button>
@@ -318,7 +318,7 @@ function resolveBanquetHallImage(image) {
 
 function getReservationStatusBadgeClass(status) {
   const baseClass =
-    "inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em]";
+    "inline-flex items-center rounded-full border px-3 py-1 text-sm font-bold uppercase tracking-[0.16em]";
 
   switch (status) {
     case "Confirmed":
@@ -338,7 +338,7 @@ function getReservationStatusBadgeClass(status) {
 
 function getPaymentStatusBadgeClass(status) {
   const baseClass =
-    "inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-bold";
+    "inline-flex items-center rounded-full border px-3 py-1 text-sm font-bold";
 
   switch (status) {
     case "Paid":
@@ -1694,17 +1694,17 @@ const Banquet = () => {
         <div className="space-y-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
+              <p className="text-base font-black uppercase tracking-[0.24em] text-emerald-400">
                 Venue Options
               </p>
-              <h3 className="mt-1 text-2xl font-black text-slate-900">
+              <h3 className="mt-1 text-3xl font-black text-slate-900">
                 Banquet halls
               </h3>
             </div>
             <button
               type="button"
               onClick={openAddHallForm}
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-teal-600 to-emerald-500 px-4 py-2.5 text-sm font-bold text-white"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-teal-600 to-emerald-500 px-4 py-2.5 text-base font-bold text-white"
             >
               <FaPlus />
               Add Hall
@@ -1713,8 +1713,8 @@ const Banquet = () => {
           <div className="overflow-hidden rounded-[24px] border border-slate-200/80 bg-white shadow-[0_18px_60px_rgba(148,163,184,0.12)]">
             {halls.length ? (
               <div className="overflow-x-auto">
-                <table className="min-w-full text-left text-sm">
-                  <thead className="bg-[linear-gradient(180deg,#f8fbff_0%,#eef6ff_100%)] text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                <table className="min-w-full text-left text-base">
+                <thead className="bg-[linear-gradient(180deg,#f8fbff_0%,#eef6ff_100%)] text-sm font-bold uppercase tracking-[0.18em] text-slate-500">
                     <tr>
                       <th className="px-4 py-4">Image</th>
                       <th className="px-4 py-4">Hall Name</th>
@@ -1773,29 +1773,29 @@ const Banquet = () => {
                               }
                               className="text-left"
                             >
-                              <div className="font-bold text-slate-900 transition hover:text-cyan-700">
+                              <div className="text-lg font-black text-slate-900 transition hover:text-cyan-700">
                                 {hall.name || "Unnamed Hall"}
                               </div>
                             </button>
-                            <p className="mt-1 max-w-[34ch] text-xs leading-5 text-slate-500">
+                            <p className="mt-1 max-w-[34ch] text-base leading-7 text-slate-500">
                               Elegant venue setup for weddings, celebrations,
                               conferences and premium social events.
                             </p>
                           </td>
                           <td className="px-4 py-4 align-top font-semibold text-slate-900">
-                            {hall.capacity || 0}
+                              {hall.capacity || 0}
                           </td>
                           <td className="px-4 py-4 align-top font-semibold text-slate-900">
                             {formatINR(hall.ratePerHour)}
                           </td>
                           <td className="px-4 py-4 align-top">
-                            <span className="inline-flex rounded-full bg-cyan-50 px-3 py-1 text-xs font-bold text-cyan-700">
+                            <span className="inline-flex rounded-full bg-cyan-50 px-3 py-1 text-sm font-bold text-cyan-700">
                               {hall.is_ac ? "AC Hall" : "Non-AC Hall"}
                             </span>
                           </td>
                           <td className="px-4 py-4 align-top">
                             <span
-                              className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${
+                              className={`inline-flex rounded-full px-3 py-1 text-sm font-bold ${
                                 hall.status === "Available"
                                   ? "bg-emerald-50 text-emerald-700"
                                   : hall.status === "Maintenance"
@@ -1811,14 +1811,14 @@ const Banquet = () => {
                               <button
                                 type="button"
                                 onClick={() => setDetailHall(hall)}
-                                className="rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1.5 text-xs font-bold text-cyan-700 transition hover:border-cyan-300 hover:bg-cyan-100"
+                                className="rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1.5 text-sm font-bold text-cyan-700 transition hover:border-cyan-300 hover:bg-cyan-100"
                               >
                                 View
                               </button>
                               <button
                                 type="button"
                                 onClick={() => handleEditHall(hall)}
-                                className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-700 transition hover:border-amber-300 hover:bg-amber-100"
+                                className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-sm font-bold text-amber-700 transition hover:border-amber-300 hover:bg-amber-100"
                               >
                                 <FaEdit />
                                 Edit
@@ -1826,7 +1826,7 @@ const Banquet = () => {
                               <button
                                 type="button"
                                 onClick={() => handleDeleteHall(hall)}
-                                className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-700 transition hover:border-rose-300 hover:bg-rose-100"
+                                className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-sm font-bold text-rose-700 transition hover:border-rose-300 hover:bg-rose-100"
                               >
                                 <FaTrash />
                                 Delete
@@ -1840,7 +1840,7 @@ const Banquet = () => {
                 </table>
               </div>
             ) : (
-              <div className="p-6 text-sm text-slate-500">
+              <div className="p-6 text-base font-medium text-slate-500">
                 No banquet hall has been added yet. Create a new hall using Add
                 Hall.
               </div>
@@ -1867,10 +1867,10 @@ const Banquet = () => {
       return (
         <div className="space-y-5">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
+              <p className="text-base font-black uppercase tracking-[0.24em] text-emerald-400">
               Banquet Addons
             </p>
-            <h3 className="mt-1 text-2xl font-black text-slate-900">
+            <h3 className="mt-1 text-3xl font-black text-slate-900">
               Addon pricing controls
             </h3>
           </div>
@@ -1880,7 +1880,7 @@ const Banquet = () => {
                 key={option.id}
                 className="rounded-[22px] border border-slate-200/80 bg-white p-5"
               >
-                <div className="text-sm font-bold text-slate-900">
+                <div className="text-base font-black text-slate-900">
                   {option.label}
                 </div>
                 <div className="mt-3">
@@ -1900,7 +1900,7 @@ const Banquet = () => {
           </div>
           <div className="grid gap-4 md:grid-cols-2">
             <div className="rounded-[22px] border border-slate-200/80 bg-white p-5">
-              <div className="text-sm font-bold text-slate-900">
+              <div className="text-base font-black text-slate-900">
                 Event support
               </div>
               <label className={`${labelCls} mt-4`}>Setup Price</label>
@@ -1918,7 +1918,7 @@ const Banquet = () => {
               />
             </div>
             <div className="rounded-[22px] border border-slate-200/80 bg-white p-5">
-              <div className="text-sm font-bold text-slate-900">
+              <div className="text-base font-black text-slate-900">
                 Decor and service
               </div>
               <label className={`${labelCls} mt-4`}>Decor Price</label>
@@ -1944,12 +1944,12 @@ const Banquet = () => {
       return (
         <div className="  space-y-4">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
+                <p className="text-sm font-bold uppercase tracking-[0.24em] text-emerald-400">
               Event Dining
             </p>
-            <h3 className="mt-1 text-2xl font-black text-slate-900">
-              Meal menu pricing
-            </h3>
+              <h3 className="mt-1 text-3xl font-black text-slate-900">
+                Meal menu pricing
+              </h3>
           </div>
           <div className="grid gap-4 md:grid-cols-3">
             {pricingConfig.menuPackages.map((menu) => (
@@ -1957,7 +1957,7 @@ const Banquet = () => {
                 key={menu.id}
                 className="rounded-[22px] border border-slate-200/80 bg-white p-5"
               >
-                <div className="text-sm font-bold uppercase tracking-[0.14em] text-cyan-700">
+                <div className="text-base font-black uppercase tracking-[0.14em] text-cyan-700">
                   {menu.name}
                 </div>
                 <label className={`${labelCls} mt-4`}>Per Guest Price</label>
@@ -1970,18 +1970,18 @@ const Banquet = () => {
                   }
                   className={inputCls}
                 />
-                <p className="mt-4 text-sm text-slate-500">{menu.mealLabel}</p>
+                <p className="mt-4 text-base text-slate-500">{menu.mealLabel}</p>
               </div>
             ))}
           </div>
           <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-5">
-            <div className="text-sm font-bold text-slate-900">
+            <div className="text-base font-black text-slate-900">
               Meal section prices
             </div>
             <div className="mt-4 grid gap-4 md:grid-cols-2">
               {mealSections.map((section) => (
                 <div key={section} className="rounded-2xl bg-white p-4">
-                  <div className="text-sm font-semibold text-slate-800">
+                  <div className="text-base font-bold text-slate-800">
                     {section}
                   </div>
                   <label className={`${labelCls} mt-3`}>Section Price</label>
@@ -2007,10 +2007,10 @@ const Banquet = () => {
         <div className="space-y-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
+                <p className="text-base font-black uppercase tracking-[0.24em] text-emerald-400">
                 Reservation Dashboard
               </p>
-              <h3 className="mt-1 text-2xl font-black text-slate-900">
+              <h3 className="mt-1 text-3xl font-black text-slate-900">
                 Manage banquet reservations
               </h3>
             </div>
@@ -2020,7 +2020,7 @@ const Banquet = () => {
                 setActiveQuickSection(null);
                 openCreateReservationForm();
               }}
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-sky-600 to-cyan-500 px-4 py-2.5 text-sm font-bold text-white"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-sky-600 to-cyan-500 px-4 py-2.5 text-base font-bold text-white"
             >
               <FaPlus />
               Add New
@@ -2043,7 +2043,7 @@ const Banquet = () => {
                         {booking.eventTitle || booking.eventType}
                       </div>
                     </div>
-                    <span className="rounded-full bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-700">
+                    <span className="rounded-full bg-cyan-50 px-3 py-1 text-sm font-semibold text-cyan-700">
                       {booking.status}
                     </span>
                   </div>
@@ -2062,7 +2062,7 @@ const Banquet = () => {
                     <button
                       type="button"
                       onClick={() => handleEditBooking(booking)}
-                      className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700"
+                      className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700"
                     >
                       <FaEdit />
                       Edit
@@ -2071,7 +2071,7 @@ const Banquet = () => {
                       <button
                         type="button"
                         onClick={() => handleCancelBooking(booking)}
-                        className="rounded-full bg-rose-500 px-3 py-2 text-xs font-bold text-white"
+                        className="rounded-full bg-rose-500 px-3 py-2 text-sm font-bold text-white"
                       >
                         Cancel
                       </button>
@@ -2082,7 +2082,7 @@ const Banquet = () => {
                       <button
                         type="button"
                         onClick={() => handleRefundBooking(booking)}
-                        className="rounded-full bg-violet-600 px-3 py-2 text-xs font-bold text-white"
+                        className="rounded-full bg-violet-600 px-3 py-2 text-sm font-bold text-white"
                       >
                         Refund
                       </button>
@@ -2091,7 +2091,7 @@ const Banquet = () => {
                       <button
                         type="button"
                         onClick={() => handleDeleteBooking(booking)}
-                        className="rounded-full border border-rose-200 px-3 py-2 text-xs font-bold text-rose-600"
+                        className="rounded-full border border-rose-200 px-3 py-2 text-sm font-bold text-rose-600"
                       >
                         Delete
                       </button>
@@ -2100,7 +2100,7 @@ const Banquet = () => {
                 </div>
               ))
             ) : (
-              <div className="rounded-[22px] border border-dashed border-slate-300 bg-white/70 p-6 text-sm text-slate-500">
+              <div className="rounded-[22px] border border-dashed border-slate-300 bg-white/70 p-6 text-base font-medium text-slate-500">
       No reservations are available. Create your first booking using ‘Add New.
               </div>
             )}
@@ -2120,10 +2120,10 @@ const Banquet = () => {
     return (
       <div className="space-y-5">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
+          <p className="text-base font-black uppercase tracking-[0.24em] text-emerald-400">
             Settlement Report
           </p>
-          <h3 className="mt-1 text-2xl font-black text-slate-900">
+          <h3 className="mt-1 text-3xl font-black text-slate-900">
             Pricing and settlement preview
           </h3>
         </div>
@@ -2152,10 +2152,10 @@ const Banquet = () => {
               key={item.label}
               className="rounded-[22px] border border-slate-200/80 bg-white p-5"
             >
-              <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                  <div className="text-base font-black uppercase tracking-[0.16em] text-slate-500">
                 {item.label}
               </div>
-              <div className="mt-3 text-2xl font-black text-slate-900">
+              <div className="mt-3 text-3xl font-black text-slate-900">
                 {item.value}
               </div>
             </div>
@@ -2163,7 +2163,7 @@ const Banquet = () => {
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           <div className="rounded-[22px] border border-slate-200/80 bg-white p-5">
-            <div className="text-sm font-bold text-slate-900">
+            <div className="text-base font-black text-slate-900">
               Global addon pricing
             </div>
             <div className="mt-4 space-y-4">
@@ -2238,14 +2238,14 @@ const Banquet = () => {
         <section className="overflow-hidden rounded-[30px] border border-slate-200/80 bg-white/95 px-5 py-6 shadow-[0_22px_55px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:px-7 sm:py-8">
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(340px,1fr)] xl:items-start">
             <div className="space-y-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-sky-500">
+              <p className="text-sm font-bold uppercase tracking-[0.28em] text-sky-500">
                 Dashboard
               </p>
               <div className="space-y-2">
-                <h1 className="text-3xl font-semibold leading-tight text-slate-950 sm:text-4xl">
+                <h1 className="text-4xl font-black leading-tight text-slate-950 sm:text-5xl">
                   Banquet operations dashboard
                 </h1>
-                <p className="max-w-3xl text-sm leading-6 text-slate-500 sm:text-base">
+                <p className="max-w-3xl text-base font-medium leading-7 text-slate-600 sm:text-lg">
                   Reservation activity, hall readiness, menu pricing, and billing actions are
                   shown in a clean workspace so the team can scan information faster.
                 </p>
@@ -2254,7 +2254,7 @@ const Banquet = () => {
                 <button
                   type="button"
                   onClick={() => window.location.reload()}
-                  className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_12px_28px_rgba(15,23,42,0.16)] transition hover:-translate-y-0.5 hover:bg-slate-800"
+                  className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2.5 text-base font-bold text-white shadow-[0_12px_28px_rgba(15,23,42,0.16)] transition hover:-translate-y-0.5 hover:bg-slate-800"
                 >
                   <FaSyncAlt />
                   Refresh
@@ -2262,7 +2262,7 @@ const Banquet = () => {
                 <button
                   type="button"
                   onClick={openAddHallForm}
-                  className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                  className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-base font-bold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
                 >
                   <FaPlus />
                   Add hall
@@ -2270,7 +2270,7 @@ const Banquet = () => {
                 <button
                   type="button"
                   onClick={openCreateReservationForm}
-                  className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                  className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-base font-bold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
                 >
                   <FaPlus />
                   New reservation
@@ -2283,7 +2283,7 @@ const Banquet = () => {
                       key={section.id}
                       type="button"
                       onClick={() => setActiveQuickSection(section.id)}
-                      className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-white"
+                      className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2.5 text-base font-bold text-slate-700 transition hover:border-slate-300 hover:bg-white"
                     >
                       <Icon />
                       {section.label}
@@ -2299,10 +2299,10 @@ const Banquet = () => {
                   key={item.label}
                   className="rounded-[24px] border border-slate-200/80 bg-slate-50/90 p-4 shadow-[0_10px_24px_rgba(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:shadow-[0_14px_32px_rgba(15,23,42,0.08)]"
                 >
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                  <div className="text-sm font-bold uppercase tracking-[0.16em] text-slate-500">
                     {item.label}
                   </div>
-                  <div className="mt-3 text-[30px] font-semibold leading-none text-slate-950">
+                  <div className="mt-3 text-4xl font-black leading-none text-slate-950 sm:text-[42px]">
                     {item.value}
                   </div>
                   <div className="mt-2 h-1.5 w-12 rounded-full bg-sky-200" />
@@ -2324,10 +2324,10 @@ const Banquet = () => {
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-cyan-600">
+                  <p className="text-sm font-bold uppercase tracking-[0.24em] text-cyan-600">
                     Filters
                   </p>
-                  <h2 className="mt-1 text-xl font-bold text-slate-900">
+                  <h2 className="mt-1 text-2xl font-black text-slate-900 sm:text-3xl">
                     Search banquet reservations
                   </h2>
                 </div>
@@ -2339,13 +2339,13 @@ const Banquet = () => {
                       setBookingFilters({ ...bookingFilterDefaults });
                       setBookingPage(1);
                     }}
-                    className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-slate-300"
+                    className="rounded-full border border-slate-200 bg-white px-4 py-2 text-base font-bold text-slate-600 transition hover:border-slate-300"
                   >
                     Clear
                   </button>
                   <button
                     type="submit"
-                    className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-sky-600 to-cyan-500 px-4 py-2 text-sm font-bold text-white shadow-[0_12px_30px_rgba(14,165,233,0.24)] transition hover:-translate-y-0.5"
+                    className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-sky-600 to-cyan-500 px-4 py-2 text-base font-bold text-white shadow-[0_12px_30px_rgba(14,165,233,0.24)] transition hover:-translate-y-0.5"
                   >
                     <FaFilter />
                     Apply Filters
@@ -2440,26 +2440,26 @@ const Banquet = () => {
 
               <div className="grid gap-3 sm:grid-cols-3">
                 <div className="rounded-[20px] border border-slate-200/80 bg-slate-50 px-4 py-4">
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                  <div className="text-sm font-bold uppercase tracking-[0.16em] text-slate-500">
                     Visible Results
                   </div>
-                  <div className="mt-2 text-2xl font-black text-slate-900">
+                  <div className="mt-2 text-3xl font-black text-slate-900">
                     {filteredBookings.length}
                   </div>
                 </div>
                 <div className="rounded-[20px] border border-slate-200/80 bg-slate-50 px-4 py-4">
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                  <div className="text-sm font-bold uppercase tracking-[0.16em] text-slate-500">
                     Available Halls
                   </div>
-                  <div className="mt-2 text-2xl font-black text-slate-900">
+                  <div className="mt-2 text-3xl font-black text-slate-900">
                     {halls.filter((hall) => hall.status === "Available").length}
                   </div>
                 </div>
                 <div className="rounded-[20px] border border-slate-200/80 bg-slate-50 px-4 py-4">
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                  <div className="text-sm font-bold uppercase tracking-[0.16em] text-slate-500">
                     Draft Estimate
                   </div>
-                  <div className="mt-2 text-2xl font-black text-slate-900">
+                  <div className="mt-2 text-3xl font-black text-slate-900">
                     {formatINR(wizardTotals.grandTotal)}
                   </div>
                 </div>
@@ -2469,10 +2469,10 @@ const Banquet = () => {
 
           <aside className="rounded-[26px] border border-white/70 bg-white/90 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
             <div className="mb-4">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-amber-500">
+              <p className="text-sm font-bold uppercase tracking-[0.24em] text-amber-500">
                 Snapshot
               </p>
-              <h2 className="mt-1 text-xl font-bold text-slate-900">
+              <h2 className="mt-1 text-2xl font-black text-slate-900 sm:text-3xl">
                 Live banquet health
               </h2>
             </div>
@@ -2485,14 +2485,14 @@ const Banquet = () => {
                     key={card.label}
                     className={`rounded-[20px] border px-4 py-4 ${card.tone}`}
                   >
-                    <div className={`inline-flex items-center gap-2 text-xs font-bold ${card.iconTone}`}>
+                    <div className={`inline-flex items-center gap-2 text-sm font-bold ${card.iconTone}`}>
                       <Icon />
                       {card.label}
                     </div>
-                    <div className="mt-3 text-3xl font-black leading-none">
+                    <div className="mt-3 text-4xl font-black leading-none">
                       {card.value}
                     </div>
-                    <div className="mt-2 text-xs leading-5 opacity-75">
+                    <div className="mt-2 text-sm font-medium leading-6 opacity-80">
                       {card.note}
                     </div>
                   </div>
@@ -2506,10 +2506,10 @@ const Banquet = () => {
           <section className="rounded-[26px] border border-white/70 bg-white/92 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
             <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
+                <p className="text-sm font-bold uppercase tracking-[0.24em] text-emerald-400">
                   Section Preview
                 </p>
-                <h2 className="mt-1 text-2xl font-black text-slate-900">
+                <h2 className="mt-1 text-3xl font-black text-slate-900 sm:text-4xl">
                   Banquet Quick View
                 </h2>
               </div>
@@ -2531,13 +2531,13 @@ const Banquet = () => {
         >
           <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-cyan-600">
+              <p className="text-sm font-bold uppercase tracking-[0.24em] text-cyan-600">
                 Reservation Ledger
               </p>
-              <h2 className="mt-1 text-xl font-bold text-slate-900">
+              <h2 className="mt-1 text-2xl font-black text-slate-900 sm:text-3xl">
                 Manage banquet reservations
               </h2>
-              <p className="mt-2 text-sm text-slate-500">
+              <p className="mt-2 text-base font-medium text-slate-600">
                 Showing {paginatedBookings.length} of {filteredBookings.length} filtered
                 reservations{hasAppliedBookingFilters ? " with active filters." : "."}
               </p>
@@ -2545,7 +2545,7 @@ const Banquet = () => {
             <button
               type="button"
               onClick={openCreateReservationForm}
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-sky-600 to-cyan-500 px-4 py-2.5 text-sm font-bold text-white shadow-[0_12px_30px_rgba(14,165,233,0.24)] transition hover:-translate-y-0.5"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-sky-600 to-cyan-500 px-4 py-2.5 text-base font-bold text-white shadow-[0_12px_30px_rgba(14,165,233,0.24)] transition hover:-translate-y-0.5"
             >
               <FaPlus />
               Add New
@@ -2555,7 +2555,7 @@ const Banquet = () => {
           <div className="hidden overflow-x-auto lg:block">
             {filteredBookings.length ? (
               <table className="min-w-full overflow-hidden rounded-[22px] border border-slate-200/80 bg-white">
-                <thead className="bg-[linear-gradient(180deg,#f8fbff_0%,#eef4ff_100%)] text-left text-[11px] uppercase tracking-[0.18em] text-slate-500">
+                <thead className="bg-[linear-gradient(180deg,#f8fbff_0%,#eef4ff_100%)] text-left text-sm uppercase tracking-[0.18em] text-slate-500">
                   <tr>
                     <th className="px-4 py-4">Guest</th>
                     <th className="px-4 py-4">Event</th>
@@ -2580,48 +2580,48 @@ const Banquet = () => {
                         key={booking.id}
                         className="border-t border-slate-200/80 align-top transition hover:bg-slate-50/80"
                       >
-                        <td className="px-4 py-4 text-sm text-slate-700">
+                        <td className="px-4 py-4 text-base text-slate-700">
                           <div className="font-bold text-slate-900">
                             {booking.customerName}
                           </div>
-                          <div className="mt-1 text-xs text-slate-500">
+                          <div className="mt-1 text-sm text-slate-500">
                             {booking.guestEmail || booking.phone || "Contact pending"}
                           </div>
                         </td>
-                        <td className="px-4 py-4 text-sm text-slate-700">
+                        <td className="px-4 py-4 text-base text-slate-700">
                           <div className="font-semibold text-slate-900">
                             {booking.eventTitle || booking.eventType}
                           </div>
-                          <div className="mt-1 text-xs text-slate-500">
+                          <div className="mt-1 text-sm text-slate-500">
                             {booking.eventType || "Event"} • {booking.guests || 0} guests
                           </div>
                         </td>
-                        <td className="px-4 py-4 text-sm text-slate-700">
+                        <td className="px-4 py-4 text-base text-slate-700">
                           <div className="font-semibold text-slate-900">
                             {booking.hallName || "Hall pending"}
                           </div>
-                          <div className="mt-1 text-xs text-slate-500">
+                          <div className="mt-1 text-sm text-slate-500">
                             {lightingLabelMap[booking.lightingSystem] ||
                               booking.lightingSystem ||
                               "Lighting pending"}
                           </div>
                         </td>
-                        <td className="px-4 py-4 text-sm text-slate-700">
+                        <td className="px-4 py-4 text-base text-slate-700">
                           <div className="font-semibold text-slate-900">
                             {formatBookingDate(booking.date)}
                           </div>
-                          <div className="mt-1 text-xs text-slate-500">
+                          <div className="mt-1 text-sm text-slate-500">
                             {booking.startTime || "--"} - {booking.endTime || "--"}
                           </div>
                         </td>
-                        <td className="px-4 py-4 text-sm text-slate-700">
+                        <td className="px-4 py-4 text-base text-slate-700">
                           <div className="font-semibold text-slate-900">
                             {formatINR(booking.grandTotal || 0)}
                           </div>
-                          <div className="mt-1 text-xs text-emerald-700">
+                          <div className="mt-1 text-sm text-emerald-700">
                             Received {formatINR(booking.netReceived || 0)}
                           </div>
-                          <div className="mt-1 text-xs text-rose-600">
+                          <div className="mt-1 text-sm text-rose-600">
                             Due {formatINR(booking.balanceDue || 0)}
                           </div>
                         </td>
@@ -2637,26 +2637,26 @@ const Banquet = () => {
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 py-4 text-sm text-slate-700">
+                        <td className="px-4 py-4 text-base text-slate-700">
                           <div className="font-semibold text-slate-900">
                             {menuPackageNameMap[booking.menuPackageId] || "Custom package"}
                           </div>
-                          <div className="mt-1 text-xs text-slate-500">
+                          <div className="mt-1 text-sm text-slate-500">
                             {booking.mealSection || "Meal section pending"}
                           </div>
-                          <div className="mt-1 text-xs text-cyan-700">
+                          <div className="mt-1 text-sm text-cyan-700">
                             {customItemsCount} custom selections
                           </div>
                         </td>
-                        <td className="px-4 py-4 text-sm text-slate-700">
+                        <td className="px-4 py-4 text-base text-slate-700">
                           <div className="font-semibold text-slate-900">
                             {booking.invoiceNo || "Draft only"}
                           </div>
-                          <div className="mt-1 text-xs text-slate-500">
+                          <div className="mt-1 text-sm text-slate-500">
                             {booking.paymentMode || "Pending"}
                           </div>
                           {booking.paymentReferenceId ? (
-                            <div className="mt-1 text-xs text-slate-400">
+                            <div className="mt-1 text-sm text-slate-400">
                               Ref {booking.paymentReferenceId}
                             </div>
                           ) : null}
@@ -2666,7 +2666,7 @@ const Banquet = () => {
                             <button
                               type="button"
                               onClick={() => handleEditBooking(booking)}
-                              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:border-cyan-200 hover:text-cyan-700"
+                              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 transition hover:border-cyan-200 hover:text-cyan-700"
                             >
                               <FaEdit />
                               Edit
@@ -2675,7 +2675,7 @@ const Banquet = () => {
                               <button
                                 type="button"
                                 onClick={() => handleCancelBooking(booking)}
-                                className="rounded-full bg-rose-500 px-3 py-2 text-xs font-bold text-white transition hover:bg-rose-600"
+                                className="rounded-full bg-rose-500 px-3 py-2 text-sm font-bold text-white transition hover:bg-rose-600"
                               >
                                 Cancel
                               </button>
@@ -2684,7 +2684,7 @@ const Banquet = () => {
                               <button
                                 type="button"
                                 onClick={() => handleCompleteBooking(booking.id)}
-                                className="rounded-full bg-amber-500 px-3 py-2 text-xs font-bold text-white transition hover:bg-amber-600"
+                                className="rounded-full bg-amber-500 px-3 py-2 text-sm font-bold text-white transition hover:bg-amber-600"
                               >
                                 Complete
                               </button>
@@ -2693,7 +2693,7 @@ const Banquet = () => {
                               <button
                                 type="button"
                                 onClick={() => handleGenerateBill(booking)}
-                                className="rounded-full bg-emerald-600 px-3 py-2 text-xs font-bold text-white transition hover:bg-emerald-700"
+                                className="rounded-full bg-emerald-600 px-3 py-2 text-sm font-bold text-white transition hover:bg-emerald-700"
                               >
                                 Bill
                               </button>
@@ -2705,7 +2705,7 @@ const Banquet = () => {
                                   setSelectedBooking(booking);
                                   setShowBill(true);
                                 }}
-                                className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:border-sky-200 hover:text-sky-700"
+                                className="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 transition hover:border-sky-200 hover:text-sky-700"
                               >
                                 View
                               </button>
@@ -2716,7 +2716,7 @@ const Banquet = () => {
                               <button
                                 type="button"
                                 onClick={() => handleRefundBooking(booking)}
-                                className="rounded-full bg-violet-600 px-3 py-2 text-xs font-bold text-white transition hover:bg-violet-700"
+                                className="rounded-full bg-violet-600 px-3 py-2 text-sm font-bold text-white transition hover:bg-violet-700"
                               >
                                 Refund
                               </button>
@@ -2724,7 +2724,7 @@ const Banquet = () => {
                             <button
                               type="button"
                               onClick={() => handleSendQuotation(booking, "email")}
-                              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:border-sky-200 hover:text-sky-700"
+                              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 transition hover:border-sky-200 hover:text-sky-700"
                             >
                               <FaEnvelope />
                               Email
@@ -2732,7 +2732,7 @@ const Banquet = () => {
                             <button
                               type="button"
                               onClick={() => handleSendQuotation(booking, "whatsapp")}
-                              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:border-emerald-200 hover:text-emerald-700"
+                              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 transition hover:border-emerald-200 hover:text-emerald-700"
                             >
                               <FaWhatsapp />
                               WhatsApp
@@ -2741,7 +2741,7 @@ const Banquet = () => {
                               <button
                                 type="button"
                                 onClick={() => handleDeleteBooking(booking)}
-                                className="rounded-full border border-rose-200 bg-white px-3 py-2 text-xs font-bold text-rose-600 transition hover:bg-rose-50"
+                      className="rounded-full border border-rose-200 bg-white px-3 py-2 text-sm font-bold text-rose-600 transition hover:bg-rose-50"
                               >
                                 Delete
                               </button>
@@ -2819,7 +2819,7 @@ const Banquet = () => {
                       <button
                         type="button"
                         onClick={() => handleEditBooking(booking)}
-                        className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700"
+                        className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-2 text-sm font-bold text-slate-700"
                       >
                         <FaEdit />
                         Edit
@@ -2828,7 +2828,7 @@ const Banquet = () => {
                         <button
                           type="button"
                           onClick={() => handleCancelBooking(booking)}
-                          className="rounded-full bg-rose-500 px-3 py-2 text-xs font-bold text-white"
+                          className="rounded-full bg-rose-500 px-3 py-2 text-sm font-bold text-white"
                         >
                           Cancel
                         </button>
@@ -2837,7 +2837,7 @@ const Banquet = () => {
                         <button
                           type="button"
                           onClick={() => handleCompleteBooking(booking.id)}
-                          className="rounded-full bg-amber-500 px-3 py-2 text-xs font-bold text-white"
+                          className="rounded-full bg-amber-500 px-3 py-2 text-sm font-bold text-white"
                         >
                           Complete
                         </button>
@@ -2846,7 +2846,7 @@ const Banquet = () => {
                         <button
                           type="button"
                           onClick={() => handleGenerateBill(booking)}
-                          className="rounded-full bg-emerald-600 px-3 py-2 text-xs font-bold text-white"
+                          className="rounded-full bg-emerald-600 px-3 py-2 text-sm font-bold text-white"
                         >
                           Bill
                         </button>
@@ -2858,7 +2858,7 @@ const Banquet = () => {
                             setSelectedBooking(booking);
                             setShowBill(true);
                           }}
-                          className="rounded-full border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700"
+                          className="rounded-full border border-slate-200 px-3 py-2 text-sm font-bold text-slate-700"
                         >
                           View
                         </button>
@@ -2869,7 +2869,7 @@ const Banquet = () => {
                         <button
                           type="button"
                           onClick={() => handleRefundBooking(booking)}
-                          className="rounded-full bg-violet-600 px-3 py-2 text-xs font-bold text-white"
+                          className="rounded-full bg-violet-600 px-3 py-2 text-sm font-bold text-white"
                         >
                           Refund
                         </button>
@@ -2877,14 +2877,14 @@ const Banquet = () => {
                       <button
                         type="button"
                         onClick={() => handleSendQuotation(booking, "email")}
-                        className="rounded-full border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700"
+                        className="rounded-full border border-slate-200 px-3 py-2 text-sm font-bold text-slate-700"
                       >
                         Email
                       </button>
                       <button
                         type="button"
                         onClick={() => handleSendQuotation(booking, "whatsapp")}
-                        className="rounded-full border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700"
+                        className="rounded-full border border-slate-200 px-3 py-2 text-sm font-bold text-slate-700"
                       >
                         WhatsApp
                       </button>
@@ -2892,7 +2892,7 @@ const Banquet = () => {
                         <button
                           type="button"
                           onClick={() => handleDeleteBooking(booking)}
-                          className="rounded-full border border-rose-200 px-3 py-2 text-xs font-bold text-rose-600"
+                          className="rounded-full border border-rose-200 px-3 py-2 text-sm font-bold text-rose-600"
                         >
                           Delete
                         </button>
@@ -3268,7 +3268,7 @@ const Banquet = () => {
                       onChange={(e) => handleReceiptUpload(e.target.files?.[0])}
                       className="block w-full text-sm text-slate-600 file:mr-4 file:rounded-full file:border-0 file:bg-slate-900 file:px-4 file:py-2 file:text-sm file:font-bold file:text-white"
                     />
-                    <p className="text-xs text-slate-500">
+                    <p className="text-sm text-slate-500">
                       Optional hai. Image ya PDF receipt upload kar sakte hain.
                     </p>
                     {wizard.receiptFileName ? (
@@ -3304,7 +3304,7 @@ const Banquet = () => {
                         <div className="text-sm font-bold text-slate-900">
                           Restaurant menu se select karein
                         </div>
-                        <div className="mt-1 text-xs text-slate-500">
+                        <div className="mt-1 text-sm text-slate-500">
                           Full restaurant menu khol kar items select kijiye, fir
                           yahin reservation form par wapas aa jayenge.
                         </div>
@@ -3312,7 +3312,7 @@ const Banquet = () => {
                       <button
                         type="button"
                         onClick={handleOpenRestaurantMenu}
-                        className="inline-flex items-center justify-center rounded-full bg-slate-900 px-4 py-2.5 text-xs font-bold text-white"
+                        className="inline-flex items-center justify-center rounded-full bg-slate-900 px-4 py-2.5 text-sm font-bold text-white"
                       >
                         Open Restaurant Menu
                       </button>
@@ -3335,7 +3335,7 @@ const Banquet = () => {
                                       key={item.id || `${category}-${item.name}`}
                                       type="button"
                                       onClick={() => toggleCustomMenuSelection(item.name)}
-                                      className={`rounded-2xl border px-3 py-3 text-left text-xs font-semibold transition ${
+                                      className={`rounded-2xl border px-3 py-3 text-left text-sm font-semibold transition ${
                                         isSelected
                                           ? "border-cyan-200 bg-cyan-50 text-cyan-700"
                                           : "border-slate-200 bg-slate-50 text-slate-600 hover:border-cyan-100 hover:text-cyan-700"
@@ -3345,7 +3345,7 @@ const Banquet = () => {
                                         {item.name}
                                       </span>
                                       {item.price ? (
-                                        <span className="mt-1 block text-xs opacity-80">
+                                        <span className="mt-1 block text-sm opacity-80">
                                           {formatINR(item.price)}
                                         </span>
                                       ) : null}
@@ -3387,19 +3387,19 @@ const Banquet = () => {
                           <button
                             type="button"
                             onClick={handleAddManualMenuItem}
-                            className="rounded-full bg-slate-900 px-4 py-2 text-xs font-bold text-white"
+                          className="rounded-full bg-slate-900 px-4 py-2 text-sm font-bold text-white"
                           >
                             Add
                           </button>
                         </div>
-                        <div className="text-xs text-slate-500">
+                        <div className="text-sm text-slate-500">
               “You can select from the full menu or manually add a custom item here.”
                         </div>
                       </div>
                     </div>
 
                     <div>
-                      <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                      <div className="text-sm font-bold uppercase tracking-[0.16em] text-slate-500">
                         Selected items
                       </div>
                       <div className="mt-3 flex flex-wrap gap-2">
@@ -3413,7 +3413,7 @@ const Banquet = () => {
                                 onClick={() =>
                                   handleRemoveSelectedRestaurantMenuItem(item, index)
                                 }
-                                className="rounded-2xl bg-cyan-50 px-3 py-2 text-xs font-semibold text-cyan-700"
+                              className="rounded-2xl bg-cyan-50 px-3 py-2 text-sm font-semibold text-cyan-700"
                               >
                                 {item.name} x{item.qty} • {formatINR(item.total)} x
                               </button>
@@ -3426,7 +3426,7 @@ const Banquet = () => {
                                   key={`selected-${item}`}
                                   type="button"
                                   onClick={() => handleRemoveSelectedCustomMenuItem(item)}
-                                  className="rounded-full bg-cyan-50 px-3 py-2 text-xs font-semibold text-cyan-700"
+                                  className="rounded-full bg-cyan-50 px-3 py-2 text-sm font-semibold text-cyan-700"
                                 >
                                   {item} x
                                 </button>
@@ -3437,7 +3437,7 @@ const Banquet = () => {
                                 key={`manual-${item}`}
                                 type="button"
                                 onClick={() => handleRemoveManualMenuItem(item)}
-                                className="rounded-full bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700"
+                                className="rounded-full bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-700"
                               >
                                 {item} x
                               </button>
@@ -3564,7 +3564,7 @@ const Banquet = () => {
                     ) : null}
                   </div>
                   <div className="mt-5 rounded-[20px] bg-slate-950 px-4 py-4 text-white">
-                    <div className="text-xs uppercase tracking-[0.2em] text-slate-300">
+              <div className="text-sm uppercase tracking-[0.2em] text-slate-300">
                       Estimated total
                     </div>
                     <div className="mt-2 text-3xl font-black">
@@ -3584,11 +3584,11 @@ const Banquet = () => {
           “Action buttons are provided on the booking dashboard to send quotations to guests via email or WhatsApp.”
                   </p>
                   <div className="mt-4 flex flex-wrap gap-2">
-                    <span className="inline-flex items-center gap-2 rounded-full bg-cyan-50 px-3 py-2 text-xs font-semibold text-cyan-700">
+                    <span className="inline-flex items-center gap-2 rounded-full bg-cyan-50 px-3 py-2 text-sm font-semibold text-cyan-700">
                       <FaEnvelope />
                       Email Quote
                     </span>
-                    <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700">
+                    <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700">
                       <FaWhatsapp />
                       WhatsApp Quote
                     </span>
@@ -3718,7 +3718,7 @@ const Banquet = () => {
                           ? hallImageFile.name
                           : "Choose a square or landscape image"}
                       </span>
-                      <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-slate-700 shadow-sm">
+                      <span className="rounded-full bg-white px-3 py-1 text-sm font-bold text-slate-700 shadow-sm">
                         Browse
                       </span>
                       <input
@@ -3836,7 +3836,7 @@ const Banquet = () => {
         >
           <div className="mt-2 grid gap-4 sm:grid-cols-2">
               <div className="rounded-[22px] border border-slate-200/80 bg-slate-50 p-4">
-                <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                <div className="text-sm uppercase tracking-[0.18em] text-slate-500">
                   Capacity
                 </div>
                 <div className="mt-2 text-2xl font-black text-slate-900">
@@ -3844,7 +3844,7 @@ const Banquet = () => {
                 </div>
               </div>
               <div className="rounded-[22px] border border-slate-200/80 bg-slate-50 p-4">
-                <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                <div className="text-sm uppercase tracking-[0.18em] text-slate-500">
                   Rate / hour
                 </div>
                 <div className="mt-2 text-2xl font-black text-slate-900">
@@ -3852,7 +3852,7 @@ const Banquet = () => {
                 </div>
               </div>
               <div className="rounded-[22px] border border-slate-200/80 bg-slate-50 p-4">
-                <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                <div className="text-sm uppercase tracking-[0.18em] text-slate-500">
                   Cooling
                 </div>
                 <div className="mt-2 text-lg font-bold text-slate-900">
@@ -3860,7 +3860,7 @@ const Banquet = () => {
                 </div>
               </div>
               <div className="rounded-[22px] border border-slate-200/80 bg-slate-50 p-4">
-                <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                <div className="text-sm uppercase tracking-[0.18em] text-slate-500">
                   Status
                 </div>
                 <div className="mt-2 text-lg font-bold text-slate-900">
@@ -4066,7 +4066,7 @@ const Banquet = () => {
           heightClass="h-[min(78vh,620px)]"
         >
             <div>
-              <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-600">
+              <div className="text-sm font-bold uppercase tracking-[0.24em] text-cyan-600">
                 Package Pricing
               </div>
               <div className="mt-4 max-w-xs">
@@ -4099,7 +4099,7 @@ const Banquet = () => {
 
             <div className="mt-6 grid gap-4 sm:grid-cols-[minmax(0,1fr)_220px]">
               <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-5">
-                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                <div className="text-sm font-bold uppercase tracking-[0.18em] text-slate-500">
                   Included Highlights
                 </div>
                 <div className="mt-4 space-y-3">
@@ -4115,20 +4115,20 @@ const Banquet = () => {
               </div>
 
               <div className="rounded-[24px] border border-cyan-100 bg-[linear-gradient(180deg,#ecfeff_0%,#f8fafc_100%)] p-5">
-                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-700">
+                <div className="text-sm font-bold uppercase tracking-[0.18em] text-cyan-700">
                   Meal Type
                 </div>
                 <div className="mt-3 text-lg font-bold text-slate-900">
                   {delayedSelectedMenuPackage.mealLabel}
                 </div>
-                <div className="mt-6 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-700">
+                <div className="mt-6 text-sm font-bold uppercase tracking-[0.18em] text-cyan-700">
                   Available Sections
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {mealSections.map((section) => (
                     <span
                       key={section}
-                      className="rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-slate-700"
+                      className="rounded-full bg-white px-3 py-1.5 text-sm font-semibold text-slate-700"
                     >
                       {section}
                     </span>

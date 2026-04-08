@@ -19,16 +19,16 @@ const MGMT_LINKS = [
   { name: "Guest Profile", path: "/hotel/guest-profile" },
   { name: "Folio / Audit", path: "/hotel/folio" },
   { name: "Room Maintenance", path: "/hotel/room-maintenance" },
-  { name: "Occupancy Forecast", path: "/hotel/occupancy-forecast" },
+  { name: "Occ Forecast", path: "/hotel/occupancy-forecast" },
 ];
 
 const linkClassName = ({ isActive }) =>
-  `text-sm font-bold leading-none transition xl:text-[15px] 2xl:text-base ${
+  `text-[15px] font-bold leading-none transition xl:text-[16px] 2xl:text-[17px] ${
     isActive ? "text-sky-600" : "text-slate-700 hover:text-sky-600"
   }`;
 
 const actionButtonClassName = (isActive) =>
-  `rounded-full border border-sky-200/70 bg-[linear-gradient(135deg,rgba(219,234,254,0.72),rgba(191,219,254,0.38))] px-4 py-2 text-sm font-bold leading-none text-sky-950 shadow-[0_10px_28px_rgba(59,130,246,0.16)] backdrop-blur-md transition xl:px-4.5 xl:py-2.5 xl:text-[15px] 2xl:text-base ${
+  `rounded-full border border-sky-200/70 bg-[linear-gradient(135deg,rgba(219,234,254,0.72),rgba(191,219,254,0.38))] px-4 py-2 text-[15px] font-bold leading-none text-sky-950 shadow-[0_10px_28px_rgba(59,130,246,0.16)] backdrop-blur-md transition xl:px-4.5 xl:py-2.5 xl:text-[16px] 2xl:text-[17px] ${
     isActive
       ? "border-sky-300/80 bg-[linear-gradient(135deg,rgba(191,219,254,0.92),rgba(125,211,252,0.52))] text-blue-950 shadow-[0_14px_34px_rgba(37,99,235,0.22)]"
       : "hover:border-sky-300/80 hover:bg-[linear-gradient(135deg,rgba(219,234,254,0.84),rgba(186,230,253,0.46))] hover:text-blue-950"
@@ -41,9 +41,9 @@ const BookingSteps = () => {
     new URLSearchParams(location.search).get("mode") || location.state?.bookingAction || "";
 
   return (
-    <div className="mx-auto flex w-full max-w-full flex-col gap-4 xl:flex-row xl:flex-nowrap xl:items-center xl:justify-start xl:gap-2 2xl:gap-3">
-      <div className="min-w-0 xl:flex-[0_1_auto]">
-        <div className="flex flex-nowrap items-center gap-3 whitespace-nowrap xl:justify-start xl:gap-4 2xl:gap-5">
+    <div className="mx-auto flex w-full max-w-full flex-col gap-4 xl:flex-row xl:items-center xl:gap-4 2xl:gap-5">
+      <div className="min-w-0 xl:flex-none">
+        <div className="flex flex-nowrap items-center gap-3 whitespace-nowrap xl:gap-4 2xl:gap-5">
           {WIZARD_STEPS.map((step) => (
             <NavLink
               key={step.path}
@@ -57,7 +57,7 @@ const BookingSteps = () => {
         </div>
       </div>
 
-      <div className="flex flex-nowrap items-center justify-center gap-2 border-y border-slate-100 py-4 xl:mx-2 xl:ml-24 xl:flex-none xl:border-y-0 xl:border-x xl:px-3 xl:py-0 2xl:ml-28 2xl:px-4">
+      <div className="flex flex-nowrap items-center justify-center gap-2 border-y border-slate-100 py-4 xl:mx-auto xl:border-y-0 xl:border-x xl:px-4 xl:py-0">
         <button
           type="button"
           onClick={() =>
@@ -84,7 +84,7 @@ const BookingSteps = () => {
         </button>
       </div>
 
-      <div className="min-w-0 xl:flex-[1_1_auto]">
+      <div className="min-w-0 xl:flex-none">
         <div className="flex flex-nowrap items-center gap-3 whitespace-nowrap xl:justify-end xl:gap-4 2xl:gap-5">
           {MGMT_LINKS.map((link) => (
             <NavLink key={link.path} to={link.path} className={linkClassName}>

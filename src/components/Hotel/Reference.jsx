@@ -11,10 +11,10 @@ import {
 } from "./bookingSession";
 
 const fieldCls =
-  "w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:ring-4 focus:ring-sky-100";
+  "w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-base font-semibold text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:ring-4 focus:ring-sky-100";
 
 const labelCls =
-  "mb-2 block text-sm font-semibold text-slate-800";
+  "mb-2 block text-base font-bold text-slate-900";
 
 const panelCls =
   "rounded-[30px] border border-slate-200/80 bg-white p-6 shadow-[0_24px_60px_rgba(15,23,42,0.06)] sm:p-7";
@@ -79,32 +79,11 @@ const Reference = () => {
       style={{ fontFamily: '"Segoe UI", "Helvetica Neue", Arial, sans-serif' }}
     >
       <div className="mx-auto max-w-[2000px] rounded-[36px] border border-white/70 bg-[linear-gradient(180deg,#fafdff_0%,#ffffff_40%,#fffdf8_100%)] p-4 shadow-[0_30px_80px_rgba(148,163,184,0.18)] sm:p-6">
-        <section className="px-2 py-2">
-          <div className="grid gap-4 md:max-w-3xl">
-            <div className="grid grid-cols-[140px_minmax(0,1fr)] items-center gap-4">
-              <div className="text-xs font-medium uppercase tracking-[0.28em] text-slate-500">
-                Booking ID
-              </div>
-              <div className="text-2xl font-[800] tracking-[-0.03em] text-slate-900">
-                {bookingRef || "Pending"}
-              </div>
-            </div>
-            <div className="grid grid-cols-[140px_minmax(0,1fr)] items-center gap-4">
-              <div className="text-xs font-medium uppercase tracking-[0.28em] text-slate-500">
-                Source
-              </div>
-              <div className="text-2xl font-[800] tracking-[-0.03em] text-slate-900">
-                {otherBookingDraft.bookingSource || "Not selected"}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+        <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
           <div className={panelCls}>
             <div className="space-y-6">
               <div className={sectionCls}>
-                <div className="mb-5 text-2xl font-[700] tracking-[-0.02em] text-slate-900">
+                <div className="mb-5 text-3xl font-black tracking-[-0.03em] text-slate-900">
                   Guest Classification
                 </div>
                 <div>
@@ -124,7 +103,7 @@ const Reference = () => {
               </div>
 
               <div className={sectionCls}>
-                <div className="mb-5 text-2xl font-[700] tracking-[-0.02em] text-slate-900">
+                <div className="mb-5 text-3xl font-black tracking-[-0.03em] text-slate-900">
                   Notes
                 </div>
                 <div className="grid gap-5">
@@ -152,63 +131,63 @@ const Reference = () => {
               </div>
 
               <div className={sectionCls}>
-                <div className="mb-4 text-xl font-bold text-slate-900">
+                <div className="mb-4 text-3xl font-black tracking-[-0.03em] text-slate-900">
                   Booking Overview
                 </div>
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className={overviewCardCls}>
-                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    <div className="text-sm font-bold uppercase tracking-[0.18em] text-slate-500">
                       Booking ID
                     </div>
-                    <div className="mt-2 text-lg font-bold text-slate-900">
+                    <div className="mt-2 text-xl font-black text-slate-900">
                       {bookingRef || "Pending"}
                     </div>
                   </div>
 
                   <div className={overviewCardCls}>
-                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    <div className="text-sm font-bold uppercase tracking-[0.18em] text-slate-500">
                       Source
                     </div>
-                    <div className="mt-2 text-lg font-bold text-slate-900">
+                    <div className="mt-2 text-xl font-black text-slate-900">
                       {otherBookingDraft.bookingSource || "Not selected"}
                     </div>
                   </div>
 
                   <div className={overviewCardCls}>
-                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    <div className="text-sm font-bold uppercase tracking-[0.18em] text-slate-500">
                       Guest Name
                     </div>
-                    <div className="mt-2 text-lg font-bold text-slate-900">
+                    <div className="mt-2 text-xl font-black text-slate-900">
                       {guestDraft.guestName || "Not entered"}
                     </div>
                   </div>
 
                   <div className={overviewCardCls}>
-                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    <div className="text-sm font-bold uppercase tracking-[0.18em] text-slate-500">
                       Guest Type
                     </div>
-                    <div className="mt-2 text-lg font-bold text-slate-900">
+                    <div className="mt-2 text-xl font-black text-slate-900">
                       {formData.guestType || "Not selected"}
                     </div>
                   </div>
 
                   <div className={overviewCardCls}>
-                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    <div className="text-sm font-bold uppercase tracking-[0.18em] text-slate-500">
                       Booking Type
                     </div>
-                    <div className="mt-2 text-lg font-bold text-slate-900">
+                    <div className="mt-2 text-xl font-black text-slate-900">
                       {otherBookingDraft.bookingType || "Not selected"}
                     </div>
                   </div>
 
                   <div className={overviewCardCls}>
-                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    <div className="text-sm font-bold uppercase tracking-[0.18em] text-slate-500">
                       Location
                     </div>
-                    <div className="mt-2 text-lg font-bold text-slate-900">
+                    <div className="mt-2 text-xl font-black text-slate-900">
                       {locationSummary || "Pending"}
                     </div>
-                    <div className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    <div className="mt-2 text-sm font-bold uppercase tracking-[0.18em] text-slate-500">
                       {otherBookingDraft.pincode
                         ? `PIN Code ${otherBookingDraft.pincode}`
                         : "PIN Code Pending"}
@@ -216,75 +195,77 @@ const Reference = () => {
                   </div>
 
                   <div className="md:col-span-2 rounded-2xl bg-white p-4 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
-                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    <div className="text-sm font-bold uppercase tracking-[0.18em] text-slate-500">
                       Notes
                     </div>
-                    <div className="mt-2 text-sm font-semibold text-slate-700">
+                    <div className="mt-2 text-base font-semibold leading-7 text-slate-700">
                       {formData.guestNotes || "No guest notes added yet."}
                     </div>
-                    <div className="mt-3 border-t border-slate-200 pt-3 text-sm text-slate-600">
+                    <div className="mt-3 border-t border-slate-200 pt-3 text-base font-medium leading-7 text-slate-600">
                       {formData.internalNotes || "No internal notes added yet."}
                     </div>
                   </div>
                 </div>
               </div>
+
+              <div className="w-full rounded-[28px] border border-violet-100/80 bg-[linear-gradient(180deg,#f8f4ff_0%,#f3eeff_52%,#efe9ff_100%)] p-6 shadow-[0_26px_70px_rgba(109,76,246,0.10)]">
+                <div className="text-3xl font-black tracking-[-0.03em] text-slate-900">
+                  Move to Company
+                </div>
+                <p className="mt-4 text-base leading-7 text-slate-600">
+                  Save guest classification and notes, then open the company section.
+                </p>
+                <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                  <button
+                    onClick={handleSubmit}
+                    className="inline-flex w-full items-center justify-center rounded-[24px] bg-[linear-gradient(90deg,#6e49f6_0%,#6d44f2_55%,#6b46ef_100%)] px-5 py-4 text-lg font-extrabold text-white shadow-[0_20px_40px_rgba(109,76,246,0.22)] transition hover:brightness-105 sm:w-auto sm:min-w-[170px]"
+                  >
+                    Save & Next
+                  </button>
+                  <button
+                    onClick={() => navigate("/hotel/other-booking", { state: { bookingId, bookingCode } })}
+                    className="inline-flex w-full items-center justify-center rounded-[24px] border border-slate-200/90 bg-white px-5 py-4 text-base font-bold text-slate-700 transition hover:bg-slate-50 sm:w-auto sm:min-w-[170px]"
+                  >
+                    Go Back
+                  </button>
+                  <BookingCancelAction
+                    bookingId={bookingId}
+                    bookingCode={bookingCode}
+                    buttonClassName="w-full !rounded-[24px] !border-rose-200 !bg-rose-50/80 !py-4 !text-base !font-bold !text-rose-700 hover:!bg-rose-100 sm:w-auto sm:min-w-[170px]"
+                    fullWidth
+                  />
+                </div>
+              </div>
+
             </div>
           </div>
 
           <div className="space-y-4 xl:flex xl:flex-col xl:items-start">
-            <div className="w-full rounded-[24px] border border-slate-200/80 bg-white/90 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.06)]">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-violet-700">
+              <div className="w-full rounded-[24px] border border-slate-200/80 bg-white/90 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.06)]">
+              <div className="text-sm font-bold uppercase tracking-[0.24em] text-violet-700">
                 Snapshot
               </div>
               <div className="mt-4 space-y-3">
                 <div className="rounded-2xl bg-slate-50 p-4">
-                  <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  <div className="text-sm font-bold uppercase tracking-[0.18em] text-slate-500">
                     Booking ID
                   </div>
-                  <div className="mt-2 text-lg font-bold text-slate-900">
+                  <div className="mt-2 text-xl font-black text-slate-900">
                     {bookingRef || "Pending"}
                   </div>
                 </div>
 
                 <div className="rounded-2xl bg-slate-50 p-4">
-                  <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  <div className="text-sm font-bold uppercase tracking-[0.18em] text-slate-500">
                     Source
                   </div>
-                  <div className="mt-2 text-lg font-bold text-slate-900">
+                  <div className="mt-2 text-xl font-black text-slate-900">
                     {otherBookingDraft.bookingSource || "Not selected"}
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="w-full rounded-[28px] border border-violet-100/80 bg-[linear-gradient(180deg,#f8f4ff_0%,#f3eeff_52%,#efe9ff_100%)] p-6 shadow-[0_26px_70px_rgba(109,76,246,0.10)] xl:max-w-[320px]">
-              <div className="text-2xl font-[900] tracking-[-0.03em] text-slate-900">
-                Move to Company
-              </div>
-              <p className="mt-4 text-[14px] leading-7 text-slate-600">
-                Save guest classification and notes, then open the company section.
-              </p>
-              <div className="mt-7 flex flex-col gap-3">
-                <button
-                  onClick={handleSubmit}
-                  className="inline-flex w-full items-center justify-center rounded-[24px] bg-[linear-gradient(90deg,#6e49f6_0%,#6d44f2_55%,#6b46ef_100%)] px-5 py-4 text-lg font-extrabold text-white shadow-[0_20px_40px_rgba(109,76,246,0.22)] transition hover:brightness-105"
-                >
-                  Save & Next
-                </button>
-                <button
-                  onClick={() => navigate("/hotel/other-booking", { state: { bookingId, bookingCode } })}
-                  className="inline-flex w-full items-center justify-center rounded-[24px] border border-slate-200/90 bg-white px-5 py-4 text-base font-bold text-slate-700 transition hover:bg-slate-50"
-                >
-                  Go Back
-                </button>
-                <BookingCancelAction
-                  bookingId={bookingId}
-                  bookingCode={bookingCode}
-                  buttonClassName="!rounded-[24px] !border-rose-200 !bg-rose-50/80 !py-4 !text-base !font-bold !text-rose-700 hover:!bg-rose-100"
-                  fullWidth
-                />
-              </div>
-            </div>
           </div>
         </section>
       </div>

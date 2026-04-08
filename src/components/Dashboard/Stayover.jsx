@@ -745,18 +745,18 @@ const Stayover = () => {
         <section className="overflow-hidden rounded-[30px] border border-white/70 bg-[linear-gradient(135deg,#08253d_0%,#0e5b6a_50%,#0f3f67_100%)] px-5 py-6 text-white shadow-[0_24px_70px_rgba(15,23,42,0.18)] sm:px-7 lg:px-8">
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(340px,0.8fr)] lg:items-center">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-cyan-200">Stay Overview</p>
-              <h1 className="mt-3 text-3xl font-black leading-tight sm:text-4xl">
+              <p className="text-sm font-bold uppercase tracking-[0.35em] text-cyan-200">Stay Overview</p>
+              <h1 className="mt-3 text-4xl font-black leading-tight sm:text-5xl">
                 Category-wise room inventory with live booking status
               </h1>
-              <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-100/85 sm:text-base">
+              <p className="mt-3 max-w-3xl text-base font-medium leading-7 text-slate-100/90 sm:text-lg">
                 Stayoverview open karte hi aapko room-wise strip milegi, aur main dashboard ka data bhi isi live source se aayega.
               </p>
               <div className="mt-5 flex flex-wrap gap-3">
                 <button
                   type="button"
                   onClick={() => navigate("/dashboard")}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-3 text-sm font-bold text-white backdrop-blur transition hover:bg-white/15"
+                  className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-3 text-base font-bold text-white backdrop-blur transition hover:bg-white/15"
                 >
                   <FaDoorOpen />
                   Main Dashboard
@@ -764,7 +764,7 @@ const Stayover = () => {
                 <button
                   type="button"
                   onClick={() => navigate("/stayover")}
-                  className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-bold text-slate-900 shadow-[0_12px_30px_rgba(255,255,255,0.2)] transition hover:-translate-y-0.5"
+                  className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-base font-bold text-slate-900 shadow-[0_12px_30px_rgba(255,255,255,0.2)] transition hover:-translate-y-0.5"
                 >
                   <FaCalendarAlt className="text-sky-600" />
                   Stay Overview
@@ -772,7 +772,7 @@ const Stayover = () => {
                 <button
                   type="button"
                   onClick={() => navigate("/hotel/guest", { state: { resetBookingDraft: true } })}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-3 text-sm font-bold text-white backdrop-blur transition hover:bg-white/15"
+                  className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-3 text-base font-bold text-white backdrop-blur transition hover:bg-white/15"
                 >
                   <FaPlus />
                   New Booking
@@ -788,9 +788,9 @@ const Stayover = () => {
                     <div className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-r ${card.tone} text-white`}>
                       <Icon />
                     </div>
-                    <div className="mt-4 text-sm text-slate-100/85">{card.label}</div>
-                    <div className="mt-1 text-3xl font-black">{card.value}</div>
-                    <div className="mt-1 text-xs text-slate-200/70">{card.helper}</div>
+                    <div className="mt-4 text-base font-bold text-slate-100/90">{card.label}</div>
+                    <div className="mt-1 text-4xl font-black">{card.value}</div>
+                    <div className="mt-1 text-sm font-medium text-slate-200/80">{card.helper}</div>
                   </div>
                 );
               })}
@@ -801,9 +801,9 @@ const Stayover = () => {
         <section className="rounded-[28px] border border-slate-200/70 bg-white/85 p-4 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-sky-700">Booking Strip</p>
-              <h2 className="mt-2 text-2xl font-black text-slate-900">Room-number stay overview board</h2>
-              <p className="mt-2 text-sm text-slate-500">
+              <p className="text-sm font-bold uppercase tracking-[0.28em] text-sky-700">Booking Strip</p>
+              <h2 className="mt-2 text-3xl font-black text-slate-900">Room-number stay overview board</h2>
+              <p className="mt-2 text-base font-medium text-slate-500">
                 Room rows aur next 7 din ki booking strip booking master style me.
               </p>
             </div>
@@ -813,12 +813,12 @@ const Stayover = () => {
                 <button
                   type="button"
                   onClick={() => shiftDateWindow(-7)}
-                  className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-600 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-white shadow-sm transition hover:bg-sky-700"
+                  className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-600 px-4 py-2 text-sm font-bold uppercase tracking-[0.16em] text-white shadow-sm transition hover:bg-sky-700"
                 >
                   <FaArrowLeft />
                   Previous
                 </button>
-                <div className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm">
+                <div className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 text-base font-semibold text-slate-700 shadow-sm">
                   <FaCalendarAlt className="text-sky-600" />
                   <input
                     type="date"
@@ -835,22 +835,22 @@ const Stayover = () => {
                 <button
                   type="button"
                   onClick={() => shiftDateWindow(7)}
-                  className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-600 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-white shadow-sm transition hover:bg-sky-700"
+                  className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-600 px-4 py-2 text-sm font-bold uppercase tracking-[0.16em] text-white shadow-sm transition hover:bg-sky-700"
                 >
                   Next
                   <FaArrowRight />
                 </button>
-                <div className="rounded-full bg-slate-100 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-slate-600">
+                <div className="rounded-full bg-slate-100 px-4 py-2 text-sm font-bold uppercase tracking-[0.18em] text-slate-600">
                   7 day pagination
                 </div>
               </div>
-              <div className="rounded-full bg-white px-4 py-2 text-xs font-semibold text-slate-600 shadow-sm">
+              <div className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm">
                 {formatShortDate(dateWindowStart)} - {formatShortDate(addDays(dateWindowStart, 6))}
               </div>
               <button
                 type="button"
                 onClick={() => navigate("/hotel/guest", { state: { resetBookingDraft: true } })}
-                className="rounded-full bg-gradient-to-r from-sky-600 to-blue-500 px-5 py-3 text-sm font-bold text-white shadow-[0_12px_30px_rgba(37,99,235,0.24)] transition hover:-translate-y-0.5"
+                className="rounded-full bg-gradient-to-r from-sky-600 to-blue-500 px-5 py-3 text-base font-bold text-white shadow-[0_12px_30px_rgba(37,99,235,0.24)] transition hover:-translate-y-0.5"
               >
                 Start With Guest
               </button>
@@ -859,25 +859,25 @@ const Stayover = () => {
 
           <div className="mt-5 flex flex-wrap gap-2">
             {Object.entries(STATUS_META).map(([key, value]) => (
-              <div key={key} className={`rounded-full px-3 py-1 text-xs font-bold ${value.badge}`}>
+              <div key={key} className={`rounded-full px-3 py-1 text-sm font-bold ${value.badge}`}>
                 {value.label}
               </div>
             ))}
           </div>
 
           {loading && !hasLoadedOnce ? (
-            <div className="mt-6 rounded-[24px] border border-dashed border-slate-300 bg-slate-50 px-6 py-14 text-center text-slate-500">
+            <div className="mt-6 rounded-[24px] border border-dashed border-slate-300 bg-slate-50 px-6 py-14 text-center text-base font-medium text-slate-500">
               Stay overview load ho raha hai...
             </div>
           ) : error ? (
-            <div className="mt-6 flex items-center gap-3 rounded-[24px] border border-rose-200 bg-rose-50 px-5 py-5 text-sm text-rose-700">
+            <div className="mt-6 flex items-center gap-3 rounded-[24px] border border-rose-200 bg-rose-50 px-5 py-5 text-base font-medium text-rose-700">
               <FaExclamationCircle />
               {error}
             </div>
           ) : (
             <>
               {refreshing ? (
-                <div className="mt-4 rounded-full bg-sky-50 px-4 py-2 text-xs font-semibold text-sky-700">
+                <div className="mt-4 rounded-full bg-sky-50 px-4 py-2 text-sm font-semibold text-sky-700">
                   Refreshing live booking data...
                 </div>
               ) : null}
@@ -930,9 +930,9 @@ const Stayover = () => {
                         key={day.date}
                         className="border-r border-b border-slate-200 bg-[#86a7aa] px-3 py-2.5 text-center text-white last:border-r-0"
                       >
-                        <div className="text-lg font-black">{day.available}</div>
-                        <div className="text-xs font-semibold uppercase tracking-[0.16em] text-white/85">Available</div>
-                        <div className="mt-2 text-[11px] text-white/80">
+                        <div className="text-2xl font-black">{day.available}</div>
+                        <div className="text-sm font-bold uppercase tracking-[0.16em] text-white/85">Available</div>
+                        <div className="mt-2 text-sm font-medium text-white/80">
                           {day.occupied} occupied | {day.arrivals} arr | {day.departures} dep
                         </div>
                       </div>
@@ -943,18 +943,18 @@ const Stayover = () => {
                     <div className="grid grid-cols-[220px_repeat(7,minmax(0,1fr))]">
                       {sortedRooms.map((room) => (
                         <React.Fragment key={room.id}>
-                          <div className="sticky left-0 z-20 border-r border-b border-slate-200 bg-slate-50 px-4 py-3">
+                    <div className="sticky left-0 z-20 border-r border-b border-slate-200 bg-slate-50 px-4 py-3">
                             <div className="flex items-start justify-between gap-3">
                               <button type="button" onClick={() => openRoomPreview(room, null)} className="text-left">
-                                <div className="text-xl font-black text-slate-900">{room.roomNumber}</div>
-                                <div className="mt-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-sky-700">
+                                <div className="text-2xl font-black text-slate-900">{room.roomNumber}</div>
+                                <div className="mt-1 text-sm font-bold uppercase tracking-[0.14em] text-sky-700">
                                   ID {room.roomId || room.id || "--"}
                                 </div>
-                                <div className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                                <div className="text-sm font-bold uppercase tracking-[0.14em] text-slate-500">
                                   {room.categoryName || "Uncategorized"}
                                 </div>
                                 <div
-                                  className={`mt-2 inline-flex rounded-full px-3 py-1 text-[11px] font-bold ${
+                                  className={`mt-2 inline-flex rounded-full px-3 py-1 text-sm font-bold ${
                                     STATUS_META[room.status]?.badge || STATUS_META.available.badge
                                   }`}
                                 >
@@ -974,7 +974,7 @@ const Stayover = () => {
                                 <button
                                   type="button"
                                   onClick={() => handleRoomStatus(room, "available")}
-                                  className="rounded-full bg-emerald-500 px-3 py-1 text-[11px] font-bold text-white"
+                                  className="rounded-full bg-emerald-500 px-3 py-1 text-sm font-bold text-white"
                                 >
                                   Mark Clean
                                 </button>
@@ -991,7 +991,7 @@ const Stayover = () => {
                                       },
                                     })
                                   }
-                                  className="rounded-full bg-sky-600 px-3 py-1 text-[11px] font-bold text-white"
+                                  className="rounded-full bg-sky-600 px-3 py-1 text-sm font-bold text-white"
                                 >
                                   Book Now
                                 </button>
@@ -1031,7 +1031,7 @@ const Stayover = () => {
                                           handleRoomStatus(room, "cleaning");
                                           setDropdownRoom(null);
                                         }}
-                                        className="block w-full px-3 py-2 text-left text-sm hover:bg-gray-100"
+                                        className="block w-full px-3 py-2 text-left text-base font-medium hover:bg-gray-100"
                                       >
                                         Send to Cleaning
                                       </button>
@@ -1043,7 +1043,7 @@ const Stayover = () => {
                                           handleRoomStatus(room, "available");
                                           setDropdownRoom(null);
                                         }}
-                                        className="block w-full px-3 py-2 text-left text-sm hover:bg-gray-100"
+                                        className="block w-full px-3 py-2 text-left text-base font-medium hover:bg-gray-100"
                                       >
                                         Mark Clean
                                       </button>
@@ -1054,7 +1054,7 @@ const Stayover = () => {
                                         openRoomPreview(room, cell.booking);
                                         setDropdownRoom(null);
                                       }}
-                                      className="block w-full px-3 py-2 text-left text-sm hover:bg-gray-100"
+                                      className="block w-full px-3 py-2 text-left text-base font-medium hover:bg-gray-100"
                                     >
                                       View Details
                                     </button>
@@ -1067,20 +1067,20 @@ const Stayover = () => {
                                     onClick={() => openRoomPreview(room, cell.booking)}
                                     className={`h-full w-full rounded-[16px] border px-3 py-2 text-left shadow-sm ${meta.cell}`}
                                   >
-                                    <div className="text-sm font-black uppercase">{cell.booking.guestName}</div>
-                                    <div className="mt-1 text-xs font-medium">
+                                    <div className="text-base font-black uppercase">{cell.booking.guestName}</div>
+                                    <div className="mt-1 text-sm font-medium">
                                       Room {room.roomNumber} | {room.categoryName}
                                     </div>
-                                    <div className="mt-1 text-[11px] font-semibold uppercase tracking-[0.14em]">
+                                    <div className="mt-1 text-sm font-bold uppercase tracking-[0.14em]">
                                       {meta.label}
                                     </div>
-                                    <div className="mt-2 text-[11px] font-semibold">
+                                    <div className="mt-2 text-sm font-semibold">
                                       {formatShortDate(cell.booking.checkIn)} to {formatShortDate(cell.booking.checkOut)}
                                     </div>
-                                    <div className="mt-1 text-[11px] font-medium opacity-80">
+                                    <div className="mt-1 text-sm font-medium opacity-80">
                                       {cell.booking.bookingCode || cell.booking.bookingId || "--"}
                                     </div>
-                                    <div className="mt-1 text-[11px] font-medium opacity-80">
+                                    <div className="mt-1 text-sm font-medium opacity-80">
                                       {getBookingContact(cell.booking) || "No contact"}
                                     </div>
                                   </button>
@@ -1088,7 +1088,7 @@ const Stayover = () => {
                                   <button
                                     type="button"
                                     onClick={() => openRoomPreview(room, null)}
-                                    className={`flex h-full w-full items-center justify-center rounded-[16px] border text-xs font-semibold uppercase tracking-[0.16em] ${meta.cell}`}
+                                    className={`flex h-full w-full items-center justify-center rounded-[16px] border text-sm font-bold uppercase tracking-[0.16em] ${meta.cell}`}
                                   >
                                     {meta.label}
                                   </button>
@@ -1104,24 +1104,24 @@ const Stayover = () => {
               </div>
 
               <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="text-sm text-slate-500">
+                <div className="text-base font-medium text-slate-500">
                   Showing {sortedRooms.length} rooms in the current 7-day view
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <button
                     type="button"
                     onClick={() => shiftDateWindow(-7)}
-                    className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+                    className="rounded-full border border-slate-200 bg-white px-4 py-2 text-base font-bold text-slate-700 transition hover:bg-slate-50"
                   >
                     Previous 7 Days
                   </button>
-                  <div className="rounded-full bg-slate-100 px-4 py-2 text-sm font-bold text-slate-700">
+                  <div className="rounded-full bg-slate-100 px-4 py-2 text-base font-bold text-slate-700">
                     {formatShortDate(dateWindowStart)} - {formatShortDate(addDays(dateWindowStart, 6))}
                   </div>
                   <button
                     type="button"
                     onClick={() => shiftDateWindow(7)}
-                    className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+                    className="rounded-full border border-slate-200 bg-white px-4 py-2 text-base font-bold text-slate-700 transition hover:bg-slate-50"
                   >
                     Next 7 Days
                   </button>
@@ -1136,13 +1136,13 @@ const Stayover = () => {
             <div className="h-[650px] rounded-[28px]  border-slate-200/70 bg-white/85 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl ">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-600">Active Booking Data</p>
-                  <h3 className="mt-2 text-xl font-black text-slate-900">{formatShortDate(selectedDate)} ke live stays</h3>
+                  <p className="text-sm font-bold uppercase tracking-[0.28em] text-emerald-600">Active Booking Data</p>
+                  <h3 className="mt-2 text-2xl font-black text-slate-900">{formatShortDate(selectedDate)} ke live stays</h3>
                 </div>
                 <button
                   type="button"
                   onClick={() => navigate("/hotel/all-bookings")}
-                  className="rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-100"
+                  className="rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-base font-bold text-slate-700 transition hover:bg-slate-100"
                 >
                   View All
                 </button>
@@ -1166,41 +1166,41 @@ const Stayover = () => {
                       >
                         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                           <div>
-                            <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
+                            <div className="text-sm font-bold uppercase tracking-[0.24em] text-slate-400">
                               Booking #{booking.bookingId}
                             </div>
-                            <div className="mt-1 text-lg font-black text-slate-900">
+                            <div className="mt-1 text-xl font-black text-slate-900">
                               {booking.guest_name || booking.guestName || "Walk-in Guest"}
                             </div>
-                            <div className="mt-1 text-sm text-slate-500">
+                            <div className="mt-1 text-base font-medium text-slate-500">
                               Room {booking.rooms || "Not assigned yet"} | {getBookingContact(booking) || "--"} |{" "}
                               {booking.company_name || booking.company || "Direct"}
                             </div>
-                            <div className="mt-1 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                            <div className="mt-1 text-sm font-bold uppercase tracking-[0.16em] text-slate-400">
                               {booking.booking_status || "Confirmed"}
                             </div>
                           </div>
-                          <div className="rounded-[18px] bg-sky-50 px-4 py-3 text-sm font-semibold text-sky-700">
+                          <div className="rounded-[18px] bg-sky-50 px-4 py-3 text-base font-bold text-sky-700">
                             {formatShortDate(booking.check_in || booking.checkIn)} to{" "}
                             {formatShortDate(booking.check_out || booking.checkOut)}
                           </div>
                         </div>
                         <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                          <div className="rounded-[18px] bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                          <div className="rounded-[18px] bg-slate-50 px-4 py-3 text-base font-medium text-slate-600">
                             Total Bill
-                            <div className="mt-1 text-lg font-black text-slate-900">
+                            <div className="mt-1 text-xl font-black text-slate-900">
                               {formatCurrency(booking.totalAmount)}
                             </div>
                           </div>
-                          <div className="rounded-[18px] bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                          <div className="rounded-[18px] bg-emerald-50 px-4 py-3 text-base font-medium text-emerald-700">
                             Paid
-                            <div className="mt-1 text-lg font-black text-emerald-900">
+                            <div className="mt-1 text-xl font-black text-emerald-900">
                               {formatCurrency(booking.paidAmount)}
                             </div>
                           </div>
-                          <div className="rounded-[18px] bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                          <div className="rounded-[18px] bg-amber-50 px-4 py-3 text-base font-medium text-amber-700">
                             Remaining
-                            <div className="mt-1 text-lg font-black text-amber-900">
+                            <div className="mt-1 text-xl font-black text-amber-900">
                               {formatCurrency(booking.remainingAmount)}
                             </div>
                           </div>
@@ -1209,7 +1209,7 @@ const Stayover = () => {
                     );
                   })
                 ) : (
-                  <div className="rounded-[24px] border border-dashed border-slate-300 bg-slate-50 px-5 py-10 text-center text-sm text-slate-500">
+                  <div className="rounded-[24px] border border-dashed border-slate-300 bg-slate-50 px-5 py-10 text-center text-base font-medium text-slate-500">
                     Backend se abhi koi active booking record nahi mila.
                   </div>
                 )}
@@ -1217,8 +1217,8 @@ const Stayover = () => {
             </div>
 
             <div className="rounded-[28px] border border-slate-200/70 bg-[linear-gradient(135deg,#f8fdff_0%,#eff8ff_100%)] p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-sky-700 ">Quick Direction</p>
-              <h3 className="mt-2 text-xl font-black text-slate-900">Front desk shortcuts</h3>
+              <p className="text-sm font-bold uppercase tracking-[0.28em] text-sky-700 ">Quick Direction</p>
+              <h3 className="mt-2 text-2xl font-black text-slate-900">Front desk shortcuts</h3>
               <div className="mt-4 space-y-3">
                 <button
                   type="button"
@@ -1226,8 +1226,8 @@ const Stayover = () => {
                   className="flex w-full items-center justify-between rounded-[20px] bg-white px-4 py-4 text-left shadow-sm transition hover:-translate-y-0.5"
                 >
                   <span>
-                    <span className="block text-sm font-black text-slate-900">Open Main Dashboard</span>
-                    <span className="block text-xs text-slate-500">Booking master style overview wapas dekhne ke liye</span>
+                    <span className="block text-base font-black text-slate-900">Open Main Dashboard</span>
+                    <span className="block text-sm font-medium text-slate-500">Booking master style overview wapas dekhne ke liye</span>
                   </span>
                   <FaArrowRight className="text-sky-600" />
                 </button>
@@ -1237,8 +1237,8 @@ const Stayover = () => {
                   className="flex w-full items-center justify-between rounded-[20px] bg-white px-4 py-4 text-left shadow-sm transition hover:-translate-y-0.5"
                 >
                   <span>
-                    <span className="block text-sm font-black text-slate-900">Manage Room Inventory</span>
-                    <span className="block text-xs text-slate-500">Category wise rooms add aur edit karne ke liye</span>
+                    <span className="block text-base font-black text-slate-900">Manage Room Inventory</span>
+                    <span className="block text-sm font-medium text-slate-500">Category wise rooms add aur edit karne ke liye</span>
                   </span>
                   <FaArrowRight className="text-sky-600" />
                 </button>
@@ -1248,8 +1248,8 @@ const Stayover = () => {
 
           <div className="space-y-6">
             <div className="rounded-[28px] border border-slate-200/70 bg-white/85 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-violet-600">Upcoming Bookings</p>
-              <h3 className="mt-2 text-xl font-black text-slate-900">Recent booking feed with dates</h3>
+              <p className="text-sm font-bold uppercase tracking-[0.28em] text-violet-600">Upcoming Bookings</p>
+              <h3 className="mt-2 text-2xl font-black text-slate-900">Recent booking feed with dates</h3>
               <div className="mt-5 space-y-3">
                 {upcomingBookings.length ? (
                   upcomingBookings.map((booking) => (
@@ -1259,22 +1259,22 @@ const Stayover = () => {
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <div className="text-sm font-black text-slate-900">{booking.guestName}</div>
-                          <div className="mt-1 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                          <div className="text-base font-black text-slate-900">{booking.guestName}</div>
+                          <div className="mt-1 text-sm font-bold uppercase tracking-[0.14em] text-slate-500">
                             Room {booking.roomNumber}
                           </div>
                         </div>
-                        <div className="rounded-full bg-white px-3 py-1 text-[11px] font-bold text-sky-700 shadow-sm">
+                        <div className="rounded-full bg-white px-3 py-1 text-sm font-bold text-sky-700 shadow-sm">
                           #{booking.bookingId}
                         </div>
                       </div>
-                      <div className="mt-3 text-sm text-slate-600">
+                      <div className="mt-3 text-base font-medium text-slate-600">
                         {formatShortDate(booking.checkIn)} to {formatShortDate(booking.checkOut)}
                       </div>
                     </div>
                   ))
                 ) : (
-                  <div className="rounded-[20px] border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
+                  <div className="rounded-[20px] border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center text-base font-medium text-slate-500">
                     Booking feed abhi empty hai.
                   </div>
                 )}

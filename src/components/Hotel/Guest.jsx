@@ -516,18 +516,25 @@ const Guest = () => {
                 <div className="text-xl leading-6 text-slate-500">
                   Review guest details carefully before moving to the next booking step.
                 </div>
-                <div className="flex flex-col gap-3 sm:flex-row">
+                <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-end">
+                  <button
+                    type="button"
+                    onClick={() => navigate("/hotel/all-bookings")}
+                    className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-xl font-bold text-slate-700 transition hover:bg-slate-50"
+                  >
+                    Go Back
+                  </button>
                   <button
                     type="button"
                     onClick={() => setCancelFlowModal({ open: true, reason: "", submitting: false })}
-                    className="inline-flex items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 px-5 py-3 text-sm font-bold text-rose-700 transition hover:bg-rose-100"
+                    className="inline-flex items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 px-5 py-3 text-xl font-bold text-rose-700 transition hover:bg-rose-100"
                   >
                     {activeBookingId ? "Cancel Booking" : "Discard Booking"}
                   </button>
                   <button
                     type="button"
                     onClick={handleSubmit}
-                    className="inline-flex items-center justify-center rounded-2xl bg-[linear-gradient(180deg,#39a6eb_0%,#2a8fd4_100%)] px-7 py-3 text-sm font-bold text-white shadow-[0_16px_35px_rgba(14,165,233,0.24)] transition hover:brightness-105"
+                    className="inline-flex items-center justify-center rounded-2xl bg-[linear-gradient(180deg,#39a6eb_0%,#2a8fd4_100%)] px-7 py-3 text-xl font-bold text-white shadow-[0_16px_35px_rgba(14,165,233,0.24)] transition hover:brightness-105"
                   >
                     Save & Next
                   </button>
@@ -579,13 +586,6 @@ const Guest = () => {
                 </div>
               </div>
             </div>
-
-            <button
-              onClick={handleSubmit}
-              className="inline-flex w-full items-center justify-center rounded-[22px] bg-[linear-gradient(180deg,#39a6eb_0%,#2a8fd4_100%)] px-5 py-4 text-sm font-bold text-white shadow-[0_16px_35px_rgba(14,165,233,0.24)] transition hover:brightness-105"
-            >
-              Next Step
-            </button>
           </div>
         </div>
       </div>

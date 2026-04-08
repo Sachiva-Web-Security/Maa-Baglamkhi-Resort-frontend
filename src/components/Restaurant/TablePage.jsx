@@ -10,13 +10,17 @@ const ACTIVE_INVOICE_KEY = "restaurant-active-invoice";
 const SAVED_INVOICE_KEY = "restaurant-saved-invoice";
 const TABLE_PAGE_SIZE = 5;
 const normalizeInvoiceStatus = (value) => String(value || "").trim().toLowerCase();
-const isOpenInvoiceStatus = (value) => normalizeInvoiceStatus(value) !== "paid";
+const isSettledInvoiceStatus = (value) => {
+  const normalized = normalizeInvoiceStatus(value);
+  return normalized === "paid" || normalized === "posted to room";
+};
+const isOpenInvoiceStatus = (value) => !isSettledInvoiceStatus(value);
 const getReusableBill = (bill) => (bill && isOpenInvoiceStatus(bill.invoiceStatus) ? bill : null);
 const isPaidBill = (bill) =>
   Boolean(
     bill &&
       (
-        normalizeInvoiceStatus(bill.invoiceStatus) === "paid" ||
+        isSettledInvoiceStatus(bill.invoiceStatus) ||
         bill.account_transaction_id ||
         bill.accountTransactionId ||
         bill.payment_id ||
