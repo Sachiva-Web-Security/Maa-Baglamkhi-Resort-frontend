@@ -176,10 +176,10 @@ const ManagerDashboard = () => {
       description="Occupancy, revenue, staff movement, banquet activity aur inventory alerts ko ek focused operational screen par dekhiye."
       stats={stats}
       quickActions={[
-        { label: "Open Reports", helper: "Revenue aur trend reports review karein.", route: "/reports", icon: FaChartBar, tone: "emerald" },
-        { label: "All Bookings", helper: "Front office pipeline aur arrivals manage karein.", route: "/hotel/all-bookings", icon: FaClipboardList, tone: "cyan" },
-        { label: "Inventory Alerts", helper: "Low stock items ko immediately review karein.", route: "/inventory", icon: FaBoxOpen, tone: "amber" },
-        { label: "Banquet Board", helper: "Upcoming banquet load aur hall planning dekhein.", route: "/banquet", icon: FaUsers, tone: "violet" },
+        { label: "Open Reports", helper: "Review revenue and trend reports.", route: "/reports", icon: FaChartBar, tone: "emerald" },
+        { label: "All Bookings", helper: "Manage front office pipeline and arrivals.", route: "/hotel/all-bookings", icon: FaClipboardList, tone: "cyan" },
+        { label: "Inventory Alerts", helper: "Immediately review low stock items.", route: "/inventory", icon: FaBoxOpen, tone: "amber" },
+        { label: "Banquet Board", helper: "View upcoming banquet load and hall planning.", route: "/banquet", icon: FaUsers, tone: "violet" },
       ]}
       insights={insights}
       table={table}

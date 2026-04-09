@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   FaBalanceScale, FaBoxes, FaClipboardList, FaExchangeAlt,
   FaFilter, FaFire, FaLayerGroup, FaListAlt, FaPlus, FaSearch,
@@ -23,10 +24,8 @@ const INVENTORY_SECTIONS = [
   { id: "segments",           label: "Segments",            icon: FaLayerGroup,   type: "master" },
   { id: "vendors",            label: "Vendors",             icon: FaTruck,        type: "master" },
   { id: "units",              label: "Units",               icon: FaBalanceScale, type: "master" },
-  { id: "unit-conversion",    label: "Unit Conversion",     icon: FaExchangeAlt,  type: "master" },
   { id: "store-kitchen",      label: "Store / Kitchen",     icon: FaStore,        type: "master" },
   { id: "item-groups",        label: "Item Groups",         icon: FaBoxes,        type: "master" },
-  { id: "gravies",            label: "Gravies",             icon: FaUtensils,     type: "master" },
   { id: "ingredients",        label: "Ingredients",         icon: FaFire,         type: "master" },
   { id: "purchase-items",     label: "Purchase Items",      icon: FaShoppingCart, type: "master" },
   { id: "purchase-services",  label: "Purchase Services",   icon: FaClipboardList,type: "master" },
@@ -38,6 +37,8 @@ const INVENTORY_SECTIONS = [
   { id: "stock-report",       label: "Stock Report",        icon: FaChartBar,     type: "report" },
   { id: "closing-stock-report",label:"Closing Stock Report",icon: FaListAlt,      type: "report" },
   { id: "item-report",        label: "Item Report",         icon: FaListAlt,      type: "report" },
+  { id: "expiring-soon-report",label:"Expiring Soon",       icon: FaCalendarAlt,  type: "report" },
+  { id: "batch-expiry-report", label:"Batch Expiry",        icon: FaListAlt,      type: "report" },
   { id: "item-consumption-report",label:"Consumption Report",icon:FaFlask,        type: "report" },
   { id: "total-consumption-report",label:"Total Consumption",icon:FaListAlt,      type: "report" },
   { id: "item-audit",         label: "Item Audit Report",   icon: FaListAlt,      type: "report" },
@@ -46,10 +47,10 @@ const INVENTORY_SECTIONS = [
 const NAVIGATION_GROUPS = [
   {
     label: "Stock",
-    helper: "Core stock controls and movement",
+    helper: "",
     ids: ["items", "menu-items", "stock-transfer", "stock-audit", "waste-log"],
-    activeButton: "border-cyan-300 bg-[linear-gradient(135deg,#06b6d4_0%,#3b82f6_100%)] text-white shadow-[0_18px_36px_rgba(14,165,233,0.28)]",
-    idleButton: "border-cyan-100 bg-[linear-gradient(135deg,#ecfeff_0%,#eff6ff_100%)] text-cyan-950 hover:border-cyan-200",
+    activeButton: "border-sky-300 bg-[linear-gradient(135deg,#2aa8de_0%,#3b82f6_100%)] text-white shadow-[0_18px_36px_rgba(14,165,233,0.22)]",
+    idleButton: "border-sky-100 bg-[linear-gradient(135deg,#dff4ff_0%,#e8f1ff_100%)] text-cyan-950 hover:border-sky-200",
     dropdown: "border-cyan-200/80 bg-[linear-gradient(180deg,rgba(236,254,255,0.98)_0%,rgba(239,246,255,0.98)_100%)]",
     itemActive: "border-cyan-200 bg-white text-cyan-900 shadow-[0_14px_28px_rgba(8,145,178,0.10)]",
     itemIdle: "border-cyan-100/80 bg-white/90 text-slate-700 hover:border-cyan-200 hover:bg-white",
@@ -59,9 +60,9 @@ const NAVIGATION_GROUPS = [
   {
     label: "Masters",
     helper: "Base masters and inventory setup",
-    ids: ["menu-categories", "segments", "vendors", "units", "unit-conversion", "store-kitchen", "item-groups", "gravies", "ingredients"],
-    activeButton: "border-violet-400 bg-[linear-gradient(135deg,#5b21b6_0%,#1d4ed8_100%)] text-white shadow-[0_18px_36px_rgba(91,33,182,0.30)]",
-    idleButton: "border-violet-200 bg-[linear-gradient(135deg,#ede9fe_0%,#dbeafe_100%)] text-violet-950 hover:border-violet-300",
+    ids: ["menu-categories", "segments", "vendors", "units", "store-kitchen", "item-groups", "ingredients"],
+    activeButton: "border-violet-300 bg-[linear-gradient(135deg,#8f7ae8_0%,#7ea5ff_100%)] text-white shadow-[0_18px_36px_rgba(124,58,237,0.22)]",
+    idleButton: "border-violet-200 bg-[linear-gradient(135deg,#f1edff_0%,#e7edff_100%)] text-violet-950 hover:border-violet-300",
     dropdown: "border-violet-300/90 bg-[linear-gradient(180deg,rgba(237,233,254,0.99)_0%,rgba(219,234,254,0.99)_100%)]",
     itemActive: "border-violet-300 bg-white text-violet-950 shadow-[0_14px_28px_rgba(91,33,182,0.14)]",
     itemIdle: "border-violet-200/90 bg-white/95 text-slate-800 hover:border-violet-300 hover:bg-white",
@@ -72,8 +73,8 @@ const NAVIGATION_GROUPS = [
     label: "Purchases",
     helper: "Purchase entries, services and orders",
     ids: ["purchase-items", "purchase-services", "purchase-orders"],
-    activeButton: "border-amber-400 bg-[linear-gradient(135deg,#c2410c_0%,#d97706_100%)] text-white shadow-[0_18px_36px_rgba(194,65,12,0.30)]",
-    idleButton: "border-amber-200 bg-[linear-gradient(135deg,#ffedd5_0%,#fef3c7_100%)] text-amber-950 hover:border-amber-300",
+    activeButton: "border-amber-300 bg-[linear-gradient(135deg,#f4c95b_0%,#f59e0b_100%)] text-amber-950 shadow-[0_18px_36px_rgba(245,158,11,0.18)]",
+    idleButton: "border-amber-200 bg-[linear-gradient(135deg,#fff4d7_0%,#fff0bf_100%)] text-amber-950 hover:border-amber-300",
     dropdown: "border-amber-300/90 bg-[linear-gradient(180deg,rgba(255,237,213,0.99)_0%,rgba(254,243,199,0.99)_100%)]",
     itemActive: "border-amber-300 bg-white text-amber-950 shadow-[0_14px_28px_rgba(194,65,12,0.14)]",
     itemIdle: "border-amber-200/90 bg-white/95 text-slate-800 hover:border-amber-300 hover:bg-white",
@@ -83,9 +84,9 @@ const NAVIGATION_GROUPS = [
   {
     label: "Reports",
     helper: "Operational and inventory reporting",
-    ids: ["vendor-report", "stock-report", "closing-stock-report", "item-report", "item-consumption-report", "total-consumption-report", "item-audit"],
-    activeButton: "border-emerald-400 bg-[linear-gradient(135deg,#047857_0%,#0f766e_100%)] text-white shadow-[0_18px_36px_rgba(4,120,87,0.30)]",
-    idleButton: "border-emerald-200 bg-[linear-gradient(135deg,#d1fae5_0%,#ccfbf1_100%)] text-emerald-950 hover:border-emerald-300",
+    ids: ["vendor-report", "stock-report", "closing-stock-report", "item-report", "expiring-soon-report", "batch-expiry-report", "item-consumption-report", "total-consumption-report", "item-audit"],
+    activeButton: "border-emerald-300 bg-[linear-gradient(135deg,#6ad5b1_0%,#55c8c4_100%)] text-emerald-950 shadow-[0_18px_36px_rgba(16,185,129,0.18)]",
+    idleButton: "border-emerald-200 bg-[linear-gradient(135deg,#dcfaed_0%,#d8f8f2_100%)] text-emerald-950 hover:border-emerald-300",
     dropdown: "border-emerald-300/90 bg-[linear-gradient(180deg,rgba(209,250,229,0.99)_0%,rgba(204,251,241,0.99)_100%)]",
     itemActive: "border-emerald-300 bg-white text-emerald-950 shadow-[0_14px_28px_rgba(4,120,87,0.14)]",
     itemIdle: "border-emerald-200/90 bg-white/95 text-slate-800 hover:border-emerald-300 hover:bg-white",
@@ -94,14 +95,211 @@ const NAVIGATION_GROUPS = [
   },
 ];
 
+function generatePurchaseInvoiceNo() {
+  const now = new Date();
+  const stamp = [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, "0"),
+    String(now.getDate()).padStart(2, "0"),
+    String(now.getHours()).padStart(2, "0"),
+    String(now.getMinutes()).padStart(2, "0"),
+    String(now.getSeconds()).padStart(2, "0"),
+  ].join("");
+  return `PINV-${stamp}`;
+}
+
+function buildSelectOptions(values = []) {
+  return Array.from(
+    new Set(values.map((value) => String(value || "").trim()).filter(Boolean)),
+  );
+}
+
+function normalizeInventoryText(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function getInventoryRowTimestamp(...values) {
+  for (const value of values) {
+    const text = String(value || "").trim();
+    if (!text) continue;
+    const parsed = new Date(text).getTime();
+    if (!Number.isNaN(parsed)) return parsed;
+  }
+  return 0;
+}
+
+function getNormalizedNumber(value) {
+  const parsed = Number(value || 0);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+const INVENTORY_INTERNAL_CSS = `
+.inventory-ui-scope {
+  font-family: "Roboto", "Segoe UI", sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.inventory-ui-scope h1,
+.inventory-ui-scope h2,
+.inventory-ui-scope h3,
+.inventory-ui-scope h4,
+.inventory-ui-scope h5,
+.inventory-ui-scope h6 {
+  font-family: "Roboto", "Segoe UI", sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.inventory-ui-scope h1 { font-size: 32px; line-height: 1.15; }
+.inventory-ui-scope h2 { font-size: 28px; line-height: 1.18; }
+.inventory-ui-scope h3 { font-size: 24px; line-height: 1.2; }
+.inventory-ui-scope h4,
+.inventory-ui-scope h5,
+.inventory-ui-scope h6 { font-size: 20px; line-height: 1.25; }
+
+.inventory-ui-scope label,
+.inventory-ui-scope .inventory-form-label {
+  font-family: "Poppins", "Segoe UI", sans-serif;
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+@media (min-width: 768px) {
+  .inventory-ui-scope label,
+  .inventory-ui-scope .inventory-form-label {
+    font-size: 14px;
+  }
+}
+
+.inventory-ui-scope input,
+.inventory-ui-scope select,
+.inventory-ui-scope textarea,
+.inventory-ui-scope .inventory-field-text {
+  font-family: "Roboto", "Segoe UI", sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+@media (min-width: 768px) {
+  .inventory-ui-scope input,
+  .inventory-ui-scope select,
+  .inventory-ui-scope textarea,
+  .inventory-ui-scope .inventory-field-text {
+    font-size: 16px;
+  }
+}
+
+.inventory-ui-scope p,
+.inventory-ui-scope span,
+.inventory-ui-scope td,
+.inventory-ui-scope th,
+.inventory-ui-scope li,
+.inventory-ui-scope small,
+.inventory-ui-scope .inventory-body-text {
+  font-family: "Roboto", "Segoe UI", sans-serif;
+  font-weight: 400;
+}
+
+.inventory-ui-scope p,
+.inventory-ui-scope td,
+.inventory-ui-scope th,
+.inventory-ui-scope .inventory-body-text {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+@media (min-width: 768px) {
+  .inventory-ui-scope p,
+  .inventory-ui-scope td,
+  .inventory-ui-scope th,
+  .inventory-ui-scope .inventory-body-text {
+    font-size: 16px;
+  }
+}
+
+.inventory-ui-scope button,
+.inventory-ui-scope .inventory-button-text {
+  font-family: "Roboto", "Segoe UI", sans-serif;
+  font-weight: 500;
+}
+`;
+
+const UNIT_PRESETS = [
+  { name: "Kilogram", shortName: "kg", type: "Weight" },
+  { name: "Gram", shortName: "g", type: "Weight" },
+  { name: "Quintal", shortName: "qtl", type: "Weight" },
+  { name: "Litre", shortName: "ltr", type: "Volume" },
+  { name: "Millilitre", shortName: "ml", type: "Volume" },
+  { name: "Piece", shortName: "pcs", type: "Count" },
+  { name: "Dozen", shortName: "doz", type: "Count" },
+  { name: "Packet", shortName: "pkt", type: "Count" },
+  { name: "Bottle", shortName: "btl", type: "Count" },
+  { name: "Box", shortName: "box", type: "Count" },
+  { name: "Tray", shortName: "tray", type: "Count" },
+];
+
+function findUnitPreset(value, key = "name") {
+  const normalized = String(value || "").trim().toLowerCase();
+  if (!normalized) return null;
+  return UNIT_PRESETS.find((preset) => String(preset[key] || "").trim().toLowerCase() === normalized) || null;
+}
+
+const SEGMENT_PRESETS = [
+  { name: "Food", description: "Kitchen raw materials and cooking stock" },
+  { name: "Beverage", description: "Cold drinks, tea, coffee, juices and bar supplies" },
+  { name: "Housekeeping", description: "Cleaning materials and housekeeping consumables" },
+  { name: "Linen", description: "Bed sheets, towels, blankets and room linen" },
+  { name: "Kitchen", description: "Kitchen support items and preparation supplies" },
+  { name: "Bar", description: "Bar stock, mixers and serving materials" },
+  { name: "Banquet", description: "Banquet event stock and service materials" },
+  { name: "Maintenance", description: "Repair, electrical and plumbing items" },
+  { name: "Consumables", description: "Daily-use consumable stock items" },
+  { name: "Packaging", description: "Packing, takeaway and storage materials" },
+  { name: "Cleaning Supplies", description: "Detergents, cleaners and sanitation stock" },
+  { name: "Guest Supplies", description: "Guest amenities and room-use consumables" },
+  { name: "Stationery", description: "Office and operational stationery items" },
+];
+
+function findSegmentPreset(value) {
+  const normalized = String(value || "").trim().toLowerCase();
+  if (!normalized) return null;
+  return SEGMENT_PRESETS.find((preset) => String(preset.name || "").trim().toLowerCase() === normalized) || null;
+}
+
+const ITEM_GROUP_PRESETS = {
+  Food: ["Dairy", "Grain", "Spice", "Vegetables", "Fruits", "Pulses", "Dry Fruits", "Bakery", "Frozen Items", "Meat", "Seafood", "Oil & Ghee"],
+  Beverage: ["Soft Drinks", "Juices", "Tea Coffee", "Water", "Syrups", "Mocktail Supplies", "Bar Mixers"],
+  Housekeeping: ["Cleaning Chemicals", "Toiletries", "Room Amenities", "Tissue & Paper", "Dusting Supplies", "Laundry Supplies"],
+  Linen: ["Bed Linen", "Bath Linen", "Curtains", "Pillow Covers", "Blankets"],
+  Kitchen: ["Preparation Supplies", "Cooking Essentials", "Service Tools", "Storage Containers"],
+  Bar: ["Alcoholic Beverages", "Mixers", "Glassware", "Bar Garnish", "Bar Consumables"],
+  Banquet: ["Serving Supplies", "Buffet Setup", "Event Consumables", "Banquet Crockery"],
+  Maintenance: ["Electrical", "Plumbing", "Hardware", "Repair Tools"],
+  Consumables: ["Daily Use", "Single Use", "Operational Consumables"],
+  Packaging: ["Takeaway Containers", "Carry Bags", "Wrapping Material", "Storage Packaging"],
+  "Cleaning Supplies": ["Floor Care", "Surface Cleaners", "Washroom Supplies", "Disinfectants"],
+  "Guest Supplies": ["Amenities", "Room Supplies", "Welcome Kit"],
+  Stationery: ["Office Stationery", "Billing Stationery", "Registers"],
+};
+
+const MASTER_WORKSPACE_IDS = [
+  "menu-categories",
+  "units",
+  "vendors",
+  "item-groups",
+  "store-kitchen",
+  "ingredients",
+];
+
 const STORAGE_KEYS = {
   segments: "inventory_segments",
   vendors: "inventory_vendors",
   units: "inventory_units",
-  "unit-conversion": "inventory_unit_conversion",
   "store-kitchen": "inventory_store_kitchen",
   "item-groups": "inventory_item_groups",
-  gravies: "inventory_gravies",
   ingredients: "inventory_ingredients",
   "purchase-items": "inventory_purchase_items",
   "purchase-services": "inventory_purchase_services",
@@ -117,10 +315,8 @@ const INVENTORY_MASTER_API_SECTION_MAP = {
   segments: "segments",
   vendors: "vendors",
   units: "units",
-  "unit-conversion": "unit-conversions",
   "store-kitchen": "locations",
   "item-groups": "item-groups",
-  gravies: "gravies",
   ingredients: "ingredients",
   "purchase-items": "purchase-items",
   "purchase-services": "purchase-services",
@@ -159,12 +355,6 @@ const MASTER_FIELDS = {
     { key: "shortName", label: "Short Name", type: "text", required: true },
     { key: "type", label: "Type", type: "select", options: ["Weight", "Volume", "Count"] },
   ],
-  "unit-conversion": [
-    { key: "fromUnit", label: "From Unit", type: "text", required: true },
-    { key: "toUnit", label: "To Unit", type: "text", required: true },
-    { key: "factor", label: "Conversion Factor", type: "number", required: true },
-    { key: "notes", label: "Notes", type: "text" },
-  ],
   "store-kitchen": [
     { key: "name", label: "Store Name", type: "text", required: true },
     { key: "type", label: "Type", type: "select", options: ["Store", "Kitchen", "Bar", "Banquet"] },
@@ -175,11 +365,6 @@ const MASTER_FIELDS = {
     { key: "name", label: "Group Name", type: "text", required: true },
     { key: "segment", label: "Segment", type: "text" },
     { key: "status", label: "Status", type: "select", options: ["Active", "Inactive"] },
-  ],
-  gravies: [
-    { key: "name", label: "Gravy Name", type: "text", required: true },
-    { key: "base", label: "Base", type: "text" },
-    { key: "spiceLevel", label: "Spice Level", type: "select", options: ["Low", "Medium", "High"] },
   ],
   ingredients: [
     { key: "name", label: "Ingredient Name", type: "text", required: true },
@@ -225,10 +410,8 @@ const MASTER_TABLE_COLUMNS = {
   segments: ["name", "description", "status"],
   vendors: ["name", "contact", "phone", "city", "gstin", "status"],
   units: ["name", "shortName", "type"],
-  "unit-conversion": ["fromUnit", "toUnit", "factor", "notes"],
   "store-kitchen": ["name", "type", "manager", "status"],
   "item-groups": ["name", "segment", "status"],
-  gravies: ["name", "base", "spiceLevel"],
   ingredients: ["name", "group", "unit", "status"],
   "purchase-items": ["itemName", "vendor", "quantity", "unit", "ratePerUnit", "amount", "invoiceNo", "date"],
   "purchase-services": ["serviceName", "vendor", "amount", "date", "status"],
@@ -282,10 +465,6 @@ const DEFAULT_MASTER_DATA = {
     { id: 2, name: "Litre", shortName: "ltr", type: "Volume" },
     { id: 3, name: "Piece", shortName: "pcs", type: "Count" },
   ],
-  "unit-conversion": [
-    { id: 1, fromUnit: "kg", toUnit: "gram", factor: 1000, notes: "Standard kitchen weight" },
-    { id: 2, fromUnit: "ltr", toUnit: "ml", factor: 1000, notes: "Liquid conversion" },
-  ],
   "store-kitchen": [
     { id: 1, name: "Main Store", type: "Store", manager: "Mohan", status: "Open" },
     { id: 2, name: "Live Kitchen", type: "Kitchen", manager: "Chef Arjun", status: "Open" },
@@ -295,10 +474,6 @@ const DEFAULT_MASTER_DATA = {
   "item-groups": [
     { id: 1, name: "Dry Store", segment: "Food", status: "Active" },
     { id: 2, name: "Cold Storage", segment: "Food", status: "Active" },
-  ],
-  gravies: [
-    { id: 1, name: "Brown Gravy", base: "Onion Tomato", spiceLevel: "Medium" },
-    { id: 2, name: "White Gravy", base: "Cream Cashew", spiceLevel: "Low" },
   ],
   ingredients: [
     { id: 1, name: "Basmati Rice", group: "Dry Store", unit: "kg", status: "Active" },
@@ -434,6 +609,10 @@ function formatCurrency(amount) {
   }).format(Number(amount || 0));
 }
 
+function formatQuantity(value) {
+  return Number(value || 0).toFixed(2).replace(/\.00$/, "");
+}
+
 function resolveAssetUrl(value) {
   const normalized = String(value || "").trim();
   if (!normalized) return "";
@@ -462,6 +641,30 @@ function isLowStock(item) {
 
 function FormInput({ field, value, onChange }) {
   const cls = "w-full rounded-xl border border-slate-200 bg-white px-4 py-4 text-xl text-slate-900 outline-none transition placeholder:text-xl placeholder:text-slate-400 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100";
+  if (field.type === "select" && field.allowCustom) {
+    const options = Array.isArray(field.options) ? field.options : [];
+    const isPresetValue = !value || options.includes(value);
+    const selectValue = isPresetValue ? value : "__custom__";
+
+    return (
+      <div className="space-y-3">
+        <select value={selectValue} onChange={(e) => onChange(field.key, e.target.value === "__custom__" ? "" : e.target.value)} className={cls}>
+          <option value="">Select {field.label}</option>
+          {options.map((o) => <option key={o} value={o}>{o}</option>)}
+          <option value="__custom__">Other (Custom)</option>
+        </select>
+        {selectValue === "__custom__" ? (
+          <input
+            type="text"
+            value={value}
+            onChange={(e) => onChange(field.key, e.target.value)}
+            className={cls}
+            placeholder={field.customPlaceholder || `Enter ${field.label}`}
+          />
+        ) : null}
+      </div>
+    );
+  }
   if (field.type === "select") {
     return (
       <select value={value} onChange={(e) => onChange(field.key, e.target.value)} className={cls}>
@@ -497,11 +700,11 @@ function FormInput({ field, value, onChange }) {
 
 function SearchBar({ value, onChange, placeholder }) {
   return (
-    <label className="flex items-center gap-2 rounded-2xl border border-white/70 bg-white/85 px-4 py-3 text-slate-700 shadow-[0_18px_40px_rgba(15,23,42,0.08)] backdrop-blur-xl transition focus-within:-translate-y-0.5 focus-within:border-cyan-200">
-      <FaSearch className="shrink-0 text-cyan-500" size={13} />
+    <label className="flex items-center gap-3 rounded-2xl border border-white/70 bg-white/85 px-4 py-3.5 text-slate-700 shadow-[0_18px_40px_rgba(15,23,42,0.08)] backdrop-blur-xl transition focus-within:-translate-y-0.5 focus-within:border-cyan-200">
+      <FaSearch className="shrink-0 text-cyan-500" size={14} />
       <input value={value} onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full bg-transparent text-xl outline-none placeholder:text-lg placeholder:text-slate-400" />
+        className="w-full bg-transparent text-[17px] outline-none placeholder:text-[16px] placeholder:text-slate-400" />
     </label>
   );
 }
@@ -533,50 +736,92 @@ function MetricCard({ label, value, sub, tone = "default" }) {
   return (
     <div className={`relative overflow-hidden rounded-[24px] border bg-gradient-to-br px-4 py-4 ${tones[tone]}`}>
       <div className="absolute right-0 top-0 h-20 w-20 rounded-full bg-white/40 blur-2xl" />
-      <p className="text-sm font-semibold uppercase tracking-widest text-slate-500">{label}</p>
-      <p className="mt-1.5 text-3xl font-bold text-slate-900">{value}</p>
-      {sub && <p className="mt-0.5 text-base text-slate-400">{sub}</p>}
+      <p className="inventory-form-label text-slate-500 uppercase tracking-widest">{label}</p>
+      <p className="mt-1.5 font-bold text-slate-900 text-[20px] leading-[1.2] md:text-[32px]">{value}</p>
+      {sub && <p className="inventory-body-text mt-0.5 text-slate-400">{sub}</p>}
     </div>
   );
 }
 
 // ─── Form Panel + Table ───────────────────────────────────────────────────────
 
-function FormPanel({ title, subtitle, fields, draft, setDraft, editingId, onSave, onReset }) {
+function FormPanel({ title, subtitle, fields, draft, setDraft, editingId, onSave, onReset, onFieldChange }) {
+  const fieldRows = [];
+  for (let index = 0; index < fields.length; index += 2) {
+    fieldRows.push(fields.slice(index, index + 2));
+  }
+
   return (
-    <div className="overflow-hidden rounded-[28px] border border-white/70 bg-white/90 p-5 shadow-[0_24px_60px_rgba(15,23,42,0.09)] backdrop-blur-xl">
-      <div className="mb-5 rounded-[24px] bg-[linear-gradient(135deg,#0f172a_0%,#155e75_48%,#0f766e_100%)] px-4 py-4 text-white">
-        <div className="flex items-start justify-between gap-3">
+    <div className="overflow-hidden rounded-[30px] border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(248,250,252,0.96)_100%)] p-5 shadow-[0_28px_70px_rgba(15,23,42,0.10)] backdrop-blur-xl">
+      <div className="mb-5 rounded-[26px] border border-slate-900/10 bg-[linear-gradient(135deg,#0f172a_0%,#14532d_36%,#0f766e_100%)] px-5 py-5 text-white shadow-[0_22px_45px_rgba(15,23,42,0.18)]">
+        <div className="flex items-start justify-between gap-4">
           <div>
-            <h3 className="text-3xl font-semibold">
+            <div className="text-[11px] font-bold uppercase tracking-[0.24em] text-emerald-100/90">
+              Inventory Form
+            </div>
+            <h3 className="mt-2 text-3xl font-semibold">
               {editingId ? `Edit ${title}` : `Add ${title}`}
             </h3>
-            {subtitle && <p className="mt-1 text-xl text-white/75">{subtitle}</p>}
+            {subtitle && <p className="mt-2 max-w-2xl text-sm text-white/75 sm:text-base">{subtitle}</p>}
           </div>
           {editingId && (
             <button type="button" onClick={onReset}
-              className="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xl font-medium text-white transition hover:bg-white/20">
+              className="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20">
               Cancel Edit
             </button>
           )}
         </div>
       </div>
-      <div className="space-y-3">
-        {fields.map((field) => (
-          <div key={field.key}>
-            <label className="mb-2 block text-xl font-semibold uppercase tracking-[0.18em] text-slate-500">
-              {field.label} {field.required && <span className="text-red-400">*</span>}
-            </label>
-            <FormInput field={field} value={draft[field.key] ?? ""}
-              onChange={(key, val) => setDraft((c) => ({ ...c, [key]: val }))} />
+      <div className="rounded-[24px] border border-slate-200/80 bg-white/90 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.85)] sm:p-5">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
+          <div>
+            <div className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Quick Entry</div>
+            <div className="mt-1 text-sm text-slate-400">Single-line field layout for faster inventory updates.</div>
+          </div>
+          <div className="rounded-full border border-cyan-100 bg-cyan-50 px-3 py-1.5 text-xs font-semibold text-cyan-700">
+            {fields.length} fields
+          </div>
+        </div>
+        <div className="space-y-3">
+        {fieldRows.map((row, rowIndex) => (
+          <div key={`row-${rowIndex}`} className="grid gap-3 xl:grid-cols-2">
+            {row.map((field) => (
+              <div key={field.key} className="rounded-[20px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] px-4 py-3 shadow-[0_10px_24px_rgba(15,23,42,0.04)]">
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-5">
+                  <label className="w-full shrink-0 text-xs font-bold uppercase tracking-[0.22em] text-slate-500 lg:w-[160px]">
+                    {field.label} {field.required && <span className="text-red-400">*</span>}
+                  </label>
+                  <div className="min-w-0 flex-1">
+                    <FormInput field={field} value={draft[field.key] ?? ""}
+                      onChange={(key, val) => {
+                        if (onFieldChange) {
+                          onFieldChange(key, val);
+                          return;
+                        }
+                        setDraft((c) => ({ ...c, [key]: val }));
+                      }} />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         ))}
       </div>
-      <button type="button" onClick={onSave}
-        className="mt-5 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 via-sky-500 to-blue-600 px-6 py-3.5 text-xl font-semibold text-white shadow-[0_18px_30px_rgba(37,99,235,0.25)] transition hover:-translate-y-0.5">
-        <FaPlus size={12} />
-        {editingId ? "Update" : "Save"}
-      </button>
+      <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-slate-100 pt-4">
+        <button type="button" onClick={onSave}
+          className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 via-sky-500 to-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-[0_18px_30px_rgba(37,99,235,0.25)] transition hover:-translate-y-0.5">
+          <FaPlus size={12} />
+          {editingId ? "Update" : "Save"}
+        </button>
+        <button
+          type="button"
+          onClick={onReset}
+          className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+        >
+          Reset Form
+        </button>
+      </div>
+      </div>
     </div>
   );
 }
@@ -745,10 +990,264 @@ function SectionTabs({
 
 // ─── Section: Items ───────────────────────────────────────────────────────────
 
-function ItemsSection({ items, form, setForm, editingId, setEditingId, onSave, onDelete, searchQuery, setSearchQuery, categoryFilter, setCategoryFilter, categories }) {
+function InventoryHeaderStrip({
+  summaryMetrics,
+  activeGroupLabel,
+  setOpenNavGroup,
+  setActiveSection,
+}) {
+  const overviewCards = [
+    { key: "total", label: "Total Items", value: summaryMetrics.totalItems, icon: FaWarehouse, accent: "from-sky-50 to-blue-50", iconTone: "bg-sky-100 text-sky-600", valueTone: "text-slate-950", meta: "+12%" },
+    { key: "value", label: "Stock Value", value: formatCurrency(summaryMetrics.totalStockValue), icon: FaChartBar, accent: "from-violet-50 to-indigo-50", iconTone: "bg-violet-100 text-violet-600", valueTone: "text-slate-950", meta: "Live backend sync" },
+    { key: "low", label: "Low Stock", value: `${summaryMetrics.lowStockCount} Items`, icon: FaExclamationTriangle, accent: "from-amber-50 to-orange-50", iconTone: "bg-amber-100 text-amber-600", valueTone: "text-orange-600", meta: "Needs reorder" },
+    { key: "expired", label: "Expired", value: `${summaryMetrics.expiredCount} Items`, icon: FaCalendarAlt, accent: "from-rose-50 to-red-50", iconTone: "bg-rose-100 text-rose-600", valueTone: "text-rose-600", meta: "Expiry alerts" },
+  ];
+
+  return (
+    <section className="mb-5 overflow-hidden rounded-[28px] border border-[#c7cbff] bg-white p-2 shadow-[0_22px_50px_rgba(15,23,42,0.1)]">
+      <div className="rounded-[22px] bg-[linear-gradient(90deg,#17315c_0%,#224f94_60%,#2d67cb_100%)] px-4 py-3 text-white">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/10">
+              <FaClipboardList size={15} />
+            </span>
+            <div className="min-w-0">
+              <div className="font-bold text-white text-[20px] leading-[1.2] sm:text-[32px]">Inventory Management</div>
+              <div className="inventory-body-text text-blue-100/85">{activeGroupLabel} workspace with live stock overview</div>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {NAVIGATION_GROUPS.map((group) => {
+              const active = group.label === activeGroupLabel;
+              return (
+                <button
+                  key={group.label}
+                  type="button"
+                  onClick={() => {
+                    setOpenNavGroup(group.label);
+                    setActiveSection(group.ids[0]);
+                  }}
+                  className={`rounded-full px-5 py-2.5 text-[14px] font-medium transition ${active ? "bg-white text-slate-950 shadow-[0_10px_30px_rgba(15,23,42,0.2)]" : "bg-white/8 text-blue-100 hover:bg-white/14"}`}
+                >
+                  {group.label}
+                </button>
+              );
+            })}
+           
+            
+          </div>
+        </div>
+        <div className="mt-3 grid gap-2 lg:grid-cols-4">
+          {overviewCards.map((card) => {
+            const Icon = card.icon;
+            return (
+              <div key={card.key} className="rounded-[22px] border border-white/10 bg-white/95 p-4 shadow-[0_14px_26px_rgba(15,23,42,0.10)]">
+                <div className="flex items-start justify-between gap-3">
+                  <span className={`inline-flex h-[70px] w-[70px] items-center justify-center rounded-[24px] ${card.iconTone}`}>
+                    <Icon size={30} />
+                  </span>
+                  <span className="inventory-form-label text-[20px] md:text-[20px] font-semibold uppercase tracking-[0.14em] text-emerald-600">{card.meta}</span>
+                </div>
+                <div className="inventory-body-text mt-6 text-[20px] md:text-[22px] text-slate-500">{card.label}</div>
+                <div className={`mt-4 font-bold leading-none text-[32px] md:text-[40px] ${card.valueTone}`}>{card.value}</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ItemsSection({
+  items,
+  vendorInwards,
+  stockLedgerRows,
+  masterData,
+  form,
+  setForm,
+  editingId,
+  setEditingId,
+  onSave,
+  onDelete,
+  searchQuery,
+  setSearchQuery,
+  categoryFilter,
+  setCategoryFilter,
+  categories,
+}) {
   const ITEMS_LEDGER_PAGE_SIZE = 10;
   const [ledgerPage, setLedgerPage] = useState(1);
   const [stockTab, setStockTab] = useState("list");
+  const itemSnapshotMap = useMemo(
+    () => new Map(
+      (items || []).map((item) => [String(item.name || "").trim().toLowerCase(), item]).filter(([key]) => key),
+    ),
+    [items],
+  );
+  const inwardSummaryByItem = useMemo(() => {
+    const map = new Map();
+    (vendorInwards || []).forEach((row) => {
+      const key = String(row.itemName || "").trim().toLowerCase();
+      if (!key) return;
+      const current = map.get(key);
+      const currentDate = current?.receivedDate ? new Date(current.receivedDate) : new Date(0);
+      const nextDate = row.receivedDate ? new Date(row.receivedDate) : new Date(0);
+      if (!current || nextDate >= currentDate) {
+        map.set(key, row);
+      }
+    });
+    return map;
+  }, [vendorInwards]);
+  const purchaseItemRows = masterData?.["purchase-items"] || [];
+  const stockItemOptions = useMemo(
+    () => buildSelectOptions([
+      ...items.map((item) => item.name),
+      ...purchaseItemRows.map((row) => row.itemName),
+      ...(vendorInwards || []).map((row) => row.itemName),
+    ]),
+    [items, purchaseItemRows, vendorInwards],
+  );
+  const categoryOptions = useMemo(
+    () => buildSelectOptions([
+      ...categories,
+      ...(masterData?.["item-groups"] || []).map((row) => row.name),
+      ...(vendorInwards || []).map((row) => row.category),
+    ]),
+    [categories, masterData, vendorInwards],
+  );
+  const unitOptions = useMemo(
+    () => buildSelectOptions([
+      ...(masterData?.units || []).map((row) => row.shortName || row.name),
+      ...items.map((item) => item.unit),
+      ...purchaseItemRows.map((row) => row.unit),
+      ...(vendorInwards || []).map((row) => row.unit),
+    ]),
+    [items, masterData, purchaseItemRows, vendorInwards],
+  );
+  const storeOptions = useMemo(
+    () => buildSelectOptions([
+      ...(masterData?.["store-kitchen"] || []).map((row) => row.name),
+      ...items.map((item) => item.branch),
+      ...(vendorInwards || []).map((row) => row.store),
+    ]),
+    [items, masterData, vendorInwards],
+  );
+  const purchaseMetaByItem = useMemo(() => {
+    const map = new Map();
+    purchaseItemRows.forEach((row) => {
+      const key = String(row.itemName || "").trim().toLowerCase();
+      if (!key) return;
+      const current = map.get(key);
+      const currentDate = current?.sortDate ? new Date(current.sortDate) : new Date(0);
+      const nextDate = row.date ? new Date(row.date) : new Date(0);
+      if (!current || nextDate >= currentDate) {
+        map.set(key, {
+          category: row.category || "",
+          unit: row.unit || "",
+          price: row.ratePerUnit || "",
+          vendor: row.vendor || "",
+          sortDate: row.date || "",
+        });
+      }
+    });
+    return map;
+  }, [purchaseItemRows]);
+  const stockSummaryByItem = useMemo(() => {
+    const map = new Map();
+    (stockLedgerRows || []).forEach((row) => {
+      const key = String(row.itemName || "").trim().toLowerCase();
+      if (!key) return;
+      const current = map.get(key) || { receivedQty: 0, usedQty: 0 };
+      const quantity = Number(row.quantity || 0);
+      const direction = String(row.direction || "").toUpperCase();
+      const referenceType = String(row.referenceType || "").toLowerCase();
+      if (direction === "IN" && referenceType === "vendor_inward") {
+        current.receivedQty += quantity;
+      }
+      if (direction === "OUT") {
+        current.usedQty += quantity;
+      }
+      map.set(key, current);
+    });
+    return map;
+  }, [stockLedgerRows]);
+  const resolvedStockFields = useMemo(() => {
+    const baseFields = ITEMS_FORM.map((field) => {
+      if (field.key === "name") {
+        return {
+          ...field,
+          type: stockItemOptions.length ? "select" : field.type,
+          options: stockItemOptions,
+          suggestions: stockItemOptions,
+          allowCustom: Boolean(stockItemOptions.length),
+          customPlaceholder: "Enter item name",
+        };
+      }
+      if (field.key === "category") {
+        return {
+          ...field,
+          type: categoryOptions.length ? "select" : field.type,
+          options: categoryOptions,
+          suggestions: categoryOptions,
+          allowCustom: Boolean(categoryOptions.length),
+          customPlaceholder: "Enter category",
+        };
+      }
+      if (field.key === "unit") {
+        return {
+          ...field,
+          type: unitOptions.length ? "select" : field.type,
+          options: unitOptions,
+          suggestions: unitOptions,
+          allowCustom: Boolean(unitOptions.length),
+          customPlaceholder: "Enter unit",
+        };
+      }
+      if (field.key === "branch") {
+        return {
+          ...field,
+          type: storeOptions.length ? "select" : field.type,
+          options: storeOptions,
+          suggestions: storeOptions,
+          allowCustom: Boolean(storeOptions.length),
+          customPlaceholder: "Enter store / branch",
+        };
+      }
+      return field;
+    });
+
+    if (!editingId) return baseFields;
+
+    return [
+      ...baseFields,
+      { key: "adjustmentReason", label: "Adjustment Reason", type: "text" },
+    ];
+  }, [categoryOptions, editingId, stockItemOptions, storeOptions, unitOptions]);
+
+  const handleStockFieldChange = useCallback((key, val) => {
+    if (key !== "name") {
+      setForm((current) => ({ ...current, [key]: val }));
+      return;
+    }
+
+    const normalizedKey = String(val || "").trim().toLowerCase();
+    const itemSnapshot = itemSnapshotMap.get(normalizedKey);
+    const inwardSummary = inwardSummaryByItem.get(normalizedKey);
+    const purchaseMeta = purchaseMetaByItem.get(normalizedKey);
+
+    setForm((current) => ({
+      ...current,
+      name: val,
+      category: itemSnapshot?.category || purchaseMeta?.category || current.category || "",
+      stock: itemSnapshot ? itemSnapshot.stock ?? "" : current.stock || "",
+      unit: itemSnapshot?.unit || inwardSummary?.unit || purchaseMeta?.unit || current.unit || "",
+      price: itemSnapshot?.price || purchaseMeta?.price || current.price || "",
+      reorderPoint: itemSnapshot?.reorderPoint || current.reorderPoint || "",
+      expiry: itemSnapshot?.expiry || inwardSummary?.expiryDate || current.expiry || "",
+      branch: itemSnapshot?.branch || inwardSummary?.store || current.branch || "",
+    }));
+  }, [inwardSummaryByItem, itemSnapshotMap, purchaseMetaByItem, setForm]);
 
   const visibleItems = items.filter((item) => {
     const matchCat = categoryFilter === "All" || item.category === categoryFilter;
@@ -782,7 +1281,7 @@ function ItemsSection({ items, form, setForm, editingId, setEditingId, onSave, o
   }, [editingId]);
 
   const resetStockForm = () => {
-    setForm(buildInitialForm(ITEMS_FORM));
+    setForm({ ...buildInitialForm(ITEMS_FORM), adjustmentReason: "" });
     setEditingId(null);
     setStockTab("list");
   };
@@ -805,14 +1304,16 @@ function ItemsSection({ items, form, setForm, editingId, setEditingId, onSave, o
       reorderPoint: item.reorderPoint || "",
       expiry: item.expiry ? String(item.expiry).split("T")[0] : "",
       branch: item.branch || "",
+      adjustmentReason: "",
     });
     setStockTab("add");
   };
 
   return (
     <div className="space-y-5">
-      <div className="overflow-hidden rounded-[28px] border border-white/70 bg-white/90 p-3 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-        <div className="flex flex-wrap gap-3">
+      <div className="overflow-hidden rounded-[28px] border border-white/70 bg-white/90 p-4 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+        <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+          <div className="flex flex-wrap items-center gap-3">
           {[
             { id: "list", label: "Stock List", helper: "Current stock table and records" },
             {
@@ -827,21 +1328,42 @@ function ItemsSection({ items, form, setForm, editingId, setEditingId, onSave, o
                 key={tab.id}
                 type="button"
                 onClick={() => setStockTab(tab.id)}
-                className={`min-w-[220px] rounded-[22px] border px-5 py-4 text-left transition ${
+                className={`inline-flex min-h-[52px] items-center gap-3 rounded-full border px-5 py-3 text-left transition ${
                   active
-                    ? "border-cyan-300 bg-[linear-gradient(135deg,#ecfeff_0%,#dbeafe_100%)] shadow-[0_18px_35px_rgba(14,165,233,0.16)]"
-                    : "border-slate-200 bg-white hover:border-cyan-200 hover:bg-cyan-50/60"
+                    ? "border-transparent bg-[linear-gradient(90deg,#1d4ed8_0%,#2563eb_100%)] text-white shadow-[0_14px_28px_rgba(37,99,235,0.22)]"
+                    : "border-slate-200 bg-slate-100/80 text-slate-700 hover:border-slate-300 hover:bg-white"
                 }`}
               >
-                <div className={`text-lg font-black uppercase tracking-[0.18em] ${active ? "text-cyan-700" : "text-slate-700"}`}>
+                <span className={`inline-flex h-8 w-8 items-center justify-center rounded-full ${
+                  active ? "bg-white/15 text-white" : "bg-white text-slate-500"
+                }`}>
+                  {tab.id === "list" ? <FaWarehouse size={12} /> : <FaPlus size={11} />}
+                </span>
+                <div className={`text-[16px] font-bold ${active ? "text-white" : "text-slate-700"}`}>
                   {tab.label}
-                </div>
-                <div className={`mt-1 text-sm ${active ? "text-cyan-700/80" : "text-slate-500"}`}>
-                  {tab.helper}
                 </div>
               </button>
             );
           })}
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <label className="flex min-w-[240px] items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-3 text-[15px] text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]">
+              <FaSearch size={12} className="text-slate-400" />
+              <input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search items..."
+                className="w-full bg-transparent outline-none placeholder:text-[15px] placeholder:text-slate-400"
+              />
+            </label>
+            <label className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-3 text-[15px] text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]">
+              <FaFilter size={12} className="text-slate-400" />
+              <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} className="bg-transparent outline-none">
+                <option value="All">All Categories</option>
+                {categories.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </label>
+          </div>
         </div>
       </div>
       <div className="grid gap-5 lg:grid-cols-1">
@@ -849,12 +1371,13 @@ function ItemsSection({ items, form, setForm, editingId, setEditingId, onSave, o
         <FormPanel
           title="Stock Item"
           subtitle="Use this tab to add or update inventory stock"
-          fields={ITEMS_FORM}
+          fields={resolvedStockFields}
           draft={form}
           setDraft={setForm}
           editingId={editingId}
           onSave={handleSaveStock}
           onReset={resetStockForm}
+          onFieldChange={handleStockFieldChange}
         />
         ) : null}
 
@@ -862,31 +1385,22 @@ function ItemsSection({ items, form, setForm, editingId, setEditingId, onSave, o
         <div className="overflow-hidden rounded-[28px] border border-white/70 bg-white/90 p-5 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h3 className="text-2xl font-semibold text-slate-900">Items Ledger</h3>
-              <p className="text-lg text-slate-400">{items.length} total items loaded from backend</p>
-            </div>
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <div className="w-full sm:w-60">
-                <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Search item / store" />
-              </div>
-              <label className="flex items-center gap-2 rounded-2xl border border-white/70 bg-white px-4 py-3 text-lg text-slate-700 shadow-[0_16px_35px_rgba(15,23,42,0.06)]">
-                <FaFilter size={12} className="text-cyan-500" />
-                <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} className="bg-transparent text-lg outline-none">
-                  <option value="All">All Categories</option>
-                  {categories.map((c) => <option key={c} value={c}>{c}</option>)}
-                </select>
-              </label>
+              <h3 className="text-[20px] font-semibold text-slate-900">Items Ledger</h3>
+              <p className="text-[16px] text-slate-400">{items.length} total items loaded from backend</p>
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-[26px] border border-slate-200/80">
-            <table className="min-w-full text-lg">
-              <thead className="bg-[linear-gradient(180deg,#f8fafc_0%,#eef2ff_100%)] text-left text-base font-semibold uppercase tracking-widest text-slate-500">
+          <div className="overflow-hidden rounded-[26px] border border-slate-200/80 bg-white">
+            <table className="min-w-full text-[15px]">
+              <thead className="bg-[linear-gradient(180deg,#f8fbff_0%,#eef4ff_100%)] text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
                 <tr>
-                  <th className="px-4 py-3">Item</th>
+                  <th className="px-4 py-3">Item Name</th>
                   <th className="px-4 py-3">Category</th>
-                  <th className="px-4 py-3">Stock</th>
-                  <th className="px-4 py-3">Reorder</th>
+                  <th className="px-4 py-3">Last Vendor</th>
+                  <th className="px-4 py-3">Received Qty</th>
+                  <th className="px-4 py-3">Used Qty</th>
+                  <th className="px-4 py-3">Physical Stock</th>
+                  <th className="px-4 py-3">Reorder Level</th>
                   <th className="px-4 py-3">Price</th>
                   <th className="px-4 py-3">Expiry</th>
                   <th className="px-4 py-3">Store</th>
@@ -896,7 +1410,13 @@ function ItemsSection({ items, form, setForm, editingId, setEditingId, onSave, o
               <tbody>
                 {visibleItems.length ? paginatedItems.map((item) => {
                   const low = isLowStock(item);
-                  const expStatus = getExpiryStatus(item.expiry);
+                  const normalizedItemKey = String(item.name || "").trim().toLowerCase();
+                  const inwardSummary = inwardSummaryByItem.get(normalizedItemKey);
+                  const purchaseMeta = purchaseMetaByItem.get(normalizedItemKey);
+                  const stockSummary = stockSummaryByItem.get(normalizedItemKey) || { receivedQty: 0, usedQty: 0 };
+                  const effectiveExpiry = inwardSummary?.expiryDate || item.expiry;
+                  const lastVendorName = inwardSummary?.vendorName || purchaseMeta?.vendor || "—";
+                  const expStatus = getExpiryStatus(effectiveExpiry);
                   return (
                     <tr key={item.id} className={`border-t border-slate-100 hover:bg-cyan-50/40 transition ${low ? "bg-amber-50/40" : ""}`}>
                       <td className="px-4 py-4">
@@ -906,6 +1426,9 @@ function ItemsSection({ items, form, setForm, editingId, setEditingId, onSave, o
                         </div>
                       </td>
                       <td className="px-4 py-4 text-lg text-slate-600">{item.category}</td>
+                      <td className="px-4 py-4 text-base text-slate-600">{lastVendorName}</td>
+                      <td className="px-4 py-4 text-base text-slate-500">{stockSummary.receivedQty} {item.unit}</td>
+                      <td className="px-4 py-4 text-base text-slate-500">{stockSummary.usedQty} {item.unit}</td>
                       <td className="px-4 py-4">
                         <span className={`text-lg font-semibold ${low ? "text-amber-600" : "text-slate-900"}`}>
                           {item.stock} <span className="text-base font-normal text-slate-400">{item.unit}</span>
@@ -934,7 +1457,7 @@ function ItemsSection({ items, form, setForm, editingId, setEditingId, onSave, o
                     </tr>
                   );
                 }) : (
-                  <tr><td colSpan={8} className="px-4 py-12 text-center text-lg text-slate-400">No matching inventory items.</td></tr>
+                  <tr><td colSpan={11} className="px-4 py-12 text-center text-lg text-slate-400">No matching inventory items.</td></tr>
                 )}
               </tbody>
             </table>
@@ -999,81 +1522,590 @@ function ItemsSection({ items, form, setForm, editingId, setEditingId, onSave, o
 
 // ─── Section: Generic Master ──────────────────────────────────────────────────
 
-function GenericMasterSection({ section, records, onSave, onEdit, onDelete, draft, setDraft, editingId, searchQuery, setSearchQuery }) {
+function GenericMasterSection({ section, records, onSave, onEdit, onDelete, draft, setDraft, editingId, searchQuery, setSearchQuery, setActiveSection, vendorInsights, masterData, vendorInwards = [] }) {
   const fields = MASTER_FIELDS[section.id];
   const columns = MASTER_TABLE_COLUMNS[section.id];
-  const [activeTab, setActiveTab] = useState("form");
+  const [workspaceView, setWorkspaceView] = useState("add");
+  const isPurchaseServicesSection = section.id === "purchase-services";
+  const isPurchaseItemsSection = section.id === "purchase-items";
+  const isSegmentsSection = section.id === "segments";
+  const isUnitsSection = section.id === "units";
+  const isStoreKitchenSection = section.id === "store-kitchen";
+  const isItemGroupsSection = section.id === "item-groups";
   const subtitle = API_BACKED_MASTER_SECTIONS.has(section.id)
     ? "Synced with inventory backend API"
     : "Stored in local inventory workspace";
   const filtered = records.filter((r) =>
     Object.values(r).some((v) => String(v ?? "").toLowerCase().includes(searchQuery.toLowerCase()))
   );
-
-  useEffect(() => {
-    setActiveTab("form");
-  }, [section.id]);
-
-  useEffect(() => {
-    if (editingId) {
-      setActiveTab("form");
-    }
-  }, [editingId]);
+  const vendorSummary = vendorInsights?.summary || {};
+  const vendorStats = vendorInsights?.vendors || [];
 
   const handleSave = async () => {
     const saved = await onSave();
     if (saved) {
-      setActiveTab("list");
+      setWorkspaceView("list");
     }
   };
 
   const handleReset = () => {
     setDraft(buildInitialForm(fields));
     onEdit(null);
-    setActiveTab("list");
+    setWorkspaceView("list");
   };
 
   const handleEdit = (record) => {
     onEdit(record);
-    setActiveTab("form");
+    setWorkspaceView("add");
   };
+
+  useEffect(() => {
+    setWorkspaceView("add");
+  }, [section.id]);
+
+  useEffect(() => {
+    if (editingId) {
+      setWorkspaceView("add");
+    }
+  }, [editingId]);
+
+  useEffect(() => {
+    if (!isPurchaseItemsSection) return;
+    const quantity = Number(draft.quantity || 0);
+    const ratePerUnit = Number(draft.ratePerUnit || 0);
+    const nextAmount = quantity > 0 && ratePerUnit > 0 ? quantity * ratePerUnit : 0;
+    const currentAmount = Number(draft.amount || 0);
+    if (currentAmount === nextAmount) return;
+    setDraft((current) => ({
+      ...current,
+      amount: nextAmount ? String(nextAmount) : "",
+    }));
+  }, [draft.quantity, draft.ratePerUnit, draft.amount, isPurchaseItemsSection, setDraft]);
+
+  useEffect(() => {
+    if (!isPurchaseItemsSection || editingId) return;
+    if (String(draft.invoiceNo || "").trim()) return;
+    setDraft((current) => ({
+      ...current,
+      invoiceNo: generatePurchaseInvoiceNo(),
+    }));
+  }, [draft.invoiceNo, editingId, isPurchaseItemsSection, setDraft]);
+
+  const vendorOptions = (masterData?.vendors || [])
+    .map((row) => String(row.name || "").trim())
+    .filter(Boolean);
+
+  const unitOptions = (masterData?.units || [])
+    .map((row) => String(row.shortName || row.name || "").trim())
+    .filter(Boolean);
+
+  const unitNameOptions = buildSelectOptions([
+    ...UNIT_PRESETS.map((preset) => preset.name),
+    ...(masterData?.units || []).map((row) => row.name),
+    ...records.map((row) => row.name),
+  ]);
+
+  const unitShortNameOptions = buildSelectOptions([
+    ...UNIT_PRESETS.map((preset) => preset.shortName),
+    ...(masterData?.units || []).map((row) => row.shortName),
+    ...records.map((row) => row.shortName),
+  ]);
+
+  const unitTypeOptions = buildSelectOptions([
+    "Weight",
+    "Volume",
+    "Count",
+    ...(masterData?.units || []).map((row) => row.type),
+    ...records.map((row) => row.type),
+  ]);
+
+  const itemOptions = buildSelectOptions([
+    ...(masterData?.["purchase-items"] || []).map((row) => row.itemName),
+    ...DEFAULT_MASTER_DATA["purchase-items"].map((row) => row.itemName),
+  ]);
+  const selectedPurchaseVendor = String(draft.vendor || "").trim();
+  const purchaseVendorHistory = [
+    ...(masterData?.["purchase-items"] || []),
+    ...DEFAULT_MASTER_DATA["purchase-items"],
+    ...(vendorInsights?.vendors || []).flatMap(() => []),
+  ];
+  const vendorInwardHistory = Array.isArray(vendorInwards) ? vendorInwards : [];
+  const vendorScopedItemRows = [
+    ...purchaseVendorHistory
+      .filter((row) => !selectedPurchaseVendor || String(row.vendor || "").trim() === selectedPurchaseVendor)
+      .map((row) => ({
+        itemName: row.itemName,
+        unit: row.unit,
+        ratePerUnit: row.ratePerUnit,
+      })),
+    ...vendorInwardHistory
+      .filter((row) => !selectedPurchaseVendor || String(row.vendorName || "").trim() === selectedPurchaseVendor)
+      .map((row) => ({
+        itemName: row.itemName,
+        unit: row.unit,
+        ratePerUnit: row.rate,
+      })),
+  ];
+  const vendorScopedItemOptions = buildSelectOptions(vendorScopedItemRows.map((row) => row.itemName));
+  const vendorItemMetaMap = vendorScopedItemRows.reduce((map, row) => {
+    const key = String(row.itemName || "").trim().toLowerCase();
+    if (!key || map.has(key)) return map;
+    map.set(key, row);
+    return map;
+  }, new Map());
+
+  const storeOptions = buildSelectOptions((masterData?.["store-kitchen"] || []).map((row) => row.name));
+  const detectedManagerName = String(localStorage.getItem("name") || "").trim();
+  const managerOptions = buildSelectOptions([
+    detectedManagerName,
+    ...(masterData?.["store-kitchen"] || []).map((row) => row.manager),
+    ...records.map((row) => row.manager),
+  ]);
+  const segmentNameOptions = buildSelectOptions([
+    ...SEGMENT_PRESETS.map((preset) => preset.name),
+    ...(masterData?.segments || []).map((row) => row.name),
+    ...records.map((row) => row.name),
+  ]);
+  const selectedSegment = String(draft.segment || "").trim();
+  const presetItemGroupOptions = selectedSegment
+    ? ITEM_GROUP_PRESETS[selectedSegment] || []
+    : Object.values(ITEM_GROUP_PRESETS).flat();
+  const itemGroupNameOptions = buildSelectOptions([
+    ...presetItemGroupOptions,
+    ...(masterData?.["item-groups"] || [])
+      .filter((row) => !selectedSegment || String(row.segment || "").trim() === selectedSegment)
+      .map((row) => row.name),
+    ...records
+      .filter((row) => !selectedSegment || String(row.segment || "").trim() === selectedSegment)
+      .map((row) => row.name),
+  ]);
+
+  const resolvedFields = fields.map((field) => {
+    if (isItemGroupsSection && field.key === "name") {
+      return {
+        ...field,
+        type: "select",
+        options: itemGroupNameOptions,
+        allowCustom: true,
+        customPlaceholder: "Enter custom item group",
+      };
+    }
+    if (isItemGroupsSection && field.key === "segment") {
+      return {
+        ...field,
+        type: "select",
+        options: segmentNameOptions,
+        allowCustom: true,
+        customPlaceholder: "Enter custom segment",
+      };
+    }
+    if (isSegmentsSection && field.key === "name") {
+      return {
+        ...field,
+        type: "select",
+        options: segmentNameOptions,
+        allowCustom: true,
+        customPlaceholder: "Enter custom segment name",
+      };
+    }
+    if (isUnitsSection && field.key === "name") {
+      return {
+        ...field,
+        type: "select",
+        options: unitNameOptions,
+        allowCustom: true,
+        customPlaceholder: "Enter custom unit name",
+      };
+    }
+    if (isUnitsSection && field.key === "shortName") {
+      return {
+        ...field,
+        type: "select",
+        options: unitShortNameOptions,
+        allowCustom: true,
+        customPlaceholder: "Enter custom short name",
+      };
+    }
+    if (isUnitsSection && field.key === "type") {
+      return {
+        ...field,
+        type: "select",
+        options: unitTypeOptions,
+      };
+    }
+    if ((isPurchaseItemsSection || section.id === "purchase-services") && field.key === "vendor") {
+      return { ...field, type: vendorOptions.length ? "select" : field.type, options: vendorOptions };
+    }
+    if (isPurchaseItemsSection && field.key === "unit") {
+      return {
+        ...field,
+        type: unitOptions.length ? "select" : field.type,
+        options: unitOptions,
+        suggestions: unitOptions,
+      };
+    }
+    if (isPurchaseItemsSection && field.key === "itemName") {
+      return {
+        ...field,
+        type: vendorScopedItemOptions.length ? "select" : "text",
+        options: vendorScopedItemOptions,
+        suggestions: vendorScopedItemOptions,
+        allowCustom: Boolean(vendorScopedItemOptions.length),
+        customPlaceholder: "Enter custom item name",
+      };
+    }
+    if (section.id === "stock-transfer" && field.key === "itemName") {
+      return {
+        ...field,
+        type: itemOptions.length ? "select" : field.type,
+        options: itemOptions,
+        suggestions: itemOptions,
+      };
+    }
+    if (section.id === "stock-transfer" && (field.key === "fromStore" || field.key === "toStore")) {
+      return {
+        ...field,
+        type: storeOptions.length ? "select" : field.type,
+        options: storeOptions,
+        suggestions: storeOptions,
+      };
+    }
+    if (section.id === "stock-transfer" && field.key === "unit") {
+      return {
+        ...field,
+        type: unitOptions.length ? "select" : field.type,
+        options: unitOptions,
+        suggestions: unitOptions,
+      };
+    }
+    if (isStoreKitchenSection && field.key === "manager") {
+      return {
+        ...field,
+        type: managerOptions.length ? "select" : "text",
+        options: managerOptions,
+        suggestions: managerOptions,
+        allowCustom: Boolean(managerOptions.length),
+        customPlaceholder: "Enter manager name",
+      };
+    }
+    return field;
+  });
+
+  const handleFieldChange = useCallback((key, val) => {
+    if (isPurchaseItemsSection && key === "vendor") {
+      setDraft((current) => ({
+        ...current,
+        vendor: val,
+        itemName: String(current.vendor || "").trim() === String(val || "").trim() ? current.itemName : "",
+        unit: String(current.vendor || "").trim() === String(val || "").trim() ? current.unit : "",
+        ratePerUnit: String(current.vendor || "").trim() === String(val || "").trim() ? current.ratePerUnit : "",
+      }));
+      return;
+    }
+
+    if (isPurchaseItemsSection && key === "itemName") {
+      const meta = vendorItemMetaMap.get(String(val || "").trim().toLowerCase());
+      setDraft((current) => ({
+        ...current,
+        itemName: val,
+        unit: meta?.unit || current.unit || "",
+        ratePerUnit: meta?.ratePerUnit || current.ratePerUnit || "",
+      }));
+      return;
+    }
+
+    if (isItemGroupsSection && key === "segment") {
+      setDraft((current) => ({
+        ...current,
+        segment: val,
+        name:
+          String(current.segment || "").trim() === String(val || "").trim()
+            ? current.name
+            : "",
+      }));
+      return;
+    }
+
+    if (isSegmentsSection && key === "name") {
+      const preset = findSegmentPreset(val);
+      setDraft((current) => ({
+        ...current,
+        name: val,
+        description: preset?.description || current.description || "",
+      }));
+      return;
+    }
+
+    if (!isUnitsSection) {
+      setDraft((current) => ({ ...current, [key]: val }));
+      return;
+    }
+
+    if (key === "name") {
+      const preset = findUnitPreset(val, "name");
+      setDraft((current) => ({
+        ...current,
+        name: val,
+        shortName: preset?.shortName || current.shortName || "",
+        type: preset?.type || current.type || "",
+      }));
+      return;
+    }
+
+    if (key === "shortName") {
+      const preset = findUnitPreset(val, "shortName");
+      setDraft((current) => ({
+        ...current,
+        shortName: val,
+        name: preset?.name || current.name || "",
+        type: preset?.type || current.type || "",
+      }));
+      return;
+    }
+
+    setDraft((current) => ({ ...current, [key]: val }));
+  }, [isItemGroupsSection, isPurchaseItemsSection, isSegmentsSection, isUnitsSection, setDraft, vendorItemMetaMap]);
+
+  useEffect(() => {
+    if (!isStoreKitchenSection || editingId) return;
+    if (String(draft.manager || "").trim()) return;
+    if (!detectedManagerName) return;
+
+    setDraft((current) => {
+      if (String(current.manager || "").trim()) return current;
+      return { ...current, manager: detectedManagerName };
+    });
+  }, [detectedManagerName, draft.manager, editingId, isStoreKitchenSection, setDraft]);
+
+  const statCards = section.id === "vendors" ? [
+    {
+      label: "Registered Vendors",
+      value: vendorSummary.totalVendors || records.length,
+      iconTone: "bg-violet-100 text-violet-600",
+      icon: FaTruck,
+    },
+    {
+      label: "Stock Received",
+      value: `${Number(vendorSummary.totalReceivedQty || 0).toFixed(2).replace(/\.00$/, "")} units`,
+      iconTone: "bg-blue-100 text-blue-600",
+      icon: FaBoxes,
+    },
+    {
+      label: "Received Value",
+      value: formatCurrency(vendorSummary.totalReceivedValue || 0),
+      iconTone: "bg-emerald-100 text-emerald-600",
+      icon: FaClipboardList,
+    },
+    {
+      label: "Outstanding",
+      value: formatCurrency(vendorSummary.totalOutstandingAmount || 0),
+      iconTone: "bg-amber-100 text-amber-600",
+      icon: FaChartBar,
+    },
+  ] : [
+    {
+      label: section.id === "menu-categories" ? "Total Menu Items" : `${section.label} Records`,
+      value: records.length,
+      iconTone: "bg-violet-100 text-violet-600",
+      icon: FaLayerGroup,
+    },
+    {
+      label: "Active Records",
+      value: records.filter((row) => String(row.status || "").toLowerCase().includes("active")).length,
+      iconTone: "bg-blue-100 text-blue-600",
+      icon: FaTruck,
+    },
+    {
+      label: "Fields Tracked",
+      value: columns.length,
+      iconTone: "bg-emerald-100 text-emerald-600",
+      icon: FaClipboardList,
+    },
+    {
+      label: "Search Results",
+      value: filtered.length,
+      iconTone: "bg-violet-100 text-violet-500",
+      icon: FaStore,
+    },
+  ];
 
   return (
     <div className="space-y-5">
-      <SectionTabs
-        activeTab={activeTab}
-        onChange={setActiveTab}
-        listLabel={`${section.label} Register`}
-        listHelper={`View all ${section.label.toLowerCase()} records`}
-        formLabel={editingId ? `Edit ${section.label}` : `Add ${section.label}`}
-        formHelper={editingId ? "Update selected record" : "Open form to create a new record"}
-      />
-      {activeTab === "form" ? (
-        <FormPanel
-          title={section.label}
-          subtitle={subtitle}
-          fields={fields}
-          draft={draft}
-          setDraft={setDraft}
-          editingId={editingId}
-          onSave={handleSave}
-          onReset={handleReset}
-        />
-      ) : null}
-      {activeTab === "list" ? (
-        <div className="overflow-hidden rounded-[28px] border border-white/70 bg-white/90 p-5 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <div>
-              <h3 className="text-xl font-semibold text-slate-900">{section.label} Register</h3>
-              <p className="text-base text-slate-400">{records.length} records</p>
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {statCards.map((card) => {
+          const Icon = card.icon;
+          return (
+            <div key={card.label} className="rounded-[24px] border border-white/70 bg-white/95 p-4 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="text-xs font-medium text-slate-500">{card.label}</div>
+                  <div className="mt-1 text-3xl font-bold text-slate-900">{card.value}</div>
+                </div>
+                <span className={`inline-flex h-10 w-10 items-center justify-center rounded-full ${card.iconTone}`}>
+                  <Icon size={14} />
+                </span>
+              </div>
             </div>
-            <div className="w-64">
-              <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder={`Search ${section.label.toLowerCase()}`} />
+          );
+        })}
+      </div>
+
+      {section.id === "vendors" && vendorStats.length ? (
+        <div className="rounded-[26px] border border-white/70 bg-white/95 p-5 shadow-[0_24px_60px_rgba(15,23,42,0.08)]">
+          <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h3 className="text-xl font-bold text-slate-900">Vendor Supply Snapshot</h3>
+              <p className="text-sm text-slate-400">Real inward and payment data across vendors</p>
+            </div>
+          </div>
+          <div className="overflow-x-auto rounded-2xl border border-slate-200">
+            <table className="min-w-full text-sm">
+              <thead className="bg-slate-50 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400 text-left">
+                <tr>
+                  <th className="px-4 py-4">Vendor</th>
+                  <th className="px-4 py-4">Status</th>
+                  <th className="px-4 py-4">Receipts</th>
+                  <th className="px-4 py-4">Qty Received</th>
+                  <th className="px-4 py-4">Supply Value</th>
+                  <th className="px-4 py-4">Paid</th>
+                  <th className="px-4 py-4">Due</th>
+                  <th className="px-4 py-4">Last Received</th>
+                </tr>
+              </thead>
+              <tbody>
+                {vendorStats.slice(0, 8).map((row) => (
+                  <tr key={row.vendorName} className="border-t border-slate-100">
+                    <td className="px-4 py-4 font-semibold text-slate-900">{row.vendorName}</td>
+                    <td className="px-4 py-4"><Badge color={String(row.status || "").toLowerCase().includes("hold") ? "amber" : "green"}>{row.status || "Active"}</Badge></td>
+                    <td className="px-4 py-4 text-slate-700">{row.receiptsCount}</td>
+                    <td className="px-4 py-4 text-slate-700">{Number(row.totalQty || 0).toFixed(2).replace(/\.00$/, "")}</td>
+                    <td className="px-4 py-4 font-semibold text-slate-900">{formatCurrency(row.totalValue || 0)}</td>
+                    <td className="px-4 py-4 text-emerald-600 font-semibold">{formatCurrency(row.totalPaid || 0)}</td>
+                    <td className="px-4 py-4 text-amber-600 font-semibold">{formatCurrency(row.totalDue || 0)}</td>
+                    <td className="px-4 py-4 text-slate-500">{row.lastReceivedDate || "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : null}
+
+      <div className="flex flex-wrap items-center gap-3">
+        {[
+          {
+            id: "add",
+            label: isPurchaseServicesSection
+              ? (editingId ? "Edit Purchase Services" : "Add Purchase Services")
+              : (editingId ? `Edit ${section.label}` : `Add ${section.label}`),
+            icon: FaPlus,
+          },
+          {
+            id: "list",
+            label: isPurchaseServicesSection ? "Purchase Services List" : `${section.label} List`,
+            icon: FaListAlt,
+          },
+        ].map((view) => {
+          const active = workspaceView === view.id;
+          const Icon = view.icon;
+          return (
+            <button
+              key={view.id}
+              type="button"
+              onClick={() => setWorkspaceView(view.id)}
+              className={`inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold transition ${
+                active
+                  ? "border-transparent bg-[linear-gradient(90deg,#7c3aed_0%,#6d28d9_100%)] text-white shadow-[0_14px_28px_rgba(109,40,217,0.22)]"
+                  : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
+              }`}
+            >
+              <Icon size={11} />
+              {view.label}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className={`grid gap-5 ${workspaceView === "add" ? (isPurchaseServicesSection ? "" : "xl:grid-cols-[320px,minmax(0,1fr)]") : ""}`}>
+        {workspaceView === "add" ? (
+        <div className={`space-y-4 ${isPurchaseServicesSection ? "" : ""}`}>
+          <div className="rounded-[26px] border border-white/70 bg-white/95 p-5 shadow-[0_24px_60px_rgba(15,23,42,0.08)]">
+            <div className="mb-4 flex items-center gap-2 text-slate-900">
+              <span className="inline-flex h-5 w-1.5 rounded-full bg-violet-500" />
+              <h3 className="text-xl font-bold">
+                {isPurchaseServicesSection
+                  ? (editingId ? "Edit Purchase Services" : "Add New Purchase Services")
+                  : (editingId ? `Edit ${section.label}` : `Add New ${section.label}`)}
+              </h3>
+            </div>
+            <div className={`grid gap-3 ${isPurchaseServicesSection ? "" : "space-y-0"}`}>
+              {resolvedFields.map((field) => (
+                <div key={field.key}>
+                  <label className="mb-2 block text-sm font-semibold text-slate-700">
+                    {field.label} {field.required ? <span className="text-red-400">*</span> : null}
+                  </label>
+                  <FormInput
+                    field={field}
+                    value={draft[field.key] ?? ""}
+                    onChange={handleFieldChange}
+                  />
+                </div>
+              ))}
+            </div>
+            <div className="mt-5 flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={handleSave}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[linear-gradient(90deg,#7c3aed_0%,#6d28d9_100%)] px-4 py-3 text-sm font-semibold text-white shadow-[0_18px_28px_rgba(109,40,217,0.28)]"
+              >
+                <FaPlus size={11} />
+                {isPurchaseServicesSection
+                  ? (editingId ? "Save Purchase Services" : "Save Purchase Services")
+                  : (editingId ? `Update ${section.label}` : `Save ${section.label}`)}
+              </button>
+              {editingId ? (
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  className="rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-600"
+                >
+                  Cancel
+                </button>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="rounded-[24px] bg-[linear-gradient(135deg,#4f1ecf_0%,#7c3aed_55%,#6d28d9_100%)] p-5 text-white shadow-[0_20px_40px_rgba(109,40,217,0.28)]">
+            <div className="text-xl font-bold">Smart Organization</div>
+            <p className="mt-3 text-sm leading-6 text-white/85">
+              {isUnitsSection
+                ? "Choose a preset unit name or short name to auto-fill the matching type. You can still enter a custom unit manually if needed."
+                : "System-wide updates propagate instantly. Changes to master units reflect in real-time stock calculations."}
+            </p>
+          </div>
+        </div>
+        ) : null}
+
+        {workspaceView === "list" ? (
+        <div className="rounded-[26px] border border-white/70 bg-white/95 p-5 shadow-[0_24px_60px_rgba(15,23,42,0.08)]">
+          <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h3 className="text-lg font-bold text-slate-900">Existing {section.label}</h3>
+              <p className="text-sm text-slate-400">{subtitle}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-64">
+                <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder={`Search ${section.label.toLowerCase()}...`} />
+              </div>
+              <span className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-500">
+                <FaFilter size={12} />
+              </span>
             </div>
           </div>
           <DataTable columns={columns} rows={filtered} onEdit={handleEdit} onDelete={onDelete} emptyMessage="No matching records found." />
         </div>
-      ) : null}
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -1389,11 +2421,228 @@ function MenuItemsSection({ records, draft, setDraft, editingId, onSave, onEdit,
   );
 }
 
-function PurchaseOrderSection({ records, onSave, onEdit, onDelete, draft, setDraft, editingId, searchQuery, setSearchQuery }) {
+function PurchaseOrderSection({
+  records,
+  onSave,
+  onEdit,
+  onDelete,
+  draft,
+  setDraft,
+  editingId,
+  searchQuery,
+  setSearchQuery,
+  inventoryItems,
+  vendorInwards,
+  refreshVendorInwards,
+  vendorPayments,
+  refreshVendorPayments,
+  stockLedgerRows,
+  refreshStockLedger,
+  vendorInsights,
+  refreshInventoryItems,
+  refreshPurchaseOrders,
+  masterData,
+  procurementOnly = false,
+}) {
   const [activeTab, setActiveTab] = useState("form");
+  const [opsTab, setOpsTab] = useState("inward-form");
+  const [opsSearch, setOpsSearch] = useState("");
+  const [inwardDraft, setInwardDraft] = useState(() => buildInitialForm([
+    { key: "poNumber", label: "PO Number", type: "text" },
+    { key: "vendorName", label: "Vendor", type: "text", required: true },
+    { key: "itemName", label: "Item Name", type: "text", required: true },
+    { key: "quantityReceived", label: "Quantity Received", type: "number", required: true },
+    { key: "unit", label: "Unit", type: "text" },
+    { key: "rate", label: "Rate / Unit (₹)", type: "number" },
+    { key: "amount", label: "Amount (₹)", type: "number" },
+    { key: "invoiceNo", label: "Invoice No", type: "text" },
+    { key: "batchNo", label: "Batch No", type: "text" },
+    { key: "expiryDate", label: "Expiry Date", type: "date" },
+    { key: "receivedDate", label: "Received Date", type: "date", required: true },
+    { key: "store", label: "Store", type: "text" },
+    { key: "remarks", label: "Remarks", type: "text" },
+  ]));
+  const [paymentDraft, setPaymentDraft] = useState(() => buildInitialForm([
+    { key: "vendorName", label: "Vendor", type: "text", required: true },
+    { key: "invoiceRef", label: "Invoice Ref", type: "text" },
+    { key: "paymentDate", label: "Payment Date", type: "date", required: true },
+    { key: "amount", label: "Amount (₹)", type: "number", required: true },
+    { key: "paymentMode", label: "Payment Mode", type: "select", options: ["Bank Transfer", "Cash", "UPI", "Cheque"] },
+    { key: "status", label: "Status", type: "select", options: ["Scheduled", "Paid", "Partial", "Cancelled"] },
+    { key: "notes", label: "Notes", type: "text" },
+  ]));
+  const [editingInwardId, setEditingInwardId] = useState(null);
+  const [editingPaymentId, setEditingPaymentId] = useState(null);
   const filtered = records.filter((r) =>
     Object.values(r).some((v) => String(v ?? "").toLowerCase().includes(searchQuery.toLowerCase()))
   );
+  const filteredInwards = vendorInwards.filter((row) =>
+    Object.values(row).some((value) => String(value ?? "").toLowerCase().includes(opsSearch.toLowerCase()))
+  );
+  const filteredPayments = vendorPayments.filter((row) =>
+    Object.values(row).some((value) => String(value ?? "").toLowerCase().includes(opsSearch.toLowerCase()))
+  );
+  const filteredLedger = stockLedgerRows.filter((row) =>
+    Object.values(row).some((value) => String(value ?? "").toLowerCase().includes(opsSearch.toLowerCase()))
+  );
+  const procurementSummary = vendorInsights?.summary || {};
+  const procurementVendors = vendorInsights?.vendors || [];
+  const normalizedInwardVendor = normalizeInventoryText(inwardDraft.vendorName);
+  const normalizedPaymentVendor = normalizeInventoryText(paymentDraft.vendorName);
+  const purchaseItemRows = masterData?.["purchase-items"] || [];
+  const vendorOptions = buildSelectOptions((masterData?.vendors || []).map((row) => row.name));
+  const unitOptions = buildSelectOptions((masterData?.units || []).map((row) => row.shortName || row.name));
+  const itemOptions = buildSelectOptions(inventoryItems.map((row) => row.name));
+  const storeOptions = buildSelectOptions((masterData?.["store-kitchen"] || []).map((row) => row.name));
+  const procurementInvoiceRows = useMemo(
+    () => [
+      ...vendorInwards.map((row) => ({
+        source: "inward",
+        vendorName: row.vendorName || "",
+        itemName: row.itemName || "",
+        quantity: row.quantityReceived,
+        unit: row.unit || "",
+        rate: row.rate || "",
+        amount: row.amount || "",
+        invoiceNo: row.invoiceNo || "",
+        date: row.receivedDate || row.createdAt || "",
+        store: row.store || "",
+      })),
+      ...purchaseItemRows.map((row) => ({
+        source: "purchase-item",
+        vendorName: row.vendor || "",
+        itemName: row.itemName || "",
+        quantity: row.quantity,
+        unit: row.unit || "",
+        rate: row.ratePerUnit || "",
+        amount: row.amount || "",
+        invoiceNo: row.invoiceNo || "",
+        date: row.date || "",
+        store: row.store || "",
+      })),
+    ]
+      .filter((row) => row.vendorName || row.invoiceNo || row.itemName)
+      .sort((a, b) => getInventoryRowTimestamp(b.date) - getInventoryRowTimestamp(a.date)),
+    [purchaseItemRows, vendorInwards],
+  );
+  const invoiceOptions = buildSelectOptions(procurementInvoiceRows.map((row) => row.invoiceNo));
+  const inwardVendorHistory = useMemo(
+    () => procurementInvoiceRows
+      .filter((row) => normalizeInventoryText(row.vendorName) === normalizedInwardVendor)
+      .sort((a, b) => getInventoryRowTimestamp(b.date) - getInventoryRowTimestamp(a.date)),
+    [normalizedInwardVendor, procurementInvoiceRows],
+  );
+  const selectedVendorInsight = useMemo(
+    () => procurementVendors.find((row) => normalizeInventoryText(row.vendorName) === normalizedInwardVendor) || null,
+    [normalizedInwardVendor, procurementVendors],
+  );
+  const selectedVendorLatestInward = inwardVendorHistory[0] || null;
+  const selectedVendorOpenPo = useMemo(
+    () => records.find((row) => normalizeInventoryText(row.vendor) === normalizedInwardVendor) || null,
+    [normalizedInwardVendor, records],
+  );
+  const selectedInwardInvoice = useMemo(
+    () => procurementInvoiceRows.find((row) => String(row.invoiceNo || "").trim() === String(inwardDraft.invoiceNo || "").trim()) || null,
+    [inwardDraft.invoiceNo, procurementInvoiceRows],
+  );
+  const vendorScopedInvoiceOptions = buildSelectOptions(inwardVendorHistory.map((row) => row.invoiceNo));
+  const vendorScopedItemOptions = buildSelectOptions([
+    ...inwardVendorHistory.map((row) => row.itemName),
+    ...records.filter((row) => normalizeInventoryText(row.vendor) === normalizedInwardVendor).map((row) => row.itemName),
+    ...inventoryItems.map((row) => row.name),
+  ]);
+  const paymentVendorHistory = useMemo(
+    () => procurementInvoiceRows
+      .filter((row) => normalizeInventoryText(row.vendorName) === normalizedPaymentVendor)
+      .sort((a, b) => getInventoryRowTimestamp(b.date) - getInventoryRowTimestamp(a.date)),
+    [normalizedPaymentVendor, procurementInvoiceRows],
+  );
+  const paymentInvoiceOptions = buildSelectOptions(
+    (normalizedPaymentVendor ? paymentVendorHistory : procurementInvoiceRows).map((row) => row.invoiceNo),
+  );
+  const selectedPaymentInvoice = useMemo(
+    () => paymentVendorHistory.find((row) => String(row.invoiceNo || "") === String(paymentDraft.invoiceRef || "")) || null,
+    [paymentDraft.invoiceRef, paymentVendorHistory],
+  );
+  const resolveInvoiceForInwardRow = useCallback((row) => {
+    if (String(row.invoiceNo || "").trim()) return row.invoiceNo;
+    const normalizedVendor = normalizeInventoryText(row.vendorName);
+    const normalizedItem = normalizeInventoryText(row.itemName);
+    const quantity = getNormalizedNumber(row.quantityReceived);
+    const amount = getNormalizedNumber(row.amount);
+    const rowDate = String(row.receivedDate || "").trim();
+
+    const quantityMatch = procurementInvoiceRows.find((entry) =>
+      normalizeInventoryText(entry.vendorName) === normalizedVendor
+      && normalizeInventoryText(entry.itemName) === normalizedItem
+      && getNormalizedNumber(entry.quantity) === quantity
+      && String(entry.invoiceNo || "").trim()
+    );
+    if (quantityMatch?.invoiceNo) return quantityMatch.invoiceNo;
+
+    const amountMatch = procurementInvoiceRows.find((entry) =>
+      normalizeInventoryText(entry.vendorName) === normalizedVendor
+      && normalizeInventoryText(entry.itemName) === normalizedItem
+      && getNormalizedNumber(entry.amount) === amount
+      && String(entry.invoiceNo || "").trim()
+    );
+    if (amountMatch?.invoiceNo) return amountMatch.invoiceNo;
+
+    const datedMatch = procurementInvoiceRows.find((entry) =>
+      normalizeInventoryText(entry.vendorName) === normalizedVendor
+      && normalizeInventoryText(entry.itemName) === normalizedItem
+      && String(entry.date || "").trim() === rowDate
+      && String(entry.invoiceNo || "").trim()
+    );
+    if (datedMatch?.invoiceNo) return datedMatch.invoiceNo;
+
+    const latestMatch = procurementInvoiceRows.find((entry) =>
+      normalizeInventoryText(entry.vendorName) === normalizedVendor
+      && normalizeInventoryText(entry.itemName) === normalizedItem
+      && String(entry.invoiceNo || "").trim()
+    );
+    return latestMatch?.invoiceNo || "";
+  }, [procurementInvoiceRows]);
+
+  const resolvedPoFields = PO_FIELDS.map((field) => {
+    if (field.key === "vendor") return { ...field, type: vendorOptions.length ? "select" : field.type, options: vendorOptions, suggestions: vendorOptions };
+    if (field.key === "itemName") return { ...field, type: itemOptions.length ? "select" : field.type, options: itemOptions, suggestions: itemOptions };
+    if (field.key === "unit") return { ...field, type: unitOptions.length ? "select" : field.type, options: unitOptions, suggestions: unitOptions };
+    return field;
+  });
+
+  const inwardFields = [
+    { key: "poNumber", label: "PO Number", type: "select", options: buildSelectOptions(records.map((row) => row.poNumber)) },
+    { key: "vendorName", label: "Vendor", type: vendorOptions.length ? "select" : "text", required: true, options: vendorOptions },
+    { key: "itemName", label: "Item Name", type: vendorScopedItemOptions.length ? "select" : itemOptions.length ? "select" : "text", required: true, options: vendorScopedItemOptions.length ? vendorScopedItemOptions : itemOptions, suggestions: vendorScopedItemOptions.length ? vendorScopedItemOptions : itemOptions },
+    { key: "quantityReceived", label: "Quantity Received", type: "number", required: true },
+    { key: "unit", label: "Unit", type: unitOptions.length ? "select" : "text", options: unitOptions, suggestions: unitOptions },
+    { key: "rate", label: "Rate / Unit (₹)", type: "number" },
+    { key: "amount", label: "Amount (₹)", type: "number" },
+    {
+      key: "invoiceNo",
+      label: "Invoice No",
+      type: invoiceOptions.length ? "select" : "text",
+      options: normalizedInwardVendor && vendorScopedInvoiceOptions.length ? vendorScopedInvoiceOptions : invoiceOptions,
+      suggestions: normalizedInwardVendor && vendorScopedInvoiceOptions.length ? vendorScopedInvoiceOptions : invoiceOptions,
+      allowCustom: invoiceOptions.length > 0,
+    },
+    { key: "batchNo", label: "Batch No", type: "text" },
+    { key: "expiryDate", label: "Expiry Date", type: "date" },
+    { key: "receivedDate", label: "Received Date", type: "date", required: true },
+    { key: "store", label: "Store", type: storeOptions.length ? "select" : "text", options: storeOptions, suggestions: storeOptions },
+    { key: "remarks", label: "Remarks", type: "text" },
+  ];
+
+  const paymentFields = [
+    { key: "vendorName", label: "Vendor", type: vendorOptions.length ? "select" : "text", required: true, options: vendorOptions },
+    { key: "invoiceRef", label: "Invoice Ref", type: paymentInvoiceOptions.length ? "select" : invoiceOptions.length ? "select" : "text", options: paymentInvoiceOptions.length ? paymentInvoiceOptions : invoiceOptions, suggestions: paymentInvoiceOptions.length ? paymentInvoiceOptions : invoiceOptions },
+    { key: "paymentDate", label: "Payment Date", type: "date", required: true },
+    { key: "amount", label: "Amount (₹)", type: "number", required: true },
+    { key: "paymentMode", label: "Payment Mode", type: "select", options: ["Bank Transfer", "Cash", "UPI", "Cheque"] },
+    { key: "status", label: "Status", type: "select", options: ["Scheduled", "Paid", "Partial", "Cancelled"] },
+    { key: "notes", label: "Notes", type: "text" },
+  ];
 
   const poColumns = ["poNumber", "vendor", "itemName", "quantity", "unit", "rate", "expectedDate", "status"];
 
@@ -1421,21 +2670,201 @@ function PurchaseOrderSection({ records, onSave, onEdit, onDelete, draft, setDra
     setActiveTab("form");
   };
 
+  useEffect(() => {
+    const quantity = Number(inwardDraft.quantityReceived || 0);
+    const rate = Number(inwardDraft.rate || 0);
+    const nextAmount = quantity > 0 && rate > 0 ? quantity * rate : 0;
+    if (Number(inwardDraft.amount || 0) === nextAmount) return;
+    setInwardDraft((current) => ({ ...current, amount: nextAmount ? String(nextAmount) : "" }));
+  }, [inwardDraft.quantityReceived, inwardDraft.rate, inwardDraft.amount]);
+
+  useEffect(() => {
+    const po = records.find((row) => String(row.poNumber || "") === String(inwardDraft.poNumber || ""));
+    if (!po) return;
+    setInwardDraft((current) => ({
+      ...current,
+      vendorName: current.vendorName || po.vendor || "",
+      itemName: current.itemName || po.itemName || "",
+      unit: current.unit || po.unit || "",
+      rate: current.rate || po.rate || "",
+    }));
+  }, [inwardDraft.poNumber, records]);
+
+  useEffect(() => {
+    if (editingInwardId || !normalizedInwardVendor) return;
+    setInwardDraft((current) => {
+      if (normalizeInventoryText(current.vendorName) !== normalizedInwardVendor) return current;
+      const next = { ...current };
+
+      if (!String(next.invoiceNo || "").trim() && selectedVendorLatestInward?.invoiceNo) {
+        next.invoiceNo = selectedVendorLatestInward.invoiceNo;
+      }
+      if (!String(next.poNumber || "").trim() && selectedVendorOpenPo?.poNumber) {
+        next.poNumber = selectedVendorOpenPo.poNumber;
+      }
+      if (!String(next.itemName || "").trim()) {
+        next.itemName = selectedVendorLatestInward?.itemName || selectedVendorOpenPo?.itemName || "";
+      }
+      if (!String(next.unit || "").trim()) {
+        next.unit = selectedVendorLatestInward?.unit || selectedVendorOpenPo?.unit || "";
+      }
+      if (!String(next.rate || "").trim()) {
+        next.rate = selectedVendorLatestInward?.rate || selectedVendorOpenPo?.rate || "";
+      }
+      if (!String(next.store || "").trim()) {
+        next.store = selectedVendorLatestInward?.store || "";
+      }
+      return next;
+    });
+  }, [editingInwardId, normalizedInwardVendor, selectedVendorLatestInward, selectedVendorOpenPo]);
+
+  useEffect(() => {
+    if (editingInwardId || !selectedInwardInvoice) return;
+    setInwardDraft((current) => {
+      if (String(current.invoiceNo || "").trim() !== String(selectedInwardInvoice.invoiceNo || "").trim()) {
+        return current;
+      }
+      return {
+        ...current,
+        vendorName: selectedInwardInvoice.vendorName || current.vendorName || "",
+        itemName: current.itemName || selectedInwardInvoice.itemName || "",
+        unit: current.unit || selectedInwardInvoice.unit || "",
+        rate: current.rate || selectedInwardInvoice.rate || "",
+        store: current.store || selectedInwardInvoice.store || "",
+      };
+    });
+  }, [editingInwardId, selectedInwardInvoice]);
+
+  useEffect(() => {
+    if (editingPaymentId || !normalizedPaymentVendor) return;
+    const latestVendorInvoice = paymentVendorHistory[0] || null;
+    if (!latestVendorInvoice?.invoiceNo) return;
+    setPaymentDraft((current) => {
+      if (normalizeInventoryText(current.vendorName) !== normalizedPaymentVendor) return current;
+      return {
+        ...current,
+        invoiceRef: latestVendorInvoice.invoiceNo,
+      };
+    });
+  }, [editingPaymentId, normalizedPaymentVendor, paymentVendorHistory]);
+
+  useEffect(() => {
+    if (!selectedPaymentInvoice) return;
+    setPaymentDraft((current) => {
+      if (String(current.invoiceRef || "") !== String(selectedPaymentInvoice.invoiceNo || "")) return current;
+      return {
+        ...current,
+        vendorName: current.vendorName || selectedPaymentInvoice.vendorName || "",
+        amount: current.amount || selectedPaymentInvoice.amount || "",
+        notes: current.notes || `Payment against invoice ${selectedPaymentInvoice.invoiceNo}`,
+      };
+    });
+  }, [selectedPaymentInvoice]);
+
+  const handleInwardFieldChange = useCallback((key, val) => {
+    setInwardDraft((current) => {
+      const next = { ...current, [key]: val };
+      if (key === "vendorName") {
+        next.invoiceNo = "";
+      }
+      if (key === "invoiceNo" && val) {
+        const matchedInvoice = procurementInvoiceRows.find(
+          (row) => String(row.invoiceNo || "").trim() === String(val || "").trim(),
+        );
+        if (matchedInvoice) {
+          next.vendorName = matchedInvoice.vendorName || next.vendorName || "";
+          next.itemName = next.itemName || matchedInvoice.itemName || "";
+          next.unit = next.unit || matchedInvoice.unit || "";
+          next.rate = next.rate || matchedInvoice.rate || "";
+          next.store = next.store || matchedInvoice.store || "";
+        }
+      }
+      return next;
+    });
+  }, [procurementInvoiceRows]);
+
+  const handleSaveInward = async () => {
+    try {
+      const resolvedInvoiceNo = String(inwardDraft.invoiceNo || "").trim()
+        || resolveInvoiceForInwardRow(inwardDraft);
+      const payload = {
+        ...inwardDraft,
+        invoiceNo: resolvedInvoiceNo,
+      };
+      if (editingInwardId) {
+        await API.put(`/inventory/vendor-inwards/${editingInwardId}`, payload);
+      } else {
+        await API.post("/inventory/vendor-inwards", payload);
+      }
+      setInwardDraft(buildInitialForm([
+        { key: "poNumber", label: "PO Number", type: "text" },
+        { key: "vendorName", label: "Vendor", type: "text", required: true },
+        { key: "itemName", label: "Item Name", type: "text", required: true },
+        { key: "quantityReceived", label: "Quantity Received", type: "number", required: true },
+        { key: "unit", label: "Unit", type: "text" },
+        { key: "rate", label: "Rate / Unit (₹)", type: "number" },
+        { key: "amount", label: "Amount (₹)", type: "number" },
+        { key: "invoiceNo", label: "Invoice No", type: "text" },
+        { key: "batchNo", label: "Batch No", type: "text" },
+        { key: "expiryDate", label: "Expiry Date", type: "date" },
+        { key: "receivedDate", label: "Received Date", type: "date", required: true },
+        { key: "store", label: "Store", type: "text" },
+        { key: "remarks", label: "Remarks", type: "text" },
+      ]));
+      setEditingInwardId(null);
+      setOpsTab("inward-list");
+      await Promise.all([refreshVendorInwards(), refreshStockLedger(), refreshStockFlowReport(), refreshInventoryItems(), refreshPurchaseOrders()]);
+    } catch (err) {
+      alert(err.response?.data?.message || "Vendor inward save nahi ho paaya.");
+    }
+  };
+
+  const handleSavePayment = async () => {
+    try {
+      if (editingPaymentId) {
+        await API.put(`/inventory/vendor-payments/${editingPaymentId}`, paymentDraft);
+      } else {
+        await API.post("/inventory/vendor-payments", paymentDraft);
+      }
+      setPaymentDraft(buildInitialForm([
+        { key: "vendorName", label: "Vendor", type: "text", required: true },
+        { key: "invoiceRef", label: "Invoice Ref", type: "text" },
+        { key: "paymentDate", label: "Payment Date", type: "date", required: true },
+        { key: "amount", label: "Amount (₹)", type: "number", required: true },
+        { key: "paymentMode", label: "Payment Mode", type: "select", options: ["Bank Transfer", "Cash", "UPI", "Cheque"] },
+        { key: "status", label: "Status", type: "select", options: ["Scheduled", "Paid", "Partial", "Cancelled"] },
+        { key: "notes", label: "Notes", type: "text" },
+      ]));
+      setEditingPaymentId(null);
+      setOpsTab("payment-list");
+      await refreshVendorPayments();
+    } catch (err) {
+      alert(err.response?.data?.message || "Vendor payment save nahi ho paaya.");
+    }
+  };
+
   return (
     <div className="space-y-5">
-      <SectionTabs
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <MetricCard label="Vendors" value={procurementSummary.totalVendors || procurementVendors.length} tone="default" />
+        <MetricCard label="Stock Received" value={`${Number(procurementSummary.totalReceivedQty || 0).toFixed(2).replace(/\.00$/, "")} units`} tone="cyan" />
+        <MetricCard label="Received Value" value={formatCurrency(procurementSummary.totalReceivedValue || 0)} tone="emerald" />
+        <MetricCard label="Outstanding Payments" value={formatCurrency(procurementSummary.totalOutstandingAmount || 0)} tone="amber" />
+      </div>
+
+      {!procurementOnly ? <SectionTabs
         activeTab={activeTab}
         onChange={setActiveTab}
         listLabel="PO Register"
         listHelper="View purchase order history"
         formLabel={editingId ? "Edit PO" : "Add PO"}
         formHelper={editingId ? "Update selected purchase order" : "Open form to create a purchase order"}
-      />
-      {activeTab === "form" ? (
+      /> : null}
+      {!procurementOnly && activeTab === "form" ? (
         <FormPanel
           title="Purchase Order"
           subtitle="Create PO → Send to vendor → Mark GRN Received"
-          fields={PO_FIELDS}
+          fields={resolvedPoFields}
           draft={draft}
           setDraft={setDraft}
           editingId={editingId}
@@ -1443,7 +2872,7 @@ function PurchaseOrderSection({ records, onSave, onEdit, onDelete, draft, setDra
           onReset={handleReset}
         />
       ) : null}
-      {activeTab === "list" ? (
+      {!procurementOnly && activeTab === "list" ? (
         <div className="overflow-hidden rounded-[28px] border border-white/70 bg-white/90 p-5 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
           <div className="mb-4 flex items-center justify-between gap-3">
             <div>
@@ -1502,13 +2931,582 @@ function PurchaseOrderSection({ records, onSave, onEdit, onDelete, draft, setDra
           </div>
         </div>
       ) : null}
+
+      <div className="rounded-[28px] border border-white/70 bg-white/90 p-5 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+        <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+          <div>
+            <h3 className="text-2xl font-semibold text-slate-900">Real Procurement Flow</h3>
+            <p className="text-base text-slate-400">Vendor inward, payment tracking, and stock ledger from real inventory data.</p>
+          </div>
+          <div className="w-full xl:w-80">
+            <SearchBar value={opsSearch} onChange={setOpsSearch} placeholder="Search inward / payment / ledger" />
+          </div>
+        </div>
+
+        <div className="mb-5 flex flex-wrap items-center gap-3">
+          {[
+            { id: "inward-form", label: editingInwardId ? "Edit Stock Inward" : "Add Stock Inward" },
+            { id: "inward-list", label: "Inward History" },
+            { id: "payment-form", label: editingPaymentId ? "Edit Vendor Payment" : "Add Vendor Payment" },
+            { id: "payment-list", label: "Payment History" },
+            { id: "ledger", label: "Stock Ledger" },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setOpsTab(tab.id)}
+              className={`inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold transition ${
+                opsTab === tab.id
+                  ? "border-transparent bg-[linear-gradient(90deg,#2563eb_0%,#1d4ed8_100%)] text-white shadow-[0_14px_28px_rgba(37,99,235,0.22)]"
+                  : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {opsTab === "inward-form" ? (
+          <div className="rounded-[24px] border border-slate-100 bg-white p-5 shadow-[0_18px_35px_rgba(15,23,42,0.06)]">
+            <div className="mb-4 text-xl font-bold text-slate-900">{editingInwardId ? "Edit Stock Inward" : "Add Stock Inward"}</div>
+            <div className="grid gap-3 md:grid-cols-2">
+              {inwardFields.map((field) => (
+                { key: "rate", label: "Rate / Unit (₹)", type: "number" },
+                { key: "amount", label: "Amount (₹)", type: "number" },
+                <div key={field.key}>
+                  <label className="mb-2 block text-sm font-semibold text-slate-700">{field.label}</label>
+                  <FormInput
+                    field={field}
+                    value={inwardDraft[field.key] ?? ""}
+                    onChange={handleInwardFieldChange}
+                  />
+                </div>
+              ))}
+            </div>
+            {normalizedInwardVendor ? (
+              <div className="mt-4 rounded-2xl border border-cyan-100 bg-cyan-50/70 px-4 py-4 text-sm text-slate-700">
+                <div className="font-semibold text-slate-900">
+                  Vendor history: {inwardDraft.vendorName}
+                </div>
+                <div className="mt-1 flex flex-wrap gap-x-5 gap-y-2">
+                  <span>Total received: {Number(selectedVendorInsight?.totalQty || 0).toFixed(2).replace(/\.00$/, "")} {selectedVendorLatestInward?.unit || "units"}</span>
+                  <span>Receipts: {selectedVendorInsight?.receiptsCount || inwardVendorHistory.length}</span>
+                  <span>Last invoice: {selectedVendorLatestInward?.invoiceNo || "—"}</span>
+                  <span>Last received: {selectedVendorLatestInward?.receivedDate || selectedVendorInsight?.lastReceivedDate || "—"}</span>
+                </div>
+                <div className="mt-2 text-slate-500">
+                  Vendor select karte hi latest inward se invoice no auto-fill hota hai. Item, unit, rate aur store bhi previous inward ya matching PO se prefill ho sakte hain.
+                </div>
+              </div>
+            ) : null}
+            <div className="mt-5 flex flex-wrap gap-2">
+              <button type="button" onClick={handleSaveInward} className="rounded-xl bg-[linear-gradient(90deg,#2563eb_0%,#1d4ed8_100%)] px-5 py-3 text-sm font-semibold text-white">
+                {editingInwardId ? "Update Stock Inward" : "Save Stock Inward"}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingInwardId(null);
+                  setInwardDraft(buildInitialForm([
+                    { key: "poNumber", label: "PO Number", type: "text" },
+                    { key: "vendorName", label: "Vendor", type: "text", required: true },
+                    { key: "itemName", label: "Item Name", type: "text", required: true },
+                    { key: "quantityReceived", label: "Quantity Received", type: "number", required: true },
+                    { key: "unit", label: "Unit", type: "text" },
+                    { key: "rate", label: "Rate / Unit (₹)", type: "number" },
+                    { key: "amount", label: "Amount (₹)", type: "number" },
+                    { key: "invoiceNo", label: "Invoice No", type: "text" },
+                    { key: "batchNo", label: "Batch No", type: "text" },
+                    { key: "expiryDate", label: "Expiry Date", type: "date" },
+                    { key: "receivedDate", label: "Received Date", type: "date", required: true },
+                    { key: "store", label: "Store", type: "text" },
+                    { key: "remarks", label: "Remarks", type: "text" },
+                  ]));
+                }}
+                className="rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-600"
+              >
+                Clear
+              </button>
+            </div>
+            <div className="mt-4 text-sm text-slate-500">
+              Tip: agar item name exact inventory item se match karta hai, to inward save hote hi stock real data mein increase ho jayega.
+            </div>
+          </div>
+        ) : null}
+
+        {opsTab === "inward-list" ? (
+          <div className="overflow-x-auto rounded-2xl border border-slate-200">
+            <table className="min-w-full text-sm">
+              <thead className="bg-slate-50 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400 text-left">
+                <tr>
+                  {["vendorName", "itemName", "quantityReceived", "unit", "amount", "invoiceNo", "batchNo", "expiryDate", "receivedDate", "store"].map((col) => (
+                    <th key={col} className="px-4 py-4">{formatLabel(col)}</th>
+                  ))}
+                  <th className="px-4 py-4">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredInwards.length ? filteredInwards.map((row) => {
+                  const resolvedInvoiceNo = resolveInvoiceForInwardRow(row);
+                  return (
+                  <tr key={row.id} className="border-t border-slate-100">
+                    <td className="px-4 py-4 font-semibold text-slate-900">{row.vendorName}</td>
+                    <td className="px-4 py-4 text-slate-700">{row.itemName}</td>
+                    <td className="px-4 py-4 text-slate-700">{row.quantityReceived}</td>
+                    <td className="px-4 py-4 text-slate-500">{row.unit || "—"}</td>
+                    <td className="px-4 py-4 font-semibold text-slate-900">{formatCurrency(row.amount)}</td>
+                    <td className="px-4 py-4 text-slate-500">{resolvedInvoiceNo || "—"}</td>
+                    <td className="px-4 py-4 text-slate-500">{row.batchNo || "—"}</td>
+                    <td className="px-4 py-4 text-slate-500">
+                      <div className="flex flex-col gap-1">
+                        <span>{row.expiryDate || "—"}</span>
+                        {row.expiryDate ? (
+                          <Badge
+                            color={
+                              getExpiryStatus(row.expiryDate)?.label === "Expired"
+                                ? "red"
+                                : getExpiryStatus(row.expiryDate)?.label === "Expiring Soon"
+                                  ? "amber"
+                                  : "green"
+                            }
+                          >
+                            {getExpiryStatus(row.expiryDate)?.label || "Healthy"}
+                          </Badge>
+                        ) : null}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 text-slate-500">{row.receivedDate || "—"}</td>
+                    <td className="px-4 py-4 text-slate-500">{row.store || "—"}</td>
+                    <td className="px-4 py-4">
+                      <div className="flex gap-2">
+                        <button type="button" onClick={() => { setEditingInwardId(row.id); setInwardDraft({ ...buildInitialForm(inwardFields), ...row, invoiceNo: resolvedInvoiceNo || row.invoiceNo || "" }); setOpsTab("inward-form"); }} className="inline-flex items-center gap-1 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-2 text-sm font-semibold text-cyan-700"><FaEdit size={10} /> Edit</button>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            try {
+                              await API.delete(`/inventory/vendor-inwards/${row.id}`);
+                              await Promise.all([
+                                refreshVendorInwards(),
+                                refreshStockLedger(),
+                                refreshStockFlowReport(),
+                                refreshInventoryItems(),
+                                refreshPurchaseOrders(),
+                              ]);
+                            } catch (err) {
+                              alert(err.response?.data?.message || "Vendor inward delete nahi ho paaya.");
+                            }
+                          }}
+                          className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-600"
+                        >
+                          <FaTrash size={10} /> Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+                }) : <tr><td colSpan={9} className="px-4 py-12 text-center text-sm text-slate-400">No inward entries found.</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
+
+        {opsTab === "payment-form" ? (
+          <div className="rounded-[24px] border border-slate-100 bg-white p-5 shadow-[0_18px_35px_rgba(15,23,42,0.06)]">
+            <div className="mb-4 text-xl font-bold text-slate-900">{editingPaymentId ? "Edit Vendor Payment" : "Add Vendor Payment"}</div>
+            <div className="grid gap-3 md:grid-cols-2">
+              {paymentFields.map((field) => (
+                { key: "vendorName", label: "Vendor", type: "text", required: true },
+                { key: "invoiceRef", label: "Invoice Ref", type: "text" },
+                { key: "paymentDate", label: "Payment Date", type: "date", required: true },
+                { key: "amount", label: "Amount (₹)", type: "number", required: true },
+                { key: "paymentMode", label: "Payment Mode", type: "select", options: ["Bank Transfer", "Cash", "UPI", "Cheque"] },
+                { key: "status", label: "Status", type: "select", options: ["Scheduled", "Paid", "Partial", "Cancelled"] },
+                { key: "notes", label: "Notes", type: "text" },
+                <div key={field.key}>
+                  <label className="mb-2 block text-sm font-semibold text-slate-700">{field.label}</label>
+                  <FormInput
+                    field={field}
+                    value={paymentDraft[field.key] ?? ""}
+                    onChange={(key, val) => setPaymentDraft((current) => ({ ...current, [key]: val }))}
+                  />
+                </div>
+              ))}
+            </div>
+            {normalizedPaymentVendor ? (
+              <div className="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50/70 px-4 py-4 text-sm text-slate-700">
+                <div className="font-semibold text-slate-900">
+                  Payment context: {paymentDraft.vendorName}
+                </div>
+                <div className="mt-1 flex flex-wrap gap-x-5 gap-y-2">
+                  <span>Invoice options: {paymentInvoiceOptions.length}</span>
+                  <span>Latest invoice: {paymentVendorHistory[0]?.invoiceNo || "—"}</span>
+                  <span>Latest amount: {formatCurrency(paymentVendorHistory[0]?.amount || 0)}</span>
+                </div>
+                <div className="mt-2 text-slate-500">
+                  Vendor select karne par invoice ref us vendor ke inward history tak limit ho jata hai aur latest invoice auto-select ho jata hai.
+                </div>
+              </div>
+            ) : null}
+            <div className="mt-5 flex flex-wrap gap-2">
+              <button type="button" onClick={handleSavePayment} className="rounded-xl bg-[linear-gradient(90deg,#16a34a_0%,#15803d_100%)] px-5 py-3 text-sm font-semibold text-white">
+                {editingPaymentId ? "Update Vendor Payment" : "Save Vendor Payment"}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingPaymentId(null);
+                  setPaymentDraft(buildInitialForm([
+                    { key: "vendorName", label: "Vendor", type: "text", required: true },
+                    { key: "invoiceRef", label: "Invoice Ref", type: "text" },
+                    { key: "paymentDate", label: "Payment Date", type: "date", required: true },
+                    { key: "amount", label: "Amount (₹)", type: "number", required: true },
+                    { key: "paymentMode", label: "Payment Mode", type: "select", options: ["Bank Transfer", "Cash", "UPI", "Cheque"] },
+                    { key: "status", label: "Status", type: "select", options: ["Scheduled", "Paid", "Partial", "Cancelled"] },
+                    { key: "notes", label: "Notes", type: "text" },
+                  ]));
+                }}
+                className="rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-600"
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+        ) : null}
+
+        {opsTab === "payment-list" ? (
+          <div className="overflow-x-auto rounded-2xl border border-slate-200">
+            <table className="min-w-full text-sm">
+              <thead className="bg-slate-50 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400 text-left">
+                <tr>
+                  {["vendorName", "invoiceRef", "paymentDate", "amount", "paymentMode", "status"].map((col) => (
+                    <th key={col} className="px-4 py-4">{formatLabel(col)}</th>
+                  ))}
+                  <th className="px-4 py-4">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredPayments.length ? filteredPayments.map((row) => (
+                  <tr key={row.id} className="border-t border-slate-100">
+                    <td className="px-4 py-4 font-semibold text-slate-900">{row.vendorName}</td>
+                    <td className="px-4 py-4 text-slate-700">{row.invoiceRef || "—"}</td>
+                    <td className="px-4 py-4 text-slate-500">{row.paymentDate || "—"}</td>
+                    <td className="px-4 py-4 font-semibold text-emerald-600">{formatCurrency(row.amount)}</td>
+                    <td className="px-4 py-4 text-slate-500">{row.paymentMode || "—"}</td>
+                    <td className="px-4 py-4"><Badge color={String(row.status || "").toLowerCase().includes("paid") ? "green" : String(row.status || "").toLowerCase().includes("cancel") ? "red" : "amber"}>{row.status || "Scheduled"}</Badge></td>
+                    <td className="px-4 py-4">
+                      <div className="flex gap-2">
+                        <button type="button" onClick={() => { setEditingPaymentId(row.id); setPaymentDraft({ ...buildInitialForm([]), ...row }); setOpsTab("payment-form"); }} className="inline-flex items-center gap-1 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-2 text-sm font-semibold text-cyan-700"><FaEdit size={10} /> Edit</button>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            try {
+                              await API.delete(`/inventory/vendor-payments/${row.id}`);
+                              await refreshVendorPayments();
+                            } catch (err) {
+                              alert(err.response?.data?.message || "Vendor payment delete nahi ho paaya.");
+                            }
+                          }}
+                          className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-600"
+                        >
+                          <FaTrash size={10} /> Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )) : <tr><td colSpan={7} className="px-4 py-12 text-center text-sm text-slate-400">No vendor payments found.</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
+
+        {opsTab === "ledger" ? (
+          <div className="overflow-x-auto rounded-2xl border border-slate-200">
+            <table className="min-w-full text-sm">
+              <thead className="bg-slate-50 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400 text-left">
+                <tr>
+                  {["entryDate", "itemName", "referenceType", "direction", "quantity", "unit", "vendorName", "amount", "balanceAfter"].map((col) => (
+                    <th key={col} className="px-4 py-4">{formatLabel(col)}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filteredLedger.length ? filteredLedger.map((row) => (
+                  <tr key={`${row.referenceType}-${row.id}-${row.createdAt || row.entryDate}`} className="border-t border-slate-100">
+                    <td className="px-4 py-4 text-slate-500">{row.entryDate || "—"}</td>
+                    <td className="px-4 py-4 font-semibold text-slate-900">{row.itemName || "—"}</td>
+                    <td className="px-4 py-4 text-slate-700">{formatLabel(row.referenceType || "entry")}</td>
+                    <td className="px-4 py-4"><Badge color={String(row.direction || "").toUpperCase() === "OUT" ? "red" : "green"}>{String(row.direction || "IN").toUpperCase()}</Badge></td>
+                    <td className="px-4 py-4 text-slate-700">{row.quantity}</td>
+                    <td className="px-4 py-4 text-slate-500">{row.unit || "—"}</td>
+                    <td className="px-4 py-4 text-slate-500">{row.vendorName || "—"}</td>
+                    <td className="px-4 py-4 font-semibold text-slate-900">{formatCurrency(row.amount || 0)}</td>
+                    <td className="px-4 py-4 text-slate-500">{row.balanceAfter ?? "—"}</td>
+                  </tr>
+                )) : <tr><td colSpan={9} className="px-4 py-12 text-center text-sm text-slate-400">No stock ledger rows found.</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function PurchaseWorkspaceSection({ records, masterData, onSave, onEdit, onDelete, draft, setDraft, editingId, searchQuery, setSearchQuery, setActiveSection }) {
+  const [activeTab, setActiveTab] = useState("form");
+  const filtered = records.filter((r) =>
+    Object.values(r).some((v) => String(v ?? "").toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+  const poColumns = ["poNumber", "vendor", "itemName", "quantity", "unit", "rate", "expectedDate", "status"];
+  const purchaseItems = masterData["purchase-items"] || [];
+  const purchaseServices = masterData["purchase-services"] || [];
+  const totalSpend = [...purchaseItems, ...purchaseServices].reduce((sum, row) => sum + Number(row.amount || 0), 0);
+  const openOrders = records.filter((row) => !["Closed", "Cancelled"].includes(String(row.status || ""))).length;
+  const pendingOrders = records.filter((row) => ["Draft", "Sent"].includes(String(row.status || ""))).length;
+  const recentPurchases = [...records]
+    .sort((a, b) => new Date(b.expectedDate || 0) - new Date(a.expectedDate || 0))
+    .slice(0, 3);
+  const purchaseTabs = [
+    { id: "purchase-items", label: "Purchase Items" },
+    { id: "purchase-services", label: "Purchase Services" },
+    { id: "purchase-orders", label: "Purchase Orders" },
+  ];
+
+  useEffect(() => {
+    if (editingId) {
+      setActiveTab("form");
+    }
+  }, [editingId]);
+
+  const handleSave = async () => {
+    const saved = await onSave();
+    if (saved) {
+      setActiveTab("list");
+    }
+  };
+
+  const handleReset = () => {
+    setDraft(buildInitialForm(PO_FIELDS));
+    onEdit(null);
+    setActiveTab("form");
+  };
+
+  const handleEdit = (record) => {
+    onEdit(record);
+    setActiveTab("form");
+  };
+
+  return (
+    <div className="space-y-5">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {[
+          { label: "Total Orders", value: records.length, meta: "+12%", tone: "bg-emerald-50 text-emerald-600", icon: FaClipboardList },
+          { label: "Spend (MTD)", value: formatCurrency(totalSpend), meta: "+5.2%", tone: "bg-orange-50 text-orange-500", icon: FaChartBar },
+          { label: "Open Orders", value: openOrders, meta: "Active", tone: "bg-violet-50 text-violet-600", icon: FaTruck },
+          { label: "Pending Tasks", value: String(pendingOrders).padStart(2, "0"), meta: "", tone: "bg-orange-50 text-orange-500", icon: FaExclamationTriangle },
+        ].map((card) => {
+          const Icon = card.icon;
+          return (
+            <div key={card.label} className="rounded-[24px] border border-white/70 bg-white/95 p-4 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">{card.label}</div>
+                  <div className="mt-1 text-3xl font-bold text-slate-900">{card.value}</div>
+                </div>
+                <div className="flex flex-col items-end gap-2">
+                  {card.meta ? <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-500">{card.meta}</span> : null}
+                  <span className={`inline-flex h-10 w-10 items-center justify-center rounded-full ${card.tone}`}>
+                    <Icon size={13} />
+                  </span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="rounded-[28px] border border-white/70 bg-white/90 p-5 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+        <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+          <div>
+            <h3 className="text-3xl font-semibold text-slate-900">Purchases Overview</h3>
+            <p className="mt-1 max-w-md text-sm leading-6 text-slate-500">
+              Manage procurement workflows and vendor relationships.
+            </p>
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              {purchaseTabs.map((tab) => {
+                const active = tab.id === "purchase-orders";
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setActiveSection(tab.id)}
+                    className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
+                      active ? "bg-orange-100 text-orange-600" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1.08fr),320px]">
+          <div className="rounded-[24px] border border-slate-100 bg-white p-5 shadow-[0_18px_35px_rgba(15,23,42,0.06)]">
+            <div className="mb-4 flex items-center gap-2 text-slate-900">
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-orange-100 text-orange-500">
+                <FaPlus size={11} />
+              </span>
+              <div className="text-lg font-bold">{editingId ? "Edit Purchase" : "Add Purchase"}</div>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2">
+              {PO_FIELDS.map((field) => (
+                <div key={field.key}>
+                  <label className="mb-2 block text-xs font-semibold text-slate-500">{field.label}</label>
+                  <FormInput
+                    field={field}
+                    value={draft[field.key] ?? ""}
+                    onChange={(key, val) => setDraft((current) => ({ ...current, [key]: val }))}
+                  />
+                </div>
+              ))}
+            </div>
+            <div className="mt-5 flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={handleSave}
+                className="rounded-xl bg-[linear-gradient(90deg,#fb923c_0%,#f97316_100%)] px-5 py-3 text-sm font-semibold text-white shadow-[0_18px_30px_rgba(249,115,22,0.24)]"
+              >
+                {editingId ? "Update Purchase" : "Register Purchase"}
+              </button>
+              <button
+                type="button"
+                onClick={handleReset}
+                className="rounded-xl bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-600"
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="rounded-[24px] border border-slate-100 bg-white p-5 shadow-[0_18px_35px_rgba(15,23,42,0.06)]">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <div className="text-lg font-bold text-slate-900">Recent Purchases</div>
+                <button type="button" onClick={() => setActiveTab("list")} className="text-xs font-semibold text-blue-600">View All</button>
+              </div>
+              <div className="space-y-3">
+                {recentPurchases.length ? recentPurchases.map((row) => (
+                  <div key={row.id} className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-3 py-3">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
+                        <FaClipboardList size={11} />
+                      </span>
+                      <div className="min-w-0">
+                        <div className="truncate text-sm font-semibold text-slate-900">{row.itemName || row.poNumber}</div>
+                        <div className="text-[11px] text-slate-400">{row.vendor} • {row.expectedDate || "Scheduled"}</div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xs font-bold text-orange-500">{formatCurrency(Number(row.rate || 0) * Number(row.quantity || 1))}</div>
+                      <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-500">{row.status || "Open"}</div>
+                    </div>
+                  </div>
+                )) : <div className="text-sm text-slate-400">No recent purchase orders.</div>}
+              </div>
+            </div>
+
+            <div className="overflow-hidden rounded-[22px] bg-[linear-gradient(135deg,#1f2937_0%,#374151_45%,#111827_100%)] shadow-[0_18px_35px_rgba(15,23,42,0.16)]">
+              <div className="h-28 bg-[linear-gradient(135deg,rgba(251,146,60,0.2),rgba(255,255,255,0.05))]" />
+              <div className="p-4 text-white">
+                <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-orange-300">Top Active Vendor</div>
+                <div className="mt-1 text-lg font-bold">{records[0]?.vendor || "Vendor Insights"}</div>
+                <div className="mt-1 text-xs text-white/70">Vendor performance snapshot and delivery confidence.</div>
+              </div>
+            </div>
+
+            <div className="rounded-[24px] border border-slate-100 bg-white p-5 shadow-[0_18px_35px_rgba(15,23,42,0.06)]">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <div className="text-sm font-bold text-slate-900">Purchase Trend (Weekly)</div>
+                <span className="text-violet-500">↗</span>
+              </div>
+              <div className="flex h-20 items-end gap-2">
+                {[20, 34, 52, 28, 41, 22, 16].map((value, index) => (
+                  <div key={index} className={`flex-1 rounded-t-md ${index === 2 ? "bg-orange-500" : "bg-slate-200"}`} style={{ height: `${value}px` }} />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {activeTab === "list" ? (
+        <div className="overflow-hidden rounded-[28px] border border-white/70 bg-white/90 p-5 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <h3 className="text-2xl font-semibold text-slate-900">Purchase Order Register</h3>
+              <p className="text-sm text-slate-400">{records.length} purchase orders</p>
+            </div>
+            <div className="w-80">
+              <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Search PO / vendor" />
+            </div>
+          </div>
+          <div className="overflow-x-auto rounded-2xl border border-slate-200">
+            <table className="min-w-full text-sm">
+              <thead className="bg-slate-50 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400 text-left">
+                <tr>
+                  {poColumns.map((col) => <th key={col} className="px-4 py-4">{formatLabel(col)}</th>)}
+                  <th className="px-4 py-4">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.length ? filtered.map((row) => {
+                  const statusColors = {
+                    Draft: "gray", Sent: "cyan", "GRN Received": "green",
+                    Closed: "emerald", Cancelled: "red",
+                  };
+                  return (
+                    <tr key={row.id} className="border-t border-slate-100 hover:bg-slate-50 transition">
+                      <td className="px-4 py-4 font-semibold text-slate-900">{row.poNumber}</td>
+                      <td className="px-4 py-4 text-slate-700">{row.vendor}</td>
+                      <td className="px-4 py-4 text-slate-700">{row.itemName}</td>
+                      <td className="px-4 py-4">{row.quantity}</td>
+                      <td className="px-4 py-4 text-slate-500">{row.unit}</td>
+                      <td className="px-4 py-4">{formatCurrency(row.rate)}</td>
+                      <td className="px-4 py-4 text-sm text-slate-500">{row.expectedDate || "—"}</td>
+                      <td className="px-4 py-4">
+                        <Badge color={statusColors[row.status] || "gray"}>{row.status}</Badge>
+                      </td>
+                      <td className="px-4 py-4">
+                        <div className="flex gap-2">
+                          <button type="button" onClick={() => handleEdit(row)}
+                            className="inline-flex items-center gap-1 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-2 text-sm font-semibold text-cyan-700 hover:bg-cyan-100 transition">
+                            <FaEdit size={10} /> Edit
+                          </button>
+                          <button type="button" onClick={() => onDelete(row.id)}
+                            className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-600 hover:bg-red-100 transition">
+                            <FaTrash size={10} /> Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                }) : (
+                  <tr><td colSpan={9} className="px-4 py-12 text-center text-sm text-slate-400">No purchase orders found. Create your first PO above.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
 
 // ─── Section: Waste / Spoilage Log ────────────────────────────────────────────
 
-function WasteLogSection({ records, onSave, onEdit, onDelete, draft, setDraft, editingId, searchQuery, setSearchQuery }) {
+function WasteLogSection({ records, onSave, onEdit, onDelete, draft, setDraft, editingId, searchQuery, setSearchQuery, inventoryItems, masterData }) {
   const [activeTab, setActiveTab] = useState("form");
   const filtered = records.filter((r) =>
     Object.values(r).some((v) => String(v ?? "").toLowerCase().includes(searchQuery.toLowerCase()))
@@ -1540,6 +3538,22 @@ function WasteLogSection({ records, onSave, onEdit, onDelete, draft, setDraft, e
     setActiveTab("form");
   };
 
+  const wasteItemOptions = buildSelectOptions(inventoryItems.map((row) => row.name));
+  const wasteUnitOptions = buildSelectOptions([
+    ...inventoryItems.map((row) => row.unit),
+    ...(masterData?.units || []).map((row) => row.shortName || row.name),
+  ]);
+  const wasteStoreOptions = buildSelectOptions([
+    ...inventoryItems.map((row) => row.branch),
+    ...(masterData?.["store-kitchen"] || []).map((row) => row.name),
+  ]);
+  const resolvedWasteFields = WASTE_FIELDS.map((field) => {
+    if (field.key === "itemName") return { ...field, type: wasteItemOptions.length ? "select" : field.type, options: wasteItemOptions, suggestions: wasteItemOptions };
+    if (field.key === "unit") return { ...field, type: wasteUnitOptions.length ? "select" : field.type, options: wasteUnitOptions, suggestions: wasteUnitOptions };
+    if (field.key === "store") return { ...field, type: wasteStoreOptions.length ? "select" : field.type, options: wasteStoreOptions, suggestions: wasteStoreOptions };
+    return field;
+  });
+
   return (
     <div className="space-y-5">
       <div className="grid gap-4 sm:grid-cols-3">
@@ -1559,7 +3573,7 @@ function WasteLogSection({ records, onSave, onEdit, onDelete, draft, setDraft, e
         <FormPanel
           title="Waste / Spoilage Entry"
           subtitle="Log expired, damaged or wasted items"
-          fields={WASTE_FIELDS}
+          fields={resolvedWasteFields}
           draft={draft}
           setDraft={setDraft}
           editingId={editingId}
@@ -1799,14 +3813,136 @@ function StockAuditSection({ items, onSubmit, isSubmitting }) {
 
 // ─── Section: Reports ─────────────────────────────────────────────────────────
 
-function ReportSection({ title, subtitle, columns, rows }) {
+function ReportSection({
+  title,
+  subtitle,
+  columns,
+  rows,
+  stockFlowSummary = null,
+  stockFlowFilters = null,
+  onStockFlowFilterChange = null,
+}) {
+  const isStockFlowReport = columns.some((column) => column.key === "openingQty") && columns.some((column) => column.key === "remainingStock");
+  const derivedStockFlowSummary = useMemo(() => {
+    if (!isStockFlowReport) return null;
+    return rows.reduce((summary, row) => {
+      const opening = Number(String(row.openingQty || "").split(" ")[0] || 0);
+      const received = Number(String(row.receivedQty || "").split(" ")[0] || 0);
+      const used = Number(String(row.usedQty || "").split(" ")[0] || 0);
+      const remaining = Number(String(row.remainingStock || "").split(" ")[0] || 0);
+      return {
+        opening: summary.opening + opening,
+        received: summary.received + received,
+        used: summary.used + used,
+        remaining: summary.remaining + remaining,
+      };
+    }, { opening: 0, received: 0, used: 0, remaining: 0 });
+  }, [isStockFlowReport, rows]);
+  const resolvedStockFlowSummary = stockFlowSummary || derivedStockFlowSummary;
+
   return (
     <div className="overflow-hidden rounded-[28px] border border-white/70 bg-white/90 p-5 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
       <div className="mb-4">
         <h3 className="text-xl font-semibold text-slate-900">{title}</h3>
         {subtitle && <p className="mt-0.5 text-base text-slate-400">{subtitle}</p>}
       </div>
-      <DataTable columns={columns.map((c) => c.key)} rows={rows.map((r, i) => ({ id: i, ...r }))} emptyMessage="No report data available." />
+      {isStockFlowReport ? (
+        <div className="space-y-4">
+          {stockFlowFilters && onStockFlowFilterChange ? (
+            <div className="flex flex-wrap items-end gap-3 rounded-2xl border border-slate-200 bg-slate-50/90 px-4 py-4">
+              <div>
+                <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Date From</div>
+                <input
+                  type="date"
+                  value={stockFlowFilters.dateFrom || ""}
+                  onChange={(event) => onStockFlowFilterChange("dateFrom", event.target.value)}
+                  className="mt-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-cyan-300"
+                />
+              </div>
+              <div>
+                <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Date To</div>
+                <input
+                  type="date"
+                  value={stockFlowFilters.dateTo || ""}
+                  onChange={(event) => onStockFlowFilterChange("dateTo", event.target.value)}
+                  className="mt-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-cyan-300"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  onStockFlowFilterChange("dateFrom", "");
+                  onStockFlowFilterChange("dateTo", "");
+                }}
+                className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-100"
+              >
+                Clear Dates
+              </button>
+            </div>
+          ) : null}
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            {[
+              { label: "Total Opening", value: resolvedStockFlowSummary?.opening ?? 0, tone: "border-slate-200 bg-slate-50 text-slate-900" },
+              { label: "Total Received", value: resolvedStockFlowSummary?.received ?? 0, tone: "border-cyan-200 bg-cyan-50 text-cyan-800" },
+              { label: "Total Used", value: resolvedStockFlowSummary?.used ?? 0, tone: "border-amber-200 bg-amber-50 text-amber-800" },
+              { label: "Total Remaining", value: resolvedStockFlowSummary?.remaining ?? 0, tone: "border-emerald-200 bg-emerald-50 text-emerald-800" },
+            ].map((card) => (
+              <div key={card.label} className={`rounded-2xl border px-4 py-4 ${card.tone}`}>
+                <div className="text-[11px] font-semibold uppercase tracking-[0.16em] opacity-70">{card.label}</div>
+                <div className="mt-2 text-2xl font-bold">{formatQuantity(card.value)}</div>
+              </div>
+            ))}
+          </div>
+          <div className="rounded-2xl border border-cyan-100 bg-cyan-50/70 px-4 py-4 text-sm text-slate-700">
+            <div className="font-semibold text-slate-900">Stock sequence flow</div>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              {["Opening Qty", "Received Qty", "Used Qty", "Remaining Stock", "Amount"].map((label, index) => (
+                <React.Fragment key={label}>
+                  <span className="rounded-full border border-white/80 bg-white px-3 py-1.5 font-medium text-slate-700">{label}</span>
+                  {index < 4 ? <span className="text-slate-400">→</span> : null}
+                </React.Fragment>
+              ))}
+            </div>
+            <div className="mt-2 text-slate-500">
+              Formula: Opening + Received - Used = Remaining. Amount = Remaining Stock × Unit Rate.
+            </div>
+          </div>
+          <div className="overflow-x-auto rounded-2xl border border-slate-200">
+            <table className="min-w-full text-sm">
+              <thead className="bg-slate-50 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400 text-left">
+                <tr>
+                  {columns.map((column) => (
+                    <th key={column.key} className="px-4 py-4">{formatLabel(column.key)}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {rows.length ? rows.map((row, index) => {
+                  const isLow = String(row.alert || "").toLowerCase().includes("low");
+                  return (
+                    <tr key={`${row.item || index}-${index}`} className={`border-t border-slate-100 ${isLow ? "bg-amber-50/60" : "hover:bg-slate-50/70"}`}>
+                      {columns.map((column) => (
+                        <td
+                          key={column.key}
+                          className={`px-4 py-4 ${column.key === "alert" && isLow ? "font-semibold text-amber-700" : "text-slate-700"} ${column.key === "amount" ? "font-semibold text-slate-900" : ""}`}
+                        >
+                          {row[column.key] || "—"}
+                        </td>
+                      ))}
+                    </tr>
+                  );
+                }) : (
+                  <tr>
+                    <td colSpan={columns.length} className="px-4 py-12 text-center text-sm text-slate-400">No report data available.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : (
+        <DataTable columns={columns.map((c) => c.key)} rows={rows.map((r, i) => ({ id: i, ...r }))} emptyMessage="No report data available." />
+      )}
     </div>
   );
 }
@@ -1823,21 +3959,23 @@ function LowStockAlerts({ items }) {
   if (lowItems.length === 0 && expiredItems.length === 0) return null;
 
   return (
-    <div className="rounded-[26px] border border-amber-200/80 bg-[linear-gradient(135deg,#fff8eb_0%,#fef3c7_100%)] p-4 shadow-[0_18px_40px_rgba(245,158,11,0.12)]">
-      <div className="flex items-center gap-2 mb-3">
-        <FaBell className="text-amber-600" />
-        <h4 className="text-lg font-semibold text-amber-800">Inventory Alerts</h4>
+    <div className="rounded-[26px] border border-sky-200/80 bg-[linear-gradient(135deg,rgba(255,255,255,0.94)_0%,rgba(240,249,255,0.92)_52%,rgba(224,242,254,0.88)_100%)] p-5 shadow-[0_24px_50px_rgba(56,189,248,0.14)] backdrop-blur-xl">
+      <div className="mb-4 flex items-center gap-3">
+        <span className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-red-200 bg-red-50 text-red-600 shadow-[0_10px_20px_rgba(239,68,68,0.12)]">
+          <FaBell size={16} />
+        </span>
+        <h4 className="text-[1.45rem] font-bold text-slate-900">Inventory Alerts</h4>
       </div>
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-3">
         {lowItems.map((item) => (
-          <span key={item.id} className="inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-white px-3 py-1 text-sm font-medium text-amber-700">
-            <FaExclamationTriangle size={10} />
+          <span key={item.id} className="inline-flex items-center gap-2 rounded-full border border-red-200 bg-[linear-gradient(135deg,#fff1f2_0%,#ffffff_100%)] px-4 py-2 text-base font-bold text-red-700 shadow-[0_12px_24px_rgba(248,113,113,0.12)]">
+            <FaExclamationTriangle size={13} className="text-red-500" />
             {item.name}: {item.stock} {item.unit} left
           </span>
         ))}
         {expiredItems.map((item) => (
-          <span key={`exp-${item.id}`} className="inline-flex items-center gap-1.5 rounded-full border border-red-300 bg-white px-3 py-1 text-sm font-medium text-red-700">
-            <FaCalendarAlt size={10} />
+          <span key={`exp-${item.id}`} className="inline-flex items-center gap-2 rounded-full border border-red-300 bg-[linear-gradient(135deg,#ffe4e6_0%,#ffffff_100%)] px-4 py-2 text-base font-bold text-red-700 shadow-[0_12px_24px_rgba(239,68,68,0.14)]">
+            <FaCalendarAlt size={13} className="text-red-500" />
             {item.name}: Expired
           </span>
         ))}
@@ -1848,7 +3986,8 @@ function LowStockAlerts({ items }) {
 
 // ─── Main Dashboard ───────────────────────────────────────────────────────────
 
-export default function InventoryDashboard() {
+export default function InventoryDashboard({ procurementOnly = false }) {
+  const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState("items");
   const [inventoryItems, setInventoryItems] = useState([]);
   const [itemsLoading, setItemsLoading] = useState(true);
@@ -1875,6 +4014,26 @@ export default function InventoryDashboard() {
   const [auditReportRows, setAuditReportRows] = useState([]);
   const [isSubmittingAudit, setIsSubmittingAudit] = useState(false);
   const [openNavGroup, setOpenNavGroup] = useState(NAVIGATION_GROUPS[0]?.label || "");
+  const [vendorInwards, setVendorInwards] = useState([]);
+  const [vendorPayments, setVendorPayments] = useState([]);
+  const [stockLedgerRows, setStockLedgerRows] = useState([]);
+  const [stockFlowReportRows, setStockFlowReportRows] = useState([]);
+  const [consumptionLogRows, setConsumptionLogRows] = useState([]);
+  const [stockFlowReportSummary, setStockFlowReportSummary] = useState({
+    opening: 0,
+    received: 0,
+    used: 0,
+    remaining: 0,
+    amount: 0,
+  });
+  const [stockFlowFilters, setStockFlowFilters] = useState({ dateFrom: "", dateTo: "" });
+  const [vendorInsights, setVendorInsights] = useState({ summary: {}, vendors: [] });
+
+  useEffect(() => {
+    if (!procurementOnly) return;
+    setActiveSection("purchase-orders");
+    setOpenNavGroup("Purchases");
+  }, [procurementOnly]);
 
   // Load inventory items from API
   useEffect(() => {
@@ -1894,6 +4053,12 @@ export default function InventoryDashboard() {
           purchaseOrdersRes,
           transfersRes,
           auditReportRes,
+          vendorInwardsRes,
+          vendorPaymentsRes,
+          stockLedgerRes,
+          stockFlowRes,
+          consumptionLogRes,
+          vendorInsightsRes,
         ] = await Promise.all([
           API.get("/inventory"),
           API.get("/restaurant/menu"),
@@ -1901,6 +4066,12 @@ export default function InventoryDashboard() {
           API.get("/inventory/purchase-orders"),
           API.get("/inventory/transfers"),
           API.get("/inventory/audit/report"),
+          API.get("/inventory/vendor-inwards"),
+          API.get("/inventory/vendor-payments"),
+          API.get("/inventory/stock-ledger"),
+          API.get("/inventory/reports/stock-flow"),
+          API.get("/menu-recipes/consumption-log", { params: { limit: 500 } }),
+          API.get("/inventory/vendor-insights"),
         ]);
         const nextMasterSections = Object.fromEntries(masterSectionEntries);
         setInventoryItems(Array.isArray(inventoryRes.data) ? inventoryRes.data : []);
@@ -1928,6 +4099,34 @@ export default function InventoryDashboard() {
         setAuditReportRows(
           Array.isArray(auditReportRes.data) ? auditReportRes.data : []
         );
+        setVendorInwards(Array.isArray(vendorInwardsRes.data) ? vendorInwardsRes.data : []);
+        setVendorPayments(Array.isArray(vendorPaymentsRes.data) ? vendorPaymentsRes.data : []);
+        setStockLedgerRows(Array.isArray(stockLedgerRes.data) ? stockLedgerRes.data : []);
+        setConsumptionLogRows(Array.isArray(consumptionLogRes.data) ? consumptionLogRes.data : []);
+        setStockFlowReportSummary(stockFlowRes.data?.summary || {
+          opening: 0,
+          received: 0,
+          used: 0,
+          remaining: 0,
+          amount: 0,
+        });
+        setStockFlowReportRows(
+          (Array.isArray(stockFlowRes.data?.rows) ? stockFlowRes.data.rows : []).map((row) => ({
+            item: row.item,
+            category: row.category || "",
+            vendor: row.vendor || "—",
+            openingQty: `${formatQuantity(row.openingQty)} ${row.unit || ""}`.trim(),
+            receivedQty: `${formatQuantity(row.receivedQty)} ${row.unit || ""}`.trim(),
+            usedQty: `${formatQuantity(row.usedQty)} ${row.unit || ""}`.trim(),
+            remainingStock: `${formatQuantity(row.remainingQty)} ${row.unit || ""}`.trim(),
+            unitRate: formatCurrency(row.unitRate),
+            amount: formatCurrency(row.amount),
+            reorderPoint: `${formatQuantity(row.reorderPoint)} ${row.unit || ""}`.trim(),
+            store: row.store || "—",
+            alert: row.alert || "OK",
+          })),
+        );
+        setVendorInsights(vendorInsightsRes.data || { summary: {}, vendors: [] });
       } catch (err) {
         setItemsError(err.response?.data?.message || "Could not load inventory items.");
       } finally {
@@ -1944,6 +4143,11 @@ export default function InventoryDashboard() {
       localStorage.setItem(storageKey, JSON.stringify(masterData[key] || []));
     });
   }, [masterData]);
+
+  const refreshInventoryItems = useCallback(async () => {
+    const response = await API.get("/inventory");
+    setInventoryItems(Array.isArray(response.data) ? response.data : []);
+  }, []);
 
   const refreshWasteLogs = useCallback(async () => {
     const response = await API.get("/inventory/waste");
@@ -1974,6 +4178,67 @@ export default function InventoryDashboard() {
     setAuditReportRows(Array.isArray(response.data) ? response.data : []);
   }, []);
 
+  const refreshVendorInsights = useCallback(async () => {
+    const response = await API.get("/inventory/vendor-insights");
+    setVendorInsights(response.data || { summary: {}, vendors: [] });
+  }, []);
+
+  const refreshVendorInwards = useCallback(async () => {
+    const response = await API.get("/inventory/vendor-inwards");
+    setVendorInwards(Array.isArray(response.data) ? response.data : []);
+    await refreshVendorInsights();
+  }, [refreshVendorInsights]);
+
+  const refreshVendorPayments = useCallback(async () => {
+    const response = await API.get("/inventory/vendor-payments");
+    setVendorPayments(Array.isArray(response.data) ? response.data : []);
+    await refreshVendorInsights();
+  }, [refreshVendorInsights]);
+
+  const refreshStockLedger = useCallback(async () => {
+    const response = await API.get("/inventory/stock-ledger");
+    setStockLedgerRows(Array.isArray(response.data) ? response.data : []);
+  }, []);
+
+  const refreshConsumptionLog = useCallback(async () => {
+    const response = await API.get("/menu-recipes/consumption-log", {
+      params: { limit: 500 },
+    });
+    setConsumptionLogRows(Array.isArray(response.data) ? response.data : []);
+  }, []);
+
+  const refreshStockFlowReport = useCallback(async (nextFilters = stockFlowFilters) => {
+    const params = {};
+    if (nextFilters?.dateFrom) params.dateFrom = nextFilters.dateFrom;
+    if (nextFilters?.dateTo) params.dateTo = nextFilters.dateTo;
+
+    const response = await API.get("/inventory/reports/stock-flow", { params });
+    const payload = response.data || {};
+    const rows = Array.isArray(payload.rows) ? payload.rows : [];
+
+    setStockFlowReportSummary(payload.summary || {
+      opening: 0,
+      received: 0,
+      used: 0,
+      remaining: 0,
+      amount: 0,
+    });
+    setStockFlowReportRows(rows.map((row) => ({
+      item: row.item,
+      category: row.category || "",
+      vendor: row.vendor || "—",
+      openingQty: `${formatQuantity(row.openingQty)} ${row.unit || ""}`.trim(),
+      receivedQty: `${formatQuantity(row.receivedQty)} ${row.unit || ""}`.trim(),
+      usedQty: `${formatQuantity(row.usedQty)} ${row.unit || ""}`.trim(),
+      remainingStock: `${formatQuantity(row.remainingQty)} ${row.unit || ""}`.trim(),
+      unitRate: formatCurrency(row.unitRate),
+      amount: formatCurrency(row.amount),
+      reorderPoint: `${formatQuantity(row.reorderPoint)} ${row.unit || ""}`.trim(),
+      store: row.store || "—",
+      alert: row.alert || "OK",
+    })));
+  }, [stockFlowFilters]);
+
   const refreshMasterSection = useCallback(async (sectionKey) => {
     const apiSectionKey = INVENTORY_MASTER_API_SECTION_MAP[sectionKey];
     if (!apiSectionKey) return;
@@ -1984,6 +4249,12 @@ export default function InventoryDashboard() {
       [sectionKey]: records,
     }));
   }, []);
+
+  useEffect(() => {
+    refreshStockFlowReport(stockFlowFilters).catch(() => {
+      setItemsError((current) => current || "Could not load stock flow report.");
+    });
+  }, [refreshStockFlowReport, stockFlowFilters]);
 
   // Reset form on section switch
   useEffect(() => {
@@ -2033,6 +4304,49 @@ export default function InventoryDashboard() {
   const totalStockValue = inventoryItems.reduce((s, i) => s + Number(i.stock || 0) * Number(i.price || 0), 0);
   const lowStockCount  = inventoryItems.filter(isLowStock).length;
   const expiredCount   = inventoryItems.filter((i) => i.expiry && new Date(i.expiry) <= new Date()).length;
+  const expiringSoonRows = useMemo(
+    () =>
+      inventoryItems
+        .filter((item) => {
+          if (!item.expiry) return false;
+          const status = getExpiryStatus(item.expiry);
+          return status && status.label !== "Healthy";
+        })
+        .map((item) => {
+          const status = getExpiryStatus(item.expiry);
+          return {
+            item: item.name,
+            category: item.category,
+            store: item.branch,
+            stock: `${item.stock} ${item.unit}`,
+            expiry: item.expiry ? String(item.expiry).split("T")[0] : "—",
+            status: status?.label || "Healthy",
+          };
+        })
+        .sort((a, b) => new Date(a.expiry || 0) - new Date(b.expiry || 0)),
+    [inventoryItems],
+  );
+  const batchExpiryRows = useMemo(
+    () =>
+      (vendorInwards || [])
+        .filter((row) => row.expiryDate || row.batchNo)
+        .map((row) => {
+          const status = getExpiryStatus(row.expiryDate);
+          return {
+            vendor: row.vendorName || "—",
+            item: row.itemName || "—",
+            batch: row.batchNo || "—",
+            invoice: row.invoiceNo || "—",
+            quantity: `${Number(row.quantityReceived || 0)} ${row.unit || ""}`.trim(),
+            receivedDate: row.receivedDate || "—",
+            expiry: row.expiryDate || "—",
+            status: status?.label || "No Expiry",
+          };
+        })
+        .sort((a, b) => new Date(a.expiry || 0) - new Date(b.expiry || 0)),
+    [vendorInwards],
+  );
+  const activeGroupLabel = NAVIGATION_GROUPS.find((group) => group.ids.includes(activeSection))?.label || "Stock";
   const selectedSection = INVENTORY_SECTIONS.find((s) => s.id === activeSection);
 
   // ── Report rows ──────────────────────────────────────────
@@ -2041,6 +4355,52 @@ export default function InventoryDashboard() {
     const ps  = masterData["purchase-services"] || [];
     const st  = masterData["stock-transfer"] || [];
     const vds = masterData.vendors || [];
+    const inventoryByName = new Map(
+      inventoryItems.map((item) => [String(item.name || "").trim().toLowerCase(), item]),
+    );
+    const latestVendorByItem = new Map();
+
+    (vendorInwards || []).forEach((row) => {
+      const key = String(row.itemName || "").trim().toLowerCase();
+      if (!key) return;
+      const current = latestVendorByItem.get(key);
+      const currentDate = current?.sortDate ? new Date(current.sortDate) : new Date(0);
+      const nextDate = row.receivedDate ? new Date(row.receivedDate) : new Date(0);
+      if (!current || nextDate >= currentDate) {
+        latestVendorByItem.set(key, {
+          vendor: row.vendorName || "",
+          receivedDate: row.receivedDate || "",
+          sortDate: row.receivedDate || "",
+        });
+      }
+    });
+
+    pi.forEach((row) => {
+      const key = String(row.itemName || "").trim().toLowerCase();
+      if (!key || latestVendorByItem.has(key)) return;
+      latestVendorByItem.set(key, {
+        vendor: row.vendor || "",
+        receivedDate: row.date || "",
+        sortDate: row.date || "",
+      });
+    });
+    const stockFlowByItem = new Map();
+
+    (stockLedgerRows || []).forEach((row) => {
+      const key = String(row.itemName || "").trim().toLowerCase();
+      if (!key) return;
+      const current = stockFlowByItem.get(key) || { receivedQty: 0, usedQty: 0 };
+      const quantity = Number(row.quantity || 0);
+      const direction = String(row.direction || "").toUpperCase();
+      const referenceType = String(row.referenceType || "").toLowerCase();
+      if (direction === "IN" && referenceType === "vendor_inward") {
+        current.receivedQty += quantity;
+      }
+      if (direction === "OUT") {
+        current.usedQty += quantity;
+      }
+      stockFlowByItem.set(key, current);
+    });
 
     return {
       "vendor-report": vds.map((v) => {
@@ -2056,18 +4416,33 @@ export default function InventoryDashboard() {
           status: v.status || "—",
         };
       }),
-      "stock-report": inventoryItems.map((i) => ({
-        item: i.name, category: i.category, store: i.branch,
+      "stock-report": inventoryItems.map((i) => {
+        const vendorMeta = latestVendorByItem.get(String(i.name || "").trim().toLowerCase());
+        const stockFlow = stockFlowByItem.get(String(i.name || "").trim().toLowerCase()) || { receivedQty: 0, usedQty: 0 };
+        return {
+          item: i.name,
+          category: i.category,
+          vendor: vendorMeta?.vendor || "—",
+          receivedQty: `${stockFlow.receivedQty} ${i.unit}`,
+          usedQty: `${stockFlow.usedQty} ${i.unit}`,
+          store: i.branch,
+        item: i.name, category: i.category, vendor: vendorMeta?.vendor || "â€”", receivedQty: `${stockFlow.receivedQty} ${i.unit}`, usedQty: `${stockFlow.usedQty} ${i.unit}`, store: i.branch,
+          vendor: vendorMeta?.vendor || "—",
+          receivedQty: `${stockFlow.receivedQty} ${i.unit}`,
+          usedQty: `${stockFlow.usedQty} ${i.unit}`,
+          store: i.branch,
         stock: `${i.stock} ${i.unit}`,
         reorderPoint: `${i.reorderPoint || 10} ${i.unit}`,
         alert: isLowStock(i) ? "⚠ Low" : "OK",
         value: formatCurrency(Number(i.stock||0) * Number(i.price||0)),
-      })),
-      "closing-stock-report": inventoryItems.map((i) => ({
-        item: i.name, branch: i.branch,
-        opening: `${i.stock} ${i.unit}`,
-        issued: `${Math.max(0, Math.floor(Number(i.stock||0)*0.2))} ${i.unit}`,
-        closing: `${Math.max(0, Math.ceil(Number(i.stock||0)*0.8))} ${i.unit}`,
+        };
+      }),
+      "closing-stock-report": stockFlowReportRows.map((row) => ({
+        item: row.item,
+        branch: row.store || "—",
+        opening: row.openingQty,
+        issued: row.usedQty,
+        closing: row.remainingStock,
       })),
       "item-report": inventoryItems.map((i) => ({
         item: i.name, category: i.category, unit: i.unit,
@@ -2075,20 +4450,57 @@ export default function InventoryDashboard() {
         expiry: i.expiry ? String(i.expiry).split("T")[0] : "—",
         status: isLowStock(i) ? "Low Stock" : "Normal",
       })),
-      "item-consumption-report": inventoryItems.map((i) => ({
-        item: i.name,
-        consumed: `${Math.max(1, Math.floor(Number(i.stock||0)*0.2))} ${i.unit}`,
-        kitchen: i.branch,
-        cost: formatCurrency(Number(i.price||0) * Math.max(1, Math.floor(Number(i.stock||0)*0.2))),
+      "expiring-soon-report": expiringSoonRows,
+      "batch-expiry-report": batchExpiryRows,
+      "item-consumption-report": Array.from(
+        consumptionLogRows.reduce((map, row) => {
+          const key = String(row.inventoryItemName || "").trim().toLowerCase();
+          if (!key) return map;
+          const itemMeta = inventoryByName.get(key);
+          const current = map.get(key) || {
+            item: row.inventoryItemName,
+            consumedQty: 0,
+            kitchen: itemMeta?.branch || "—",
+            costValue: 0,
+            unit: row.unit || itemMeta?.unit || "",
+          };
+          const consumedQty = Number(row.consumedQuantity || 0);
+          current.consumedQty += consumedQty;
+          current.costValue += consumedQty * Number(itemMeta?.price || 0);
+          current.kitchen = itemMeta?.branch || current.kitchen || "—";
+          current.unit = row.unit || itemMeta?.unit || current.unit || "";
+          map.set(key, current);
+          return map;
+        }, new Map()).values(),
+      ).map((row) => ({
+        item: row.item,
+        consumed: `${formatQuantity(row.consumedQty)} ${row.unit || ""}`.trim(),
+        kitchen: row.kitchen,
+        cost: formatCurrency(row.costValue),
       })),
-      "total-consumption-report": [
-        { group: "Kitchen Items", entries: inventoryItems.length,
-          totalConsumed: inventoryItems.reduce((s,i) => s + Math.max(1,Math.floor(Number(i.stock||0)*0.2)),0),
-          totalCost: formatCurrency(inventoryItems.reduce((s,i) => s + Number(i.price||0)*2,0)) },
-        { group: "Transfers", entries: st.length,
-          totalConsumed: st.reduce((s,r) => s + Number(r.quantity||0),0),
-          totalCost: formatCurrency(st.reduce((s,r) => s + Number(r.quantity||0)*25,0)) },
-      ],
+      "total-consumption-report": Array.from(
+        consumptionLogRows.reduce((map, row) => {
+          const key = String(row.referenceType || "manual").trim() || "manual";
+          const itemMeta = inventoryByName.get(String(row.inventoryItemName || "").trim().toLowerCase());
+          const current = map.get(key) || {
+            group: formatLabel(key),
+            entries: 0,
+            totalConsumedValue: 0,
+            totalCostValue: 0,
+          };
+          const consumedQty = Number(row.consumedQuantity || 0);
+          current.entries += 1;
+          current.totalConsumedValue += consumedQty;
+          current.totalCostValue += consumedQty * Number(itemMeta?.price || 0);
+          map.set(key, current);
+          return map;
+        }, new Map()).values(),
+      ).map((row) => ({
+        group: row.group,
+        entries: row.entries,
+        totalConsumed: formatQuantity(row.totalConsumedValue),
+        totalCost: formatCurrency(row.totalCostValue),
+      })),
       "item-audit": auditReportRows.map((row) => ({
         item: row.itemName,
         auditDate: row.auditDate || "---",
@@ -2099,20 +4511,96 @@ export default function InventoryDashboard() {
         remarks: row.remarks || "---",
       })),
     };
-  }, [auditReportRows, inventoryItems, masterData]);
+  }, [auditReportRows, batchExpiryRows, consumptionLogRows, expiringSoonRows, inventoryItems, masterData, stockFlowReportRows, stockLedgerRows, vendorInwards]);
+
+  const stockReportSequenceRows = useMemo(() => {
+    const purchaseItems = masterData["purchase-items"] || [];
+    const latestVendorByItem = new Map();
+
+    (vendorInwards || []).forEach((row) => {
+      const key = String(row.itemName || "").trim().toLowerCase();
+      if (!key) return;
+      const current = latestVendorByItem.get(key);
+      const currentDate = current?.sortDate ? new Date(current.sortDate) : new Date(0);
+      const nextDate = row.receivedDate ? new Date(row.receivedDate) : new Date(0);
+      if (!current || nextDate >= currentDate) {
+        latestVendorByItem.set(key, {
+          vendor: row.vendorName || "",
+          sortDate: row.receivedDate || "",
+        });
+      }
+    });
+
+    purchaseItems.forEach((row) => {
+      const key = String(row.itemName || "").trim().toLowerCase();
+      if (!key || latestVendorByItem.has(key)) return;
+      latestVendorByItem.set(key, {
+        vendor: row.vendor || "",
+        sortDate: row.date || "",
+      });
+    });
+
+    const stockFlowByItem = new Map();
+    (stockLedgerRows || []).forEach((row) => {
+      const key = String(row.itemName || "").trim().toLowerCase();
+      if (!key) return;
+      const current = stockFlowByItem.get(key) || { receivedQty: 0, usedQty: 0 };
+      const quantity = Number(row.quantity || 0);
+      const direction = String(row.direction || "").toUpperCase();
+      const referenceType = String(row.referenceType || "").toLowerCase();
+      if (direction === "IN" && referenceType === "vendor_inward") {
+        current.receivedQty += quantity;
+      }
+      if (direction === "OUT") {
+        current.usedQty += quantity;
+      }
+      stockFlowByItem.set(key, current);
+    });
+
+    return inventoryItems.map((item) => {
+      const key = String(item.name || "").trim().toLowerCase();
+      const stockFlow = stockFlowByItem.get(key) || { receivedQty: 0, usedQty: 0 };
+      const currentStock = Number(item.stock || 0);
+      const receivedQty = Number(stockFlow.receivedQty || 0);
+      const usedQty = Number(stockFlow.usedQty || 0);
+      const openingQty = currentStock + usedQty - receivedQty;
+      const unitRate = Number(item.price || 0);
+      const amount = currentStock * unitRate;
+
+      return {
+        item: item.name,
+        category: item.category,
+        vendor: latestVendorByItem.get(key)?.vendor || "—",
+        openingQty: `${openingQty} ${item.unit}`,
+        receivedQty: `${receivedQty} ${item.unit}`,
+        usedQty: `${usedQty} ${item.unit}`,
+        remainingStock: `${currentStock} ${item.unit}`,
+        unitRate: formatCurrency(unitRate),
+        reorderPoint: `${item.reorderPoint || 10} ${item.unit}`,
+        store: item.branch,
+        alert: isLowStock(item) ? "Low" : "OK",
+        amount: formatCurrency(amount),
+      };
+    });
+  }, [inventoryItems, masterData, stockLedgerRows, vendorInwards]);
+  void stockReportSequenceRows;
 
   const reportConfig = {
     "vendor-report": { title:"Vendor Report", subtitle:"Purchase & service cost by vendor",
       columns:[{key:"name"},{key:"contact"},{key:"purchases"},{key:"services"},{key:"totalSpend"},{key:"status"}] },
-    "stock-report": { title:"Stock Report", subtitle:"Live inventory snapshot with reorder alerts",
-      columns:[{key:"item"},{key:"category"},{key:"store"},{key:"stock"},{key:"reorderPoint"},{key:"alert"},{key:"value"}] },
-    "closing-stock-report": { title:"Closing Stock Report", subtitle:"Opening, issued and closing quantities",
+    "stock-report": { title:"Stock Flow Report", subtitle:"Opening stock + received - used = remaining stock with real closing amount",
+      columns:[{key:"item"},{key:"category"},{key:"vendor"},{key:"openingQty"},{key:"receivedQty"},{key:"usedQty"},{key:"remainingStock"},{key:"unitRate"},{key:"amount"},{key:"reorderPoint"},{key:"store"},{key:"alert"}] },
+    "closing-stock-report": { title:"Closing Stock Report", subtitle:"Real opening, issued and closing quantities from stock flow",
       columns:[{key:"item"},{key:"branch"},{key:"opening"},{key:"issued"},{key:"closing"}] },
     "item-report": { title:"Item Report", subtitle:"Item details with rate and expiry",
       columns:[{key:"item"},{key:"category"},{key:"unit"},{key:"rate"},{key:"expiry"},{key:"status"}] },
-    "item-consumption-report": { title:"Item Consumption Report", subtitle:"Estimated consumption per item",
+    "expiring-soon-report": { title:"Expiring Soon Report", subtitle:"Items nearing expiry or already expired",
+      columns:[{key:"item"},{key:"category"},{key:"store"},{key:"stock"},{key:"expiry"},{key:"status"}] },
+    "batch-expiry-report": { title:"Batch-wise Expiry List", subtitle:"Received inward batches with invoice and expiry tracking",
+      columns:[{key:"vendor"},{key:"item"},{key:"batch"},{key:"invoice"},{key:"quantity"},{key:"receivedDate"},{key:"expiry"},{key:"status"}] },
+    "item-consumption-report": { title:"Item Consumption Report", subtitle:"Real consumption aggregated from recipe consumption logs",
       columns:[{key:"item"},{key:"consumed"},{key:"kitchen"},{key:"cost"}] },
-    "total-consumption-report": { title:"Total Consumption Report", subtitle:"Combined usage totals across all records",
+    "total-consumption-report": { title:"Total Consumption Report", subtitle:"Combined real usage totals grouped by reference type",
       columns:[{key:"group"},{key:"entries"},{key:"totalConsumed"},{key:"totalCost"}] },
     "item-audit": { title:"Item Audit Report", subtitle:"Saved audit report from inventory backend",
       columns:[{key:"item"},{key:"auditDate"},{key:"physicalStock"},{key:"systemStock"},{key:"variance"},{key:"status"},{key:"remarks"}] },
@@ -2164,14 +4652,14 @@ export default function InventoryDashboard() {
           } else {
             await API.post("/inventory/waste", payload);
           }
-          await refreshWasteLogs();
+          await Promise.all([refreshWasteLogs(), refreshInventoryItems(), refreshStockLedger(), refreshStockFlowReport()]);
         } else if (isTransferSection) {
           if (editingMasterId) {
             await API.put(`/inventory/transfers/${editingMasterId}`, payload);
           } else {
             await API.post("/inventory/transfers", payload);
           }
-          await refreshTransfers();
+          await Promise.all([refreshTransfers(), refreshStockLedger(), refreshStockFlowReport()]);
         } else if (inventoryMasterApiSection) {
           if (editingMasterId) {
             await updateInventoryMasterRecord(inventoryMasterApiSection, editingMasterId, payload);
@@ -2179,6 +4667,9 @@ export default function InventoryDashboard() {
             await createInventoryMasterRecord(inventoryMasterApiSection, payload);
           }
           await refreshMasterSection(activeSection);
+          if (activeSection === "vendors") {
+            await refreshVendorInsights();
+          }
         } else {
           setMasterData((cur) => {
             const list = cur[activeSection] || [];
@@ -2208,8 +4699,12 @@ export default function InventoryDashboard() {
     masterDraft,
     refreshMasterSection,
     refreshPurchaseOrders,
+    refreshStockFlowReport,
     refreshTransfers,
     refreshWasteLogs,
+    refreshVendorInsights,
+    refreshInventoryItems,
+    refreshStockLedger,
   ]);
 
   const editMasterRecord = useCallback((record) => {
@@ -2233,10 +4728,10 @@ export default function InventoryDashboard() {
           await refreshPurchaseOrders();
         } else if (activeSection === "waste-log") {
           await API.delete(`/inventory/waste/${id}`);
-          await refreshWasteLogs();
+          await Promise.all([refreshWasteLogs(), refreshInventoryItems(), refreshStockLedger(), refreshStockFlowReport()]);
         } else if (activeSection === "stock-transfer") {
           await API.delete(`/inventory/transfers/${id}`);
-          await refreshTransfers();
+          await Promise.all([refreshTransfers(), refreshStockLedger(), refreshStockFlowReport()]);
         } else if (INVENTORY_MASTER_API_SECTION_MAP[activeSection]) {
           await deleteInventoryMasterRecord(INVENTORY_MASTER_API_SECTION_MAP[activeSection], id);
           await refreshMasterSection(activeSection);
@@ -2252,7 +4747,7 @@ export default function InventoryDashboard() {
     };
 
     run();
-  }, [activeSection, refreshMasterSection, refreshPurchaseOrders, refreshTransfers, refreshWasteLogs]);
+  }, [activeSection, refreshInventoryItems, refreshMasterSection, refreshPurchaseOrders, refreshStockFlowReport, refreshStockLedger, refreshTransfers, refreshWasteLogs]);
 
   const submitInventoryAudit = useCallback(async (entries) => {
     const payloadEntries = entries.map((entry) => ({
@@ -2386,17 +4881,23 @@ export default function InventoryDashboard() {
     const missing = ITEMS_FORM.some((f) => f.required && !String(itemsForm[f.key] ?? "").trim());
     if (missing) { setItemsError("Please fill all required fields."); return false; }
 
-    const payload = { ...itemsForm, stock: Number(itemsForm.stock), price: Number(itemsForm.price), reorderPoint: Number(itemsForm.reorderPoint || 10) };
+    const payload = {
+      ...itemsForm,
+      stock: Number(itemsForm.stock),
+      price: Number(itemsForm.price),
+      reorderPoint: Number(itemsForm.reorderPoint || 10),
+    };
 
     try {
       if (editingItemId) {
         await API.put(`/inventory/${editingItemId}`, payload);
-        setInventoryItems((cur) => cur.map((i) => i.id === editingItemId ? { ...i, ...payload } : i));
       } else {
-        const res = await API.post("/inventory", payload);
-        setInventoryItems((cur) => [...cur, { id: res.data?.id || Date.now(), ...payload }]);
+        await API.post("/inventory", payload);
       }
-      setItemsForm(buildInitialForm(ITEMS_FORM));
+      await refreshInventoryItems();
+      await refreshStockLedger();
+      await refreshStockFlowReport();
+      setItemsForm({ ...buildInitialForm(ITEMS_FORM), adjustmentReason: "" });
       setEditingItemId(null);
       setItemsError("");
       return true;
@@ -2410,6 +4911,7 @@ export default function InventoryDashboard() {
     try {
       await API.delete(`/inventory/${id}`);
       setInventoryItems((cur) => cur.filter((i) => i.id !== id));
+      await Promise.all([refreshStockLedger(), refreshStockFlowReport()]);
     } catch (err) {
       setItemsError(err.response?.data?.message || "Could not delete item.");
     }
@@ -2422,12 +4924,16 @@ export default function InventoryDashboard() {
     if (selectedSection.type === "items") {
       return (
         <ItemsSection
-          items={inventoryItems} form={itemsForm} setForm={setItemsForm}
+          items={inventoryItems} vendorInwards={vendorInwards} stockLedgerRows={stockLedgerRows} masterData={masterData} form={itemsForm} setForm={setItemsForm}
           editingId={editingItemId} setEditingId={setEditingItemId}
           onSave={saveInventoryItem} onDelete={deleteInventoryItem}
           searchQuery={sectionSearch} setSearchQuery={setSectionSearch}
           categoryFilter={categoryFilter} setCategoryFilter={setCategoryFilter}
           categories={categories}
+          summaryMetrics={{ totalItems: inventoryItems.length, totalStockValue, lowStockCount, expiredCount }}
+          activeGroupLabel={activeGroupLabel}
+          setOpenNavGroup={setOpenNavGroup}
+          setActiveSection={setActiveSection}
         />
       );
     }
@@ -2456,6 +4962,18 @@ export default function InventoryDashboard() {
           onSave={saveMasterRecord} onEdit={editMasterRecord} onDelete={deleteMasterRecord}
           draft={masterDraft} setDraft={setMasterDraft} editingId={editingMasterId}
           searchQuery={sectionSearch} setSearchQuery={setSectionSearch}
+          inventoryItems={inventoryItems}
+          vendorInwards={vendorInwards}
+          refreshVendorInwards={refreshVendorInwards}
+          vendorPayments={vendorPayments}
+          refreshVendorPayments={refreshVendorPayments}
+          stockLedgerRows={stockLedgerRows}
+          refreshStockLedger={refreshStockLedger}
+          vendorInsights={vendorInsights}
+          refreshInventoryItems={refreshInventoryItems}
+          refreshPurchaseOrders={refreshPurchaseOrders}
+          masterData={masterData}
+          procurementOnly={procurementOnly}
         />
       );
     }
@@ -2467,6 +4985,8 @@ export default function InventoryDashboard() {
           onSave={saveMasterRecord} onEdit={editMasterRecord} onDelete={deleteMasterRecord}
           draft={masterDraft} setDraft={setMasterDraft} editingId={editingMasterId}
           searchQuery={sectionSearch} setSearchQuery={setSectionSearch}
+          inventoryItems={inventoryItems}
+          masterData={masterData}
         />
       );
     }
@@ -2489,23 +5009,73 @@ export default function InventoryDashboard() {
           onSave={saveMasterRecord} onEdit={editMasterRecord} onDelete={deleteMasterRecord}
           draft={masterDraft} setDraft={setMasterDraft} editingId={editingMasterId}
           searchQuery={sectionSearch} setSearchQuery={setSectionSearch}
+          setActiveSection={setActiveSection}
+          vendorInsights={vendorInsights}
+          masterData={masterData}
+          vendorInwards={vendorInwards}
         />
       );
     }
 
     const cfg = reportConfig[activeSection];
     if (cfg) {
-      return <ReportSection title={cfg.title} subtitle={cfg.subtitle} columns={cfg.columns} rows={reportRows[activeSection] || []} />;
+      const rows = activeSection === "stock-report"
+        ? stockFlowReportRows
+        : (reportRows[activeSection] || []);
+      return (
+        <ReportSection
+          title={cfg.title}
+          subtitle={cfg.subtitle}
+          columns={cfg.columns}
+          rows={rows}
+          stockFlowSummary={activeSection === "stock-report" ? stockFlowReportSummary : null}
+          stockFlowFilters={activeSection === "stock-report" ? stockFlowFilters : null}
+          onStockFlowFilterChange={activeSection === "stock-report"
+            ? (key, value) => setStockFlowFilters((current) => ({ ...current, [key]: value }))
+            : null}
+        />
+      );
     }
 
     return null;
   };
 
   // ── Sidebar section groups ────────────────────────────────
+  if (procurementOnly) {
+    return (
+      <div className="inventory-ui-scope min-h-screen bg-[linear-gradient(135deg,#f4f8ff_0%,#eef6f8_30%,#fff9f0_66%,#f8fafc_100%)] p-4 sm:p-5">
+        <style>{INVENTORY_INTERNAL_CSS}</style>
+        <div className="mx-auto max-w-[1800px] space-y-5">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-[28px] border border-white/70 bg-white/90 p-5 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+            <div>
+              <h2 className="text-3xl font-semibold text-slate-900">Real Procurement Flow</h2>
+              <p className="mt-1 text-sm text-slate-500">Vendor inward, payment tracking, and stock ledger on a dedicated workspace.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => navigate("/inventory")}
+              className="rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+            >
+              Back To Inventory
+            </button>
+          </div>
+          {itemsError ? (
+            <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 shadow-[0_10px_30px_rgba(239,68,68,0.08)]">
+              {itemsError}
+            </div>
+          ) : null}
+          {renderContent()}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-[linear-gradient(135deg,#f6fbff_0%,#eef6f8_28%,#fff8ef_58%,#f8fafc_100%)] p-4 sm:p-5">
+    <div className="inventory-ui-scope min-h-screen bg-[linear-gradient(135deg,#f4f8ff_0%,#eef6f8_30%,#fff9f0_66%,#f8fafc_100%)] p-4 sm:p-5">
+      <style>{INVENTORY_INTERNAL_CSS}</style>
       {/* Header */}
-      <div className="relative mb-6 overflow-hidden rounded-[30px] border border-slate-900/10 bg-[linear-gradient(120deg,#071b34_0%,#0d4a53_48%,#1d4ed8_100%)] p-5 shadow-[0_30px_80px_rgba(15,23,42,0.16)]">
+      {false && (
+      <div className="relative mb-6 overflow-hidden rounded-[30px] border border-slate-900/10 bg-[linear-gradient(120deg,#08203b_0%,#0f5562_42%,#245cc5_100%)] p-5 shadow-[0_26px_70px_rgba(15,23,42,0.16)]">
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute left-[-8%] top-[-18%] h-40 w-40 rounded-full bg-cyan-300/20 blur-3xl" />
           <div className="absolute right-[-6%] top-[12%] h-44 w-44 rounded-full bg-amber-300/20 blur-3xl" />
@@ -2514,9 +5084,8 @@ export default function InventoryDashboard() {
         <div className="relative z-[1]">
         <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-300/80">Baglamukhi Resort</p>
-            <h1 className="mt-1 text-3xl font-bold text-white md:text-4xl">Inventory Management</h1>
-            <p className="mt-1.5 max-w-xl text-lg text-slate-300">
+            <h1 className="text[1.25rem] font-bold text-white md:text-4xl">Inventory Management</h1>
+            <p className="mt-1.5 max-w-2xl text-lg text-slate-300">
               Full-stack inventory workspace — items, POs, waste logs, stock audits, inter-department transfers and reports.
             </p>
           </div>
@@ -2524,11 +5093,11 @@ export default function InventoryDashboard() {
             {[
               { l: "Total Items",    v: inventoryItems.length,         c: "border-white/20 bg-white/10 text-white" },
               { l: "Stock Value",    v: formatCurrency(totalStockValue),c: "border-white/20 bg-white/10 text-white" },
-              { l: "Low Stock",      v: lowStockCount,                  c: "border-amber-400/40 bg-amber-500/20 text-amber-200" },
-              { l: "Expired",        v: expiredCount,                   c: "border-red-400/40 bg-red-500/20 text-red-200" },
+              { l: "Low Stock",      v: lowStockCount,                  c: "border-amber-300/70 bg-amber-400/10 text-amber-100" },
+              { l: "Expired",        v: expiredCount,                   c: "border-rose-300/60 bg-violet-500/15 text-rose-100" },
             ].map(({ l, v, c }) => (
               <div key={l} className={`rounded-2xl border px-4 py-3 ${c}`}>
-                <p className="text-sm font-semibold uppercase tracking-wider opacity-70">{l}</p>
+                <p className="text-xs font-bold uppercase tracking-[0.18em] opacity-75">{l}</p>
                 <p className="mt-1 text-2xl font-bold">{itemsLoading && l === "Total Items" ? "..." : v}</p>
               </div>
             ))}
@@ -2542,122 +5111,72 @@ export default function InventoryDashboard() {
         )}
         </div>
       </div>
+      )}
 
       <div className="space-y-5">
-        <section className="rounded-[28px] border border-white/70 bg-white/90 p-4 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-          <p className="mb-3 px-1 text-sm font-bold uppercase tracking-widest text-slate-400">Navigation</p>
-          <div className="grid gap-3 lg:grid-cols-4">
-            {NAVIGATION_GROUPS.map((group) => {
-              const isOpen = openNavGroup === group.label;
-              const isActiveGroup = group.ids.includes(activeSection);
-
-              return (
-                <button
-                  key={group.label}
-                  type="button"
-                  onClick={() => {
-                    setOpenNavGroup(group.label);
-                    setActiveSection(group.ids[0]);
-                  }}
-                  className={`flex min-h-[68px] items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left transition ${
-                    isOpen || isActiveGroup ? group.activeButton : group.idleButton
-                  }`}
-                >
-                  <div className="flex min-w-0 flex-1 items-center gap-3">
-                    <span
-                      className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
-                        isOpen || isActiveGroup ? group.iconTone : group.iconIdleTone
-                      }`}
-                    >
-                      <FaFilter size={13} />
-                    </span>
-                    <div className="min-w-0">
-                      <div className="text-lg font-black uppercase tracking-[0.24em]">
-                        {group.label}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-2">
-                    <span
-                      className={`rounded-full border px-3 py-1 text-sm font-bold uppercase tracking-[0.18em] ${
-                        isOpen || isActiveGroup
-                          ? "border-white/20 bg-white/15 text-white"
-                          : "border-slate-200 bg-white/80 text-slate-500"
-                      }`}
-                    >
-                      {group.ids.length} items
-                    </span>
-                    <span
-                      className={`inline-flex h-9 w-9 items-center justify-center rounded-full border transition ${
-                        isOpen || isActiveGroup
-                          ? "border-white/20 bg-white/15 text-white"
-                          : "border-slate-200 bg-white/80 text-slate-500"
-                      } ${isOpen ? "rotate-180" : ""}`}
-                    >
-                      <FaChevronDown size={13} />
-                    </span>
-                  </div>
-                </button>
-              );
-            })}
+        <InventoryHeaderStrip
+          summaryMetrics={{ totalItems: inventoryItems.length, totalStockValue, lowStockCount, expiredCount }}
+          activeGroupLabel={activeGroupLabel}
+          setOpenNavGroup={setOpenNavGroup}
+          setActiveSection={setActiveSection}
+        />
+        {itemsError && (
+          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 shadow-[0_10px_30px_rgba(239,68,68,0.08)]">
+            {itemsError}
           </div>
+        )}
+        {openNavGroup ? (
+          <div className="flex flex-wrap items-center gap-3 px-2">
+            {(() => {
+              const group = NAVIGATION_GROUPS.find((entry) => entry.label === openNavGroup);
+              if (!group) return null;
 
-          {openNavGroup ? (
-            <div className="mt-4">
-              {(() => {
-                const group = NAVIGATION_GROUPS.find((entry) => entry.label === openNavGroup);
-                if (!group) return null;
+              return group.ids.map((id) => {
+                const sec = INVENTORY_SECTIONS.find((section) => section.id === id);
+                if (!sec) return null;
+
+                const Icon = sec.icon;
+                const active = activeSection === id;
 
                 return (
-                  <div
-                    className={`w-full rounded-[24px] border p-4 text-left ${group.dropdown}`}
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => setActiveSection(id)}
+                    className={`inline-flex min-h-[48px] cursor-pointer items-center gap-3 rounded-full border px-5 py-2.5 text-left text-base font-semibold transition ${
+                      active
+                        ? "border-transparent bg-[linear-gradient(90deg,#2563eb_0%,#1d4ed8_100%)] text-white shadow-[0_12px_24px_rgba(37,99,235,0.22)]"
+                        : "border-slate-200 bg-white/85 text-slate-700 hover:border-slate-300 hover:bg-white"
+                    }`}
                   >
-                    <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-                      <div>
-                        <div className="text-xl font-black uppercase tracking-[0.24em] text-slate-900">
-                          {group.label} Navigation
-                        </div>
-                        <div className="mt-1.5 text-xl text-slate-600">{group.helper}</div>
-                      </div>
-                      <div className="rounded-full border border-white/70 bg-white/70 px-4 py-2 text-base font-bold uppercase tracking-[0.18em] text-slate-600">
-                        Click any button to open module
-                      </div>
-                    </div>
-                    <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-4">
-                      {group.ids.map((id) => {
-                        const sec = INVENTORY_SECTIONS.find((section) => section.id === id);
-                        if (!sec) return null;
-
-                        const Icon = sec.icon;
-                        const active = activeSection === id;
-
-                        return (
-                          <button
-                            key={id}
-                            type="button"
-                            onClick={() => setActiveSection(id)}
-                            className={`inline-flex cursor-pointer items-center gap-4 rounded-2xl border px-5 py-4 text-left text-lg font-semibold transition ${
-                              active ? group.itemActive : group.itemIdle
-                            }`}
-                          >
-                            <span
-                              className={`inline-flex h-11 w-11 items-center justify-center rounded-xl ${
-                                active ? "bg-slate-900 text-white" : "bg-white text-slate-500"
-                              }`}
-                            >
-                              <Icon size={16} />
-                            </span>
-                            <span className="truncate">{sec.label}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
+                    <span
+                      className={`inline-flex h-7 w-7 items-center justify-center rounded-full ${
+                        active ? "bg-white/18 text-white" : "bg-slate-100 text-slate-500"
+                      }`}
+                    >
+                      <Icon size={13} />
+                    </span>
+                    <span className="truncate whitespace-nowrap">{sec.label}</span>
+                  </button>
                 );
-              })()}
-            </div>
-          ) : null}
-        </section>
+              }).concat(
+                group.label === "Purchases"
+                  ? [
+                    <button
+                      key="purchase-real-procurement-flow"
+                      type="button"
+                      onClick={() => navigate("/inventory/procurement")}
+                      className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 shadow-[0_10px_24px_rgba(15,23,42,0.05)] transition hover:border-slate-300 hover:bg-slate-50"
+                    >
+                      <FaTruck size={12} />
+                      Real Procurement Flow
+                    </button>,
+                  ]
+                  : []
+              );
+            })()}
+          </div>
+        ) : null}
 
         {/* Main content */}
         <main className="min-w-0 space-y-5">

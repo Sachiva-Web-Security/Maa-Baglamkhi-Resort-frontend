@@ -6,6 +6,7 @@ import DashboardFooter from "./components/Dashboard/DashboardFooter";
 import Header from "./components/Header/Header";
 import InventoryDashboard from "./components/Inventory/InventoryDashboard";
 import InventoryMastersModulePage from "./pages/InventoryMastersModulePage";
+import InventoryProcurementPage from "./pages/InventoryProcurementPage";
 import MenuRecipeModulePage from "./pages/MenuRecipeModulePage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AddMenuItemPage from "./components/Restaurant/AddMenuItemPage";
@@ -218,8 +219,9 @@ function AppRoutes({ isAuthenticated, setIsAuthenticated, protect }) {
             path="/accounts/customer-invoices"
             element={protect(<AccountsCustomerInvoices />, ROLES.ACCOUNTS)}
           />
-          <Route path="/inventory" element={protect(<InventoryDashboard />, ROLES.INVENTORY)} />
-          <Route path="/inventory/masters" element={protect(<InventoryMastersModulePage />, ROLES.INVENTORY)} />
+<Route path="/inventory" element={protect(<InventoryDashboard />, ROLES.INVENTORY)} />
+<Route path="/inventory/procurement" element={protect(<InventoryProcurementPage />, ROLES.INVENTORY)} />
+<Route path="/inventory/masters" element={protect(<InventoryMastersModulePage />, ROLES.INVENTORY)} />
           <Route path="/inventory/recipes" element={protect(<MenuRecipeModulePage />, ROLES.INVENTORY)} />
           <Route path="/housekeeping" element={protect(<Housekeeping />, ROLES.HOUSEKEEPING)} />
           <Route path="/banquet" element={protect(<Banquet />, ROLES.BANQUET)} />

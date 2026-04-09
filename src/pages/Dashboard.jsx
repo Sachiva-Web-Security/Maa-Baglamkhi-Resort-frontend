@@ -1502,9 +1502,9 @@ const Dashboard = () => {
 
           <section
             id="dashboard-stay-overview"
-            className="grid gap-4 xl:grid-cols-[minmax(0,1.62fr)_minmax(280px,0.68fr)]"
+            className="grid items-start gap-4 xl:grid-cols-[minmax(0,1.62fr)_minmax(280px,0.68fr)]"
           >
-            <div className="rounded-[28px] border border-white/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.95)_0%,rgba(248,251,255,0.92)_100%)] p-4 shadow-[0_24px_58px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
+            <div className="self-start rounded-[28px] border border-white/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.95)_0%,rgba(248,251,255,0.92)_100%)] p-4 shadow-[0_24px_58px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
               <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                 <div>
                   <p className="text-xl font-semibold uppercase tracking-[0.22em] text-slate-900 sm:text-[1.25rem]">
@@ -1815,7 +1815,11 @@ const Dashboard = () => {
                   Room Mix
                 </p>
                 <div className="mb-3 mt-1 text-[15px] font-bold text-slate-900">Occupancy overview</div>
-                <RoomOccupancyChart />
+                <RoomOccupancyChart
+                  rooms={rooms}
+                  occupiedRooms={liveOccupiedRooms || apiMetrics.occupiedRooms || 0}
+                  totalRooms={liveTotalRooms}
+                />
               </div>
             </div>
           </div>

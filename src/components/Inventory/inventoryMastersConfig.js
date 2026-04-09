@@ -44,17 +44,6 @@ export const INVENTORY_MASTER_SECTIONS = [
     columns: ["name", "shortName", "type"],
   },
   {
-    key: "unit-conversions",
-    label: "Unit Conversions",
-    fields: [
-      { key: "fromUnit", label: "From Unit", type: "text", required: true },
-      { key: "toUnit", label: "To Unit", type: "text", required: true },
-      { key: "factor", label: "Factor", type: "number", required: true },
-      { key: "notes", label: "Notes", type: "text" },
-    ],
-    columns: ["fromUnit", "toUnit", "factor", "notes"],
-  },
-  {
     key: "locations",
     label: "Store / Kitchen",
     fields: [
@@ -74,16 +63,6 @@ export const INVENTORY_MASTER_SECTIONS = [
       { key: "status", label: "Status", type: "select", options: ["Active", "Inactive"] },
     ],
     columns: ["name", "segment", "status"],
-  },
-  {
-    key: "gravies",
-    label: "Gravies",
-    fields: [
-      { key: "name", label: "Name", type: "text", required: true },
-      { key: "base", label: "Base", type: "text" },
-      { key: "spiceLevel", label: "Spice Level", type: "select", options: ["Low", "Medium", "High"] },
-    ],
-    columns: ["name", "base", "spiceLevel"],
   },
   {
     key: "ingredients",
