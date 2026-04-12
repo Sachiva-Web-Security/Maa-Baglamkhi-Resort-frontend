@@ -134,6 +134,7 @@ const formatTimestamp = (value) => {
   return parsed.toLocaleString("en-IN", {
     day: "2-digit",
     month: "short",
+    year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
   });
@@ -160,6 +161,7 @@ const Assignment = () => {
   const [editId, setEditId] = useState(null);
   const [pageLoading, setPageLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [assignmentNotice, setAssignmentNotice] = useState("");
 
   const loadUsers = async () => {
     try {
@@ -282,6 +284,10 @@ const Assignment = () => {
           notes: form.notes,
           assignedBy: currentName,
         });
+
+        setAssignmentNotice(
+          `Task assigned on ${formatTimestamp(new Date().toISOString())}`,
+        );
       }
 
       resetForm();
@@ -423,6 +429,12 @@ const Assignment = () => {
             </div>
           </div>
         </section>
+
+        {assignmentNotice ? (
+          <section className="rounded-[24px] border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-semibold text-emerald-700 shadow-[0_12px_30px_rgba(16,185,129,0.08)]">
+            {assignmentNotice}
+          </section>
+        ) : null}
 
         {canManageAssignments && (
           <section className="rounded-[26px] border border-white/60 bg-white/82 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
@@ -568,6 +580,7 @@ const Assignment = () => {
                   <th className="px-5 py-4 font-semibold hidden lg:table-cell">Due</th>
                   <th className="px-5 py-4 font-semibold">Status</th>
                   <th className="px-5 py-4 font-semibold hidden xl:table-cell">Assigned By</th>
+                  <th className="px-5 py-4 font-semibold hidden xl:table-cell">Assigned On</th>
                   <th className="px-5 py-4 font-semibold hidden xl:table-cell">Updated</th>
                   <th className="px-5 py-4 font-semibold">Action</th>
                 </tr>
@@ -591,6 +604,9 @@ const Assignment = () => {
                           {assignment.notes}
                         </div>
                       ) : null}
+                      <div className="mt-2 text-sm font-semibold text-slate-500 xl:hidden">
+                        Assigned on: {formatTimestamp(assignment.created_at)}
+                      </div>
                     </td>
                     <td className="px-5 py-4">
                       <span
@@ -611,6 +627,9 @@ const Assignment = () => {
                     </td>
                     <td className="px-5 py-4 hidden text-xl text-slate-600 xl:table-cell">
                       {assignment.assigned_by || assignment.created_by_name || "--"}
+                    </td>
+                    <td className="px-5 py-4 hidden text-xl text-slate-600 xl:table-cell">
+                      {formatTimestamp(assignment.created_at)}
                     </td>
                     <td className="px-5 py-4 hidden text-xl text-slate-600 xl:table-cell">
                       {formatTimestamp(assignment.updated_at || assignment.created_at)}

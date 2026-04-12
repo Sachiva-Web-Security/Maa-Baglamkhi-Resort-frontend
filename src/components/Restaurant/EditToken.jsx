@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import API from "../../api";
 import { restaurantService } from "../../services/restaurantService";
+import { getCurrentActor, namesMatch } from "../../utils/currentActor";
 
 const ACTIVE_INVOICE_KEY = "restaurant-active-invoice";
 const SAVED_INVOICE_KEY = "restaurant-saved-invoice";
@@ -12,13 +13,15 @@ const EditToken = () => {
   const location = useLocation();
   const entityType = location.state?.entityType || localStorage.getItem(`entityType:${table}`) || "Table";
   const roomData = location.state?.roomData || null;
-  const currentRole = String(localStorage.getItem("role") || "").toLowerCase();
+  const actor = getCurrentActor();
+  const currentRole = actor.role;
+  const isWaiter = actor.isWaiter;
 
   const [tokenId, setTokenId] = useState(null);
   const [items, setItems] = useState([]);
   const [kitchenOrder, setKitchenOrder] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [waiterName, setWaiterName] = useState("Waiter");
+  const [waiterName, setWaiterName] = useState(actor.name || "Waiter");
   const [actionRequests, setActionRequests] = useState([]);
   const readySound = useRef(null);
   const lastReadyKey = useRef("");
@@ -246,6 +249,8 @@ const EditToken = () => {
     return <div className="min-h-screen bg-slate-100 p-6">Loading token...</div>;
   }
 
+  const isOwnedByCurrentWaiter = !isWaiter || !waiterName || namesMatch(waiterName, actor.name);
+
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#19253c_0%,#1f2d47_100%)] p-3 sm:p-4">
       <div className="mx-auto max-w-[1280px] space-y-4">
@@ -345,6 +350,8 @@ const EditToken = () => {
                         value={item.rate}
                         className="w-full rounded-xl border border-slate-200 px-2 py-2 text-center text-sm"
                         onChange={(event) => handleChange(item.id, "rate", event.target.value)}
+                        readOnly={isWaiter}
+                        disabled={isWaiter}
                       />
                       <div className="flex items-center justify-center rounded-xl bg-slate-50 px-2 text-sm font-bold text-slate-900">
                         Rs. {Number(item.qty) * Number(item.rate)}
@@ -363,12 +370,14 @@ const EditToken = () => {
                       >
                         Void
                       </button>
-                      <button
-                        onClick={() => deleteItem(item.id)}
-                        className="rounded-xl bg-rose-500 px-3 py-2 text-xs font-bold text-white"
-                      >
-                        Delete
-                      </button>
+                      {!isWaiter ? (
+                        <button
+                          onClick={() => deleteItem(item.id)}
+                          className="rounded-xl bg-rose-500 px-3 py-2 text-xs font-bold text-white"
+                        >
+                          Delete
+                        </button>
+                      ) : null}
                     </div>
                   </div>
                   <div className="hidden lg:grid lg:grid-cols-[minmax(0,1.3fr)_88px_112px_100px_190px] lg:items-center lg:gap-2 lg:px-4 lg:py-3">
@@ -387,6 +396,8 @@ const EditToken = () => {
                         value={item.rate}
                         className="w-24 rounded-xl border border-slate-200 px-2 py-2 text-center text-sm"
                         onChange={(event) => handleChange(item.id, "rate", event.target.value)}
+                        readOnly={isWaiter}
+                        disabled={isWaiter}
                       />
                     </div>
                     <div className="text-center text-sm font-bold text-slate-900">Rs. {Number(item.qty) * Number(item.rate)}</div>
@@ -404,12 +415,14 @@ const EditToken = () => {
                       >
                         Void
                       </button>
-                      <button
-                        onClick={() => deleteItem(item.id)}
-                        className="rounded-xl bg-rose-500 px-3 py-2 text-xs font-bold text-white"
-                      >
-                        Delete
-                      </button>
+                      {!isWaiter ? (
+                        <button
+                          onClick={() => deleteItem(item.id)}
+                          className="rounded-xl bg-rose-500 px-3 py-2 text-xs font-bold text-white"
+                        >
+                          Delete
+                        </button>
+                      ) : null}
                     </div>
                   </div>
                   </div>
@@ -484,13 +497,14 @@ const EditToken = () => {
               <div className="mt-3 grid gap-3">
                 <button
                   onClick={handleUpdate}
+                  disabled={!isOwnedByCurrentWaiter}
                   className="rounded-[16px] bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white"
                 >
                   Update Token
                 </button>
                 <button
                   onClick={handleInvoice}
-                  disabled={!items.length}
+                  disabled={!items.length || !isOwnedByCurrentWaiter}
                   className="rounded-[16px] bg-blue-600 px-4 py-2.5 text-sm font-bold text-white"
                 >
                   Create Invoice
@@ -502,6 +516,11 @@ const EditToken = () => {
                   Back to Dashboard
                 </button>
               </div>
+              {isWaiter && !isOwnedByCurrentWaiter ? (
+                <div className="rounded-[18px] border border-amber-200 bg-amber-50 px-4 py-4 text-sm font-semibold text-amber-800">
+                  Ye token kisi aur waiter ke naam par chal raha hai. Aap isse edit ya bill generate nahi kar sakte.
+                </div>
+              ) : null}
             </div>
           </div>
         </section>

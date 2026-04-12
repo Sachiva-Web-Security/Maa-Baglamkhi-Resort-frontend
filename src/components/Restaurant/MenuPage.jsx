@@ -4,6 +4,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import RestaurantContext from "../../Context/restaurantContext";
 import API, { getBackendBaseURL } from "../../api";
 import { restaurantService } from "../../services/restaurantService";
+import { getCurrentActor } from "../../utils/currentActor";
 
 const normalizeCategory = (value) => (value || "Other").trim().toLowerCase();
 const normalizeItemName = (value) => String(value || "").trim().toLowerCase();
@@ -96,6 +97,8 @@ const MenuPage = () => {
   const entityType = location.state?.entityType || "Table";
   const roomData = location.state?.roomData || null;
   const { menuItems, setSelectedTable } = useContext(RestaurantContext);
+  const actor = getCurrentActor();
+  const waiterName = actor.name || (entityType === "Room" ? "Room Service" : "Waiter");
 
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [qty, setQty] = useState({});
@@ -354,7 +357,7 @@ const MenuPage = () => {
         tokenId = null;
       }
       if (!tokenId) {
-        const createRes = await API.post("/token/create", { tableNumber: String(table), waiter: "Waiter" });
+        const createRes = await API.post("/token/create", { tableNumber: String(table), waiter: waiterName });
         tokenId = createRes.data?.tokenId;
       }
       if (tokenId) {
@@ -369,7 +372,7 @@ const MenuPage = () => {
       localStorage.setItem(`entityType:${table}`, entityType);
       await restaurantService.createKitchenOrder({
         table,
-        waiter: entityType === "Room" ? "Room Service" : "Waiter",
+        waiter: waiterName,
         entityType,
         prepTimeMinutes,
         items: order.map(({ name, qty: quantity, rate: price }) => ({ name, quantity, price })),

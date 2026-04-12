@@ -4,37 +4,44 @@ export const STATUS_META = {
   available: {
     label: "Available",
     cell: "border-emerald-200 bg-emerald-50 text-emerald-700",
-    badge: "bg-emerald-100 text-emerald-700",
+    badge:
+      "bg-gradient-to-r from-emerald-100 via-emerald-50 to-lime-100 text-emerald-800 shadow-[0_8px_18px_rgba(16,185,129,0.15)] ring-1 ring-emerald-200/80",
   },
   occupied: {
     label: "Occupied",
     cell: "border-rose-200 bg-rose-50 text-rose-700",
-    badge: "bg-rose-100 text-rose-700",
+    badge:
+      "bg-gradient-to-r from-rose-100 via-pink-50 to-red-100 text-rose-800 shadow-[0_8px_18px_rgba(244,63,94,0.14)] ring-1 ring-rose-200/80",
   },
   reserved: {
     label: "Reserved",
     cell: "border-amber-200 bg-amber-50 text-amber-700",
-    badge: "bg-amber-100 text-amber-700",
+    badge:
+      "bg-gradient-to-r from-amber-100 via-yellow-50 to-orange-100 text-amber-800 shadow-[0_8px_18px_rgba(245,158,11,0.15)] ring-1 ring-amber-200/80",
   },
   check_in_confirmed: {
     label: "Check-In Confirmed",
     cell: "border-sky-200 bg-sky-50 text-sky-700",
-    badge: "bg-sky-100 text-sky-700",
+    badge:
+      "bg-gradient-to-r from-sky-100 via-cyan-50 to-blue-100 text-sky-800 shadow-[0_8px_18px_rgba(14,165,233,0.16)] ring-1 ring-sky-200/80",
   },
   cleaning: {
     label: "Cleaning",
     cell: "border-violet-200 bg-violet-50 text-violet-700",
-    badge: "bg-violet-100 text-violet-700",
+    badge:
+      "bg-gradient-to-r from-violet-100 via-fuchsia-50 to-purple-100 text-violet-800 shadow-[0_8px_18px_rgba(139,92,246,0.15)] ring-1 ring-violet-200/80",
   },
   blocked: {
     label: "Blocked",
     cell: "border-slate-300 bg-slate-200 text-slate-700",
-    badge: "bg-slate-200 text-slate-700",
+    badge:
+      "bg-gradient-to-r from-slate-200 via-slate-100 to-zinc-200 text-slate-800 shadow-[0_8px_18px_rgba(100,116,139,0.14)] ring-1 ring-slate-300/80",
   },
   no_booking: {
     label: "No booking",
     cell: "border-slate-200 bg-slate-50 text-slate-500",
-    badge: "bg-slate-100 text-slate-500",
+    badge:
+      "bg-gradient-to-r from-slate-100 via-white to-slate-200 text-slate-600 shadow-[0_8px_18px_rgba(148,163,184,0.12)] ring-1 ring-slate-200/90",
   },
 };
 

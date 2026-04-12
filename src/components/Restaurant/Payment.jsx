@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import API from "../../api";
 import { restaurantService } from "../../services/restaurantService";
+import { getCurrentActor } from "../../utils/currentActor";
 import {
   expandBookings,
   getRoomBookingForDate,
@@ -647,6 +648,7 @@ const Payment = ({
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const actor = getCurrentActor();
   const routeInvoice = location.state || null;
 
   const [submitting, setSubmitting] = useState(false);
@@ -929,6 +931,8 @@ const Payment = ({
     });
   }, [chargeableRooms, roomChargeQuery]);
   const isRoomChargeMode = paymentMethod === "Charge To Room";
+  const waiterDiscountLocked = actor.isWaiter;
+  const canChargeToRoom = !actor.isWaiter && String(entityType || "").toLowerCase() !== "room";
 
   const saveInvoiceState = (patch = {}) => {
     setInvoice((current) => {
@@ -961,6 +965,7 @@ const Payment = ({
   };
 
   const handleDiscountChange = (value) => {
+    if (waiterDiscountLocked) return;
     const normalized = Math.max(0, Number(value || 0));
     setDiscountAmount(normalized);
     saveInvoiceState({
@@ -1289,6 +1294,15 @@ const Payment = ({
     ? `${entityType} ${invoice.table} | Visit ID ${formatVisitId(invoice.tokenCode, invoice.tokenId)} | Total ${formatCurrency(invoice.total)}`
     : "Select a payment card to continue.";
   const hasCustomerValidationErrors = Boolean(fieldErrors.customerName || fieldErrors.phone);
+  const pendingPaymentCount = invoiceCards.filter((card) => !isSettledInvoice(card.invoiceStatus)).length;
+  const readyToCloseCount = invoiceCards.filter((card) => isSettledInvoice(card.invoiceStatus)).length;
+  const pendingPaymentTotal = invoiceCards.reduce(
+    (sum, card) => (isSettledInvoice(card.invoiceStatus) ? sum : sum + Number(card.total || 0)),
+    0,
+  );
+  const activeStationLabel = invoice
+    ? `${String(entityType || "Table").toLowerCase() === "room" ? "Room" : "Table"} ${invoice.table}`
+    : "Payment Desk";
 
   return (
     <div className={shellClassName}>
@@ -1311,13 +1325,13 @@ const Payment = ({
 
         <section className={asModal || !showCardList ? "flex justify-center" : "grid gap-4 xl:grid-cols-[minmax(560px,0.98fr)_minmax(420px,0.88fr)] 2xl:grid-cols-[minmax(640px,1fr)_minmax(460px,0.84fr)]"}>
           {!asModal && showCardList ? (
-            <div className="rounded-[24px] border border-slate-200/70 bg-white/95 p-4 shadow-[0_14px_36px_rgba(15,23,42,0.09)]">
+            <div className="rounded-[24px] border border-slate-200/80 bg-white p-4 shadow-[0_14px_34px_rgba(15,23,42,0.07)]">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-base font-semibold uppercase tracking-[0.28em] text-sky-500">Payment Cards</p>
-                  <h3 className="mt-1.5 text-3xl font-black text-slate-900">All restaurant payments in one page</h3>
+                  <p className="text-sm font-semibold uppercase tracking-[0.28em] text-sky-500">Review Queue</p>
+                  <h3 className="mt-2 text-[28px] font-black text-slate-900">Open restaurant payment cards</h3>
                 </div>
-                <div className="rounded-full bg-slate-100 px-4 py-2 text-base font-bold text-slate-600">
+                <div className="rounded-full bg-[#edf4ff] px-4 py-2 text-sm font-bold text-slate-600">
                   {invoiceCards.length} Cards
                 </div>
               </div>
@@ -1552,7 +1566,7 @@ const Payment = ({
                 )}
               </div>
 
-              <div className="mt-4 rounded-[20px] border border-slate-200 bg-white p-3.5">
+              <div className="mt-4 rounded-[20px] border border-slate-200 bg-white p-4">
                 <div className="text-xl font-semibold text-slate-700">Customer Details</div>
                 <div className="mt-3 space-y-2.5">
                   <input
@@ -1588,7 +1602,7 @@ const Payment = ({
                 </div>
               </div>
 
-              <div className="mt-4 rounded-[20px] border border-slate-200 bg-white p-3.5">
+              <div className="mt-4 rounded-[20px] border border-slate-200 bg-white p-4">
                 <div className="text-xl font-semibold text-slate-700">Payment Method</div>
                 <select
                   value={paymentMethod}
@@ -1598,14 +1612,14 @@ const Payment = ({
                   <option value="Cash">Cash</option>
                   <option value="Card">Card</option>
                   <option value="UPI">UPI</option>
-                  {String(entityType || "").toLowerCase() !== "room" ? (
+                  {canChargeToRoom ? (
                     <option value="Charge To Room">Charge To Room</option>
                   ) : null}
                 </select>
               </div>
 
               {isRoomChargeMode ? (
-                <div className="mt-4 rounded-[20px] border border-slate-200 bg-white p-3.5">
+                <div className="mt-4 rounded-[20px] border border-slate-200 bg-white p-4">
                   <div className="text-xl font-semibold text-slate-700">Charge To Room</div>
                   <div className="mt-3 grid gap-3">
                     <input
@@ -1640,7 +1654,7 @@ const Payment = ({
                 </div>
               ) : null}
 
-              <div className="mt-4 rounded-[20px] border border-slate-200 bg-white p-3.5">
+              <div className="mt-4 rounded-[20px] border border-slate-200 bg-white p-4">
                 <div className="text-xl font-semibold text-slate-700">Discount</div>
                 <div className="mt-3 grid gap-3">
                   <input
@@ -1649,17 +1663,23 @@ const Payment = ({
                     step="0.01"
                     value={discountAmount}
                     onChange={(event) => handleDiscountChange(event.target.value)}
+                    disabled={waiterDiscountLocked}
                     placeholder="Enter discount amount"
                     className="w-full rounded-xl border border-slate-200 px-4 py-3.5 text-xl text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <div className="rounded-xl bg-amber-50 px-4 py-3 text-lg font-semibold text-amber-800">
                     Discount {formatCurrency(discountAmount)} | Final Total {formatCurrency(computedTotal)}
                   </div>
+                  {waiterDiscountLocked ? (
+                    <div className="rounded-xl bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-600">
+                      Waiter role par manual discount lock kiya gaya hai.
+                    </div>
+                  ) : null}
                 </div>
               </div>
 
               {paymentMethod === "Card" ? (
-                <div className="mt-4 rounded-[20px] border border-slate-200 bg-white p-3.5">
+                <div className="mt-4 rounded-[20px] border border-slate-200 bg-white p-4">
                   <div className="text-xl font-semibold text-slate-700">Card Details</div>
                   <div className="mt-3 grid gap-3">
                     <input
@@ -1700,7 +1720,7 @@ const Payment = ({
                 </div>
               ) : null}
 
-              <div className="mt-4 rounded-[20px] border border-slate-200 bg-white p-3.5">
+              <div className="mt-4 rounded-[20px] border border-slate-200 bg-white p-4">
                 <div className="text-xl font-semibold text-slate-700">Person-wise Bill</div>
                 <div className="mt-3 flex items-center gap-3">
                   <input
@@ -1729,7 +1749,7 @@ const Payment = ({
                 </div>
               </div>
 
-              <div className="mt-4 flex flex-col gap-2.5">
+              <div className="mt-5 flex flex-col gap-3">
                 {generatedBill?.id ? (
                   <div
                     className={`rounded-xl px-4 py-3.5 text-lg font-semibold ${
@@ -1744,15 +1764,17 @@ const Payment = ({
                   </div>
                 ) : null}
                 <button
+                  type="button"
                   onClick={handleClose}
-                    className="w-full rounded-xl bg-slate-200 px-4 py-3.5 text-xl font-semibold text-slate-700"
+                  className="w-full rounded-2xl bg-slate-200 px-4 py-4 text-xl font-semibold text-slate-700 transition hover:bg-slate-300"
                 >
                   Cancel
                 </button>
                 <button
+                  type="button"
                   onClick={handlePayment}
                   disabled={submitting || hasCustomerValidationErrors || isCurrentBillPaid || isCurrentBillPostedToRoom}
-                   className="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 px-4 py-3.5 text-xl font-semibold text-white shadow-lg disabled:opacity-60"
+                  className="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 px-4 py-3.5 text-xl font-semibold text-white shadow-lg transition hover:from-emerald-600 hover:to-green-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {submitting
                     ? "Processing..."
@@ -1762,13 +1784,14 @@ const Payment = ({
                         ? "Already Posted To Room"
                         : isRoomChargeMode
                           ? "Post To Room Folio"
-                      : generatedBill?.id
-                        ? "Pay Now"
-                        : "Pay Now & Save Bill"}
+                          : generatedBill?.id
+                            ? "Pay Now"
+                            : "Pay Now & Save Bill"}
                 </button>
                 <button
+                  type="button"
                   onClick={handlePrint}
-                   className="w-full rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-3.5 text-xl font-semibold text-white shadow-lg"
+                  className="w-full rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-3.5 text-xl font-semibold text-white shadow-lg transition hover:from-blue-600 hover:to-indigo-700"
                 >
                   Print Bill
                 </button>

@@ -1,15 +1,24 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
   FaArrowRight,
+  FaBan,
   FaBed,
   FaCalendarAlt,
   FaCheckCircle,
+  FaEdit,
+  FaEllipsisV,
+  FaEye,
   FaExclamationTriangle,
+  FaFileInvoiceDollar,
   FaHistory,
   FaLayerGroup,
   FaMoneyBillWave,
+  FaMoneyCheckAlt,
+  FaPlus,
   FaReceipt,
   FaRedoAlt,
+  FaSearch,
+  FaSlidersH,
   FaTimes,
   FaTimesCircle,
   FaWallet,
@@ -58,6 +67,71 @@ const getPaymentStatusMeta = (remaining) =>
     ? { label: "Fully Paid", classes: "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200" }
     : { label: "Balance Due", classes: "bg-rose-100 text-rose-700 ring-1 ring-rose-200" };
 
+const getGuestInitials = (name) =>
+  String(name || "Guest")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join("") || "G";
+
+const getActionMeta = (key) => {
+  const metaMap = {
+    view: {
+      icon: FaEye,
+      tone: "from-sky-500 to-blue-500",
+      surface: "bg-sky-50 text-sky-700",
+    },
+    invoice: {
+      icon: FaFileInvoiceDollar,
+      tone: "from-violet-500 to-indigo-500",
+      surface: "bg-violet-50 text-violet-700",
+    },
+    check: {
+      icon: FaArrowRight,
+      tone: "from-emerald-500 to-teal-500",
+      surface: "bg-emerald-50 text-emerald-700",
+    },
+    edit: {
+      icon: FaEdit,
+      tone: "from-amber-500 to-orange-500",
+      surface: "bg-amber-50 text-amber-700",
+    },
+    refund: {
+      icon: FaMoneyCheckAlt,
+      tone: "from-fuchsia-500 to-pink-500",
+      surface: "bg-fuchsia-50 text-fuchsia-700",
+    },
+    cancel: {
+      icon: FaBan,
+      tone: "from-rose-500 to-red-500",
+      surface: "bg-rose-50 text-rose-700",
+    },
+    collect: {
+      icon: FaWallet,
+      tone: "from-blue-600 to-cyan-500",
+      surface: "bg-blue-50 text-blue-700",
+    },
+    folio: {
+      icon: FaReceipt,
+      tone: "from-violet-500 to-purple-500",
+      surface: "bg-violet-50 text-violet-700",
+    },
+    history: {
+      icon: FaHistory,
+      tone: "from-slate-600 to-slate-500",
+      surface: "bg-slate-100 text-slate-700",
+    },
+  };
+
+  return metaMap[key] || {
+    icon: FaArrowRight,
+    tone: "from-slate-600 to-slate-500",
+    surface: "bg-slate-100 text-slate-700",
+  };
+};
+
 const SUMMARY_CARDS = [
   { key: "totalBookings", label: "Total Bookings", icon: FaLayerGroup, tone: "from-slate-950 via-slate-800 to-slate-700" },
   { key: "totalRevenue", label: "Total Revenue", icon: FaMoneyBillWave, tone: "from-blue-700 via-blue-600 to-cyan-500" },
@@ -65,7 +139,7 @@ const SUMMARY_CARDS = [
   { key: "totalBalance", label: "Balance Due", icon: FaReceipt, tone: "from-amber-500 via-orange-500 to-orange-400" },
 ];
 
-const BOOKINGS_PAGE_SIZE = 9;
+const BOOKINGS_PAGE_SIZE = 10;
 
 const viewConfig = {
   active: {
@@ -102,6 +176,8 @@ const AllBooking = () => {
   const [viewMode, setViewMode] = useState("active");
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [openActionMenu, setOpenActionMenu] = useState("");
   const [cancelModal, setCancelModal] = useState({ open: false, booking: null, reason: "", submitting: false });
   const [feedbackModal, setFeedbackModal] = useState({ open: false, type: "success", title: "", message: "" });
   const navigate = useNavigate();
@@ -202,6 +278,26 @@ const AllBooking = () => {
     [bookings, historyBookings, viewMode],
   );
 
+  const filteredBookings = useMemo(() => {
+    const query = String(searchQuery || "").trim().toLowerCase();
+    if (!query) return visibleBookings;
+
+    return visibleBookings.filter((booking) => {
+      const haystack = [
+        booking.guest_name,
+        booking.bookingId,
+        booking.bookingCode,
+        booking.rooms,
+        booking.mobile,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return haystack.includes(query);
+    });
+  }, [searchQuery, visibleBookings]);
+
   const summary = useMemo(() => {
     return visibleBookings.reduce(
       (acc, booking) => {
@@ -217,7 +313,7 @@ const AllBooking = () => {
   }, [visibleBookings]);
 
   const quickSnapshot = useMemo(() => {
-    return visibleBookings.reduce(
+    return filteredBookings.reduce(
       (acc, booking) => {
         const remaining = Number(booking.remainingAmount || 0);
         const status = String(booking.booking_status || "").toLowerCase();
@@ -228,14 +324,15 @@ const AllBooking = () => {
       },
       { checkedIn: 0, confirmed: 0, balanceDue: 0 },
     );
-  }, [visibleBookings]);
+  }, [filteredBookings]);
 
-  const totalPages = Math.max(1, Math.ceil(visibleBookings.length / BOOKINGS_PAGE_SIZE));
-  const paginatedBookings = visibleBookings.slice((page - 1) * BOOKINGS_PAGE_SIZE, page * BOOKINGS_PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(filteredBookings.length / BOOKINGS_PAGE_SIZE));
+  const paginatedBookings = filteredBookings.slice((page - 1) * BOOKINGS_PAGE_SIZE, page * BOOKINGS_PAGE_SIZE);
 
   useEffect(() => {
     setPage(1);
-  }, [viewMode, bookings, historyBookings]);
+    setOpenActionMenu("");
+  }, [viewMode, bookings, historyBookings, searchQuery]);
 
   useEffect(() => {
     if (page > totalPages) setPage(totalPages);
@@ -423,86 +520,178 @@ const AllBooking = () => {
   );
 
   const renderDesktopTable = () => (
-    <div className="mt-6 hidden overflow-hidden rounded-[28px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] xl:block">
-      <div className="overflow-x-auto">
-        <table className="min-w-[1480px] w-full text-left">
-          <thead className="bg-[linear-gradient(180deg,#f8fbff_0%,#eef4ff_100%)]">
-            <tr className="text-sm font-bold uppercase tracking-[0.2em] text-slate-500">
-              <th className="px-5 py-4">Booking</th>
-              <th className="px-5 py-4">Stay Dates</th>
-              <th className="px-5 py-4">Status</th>
-              <th className="px-5 py-4">Total</th>
-              <th className="px-5 py-4">Paid</th>
-              <th className="px-5 py-4">Discount</th>
-              <th className="px-5 py-4">Balance</th>
-              <th className="w-[430px] px-5 py-4">Actions</th>
+    <div className="mt-6 hidden rounded-[20px] border border-slate-200 bg-[#F9FAFB] p-5 shadow-[0_18px_45px_rgba(15,23,42,0.06)] xl:block">
+      <div className="flex flex-col gap-4 border-b border-slate-200 pb-5 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <h3 className="text-2xl font-black tracking-[-0.03em] text-slate-900">Active bookings</h3>
+          <p className="mt-1 text-sm font-medium text-slate-500">Current guest stays and balances in one clean workspace.</p>
+        </div>
+
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <label className="relative min-w-[280px]">
+            <FaSearch className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm text-slate-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Search guests..."
+              className="h-12 w-full rounded-[14px] border border-slate-200 bg-white pl-11 pr-4 text-sm font-medium text-slate-700 outline-none transition focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100"
+            />
+          </label>
+          <button
+            type="button"
+            onClick={() => setSearchQuery("")}
+            className="text-sm font-bold text-indigo-600 transition hover:text-indigo-700"
+          >
+            View all
+          </button>
+        </div>
+      </div>
+
+      <div className="mt-5 rounded-[16px] border border-slate-200 bg-white">
+        <table className="w-full table-fixed text-left">
+          <thead className="bg-slate-50">
+            <tr className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
+              <th className="w-[26%] px-6 py-4">Guest</th>
+              <th className="w-[10%] px-6 py-4">Room</th>
+              <th className="w-[13%] px-6 py-4">Check-in date</th>
+              <th className="w-[13%] px-6 py-4">Check-out date</th>
+              <th className="w-[14%] px-6 py-4 text-right">Total amount</th>
+              <th className="w-[14%] px-6 py-4">Status</th>
+              <th className="w-[10%] px-6 py-4 text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
             {paginatedBookings.map((booking) => {
-              const paid = Number(booking.paidAmount || 0);
-              const discount = Number(booking.discountAmount || 0);
               const remaining = Number(booking.remainingAmount || 0);
               const total = Number(booking.totalAmount || 0);
               const bookingStatusMeta = getBookingStatusMeta(booking.booking_status);
               const paymentStatusMeta = getPaymentStatusMeta(remaining);
               const actionButtons = buildActionButtons(booking);
+              const guestName = booking.guest_name || "Walk-in Guest";
+              const bookingRef = booking.bookingCode || `Booking #${booking.bookingId}`;
 
               return (
                 <tr
                   key={booking.bookingId}
-                  className="border-t border-slate-200 align-top text-base text-slate-700 transition hover:bg-slate-50/60"
+                  className="border-t border-slate-200 text-sm text-slate-700 transition hover:bg-slate-50"
                 >
-                  <td className="px-5 py-5">
-                    <div className="space-y-2">
-                      <div className="text-sm font-bold uppercase tracking-[0.24em] text-slate-400">
-                        Booking #{booking.bookingId}
+                  <td className="px-6 py-5">
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 text-sm font-black text-white shadow-[0_10px_24px_rgba(99,102,241,0.22)]">
+                        {getGuestInitials(guestName)}
                       </div>
-                      <div className="max-w-[220px] break-words text-xl font-black leading-7 text-slate-900">
-                        {booking.guest_name || "Walk-in Guest"}
+                      <div className="min-w-0 overflow-hidden">
+                        <div className="truncate text-base font-bold text-slate-900">{guestName}</div>
+                        <div className="mt-1 text-xs font-medium text-slate-400">{bookingRef}</div>
                       </div>
-                      <div className="text-base font-medium text-slate-500">Room {booking.rooms || "Not assigned"}</div>
                     </div>
                   </td>
-                  <td className="px-5 py-5">
-                    <div className="space-y-1">
-                      <div className="text-base font-bold text-slate-900">{formatDate(booking.check_in)}</div>
-                      <div className="text-sm uppercase tracking-[0.18em] text-slate-400">to</div>
-                      <div className="text-base font-bold text-slate-900">{formatDate(booking.check_out)}</div>
-                    </div>
+                  <td className="px-6 py-5">
+                    <div className="font-semibold text-slate-900">{booking.rooms || "--"}</div>
                   </td>
-                  <td className="px-5 py-5">
+                  <td className="px-6 py-5">
+                    <div className="font-medium text-slate-700">{formatDate(booking.check_in)}</div>
+                  </td>
+                  <td className="px-6 py-5">
+                    <div className="font-medium text-slate-700">{formatDate(booking.check_out)}</div>
+                  </td>
+                  <td className="px-6 py-5 text-right">
+                    <div className="font-black text-slate-900">{formatCurrency(total)}</div>
+                  </td>
+                  <td className="px-6 py-5">
                     <div className="flex flex-col items-start gap-2">
                       <span
-                        className={`rounded-full px-3 py-1 text-sm font-bold uppercase tracking-[0.16em] ${bookingStatusMeta.classes}`}
+                        className={`rounded-full px-3 py-1 text-xs font-bold ${paymentStatusMeta.classes}`}
+                      >
+                        {remaining > 0 ? "Balance Due" : "Paid"}
+                      </span>
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-bold ${bookingStatusMeta.classes}`}
                       >
                         {bookingStatusMeta.label}
                       </span>
-                      <span
-                        className={`rounded-full px-3 py-1 text-sm font-bold uppercase tracking-[0.16em] ${paymentStatusMeta.classes}`}
-                      >
-                        {paymentStatusMeta.label}
-                      </span>
                     </div>
                   </td>
-                  <td className="px-5 py-5 text-xl font-black text-slate-900">{formatCurrency(total)}</td>
-                  <td className="px-5 py-5 text-xl font-black text-emerald-700">{formatCurrency(paid)}</td>
-                  <td className="px-5 py-5 text-xl font-black text-amber-700">{formatCurrency(discount)}</td>
-                  <td className={`px-5 py-5 text-xl font-black ${remaining > 0 ? "text-rose-700" : "text-emerald-700"}`}>
-                    {formatCurrency(remaining)}
-                  </td>
-                  <td className="min-w-[430px] px-5 py-5">
-                    <div className="grid w-full grid-cols-6 gap-2">
-                      {actionButtons.map((button) => (
-                        <button
-                          key={button.key}
-                          type="button"
-                          onClick={button.onClick}
-                          className={button.className}
-                        >
-                          {button.label}
-                        </button>
-                      ))}
+                  <td className="px-6 py-5 text-right">
+                    <div className="relative inline-flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setOpenActionMenu((current) =>
+                            current === String(booking.bookingId) ? "" : String(booking.bookingId),
+                          )
+                        }
+                        className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50 hover:text-slate-700"
+                      >
+                        <FaEllipsisV className="text-sm" />
+                      </button>
+
+                      {openActionMenu === String(booking.bookingId) ? (
+                        <>
+                          <button
+                            type="button"
+                            aria-label="Close actions"
+                            onClick={() => setOpenActionMenu("")}
+                            className="fixed inset-0 z-10 cursor-default bg-transparent"
+                          />
+                          <div className="absolute right-0 top-12 z-20 w-72 overflow-hidden rounded-[20px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-3 shadow-[0_22px_55px_rgba(15,23,42,0.16)]">
+                            <div className="overflow-hidden rounded-[18px] bg-[linear-gradient(135deg,#eef2ff_0%,#f5f3ff_52%,#ffffff_100%)] p-4">
+                              <div className="flex items-start gap-3">
+                                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-500 text-sm font-black text-white shadow-[0_10px_24px_rgba(99,102,241,0.22)]">
+                                  {getGuestInitials(guestName)}
+                                </div>
+                                <div className="min-w-0 flex-1 text-left">
+                                  <div className="truncate text-sm font-black text-slate-900">{guestName}</div>
+                                  <div className="mt-1 text-xs font-semibold text-slate-500">{bookingRef}</div>
+                                  <div className="mt-2 flex flex-wrap gap-2">
+                                    <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${paymentStatusMeta.classes}`}>
+                                      {remaining > 0 ? "Balance Due" : "Paid"}
+                                    </span>
+                                    <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${bookingStatusMeta.classes}`}>
+                                      {bookingStatusMeta.label}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="mt-3 flex items-center justify-between px-1">
+                              <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">
+                                Quick Actions
+                              </div>
+                              <div className="text-[11px] font-semibold text-slate-400">Tap to continue</div>
+                            </div>
+
+                            <div className="mt-3 grid grid-cols-2 gap-2">
+                              {actionButtons.map((button) => {
+                                const actionMeta = getActionMeta(button.key);
+                                const ActionIcon = actionMeta.icon;
+
+                                return (
+                                  <button
+                                    key={button.key}
+                                    type="button"
+                                    onClick={() => {
+                                      setOpenActionMenu("");
+                                      button.onClick();
+                                    }}
+                                    className="group rounded-[16px] border border-slate-200 bg-white p-3 text-left transition hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-[0_14px_26px_rgba(99,102,241,0.12)]"
+                                  >
+                                    <div className="flex items-start justify-between gap-3">
+                                      <div className={`rounded-2xl bg-gradient-to-br ${actionMeta.tone} p-2.5 text-white shadow-[0_10px_24px_rgba(99,102,241,0.16)]`}>
+                                        <ActionIcon className="text-sm" />
+                                      </div>
+                                      <FaArrowRight className="mt-1 text-xs text-slate-300 transition group-hover:text-indigo-500" />
+                                    </div>
+                                    <div className="mt-3 text-sm font-bold text-slate-900">{button.label}</div>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </>
+                      ) : null}
                     </div>
                   </td>
                 </tr>
@@ -515,17 +704,14 @@ const AllBooking = () => {
   );
 
   const renderPagination = () => {
-    if (!visibleBookings.length) return null;
+    if (!filteredBookings.length) return null;
 
     return (
       <div className="mt-6 rounded-[24px] border border-slate-200 bg-slate-50/80 p-4 lg:p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="text-base font-medium text-slate-500">
-          Showing <span className="font-semibold text-slate-900">{(page - 1) * BOOKINGS_PAGE_SIZE + 1}</span> to{" "}
-          <span className="font-semibold text-slate-900">
-            {Math.min(page * BOOKINGS_PAGE_SIZE, visibleBookings.length)}
-          </span>{" "}
-          of <span className="font-semibold text-slate-900">{visibleBookings.length}</span>
+          Showing <span className="font-semibold text-slate-900">{Math.min(page * BOOKINGS_PAGE_SIZE, filteredBookings.length)}</span> of{" "}
+          <span className="font-semibold text-slate-900">{filteredBookings.length}</span> bookings
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -533,36 +719,20 @@ const AllBooking = () => {
             type="button"
             onClick={() => setPage((current) => Math.max(1, current - 1))}
             disabled={page === 1}
-            className="inline-flex min-w-[96px] items-center justify-center rounded-full bg-slate-900 px-4 py-2 text-sm font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-white/80"
+            className="inline-flex min-w-[96px] items-center justify-center rounded-full bg-slate-800 px-4 py-2 text-sm font-bold text-white transition hover:bg-slate-900 disabled:cursor-not-allowed disabled:bg-slate-600 disabled:text-slate-100"
           >
             Previous
           </button>
 
-          {Array.from({ length: totalPages }, (_, index) => {
-            const pageNumber = index + 1;
-            const isActive = pageNumber === page;
-
-            return (
-              <button
-                key={`bookings-page-${pageNumber}`}
-                type="button"
-                onClick={() => setPage(pageNumber)}
-                className={`h-10 min-w-[44px] rounded-full border px-3 text-sm font-bold transition ${
-                  isActive
-                    ? "border-blue-600 bg-blue-600 text-white shadow-[0_10px_20px_rgba(37,99,235,0.2)]"
-                    : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-                }`}
-              >
-                {pageNumber}
-              </button>
-            );
-          })}
+          <div className="rounded-full border border-slate-300 bg-slate-100 px-4 py-2 text-sm font-bold text-slate-800 shadow-sm">
+            Page {page} / {totalPages}
+          </div>
 
           <button
             type="button"
             onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
             disabled={page === totalPages}
-            className="inline-flex min-w-[96px] items-center justify-center rounded-full bg-blue-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-200 disabled:text-white/80"
+            className="inline-flex min-w-[96px] items-center justify-center rounded-full bg-blue-800 px-4 py-2 text-sm font-bold text-white transition hover:bg-blue-900 disabled:cursor-not-allowed disabled:bg-blue-500 disabled:text-blue-50"
           >
             Next
           </button>
@@ -656,73 +826,121 @@ const AllBooking = () => {
           </div>
         ) : null}
 
-        <section className="overflow-hidden rounded-[32px] border border-white/70 bg-[linear-gradient(135deg,#0f172a_0%,#1d4ed8_48%,#0f766e_100%)] text-white shadow-[0_30px_80px_rgba(15,23,42,0.2)]">
-          <div className="grid gap-8 px-6 py-7 lg:grid-cols-[minmax(0,1.1fr)_minmax(340px,0.9fr)] lg:px-8 lg:py-8">
-            <div className="relative">
-              <div className="absolute -left-10 top-0 h-28 w-28 rounded-full bg-white/10 blur-3xl" />
-              <p className="relative inline-flex rounded-full border border-white/15 bg-white/10 px-3 py-1 text-sm font-bold uppercase tracking-[0.3em] text-cyan-100">
-                Hotel Booking Desk
-              </p>
-              <h1 className="relative mt-4 max-w-3xl text-4xl font-black leading-tight sm:text-5xl">
-                All bookings in a cleaner, faster workspace
-              </h1>
-              <p className="relative mt-3 max-w-2xl text-base font-medium leading-7 text-slate-100/85 sm:text-lg">
-                Track stay dates, payment balance, and guest actions in one polished page that feels lighter and easier to scan.
-              </p>
-              <div className="relative mt-6 grid gap-3 sm:grid-cols-3">
-                <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur">
-                  <div className="text-sm font-bold uppercase tracking-[0.24em] text-cyan-100/80">Checked In</div>
-                  <div className="mt-2 text-3xl font-black">{quickSnapshot.checkedIn}</div>
+        <section
+          className="relative overflow-hidden rounded-[32px] border border-white/70 bg-[linear-gradient(135deg,rgba(243,244,246,0.92)_0%,rgba(238,242,255,0.88)_42%,rgba(245,243,255,0.9)_100%)] shadow-[0_28px_80px_rgba(79,70,229,0.12)]"
+          style={{ fontFamily: '"Poppins", "Inter", "Segoe UI", sans-serif' }}
+        >
+          <div className="pointer-events-none absolute inset-0">
+            <div className="absolute -left-10 top-0 h-36 w-36 rounded-full bg-[rgba(99,102,241,0.18)] blur-3xl" />
+            <div className="absolute right-0 top-6 h-32 w-32 rounded-full bg-[rgba(139,92,246,0.16)] blur-3xl" />
+            <div className="absolute bottom-0 left-1/3 h-24 w-24 rounded-full bg-[rgba(59,130,246,0.12)] blur-3xl" />
+          </div>
+
+          <div className="relative m-2 rounded-[28px] border border-white/60 bg-white/40 px-5 py-5 backdrop-blur-xl sm:px-6 sm:py-6 lg:px-7">
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+              <div className="min-w-0 flex-1">
+                <div className="inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/55 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.28em] text-indigo-700 shadow-[0_10px_24px_rgba(99,102,241,0.08)]">
+                  <span className="h-2 w-2 rounded-full bg-gradient-to-r from-indigo-500 to-violet-500" />
+                  Hotel Booking Desk
                 </div>
-                <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur">
-                  <div className="text-sm font-bold uppercase tracking-[0.24em] text-cyan-100/80">Confirmed</div>
-                  <div className="mt-2 text-3xl font-black">{quickSnapshot.confirmed}</div>
+
+                <div className="relative mt-4">
+                  <div className="absolute -left-2 top-3 h-12 w-12 rounded-full bg-[rgba(99,102,241,0.12)] blur-2xl" />
+                  <h1 className="relative max-w-4xl text-[2rem] font-black leading-[1.08] tracking-[-0.04em] text-[#111827] sm:text-[2.6rem]">
+                    All bookings in a{" "}
+                    <span className="bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] bg-clip-text text-transparent">
+                      cleaner
+                    </span>
+                    ,{" "}
+                    <span className="bg-gradient-to-r from-[#4F46E5] to-[#8B5CF6] bg-clip-text text-transparent">
+                      faster
+                    </span>{" "}
+                    workspace
+                  </h1>
                 </div>
-                <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur">
-                  <div className="text-sm font-bold uppercase tracking-[0.24em] text-cyan-100/80">Balance Due</div>
-                  <div className="mt-2 text-3xl font-black">{quickSnapshot.balanceDue}</div>
-                </div>
+
+                <p className="mt-4 max-w-2xl text-[15px] font-medium leading-7 text-[#6B7280] sm:text-base">
+                  Track stay dates, payment balance, and guest actions in one polished page that feels lighter and easier to scan.
+                </p>
+              </div>
+
+              <div className="flex shrink-0 flex-wrap items-center gap-3 lg:justify-end">
+                <button
+                  type="button"
+                  onClick={() =>
+                    document.getElementById("booking-workspace-controls")?.scrollIntoView({
+                      behavior: "smooth",
+                      block: "start",
+                    })
+                  }
+                  className="inline-flex min-h-[52px] items-center gap-2 rounded-[14px] border border-white/70 bg-white/70 px-5 py-3 text-sm font-bold text-slate-700 shadow-[0_12px_26px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:bg-white"
+                >
+                  <FaSlidersH className="text-xs text-slate-500" />
+                  Filter
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate("/hotel/guest")}
+                  className="inline-flex min-h-[52px] items-center gap-2 rounded-[14px] bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] px-5 py-3 text-sm font-bold text-white shadow-[0_16px_34px_rgba(99,102,241,0.28)] transition hover:scale-[1.02] hover:shadow-[0_20px_40px_rgba(99,102,241,0.34)]"
+                >
+                  <FaPlus className="text-xs" />
+                  New Booking
+                </button>
               </div>
             </div>
 
-            <div className="rounded-[28px] border border-white/15 bg-white/10 p-4 backdrop-blur-md">
-              <div className="mb-4 flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-bold uppercase tracking-[0.26em] text-white/70">Daily Snapshot</p>
-                  <h2 className="mt-2 text-2xl font-black">Revenue overview</h2>
+            <div className="mt-6 grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="rounded-2xl border border-white/70 bg-white/55 px-4 py-4 shadow-[0_12px_28px_rgba(15,23,42,0.05)] backdrop-blur">
+                  <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-500">Checked In</div>
+                  <div className="mt-2 text-3xl font-black text-slate-900">{quickSnapshot.checkedIn}</div>
                 </div>
-                <div className="rounded-full bg-white/10 px-3 py-1 text-sm font-bold text-white/85">
-                  {visibleBookings.length} bookings
+                <div className="rounded-2xl border border-white/70 bg-white/55 px-4 py-4 shadow-[0_12px_28px_rgba(15,23,42,0.05)] backdrop-blur">
+                  <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-500">Confirmed</div>
+                  <div className="mt-2 text-3xl font-black text-slate-900">{quickSnapshot.confirmed}</div>
+                </div>
+                <div className="rounded-2xl border border-white/70 bg-white/55 px-4 py-4 shadow-[0_12px_28px_rgba(15,23,42,0.05)] backdrop-blur">
+                  <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-500">Balance Due</div>
+                  <div className="mt-2 text-3xl font-black text-slate-900">{quickSnapshot.balanceDue}</div>
                 </div>
               </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                {SUMMARY_CARDS.map((card) => {
-                  const Icon = card.icon;
-                  return (
-                    <div
-                      key={card.key}
-                      className={`rounded-[24px] bg-gradient-to-br ${card.tone} p-4 shadow-[0_16px_30px_rgba(15,23,42,0.16)]`}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="text-sm font-bold uppercase tracking-[0.22em] text-white/75">
-                          {card.label}
-                        </div>
-                        <div className="rounded-2xl bg-white/15 p-2.5">
-                          <Icon className="text-sm text-white" />
-                        </div>
+
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/55 px-4 py-2.5 text-sm font-semibold text-slate-600 shadow-[0_10px_24px_rgba(15,23,42,0.05)] backdrop-blur">
+                <span className="h-2.5 w-2.5 rounded-full bg-gradient-to-r from-[#6366F1] to-[#8B5CF6]" />
+                {visibleBookings.length} bookings in this workspace
+              </div>
+            </div>
+
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {SUMMARY_CARDS.map((card) => {
+                const Icon = card.icon;
+                return (
+                  <div
+                    key={card.key}
+                    className="rounded-[22px] border border-white/60 bg-[linear-gradient(180deg,rgba(255,255,255,0.74)_0%,rgba(255,255,255,0.52)_100%)] p-4 shadow-[0_16px_34px_rgba(15,23,42,0.06)] backdrop-blur"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-500">
+                        {card.label}
                       </div>
-                      <div className="mt-4 text-3xl font-black text-white">
-                        {card.key === "totalBookings" ? summary[card.key] : formatCurrency(summary[card.key])}
+                      <div className={`rounded-2xl bg-gradient-to-br ${card.tone} p-2.5 text-white shadow-[0_12px_24px_rgba(99,102,241,0.18)]`}>
+                        <Icon className="text-sm" />
                       </div>
                     </div>
-                  );
-                })}
-              </div>
+                    <div className="mt-4 text-[1.7rem] font-black tracking-[-0.03em] text-slate-900">
+                      {card.key === "totalBookings" ? summary[card.key] : formatCurrency(summary[card.key])}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </section>
 
-        <section className="rounded-[30px] border border-white/80 bg-white/90 p-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur sm:p-6">
+        <section
+          id="booking-workspace-controls"
+          className="rounded-[30px] border border-white/80 bg-white/90 p-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur sm:p-6"
+        >
           <div className="flex flex-col gap-5 border-b border-slate-200 pb-5 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <p className="text-sm font-bold uppercase tracking-[0.3em] text-sky-700">{activeView.badge}</p>

@@ -36,6 +36,16 @@ API.interceptors.request.use((req) => {
     req.headers["X-Audit-User-Email"] = email;
   }
 
+  const role = localStorage.getItem("role");
+  if (role) {
+    req.headers["X-User-Role"] = String(role).toLowerCase();
+  }
+
+  const name = localStorage.getItem("name");
+  if (name) {
+    req.headers["X-User-Name"] = name;
+  }
+
   return req;
 });
 

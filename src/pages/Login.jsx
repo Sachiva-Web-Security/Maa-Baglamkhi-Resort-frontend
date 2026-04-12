@@ -13,6 +13,7 @@ const ROLE_CREDENTIALS = [
   { role: "receptionist", email: "reception@test.com", password: "Staff@123", label: "Reception" },
   { role: "accountant", email: "accounts@test.com", password: "Staff@123", label: "Accounts" },
   { role: "housekeeping", email: "hk@test.com", password: "Staff@123", label: "Housekeeping" },
+  { role: "waiter", email: "waiter@resort.com", password: "password", label: "Waiter" },
 ];
 
 const LOGIN_EMAIL_ALIASES = {
@@ -21,6 +22,8 @@ const LOGIN_EMAIL_ALIASES = {
   "reception@resort.com": "reception@test.com",
   "accounts@resort.com": "accounts@test.com",
   "tarun@resort.com": "hk@test.com",
+  "waiter@resort.com": "waiter@test.com",
+  "waiter@test.com": "waiter@resort.com",
 };
 
 const Login = ({ setIsAuthenticated }) => {

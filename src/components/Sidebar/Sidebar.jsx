@@ -11,6 +11,7 @@ import {
   FaHistory,
   FaHome,
   FaHotel,
+  FaSignOutAlt,
   FaTasks,
   FaUser,
   FaUserCheck,
@@ -20,7 +21,9 @@ import {
 
 import { getRoleHome } from "../../utils/roleHome";
 
-const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, footerOverlap = 0 }) => {
+const HEADER_HEIGHT = 92;
+
+const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, footerOverlap = 0, setIsAuthenticated }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [hoveredItem, setHoveredItem] = useState(null);
@@ -51,9 +54,22 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, footerOverlap = 0 }) =
   };
 
   const role = (localStorage.getItem("role") || "").toLowerCase();
-  const userName = localStorage.getItem("name") || "User";
-  const avatarUrl = localStorage.getItem("avatarUrl") || "";
   const dashboardPath = getRoleHome(role);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    localStorage.removeItem("name");
+    localStorage.removeItem("email");
+    localStorage.removeItem("isAuthenticated");
+    localStorage.removeItem("avatarUrl");
+
+    if (setIsAuthenticated) {
+      setIsAuthenticated(false);
+    }
+
+    navigate("/login");
+  };
 
   const roleMenuMap = {
     admin: [
@@ -76,8 +92,9 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, footerOverlap = 0 }) =
       { id: 4, name: "Reports", icon: FaChartBar, path: "/reports" },
       { id: 5, name: "Inventory", icon: FaBoxes, path: "/inventory" },
       { id: 6, name: "Housekeeping", icon: FaBroom, path: "/housekeeping" },
-      { id: 7, name: "Banquet", icon: FaGlassCheers, path: "/banquet" },
-      { id: 8, name: "Restaurant POS", icon: FaUtensils, path: "/restaurant" },
+      { id: 7, name: "Assignments", icon: FaTasks, path: "/assignments" },
+      { id: 8, name: "Banquet", icon: FaGlassCheers, path: "/banquet" },
+      { id: 9, name: "Restaurant POS", icon: FaUtensils, path: "/restaurant" },
       { id: 14, name: "Audit Logs", icon: FaHistory, path: "/reports/audit" },
     ],
     receptionist: [
@@ -86,8 +103,9 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, footerOverlap = 0 }) =
       { id: 4, name: "Check-In / Out", icon: FaTasks, path: "/hotel/communication" },
       { id: 5, name: "Guest List", icon: FaUserCheck, path: "/hotel/booking-history" },
       { id: 6, name: "Inventory", icon: FaBoxes, path: "/inventory" },
-      { id: 7, name: "Banquet", icon: FaGlassCheers, path: "/banquet" },
-      { id: 8, name: "Restaurant POS", icon: FaUtensils, path: "/restaurant" },
+      { id: 7, name: "Assignments", icon: FaClipboardList, path: "/assignments" },
+      { id: 8, name: "Banquet", icon: FaGlassCheers, path: "/banquet" },
+      { id: 9, name: "Restaurant POS", icon: FaUtensils, path: "/restaurant" },
     ],
     housekeeping: [
       { id: 2, name: "Room Status", icon: FaBroom, path: "/housekeeping" },
@@ -151,7 +169,8 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, footerOverlap = 0 }) =
     <>
       {isMobile && sidebarOpen && (
         <div
-          className="fixed inset-0 left-[88px] top-[70px] z-30 bg-black/50"
+          className="fixed inset-0 left-[88px] z-30 bg-black/50"
+          style={{ top: `${HEADER_HEIGHT}px` }}
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -159,7 +178,7 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, footerOverlap = 0 }) =
       <div
         className={`
           desktop-scale-sidebar
-          fixed left-0 top-[70px] z-40
+          fixed left-0 z-40
           flex translate-x-0 flex-col
           border-r border-slate-800/80 bg-[linear-gradient(180deg,#07111f_0%,#0b1728_52%,#09101b_100%)]
           text-gray-800 shadow-[0_18px_40px_rgba(2,8,23,0.45)]
@@ -168,9 +187,10 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, footerOverlap = 0 }) =
           ${sidebarOpen ? "w-[250px]" : "w-[88px]"}
         `}
         style={{
+          top: `${HEADER_HEIGHT}px`,
           height: isMobile
             ? "145vh"
-            : `calc(100dvh - 70px - ${Math.max(0, footerOverlap)}px)`,
+            : `calc(100dvh - ${HEADER_HEIGHT}px - ${Math.max(0, footerOverlap)}px)`,
         }}
       >
         <style>{`
@@ -178,6 +198,17 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, footerOverlap = 0 }) =
           .sidebar-scroll::-webkit-scrollbar-track { background: #0f172a; }
           .sidebar-scroll::-webkit-scrollbar-thumb { background: #192034; border-radius: 10px; }
           .sidebar-scroll::-webkit-scrollbar-thumb:hover { background: #1d4ed8; }
+          .sidebar-nav-fill {
+            transform: scaleX(0);
+            transform-origin: left center;
+            transition: transform 420ms ease, opacity 420ms ease;
+            opacity: 0.92;
+          }
+          .sidebar-nav-button:hover .sidebar-nav-fill,
+          .sidebar-nav-button:focus-visible .sidebar-nav-fill,
+          .sidebar-nav-button.is-highlighted .sidebar-nav-fill {
+            transform: scaleX(1);
+          }
         `}</style>
 
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.22),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(14,165,233,0.14),transparent_30%)]" />
@@ -237,19 +268,25 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, footerOverlap = 0 }) =
                 onTouchEnd={clearHoveredStates}
                 onTouchCancel={clearHoveredStates}
                 title={!showLabels ? item.name : undefined}
-                  className={`
-                  group flex w-full cursor-pointer items-center rounded-2xl border transition-all duration-300
+                className={`
+                  sidebar-nav-button group relative isolate flex w-full cursor-pointer items-center overflow-hidden rounded-2xl border transition-all duration-300
                   ${showLabels ? "justify-start gap-3 px-4 py-3" : "justify-center px-3 py-3"}
                   ${
                     highlighted
-                      ? "border-blue-400/60 bg-blue-600 text-white shadow-[0_14px_28px_rgba(37,99,235,0.3)]"
-                      : "border-transparent bg-white/[0.03] text-slate-200 hover:border-blue-400/40 hover:bg-blue-600 hover:text-white hover:shadow-[0_14px_28px_rgba(37,99,235,0.25)]"
+                      ? "is-highlighted border-blue-400/60 bg-white/[0.03] text-white shadow-[0_14px_28px_rgba(37,99,235,0.3)]"
+                      : "border-transparent bg-white/[0.03] text-slate-200 hover:border-blue-400/40 hover:text-white hover:shadow-[0_14px_28px_rgba(37,99,235,0.25)]"
                   }
-                  ${hovered && !active ? "scale-[1.01] border-blue-400/40 bg-blue-600 text-white shadow-[0_14px_28px_rgba(37,99,235,0.3)]" : ""}
+                  ${hovered && !active ? "scale-[1.01] border-blue-400/40 text-white shadow-[0_14px_28px_rgba(37,99,235,0.3)]" : ""}
                 `}
               >
                 <span
-                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all duration-300 ${
+                  aria-hidden="true"
+                  className={`sidebar-nav-fill absolute inset-0 rounded-2xl bg-[linear-gradient(270deg,#2563eb_0%,#2f6df6_48%,#4f8dff_100%)] ${
+                    highlighted ? "scale-x-100" : ""
+                  }`}
+                />
+                <span
+                  className={`relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all duration-300 ${
                     highlighted
                       ? "bg-white/18 text-white"
                       : "bg-slate-800/80 text-slate-100 group-hover:bg-white/18 group-hover:text-white"
@@ -258,7 +295,7 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, footerOverlap = 0 }) =
                   <Icon className="text-base" />
                 </span>
                 {showLabels ? (
-                  <span className="text-left text-base font-semibold leading-tight text-white">
+                  <span className="relative z-10 text-left text-base font-semibold leading-tight text-white">
                     {item.name}
                   </span>
                 ) : null}
@@ -267,51 +304,40 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, footerOverlap = 0 }) =
           })}
         </nav>
 
-        <div className={`relative mt-6 shrink-0 bg-transparent px-3 pb-3 pt-2 ${showLabels ? "" : "flex justify-center"}`}>
+        <div className={`relative mt-auto shrink-0 border-t border-white/10 px-3 pb-4 pt-4 ${showLabels ? "" : "flex justify-center"}`}>
           <button
             type="button"
-            onClick={() => setSidebarOpen((prev) => !prev)}
-            onMouseEnter={() => setHoveredControl("avatar")}
-            onMouseMove={() => setHoveredControl("avatar")}
+            onClick={handleLogout}
+            onMouseEnter={() => setHoveredControl("logout")}
+            onMouseMove={() => setHoveredControl("logout")}
             onMouseLeave={() => setHoveredControl(null)}
-            onPointerEnter={handlePointerHover("avatar")}
-            onPointerMove={handlePointerHover("avatar")}
-            onPointerLeave={clearPointerHover("avatar")}
-            onFocus={() => setHoveredControl("avatar")}
+            onPointerEnter={handlePointerHover("logout")}
+            onPointerMove={handlePointerHover("logout")}
+            onPointerLeave={clearPointerHover("logout")}
+            onFocus={() => setHoveredControl("logout")}
             onBlur={() => setHoveredControl(null)}
-            onTouchStart={() => setHoveredControl("avatar")}
+            onTouchStart={() => setHoveredControl("logout")}
             onTouchEnd={clearHoveredStates}
             onTouchCancel={clearHoveredStates}
-            title={!showLabels ? userName : undefined}
-            className={`flex w-full items-center rounded-2xl border border-white/10 transition-all duration-300 ${
+            title="Logout"
+            className={`flex w-full items-center rounded-2xl border transition-all duration-300 ${
               showLabels
-                ? "cursor-pointer gap-3 bg-white/[0.04] p-2.5 text-left hover:bg-blue-600"
-                : "cursor-pointer justify-center bg-white/[0.04] p-2 hover:bg-blue-600"
+                ? "cursor-pointer gap-3 bg-rose-500/14 px-4 py-3 text-left hover:border-rose-400/80 hover:bg-rose-500/18"
+                : "cursor-pointer justify-center bg-rose-500/14 p-3 hover:border-rose-400/80 hover:bg-rose-500/18"
             } ${
-              isControlHighlighted("avatar")
-                ? "border-blue-400 bg-blue-600 shadow-[0_14px_28px_rgba(37,99,235,0.3)]"
-                : ""
+              isControlHighlighted("logout")
+                ? "border-rose-400/90 bg-rose-500/20 shadow-[0_14px_28px_rgba(244,63,94,0.25)]"
+                : "border-rose-400/40"
             }`}
           >
-            <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-slate-700 to-slate-900 text-white ring-1 ring-white/10">
-              {avatarUrl ? (
-                <img
-                  src={avatarUrl}
-                  alt="Avatar"
-                  className="h-full w-full object-cover"
-                  onError={(e) => {
-                    e.currentTarget.style.display = "none";
-                  }}
-                />
-              ) : (
-                (userName || "U").charAt(0).toUpperCase()
-              )}
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-500/20 text-rose-100">
+              <FaSignOutAlt className="text-base" />
             </div>
             {showLabels ? (
               <div className="min-w-0 flex-1">
-                <p className="text-base font-semibold leading-tight text-white">{userName}</p>
-                <p className="text-xs font-medium uppercase tracking-[0.08em] text-blue-200/90">
-                  {role ? role.charAt(0).toUpperCase() + role.slice(1) : "User"}
+                <p className="text-base font-semibold leading-tight text-white">Logout</p>
+                <p className="text-xs font-medium text-rose-100/80">
+                  End the current admin session
                 </p>
               </div>
             ) : null}

@@ -1,14 +1,34 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid,
   Area,
   AreaChart,
+  CartesianGrid,
+  ReferenceDot,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
 } from "recharts";
 import API from "../../../api";
+
+const formatCompactValue = (value) => {
+  const amount = Number(value || 0);
+  if (amount >= 10000000) return `$${(amount / 1000000).toFixed(2)}M`;
+  if (amount >= 100000) return `$${(amount / 1000).toFixed(0)}K`;
+  return `$${amount.toLocaleString("en-US")}`;
+};
+
+const formatTooltipValue = (value) => Number(value || 0).toLocaleString("en-US");
+
+const RevenueTooltip = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null;
+
+  return (
+    <div className="rounded-xl bg-[#0b223d] px-4 py-2 text-xs font-semibold text-white shadow-[0_16px_40px_rgba(11,34,61,0.28)]">
+      {`${label}: ${formatTooltipValue(payload[0].value)} Reservations`}
+    </div>
+  );
+};
 
 const MonthlyRevenueChart = () => {
   const [data, setData] = useState([]);
@@ -18,11 +38,9 @@ const MonthlyRevenueChart = () => {
       try {
         const res = await API.get("/dashboard/charts");
         if (res.data && res.data.monthlyRevenue) {
-          // Backend returns {name: 'Jan', Online: 4000, Offline: 2400} type data
-          // We map it to { month, revenue } for this chart
-          const mappedData = res.data.monthlyRevenue.map(item => ({
-            month: item.name,
-            revenue: (item.Online || 0) + (item.Offline || 0)
+          const mappedData = res.data.monthlyRevenue.map((item) => ({
+            month: String(item.name || "").toUpperCase(),
+            revenue: (item.Online || 0) + (item.Offline || 0),
           }));
           setData(mappedData);
         }
@@ -37,30 +55,93 @@ const MonthlyRevenueChart = () => {
     fetchCharts();
   }, []);
 
+  const summary = useMemo(() => {
+    const current = Number(data[data.length - 1]?.revenue || 0);
+    const previous = Number(data[data.length - 2]?.revenue || 0);
+    const delta = previous > 0 ? ((current - previous) / previous) * 100 : 0;
+
+    return {
+      current,
+      delta,
+    };
+  }, [data]);
+
+  const activePoint = data[data.length - 1] || null;
+
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="min-h-0 flex-1">
+      <div className="flex flex-col gap-4 border-b border-sky-200/80 pb-5 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-slate-500">
+            Revenue Trend
+          </p>
+          <h3 className="mt-2 text-[1.15rem] font-bold text-[#0a2340] sm:text-[1.28rem]">
+            Reservation statistics
+          </h3>
+        </div>
+
+        <div className="text-left sm:text-right">
+          <div className="text-[2rem] font-bold leading-none text-[#0a2340] sm:text-[2.3rem]">
+            {formatCompactValue(summary.current)}
+          </div>
+          <div className="mt-1 text-sm font-semibold text-[#f0a94d]">
+            {`${summary.delta >= 0 ? "+" : ""}${summary.delta.toFixed(1)}% vs last month`}
+          </div>
+        </div>
+      </div>
+
+      <div className="min-h-0 flex-1 pt-5">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data}>
+          <AreaChart
+            data={data}
+            margin={{ top: 14, right: 12, left: 0, bottom: 4 }}
+          >
             <defs>
-              <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4} />
-                <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+              <linearGradient id="reservationCurveFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#d7dbe2" stopOpacity={0.7} />
+                <stop offset="100%" stopColor="#edf1f5" stopOpacity={0.15} />
               </linearGradient>
             </defs>
 
-            <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
-            <XAxis dataKey="month" />
-            <YAxis />
-            <Tooltip />
+            <CartesianGrid vertical={false} stroke="#e8edf3" strokeDasharray="0" />
+            <XAxis
+              dataKey="month"
+              axisLine={false}
+              tickLine={false}
+              tick={{ fill: "#7a8696", fontSize: 11, fontWeight: 700 }}
+              dy={10}
+            />
+            <YAxis
+              axisLine={false}
+              tickLine={false}
+              tick={false}
+              width={0}
+            />
+            <Tooltip
+              cursor={false}
+              content={<RevenueTooltip />}
+              position={activePoint ? { y: 16 } : undefined}
+            />
 
             <Area
               type="monotone"
               dataKey="revenue"
-              stroke="#6366f1"
+              stroke="#17324f"
               strokeWidth={3}
-              fill="url(#colorRevenue)"
+              fill="url(#reservationCurveFill)"
+              activeDot={{ r: 6, stroke: "#17324f", strokeWidth: 4, fill: "#f8fafc" }}
             />
+
+            {activePoint ? (
+              <ReferenceDot
+                x={activePoint.month}
+                y={activePoint.revenue}
+                r={6}
+                fill="#f8fafc"
+                stroke="#17324f"
+                strokeWidth={4}
+              />
+            ) : null}
           </AreaChart>
         </ResponsiveContainer>
       </div>

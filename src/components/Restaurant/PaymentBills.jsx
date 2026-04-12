@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import API from "../../api";
+import { getCurrentActor } from "../../utils/currentActor";
 
 const PAYMENT_BILLS_PAGE_SIZE = 10;
 const formatCurrency = (value) => `Rs. ${Number(value || 0).toLocaleString("en-IN")}`;
@@ -46,6 +47,7 @@ const getStatusMeta = (bill) => {
 };
 
 const PaymentBills = () => {
+  const actor = getCurrentActor();
   const [bills, setBills] = useState([]);
   const [loading, setLoading] = useState(true);
   const [roomNumbers, setRoomNumbers] = useState(new Set());
@@ -129,9 +131,9 @@ const PaymentBills = () => {
     <section className="space-y-6">
       <div className="overflow-hidden rounded-[28px] border border-slate-200/80 bg-[linear-gradient(135deg,#0f172a_0%,#1d4ed8_52%,#0f766e_100%)] px-6 py-7 text-white shadow-[0_22px_55px_rgba(15,23,42,0.12)]">
         <p className="text-sm font-semibold uppercase tracking-[0.34em] text-cyan-100/80">
-          Restaurant Billing
+          {actor.isWaiter ? "Waiter Billing" : "Restaurant Billing"}
         </p>
-        <h2 className="mt-3 text-4xl font-black leading-tight">Payment Bills</h2>
+        <h2 className="mt-3 text-4xl font-black leading-tight">{actor.isWaiter ? "My Payment Bills" : "Payment Bills"}</h2>
         <p className="mt-3 max-w-2xl text-lg leading-8 text-slate-100/85">
        “After generating the bill, the customer name, mobile number, amount, and payment status will be displayed here in a clean card format.”
         </p>

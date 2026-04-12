@@ -11,10 +11,12 @@ import RoleDashboardShell from "../components/roleDashboards/RoleDashboardShell"
 import useDashboardAutoRefresh from "../hooks/useDashboardAutoRefresh";
 import { restaurantService } from "../services/restaurantService";
 import { getRestaurantSocket, releaseRestaurantSocket } from "../utils/restaurantSocket";
+import { getCurrentActor } from "../utils/currentActor";
 
 const normalizeName = (value) => String(value || "").trim().toLowerCase();
 
 const RestaurantDashboard = () => {
+  const actor = getCurrentActor();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [orders, setOrders] = useState([]);
@@ -152,10 +154,10 @@ const RestaurantDashboard = () => {
         description="Active tables, running orders, KOT readiness aur billing shortcuts ko service team ke liye role-specific tarike se dikhaya gaya hai."
         stats={stats}
         quickActions={[
-          { label: "Open POS", helper: "Tables aur menu se nayi order flow start karein.", route: "/restaurant", icon: FaCashRegister, tone: "cyan" },
-          { label: "Payment Bills", helper: "Settled orders aur billing history dekhein.", route: "/restaurant/payment-bills", icon: FaReceipt, tone: "emerald" },
-          { label: "Token Items", helper: "Running order item details ko quickly access karein.", route: "/restaurant", icon: FaClipboardCheck, tone: "amber" },
-          { label: "Menu Board", helper: "Food menu aur serving workflow ko open karein.", route: "/restaurant/add-menu-item", icon: FaUtensils, tone: "violet" },
+          { label: "My Tables", helper: "Assigned ya available tables se waiter flow start karein.", route: "/restaurant", icon: FaCashRegister, tone: "cyan" },
+          { label: "My Bills", helper: "Generated aur settled waiter-linked bills dekhein.", route: "/restaurant/payment-bills", icon: FaReceipt, tone: "emerald" },
+          { label: "Running Orders", helper: "Open token items aur service records review karein.", route: "/restaurant", icon: FaClipboardCheck, tone: "amber" },
+          { label: "Kitchen Queue", helper: actor.isWaiter ? "Ready aur preparing KOT updates live dekhein." : "Kitchen workspace kholein.", route: actor.isWaiter ? "/restaurant" : "/kitchen", icon: FaUtensils, tone: "violet" },
         ]}
         insights={insights}
         table={table}

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { FiArrowRight, FiClipboard, FiCoffee, FiMapPin, FiUser } from "react-icons/fi";
 import API from "../../api";
+import { getCurrentActor } from "../../utils/currentActor";
 
 const TokenPage = () => {
   const navigate = useNavigate();
@@ -9,11 +10,12 @@ const TokenPage = () => {
   const location = useLocation();
   const entityType = location.state?.entityType || "Table";
   const roomData = location.state?.roomData || null;
+  const actor = getCurrentActor();
 
   const [items, setItems] = useState([]);
   const [tokenId, setTokenId] = useState(null);
   const [loading, setLoading] = useState(true);
-  const waiterName = "Waiter";
+  const waiterName = actor.name || (entityType === "Room" ? "Room Service" : "Waiter");
 
   useEffect(() => {
     const loadToken = async () => {

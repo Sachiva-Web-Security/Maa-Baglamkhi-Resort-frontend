@@ -10,7 +10,6 @@ import {
   FaBell,
   FaKey,
   FaRupeeSign,
-  FaSearch,
   FaSyncAlt,
   FaTimes,
 } from "react-icons/fa";
@@ -56,25 +55,6 @@ const AVAILABLE_ROOM_TYPE_ORDER = [
   "SUPER DELUXE ROOM",
   "SUITE ROOM",
   "DELUXE DORMITORY",
-];
-
-const DASHBOARD_SEARCH_TARGETS = [
-  { label: "Dashboard", route: "/dashboard", helper: "Operational snapshot", keywords: ["dashboard", "home", "snapshot"] },
-  { label: "Stay Overview", route: "/stayover", helper: "Room status board", keywords: ["stayover", "stay overview", "room board", "availability"] },
-  { label: "Housekeeping", route: "/housekeeping", helper: "Cleaning log and assignments", keywords: ["housekeeping", "cleaning", "timer", "cleaning log"] },
-  { label: "All Bookings", route: "/hotel/all-bookings", helper: "Active booking list", keywords: ["all booking", "all bookings", "booking", "active booking"] },
-  { label: "Booking History", route: "/hotel/booking-history", helper: "Past booking records", keywords: ["history", "booking history", "past booking"] },
-  { label: "Guest Booking", route: "/hotel/guest", helper: "New booking entry", keywords: ["guest", "new booking", "book room", "booking steps"] },
-  { label: "Communication", route: "/hotel/communication", helper: "Invoice and guest communication", keywords: ["communication", "message", "invoice", "check in", "check out"] },
-  { label: "Attendance", route: "/attendance", helper: "Staff attendance tracker", keywords: ["attendance", "staff", "punch"] },
-  { label: "Accounts", route: "/accounts", helper: "Revenue and finance", keywords: ["accounts", "finance", "revenue", "income"] },
-  { label: "Inventory", route: "/inventory", helper: "Stock and item control", keywords: ["inventory", "stock", "item"] },
-  { label: "Users", route: "/user", helper: "User management", keywords: ["user", "users", "staff", "employee"] },
-  { label: "Reports", route: "/reports", helper: "Summary and analytics", keywords: ["reports", "report", "analytics"] },
-  { label: "Audit Logs", route: "/reports/audit", helper: "Security and activity trail", keywords: ["audit", "audit log", "activity log", "history"] },
-  { label: "Kitchen", route: "/kitchen", helper: "Kitchen status", keywords: ["kitchen", "food", "prep"] },
-  { label: "Restaurant", route: "/restaurant", helper: "Restaurant dashboard", keywords: ["restaurant", "table", "menu"] },
-  { label: "Banquet", route: "/banquet", helper: "Event and hall ops", keywords: ["banquet", "hall", "event"] },
 ];
 
 const getHousekeepingUsers = (users) =>
@@ -132,6 +112,27 @@ const groupRoomsByType = (items = []) => {
   ].filter((group) => AVAILABLE_ROOM_TYPE_ORDER.includes(group.label) || group.items.length > 0);
 };
 
+const getRoomTaskKey = (room) =>
+  String(room?.roomData?.id || room?.roomId || room?.roomNumber || "").trim();
+
+const isCleaningTaskEditable = (room) => {
+  const statusTokens = [
+    String(room?.roomData?.status || ""),
+    String(room?.roomData?.hotelStatus || ""),
+    String(room?.roomData?.housekeepingLabel || ""),
+    String(room?.status || ""),
+  ]
+    .join(" ")
+    .toLowerCase();
+
+  return (
+    statusTokens.includes("clean") ||
+    statusTokens.includes("dirty") ||
+    statusTokens.includes("cleaning") ||
+    statusTokens.includes("vacant")
+  );
+};
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(localStorage.getItem("freshLogin") === "true");
@@ -148,8 +149,6 @@ const Dashboard = () => {
       return acc;
     }, {}),
   );
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchFocused, setSearchFocused] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [availableTypeOpen, setAvailableTypeOpen] = useState("");
   const [activeDashboardTab, setActiveDashboardTab] = useState("main");
@@ -203,26 +202,6 @@ const Dashboard = () => {
       if (silent) setRefreshingDashboard(false);
     }
   }, []);
-
-  const searchResults = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-    if (!query) return DASHBOARD_SEARCH_TARGETS.slice(0, 6);
-
-    const tokens = query.split(/\s+/).filter(Boolean);
-    return DASHBOARD_SEARCH_TARGETS.filter((item) => {
-      const haystack = [item.label, item.route, item.helper, ...(item.keywords || [])]
-        .join(" ")
-        .toLowerCase();
-      return tokens.every((token) => haystack.includes(token));
-    }).slice(0, 8);
-  }, [searchQuery]);
-
-  const openSearchTarget = (target) => {
-    setSearchQuery("");
-    setSearchFocused(false);
-    if (!target?.route) return;
-    navigate(target.route);
-  };
 
   useEffect(() => {
     const freshLoginFlag = localStorage.getItem("freshLogin");
@@ -548,7 +527,7 @@ const Dashboard = () => {
       value: String(liveTotalRooms),
       subtitle: "Calm inventory overview",
       icon: FaBed,
-      gradient: "bg-[linear-gradient(180deg,#89E85D_0%,#42D37D_34%,#15B58B_66%,#0A727D_100%)]",
+      gradient: "bg-slate-700",
       route: "/hotel/all-bookings",
     },
     {
@@ -556,7 +535,7 @@ const Dashboard = () => {
       value: String(liveOccupiedRooms || apiMetrics.occupiedRooms || 0),
       subtitle: "Live stay activity",
       icon: FaKey,
-      gradient: "bg-[linear-gradient(135deg,#2452D6_0%,#2E67E7_50%,#5B9AF1_100%)]",
+      gradient: "bg-blue-600",
       route: "/stayover",
     },
     {
@@ -564,7 +543,7 @@ const Dashboard = () => {
       value: `Rs. ${Number(displayRevenue || 0).toLocaleString()}`,
       subtitle: "Front office and F&B earnings",
       icon: FaRupeeSign,
-      gradient: "bg-[linear-gradient(135deg,#C96800_0%,#E18908_48%,#F4BD21_100%)]",
+      gradient: "bg-amber-500",
       route: "/accounts",
     },
     {
@@ -572,7 +551,7 @@ const Dashboard = () => {
       value: String(liveCheckins),
       subtitle: "Guest arrival momentum",
       icon: FaCheckCircle,
-      gradient: "bg-[linear-gradient(135deg,#D61B79_0%,#E43288_52%,#EB67AD_100%)]",
+      gradient: "bg-emerald-500",
       route: "/hotel",
       panelKey: "today_checkins",
     },
@@ -581,7 +560,7 @@ const Dashboard = () => {
       value: String(apiMetrics.expectedArrivals || 0),
       subtitle: "Scheduled arrivals for today",
       icon: FaDoorOpen,
-      gradient: "bg-[linear-gradient(135deg,#0F8C7B_0%,#14B8A6_48%,#5EEAD4_100%)]",
+      gradient: "bg-blue-500",
       route: "/hotel/all-bookings",
       panelKey: "expected_arrivals",
     },
@@ -590,7 +569,7 @@ const Dashboard = () => {
       value: String(apiMetrics.expectedCheckouts || 0),
       subtitle: "Planned departures for today",
       icon: FaCalendarAlt,
-      gradient: "bg-[linear-gradient(135deg,#7C3AED_0%,#8B5CF6_48%,#C4B5FD_100%)]",
+      gradient: "bg-amber-400",
       route: "/hotel/all-bookings",
       panelKey: "expected_checkouts",
     },
@@ -599,17 +578,11 @@ const Dashboard = () => {
       value: `Rs. ${totalGeneratedRevenue.toLocaleString()}`,
       subtitle: "Overall billed revenue snapshot",
       icon: FaClipboardCheck,
-      gradient: "bg-[linear-gradient(135deg,#A16207_0%,#D97706_50%,#FBBF24_100%)]",
+      gradient: "bg-slate-900",
       route: "/accounts",
     },
   ];
 
-  const heroStats = [
-    { label: "Occupancy", value: occupancyRate },
-    { label: "Today's Revenue", value: `Rs. ${Number(displayRevenue || 0).toLocaleString()}` },
-    { label: "Check-ins", value: String(liveCheckins) },
-    { label: "Expected Arrivals", value: String(apiMetrics.expectedArrivals || 0) },
-  ];
   const handleMetricClick = (metric) => {
     if (metric.panelKey) {
       setOpenMetricPanel((current) => (current === metric.panelKey ? "" : metric.panelKey));
@@ -626,7 +599,7 @@ const Dashboard = () => {
       detail: `${selectedDaySnapshot.confirmed.length} confirmed room(s) for ${formatDateLabel(selectedDate)}`,
       icon: FaDoorOpen,
       route: "/hotel/guest",
-      tone: "from-cyan-500 to-blue-500",
+      tone: "from-blue-600 to-blue-500",
     },
     {
       label: "Cleaning Log",
@@ -636,7 +609,7 @@ const Dashboard = () => {
       detail: `${selectedDaySnapshot.cleaning.length} live housekeeping room(s) need readiness review`,
       icon: FaBroom,
       route: "/housekeeping?view=cleaning-log",
-      tone: "from-emerald-500 to-teal-500",
+      tone: "from-emerald-500 to-emerald-400",
     },
     {
       label: "Settlement Review",
@@ -646,7 +619,7 @@ const Dashboard = () => {
       detail: `${pendingSettlementCount} booking(s) still waiting for settlement`,
       icon: FaClipboardCheck,
       route: "/accounts",
-      tone: "from-amber-500 to-orange-500",
+      tone: "from-amber-500 to-amber-400",
     },
   ];
 
@@ -801,70 +774,70 @@ const Dashboard = () => {
     if (["available", "confirmed", "cleaning", "pencil", "blocked", "checked_in"].includes(key)) {
       const toneMap = {
         available: {
-          border: "border-emerald-200",
-          soft: "bg-emerald-50/70",
-          badge: "border-emerald-200 bg-emerald-50 text-emerald-700 shadow-[0_8px_20px_rgba(16,185,129,0.18)]",
+          border: "border-emerald-400",
+          soft: "bg-[linear-gradient(135deg,rgba(236,253,245,0.92)_0%,rgba(220,252,231,0.8)_100%)]",
+          badge: "border-emerald-200 bg-[linear-gradient(135deg,#ecfdf5_0%,#d1fae5_100%)] text-emerald-700 shadow-[0_10px_24px_rgba(16,185,129,0.18)]",
           title: "text-emerald-900",
           sub: "text-emerald-700",
-          button: "border-emerald-100",
-          dot: "border-emerald-200 bg-emerald-50 text-emerald-600",
-          empty: "border-dashed border-emerald-200 bg-white text-emerald-500",
-          pill: "border-emerald-200 bg-emerald-50 text-emerald-700",
+          button: "border-emerald-300 bg-[linear-gradient(135deg,rgba(255,255,255,0.7)_0%,rgba(236,253,245,0.95)_100%)]",
+          dot: "border-emerald-200 bg-[linear-gradient(135deg,#ecfdf5_0%,#d1fae5_100%)] text-emerald-600",
+          empty: "border-dashed border-emerald-400 bg-[linear-gradient(135deg,rgba(255,255,255,0.65)_0%,rgba(236,253,245,0.75)_100%)] text-emerald-500",
+          pill: "border-emerald-200 bg-[linear-gradient(135deg,#ecfdf5_0%,#d1fae5_100%)] text-emerald-700",
         },
         confirmed: {
-          border: "border-orange-200",
-          soft: "bg-orange-50/70",
-          badge: "border-orange-200 bg-orange-50 text-orange-700 shadow-[0_8px_20px_rgba(249,115,22,0.18)]",
+          border: "border-orange-400",
+          soft: "bg-[linear-gradient(135deg,rgba(255,247,237,0.92)_0%,rgba(254,215,170,0.45)_100%)]",
+          badge: "border-orange-200 bg-[linear-gradient(135deg,#fff7ed_0%,#fed7aa_100%)] text-orange-700 shadow-[0_10px_24px_rgba(249,115,22,0.18)]",
           title: "text-orange-900",
           sub: "text-orange-700",
-          button: "border-orange-100",
-          dot: "border-orange-200 bg-orange-50 text-orange-600",
-          empty: "border-dashed border-orange-200 bg-white text-orange-500",
-          pill: "border-orange-200 bg-orange-50 text-orange-700",
+          button: "border-orange-300 bg-[linear-gradient(135deg,rgba(255,255,255,0.7)_0%,rgba(255,247,237,0.95)_100%)]",
+          dot: "border-orange-200 bg-[linear-gradient(135deg,#fff7ed_0%,#fed7aa_100%)] text-orange-600",
+          empty: "border-dashed border-orange-400 bg-[linear-gradient(135deg,rgba(255,255,255,0.65)_0%,rgba(255,247,237,0.78)_100%)] text-orange-500",
+          pill: "border-orange-200 bg-[linear-gradient(135deg,#fff7ed_0%,#fed7aa_100%)] text-orange-700",
         },
         cleaning: {
-          border: "border-violet-200",
-          soft: "bg-violet-50/70",
-          badge: "border-violet-200 bg-violet-50 text-violet-700 shadow-[0_8px_20px_rgba(124,58,237,0.18)]",
+          border: "border-violet-400",
+          soft: "bg-[linear-gradient(135deg,rgba(245,243,255,0.92)_0%,rgba(233,213,255,0.52)_100%)]",
+          badge: "border-violet-200 bg-[linear-gradient(135deg,#f5f3ff_0%,#e9d5ff_100%)] text-violet-700 shadow-[0_10px_24px_rgba(124,58,237,0.18)]",
           title: "text-violet-900",
           sub: "text-violet-700",
-          button: "border-violet-100",
-          dot: "border-violet-200 bg-violet-50 text-violet-600",
-          empty: "border-dashed border-violet-200 bg-white text-violet-500",
-          pill: "border-violet-200 bg-violet-50 text-violet-700",
+          button: "border-violet-300 bg-[linear-gradient(135deg,rgba(255,255,255,0.7)_0%,rgba(245,243,255,0.95)_100%)]",
+          dot: "border-violet-200 bg-[linear-gradient(135deg,#f5f3ff_0%,#e9d5ff_100%)] text-violet-600",
+          empty: "border-dashed border-violet-400 bg-[linear-gradient(135deg,rgba(255,255,255,0.65)_0%,rgba(245,243,255,0.78)_100%)] text-violet-500",
+          pill: "border-violet-200 bg-[linear-gradient(135deg,#f5f3ff_0%,#e9d5ff_100%)] text-violet-700",
         },
         pencil: {
-          border: "border-amber-200",
-          soft: "bg-amber-50/70",
-          badge: "border-amber-200 bg-amber-50 text-amber-700 shadow-[0_8px_20px_rgba(245,158,11,0.18)]",
+          border: "border-amber-400",
+          soft: "bg-[linear-gradient(135deg,rgba(255,251,235,0.92)_0%,rgba(254,243,199,0.65)_100%)]",
+          badge: "border-amber-200 bg-[linear-gradient(135deg,#fffbeb_0%,#fef3c7_100%)] text-amber-700 shadow-[0_10px_24px_rgba(245,158,11,0.18)]",
           title: "text-amber-900",
           sub: "text-amber-700",
-          button: "border-amber-100",
-          dot: "border-amber-200 bg-amber-50 text-amber-600",
-          empty: "border-dashed border-amber-200 bg-white text-amber-500",
-          pill: "border-amber-200 bg-amber-50 text-amber-700",
+          button: "border-amber-300 bg-[linear-gradient(135deg,rgba(255,255,255,0.7)_0%,rgba(255,251,235,0.95)_100%)]",
+          dot: "border-amber-200 bg-[linear-gradient(135deg,#fffbeb_0%,#fef3c7_100%)] text-amber-600",
+          empty: "border-dashed border-amber-400 bg-[linear-gradient(135deg,rgba(255,255,255,0.65)_0%,rgba(255,251,235,0.78)_100%)] text-amber-500",
+          pill: "border-amber-200 bg-[linear-gradient(135deg,#fffbeb_0%,#fef3c7_100%)] text-amber-700",
         },
         blocked: {
-          border: "border-slate-200",
-          soft: "bg-slate-50/80",
-          badge: "border-slate-200 bg-slate-50 text-slate-700 shadow-[0_8px_20px_rgba(100,116,139,0.18)]",
+          border: "border-slate-400",
+          soft: "bg-[linear-gradient(135deg,rgba(248,250,252,0.92)_0%,rgba(226,232,240,0.72)_100%)]",
+          badge: "border-slate-200 bg-[linear-gradient(135deg,#f8fafc_0%,#e2e8f0_100%)] text-slate-700 shadow-[0_10px_24px_rgba(100,116,139,0.18)]",
           title: "text-slate-900",
           sub: "text-slate-600",
-          button: "border-slate-100",
-          dot: "border-slate-200 bg-slate-50 text-slate-600",
-          empty: "border-dashed border-slate-200 bg-white text-slate-500",
-          pill: "border-slate-200 bg-slate-50 text-slate-700",
+          button: "border-slate-300 bg-[linear-gradient(135deg,rgba(255,255,255,0.7)_0%,rgba(248,250,252,0.95)_100%)]",
+          dot: "border-slate-200 bg-[linear-gradient(135deg,#f8fafc_0%,#e2e8f0_100%)] text-slate-600",
+          empty: "border-dashed border-slate-400 bg-[linear-gradient(135deg,rgba(255,255,255,0.65)_0%,rgba(248,250,252,0.78)_100%)] text-slate-500",
+          pill: "border-slate-200 bg-[linear-gradient(135deg,#f8fafc_0%,#e2e8f0_100%)] text-slate-700",
         },
         checked_in: {
-          border: "border-sky-200",
-          soft: "bg-sky-50/70",
-          badge: "border-sky-200 bg-sky-50 text-sky-700 shadow-[0_8px_20px_rgba(14,165,233,0.18)]",
+          border: "border-sky-400",
+          soft: "bg-[linear-gradient(135deg,rgba(240,249,255,0.92)_0%,rgba(186,230,253,0.62)_100%)]",
+          badge: "border-sky-200 bg-[linear-gradient(135deg,#f0f9ff_0%,#bae6fd_100%)] text-sky-700 shadow-[0_10px_24px_rgba(14,165,233,0.18)]",
           title: "text-sky-900",
           sub: "text-sky-700",
-          button: "border-sky-100",
-          dot: "border-sky-200 bg-sky-50 text-sky-600",
-          empty: "border-dashed border-sky-200 bg-white text-sky-500",
-          pill: "border-sky-200 bg-sky-50 text-sky-700",
+          button: "border-sky-300 bg-[linear-gradient(135deg,rgba(255,255,255,0.7)_0%,rgba(240,249,255,0.95)_100%)]",
+          dot: "border-sky-200 bg-[linear-gradient(135deg,#f0f9ff_0%,#bae6fd_100%)] text-sky-600",
+          empty: "border-dashed border-sky-400 bg-[linear-gradient(135deg,rgba(255,255,255,0.65)_0%,rgba(240,249,255,0.78)_100%)] text-sky-500",
+          pill: "border-sky-200 bg-[linear-gradient(135deg,#f0f9ff_0%,#bae6fd_100%)] text-sky-700",
         },
       };
 
@@ -880,7 +853,7 @@ const Dashboard = () => {
       const tone = toneMap[key];
 
       return (
-        <div className="max-h-[270px] space-y-3 overflow-y-auto pr-1">
+        <div className="max-h-[290px] space-y-3 overflow-y-auto pr-1">
           {groups.length ? (
             groups.map((group) => {
               const typeKey = `${day?.date || "today"}-${key}-${group.label}`;
@@ -888,14 +861,14 @@ const Dashboard = () => {
 
               return (
                 <div key={group.label} className="relative w-full overflow-visible">
-                  <span className={`absolute -right-1 -top-2 z-20 flex h-8 w-8 items-center justify-center rounded-full border text-sm font-black ${tone.badge}`}>
+                  <span className={`absolute -right-1 -top-2 z-20 flex h-8 w-8 items-center justify-center rounded-full border text-sm font-black backdrop-blur-sm ${tone.badge}`}>
                     {group.items.length}
                   </span>
-                  <div className={`overflow-hidden rounded-[18px] border bg-white shadow-sm ${tone.border}`}>
+                  <div className={`overflow-hidden rounded-[22px] border bg-white/55 shadow-[0_16px_38px_rgba(15,23,42,0.08)] backdrop-blur-md ${tone.border}`}>
                     <button
                       type="button"
                       onClick={() => toggleAvailableType(typeKey)}
-                      className={`flex w-full items-center justify-between gap-3 border-b px-3 py-3 text-left ${tone.button}`}
+                      className={`flex w-full items-center justify-between gap-3 border-b px-4 py-3.5 text-left transition ${tone.button}`}
                     >
                       <div className="min-w-0">
                         <div className={`text-base font-black uppercase tracking-[0.12em] ${tone.title}`}>
@@ -923,14 +896,14 @@ const Dashboard = () => {
                           isTypeOpen ? "opacity-100 translate-y-0" : "pointer-events-none opacity-0 translate-y-2"
                         }`}
                       >
-                        <div className="space-y-2 pt-2">
+                        <div className="space-y-2.5 pt-2.5">
                           {group.items.length ? (
                             group.items.map((item) => (
                             <button
                               type="button"
                               key={item.id}
                               onClick={() => openRoomPreview(item)}
-                              className={`w-full rounded-[14px] border px-3 py-2.5 text-left text-sm shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${tone.border} ${tone.soft}`}
+                              className={`w-full rounded-[16px] border px-3.5 py-3 text-left text-sm shadow-[0_10px_24px_rgba(15,23,42,0.06)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_28px_rgba(15,23,42,0.1)] ${tone.border} ${tone.soft}`}
                             >
                               {item.statusLabel ? (
                                 <div className="mb-1 flex justify-end">
@@ -957,7 +930,7 @@ const Dashboard = () => {
                             </button>
                           ))
                         ) : (
-                            <div className={`rounded-[14px] border px-3 py-4 text-center text-sm ${tone.empty}`}>
+                            <div className={`rounded-[16px] border px-3 py-4 text-center text-sm ${tone.empty}`}>
                               No rooms
                             </div>
                           )}
@@ -969,7 +942,7 @@ const Dashboard = () => {
               );
             })
           ) : (
-            <div className="rounded-[16px] border border-dashed border-slate-200 px-3 py-6 text-center text-sm text-slate-400">
+            <div className="rounded-[18px] border border-dashed border-slate-400 bg-white/40 px-3 py-6 text-center text-sm text-slate-500 backdrop-blur-sm">
               No rooms
             </div>
           )}
@@ -1017,27 +990,27 @@ const Dashboard = () => {
   };
 
   const renderExpandedBoard = (day) => (
-    <div className="grid grid-cols-[150px_minmax(230px,1.25fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)] border-t border-slate-200">
-      <div className="border-r border-slate-200 bg-slate-50" />
+    <div className="grid grid-cols-[150px_minmax(230px,1.25fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)] border-t border-sky-400 bg-[linear-gradient(180deg,rgba(255,255,255,0.32)_0%,rgba(255,255,255,0.16)_100%)]">
+      <div className="border-r border-sky-400 bg-[linear-gradient(180deg,rgba(224,242,254,0.55)_0%,rgba(240,249,255,0.2)_100%)]" />
       {boardOrder.map((key) => {
         const meta = BOARD_BUCKET_META[key];
         const items = day?.board?.[key] || [];
         const isOpen = bucketOpen[key] !== false;
 
         return (
-          <div key={`${day.date}-${key}`} className="border-r border-slate-200 bg-white last:border-r-0">
+          <div key={`${day.date}-${key}`} className="border-r border-sky-400 bg-[linear-gradient(180deg,rgba(255,255,255,0.4)_0%,rgba(255,255,255,0.16)_100%)] backdrop-blur-sm last:border-r-0">
             <div className={`h-1.5 w-full ${meta.bar}`} />
-            <div className="flex h-[320px] flex-col px-3 py-3">
+            <div className="flex h-[336px] flex-col px-3 py-3">
               <button
                 type="button"
                 onClick={() => toggleBucket(key)}
-                className="flex items-center justify-between gap-2 text-left"
+                className="flex items-center justify-between gap-2 rounded-[16px] border border-sky-400 bg-white/45 px-3 py-2 text-left shadow-[0_10px_20px_rgba(15,23,42,0.04)] backdrop-blur-sm"
               >
-                <div className="text-sm font-bold text-slate-900">
+                <div className="text-sm font-black tracking-[0.04em] text-slate-900">
                   {meta.label} ({items.length})
                 </div>
                 <span
-                  className={`flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition-transform duration-500 ease-out ${
+                  className={`flex h-8 w-8 items-center justify-center rounded-full border border-sky-400 bg-white/70 text-slate-500 shadow-sm transition-transform duration-500 ease-out ${
                     isOpen ? "rotate-180" : "rotate-0"
                   }`}
                 >
@@ -1067,7 +1040,7 @@ const Dashboard = () => {
   useEffect(() => {
     if (!selectedRoom) return;
 
-    const roomId = selectedRoom.roomData?.id || selectedRoom.roomId || selectedRoom.roomNumber;
+    const roomId = getRoomTaskKey(selectedRoom);
     const assignee = selectedRoom.roomData?.assignee;
     setSelectedAssignee(assignee && assignee !== "No Housekeeper" ? assignee : "");
 
@@ -1081,36 +1054,70 @@ const Dashboard = () => {
   }, [selectedRoom]);
 
   const handleAssignCleaning = async () => {
-    const roomId = selectedRoom?.roomData?.id || selectedRoom?.roomId || selectedRoom?.roomNumber;
+    const roomId = getRoomTaskKey(selectedRoom);
     if (!roomId) {
-      alert("Room record missing hai.");
+      toast.error("Room record missing hai.");
       return;
     }
 
     if (!selectedAssignee) {
-      alert("Please housekeeper select karein.");
+      toast.error("Please housekeeper select karein.");
+      return;
+    }
+
+    const cleaningMinutes = Number(selectedCleaningMinutes || 0);
+    if (!Number.isFinite(cleaningMinutes) || cleaningMinutes <= 0) {
+      toast.error("Cleaning time valid select karein.");
       return;
     }
 
     try {
       setAssigningCleaning(true);
-      await API.put(`/housekeeping/assignee/${roomId}`, { assignee: selectedAssignee });
-      await API.put(`/housekeeping/status/${roomId}`, { status: "Vacant Dirty" });
+      const nowIso = new Date().toISOString();
+      const dueAt = new Date(Date.now() + cleaningMinutes * 60000).toISOString();
+      const existingTask = getCleaningTasks()[String(roomId)] || null;
+
+      if (
+        existingTask &&
+        existingTask.assignee === selectedAssignee &&
+        Number(existingTask.minutes || 0) === cleaningMinutes &&
+        existingTask.dueAt &&
+        new Date(existingTask.dueAt).getTime() > Date.now()
+      ) {
+        toast.info("Ye cleaning task already active hai.");
+        return;
+      }
+
       upsertCleaningTask(roomId, {
         roomId,
         roomNumber: selectedRoom.roomNumber,
         roomType: selectedRoom.roomData?.categoryName || selectedRoom.roomType || "Room",
         assignee: selectedAssignee,
-        minutes: selectedCleaningMinutes,
+        minutes: cleaningMinutes,
         status: "dirty",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        startedAt: new Date().toISOString(),
-        dueAt: new Date(Date.now() + Number(selectedCleaningMinutes || 30) * 60000).toISOString(),
+        createdAt: existingTask?.createdAt || nowIso,
+        updatedAt: nowIso,
+        startedAt: nowIso,
+        dueAt,
       });
+
+      try {
+        await API.put(`/housekeeping/assignee/${roomId}`, { assignee: selectedAssignee });
+        await API.put(`/housekeeping/status/${roomId}`, { status: "Vacant Dirty" });
+      } catch (error) {
+        const rollbackTasks = getCleaningTasks();
+        if (existingTask) {
+          rollbackTasks[String(roomId)] = existingTask;
+        } else {
+          delete rollbackTasks[String(roomId)];
+        }
+        setCleaningTasks(rollbackTasks);
+        throw error;
+      }
+
       pushDashboardNotification({
         title: `Cleaning assigned - Room ${selectedRoom.roomNumber}`,
-        message: `Assigned to ${selectedAssignee} for ${selectedCleaningMinutes} min`,
+        message: `Assigned to ${selectedAssignee} for ${cleaningMinutes} min`,
         type: "info",
         route: "/housekeeping",
       });
@@ -1120,9 +1127,9 @@ const Dashboard = () => {
           ? {
               ...prev,
               roomData: {
-                ...prev.roomData,
+              ...prev.roomData,
                 assignee: selectedAssignee,
-                status: "cleaning",
+                status: "Vacant Dirty",
                 housekeepingLabel: "Vacant Dirty",
               },
             }
@@ -1233,124 +1240,19 @@ const Dashboard = () => {
       ) : null}
 
       <div
-        className={`dashboard-typography relative isolate min-h-fit w-full overflow-x-hidden bg-[radial-gradient(circle_at_top_left,#dff6ff_0%,transparent_22%),radial-gradient(circle_at_top_right,#fff1c7_0%,transparent_24%),linear-gradient(135deg,#f3f8ff_0%,#f6fbf8_32%,#fff9f2_60%,#f8fbff_100%)] p-4 transition-all duration-300 sm:p-6 lg:p-8 ${
+        className={`dashboard-typography dashboard-shell relative isolate min-h-fit w-full overflow-x-hidden p-4 transition-all duration-300 sm:p-6 lg:p-8 ${
           blurBg ? "blur-[6px]" : ""
         }`}
       >
         <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-          <div className="absolute left-[-8%] top-[-6%] h-72 w-72 rounded-full bg-cyan-200/55 blur-3xl sm:h-96 sm:w-96" />
-          <div className="absolute right-[-10%] top-[8%] h-72 w-72 rounded-full bg-amber-200/45 blur-3xl sm:h-[28rem] sm:w-[28rem]" />
-          <div className="absolute bottom-[18%] left-[18%] h-56 w-56 rounded-full bg-emerald-200/35 blur-3xl sm:h-80 sm:w-80" />
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.5)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.36)_1px,transparent_1px)] bg-[size:72px_72px] opacity-20" />
+          <div className="absolute left-[-8%] top-[-6%] h-72 w-72 rounded-full bg-blue-100/70 blur-3xl sm:h-96 sm:w-96" />
+          <div className="absolute right-[-10%] top-[8%] h-72 w-72 rounded-full bg-emerald-100/60 blur-3xl sm:h-[28rem] sm:w-[28rem]" />
+          <div className="absolute bottom-[18%] left-[18%] h-56 w-56 rounded-full bg-slate-100/80 blur-3xl sm:h-80 sm:w-80" />
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(148,163,184,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.08)_1px,transparent_1px)] bg-[size:88px_88px] opacity-60" />
         </div>
 
-        <div className="mt-2 max-w-full space-y-5 sm:mt-3">
-          <section
-            id="dashboard-main-panel"
-            className="relative overflow-visible rounded-[30px] border border-slate-200 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(247,250,255,0.96)_100%)] px-4 py-5 shadow-[0_30px_90px_rgba(15,23,42,0.08)] sm:px-6 sm:py-6 lg:px-8"
-          >
-            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,rgba(15,23,42,0.02)_0%,transparent_28%,rgba(15,23,42,0.015)_56%,transparent_100%)]" />
-            <div className="pointer-events-none absolute -left-16 top-4 h-48 w-48 rounded-full bg-cyan-300/10 blur-3xl" />
-            <div className="pointer-events-none absolute right-0 top-0 h-56 w-56 rounded-full bg-sky-300/8 blur-3xl" />
-            <div className="relative z-[1] grid gap-5 lg:grid-cols-[minmax(0,1.6fr)_minmax(360px,0.82fr)] lg:items-start">
-              <div className="space-y-4">
-                <p className="  text-xl   font-black">
-                  Resort Command Center
-                </p>
-                <div className="space-y-2">
-                  <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-[15px] font-semibold uppercase tracking-[0.18em] text-slate-800 backdrop-blur-md">
-                    <span className="h-2 w-2 rounded-full bg-emerald-300" />
-                    Live Admin Overview
-                  </div>
-                  <h1 className="dash-title max-w-3xl text-black">
-                    Operational snapshot for today
-                  </h1>
-                  <p className="   text-[19px] font-semibold text-gray">
-                    Track rooms, revenue, arrivals, and restaurant activity from one cleaner dashboard built for daily hotel operations.
-                  </p>
-                </div>
-
-                <div className="relative z-[70] w-full max-w-[920px] pb-5 pt-3">
-                  <label className="relative block">
-                    <FaSearch className="pointer-events-none absolute left-5 top-1/2 z-[1] -translate-y-1/2 text-[1rem] text-slate-600 sm:left-6 sm:text-[1.1rem]" />
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={(event) => setSearchQuery(event.target.value)}
-                      onFocus={() => setSearchFocused(true)}
-                      onBlur={() => setTimeout(() => setSearchFocused(false), 150)}
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter" && searchResults.length) {
-                          openSearchTarget(searchResults[0]);
-                        }
-                      }}
-                      placeholder="Search..."
-                      className="block min-h-[62px] w-full rounded-full border-[2px] border-slate-950 bg-white pl-14 pr-14 text-[1rem] font-semibold tracking-[-0.02em] text-slate-950 shadow-[0_16px_32px_rgba(15,23,42,0.2)] outline-none transition placeholder:font-bold placeholder:text-slate-400 focus:-translate-y-0.5 focus:border-slate-950 focus:ring-0 focus:shadow-[0_22px_42px_rgba(15,23,42,0.24)] sm:pl-15 sm:pr-15 sm:text-[1.12rem]"
-                    />
-                    {searchQuery ? (
-                      <button
-                        type="button"
-                        onMouseDown={(event) => event.preventDefault()}
-                        onClick={() => setSearchQuery("")}
-                        className="absolute right-4 top-1/2 z-[1] flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition hover:bg-slate-200 hover:text-slate-700"
-                      >
-                        <FaTimes className="text-[12px]" />
-                      </button>
-                    ) : null}
-                  </label>
-
-                  {searchFocused && (searchQuery || searchResults.length) ? (
-                    <div className="absolute left-0 right-0 top-full z-[90] mt-3 overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_28px_60px_rgba(15,23,42,0.28)]">
-                      <div className="max-h-[320px] overflow-y-auto p-2.5">
-                        {searchResults.length ? (
-                          searchResults.map((target) => (
-                            <button
-                              key={target.route}
-                              type="button"
-                              onMouseDown={(event) => event.preventDefault()}
-                              onClick={() => openSearchTarget(target)}
-                              className="flex w-full items-center justify-between rounded-[20px] border border-slate-200/80 px-4 py-3.5 text-left transition hover:border-sky-200 hover:bg-sky-50/60"
-                            >
-                              <div>
-                                <div className="text-sm font-bold text-slate-900">{target.label}</div>
-                                <div className="mt-1 text-xs text-slate-500">{target.helper}</div>
-                              </div>
-                              <span className="rounded-full border border-slate-300 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-700">
-                                Open
-                              </span>
-                            </button>
-                          ))
-                        ) : (
-                          <div className="rounded-[20px] border border-dashed border-slate-300 px-4 py-4 text-sm text-slate-600">
-                            No page found. Try keywords like <span className="font-semibold text-slate-900">housekeeping</span>,
-                            <span className="font-semibold text-slate-900"> booking</span>, <span className="font-semibold text-slate-900">accounts</span>.
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2.5 pt-1 sm:grid-cols-4 lg:pt-0">
-                {heroStats.map((item) => (
-                  <div
-                    key={item.label}
-                    className="flex min-h-[86px] max-w-[165px] flex-col justify-between rounded-[20px] border border-slate-200 bg-white/90 px-3.5 py-3 text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_12px_24px_rgba(15,23,42,0.08)] backdrop-blur-md"
-                  >
-                    <span className="dash-label max-w-[12ch] text-slate-700">
-                      {item.label}
-                    </span>
-                    <div className="dash-stat mt-1.5">
-                      {item.value}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-
-          <div className="grid w-full  grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
+        <div className="mt-2 max-w-full space-y-6 sm:mt-3">
+          <div className="grid w-full grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
             {metrics.map((metric) => (
               <MetricCard
                 key={metric.title}
@@ -1365,19 +1267,19 @@ const Dashboard = () => {
           </div>
 
           {activeMetricPanel ? (
-            <div className="mt-4 rounded-[28px] border border-cyan-100/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(244,251,255,0.94)_100%)] p-4 shadow-[0_24px_60px_rgba(15,23,42,0.1)] backdrop-blur-xl sm:p-5">
+            <div className="dashboard-card mt-4 p-4 sm:p-5">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <p className="text-sm font-bold uppercase tracking-[0.3em] text-cyan-700">
+                  <p className="dashboard-label text-blue-600">
                     Live Details
                   </p>
-                  <h3 className="mt-1 text-3xl font-black text-slate-900">{activeMetricPanel.title}</h3>
-                  <p className="mt-1 text-lg font-semibold text-slate-600">{activeMetricPanel.subtitle}</p>
+                  <h3 className="dashboard-heading mt-1">{activeMetricPanel.title}</h3>
+                  <p className="dashboard-subheading mt-1">{activeMetricPanel.subtitle}</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setOpenMetricPanel("")}
-                  className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
+                  className="dashboard-button-secondary inline-flex items-center gap-2 px-3 py-2 text-xs font-semibold"
                 >
                   <FaTimes className="text-[11px]" />
                   Close
@@ -1389,7 +1291,7 @@ const Dashboard = () => {
                   paginatedMetricPanelItems.map((item) => (
                     <div
                       key={`${openMetricPanel}-${item.bookingId}-${item.checkIn}-${item.checkOut}`}
-                      className="rounded-[22px] border border-slate-200/80 bg-white p-4 shadow-[0_16px_38px_rgba(15,23,42,0.06)]"
+                      className="dashboard-card-subtle p-4"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
@@ -1398,28 +1300,28 @@ const Dashboard = () => {
                             {item.bookingCode || "Direct Booking"}
                           </div>
                         </div>
-                        <span className="rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-cyan-700">
+                        <span className="rounded-full bg-blue-50 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-blue-700">
                           {item.bookingStatus || "Confirmed"}
                         </span>
                       </div>
 
                       <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                        <div className="rounded-[16px] border border-slate-200 bg-white px-3 py-3">
-                          <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Check-In</div>
+                        <div className="dashboard-card-subtle px-3 py-3">
+                          <div className="dashboard-label">Check-In</div>
                           <div className="mt-1 text-base font-bold text-slate-900">
                             {item.checkIn ? formatShortDate(item.checkIn) : "--"}
                           </div>
                         </div>
-                        <div className="rounded-[16px] border border-slate-200 bg-white px-3 py-3">
-                          <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Check-Out</div>
+                        <div className="dashboard-card-subtle px-3 py-3">
+                          <div className="dashboard-label">Check-Out</div>
                           <div className="mt-1 text-base font-bold text-slate-900">
                             {item.checkOut ? formatShortDate(item.checkOut) : "--"}
                           </div>
                         </div>
                       </div>
 
-                      <div className="mt-3 rounded-[16px] border border-dashed border-slate-200 bg-white px-3 py-3">
-                        <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Rooms</div>
+                      <div className="dashboard-card-subtle mt-3 border-dashed px-3 py-3">
+                        <div className="dashboard-label">Rooms</div>
                         <div className="mt-1 text-base font-semibold text-slate-800">
                           {item.rooms || "Room not linked"}
                         </div>
@@ -1430,15 +1332,15 @@ const Dashboard = () => {
                     </div>
                   ))
                 ) : (
-                  <div className="rounded-[20px] border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-lg font-semibold text-slate-600 sm:col-span-2 xl:col-span-3">
+                  <div className="dashboard-card-subtle border-dashed px-4 py-8 text-lg font-semibold text-slate-600 sm:col-span-2 xl:col-span-3">
                     {activeMetricPanel.empty}
                   </div>
                 )}
               </div>
 
               {activeMetricPanel.items.length > METRIC_PANEL_PAGE_SIZE ? (
-                <div className="mt-4 flex flex-col gap-3 rounded-[20px] border border-slate-200 bg-white px-4 py-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-                  <div className="text-sm text-slate-500">
+                <div className="dashboard-card-subtle mt-4 flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="dashboard-body">
                     Showing{" "}
                     <span className="font-semibold text-slate-900">
                       {(metricPanelPage - 1) * METRIC_PANEL_PAGE_SIZE + 1}
@@ -1459,7 +1361,7 @@ const Dashboard = () => {
                       type="button"
                       onClick={() => setMetricPanelPage((current) => Math.max(1, current - 1))}
                       disabled={metricPanelPage === 1}
-                      className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="dashboard-button-secondary rounded-full px-3 py-2 text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Previous
                     </button>
@@ -1475,7 +1377,7 @@ const Dashboard = () => {
                           onClick={() => setMetricPanelPage(page)}
                           className={`h-9 min-w-[36px] rounded-full border px-3 text-xs font-bold transition ${
                             isActive
-                              ? "border-cyan-600 bg-cyan-600 text-white shadow-[0_10px_24px_rgba(8,145,178,0.22)]"
+                              ? "border-blue-600 bg-blue-600 text-white shadow-[0_10px_24px_rgba(37,99,235,0.18)]"
                               : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
                           }`}
                         >
@@ -1490,7 +1392,7 @@ const Dashboard = () => {
                         setMetricPanelPage((current) => Math.min(activeMetricPanelTotalPages, current + 1))
                       }
                       disabled={metricPanelPage === activeMetricPanelTotalPages}
-                      className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="dashboard-button-secondary rounded-full px-3 py-2 text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Next
                     </button>
@@ -1502,16 +1404,16 @@ const Dashboard = () => {
 
           <section
             id="dashboard-stay-overview"
-            className="grid items-start gap-4 xl:grid-cols-[minmax(0,1.62fr)_minmax(280px,0.68fr)]"
+            className="flex w-full flex-col gap-6"
           >
-            <div className="self-start rounded-[28px] border border-white/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.95)_0%,rgba(248,251,255,0.92)_100%)] p-4 shadow-[0_24px_58px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
+            <div className="dashboard-card w-full self-start p-4 sm:p-5">
               <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                 <div>
-                  <p className="text-xl font-semibold uppercase tracking-[0.22em] text-slate-900 sm:text-[1.25rem]">
+                  <p className="dashboard-label text-blue-600">
                     Stay Overview
                   </p>
 
-                  <p className="mt-2 text-lg font-medium leading-relaxed text-slate-900 sm:text-2xl">
+                  <p className="dashboard-subheading mt-2">
                     "Shows all room statuses for the selected date."
                   </p>
                 </div>
@@ -1522,8 +1424,8 @@ const Dashboard = () => {
                     onClick={() => navigate("/dashboard")}
                     className={`rounded-full border px-4 py-2 text-[11px] font-bold uppercase tracking-[0.18em] transition ${
                       activeDashboardTab === "main"
-                        ? "border-slate-900 bg-slate-900 text-white shadow-[0_12px_30px_rgba(15,23,42,0.18)]"
-                        : "border-slate-200 bg-white text-slate-900 hover:border-blue-500 hover:bg-blue-600 hover:text-white"
+                        ? "dashboard-button-primary"
+                        : "dashboard-button-secondary"
                     }`}
                   >
                     Main Dashboard
@@ -1533,8 +1435,8 @@ const Dashboard = () => {
                     onClick={() => navigate("/stayover")}
                     className={`rounded-full px-4 py-2 text-[11px] font-bold uppercase tracking-[0.18em] transition ${
                       activeDashboardTab === "stay"
-                        ? "bg-gradient-to-r from-cyan-600 to-blue-500 text-white shadow-[0_12px_30px_rgba(37,99,235,0.22)]"
-                        : "border border-cyan-200 bg-white text-cyan-700 hover:border-blue-500 hover:bg-blue-600 hover:text-white"
+                        ? "dashboard-button-primary"
+                        : "dashboard-button-secondary border"
                     }`}
                   >
                     Stay Overview
@@ -1550,9 +1452,9 @@ const Dashboard = () => {
                     return (
                       <div
                         key={`inline-${day.date}`}
-                        className={`overflow-hidden rounded-[20px] border shadow-sm transition ${
+                        className={`overflow-hidden rounded-xl border shadow-sm transition ${
                           isExpanded
-                            ? "border-cyan-300 bg-cyan-50/40 shadow-[0_14px_30px_rgba(8,145,178,0.12)]"
+                            ? "border-blue-200 bg-slate-50/60 shadow-[0_14px_30px_rgba(37,99,235,0.08)]"
                             : "border-slate-200 bg-white"
                         }`}
                       >
@@ -1564,14 +1466,14 @@ const Dashboard = () => {
                           <div
                             className={`flex items-center justify-between gap-3 border-r px-4 py-4 text-lg font-bold ${
                               isExpanded
-                                ? "border-cyan-200 bg-cyan-100/80 text-cyan-900"
-                                : "border-slate-200 bg-slate-50 text-slate-700"
+                                ? "border-slate-200 bg-slate-50 text-slate-900"
+                                : "border-slate-200 bg-white text-slate-700"
                             }`}
                           >
                             <span>{formatDateLabel(day.date)}</span>
                             <span
-                              className={`flex h-10 w-10 items-center justify-center rounded-full border bg-white text-slate-500 shadow-sm transition-transform duration-500 ease-out ${
-                                isExpanded ? "rotate-180 border-cyan-200 text-cyan-700" : "rotate-0 border-slate-200"
+                              className={`flex h-10 w-10 items-center justify-center rounded-full border bg-transparent text-slate-500 shadow-sm transition-transform duration-500 ease-out ${
+                                isExpanded ? "rotate-180 border-blue-200 text-blue-700" : "rotate-0 border-slate-200"
                               }`}
                             >
                               <FaChevronDown className="text-base" />
@@ -1582,11 +1484,11 @@ const Dashboard = () => {
                             <div
                               key={`inline-${day.date}-${key}`}
                               className={`border-r px-3 py-3 text-center text-lg last:border-r-0 ${
-                                isExpanded ? "border-cyan-200 bg-cyan-50/40" : "border-slate-200 bg-white"
+                                isExpanded ? "border-slate-200 bg-slate-50/40" : "border-slate-200 bg-white"
                               }`}
                             >
                               <div className="text-lg font-black text-slate-900">{BOARD_BUCKET_META[key].label}</div>
-                              <div className={`mt-1 text-base font-semibold ${isExpanded ? "text-cyan-700" : "text-slate-500"}`}>
+                              <div className={`mt-1 text-base font-semibold ${isExpanded ? "text-blue-700" : "text-slate-500"}`}>
                                 {day.board[key].length} rooms
                               </div>
                             </div>
@@ -1613,19 +1515,19 @@ const Dashboard = () => {
 
 
               <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="text-xs font-semibold text-slate-500">
+                <div className="dashboard-label normal-case tracking-[0.08em] text-slate-500">
                   Selected date: {formatDateLabel(selectedDate)}
                 </div>
-                <div className="inline-flex flex-wrap items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 shadow-sm sm:ml-auto">
+                <div className="dashboard-card-subtle inline-flex flex-wrap items-center gap-2 rounded-full px-3 py-2 shadow-sm sm:ml-auto">
                   <button
                     type="button"
                     onClick={() => jumpBoardWindow(addDays(boardStartDate, -1))}
-                    className="inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-cyan-600 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-white shadow-sm transition hover:bg-cyan-700"
+                    className="dashboard-button-primary inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-[0.16em]"
                   >
                     Previous
                   </button>
-                  <div className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 text-sm font-medium text-slate-700">
-                    <FaCalendarAlt className="text-cyan-600" />
+                  <div className="dashboard-button-secondary inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium text-slate-700">
+                    <FaCalendarAlt className="text-blue-600" />
                     <input
                       type="date"
                       value={boardStartDate}
@@ -1636,7 +1538,7 @@ const Dashboard = () => {
                   <button
                     type="button"
                     onClick={() => jumpBoardWindow(addDays(boardStartDate, 1))}
-                    className="inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-cyan-600 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-white shadow-sm transition hover:bg-cyan-700"
+                    className="dashboard-button-primary inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-[0.16em]"
                     >
                     Next
                   </button>
@@ -1644,177 +1546,165 @@ const Dashboard = () => {
               </div>
             </div>
 
-              <div className="grid gap-4 self-start">
-              <div className="h-fit rounded-[28px] border border-white/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.95)_0%,rgba(249,247,255,0.92)_100%)] p-4 shadow-[0_24px_58px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
-                <div className="mb-4 flex items-center justify-between">
-                  <div>
-                    <p className="text-[16px] font-semibold uppercase tracking-[0.26em] text-violet-500">
-                      Notifications
-                    </p>
-                    <h3 className="mt-1 text-2xl font-bold text-slate-900">Messages and updates</h3>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setNotificationOpen(true)}
-                    className="flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-3 py-1 text-xl font-semibold text-violet-700 transition hover:bg-violet-100"
-                  >
-                    <FaBell />
-                    {dashboardNotifications.length}
-                  </button>
+            <div className="grid w-full items-stretch gap-5 lg:grid-cols-2">
+            <div className="dashboard-card flex h-full w-full self-start p-4 sm:p-5">
+              <div className="flex w-full flex-col">
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <p className="dashboard-label text-blue-600">
+                    Quick Actions
+                  </p>
+                  <h3 className="dashboard-heading mt-1">Daily shortcuts</h3>
                 </div>
-
-                <div className="max-h-[260px] space-y-3 overflow-y-auto pr-1">
-                  {dashboardNotifications.length ? (
-                    dashboardNotifications.map((item) => (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => item.route && navigate(item.route)}
-                        className="w-full rounded-[18px] border border-slate-200 bg-white px-4 py-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <div className="text-xl font-semibold text-slate-900">{item.title}</div>
-                            <div className="mt-1 text-[14px] leading-5 text-slate-500">{item.message}</div>
-                          </div>
-                          <div className="rounded-full bg-slate-50 px-2.5 py-1 text-[15px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-                            {new Date(item.createdAt || Date.now()).toLocaleTimeString("en-IN", {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </div>
-                        </div>
-                      </button>
-                    ))
-                  ) : (
-                    <div className="rounded-[18px] border border-dashed border-slate-200 bg-slate-50 px-4 py-5 text-sm text-slate-500">
-                      No notifications yet. Booking, cleaning aur messages yahan show honge.
-                    </div>
-                  )}
-                </div>
+                <button
+                  type="button"
+                  onClick={() => loadDashboardData(true)}
+                  className="dashboard-button-secondary rounded-full p-2 text-slate-600"
+                >
+                  <FaSyncAlt className={refreshingDashboard ? "animate-spin" : ""} />
+                </button>
               </div>
-
-              <div className="rounded-[28px] border border-white/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.95)_0%,rgba(246,251,248,0.92)_100%)] p-4 shadow-[0_24px_58px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
-                <div className="mb-4 flex items-center justify-between">
-                  <div>
-                    <p className="text-[16px] font-semibold uppercase tracking-[0.24em] text-emerald-600">
-                      Quick Actions
-                    </p>
-                    <h3 className="mt-1 text-2xl font-bold text-slate-900">Daily shortcuts</h3>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => loadDashboardData(true)}
-                    className="rounded-full border border-slate-200 bg-slate-50 p-2 text-slate-600 transition hover:text-slate-900"
-                  >
-                    <FaSyncAlt className={refreshingDashboard ? "animate-spin" : ""} />
-                  </button>
-                </div>
-                <div className="space-y-3">
-                  {quickActions.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <button
-                        key={item.label}
-                        type="button"
-                        onClick={() =>
-                          navigate(
-                            item.route,
-                            item.route === "/hotel/guest"
-                              ? { state: { resetBookingDraft: true } }
-                              : item.route === "/housekeeping" && item.label === "Cleaning Log"
-                                ? { state: { openOption: "cleaning-log" } }
-                                : undefined,
-                          )
-                        }
-                        className="relative flex w-full items-center justify-between overflow-visible rounded-[18px] border border-slate-200 bg-white px-4 py-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-                      >
-                        {item.label === "Cleaning Log" ? (
-                          <span className="absolute -right-2 -top-2 z-20 flex h-7 w-7 items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 text-[18px] font-black text-emerald-700 shadow-[0_8px_20px_rgba(16,185,129,0.18)]">
-                            {selectedDaySnapshot.cleaning.length}
-                          </span>
-                        ) : null}
-                        <div className="flex items-center gap-3">
-                          <span className={`flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-r ${item.tone} text-white`}>
-                            <Icon />
-                          </span>
-                          <div className="min-w-0">
-                            <div className="text-base font-semibold text-slate-900 sm:text-lg">{item.label}</div>
-                            <div className="text-2xl text-slate-500">{item.helper}</div>
-                            <div className="mt-1 text-sm font-semibold text-slate-700 sm:text-[15px]">
-                              {item.detail}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-base font-black text-slate-900 sm:text-lg">{item.liveValue}</div>
-                          <div className="text-[15px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-                            {item.liveLabel}
-                          </div>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="rounded-[28px] border border-white/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.95)_0%,rgba(255,248,250,0.92)_100%)] p-5 shadow-[0_24px_58px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-6">
-                <p className="text-[17px] font-semibold uppercase tracking-[0.22em] text-rose-500">
-                  Front Office Alert
-                </p>
-                <h3 className="mt-2 text-2xl font-bold text-slate-900 sm:text-[26px]">Actionable room issues</h3>
-                <div className="mt-5 space-y-3.5">
-                  {actionableAlerts.map((item) => (
-                    <div
-                      key={item.key}
-                      className={`rounded-[18px] border px-4 py-4 sm:px-5 ${item.tone}`}
+              <div className="space-y-3">
+                {quickActions.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <button
+                      key={item.label}
+                      type="button"
+                      onClick={() =>
+                        navigate(
+                          item.route,
+                          item.route === "/hotel/guest"
+                            ? { state: { resetBookingDraft: true } }
+                            : item.route === "/housekeeping" && item.label === "Cleaning Log"
+                              ? { state: { openOption: "cleaning-log" } }
+                              : undefined,
+                        )
+                      }
+                      className="dashboard-card-subtle relative flex w-full items-center justify-between overflow-visible px-4 py-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
                     >
-                      <div className="flex items-start gap-3.5">
-                        <FaExclamationTriangle className={`mt-0.5 text-lg ${item.iconClass}`} />
-                        <div>
-                          <div className="text-base font-semibold text-slate-900 sm:text-lg">{item.title}</div>
-                          <div className="text-sm text-slate-600 sm:text-[15px]">{item.detail}</div>
+                      {item.label === "Cleaning Log" ? (
+                        <span className="absolute -right-2 -top-2 z-20 flex h-7 w-7 items-center justify-center rounded-full border border-emerald-200 bg-white text-[18px] font-black text-emerald-700 shadow-[0_8px_20px_rgba(16,185,129,0.12)]">
+                          {selectedDaySnapshot.cleaning.length}
+                        </span>
+                      ) : null}
+                      <div className="flex items-center gap-3">
+                        <span className={`flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-r ${item.tone} text-white`}>
+                          <Icon />
+                        </span>
+                        <div className="min-w-0">
+                          <div className="dashboard-subheading text-slate-900">{item.label}</div>
+                          <div className="dashboard-body">{item.helper}</div>
+                          <div className="mt-1 text-sm font-semibold text-slate-700 sm:text-[15px]">
+                            {item.detail}
+                          </div>
                         </div>
                       </div>
+                      <div className="text-right">
+                        <div className="text-base font-black text-slate-900 sm:text-lg">{item.liveValue}</div>
+                        <div className="dashboard-label mt-1 text-slate-400">
+                          {item.liveLabel}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            </div>
+
+            <div className="dashboard-card flex h-full w-full self-start p-5 sm:p-6">
+              <div className="flex w-full flex-col">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <p className="dashboard-label text-amber-500">
+                    Front Office Alert
+                  </p>
+                  <h3 className="dashboard-heading mt-2">Actionable room issues</h3>
+                </div>
+                <button
+                  type="button"
+                  className="dashboard-button-secondary inline-flex w-fit items-center px-4 py-2 text-sm font-semibold text-amber-700"
+                >
+                  Review All
+                </button>
+              </div>
+
+              <div className="dashboard-card-subtle mt-6 p-4 sm:p-5">
+                <div className="mb-4 flex items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                  <div className="dashboard-heading">Alerts</div>
+                  <button
+                    type="button"
+                    className="text-sm font-semibold text-amber-700 transition hover:text-amber-800"
+                  >
+                    Clear All
+                  </button>
+                </div>
+
+                <div className="space-y-1.5">
+                {actionableAlerts.map((item) => {
+                  const accentMap = {
+                    attention: {
+                      dot: "bg-rose-600",
+                      line: "border-rose-100/80",
+                    },
+                    confirmed: {
+                      dot: "bg-amber-600",
+                      line: "border-amber-100/80",
+                    },
+                    cleaning: {
+                      dot: "bg-slate-500",
+                      line: "border-slate-100",
+                    },
+                    "checked-in": {
+                      dot: "bg-sky-600",
+                      line: "border-sky-100/80",
+                    },
+                  };
+
+                  const accent = accentMap[item.key] || {
+                    dot: "bg-slate-500",
+                    line: "border-slate-100",
+                  };
+
+                  return (
+                  <div
+                    key={item.key}
+                    className={`rounded-xl border bg-white px-3 py-3 transition hover:bg-slate-50 sm:px-4 ${accent.line}`}
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className={`mt-[9px] h-3 w-3 shrink-0 rounded-full ${accent.dot}`} />
+                      <div className="min-w-0">
+                        <div className="dashboard-subheading text-slate-900">{item.title}</div>
+                        <div className="dashboard-body mt-1">{item.detail}</div>
+                      </div>
                     </div>
-                  ))}
+                  </div>
+                  );
+                })}
                 </div>
               </div>
+            </div>
+            </div>
             </div>
           </section>
 
           <div className="grid w-full grid-cols-1 gap-6 xl:grid-cols-3 xl:items-stretch">
-            <div className="flex h-full min-w-0 flex-col rounded-[28px] border border-white/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.95)_0%,rgba(248,252,255,0.92)_100%)] px-4 py-5 shadow-[0_24px_58px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:px-5 sm:py-6">
-              <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-[15px] font-semibold uppercase tracking-[0.26em] text-emerald-300">
-                    Revenue Trend
-                  </p>
-                  <h2 className="mt-1 text-[1.25rem] font-bold text-slate-900">Reservation statistics</h2>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => navigate("/accounts")}
-                  className="rounded-full bg-gradient-to-r from-teal-600 to-emerald-500 px-4 py-2.5 text-[12px] font-bold text-white shadow-[0_12px_30px_rgba(13,148,136,0.24)] transition hover:-translate-y-0.5"
-                >
-                  Open Accounts
-                </button>
-              </div>
-              <div className="min-h-0 flex-1">
+            <div className="dashboard-card flex h-full min-w-0 flex-col px-5 py-5 sm:px-6 sm:py-6">
+              <div className="min-h-0 h-[320px] flex-1 sm:h-[360px]">
                 <MonthlyRevenueChart />
               </div>
             </div>
-
-            <div className="flex h-full min-w-0 flex-col rounded-[28px] border border-white/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.95)_0%,rgba(255,250,244,0.92)_100%)] p-4 shadow-[0_24px_58px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
+            <div className="dashboard-card flex h-full min-w-0 flex-col p-4 sm:p-5">
               <FoodSalesChart />
             </div>
 
-            <div className="flex h-full min-w-0 flex-col rounded-[28px] border border-white/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.95)_0%,rgba(247,252,249,0.92)_100%)] p-4 shadow-[0_24px_58px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
+            <div className="dashboard-card flex h-full min-w-0 flex-col p-4 sm:p-5">
               <div className="w-full">
-                <p className="text-[15px] font-semibold uppercase tracking-[0.26em] text-emerald-300">
+                <p className="dashboard-label text-blue-600">
                   Room Mix
                 </p>
-                <div className="mb-3 mt-1 text-[15px] font-bold text-slate-900">Occupancy overview</div>
+                <div className="dashboard-subheading mb-3 mt-1 text-slate-900">Occupancy overview</div>
                 <RoomOccupancyChart
                   rooms={rooms}
                   occupiedRooms={liveOccupiedRooms || apiMetrics.occupiedRooms || 0}
@@ -1973,8 +1863,7 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              {(String(selectedRoom.roomData?.status || "").toLowerCase().includes("clean") ||
-                String(selectedRoom.roomData?.housekeepingLabel || "").toLowerCase().includes("dirty")) && (
+              {isCleaningTaskEditable(selectedRoom) && (
                 <div className="rounded-[1.5rem] border border-violet-200 bg-violet-50 p-4 shadow-sm">
                   <div className="flex items-center justify-between gap-3">
                     <div>

@@ -68,6 +68,8 @@ const ROLES = {
   ASSIGNMENTS: ["admin", "manager", "receptionist", "housekeeping", "accountant", "staff"],
 };
 
+const HEADER_HEIGHT = 92;
+
 function Layout({ children, setIsAuthenticated }) {
   const location = useLocation();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -133,6 +135,7 @@ function Layout({ children, setIsAuthenticated }) {
         isMobile={isMobile}
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
+        setIsAuthenticated={setIsAuthenticated}
       />
       <div
         className="flex min-h-screen flex-col transition-all duration-300"
@@ -141,10 +144,15 @@ function Layout({ children, setIsAuthenticated }) {
           width: isMobile ? "100%" : `calc(100% - ${sidebarWidth}px)`,
         }}
       >
-        <Header setIsAuthenticated={setIsAuthenticated} />
+        <Header
+          setIsAuthenticated={setIsAuthenticated}
+          sidebarOffset={isMobile ? 0 : sidebarWidth}
+          isMobile={isMobile}
+        />
         <div
           ref={scrollContainerRef}
-          className="flex-1 overflow-y-auto pt-[70px]"
+          className="flex-1 overflow-y-auto"
+          style={{ paddingTop: `${HEADER_HEIGHT}px` }}
         >
           <div className="p-3 sm:p-4 lg:p-5">{children}</div>
         </div>

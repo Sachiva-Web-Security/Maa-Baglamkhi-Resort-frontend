@@ -859,7 +859,10 @@ const Stayover = () => {
 
           <div className="mt-5 flex flex-wrap gap-2">
             {Object.entries(STATUS_META).map(([key, value]) => (
-              <div key={key} className={`rounded-full px-3 py-1 text-sm font-bold ${value.badge}`}>
+              <div
+                key={key}
+                className={`rounded-full px-4 py-2 text-[13px] font-extrabold tracking-[0.01em] ${value.badge}`}
+              >
                 {value.label}
               </div>
             ))}
@@ -953,13 +956,13 @@ const Stayover = () => {
                                 <div className="text-sm font-bold uppercase tracking-[0.14em] text-slate-500">
                                   {room.categoryName || "Uncategorized"}
                                 </div>
-                                <div
-                                  className={`mt-2 inline-flex rounded-full px-3 py-1 text-sm font-bold ${
-                                    STATUS_META[room.status]?.badge || STATUS_META.available.badge
-                                  }`}
-                                >
-                                  {STATUS_META[room.status]?.label || "Available"}
-                                </div>
+                                  <div
+                                    className={`mt-2 inline-flex rounded-full px-4 py-2 text-[13px] font-extrabold tracking-[0.01em] ${
+                                      STATUS_META[room.status]?.badge || STATUS_META.available.badge
+                                    }`}
+                                  >
+                                    {STATUS_META[room.status]?.label || "Available"}
+                                  </div>
                               </button>
                               <button
                                 type="button"
@@ -1216,35 +1219,7 @@ const Stayover = () => {
               </div>
             </div>
 
-            <div className="rounded-[28px] border border-slate-200/70 bg-[linear-gradient(135deg,#f8fdff_0%,#eff8ff_100%)] p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
-              <p className="text-sm font-bold uppercase tracking-[0.28em] text-sky-700 ">Quick Direction</p>
-              <h3 className="mt-2 text-2xl font-black text-slate-900">Front desk shortcuts</h3>
-              <div className="mt-4 space-y-3">
-                <button
-                  type="button"
-                  onClick={() => navigate("/dashboard")}
-                  className="flex w-full items-center justify-between rounded-[20px] bg-white px-4 py-4 text-left shadow-sm transition hover:-translate-y-0.5"
-                >
-                  <span>
-                    <span className="block text-base font-black text-slate-900">Open Main Dashboard</span>
-                    <span className="block text-sm font-medium text-slate-500">Booking master style overview wapas dekhne ke liye</span>
-                  </span>
-                  <FaArrowRight className="text-sky-600" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => navigate("/hotel/room")}
-                  className="flex w-full items-center justify-between rounded-[20px] bg-white px-4 py-4 text-left shadow-sm transition hover:-translate-y-0.5"
-                >
-                  <span>
-                    <span className="block text-base font-black text-slate-900">Manage Room Inventory</span>
-                    <span className="block text-sm font-medium text-slate-500">Category wise rooms add aur edit karne ke liye</span>
-                  </span>
-                  <FaArrowRight className="text-sky-600" />
-                </button>
-              </div>
             </div>
-          </div>
 
           <div className="space-y-6">
             <div className="rounded-[28px] border border-slate-200/70 bg-white/85 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">

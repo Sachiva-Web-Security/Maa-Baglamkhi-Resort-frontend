@@ -237,7 +237,7 @@ const Advance = () => {
                   Guest
                 </p>
                 <p className="mt-2 text-lg font-black text-slate-900">
-                  {guestDraft.guest_name || "Walk-in Guest"}
+                  {guestDraft.guestName || guestDraft.guest_name || "Walk-in Guest"}
                 </p>
               </div>
 
@@ -325,8 +325,8 @@ const Advance = () => {
                   <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
                     Guest
                   </div>
-                  <div className="mt-2 text-xl font-black text-slate-900">
-                    {guestDraft.guest_name || "Walk-in Guest"}
+                <div className="mt-2 text-xl font-black text-slate-900">
+                    {guestDraft.guestName || guestDraft.guest_name || "Walk-in Guest"}
                   </div>
                   <div className="mt-2 text-sm text-slate-500">
                     {guestDraft.mobile || "No mobile"} | {guestDraft.city || "No city"}

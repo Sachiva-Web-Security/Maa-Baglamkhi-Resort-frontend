@@ -3,9 +3,7 @@ import {
   FaPlus, FaTimes, FaCheck, FaSyncAlt, FaExclamationTriangle,
   FaChevronDown, FaSearch, FaFilter, FaDownload,
 } from "react-icons/fa";
-import axios from "axios";
-
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
+import API from "../../api";
 
 const PRIORITY_CONFIG = {
   Urgent: { badge: "bg-rose-100 text-rose-700 border-rose-300",   dot: "bg-rose-500",    icon: FaExclamationTriangle },
@@ -46,7 +44,7 @@ export default function Assignments() {
   const fetchAssignments = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${API_BASE}/assignments`);
+      const res = await API.get("/assignments");
       setAssignments(res.data);
     } catch { setAssignments([]); }
     finally { setLoading(false); }
@@ -65,7 +63,7 @@ export default function Assignments() {
     if (!form.staffName || !form.task) return;
     setSaving(true);
     try {
-      await axios.post(`${API_BASE}/assignments`, form);
+      await API.post("/assignments", form);
       setForm({ staffName: "", roomNumber: "", task: "", priority: "Normal", assignedBy: localStorage.getItem("username") || "", dueTime: "", notes: "" });
       setShowForm(false);
       fetchAssignments();
@@ -75,7 +73,7 @@ export default function Assignments() {
 
   const handleStatusChange = async (id, status) => {
     try {
-      await axios.put(`${API_BASE}/assignments/${id}`, { status });
+      await API.put(`/assignments/${id}`, { status });
       setAssignments(prev => prev.map(a => a.id === id ? { ...a, status } : a));
     } catch { /* ignore */ }
   };
@@ -83,7 +81,7 @@ export default function Assignments() {
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this assignment?")) return;
     try {
-      await axios.delete(`${API_BASE}/assignments/${id}`);
+      await API.delete(`/assignments/${id}`);
       fetchAssignments();
     } catch { /* ignore */ }
   };

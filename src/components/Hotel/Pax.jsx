@@ -109,10 +109,23 @@ const Pax = () => {
       return;
     }
 
+    if (!rooms.length) {
+      showNotice("Please select at least one room before saving pax details.", "Rooms Required", "warning");
+      return;
+    }
+
     try {
+      const rows = rooms.map((room) => ({
+        roomNumber: room.name,
+        adults: Number(paxData[room.name]?.adults || 0),
+        children: Number(paxData[room.name]?.children || 0),
+        mealPlan: "EP",
+      }));
+
       await API.post(`/hotel/pax/${bookingId}`, {
-        adults: Object.values(paxData).reduce((sum, row) => sum + (row.adults || 0), 0),
-        children: Object.values(paxData).reduce((sum, row) => sum + (row.children || 0), 0),
+        rows,
+        adults: rows.reduce((sum, row) => sum + row.adults, 0),
+        children: rows.reduce((sum, row) => sum + row.children, 0),
         mealPlan: "EP",
       });
 

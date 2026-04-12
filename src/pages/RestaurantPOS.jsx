@@ -1,149 +1,189 @@
 import React from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
+  FaConciergeBell,
   FaCashRegister,
+  FaClipboardList,
+  FaLayerGroup,
+  FaExternalLinkAlt,
+  FaPlusCircle,
   FaReceipt,
-  FaStore,
+  FaRegCreditCard,
+  FaStar,
+  FaThLarge,
   FaUtensils,
-  FaBed,
 } from "react-icons/fa";
-
-const links = [
-  { label: "Tables", path: "/restaurant", icon: FaUtensils },
-  { label: "Payment", path: "/restaurant/payment", icon: FaReceipt },
-  { label: "Bills", path: "/restaurant/payment-bills", icon: FaCashRegister },
-  { label: "Room Orders", path: "/restaurant/room-items", icon: FaBed },
-  { label: "Add Menu", path: "/restaurant/add-menu-item", icon: FaStore },
-];
+import { getCurrentActor } from "../utils/currentActor";
 
 const RestaurantPOS = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const actor = getCurrentActor();
+
+  const links = actor.isWaiter
+    ? [
+        { label: "My Tables", path: "/restaurant", icon: FaThLarge },
+        { label: "Payment", path: "/restaurant/payment", icon: FaRegCreditCard },
+        { label: "Bills", path: "/restaurant/payment-bills", icon: FaClipboardList },
+      ]
+    : [
+        { label: "Tables", path: "/restaurant", icon: FaThLarge },
+        { label: "Payment", path: "/restaurant/payment", icon: FaRegCreditCard },
+        { label: "Bills", path: "/restaurant/payment-bills", icon: FaClipboardList },
+        { label: "Room Orders", path: "/restaurant/room-items", icon: FaStar },
+        { label: "Add Menu", path: "/restaurant/add-menu-item", icon: FaPlusCircle },
+      ];
+
+  const isLinkActive = (path) =>
+    location.pathname === path ||
+    (path !== "/restaurant" && location.pathname.startsWith(path));
 
   const activeLink =
-    links.find((link) => location.pathname === link.path) ||
-    links.find(
-      (link) =>
-        location.pathname.startsWith(link.path) && link.path !== "/restaurant",
-    ) ||
+    links.find((link) => isLinkActive(link.path)) ||
     links[0];
 
   const heroStats = [
-    { label: "Service Zone", value: "Restaurant + POS" },
-    { label: "Kitchen Sync", value: "Live Queue" },
-    { label: "Action Flow", value: "Tables to Billing" },
+    {
+      label: actor.isWaiter ? "WAITER STATION" : "RESTAURANT + POS",
+      value: actor.isWaiter ? "Active Service" : "Active Station",
+      icon: FaConciergeBell,
+    },
+    {
+      label: "LIVE QUEUE",
+      value: actor.isWaiter ? "Orders In Motion" : "4 Pending",
+      icon: FaLayerGroup,
+    },
+    {
+      label: actor.isWaiter ? "BILLING FLOW" : "TABLES TO BILLING",
+      value: "Ready to Close",
+      icon: FaCashRegister,
+    },
   ];
+
+  const heroTitle = actor.isWaiter
+    ? "Operational snapshot for waiter"
+    : "Operational snapshot for restaurant";
+
+  const heroCopy = actor.isWaiter
+    ? "Manage live table activity, kitchen sync, and point-of-sale handoff from one unified waiter workspace."
+    : "Manage live floor activity, kitchen sync, and point-of-sale transactions from one unified resort sanctuary.";
+
+  const activeSectionLabel = activeLink?.label || (actor.isWaiter ? "My Tables" : "Tables");
+
   return (
-    <div className="relative isolate w-full overflow-x-hidden bg-[linear-gradient(135deg,#f5fbff_0%,#f3f8f4_28%,#fff8f1_58%,#f8fafc_100%)] p-3 transition-all duration-300 sm:p-4 lg:p-5">
+    <div className="relative isolate w-full overflow-x-hidden bg-[#f5f7fb] p-3 sm:p-4 lg:p-5">
       <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute left-[-8%] top-[-6%] h-72 w-72 rounded-full bg-cyan-200/45 blur-3xl sm:h-96 sm:w-96" />
-        <div className="absolute right-[-10%] top-[8%] h-72 w-72 rounded-full bg-amber-200/45 blur-3xl sm:h-[28rem] sm:w-[28rem]" />
-        <div className="absolute bottom-[18%] left-[18%] h-56 w-56 rounded-full bg-emerald-200/30 blur-3xl sm:h-80 sm:w-80" />
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.55)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.45)_1px,transparent_1px)] bg-[size:72px_72px] opacity-25" />
+        <div className="absolute left-[-8%] top-[-10%] h-72 w-72 rounded-full bg-blue-200/45 blur-3xl sm:h-96 sm:w-96" />
+        <div className="absolute right-[-12%] top-[3%] h-80 w-80 rounded-full bg-cyan-200/40 blur-3xl sm:h-[28rem] sm:w-[28rem]" />
+        <div className="absolute bottom-[10%] left-[22%] h-60 w-60 rounded-full bg-sky-100/50 blur-3xl sm:h-80 sm:w-80" />
       </div>
 
-      <div className="w-full space-y-3">
-        <section className="overflow-hidden rounded-[20px] border border-slate-900/10 bg-[linear-gradient(120deg,#071b34_0%,#0d4a53_52%,#162d45_100%)] px-3 py-2.5 shadow-[0_14px_32px_rgba(15,23,42,0.10)] sm:px-4 sm:py-3">
-          <div className="relative z-[1] space-y-2.5">
-            <div className="flex flex-col gap-2.5 xl:flex-row xl:items-start xl:justify-between">
+      <div className="w-full space-y-5">
+        <section className="overflow-hidden rounded-[26px] bg-[linear-gradient(135deg,#135db9_0%,#1768b8_34%,#18739f_70%,#0b837d_100%)] px-6 py-6 shadow-[0_20px_40px_rgba(17,94,183,0.18)] sm:px-7 sm:py-7">
+          <div className="space-y-5">
+            <div className="max-w-3xl space-y-3">
               <div className="space-y-2">
-                <p className="text-xl font-bold uppercase tracking-[0.26em] text-cyan-200 sm:text-base   text-3xl">
-                Resort Command Center
+                <h1 className="text-[34px] font-bold leading-tight tracking-[-0.03em] text-white sm:text-[46px]">
+                  {heroTitle}
+                </h1>
+                <p className="max-w-3xl text-base font-medium leading-7 text-blue-50/92 sm:text-[19px] sm:leading-8">
+                  {heroCopy}
                 </p>
-                <div className="space-y-1">
-                  <h1 className="text-2xl font-black leading-tight text-white sm:text-4xl">
-                  Operational snapshot for restaurant
-                  </h1>
-                  <p className="max-w-3xl text-base leading-6 text-slate-100/88 sm:text-xl sm:leading-8">
-                  Track tables, billing flow, room orders, and menu activity
-                  from the same dashboard theme used across hotel operations.
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => navigate(activeLink.path)}
-                    className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-base font-bold text-slate-900 shadow-[0_10px_22px_rgba(255,255,255,0.12)] transition hover:-translate-y-0.5"
-                  >
-                    <FaUtensils className="text-cyan-600" />
-                    Open Active Section
-                  </button>
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={() => navigate(activeLink.path)}
+                  className="inline-flex items-center gap-2.5 rounded-xl bg-white px-5 py-3.5 text-base font-bold text-[#1155b6] shadow-[0_10px_24px_rgba(7,23,65,0.14)] transition hover:-translate-y-0.5"
+                >
+                  <FaExternalLinkAlt className="text-[15px]" />
+                  Open Active Section
+                </button>
+
+                {!actor.isWaiter ? (
                   <button
                     type="button"
                     onClick={() => navigate("/kitchen")}
-                    className="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-base font-semibold text-white backdrop-blur-md"
+                    className="inline-flex items-center gap-2.5 rounded-xl border border-white/18 bg-white/10 px-5 py-3.5 text-base font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md transition hover:bg-white/14"
                   >
+                    <FaUtensils className="text-[15px]" />
                     Go To Kitchen
                   </button>
-                </div>
-              </div>
-
-              <div className="grid w-full gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:w-[480px]">
-                {heroStats.map((item) => (
-                  <div
-                    key={item.label}
-                    className="min-w-0 rounded-[14px] border border-white/12 bg-white/10 px-3 py-3 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md"
-                  >
-                    <span className="block text-xs font-medium text-slate-100/75 sm:text-sm">
-                      {item.label}
-                    </span>
-                    <div className="mt-2 break-words text-lg font-bold leading-snug sm:text-xl xl:text-2xl">
-                      {item.value}
-                    </div>
-                  </div>
-                ))}
+                ) : null}
               </div>
             </div>
 
-            <div className="rounded-[16px] border border-white/12 bg-white/10 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md">
-              <div className="mb-1.5 flex items-center justify-between gap-3">
-                <p className="text-base font-semibold uppercase tracking-[0.24em] text-cyan-200">
-                  Quick Sections
-                </p>
-              </div>
-              <div className="grid gap-1.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-                  {links.map((link) => {
-                    const Icon = link.icon || FaUtensils;
-                    const active = location.pathname === link.path;
+            <div className="grid gap-3 lg:grid-cols-3">
+              {heroStats.map((item) => {
+                const Icon = item.icon;
 
-                    return (
-                      <button
-                        key={`${link.path}-${link.label}`}
-                        type="button"
-                        onClick={() => navigate(link.path)}
-                        className={`flex items-center gap-2 rounded-[12px] border px-3 py-2 text-left transition hover:-translate-y-0.5 ${
-                          active
-                            ? "border-cyan-300 bg-cyan-50/90 text-slate-900 shadow-[0_12px_28px_rgba(8,145,178,0.10)]"
-                            : "border-white/12 bg-white/90 text-slate-900 hover:border-cyan-300"
-                        }`}
-                      >
-                        <span
-                          className={`mt-0.5 rounded-2xl p-2 ${
-                            active
-                              ? "bg-cyan-100 text-cyan-700"
-                              : "bg-cyan-50 text-cyan-700"
-                          }`}
-                        >
-                          <Icon />
-                        </span>
-                        <span>
-                          <span className="block text-xl font-bold leading-tight">
-                            {link.label}
-                          </span>
-                          <span className="block text-base text-slate-500">
-                            {active ? "Currently open" : "Open this section"}
-                          </span>
-                        </span>
-                      </button>
-                    );
-                  })}
-              </div>
+                return (
+                  <div
+                    key={item.label}
+                    className="rounded-[16px] border border-white/12 bg-white/10 px-5 py-5 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/14 text-[20px] text-white">
+                        <Icon />
+                      </span>
+                      <div className="min-w-0">
+                        <div className="text-xs font-bold uppercase tracking-[0.1em] text-blue-50/75">
+                          {item.label}
+                        </div>
+                        <div className="mt-1.5 text-[30px] font-bold leading-tight text-white">
+                          {item.value}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </section>
 
+        <section className="rounded-[22px] bg-white/86 p-2.5 shadow-[0_14px_28px_rgba(15,23,42,0.06)] ring-1 ring-slate-200/70 backdrop-blur-sm">
+          <div className="flex flex-wrap gap-2">
+            {links.map((link) => {
+              const Icon = link.icon || FaUtensils;
+              const active = isLinkActive(link.path);
+
+              return (
+                <button
+                  key={`${link.path}-${link.label}`}
+                  type="button"
+                  onClick={() => navigate(link.path)}
+                  className={`inline-flex items-center gap-2.5 rounded-[14px] px-5 py-3.5 text-base font-bold transition ${
+                    active
+                      ? "bg-[#1f67df] text-white shadow-[0_12px_20px_rgba(31,103,223,0.22)]"
+                      : "bg-[#eef3fb] text-[#36435d] hover:bg-[#e3ebf9]"
+                  }`}
+                >
+                  <Icon className={`text-[16px] ${active ? "text-white" : "text-[#37558a]"}`} />
+                  {link.label}
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
         <section>
-          <div className="rounded-[22px] border border-white/60 bg-white/80 p-2.5 shadow-[0_12px_28px_rgba(15,23,42,0.07)] backdrop-blur-xl sm:p-3">
+          <div className="rounded-[22px] border border-white/60 bg-white/88 p-2.5 shadow-[0_12px_28px_rgba(15,23,42,0.07)] backdrop-blur-xl sm:p-3">
+            <div className="mb-3 flex items-center justify-between rounded-[18px] bg-[linear-gradient(180deg,#f8fbff_0%,#f1f6ff_100%)] px-4 py-3 ring-1 ring-slate-200/70">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#6a7a96]">
+                  Restaurant Command Center
+                </p>
+                <h2 className="mt-1 text-lg font-bold text-[#1f2a44]">
+                  {activeSectionLabel}
+                </h2>
+              </div>
+              <span className="inline-flex items-center gap-2 rounded-full bg-[#eaf2ff] px-3 py-1.5 text-xs font-bold uppercase tracking-[0.08em] text-[#1f67df]">
+                <FaReceipt className="text-[11px]" />
+                Live workspace
+              </span>
+            </div>
             <Outlet />
           </div>
         </section>
