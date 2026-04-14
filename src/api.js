@@ -31,21 +31,6 @@ API.interceptors.request.use((req) => {
   req.headers["X-Audit-Action"] = inferredAction;
   req.headers["X-Audit-Source"] = "frontend";
 
-  const email = localStorage.getItem("email");
-  if (email) {
-    req.headers["X-Audit-User-Email"] = email;
-  }
-
-  const role = localStorage.getItem("role");
-  if (role) {
-    req.headers["X-User-Role"] = String(role).toLowerCase();
-  }
-
-  const name = localStorage.getItem("name");
-  if (name) {
-    req.headers["X-User-Name"] = name;
-  }
-
   return req;
 });
 

@@ -196,9 +196,10 @@ html, body {
 }
 
 .dashboard-button-secondary:hover {
-  background: #f8fafc;
-  border-color: #94a3b8;
-  color: #1e293b;
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 14px 30px rgba(37, 99, 235, 0.18);
 }
 
 .profile-page {
@@ -293,6 +294,18 @@ html, body {
 @media (min-width: 1024px) {
   .profile-page {
     zoom: 1.12;
+  }
+}
+
+
+
+@supports not (zoom: 1.12) {
+  @media (min-width: 1024px) {
+    .profile-page {
+      transform: scale(1.12);
+      transform-origin: top left;
+      width: calc(100% / 1.12);
+    }
   }
 }
 

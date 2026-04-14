@@ -15,7 +15,7 @@ const TokenPage = () => {
   const [items, setItems] = useState([]);
   const [tokenId, setTokenId] = useState(null);
   const [loading, setLoading] = useState(true);
-  const waiterName = actor.name || (entityType === "Room" ? "Room Service" : "Waiter");
+ const waiterName = actor?.name || (entityType === "Room" ? "Room Service" : "Waiter");
 
   useEffect(() => {
     const loadToken = async () => {

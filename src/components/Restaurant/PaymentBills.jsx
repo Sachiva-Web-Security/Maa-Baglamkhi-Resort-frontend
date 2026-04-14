@@ -135,8 +135,7 @@ const PaymentBills = () => {
         </p>
         <h2 className="mt-3 text-4xl font-black leading-tight">{actor.isWaiter ? "My Payment Bills" : "Payment Bills"}</h2>
         <p className="mt-3 max-w-2xl text-lg leading-8 text-slate-100/85">
-       “After generating the bill, the customer name, mobile number, amount, and payment status will be displayed here in a clean card format.”
-        </p>
+  After generating the bill, the customer name, mobile number, amount, and payment status will be displayed here in a clean card format.     </p>
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[360px_minmax(0,1fr)]">
@@ -171,8 +170,8 @@ const PaymentBills = () => {
             </div>
           ) : (
             <div className="mt-4 rounded-[20px] border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-base text-slate-500">
-              “No bill has been generated yet.”
-            </div>
++              No bill has been generated yet.
++            </div>
           )}
         </div>
 
@@ -311,8 +310,8 @@ const PaymentBills = () => {
             </div>
           ) : (
             <div className="mt-6 rounded-[20px] border border-dashed border-slate-300 bg-slate-50 px-4 py-10 text-center text-base text-slate-500">
-          “After generating the bill, the bill card will appear here.”
-            </div>
++              After generating the bill, the bill card will appear here.
++            </div>
           )}
         </div>
       </div>

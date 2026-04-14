@@ -322,7 +322,7 @@ const INVENTORY_MASTER_API_SECTION_MAP = {
   "purchase-services": "purchase-services",
 };
 
-const API_BACKED_MASTER_SECTIONS = new Set(Object.keys(STORAGE_KEYS));
+const API_BACKED_MASTER_SECTIONS = new Set(Object.keys(INVENTORY_MASTER_API_SECTION_MAP));
 
 const MENU_ITEM_FIELDS = [
   { key: "name", label: "Dish Name", type: "text", required: true },
@@ -581,10 +581,24 @@ const PRESET_MENU_CATEGORY_OPTIONS = Array.from(
 
 function loadStoredValue(key, fallback) {
   try {
-    const raw = localStorage.getItem(key);
+    if (typeof window === "undefined" || !window.localStorage) {
+      return fallback;
+    }
+    const raw = window.localStorage.getItem(key);
     return raw ? JSON.parse(raw) : fallback;
   } catch {
     return fallback;
+  }
+}
+
+function setStoredValue(key, value) {
+  try {
+    if (typeof window === "undefined" || !window.localStorage) {
+      return;
+    }
+    window.localStorage.setItem(key, value);
+  } catch {
+    // Ignore storage write issues such as private mode or quota failures.
   }
 }
 
@@ -640,7 +654,7 @@ function isLowStock(item) {
 // ─── Small Shared Components ──────────────────────────────────────────────────
 
 function FormInput({ field, value, onChange }) {
-  const cls = "w-full rounded-xl border border-slate-200 bg-white px-4 py-4 text-xl text-slate-900 outline-none transition placeholder:text-xl placeholder:text-slate-400 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100";
+  const cls = "w-full rounded-xl border border-slate-200 bg-white px-4 py-4 text-[18px] font-semibold text-slate-950 outline-none transition placeholder:text-[18px] placeholder:text-slate-500 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100";
   if (field.type === "select" && field.allowCustom) {
     const options = Array.isArray(field.options) ? field.options : [];
     const isPresetValue = !value || options.includes(value);
@@ -746,9 +760,24 @@ function MetricCard({ label, value, sub, tone = "default" }) {
 // ─── Form Panel + Table ───────────────────────────────────────────────────────
 
 function FormPanel({ title, subtitle, fields, draft, setDraft, editingId, onSave, onReset, onFieldChange }) {
+  const orderedFields =
+    title === "Stock Transfer"
+      ? [
+          ...["itemName", "toStore", "fromStore", "quantity", "unit", "approvedBy", "notes", "date"]
+            .map((key) => fields.find((field) => field.key === key))
+            .filter(Boolean),
+          ...fields.filter(
+            (field) =>
+              !["itemName", "toStore", "fromStore", "quantity", "unit", "approvedBy", "notes", "date"].includes(
+                field.key,
+              ),
+          ),
+        ]
+      : fields;
+
   const fieldRows = [];
-  for (let index = 0; index < fields.length; index += 2) {
-    fieldRows.push(fields.slice(index, index + 2));
+  for (let index = 0; index < orderedFields.length; index += 2) {
+    fieldRows.push(orderedFields.slice(index, index + 2));
   }
 
   return (
@@ -775,20 +804,20 @@ function FormPanel({ title, subtitle, fields, draft, setDraft, editingId, onSave
       <div className="rounded-[24px] border border-slate-200/80 bg-white/90 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.85)] sm:p-5">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
           <div>
-            <div className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Quick Entry</div>
-            <div className="mt-1 text-sm text-slate-400">Single-line field layout for faster inventory updates.</div>
+            <div className="text-[16px] font-semibold uppercase tracking-[0.18em] text-slate-700">Quick Entry</div>
+            <div className="mt-1 text-[16px] font-semibold text-slate-700">Single-line field layout for faster inventory updates.</div>
           </div>
-          <div className="rounded-full border border-cyan-100 bg-cyan-50 px-3 py-1.5 text-xs font-semibold text-cyan-700">
+          <div className="rounded-full border border-cyan-100 bg-cyan-50 px-3 py-1.5 text-[14px] font-semibold text-cyan-800">
             {fields.length} fields
           </div>
         </div>
         <div className="space-y-3">
         {fieldRows.map((row, rowIndex) => (
-          <div key={`row-${rowIndex}`} className="grid gap-3 xl:grid-cols-2">
+          <div key={`row-${rowIndex}`} className="grid gap-3 sm:grid-cols-2">
             {row.map((field) => (
               <div key={field.key} className="rounded-[20px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] px-4 py-3 shadow-[0_10px_24px_rgba(15,23,42,0.04)]">
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-5">
-                  <label className="w-full shrink-0 text-xs font-bold uppercase tracking-[0.22em] text-slate-500 lg:w-[160px]">
+                  <label className="w-full shrink-0 text-[16px] font-semibold uppercase tracking-[0.22em] text-slate-700 lg:w-[160px]">
                     {field.label} {field.required && <span className="text-red-400">*</span>}
                   </label>
                   <div className="min-w-0 flex-1">
@@ -809,14 +838,14 @@ function FormPanel({ title, subtitle, fields, draft, setDraft, editingId, onSave
       </div>
       <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-slate-100 pt-4">
         <button type="button" onClick={onSave}
-          className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 via-sky-500 to-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-[0_18px_30px_rgba(37,99,235,0.25)] transition hover:-translate-y-0.5">
+          className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 via-sky-500 to-blue-600 px-6 py-3 text-[16px] font-semibold text-white shadow-[0_18px_30px_rgba(37,99,235,0.25)] transition hover:-translate-y-0.5">
           <FaPlus size={12} />
           {editingId ? "Update" : "Save"}
         </button>
         <button
           type="button"
           onClick={onReset}
-          className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+          className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-3 text-[16px] font-semibold text-slate-800 transition hover:bg-slate-50"
         >
           Reset Form
         </button>
@@ -954,7 +983,46 @@ function SectionTabs({
   listHelper,
   formLabel,
   formHelper,
+  segmented = false,
+  listIcon: ListIcon = FaClipboardList,
+  formIcon: FormIcon = FaPlus,
 }) {
+  if (segmented) {
+    return (
+      <div className="inline-flex flex-wrap items-center gap-2 rounded-full border border-slate-200/90 bg-[#f1f3f5] p-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]">
+        {[
+          { id: "list", label: listLabel, Icon: ListIcon },
+          { id: "form", label: formLabel, Icon: FormIcon },
+        ].map((tab) => {
+          const active = activeTab === tab.id;
+          const Icon = tab.Icon;
+
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => onChange(tab.id)}
+              className={`inline-flex min-h-[48px] items-center justify-center gap-2.5 rounded-full px-5 text-[16px] font-semibold transition-all duration-200 ${
+                active
+                  ? "bg-[linear-gradient(135deg,#2563eb_0%,#1d4ed8_100%)] text-white shadow-[0_10px_22px_rgba(37,99,235,0.26)]"
+                  : "bg-transparent text-slate-700 hover:bg-white/70"
+              }`}
+            >
+              <span
+                className={`inline-flex h-6 w-6 items-center justify-center rounded-full ${
+                  active ? "bg-white/18 text-white" : "bg-white text-slate-500"
+                }`}
+              >
+                <Icon size={12} />
+              </span>
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
+    );
+  }
+
   return (
     <div className="overflow-hidden rounded-[28px] border border-white/70 bg-white/90 p-3 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
       <div className="flex flex-wrap gap-3">
@@ -1928,6 +1996,41 @@ function GenericMasterSection({ section, records, onSave, onEdit, onDelete, draf
       icon: FaStore,
     },
   ];
+  const orderedSectionFields =
+    section.id === "stock-transfer"
+      ? [
+          "itemName",
+          "toStore",
+          "fromStore",
+          "quantity",
+          "unit",
+          "approvedBy",
+          "notes",
+          "date",
+        ]
+          .map((key) => resolvedFields.find((field) => field.key === key))
+          .filter(Boolean)
+      : section.id === "vendors"
+      ? ["name", "contact", "phone", "email", "city", "gstin", "status"]
+          .map((key) => resolvedFields.find((field) => field.key === key))
+          .filter(Boolean)
+      : section.id === "store-kitchen"
+      ? ["name", "type", "manager", "status"]
+          .map((key) => resolvedFields.find((field) => field.key === key))
+          .filter(Boolean)
+      : section.id === "ingredients"
+      ? ["name", "group", "unit", "status"]
+          .map((key) => resolvedFields.find((field) => field.key === key))
+          .filter(Boolean)
+      : section.id === "purchase-items"
+      ? ["itemName", "vendor", "quantity", "unit", "ratePerUnit", "amount", "invoiceNo", "date"]
+          .map((key) => resolvedFields.find((field) => field.key === key))
+          .filter(Boolean)
+      : section.id === "purchase-services"
+      ? ["serviceName", "vendor", "amount", "date", "status"]
+          .map((key) => resolvedFields.find((field) => field.key === key))
+          .filter(Boolean)
+      : resolvedFields;
 
   return (
     <div className="space-y-5">
@@ -1938,8 +2041,8 @@ function GenericMasterSection({ section, records, onSave, onEdit, onDelete, draf
             <div key={card.label} className="rounded-[24px] border border-white/70 bg-white/95 p-4 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <div className="text-xs font-medium text-slate-500">{card.label}</div>
-                  <div className="mt-1 text-3xl font-bold text-slate-900">{card.value}</div>
+                  <div className="text-[16px] font-semibold text-slate-700">{card.label}</div>
+                  <div className="mt-1 text-3xl font-bold text-slate-950">{card.value}</div>
                 </div>
                 <span className={`inline-flex h-10 w-10 items-center justify-center rounded-full ${card.iconTone}`}>
                   <Icon size={14} />
@@ -2013,13 +2116,13 @@ function GenericMasterSection({ section, records, onSave, onEdit, onDelete, draf
               key={view.id}
               type="button"
               onClick={() => setWorkspaceView(view.id)}
-              className={`inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold transition ${
+              className={`inline-flex min-h-[50px] items-center gap-2.5 rounded-full border px-5 py-3 text-[16px] font-semibold transition ${
                 active
                   ? "border-transparent bg-[linear-gradient(90deg,#7c3aed_0%,#6d28d9_100%)] text-white shadow-[0_14px_28px_rgba(109,40,217,0.22)]"
                   : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
               }`}
             >
-              <Icon size={11} />
+              <Icon size={13} />
               {view.label}
             </button>
           );
@@ -2038,8 +2141,13 @@ function GenericMasterSection({ section, records, onSave, onEdit, onDelete, draf
                   : (editingId ? `Edit ${section.label}` : `Add New ${section.label}`)}
               </h3>
             </div>
-            <div className={`grid gap-3 ${isPurchaseServicesSection ? "" : "space-y-0"}`}>
-              {resolvedFields.map((field) => (
+            <div className={`grid gap-3 ${
+              section.id === "stock-transfer" || section.id === "vendors" || section.id === "store-kitchen"
+                || section.id === "ingredients" || section.id === "purchase-items" || section.id === "purchase-services"
+                ? "sm:grid-cols-2"
+                : ""
+            } ${isPurchaseServicesSection ? "" : "space-y-0"}`}>
+              {orderedSectionFields.map((field) => (
                 <div key={field.key}>
                   <label className="mb-2 block text-sm font-semibold text-slate-700">
                     {field.label} {field.required ? <span className="text-red-400">*</span> : null}
@@ -2052,11 +2160,11 @@ function GenericMasterSection({ section, records, onSave, onEdit, onDelete, draf
                 </div>
               ))}
             </div>
-            <div className="mt-5 flex flex-wrap items-center gap-2">
+            <div className="mt-5 flex flex-wrap items-center justify-end gap-2">
               <button
                 type="button"
                 onClick={handleSave}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[linear-gradient(90deg,#7c3aed_0%,#6d28d9_100%)] px-4 py-3 text-sm font-semibold text-white shadow-[0_18px_28px_rgba(109,40,217,0.28)]"
+                className="inline-flex h-[44px] items-center justify-center gap-2 rounded-xl bg-[linear-gradient(90deg,#7c3aed_0%,#6d28d9_100%)] px-7 text-[16px] font-semibold text-white shadow-[0_18px_28px_rgba(109,40,217,0.28)] [text-shadow:0_1px_0_rgba(15,23,42,0.18)]"
               >
                 <FaPlus size={11} />
                 {isPurchaseServicesSection
@@ -2171,9 +2279,12 @@ function MenuItemsSection({ records, draft, setDraft, editingId, onSave, onEdit,
       <SectionTabs
         activeTab={activeTab}
         onChange={setActiveTab}
-        listLabel="Menu Library"
+        segmented
+        listIcon={FaUtensils}
+        formIcon={FaPlus}
+        listLabel="Menu"
         listHelper="Browse saved menu cards"
-        formLabel={editingId ? "Edit Menu Item" : "Add Menu Item"}
+        formLabel="Add Menu Item"
         formHelper={editingId ? "Update the selected dish card" : "Open form to create a new menu item"}
       />
       {activeTab === "form" ? (
@@ -2855,9 +2966,12 @@ function PurchaseOrderSection({
       {!procurementOnly ? <SectionTabs
         activeTab={activeTab}
         onChange={setActiveTab}
+        segmented
+        listIcon={FaClipboardList}
+        formIcon={FaPlus}
         listLabel="PO Register"
         listHelper="View purchase order history"
-        formLabel={editingId ? "Edit PO" : "Add PO"}
+        formLabel="Add PO"
         formHelper={editingId ? "Update selected purchase order" : "Open form to create a purchase order"}
       /> : null}
       {!procurementOnly && activeTab === "form" ? (
@@ -2932,6 +3046,7 @@ function PurchaseOrderSection({
         </div>
       ) : null}
 
+      {procurementOnly ? (
       <div className="rounded-[28px] border border-white/70 bg-white/90 p-5 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
         <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div>
@@ -2955,10 +3070,10 @@ function PurchaseOrderSection({
               key={tab.id}
               type="button"
               onClick={() => setOpsTab(tab.id)}
-              className={`inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold transition ${
+              className={`inline-flex min-h-[46px] items-center gap-2.5 rounded-full border px-5 py-3 text-[15px] font-semibold transition ${
                 opsTab === tab.id
                   ? "border-transparent bg-[linear-gradient(90deg,#2563eb_0%,#1d4ed8_100%)] text-white shadow-[0_14px_28px_rgba(37,99,235,0.22)]"
-                  : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
+                  : "border-slate-200 bg-white text-slate-800 hover:border-slate-300 hover:bg-slate-50"
               }`}
             >
               {tab.label}
@@ -2968,13 +3083,13 @@ function PurchaseOrderSection({
 
         {opsTab === "inward-form" ? (
           <div className="rounded-[24px] border border-slate-100 bg-white p-5 shadow-[0_18px_35px_rgba(15,23,42,0.06)]">
-            <div className="mb-4 text-xl font-bold text-slate-900">{editingInwardId ? "Edit Stock Inward" : "Add Stock Inward"}</div>
+            <div className="mb-4 text-[1.65rem] font-bold text-slate-950">{editingInwardId ? "Edit Stock Inward" : "Add Stock Inward"}</div>
             <div className="grid gap-3 md:grid-cols-2">
               {inwardFields.map((field) => (
                 { key: "rate", label: "Rate / Unit (₹)", type: "number" },
                 { key: "amount", label: "Amount (₹)", type: "number" },
                 <div key={field.key}>
-                  <label className="mb-2 block text-sm font-semibold text-slate-700">{field.label}</label>
+                  <label className="mb-2 block text-[16px] font-semibold text-slate-800">{field.label}</label>
                   <FormInput
                     field={field}
                     value={inwardDraft[field.key] ?? ""}
@@ -3000,7 +3115,7 @@ function PurchaseOrderSection({
               </div>
             ) : null}
             <div className="mt-5 flex flex-wrap gap-2">
-              <button type="button" onClick={handleSaveInward} className="rounded-xl bg-[linear-gradient(90deg,#2563eb_0%,#1d4ed8_100%)] px-5 py-3 text-sm font-semibold text-white">
+              <button type="button" onClick={handleSaveInward} className="rounded-xl bg-[linear-gradient(90deg,#2563eb_0%,#1d4ed8_100%)] px-6 py-3.5 text-[15px] font-semibold text-white">
                 {editingInwardId ? "Update Stock Inward" : "Save Stock Inward"}
               </button>
               <button
@@ -3023,12 +3138,12 @@ function PurchaseOrderSection({
                     { key: "remarks", label: "Remarks", type: "text" },
                   ]));
                 }}
-                className="rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-600"
+                className="rounded-xl border border-slate-200 px-5 py-3.5 text-[15px] font-semibold text-slate-700"
               >
                 Clear
               </button>
             </div>
-            <div className="mt-4 text-sm text-slate-500">
+            <div className="mt-4 text-[16px] font-semibold text-slate-500">
               Tip: agar item name exact inventory item se match karta hai, to inward save hote hi stock real data mein increase ho jayega.
             </div>
           </div>
@@ -3112,18 +3227,11 @@ function PurchaseOrderSection({
 
         {opsTab === "payment-form" ? (
           <div className="rounded-[24px] border border-slate-100 bg-white p-5 shadow-[0_18px_35px_rgba(15,23,42,0.06)]">
-            <div className="mb-4 text-xl font-bold text-slate-900">{editingPaymentId ? "Edit Vendor Payment" : "Add Vendor Payment"}</div>
+            <div className="mb-4 text-[1.65rem] font-bold text-slate-950">{editingPaymentId ? "Edit Vendor Payment" : "Add Vendor Payment"}</div>
             <div className="grid gap-3 md:grid-cols-2">
               {paymentFields.map((field) => (
-                { key: "vendorName", label: "Vendor", type: "text", required: true },
-                { key: "invoiceRef", label: "Invoice Ref", type: "text" },
-                { key: "paymentDate", label: "Payment Date", type: "date", required: true },
-                { key: "amount", label: "Amount (₹)", type: "number", required: true },
-                { key: "paymentMode", label: "Payment Mode", type: "select", options: ["Bank Transfer", "Cash", "UPI", "Cheque"] },
-                { key: "status", label: "Status", type: "select", options: ["Scheduled", "Paid", "Partial", "Cancelled"] },
-                { key: "notes", label: "Notes", type: "text" },
                 <div key={field.key}>
-                  <label className="mb-2 block text-sm font-semibold text-slate-700">{field.label}</label>
+                  <label className="mb-2 block text-[16px] font-semibold text-slate-800">{field.label}</label>
                   <FormInput
                     field={field}
                     value={paymentDraft[field.key] ?? ""}
@@ -3248,6 +3356,7 @@ function PurchaseOrderSection({
           </div>
         ) : null}
       </div>
+      ) : null}
     </div>
   );
 }
@@ -3564,9 +3673,12 @@ function WasteLogSection({ records, onSave, onEdit, onDelete, draft, setDraft, e
       <SectionTabs
         activeTab={activeTab}
         onChange={setActiveTab}
+        segmented
+        listIcon={FaClipboardList}
+        formIcon={FaPlus}
         listLabel="Waste Register"
         listHelper="View all waste and spoilage entries"
-        formLabel={editingId ? "Edit Waste" : "Add Waste"}
+        formLabel="Add Waste Register"
         formHelper={editingId ? "Update selected waste entry" : "Open form to log a new waste entry"}
       />
       {activeTab === "form" ? (
@@ -4140,7 +4252,7 @@ export default function InventoryDashboard({ procurementOnly = false }) {
   useEffect(() => {
     Object.entries(STORAGE_KEYS).forEach(([key, storageKey]) => {
       if (API_BACKED_MASTER_SECTIONS.has(key)) return;
-      localStorage.setItem(storageKey, JSON.stringify(masterData[key] || []));
+      setStoredValue(storageKey, JSON.stringify(masterData[key] || []));
     });
   }, [masterData]);
 
@@ -4512,78 +4624,6 @@ export default function InventoryDashboard({ procurementOnly = false }) {
       })),
     };
   }, [auditReportRows, batchExpiryRows, consumptionLogRows, expiringSoonRows, inventoryItems, masterData, stockFlowReportRows, stockLedgerRows, vendorInwards]);
-
-  const stockReportSequenceRows = useMemo(() => {
-    const purchaseItems = masterData["purchase-items"] || [];
-    const latestVendorByItem = new Map();
-
-    (vendorInwards || []).forEach((row) => {
-      const key = String(row.itemName || "").trim().toLowerCase();
-      if (!key) return;
-      const current = latestVendorByItem.get(key);
-      const currentDate = current?.sortDate ? new Date(current.sortDate) : new Date(0);
-      const nextDate = row.receivedDate ? new Date(row.receivedDate) : new Date(0);
-      if (!current || nextDate >= currentDate) {
-        latestVendorByItem.set(key, {
-          vendor: row.vendorName || "",
-          sortDate: row.receivedDate || "",
-        });
-      }
-    });
-
-    purchaseItems.forEach((row) => {
-      const key = String(row.itemName || "").trim().toLowerCase();
-      if (!key || latestVendorByItem.has(key)) return;
-      latestVendorByItem.set(key, {
-        vendor: row.vendor || "",
-        sortDate: row.date || "",
-      });
-    });
-
-    const stockFlowByItem = new Map();
-    (stockLedgerRows || []).forEach((row) => {
-      const key = String(row.itemName || "").trim().toLowerCase();
-      if (!key) return;
-      const current = stockFlowByItem.get(key) || { receivedQty: 0, usedQty: 0 };
-      const quantity = Number(row.quantity || 0);
-      const direction = String(row.direction || "").toUpperCase();
-      const referenceType = String(row.referenceType || "").toLowerCase();
-      if (direction === "IN" && referenceType === "vendor_inward") {
-        current.receivedQty += quantity;
-      }
-      if (direction === "OUT") {
-        current.usedQty += quantity;
-      }
-      stockFlowByItem.set(key, current);
-    });
-
-    return inventoryItems.map((item) => {
-      const key = String(item.name || "").trim().toLowerCase();
-      const stockFlow = stockFlowByItem.get(key) || { receivedQty: 0, usedQty: 0 };
-      const currentStock = Number(item.stock || 0);
-      const receivedQty = Number(stockFlow.receivedQty || 0);
-      const usedQty = Number(stockFlow.usedQty || 0);
-      const openingQty = currentStock + usedQty - receivedQty;
-      const unitRate = Number(item.price || 0);
-      const amount = currentStock * unitRate;
-
-      return {
-        item: item.name,
-        category: item.category,
-        vendor: latestVendorByItem.get(key)?.vendor || "—",
-        openingQty: `${openingQty} ${item.unit}`,
-        receivedQty: `${receivedQty} ${item.unit}`,
-        usedQty: `${usedQty} ${item.unit}`,
-        remainingStock: `${currentStock} ${item.unit}`,
-        unitRate: formatCurrency(unitRate),
-        reorderPoint: `${item.reorderPoint || 10} ${item.unit}`,
-        store: item.branch,
-        alert: isLowStock(item) ? "Low" : "OK",
-        amount: formatCurrency(amount),
-      };
-    });
-  }, [inventoryItems, masterData, stockLedgerRows, vendorInwards]);
-  void stockReportSequenceRows;
 
   const reportConfig = {
     "vendor-report": { title:"Vendor Report", subtitle:"Purchase & service cost by vendor",
@@ -5048,8 +5088,8 @@ export default function InventoryDashboard({ procurementOnly = false }) {
         <div className="mx-auto max-w-[1800px] space-y-5">
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-[28px] border border-white/70 bg-white/90 p-5 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
             <div>
-              <h2 className="text-3xl font-semibold text-slate-900">Real Procurement Flow</h2>
-              <p className="mt-1 text-sm text-slate-500">Vendor inward, payment tracking, and stock ledger on a dedicated workspace.</p>
+              <h2 className="text-[2.35rem] font-semibold text-slate-950">Real Procurement Flow</h2>
+              <p className="mt-1 text-[18px] font-semibold text-slate-700">Vendor inward, payment tracking, and stock ledger on a dedicated workspace.</p>
             </div>
             <button
               type="button"
@@ -5074,7 +5114,7 @@ export default function InventoryDashboard({ procurementOnly = false }) {
     <div className="inventory-ui-scope min-h-screen bg-[linear-gradient(135deg,#f4f8ff_0%,#eef6f8_30%,#fff9f0_66%,#f8fafc_100%)] p-4 sm:p-5">
       <style>{INVENTORY_INTERNAL_CSS}</style>
       {/* Header */}
-      {false && (
+      {false ? (
       <div className="relative mb-6 overflow-hidden rounded-[30px] border border-slate-900/10 bg-[linear-gradient(120deg,#08203b_0%,#0f5562_42%,#245cc5_100%)] p-5 shadow-[0_26px_70px_rgba(15,23,42,0.16)]">
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute left-[-8%] top-[-18%] h-40 w-40 rounded-full bg-cyan-300/20 blur-3xl" />
@@ -5082,9 +5122,9 @@ export default function InventoryDashboard({ procurementOnly = false }) {
           <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.06)_1px,transparent_1px)] bg-[size:68px_68px] opacity-35" />
         </div>
         <div className="relative z-[1]">
-        <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+          <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
           <div>
-            <h1 className="text[1.25rem] font-bold text-white md:text-4xl">Inventory Management</h1>
+            <h1 className="text-[1.25rem] font-bold text-white md:text-4xl">Inventory Management</h1>
             <p className="mt-1.5 max-w-2xl text-lg text-slate-300">
               Full-stack inventory workspace — items, POs, waste logs, stock audits, inter-department transfers and reports.
             </p>
@@ -5104,14 +5144,14 @@ export default function InventoryDashboard({ procurementOnly = false }) {
           </div>
         </div>
 
-        {itemsError && (
-          <div className="mt-4 rounded-xl border border-red-400/30 bg-red-500/15 px-4 py-3 text-base text-red-200">
-            {itemsError}
-          </div>
-        )}
+          {itemsError ? (
+            <div className="mt-4 rounded-xl border border-red-400/30 bg-red-500/15 px-4 py-3 text-base text-red-200">
+              {itemsError}
+            </div>
+          ) : null}
         </div>
       </div>
-      )}
+      ) : null}
 
       <div className="space-y-5">
         <InventoryHeaderStrip
@@ -5143,18 +5183,18 @@ export default function InventoryDashboard({ procurementOnly = false }) {
                     key={id}
                     type="button"
                     onClick={() => setActiveSection(id)}
-                    className={`inline-flex min-h-[48px] cursor-pointer items-center gap-3 rounded-full border px-5 py-2.5 text-left text-base font-semibold transition ${
+                    className={`inline-flex min-h-[58px] cursor-pointer items-center gap-3 rounded-full border px-6 py-3.5 text-left text-[17px] font-semibold transition ${
                       active
                         ? "border-transparent bg-[linear-gradient(90deg,#2563eb_0%,#1d4ed8_100%)] text-white shadow-[0_12px_24px_rgba(37,99,235,0.22)]"
                         : "border-slate-200 bg-white/85 text-slate-700 hover:border-slate-300 hover:bg-white"
                     }`}
                   >
                     <span
-                      className={`inline-flex h-7 w-7 items-center justify-center rounded-full ${
+                      className={`inline-flex h-9 w-9 items-center justify-center rounded-full ${
                         active ? "bg-white/18 text-white" : "bg-slate-100 text-slate-500"
                       }`}
                     >
-                      <Icon size={13} />
+                      <Icon size={16} />
                     </span>
                     <span className="truncate whitespace-nowrap">{sec.label}</span>
                   </button>
@@ -5166,9 +5206,9 @@ export default function InventoryDashboard({ procurementOnly = false }) {
                       key="purchase-real-procurement-flow"
                       type="button"
                       onClick={() => navigate("/inventory/procurement")}
-                      className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 shadow-[0_10px_24px_rgba(15,23,42,0.05)] transition hover:border-slate-300 hover:bg-slate-50"
+                      className="inline-flex min-h-[44px] items-center gap-2.5 rounded-full border border-slate-200 bg-white px-5 py-3 text-[16px] font-semibold text-slate-800 shadow-[0_10px_24px_rgba(15,23,42,0.05)] transition hover:border-slate-300 hover:bg-slate-50"
                     >
-                      <FaTruck size={12} />
+                      <FaTruck size={14} />
                       Real Procurement Flow
                     </button>,
                   ]

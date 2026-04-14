@@ -83,7 +83,9 @@ export default function Assignments() {
     try {
       await API.delete(`/assignments/${id}`);
       fetchAssignments();
-    } catch { /* ignore */ }
+    } catch {
+      alert("Failed to delete assignment. Please try again.");
+    }
   };
 
   const exportCSV = () => {

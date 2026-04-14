@@ -4,12 +4,12 @@ import API from "../../api";
 
 const SHIFTS = ["Morning (6am-2pm)", "Afternoon (2pm-10pm)", "Night (10pm-6am)", "Day (8am-8pm)", "Off"];
 const SHIFT_COLORS = {
-  "Morning (6am-2pm)":   "bg-amber-100 text-amber-800 border-amber-300 text-xl",
-  "Afternoon (2pm-10pm)":"bg-blue-100 text-blue-800 border-blue-300 text-xl",
-  "Night (10pm-6am)":    "bg-indigo-100 text-indigo-800 border-indigo-300 text-xl",
-  "Day (8am-8pm)":       "bg-emerald-100 text-emerald-800 border-emerald-300 text-xl",
-  "Off":                 "bg-slate-100 text-slate-400 border-slate-200 text-xl",
-};
+  "Morning (6am-2pm)":   "bg-amber-100 text-amber-800 border-amber-300",
+ "Afternoon (2pm-10pm)":"bg-blue-100 text-blue-800 border-blue-300",
+ "Night (10pm-6am)":    "bg-indigo-100 text-indigo-800 border-indigo-300",
+ "Day (8am-8pm)":       "bg-emerald-100 text-emerald-800 border-emerald-300",
+ "Off":                 "bg-slate-100 text-slate-400 border-slate-200",
+ };
 
 function getWeekDates(weekOffset = 0) {
   const now = new Date();
@@ -137,7 +137,7 @@ export default function ShiftRosterModal({ housekeepers, onClose, apiBase }) {
           {/* Shift Legend */}
           <div className="mb-4 flex flex-wrap gap-2">
             {Object.entries(SHIFT_COLORS).map(([shift, color]) => (
-              <span key={shift} className={`rounded-full border px-2 py-0.5 text-xs font-semibold ${color}`}>{shift}</span>
+              <span key={shift} className={`rounded-full border px-2 py-0.5 text-sm font-semibold ${color}`}>{shift}</span>
             ))}
           </div>
 

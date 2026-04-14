@@ -204,9 +204,10 @@ const AccountsCustomerInvoices = () => {
 
   useEffect(() => {
     let active = true;
-
+const abortController = new AbortController();
     const runRefresh = async () => {
       if (!active) return;
+       if (abortController.signal.aborted) return;
       await refreshData();
     };
 
@@ -225,6 +226,7 @@ const AccountsCustomerInvoices = () => {
 
     return () => {
       active = false;
+      abortController.abort();
       if (refreshTimerRef.current) {
         window.clearInterval(refreshTimerRef.current);
       }
@@ -526,7 +528,7 @@ const AccountsCustomerInvoices = () => {
                   key={item.label}
                   className="rounded-[22px] border border-white/12 bg-white/10 px-4 py-4 backdrop-blur-md"
                 >
-                  <span className="text-sm text-slate-100/75">{item.label}</span>
+                  <span className="text-[16px] font-semibold text-slate-100/85">{item.label}</span>
                   <div className={`mt-3 text-3xl font-bold leading-none ${item.tone}`}>
                     {item.value}
                   </div>
@@ -614,26 +616,26 @@ const AccountsCustomerInvoices = () => {
 
           <div className="mb-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <div className="rounded-[22px] border border-emerald-100 bg-emerald-50/80 p-4">
-              <div className="text-sm font-semibold uppercase tracking-[0.16em] text-emerald-700">Filtered Room Total</div>
+              <div className="text-[18px] font-semibold uppercase tracking-[0.16em] text-emerald-700">Filtered Room Total</div>
               <div className="mt-2 text-3xl font-black text-emerald-800">{formatINR(filteredBillingTotals.roomAmount)}</div>
-              <div className="mt-1 text-base text-emerald-700/80">
+              <div className="mt-1 text-[18px] font-semibold text-emerald-700/80">
                 {selectedInvoiceRoom === "all" ? "Room share across all invoice records." : `Room share for Room ${selectedInvoiceRoom}.`}
               </div>
             </div>
             <div className="rounded-[22px] border border-cyan-100 bg-cyan-50/80 p-4">
-              <div className="text-sm font-semibold uppercase tracking-[0.16em] text-cyan-700">Filtered Restaurant Total</div>
+              <div className="text-[18px] font-semibold uppercase tracking-[0.16em] text-cyan-700">Filtered Restaurant Total</div>
               <div className="mt-2 text-3xl font-black text-cyan-800">{formatINR(filteredBillingTotals.restaurantAmount)}</div>
-              <div className="mt-1 text-base text-cyan-700/80">Restaurant bills plus room-service order totals.</div>
+              <div className="mt-1 text-[18px] font-semibold text-cyan-700/80">Restaurant bills plus room-service order totals.</div>
             </div>
             <div className="rounded-[22px] border border-violet-100 bg-violet-50/80 p-4">
-              <div className="text-sm font-semibold uppercase tracking-[0.16em] text-violet-700">Filtered Banquet Total</div>
+              <div className="text-[18px] font-semibold uppercase tracking-[0.16em] text-violet-700">Filtered Banquet Total</div>
               <div className="mt-2 text-3xl font-black text-violet-800">{formatINR(filteredBillingTotals.banquetAmount)}</div>
-              <div className="mt-1 text-base text-violet-700/80">Real banquet booking totals from the banquet module.</div>
+              <div className="mt-1 text-[18px] font-semibold text-violet-700/80">Real banquet booking totals from the banquet module.</div>
             </div>
             <div className="rounded-[22px] border border-slate-200 bg-slate-50/90 p-4">
-              <div className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">Filtered Combined Total</div>
+              <div className="text-[18px] font-semibold uppercase tracking-[0.16em] text-slate-700">Filtered Combined Total</div>
               <div className="mt-2 text-3xl font-black text-slate-900">{formatINR(filteredBillingTotals.finalAmount)}</div>
-              <div className="mt-1 text-base text-slate-500">Combined billed amount for the current filter.</div>
+              <div className="mt-1 text-[18px] font-semibold text-slate-700">Combined billed amount for the current filter.</div>
             </div>
           </div>
 

@@ -49,7 +49,7 @@ const BanquetBill = ({
     const taxableAmount = Math.max(0, subTotal - discount);
     const gst =
       Number(booking.gstAmount || booking.gst_amount) ||
-      Math.round(taxableAmount * ((Number(booking.gstPercent || booking.gst_percent || 5) || 5) / 100));
+      Math.round(taxableAmount * ((booking.gstPercent ?? booking.gst_percent ?? 5) / 100));
 
     const grandTotal =
       Number(booking.grandTotal || booking.grand_total || booking.totalAmount || booking.total_amount) ||

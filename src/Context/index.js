@@ -1,2 +1,2 @@
-export { default } from "./restaurantContext";
+export { default } from "./RestaurantContext";
 export { RestaurantProvider } from "./RestaurantContext";

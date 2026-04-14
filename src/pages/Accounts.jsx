@@ -1476,10 +1476,10 @@ const Accounts = () => {
   const accountsModulesSection = (
     <section ref={accountsModuleSectionRef} className="space-y-5">
       <div className="rounded-[26px] border border-white/60 bg-white/82 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
-        <div className="text-sm font-semibold uppercase tracking-[0.18em] text-cyan-700">
+        <div className="text-[15px] font-semibold uppercase tracking-[0.18em] text-cyan-700">
           Accounts Tabs
         </div>
-        <h3 className="mt-2 text-3xl font-black text-slate-900">
+        <h3 className="mt-2 text-[15px] font-black text-slate-900">
           Open any finance module from one click
         </h3>
         <p className="mt-3 max-w-3xl text-[15px] leading-7 text-slate-500">
@@ -1545,7 +1545,7 @@ const Accounts = () => {
         </div>
 
         <div className="w-full space-y-7">
-          <section className="overflow-hidden rounded-[28px] border border-slate-900/10 bg-[linear-gradient(120deg,#071b34_0%,#0d4a53_52%,#162d45_100%)] px-5 py-6 text-white shadow-[0_22px_55px_rgba(15,23,42,0.12)] sm:px-7 sm:py-8">
+          <section className="overflow-hidden rounded-[28px] border border-sky-200/70 bg-[linear-gradient(90deg,#2563EB_0%,#38BDF8_50%,#60A5FA_100%)] px-5 py-6 text-white shadow-[0_22px_55px_rgba(37,99,235,0.18)] sm:px-7 sm:py-8">
             <div className="space-y-4">
               <button
                 type="button"
@@ -1582,16 +1582,16 @@ const Accounts = () => {
       </div>
 
       <div className="w-full space-y-7">
-        <section className="overflow-hidden rounded-[28px] border border-slate-900/10 bg-[linear-gradient(120deg,#071b34_0%,#0d4a53_52%,#162d45_100%)] px-5 py-6 text-white shadow-[0_22px_55px_rgba(15,23,42,0.12)] sm:px-7 sm:py-8">
+        <section className="overflow-hidden rounded-[28px] border border-sky-500/55 bg-[linear-gradient(90deg,#1E40AF_0%,#0369A1_52%,#075985_100%)] px-5 py-6 text-slate-950 shadow-[0_22px_55px_rgba(30,64,175,0.28)] sm:px-7 sm:py-8">
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.9fr)] lg:items-center">
             <div className="space-y-4">
-              <p className="text-sm font-semibold uppercase tracking-[0.26em] text-cyan-200">
+              <p className="text-2xl font-semibold uppercase tracking-[0.26em] text-slate-950">
                 Finance Center
               </p>
-              <h1 className="text-4xl font-black leading-tight sm:text-5xl">
+              <h1 className="text-5xl font-black leading-tight text-slate-950 sm:text-6xl">
                 Accounts workspace in dashboard style
               </h1>
-              <p className="max-w-3xl text-lg leading-8 text-slate-100/85 sm:text-xl">
+              <p className="max-w-3xl text-2xl leading-9 text-slate-950 sm:text-2xl">
                 Manage income, expenses, invoices, and transaction records from
                 one attractive and responsive finance dashboard.
               </p>
@@ -1604,48 +1604,48 @@ const Accounts = () => {
                   Add Income
                 </button>
                 <button
-                  className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-3 text-base font-semibold text-white backdrop-blur-md"
+                  className="inline-flex items-center gap-2 rounded-full border border-sky-100/40 bg-white/18 px-5 py-3 text-base font-semibold text-slate-950 backdrop-blur-md"
                   onClick={() => setShowExpense(true)}
                 >
                   <FaMoneyBillWave />
                   Add Expense
                 </button>
                 <button
-                  className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-3 text-base font-semibold text-white backdrop-blur-md"
+                  className="inline-flex items-center gap-2 rounded-full border border-sky-100/40 bg-white/18 px-5 py-3 text-base font-semibold text-slate-950 backdrop-blur-md"
                   onClick={() => setShowInvoice(true)}
                 >
                   <FaReceipt />
                   Invoice
                 </button>
                 <button
-                  className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-3 text-base font-bold text-white backdrop-blur-md transition hover:border-cyan-200 hover:text-cyan-100"
+                  className="inline-flex items-center gap-2 rounded-full border border-sky-100/40 bg-white/18 px-5 py-3 text-base font-bold text-slate-950 backdrop-blur-md transition hover:border-sky-100"
                   onClick={openAccountsTabsPage}
                 >
-                  <FaThLarge className="text-cyan-200" />
+                  <FaThLarge className="text-slate-950" />
                   Accounts Tab
                 </button>
                 <button
-                  className="inline-flex items-center gap-2 rounded-full border border-cyan-200/40 bg-cyan-400/15 px-5 py-3 text-base font-bold text-white backdrop-blur-md transition hover:border-cyan-200 hover:bg-cyan-400/20"
+                  className="inline-flex items-center gap-2 rounded-full border border-sky-100/40 bg-white/22 px-5 py-3 text-base font-bold text-slate-950 backdrop-blur-md transition hover:border-sky-100 hover:bg-white/26"
                   onClick={openBankReconciliationModule}
                 >
-                  <FaChartLine className="text-cyan-200" />
+                  <FaChartLine className="text-slate-950" />
                   Bank Reconciliation
                 </button>
                 <button
-                  className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-3 text-base font-bold text-white backdrop-blur-md transition hover:border-cyan-200 hover:text-cyan-100"
+                  className="inline-flex items-center gap-2 rounded-full border border-sky-100/40 bg-white/18 px-5 py-3 text-base font-bold text-slate-950 backdrop-blur-md transition hover:border-sky-100"
                   onClick={openCustomerInvoicesPage}
                 >
-                  <FaFileInvoiceDollar className="text-cyan-200" />
+                  <FaFileInvoiceDollar className="text-slate-950" />
                   Customer Invoices
                 </button>
-                <label className="min-w-[220px] rounded-[20px] border border-white/15 bg-white/10 px-4 py-3 text-left backdrop-blur-md">
-                  <span className="block text-sm font-semibold uppercase tracking-[0.2em] text-cyan-100/80">
+                <label className="min-w-[220px] rounded-[20px] border border-sky-100/40 bg-white/18 px-4 py-3 text-left backdrop-blur-md">
+                  <span className="block text-base font-semibold uppercase tracking-[0.2em] text-slate-950">
                     Payment Filter
                   </span>
                   <select
                     value={selectedPaymentMode}
                     onChange={(event) => setSelectedPaymentMode(event.target.value)}
-                    className="mt-2 w-full bg-transparent text-base font-semibold text-white outline-none"
+                    className="mt-2 w-full bg-transparent text-lg font-semibold text-slate-950 outline-none"
                   >
                     {paymentModeOptions.map((mode) => (
                       <option key={mode} value={mode} className="text-slate-900">
@@ -1662,9 +1662,9 @@ const Accounts = () => {
                 { label: "Net Position", value: formatINR(totals.net) },
                 { label: "GST Payable", value: formatINR(totals.gstPayable) },
               ].map((item) => (
-                <div key={item.label} className="rounded-[22px] border border-white/12 bg-white/10 px-4 py-4 backdrop-blur-md">
-                  <span className="text-sm text-slate-100/75">{item.label}</span>
-                  <div className="mt-3 text-3xl font-bold leading-none">{item.value}</div>
+                <div key={item.label} className="rounded-[22px] border border-sky-100/40 bg-white/18 px-4 py-4 backdrop-blur-md">
+                  <span className="text-base text-slate-950">{item.label}</span>
+                  <div className="mt-3 text-4xl font-bold leading-none text-slate-950">{item.value}</div>
                 </div>
               ))}
             </div>
@@ -2188,7 +2188,7 @@ const Accounts = () => {
 
         {showIncome && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm">
-            <div className="w-full max-w-2xl overflow-hidden rounded-[28px] bg-white shadow-[0_24px_80px_rgba(15,23,42,0.25)]">
+            <div className="w-full max-w-3xl overflow-hidden rounded-[28px] bg-white shadow-[0_24px_80px_rgba(15,23,42,0.25)]">
               <TransactionForm type="Income" onSubmit={handleAddIncome} onCancel={() => setShowIncome(false)} />
             </div>
           </div>
@@ -2196,15 +2196,15 @@ const Accounts = () => {
 
         {showExpense && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm">
-            <div className="w-full max-w-2xl overflow-hidden rounded-[28px] bg-white shadow-[0_24px_80px_rgba(15,23,42,0.25)]">
+            <div className="w-full max-w-3xl overflow-hidden rounded-[28px] bg-white shadow-[0_24px_80px_rgba(15,23,42,0.25)]">
               <TransactionForm type="Expense" onSubmit={handleAddExpense} onCancel={() => setShowExpense(false)} />
             </div>
           </div>
         )}
 
         {showInvoice && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm">
-            <div className="w-full max-w-4xl overflow-auto rounded-[28px] bg-white shadow-[0_24px_80px_rgba(15,23,42,0.25)] max-h-[90vh]">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-0 backdrop-blur-sm">
+            <div className="h-[100dvh] w-[100vw] max-w-none overflow-auto rounded-[18px] bg-white shadow-[0_24px_80px_rgba(15,23,42,0.25)]">
               <InvoiceForm onSuccess={handleGenerateInvoice} onCancel={() => setShowInvoice(false)} />
             </div>
           </div>

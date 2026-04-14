@@ -285,7 +285,7 @@ const RoomMaintenance = () => {
                   Room Blocking & Maintenance
                 </h1>
                 <p className="mt-3 max-w-2xl text-base leading-7 text-slate-100/80 sm:text-lg">
-                  “Block rooms during the maintenance window to avoid any booking conflicts.”
+                 Block rooms during the maintenance window to avoid any booking conflicts.
                 </p>
               </div>
               <div className="grid grid-cols-2 gap-3">

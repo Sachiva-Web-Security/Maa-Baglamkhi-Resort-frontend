@@ -22,7 +22,10 @@ export default function CheckoutReportModal({ onClose, apiBase }) {
     try {
       await API.put(`/housekeeping/status/${roomId}`, { status: "Vacant Dirty" });
       fetchCheckouts();
-    } catch { /* ignore */ }
+    } catch (err) {
+     console.error("Failed to mark room dirty:", err);
+     // Consider: toast.error("Failed to update room status");
+   }
   };
 
   const exportCSV = () => {

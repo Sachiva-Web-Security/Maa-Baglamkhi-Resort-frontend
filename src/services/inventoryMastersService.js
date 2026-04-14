@@ -1,8 +1,13 @@
 import API from "../api";
 
 export async function fetchInventoryMasterSections() {
-  const response = await API.get("/inventory-masters/sections");
-  return Array.isArray(response.data) ? response.data : [];
+  try {
+    const response = await API.get("/inventory-masters/sections");
+    return Array.isArray(response.data) ? response.data : [];
+  } catch (error) {
+    console.error("Error fetching inventory master sections:", error);
+    return [];
+  }
 }
 
 export async function fetchInventoryMasterRecords(sectionKey) {

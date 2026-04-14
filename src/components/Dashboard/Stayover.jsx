@@ -77,6 +77,8 @@ const popupTone = {
   },
 };
 
+const ACTIVE_BOOKINGS_PAGE_SIZE = 4;
+
 const Stayover = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -104,6 +106,7 @@ const Stayover = () => {
   const [savingBookingDates, setSavingBookingDates] = useState(false);
   const [actionPopup, setActionPopup] = useState({ open: false, type: "success", message: "" });
   const [cancelBookingModal, setCancelBookingModal] = useState({ open: false, reason: "", submitting: false });
+  const [activeBookingsPage, setActiveBookingsPage] = useState(1);
 // format: `${room.id}-${date}`
   const showActionPopup = React.useCallback((type, message) => {
     setActionPopup({ open: true, type, message });
@@ -298,6 +301,30 @@ const Stayover = () => {
       ),
     [bookingRecords],
   );
+
+  const totalActiveBookingPages = useMemo(
+    () => Math.max(1, Math.ceil(activeBookingRecords.length / ACTIVE_BOOKINGS_PAGE_SIZE)),
+    [activeBookingRecords],
+  );
+
+  const paginatedActiveBookingRecords = useMemo(
+    () =>
+      activeBookingRecords.slice(
+        (activeBookingsPage - 1) * ACTIVE_BOOKINGS_PAGE_SIZE,
+        activeBookingsPage * ACTIVE_BOOKINGS_PAGE_SIZE,
+      ),
+    [activeBookingRecords, activeBookingsPage],
+  );
+
+  useEffect(() => {
+    setActiveBookingsPage(1);
+  }, [selectedDate]);
+
+  useEffect(() => {
+    if (activeBookingsPage > totalActiveBookingPages) {
+      setActiveBookingsPage(totalActiveBookingPages);
+    }
+  }, [activeBookingsPage, totalActiveBookingPages]);
 
   const activeCleaningTasks = useMemo(() => {
     const tasks = getCleaningTasks();
@@ -1136,7 +1163,7 @@ const Stayover = () => {
 
         <section className="grid gap-1 xl:grid-cols-[minmax(0,1.1fr)_minmax(360px,0.9fr)]">
           <div className="space-y-6">
-            <div className="h-[650px] rounded-[28px]  border-slate-200/70 bg-white/85 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl ">
+            <div className="rounded-[28px] border-slate-200/70 bg-white/85 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <p className="text-sm font-bold uppercase tracking-[0.28em] text-emerald-600">Active Booking Data</p>
@@ -1150,9 +1177,9 @@ const Stayover = () => {
                   View All
                 </button>
               </div>
-              <div className="mt-5 max-h-[520px] space-y-3 overflow-y-auto pr-1">
+              <div className="mt-5 space-y-3">
                 {activeBookingRecords.length ? (
-                  activeBookingRecords.map((booking) => {
+                  paginatedActiveBookingRecords.map((booking) => {
                     const roomNumber = String(booking.rooms || "").split(",")[0]?.trim() || booking.rooms || "";
                     const room =
                       rooms.find((item) => String(item.roomNumber) === String(roomNumber)) || {
@@ -1217,6 +1244,48 @@ const Stayover = () => {
                   </div>
                 )}
               </div>
+
+              {activeBookingRecords.length > ACTIVE_BOOKINGS_PAGE_SIZE ? (
+                <div className="mt-5 flex flex-col gap-3 border-t border-slate-200 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="text-sm font-medium text-slate-500">
+                    Page {activeBookingsPage} of {totalActiveBookingPages}
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setActiveBookingsPage((current) => Math.max(1, current - 1))}
+                      disabled={activeBookingsPage === 1}
+                      className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      Previous
+                    </button>
+                    {Array.from({ length: totalActiveBookingPages }, (_, index) => index + 1).map((pageNumber) => (
+                      <button
+                        key={`active-bookings-page-${pageNumber}`}
+                        type="button"
+                        onClick={() => setActiveBookingsPage(pageNumber)}
+                        className={`h-10 min-w-10 rounded-full px-3 text-sm font-bold transition ${
+                          activeBookingsPage === pageNumber
+                            ? "bg-[#2563eb] text-white shadow-[0_10px_20px_rgba(37,99,235,0.18)]"
+                            : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                        }`}
+                      >
+                        {pageNumber}
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setActiveBookingsPage((current) => Math.min(totalActiveBookingPages, current + 1))
+                      }
+                      disabled={activeBookingsPage === totalActiveBookingPages}
+                      className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              ) : null}
             </div>
 
             </div>

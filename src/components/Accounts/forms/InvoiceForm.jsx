@@ -3,6 +3,29 @@ import API from "../../../api";
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
 const EMPTY_INITIAL_DATA = Object.freeze({});
+const padNumber = (value, length = 2) => String(value).padStart(length, "0");
+
+const generateInvoiceNo = () => {
+  const now = new Date();
+  const timestamp = [
+    now.getFullYear(),
+    padNumber(now.getMonth() + 1),
+    padNumber(now.getDate()),
+    padNumber(now.getHours()),
+    padNumber(now.getMinutes()),
+    padNumber(now.getSeconds()),
+    padNumber(now.getMilliseconds(), 3),
+  ].join("");
+
+  const cryptoSuffix =
+    typeof window !== "undefined" &&
+    window.crypto &&
+    typeof window.crypto.getRandomValues === "function"
+      ? String(window.crypto.getRandomValues(new Uint32Array(1))[0] % 1000).padStart(3, "0")
+      : String(Math.floor(Math.random() * 1000)).padStart(3, "0");
+
+  return `INV-${timestamp}-${cryptoSuffix}`;
+};
 
 const InvoiceForm = ({
   onCancel,
@@ -11,9 +34,6 @@ const InvoiceForm = ({
   invoiceId,
   onSuccess,
 }) => {
-  const generateInvoiceNo = () =>
-    `INV-${new Date().getFullYear()}-${Math.floor(Math.random() * 9000 + 1000)}`;
-
   const [invoiceNo] = useState(initialData.invoiceNo || generateInvoiceNo());
 
   const [form, setForm] = useState({
@@ -134,38 +154,38 @@ const InvoiceForm = ({
   };
 
   return (
-    <div className="bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] px-5 py-6 sm:px-6 sm:py-7">
+    <div className="bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] px-4 py-4 sm:px-5 sm:py-5">
       <form onSubmit={handleSubmit}>
-        <div className="mb-6 rounded-[24px] border border-slate-200 bg-white/90 px-4 py-4 shadow-[0_16px_40px_rgba(15,23,42,0.06)] sm:px-5">
+        <div className="mb-4 rounded-[24px] border border-slate-200 bg-white/90 px-4 py-3 shadow-[0_16px_40px_rgba(15,23,42,0.06)] sm:px-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-700">
+              <p className="text-[16px] font-semibold uppercase tracking-[0.24em] text-cyan-800">
                 Invoice Form
               </p>
-              <h2 className="mt-2 text-[2rem] font-black text-slate-900 sm:text-[2.2rem]">
+              <h2 className="mt-1 text-[2.25rem] font-black text-slate-950 sm:text-[2.45rem]">
                 {invoiceId ? "Edit Invoice" : "Generate Invoice"}
               </h2>
-              <p className="mt-2 text-lg text-slate-500">
+              <p className="mt-1 text-[18px] font-semibold text-slate-800">
                 Fill guest, stay, and billing details. Final total updates automatically.
               </p>
             </div>
 
-            <div className="rounded-[18px] border border-cyan-100 bg-cyan-50/80 px-4 py-3 sm:min-w-[220px]">
-              <div className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-700">
+            <div className="rounded-[18px] border border-cyan-100 bg-cyan-50/80 px-4 py-2.5 sm:min-w-[220px]">
+              <div className="text-[16px] font-semibold uppercase tracking-[0.2em] text-cyan-800">
                 Invoice No
               </div>
-              <div className="mt-2 text-lg font-bold text-slate-900">{form.invoiceNo}</div>
+              <div className="mt-2 text-[18px] font-semibold text-slate-950">{form.invoiceNo}</div>
             </div>
           </div>
         </div>
 
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1.55fr)_minmax(280px,0.95fr)]">
-          <div className="space-y-5">
-            <section className="rounded-[22px] border border-slate-200 bg-white/90 p-4 shadow-[0_14px_36px_rgba(15,23,42,0.05)] sm:p-5">
-              <div className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.7fr)_minmax(320px,0.9fr)]">
+          <div className="space-y-4">
+            <section className="rounded-[22px] border border-slate-200 bg-white/90 p-4 shadow-[0_14px_36px_rgba(15,23,42,0.05)]">
+              <div className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
                 Basic Details
               </div>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                 <Input
                   label="Invoice No"
                   name="invoiceNo"
@@ -213,11 +233,11 @@ const InvoiceForm = ({
               </div>
             </section>
 
-            <section className="rounded-[22px] border border-slate-200 bg-white/90 p-4 shadow-[0_14px_36px_rgba(15,23,42,0.05)] sm:p-5">
-              <div className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+            <section className="rounded-[22px] border border-slate-200 bg-white/90 p-4 shadow-[0_14px_36px_rgba(15,23,42,0.05)]">
+              <div className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
                 Stay And Charges
               </div>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                 <Input
                   label="Check In"
                   type="date"
@@ -268,11 +288,11 @@ const InvoiceForm = ({
               </div>
             </section>
 
-            <section className="rounded-[22px] border border-slate-200 bg-white/90 p-4 shadow-[0_14px_36px_rgba(15,23,42,0.05)] sm:p-5">
-              <div className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+            <section className="rounded-[22px] border border-slate-200 bg-white/90 p-4 shadow-[0_14px_36px_rgba(15,23,42,0.05)]">
+              <div className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
                 Payment And Notes
               </div>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 <Select
                   label="Payment Mode"
                   name="paymentMode"
@@ -290,28 +310,28 @@ const InvoiceForm = ({
                 />
               </div>
 
-              <div className="mt-4">
-                <label className="mb-1 block text-lg font-semibold text-slate-700">
+              <div className="mt-3">
+                <label className="mb-1 block text-[16px] font-semibold text-slate-700">
                   Notes
                 </label>
                 <textarea
-                  className="min-h-[110px] w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-lg text-slate-800 outline-none transition focus:border-cyan-300 focus:ring-4 focus:ring-cyan-100"
+                  className="min-h-[84px] w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[16px] font-semibold text-slate-800 outline-none transition focus:border-cyan-300 focus:ring-4 focus:ring-cyan-100"
                   name="notes"
                   value={form.notes}
                   onChange={handleChange}
-                  rows={4}
+                  rows={3}
                   placeholder="Optional notes for the invoice"
                 />
               </div>
             </section>
           </div>
 
-          <div className="space-y-5">
-            <section className="rounded-[22px] border border-slate-200 bg-[linear-gradient(180deg,#f5f9ff_0%,#eef6ff_100%)] p-5 shadow-[0_16px_40px_rgba(15,23,42,0.06)]">
+          <div className="space-y-4">
+            <section className="rounded-[22px] border border-slate-200 bg-[linear-gradient(180deg,#f5f9ff_0%,#eef6ff_100%)] p-4 shadow-[0_16px_40px_rgba(15,23,42,0.06)]">
               <div className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-700">
                 Invoice Summary
               </div>
-              <div className="mt-4 space-y-3">
+              <div className="mt-3 space-y-2.5">
                 <SummaryRow label="Total Days" value={String(calculated.days)} />
                 <SummaryRow label="Room Charge" value={`Rs. ${calculated.roomCharge.toFixed(2)}`} />
                 <SummaryRow label="Subtotal" value={`Rs. ${calculated.subtotal.toFixed(2)}`} />
@@ -325,21 +345,21 @@ const InvoiceForm = ({
                 ) : null}
               </div>
 
-              <div className="mt-5 rounded-[18px] border border-cyan-100 bg-white px-4 py-4">
+              <div className="mt-4 rounded-[18px] border border-cyan-100 bg-white px-4 py-3.5">
                 <div className="flex items-center justify-between gap-4">
-                  <span className="text-lg font-bold text-slate-700">Final Total</span>
-                  <span className="text-[2rem] font-black text-cyan-700">
+                  <span className="text-[16px] font-semibold text-slate-700">Final Total</span>
+                  <span className="text-[1.8rem] font-black text-cyan-700">
                     Rs. {calculated.finalTotal.toFixed(2)}
                   </span>
                 </div>
               </div>
             </section>
 
-            <section className="rounded-[22px] border border-slate-200 bg-white/90 p-5 shadow-[0_14px_36px_rgba(15,23,42,0.05)]">
+            <section className="rounded-[22px] border border-slate-200 bg-white/90 p-4 shadow-[0_14px_36px_rgba(15,23,42,0.05)]">
               <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
                 Quick Info
               </div>
-              <div className="mt-4 space-y-3 text-lg text-slate-600">
+              <div className="mt-3 space-y-2.5 text-[16px] font-semibold text-slate-600">
                 <div className="flex items-center justify-between gap-4">
                   <span>Payment Mode</span>
                   <span className="font-semibold text-slate-900">{form.paymentMode}</span>
@@ -357,10 +377,10 @@ const InvoiceForm = ({
           </div>
         </div>
 
-        <div className="mt-6 flex justify-end gap-3 border-t border-slate-200 pt-5">
+        <div className="mt-4 flex justify-end gap-3 border-t border-slate-200 pt-4">
           <button
             type="button"
-            className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-lg font-semibold text-slate-700 transition hover:bg-slate-50"
+            className="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-[16px] font-semibold text-slate-700 transition hover:bg-slate-50"
             onClick={onCancel}
           >
             Cancel
@@ -368,7 +388,7 @@ const InvoiceForm = ({
 
           <button
             type="submit"
-            className="rounded-xl bg-gradient-to-r from-cyan-600 to-indigo-600 px-5 py-3 text-lg font-semibold text-white shadow-[0_12px_30px_rgba(8,145,178,0.2)] transition hover:from-cyan-700 hover:to-indigo-700"
+            className="rounded-xl bg-gradient-to-r from-cyan-600 to-indigo-600 px-5 py-2.5 text-[16px] font-semibold text-white shadow-[0_12px_30px_rgba(8,145,178,0.2)] transition hover:from-cyan-700 hover:to-indigo-700"
             disabled={loading}
           >
             {loading ? "Saving..." : invoiceId ? "Update Invoice" : "Generate Invoice"}
@@ -381,11 +401,11 @@ const InvoiceForm = ({
 
 const Input = ({ label, required, ...props }) => (
   <div>
-    <label className="mb-1 block text-lg font-semibold text-slate-700">
+    <label className="mb-1 block text-[16px] font-semibold text-slate-700">
       {label}
     </label>
     <input
-      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-lg text-slate-800 outline-none transition focus:border-cyan-300 focus:ring-4 focus:ring-cyan-100"
+      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[16px] font-semibold text-slate-800 outline-none transition focus:border-cyan-300 focus:ring-4 focus:ring-cyan-100"
       required={required}
       {...props}
     />
@@ -394,11 +414,11 @@ const Input = ({ label, required, ...props }) => (
 
 const Select = ({ label, options, ...props }) => (
   <div>
-    <label className="mb-1 block text-lg font-semibold text-slate-700">
+    <label className="mb-1 block text-[16px] font-semibold text-slate-700">
       {label}
     </label>
     <select
-      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-lg text-slate-800 outline-none transition focus:border-cyan-300 focus:ring-4 focus:ring-cyan-100"
+      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[16px] font-semibold text-slate-800 outline-none transition focus:border-cyan-300 focus:ring-4 focus:ring-cyan-100"
       {...props}
     >
       {options.map((opt) => (
@@ -411,9 +431,9 @@ const Select = ({ label, options, ...props }) => (
 );
 
 const SummaryRow = ({ label, value, valueClassName = "text-slate-900" }) => (
-  <div className="flex items-center justify-between gap-4 rounded-[14px] bg-white/70 px-3 py-3">
-    <span className="text-lg text-slate-500">{label}</span>
-    <span className={`text-lg font-semibold ${valueClassName}`}>{value}</span>
+  <div className="flex items-center justify-between gap-4 rounded-[14px] bg-white/70 px-3 py-2.5">
+    <span className="text-[16px] font-semibold text-slate-500">{label}</span>
+    <span className={`text-[16px] font-semibold ${valueClassName}`}>{value}</span>
   </div>
 );
 

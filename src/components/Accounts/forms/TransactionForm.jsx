@@ -75,7 +75,7 @@ const TransactionForm = ({ type, onSubmit, onCancel, initialData = {} }) => {
           <div className="accounts-form__eyebrow">{type} Entry</div>
           <h3 className="accounts-form__title">{title}</h3>
           <p className="accounts-form__subtitle">
-      “The description, amount, and payment mode will be saved directly in the accounts ledger.”
+     The description, amount, and payment mode will be saved directly in the accounts ledger.
           </p>
         </div>
         <span className={`accounts-form__badge accounts-form__badge--${type.toLowerCase()}`}>

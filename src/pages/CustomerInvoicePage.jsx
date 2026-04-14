@@ -192,8 +192,12 @@ const CustomerInvoicePage = () => {
   }, [selectedPaymentMode, filteredPaymentSettings]);
 
   const reloadInvoice = async () => {
-    const response = await API.get(`/invoice/${customerId}`);
-    setInvoice(response.data || null);
+    try {
+      const response = await API.get(`/invoice/${customerId}`);
+      setInvoice(response.data || null);
+    } catch (err) {
+      console.error("Failed to reload invoice:", err);
+    }
   };
 
   const handlePrint = () => {
@@ -380,6 +384,34 @@ const CustomerInvoicePage = () => {
           display: none;
         }
 
+        .thermal-meta-row {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
+          gap: 8px;
+          align-items: start;
+        }
+
+        .thermal-meta-value {
+          min-width: 0;
+          text-align: right;
+          overflow-wrap: anywhere;
+          word-break: break-word;
+        }
+
+        .thermal-items-table {
+          width: 100%;
+          table-layout: fixed;
+        }
+
+        .thermal-item-name {
+          overflow-wrap: anywhere;
+          word-break: break-word;
+        }
+
+        .thermal-amount-cell {
+          white-space: nowrap;
+        }
+
         @media print {
           @page { size: A4; margin: 10mm; }
           html, body {
@@ -400,6 +432,7 @@ const CustomerInvoicePage = () => {
             left: 50%;
             top: 0;
             width: 80mm;
+            max-width: 80mm;
             transform: translateX(-50%);
             padding: 0;
             margin: 0;
@@ -408,6 +441,7 @@ const CustomerInvoicePage = () => {
             background: #ffffff !important;
             font-family: "Courier New", Courier, monospace;
             color: #111827 !important;
+            box-sizing: border-box;
           }
           .invoice-screen-print {
             display: none !important;
@@ -417,10 +451,21 @@ const CustomerInvoicePage = () => {
             padding: 10px 12px;
             background: #ffffff;
             box-shadow: none;
+            box-sizing: border-box;
+            width: 100%;
+            overflow: hidden;
           }
           .thermal-divider {
             border-top: 1px dashed #94a3b8;
             margin: 8px 0;
+          }
+          .thermal-meta-row {
+            grid-template-columns: minmax(0, 58px) minmax(0, 1fr);
+            gap: 6px;
+          }
+          .thermal-items-table th,
+          .thermal-items-table td {
+            box-sizing: border-box;
           }
           .invoice-no-print { display: none !important; }
           .print-break-avoid {
@@ -433,9 +478,9 @@ const CustomerInvoicePage = () => {
         <section className="rounded-[28px] border border-white/70 bg-[linear-gradient(135deg,#0f172a_0%,#1d4ed8_45%,#0f766e_100%)] px-6 py-7 text-white shadow-[0_22px_60px_rgba(15,23,42,0.2)]">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200">Reception + Accounts Invoice</p>
+              <p className="text-xl font-semibold uppercase tracking-[0.3em] text-cyan-200">Reception + Accounts Invoice</p>
               <h1 className="mt-3 text-3xl font-black sm:text-4xl">Combined hotel and restaurant invoice</h1>
-              <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-100/85">
+              <p className="mt-3 max-w-3xl text-xl leading-6 text-slate-100/85">
                 Customer, room, hotel charges, food orders, GST, discount aur final amount ek printable invoice me.
               </p>
             </div>
@@ -444,21 +489,21 @@ const CustomerInvoicePage = () => {
               <button
                 type="button"
                 onClick={() => navigate(-1)}
-                className="rounded-full border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white"
+                className="rounded-full border border-white/20 bg-white/10 px-5 py-3 text-xl font-semibold text-white"
               >
                 Back
               </button>
               <button
                 type="button"
                 onClick={handlePrint}
-                className="rounded-full bg-white px-5 py-3 text-sm font-bold text-slate-900"
+                className="rounded-full bg-white px-5 py-3 text-xl font-bold text-slate-900"
               >
                 Print
               </button>
               <button
                 type="button"
                 onClick={handleDownloadPdf}
-                className="rounded-full bg-amber-400 px-5 py-3 text-sm font-bold text-slate-900"
+                className="rounded-full bg-amber-400 px-5 py-3 text-xl font-bold text-slate-900"
               >
                 Download PDF
               </button>
@@ -471,26 +516,26 @@ const CustomerInvoicePage = () => {
             <div className="receipt-accent rounded-[26px] bg-[linear-gradient(135deg,#0f172a_0%,#1d4ed8_46%,#0f766e_100%)] px-5 py-5 text-white">
               <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                 <div>
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.34em] text-cyan-100/85">
+                  <div className="text-[15px] font-semibold uppercase tracking-[0.34em] text-cyan-100/85">
                     {RESORT_NAME}
                   </div>
-                  <h2 className="mt-3 text-3xl font-black sm:text-[2.2rem]">
+                  <h2 className="mt-3 text-3xl font-black sm:text-[3rem]">
                     {RESORT_RECEIPT_TITLE}
                   </h2>
-                  <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-100/85">
+                  <p className="mt-3 max-w-3xl text-xl leading-6 text-slate-100/85">
                     {RESORT_RECEIPT_SUBTITLE}
                   </p>
                 </div>
 
                 <div className="min-w-[250px] rounded-[22px] border border-white/15 bg-white/10 p-4 backdrop-blur">
-                  <div className="text-[11px] uppercase tracking-[0.24em] text-white/70">
+                  <div className="text-[16px] uppercase tracking-[0.24em] text-white/70">
                     Receipt Status
                   </div>
                   <div className="mt-2 text-2xl font-black">{paymentStatusLabel}</div>
-                  <div className="mt-3 text-sm text-white/80">
+                  <div className="mt-3 text-xl text-white/80">
                     Invoice No: {invoice?.invoiceNo || `INV-${customerId}`}
                   </div>
-                  <div className="mt-1 text-sm text-white/80">
+                  <div className="mt-1 text-xl text-white/80">
                     Date: {formatDate(invoice?.date)}
                   </div>
                 </div>
@@ -499,13 +544,13 @@ const CustomerInvoicePage = () => {
 
             <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px] print-break-avoid">
               <div className="rounded-[24px] border border-slate-200 bg-slate-50/80 p-5">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+                <div className="text-[15px] font-semibold uppercase tracking-[0.22em] text-slate-500">
                   Bill To
                 </div>
                 <div className="mt-3 text-3xl font-black text-slate-900">
                   {invoice?.customerName || "Guest"}
                 </div>
-                <div className="mt-3 grid gap-2 text-sm text-slate-600 sm:grid-cols-2">
+                <div className="mt-3 grid gap-2 text-xl text-slate-600 sm:grid-cols-2">
                   <div>Phone: {invoice?.phone || "--"}</div>
                   <div>Booking ID: {invoice?.bookingId || "--"}</div>
                   <div>Room No: {invoice?.roomNumber || "--"}</div>
@@ -516,10 +561,10 @@ const CustomerInvoicePage = () => {
               <div className="grid gap-3">
                 {invoiceMeta.map((entry) => (
                   <div key={entry.label} className="rounded-[20px] border border-slate-200 bg-white p-4">
-                    <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
+                    <div className="text-[15px] uppercase tracking-[0.18em] text-slate-500">
                       {entry.label}
                     </div>
-                    <div className="mt-2 text-lg font-black text-slate-900">{entry.value}</div>
+                    <div className="mt-2 text-xl font-black text-slate-900">{entry.value}</div>
                   </div>
                 ))}
               </div>
@@ -527,20 +572,20 @@ const CustomerInvoicePage = () => {
 
             <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4 print-break-avoid">
               <div className="rounded-[20px] border border-slate-200 bg-white p-4">
-                <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Check-In</div>
-                <div className="mt-2 text-lg font-black text-slate-900">{formatDate(invoice?.checkIn)}</div>
+                <div className="text-[15px] uppercase tracking-[0.18em] text-slate-500">Check-In</div>
+                <div className="mt-2 text-xl font-black text-slate-900">{formatDate(invoice?.checkIn)}</div>
               </div>
               <div className="rounded-[20px] border border-slate-200 bg-white p-4">
-                <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Check-Out</div>
-                <div className="mt-2 text-lg font-black text-slate-900">{formatDate(invoice?.checkOut)}</div>
+                <div className="text-[15px] uppercase tracking-[0.18em] text-slate-500">Check-Out</div>
+                <div className="mt-2 text-xl font-black text-slate-900">{formatDate(invoice?.checkOut)}</div>
               </div>
               <div className="rounded-[20px] border border-slate-200 bg-white p-4">
-                <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Nights</div>
-                <div className="mt-2 text-lg font-black text-slate-900">{numberOfNights}</div>
+                <div className="text-[15px] uppercase tracking-[0.18em] text-slate-500">Nights</div>
+                <div className="mt-2 text-xl font-black text-slate-900">{numberOfNights}</div>
               </div>
               <div className="rounded-[20px] border border-slate-200 bg-white p-4">
-                <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Payment Mode</div>
-                <div className="mt-2 text-lg font-black text-slate-900">
+                <div className="text-[15px] uppercase tracking-[0.18em] text-slate-500">Payment Mode</div>
+                <div className="mt-2 text-xl font-black text-slate-900">
                   {invoice?.paymentMode || invoice?.paymentMethod || "Front Desk"}
                 </div>
               </div>
@@ -548,7 +593,7 @@ const CustomerInvoicePage = () => {
 
             <div className="mt-6 overflow-x-auto rounded-[24px] border border-slate-200 print-break-avoid">
               <table className="invoice-print-table min-w-full text-left text-sm">
-                <thead className="bg-slate-50 text-[11px] uppercase tracking-[0.16em] text-slate-500">
+                <thead className="bg-slate-50 text-[15px] uppercase tracking-[0.16em] text-slate-500">
                   <tr>
                     <th className="px-4 py-3">Item Description</th>
                     <th className="px-4 py-3">Category</th>
@@ -572,7 +617,7 @@ const CustomerInvoicePage = () => {
                   {!itemRows.length ? (
                     <tr>
                       <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
-                        Invoice items available nahi hain.
+Invoice items are not available
                       </td>
                     </tr>
                   ) : null}
@@ -583,10 +628,10 @@ const CustomerInvoicePage = () => {
             <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px] print-break-avoid">
               <div className="space-y-4">
                 <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  <div className="text-[15px] font-semibold uppercase tracking-[0.18em] text-slate-500">
                     Guest Contact
                   </div>
-                  <div className="mt-3 space-y-1 text-sm text-slate-700">
+                  <div className="mt-3 space-y-1 text-xl text-slate-700">
                     <div>Name: {invoice?.customerName || "--"}</div>
                     <div>Phone: {invoice?.phone || "--"}</div>
                     <div>Booking ID: {invoice?.bookingId || "--"}</div>
@@ -595,10 +640,10 @@ const CustomerInvoicePage = () => {
                 </div>
 
                 <div className="rounded-[22px] border border-slate-200 bg-white p-4">
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  <div className="text-[15px] font-semibold uppercase tracking-[0.18em] text-slate-500">
                     Receipt Notes
                   </div>
-                  <p className="mt-3 text-sm leading-6 text-slate-600">
+                  <p className="mt-3 text-xl leading-6 text-slate-600">
                     This is a system-generated invoice receipt issued by {RESORT_NAME}. Please
                     verify guest details, stay dates, and amount summary before final handover.
                   </p>
@@ -606,14 +651,14 @@ const CustomerInvoicePage = () => {
               </div>
 
               <div className="rounded-[24px] border border-slate-200 bg-slate-950 p-5 text-white">
-                <div className="space-y-3 text-sm">
+                <div className="space-y-3 text-xl">
                   <div className="flex items-center justify-between gap-3">
                     <span className="text-white/70">Subtotal</span>
                     <span className="font-bold">{formatCurrency(invoice?.subtotal)}</span>
                   </div>
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-white/70">GST (5%)</span>
-                    <span className="font-bold">{formatCurrency(invoice?.tax)}</span>
+                 <div className="flex items-center justify-between gap-3">
++                    <span className="text-white/70">GST</span>
+                     <span className="font-bold">{formatCurrency(invoice?.tax)}</span>
                   </div>
                   <div className="flex items-center justify-between gap-3">
                     <span className="text-white/70">Discount</span>
@@ -631,17 +676,17 @@ const CustomerInvoicePage = () => {
 
             <div className="mt-6 grid gap-4 md:grid-cols-2 print-break-avoid">
               <div className="rounded-[20px] border border-dashed border-slate-300 bg-slate-50 px-4 py-5">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                <div className="text-[15px] font-semibold uppercase tracking-[0.18em] text-slate-500">
                   Thank You Note
                 </div>
-                <p className="mt-3 text-sm leading-6 text-slate-600">
+                <p className="mt-3 text-xl leading-6 text-slate-600">
                   Thank you for staying with {RESORT_NAME}. We appreciate your visit and look
                   forward to welcoming you again.
                 </p>
               </div>
 
               <div className="rounded-[20px] border border-dashed border-slate-300 bg-white px-4 py-5 text-right">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                <div className="text-[15px] font-semibold uppercase tracking-[0.18em] text-slate-500">
                   Authorized Signatory
                 </div>
                 <div className="mt-10 text-sm font-semibold text-slate-700">For {RESORT_NAME}</div>
@@ -653,58 +698,64 @@ const CustomerInvoicePage = () => {
             <div className="invoice-thermal-card">
               <div className="text-center">
                 <div className="text-[18px] font-bold uppercase leading-tight">{RESORT_NAME}</div>
-                <div className="mt-1 text-[11px]">Hotel Guest Receipt</div>
-                <div className="text-[11px]">Reception Copy</div>
+                <div className="mt-1 text-[15px]">Hotel Guest Receipt</div>
+                <div className="text-[15px]">Reception Copy</div>
               </div>
 
               <div className="thermal-divider" />
 
-              <div className="space-y-1 text-[11px] leading-4">
-                <div className="flex items-start justify-between gap-3">
+              <div className="space-y-1 text-[14px] leading-4">
+                <div className="thermal-meta-row">
                   <span>Invoice No</span>
-                  <span>{invoice?.invoiceNo || `INV-${customerId}`}</span>
+                  <span className="thermal-meta-value">{invoice?.invoiceNo || `INV-${customerId}`}</span>
                 </div>
-                <div className="flex items-start justify-between gap-3">
+                <div className="thermal-meta-row">
                   <span>Date</span>
-                  <span>{formatThermalDate(printTimestamp)}</span>
+                  <span className="thermal-meta-value">{formatThermalDate(printTimestamp)}</span>
                 </div>
-                <div className="flex items-start justify-between gap-3">
+                <div className="thermal-meta-row">
                   <span>Time</span>
-                  <span>{formatThermalTime(printTimestamp)}</span>
+                  <span className="thermal-meta-value">{formatThermalTime(printTimestamp)}</span>
                 </div>
-                <div className="flex items-start justify-between gap-3">
+                <div className="thermal-meta-row">
                   <span>Guest</span>
-                  <span className="max-w-[150px] text-right">{invoice?.customerName || "Guest"}</span>
+                  <span className="thermal-meta-value">{invoice?.customerName || "Guest"}</span>
                 </div>
-                <div className="flex items-start justify-between gap-3">
+                <div className="thermal-meta-row">
                   <span>Phone</span>
-                  <span>{invoice?.phone || "--"}</span>
+                  <span className="thermal-meta-value">{invoice?.phone || "--"}</span>
                 </div>
-                <div className="flex items-start justify-between gap-3">
+                <div className="thermal-meta-row">
                   <span>Room</span>
-                  <span>{invoice?.roomNumber || "--"}</span>
+                  <span className="thermal-meta-value">{invoice?.roomNumber || "--"}</span>
                 </div>
-                <div className="flex items-start justify-between gap-3">
+                <div className="thermal-meta-row">
                   <span>Booking ID</span>
-                  <span>{invoice?.bookingId || "--"}</span>
+                  <span className="thermal-meta-value">{invoice?.bookingId || "--"}</span>
                 </div>
-                <div className="flex items-start justify-between gap-3">
+                <div className="thermal-meta-row">
                   <span>Check-In</span>
-                  <span>{formatThermalDate(invoice?.checkIn)}</span>
+                  <span className="thermal-meta-value">{formatThermalDate(invoice?.checkIn)}</span>
                 </div>
-                <div className="flex items-start justify-between gap-3">
+                <div className="thermal-meta-row">
                   <span>Check-Out</span>
-                  <span>{formatThermalDate(invoice?.checkOut)}</span>
+                  <span className="thermal-meta-value">{formatThermalDate(invoice?.checkOut)}</span>
                 </div>
-                <div className="flex items-start justify-between gap-3">
+                <div className="thermal-meta-row">
                   <span>Status</span>
-                  <span>{paymentStatusLabel}</span>
+                  <span className="thermal-meta-value">{paymentStatusLabel}</span>
                 </div>
               </div>
 
               <div className="thermal-divider" />
 
-              <table className="w-full text-[11px] leading-4">
+              <table className="thermal-items-table w-full text-[15px] leading-4">
+                <colgroup>
+                  <col style={{ width: "52%" }} />
+                  <col style={{ width: "12%" }} />
+                  <col style={{ width: "18%" }} />
+                  <col style={{ width: "18%" }} />
+                </colgroup>
                 <thead>
                   <tr className="border-b border-dashed border-slate-400">
                     <th className="pb-1 text-left font-bold">Item</th>
@@ -718,12 +769,12 @@ const CustomerInvoicePage = () => {
                     itemRows.map((item, index) => (
                       <tr key={`thermal-${item.name}-${index}`} className="align-top">
                         <td className="py-1 pr-2">
-                          <div>{item.name}</div>
-                          <div className="text-[10px] text-slate-500">{item.category || "Hotel"}</div>
+                          <div className="thermal-item-name">{item.name}</div>
+                          <div className="text-[15px] text-slate-500">{item.category || "Hotel"}</div>
                         </td>
                         <td className="py-1 text-center">{item.quantity || 1}</td>
-                        <td className="py-1 text-right">{formatThermalAmount(item.price)}</td>
-                        <td className="py-1 text-right">{formatThermalAmount(item.total)}</td>
+                        <td className="thermal-amount-cell py-1 text-right">{formatThermalAmount(item.price)}</td>
+                        <td className="thermal-amount-cell py-1 text-right">{formatThermalAmount(item.total)}</td>
                       </tr>
                     ))
                   ) : (
@@ -738,7 +789,7 @@ const CustomerInvoicePage = () => {
 
               <div className="thermal-divider" />
 
-              <div className="space-y-1 text-[11px] leading-4">
+              <div className="space-y-1 text-[15px] leading-4">
                 <div className="flex items-center justify-between gap-3">
                   <span>Subtotal</span>
                   <span>{formatThermalAmount(invoice?.subtotal)}</span>
@@ -759,14 +810,14 @@ const CustomerInvoicePage = () => {
 
               <div className="thermal-divider" />
 
-              <div className="flex items-center justify-between gap-3 text-[13px] font-bold leading-5">
+              <div className="flex items-center justify-between gap-3 text-[14px] font-bold leading-5">
                 <span>NET AMOUNT</span>
                 <span>{formatThermalAmount(invoice?.totalAmount)}</span>
               </div>
 
               <div className="thermal-divider" />
 
-              <div className="space-y-1 text-center text-[10px] leading-4 text-slate-600">
+              <div className="space-y-1 text-center text-[15px] leading-4 text-slate-600">
                 <div>Thank you for staying with us.</div>
                 <div>Please visit again.</div>
                 <div>Powered by {RESORT_NAME}</div>
@@ -778,18 +829,18 @@ const CustomerInvoicePage = () => {
             <div className="invoice-no-print mt-6 rounded-[24px] border border-cyan-100 bg-cyan-50/70 p-5">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div>
-                  <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-700">
+                  <div className="text-[15px] font-semibold uppercase tracking-[0.18em] text-cyan-700">
                     Pending Payment Settlement
                   </div>
                   <h3 className="mt-2 text-2xl font-black text-slate-900">
                     Complete payment from the invoice page
                   </h3>
-                  <p className="mt-2 max-w-3xl text-sm text-slate-600">
+                  <p className="mt-2 max-w-3xl text-xl text-slate-600">
                     Choose the payment mode, show the saved scanner if required, collect the
                     payment reference, and mark this invoice as paid.
                   </p>
                 </div>
-                <div className="rounded-[20px] border border-cyan-200 bg-white px-4 py-3 text-sm text-cyan-800">
+                <div className="rounded-[20px] border border-cyan-200 bg-white px-4 py-3 text-xl text-cyan-800">
                   Invoice amount: <span className="font-bold">{formatCurrency(invoice?.totalAmount)}</span>
                 </div>
               </div>
@@ -797,13 +848,13 @@ const CustomerInvoicePage = () => {
               <div className="mt-5 grid gap-4 lg:grid-cols-[1fr_1.1fr]">
                 <div className="space-y-4">
                   <label className="block">
-                    <span className="mb-1 block text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                    <span className="mb-1 block text-xl font-semibold uppercase tracking-[0.14em] text-slate-500">
                       Payment Mode
                     </span>
                     <select
                       value={selectedPaymentMode}
                       onChange={(event) => setSelectedPaymentMode(event.target.value)}
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none"
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xl text-slate-900 outline-none"
                     >
                       {paymentModeOptions.map((mode) => (
                         <option key={mode} value={mode}>
@@ -816,13 +867,13 @@ const CustomerInvoicePage = () => {
                   {selectedPaymentMode !== "Cash" ? (
                     <>
                       <label className="block">
-                        <span className="mb-1 block text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                        <span className="mb-1 block text-xl font-semibold uppercase tracking-[0.14em] text-slate-500">
                           Payment Setup
                         </span>
                         <select
                           value={selectedPaymentSettingId}
                           onChange={(event) => setSelectedPaymentSettingId(event.target.value)}
-                          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none"
+                          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xl text-slate-900 outline-none"
                         >
                           <option value="">Select setup</option>
                           {filteredPaymentSettings.map((row) => (
@@ -834,33 +885,33 @@ const CustomerInvoicePage = () => {
                       </label>
 
                       <label className="block">
-                        <span className="mb-1 block text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                        <span className="mb-1 block text-xl font-semibold uppercase tracking-[0.14em] text-slate-500">
                           Reference / UTR
                         </span>
                         <input
                           value={paymentReferenceNo}
                           onChange={(event) => setPaymentReferenceNo(event.target.value)}
-                          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none"
+                          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xl text-slate-900 outline-none"
                           placeholder="Enter transaction reference"
                         />
                       </label>
                     </>
                   ) : (
-                    <div className="rounded-[20px] border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                    <div className="rounded-[20px] border border-emerald-100 bg-emerald-50 px-4 py-3 text-xl text-emerald-800">
                       Cash selected. This will mark the invoice as paid without creating a bank
                       reconciliation row.
                     </div>
                   )}
 
                   <label className="block">
-                    <span className="mb-1 block text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                    <span className="mb-1 block text-xl font-semibold uppercase tracking-[0.14em] text-slate-500">
                       Notes
                     </span>
                     <textarea
                       value={paymentNotes}
                       onChange={(event) => setPaymentNotes(event.target.value)}
                       rows={3}
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none"
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xl text-slate-900 outline-none"
                       placeholder="Optional payment note"
                     />
                   </label>
@@ -869,14 +920,14 @@ const CustomerInvoicePage = () => {
                     type="button"
                     onClick={handleSettleInvoice}
                     disabled={settlingPayment}
-                    className="rounded-xl bg-gradient-to-r from-cyan-600 to-teal-500 px-4 py-3 text-sm font-semibold text-white disabled:opacity-60"
+                    className="rounded-xl bg-gradient-to-r from-cyan-600 to-teal-500 px-4 py-3 text-xl font-semibold text-white disabled:opacity-60"
                   >
                     {settlingPayment ? "Saving payment..." : `Confirm ${selectedPaymentMode} Payment`}
                   </button>
                 </div>
 
                 <div className="rounded-[24px] border border-slate-200 bg-white p-4">
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  <div className="text-[15px] font-semibold uppercase tracking-[0.18em] text-slate-500">
                     Payment Setup Preview
                   </div>
                   {selectedPaymentMode !== "Cash" && selectedPaymentSetting ? (
@@ -889,12 +940,12 @@ const CustomerInvoicePage = () => {
                             className="mx-auto h-40 w-40 rounded-xl object-contain"
                           />
                         ) : (
-                          <div className="flex h-40 items-center justify-center rounded-xl border border-dashed border-slate-300 text-xs text-slate-500">
+                          <div className="flex h-40 items-center justify-center rounded-xl border border-dashed border-slate-300 text-xl text-slate-500">
                             No scanner image
                           </div>
                         )}
                       </div>
-                      <div className="space-y-2 text-sm text-slate-700">
+                      <div className="space-y-2 text-xl text-slate-700">
                         <div><span className="font-semibold text-slate-900">Provider:</span> {selectedPaymentSetting.provider_name || "-"}</div>
                         <div><span className="font-semibold text-slate-900">UPI ID:</span> {selectedPaymentSetting.upi_id || "-"}</div>
                         <div><span className="font-semibold text-slate-900">Account Holder:</span> {selectedPaymentSetting.account_holder_name || "-"}</div>
@@ -903,7 +954,7 @@ const CustomerInvoicePage = () => {
                       </div>
                     </div>
                   ) : (
-                    <div className="mt-4 text-sm text-slate-500">
+                    <div className="mt-4 text-xl text-slate-500">
                       {selectedPaymentMode === "Cash"
                         ? "No scanner required for cash payment."
                         : "No active setup available for this payment mode."}

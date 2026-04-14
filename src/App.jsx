@@ -69,6 +69,7 @@ const ROLES = {
 };
 
 const HEADER_HEIGHT = 92;
+const HEADER_CONTENT_GAP = 18;
 
 function Layout({ children, setIsAuthenticated }) {
   const location = useLocation();
@@ -152,7 +153,7 @@ function Layout({ children, setIsAuthenticated }) {
         <div
           ref={scrollContainerRef}
           className="flex-1 overflow-y-auto"
-          style={{ paddingTop: `${HEADER_HEIGHT}px` }}
+          style={{ paddingTop: `${HEADER_HEIGHT + HEADER_CONTENT_GAP}px` }}
         >
           <div className="p-3 sm:p-4 lg:p-5">{children}</div>
         </div>

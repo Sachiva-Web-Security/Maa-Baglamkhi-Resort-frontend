@@ -21,15 +21,15 @@ const ReceptionDashboard = () => {
   const [bookings, setBookings] = useState([]);
   const [rooms, setRooms] = useState([]);
 
-  const load = useCallback(async (silent = false) => {
+ const load = useCallback(async (silent = false, signal) => {
     try {
       if (!silent) setLoading(true);
       setError("");
 
-      const results = await Promise.allSettled([
-        API.get("/hotel/all-bookings"),
-        API.get("/housekeeping"),
-      ]);
+     const results = await Promise.allSettled([
+       API.get("/hotel/all-bookings", { signal }),
+       API.get("/housekeeping", { signal }),
+     ]);
 
       const [bookingsRes, roomsRes] = results;
       setBookings(bookingsRes.status === "fulfilled" ? bookingsRes.value.data || [] : []);

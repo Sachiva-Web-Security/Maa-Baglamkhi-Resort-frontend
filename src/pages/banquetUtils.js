@@ -97,7 +97,7 @@ export function buildNotesPayload(notes, meta) {
 }
 
 export function extractMeta(notes = "") {
-  const match = notes.match(/\[\[BNQ_META\]\](.*?)\[\[\/BNQ_META\]\]/);
+  const match = notes.match(/\[\[BNQ_META\]\]([\s\S]*?)\[\[\/BNQ_META\]\]/);
 
   if (!match?.[1]) return {};
 
@@ -109,7 +109,7 @@ export function extractMeta(notes = "") {
 }
 
 export function stripMeta(notes = "") {
-  return notes.replace(/\s*\[\[BNQ_META\]\].*?\[\[\/BNQ_META\]\]/, "").trim();
+return notes.replace(/\s*\[\[BNQ_META\]\][\s\S]*?\[\[\/BNQ_META\]\]/, "").trim();
 }
 
 export function normalizeCategory(value) {
@@ -206,20 +206,18 @@ export function deriveBookingFinancials(booking, halls, pricingConfig) {
   const eventSupportFee = Number(booking.eventSupportFee) || 0;
   const decorationFee = Number(booking.decorationFee) || 0;
   const subtotalAmount =
-    Number(booking.subtotalAmount) ||
     hallCharge +
-      mealCharge +
-      customMenuCharge +
-      lightingCharge +
-      eventSupportFee +
-      decorationFee;
+    mealCharge +
+    customMenuCharge +
+    lightingCharge +
+    eventSupportFee +
+    decorationFee;
   const discount = Math.min(subtotalAmount, Number(booking.discount) || 0);
   const taxableAmount = Math.max(0, subtotalAmount - discount);
-  const gstAmount =
-    Number(booking.gstAmount) ||
-    Math.round((taxableAmount * (Number(booking.gstPercent) || 0)) / 100);
-  const grandTotal =
-    Number(booking.grandTotal) || taxableAmount + gstAmount;
+  const gstAmount = Math.round(
+    (taxableAmount * (Number(booking.gstPercent) || 0)) / 100
+  );
+  const grandTotal = taxableAmount + gstAmount;
   const advance = Number(booking.advance || 0);
   const refundAmount = Number(booking.refundAmount || 0);
   const netReceived =
@@ -371,7 +369,6 @@ export function normalizeBooking(raw) {
       meta.paymentReferenceId ||
       "",
     receiptFileName: meta.receiptFileName || "",
-    receiptFileDataUrl: meta.receiptFileDataUrl || "",
     paymentReceived: advance,
     refundAmount,
     netReceived: Number(

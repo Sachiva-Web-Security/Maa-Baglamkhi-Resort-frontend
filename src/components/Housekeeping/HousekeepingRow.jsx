@@ -16,39 +16,42 @@ const STATUS_TONE = {
   "Out of Service": "bg-slate-200 text-slate-700 border-slate-300 text-xl",
 };
 
+const NOOP = () => {};
+
 export default function HousekeepingRow(props) {
   if (props.item) {
     const {
       item,
       visibleColumns = [],
-      onStatusChange,
-      onAssigneeChange,
+      onStatusChange = NOOP,
+      onAssigneeChange = NOOP,
       assigneeOptions = [],
       housekeeperStatuses = {},
     } = props;
 
     const itemTone = STATUS_TONE[item.status] || "bg-slate-100 text-slate-700 border-slate-200";
-    const assigneeState = housekeeperStatuses[item.assignee] || "";
+    const assigneeValue = item.assignee ?? "No Housekeeper";
+    const assigneeState = housekeeperStatuses[assigneeValue] || "";
 
     return (
-      <tr className="border-b border-white/5 text-sm text-slate-200 transition hover:bg-white/5">
+      <tr className="border-b border-slate-100 text-sm text-slate-700 transition hover:bg-slate-50">
         {visibleColumns.includes("type") && (
           <td className="px-4 py-4">
-            <div className="font-semibold text-white text-xl">{item.type || "Accommodation"}</div>
-            <div className="text-xl text-slate-400">Room {item.roomNo}</div>
+            <div className="text-xl font-semibold text-slate-900">{item.type || "Accommodation"}</div>
+            <div className="text-xl font-medium text-slate-700">Room {item.roomNo}</div>
           </td>
         )}
-        {visibleColumns.includes("roomNo") && <td className="px-4 py-4 font-semibold text-white">{item.roomNo}</td>}
-        {visibleColumns.includes("building") && <td className="px-4 py-4 text-slate-300">{item.building || "-"}</td>}
-        {visibleColumns.includes("floor") && <td className="px-4 py-4 text-slate-300">{item.floor || "-"}</td>}
-        {visibleColumns.includes("section") && <td className="px-4 py-4 text-slate-300">{item.section || "-"}</td>}
-        {visibleColumns.includes("guestStatus") && <td className="px-4 py-4 text-slate-300">{item.guestStatus || item.guest || "-"}</td>}
-        {visibleColumns.includes("roomType") && <td className="px-4 py-4 text-slate-300">{item.roomType || "-"}</td>}
+        {visibleColumns.includes("roomNo") && <td className="px-4 py-4 text-[14px] font-semibold text-slate-900">{item.roomNo}</td>}
+        {visibleColumns.includes("building") && <td className="px-4 py-4 font-medium text-slate-700">{item.building || "-"}</td>}
+        {visibleColumns.includes("floor") && <td className="px-4 py-4 font-medium text-slate-700">{item.floor || "-"}</td>}
+        {visibleColumns.includes("section") && <td className="px-4 py-4 font-medium text-slate-700">{item.section || "-"}</td>}
+        {visibleColumns.includes("guestStatus") && <td className="px-4 py-4 text-[14px] font-medium text-slate-700">{item.guestStatus || item.guest || "-"}</td>}
+        {visibleColumns.includes("roomType") && <td className="px-4 py-4 font-medium text-slate-700">{item.roomType || "-"}</td>}
         {visibleColumns.includes("status") && (
           <td className="px-4 py-4">
             <select
               value={item.status || "Vacant Dirty"}
-              onChange={(e) => onStatusChange?.(item.id, e.target.value)}
+              onChange={(e) => onStatusChange(item.id, e.target.value)}
               className={`w-full rounded-xl border px-3 py-2 text-xl font-semibold outline-none ${itemTone}`}
             >
               {STATUS_OPTIONS.map((status) => (
@@ -63,9 +66,9 @@ export default function HousekeepingRow(props) {
           <td className="px-4 py-4">
             <div className="space-y-2">
               <select
-                value={item.assignee || "No Housekeeper"}
-                onChange={(e) => onAssigneeChange?.(item.id, e.target.value)}
-                className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xl font-semibold text-white outline-none"
+                value={assigneeValue}
+                onChange={(e) => onAssigneeChange(item.id, e.target.value)}
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xl font-semibold text-slate-900 outline-none"
               >
                 {assigneeOptions.map((option) => (
                   <option key={option} value={option}>
@@ -74,17 +77,17 @@ export default function HousekeepingRow(props) {
                 ))}
               </select>
               {assigneeState ? (
-                <span className="inline-flex rounded-full border border-slate-600 px-2 py-0.5 text-[16px] font-bold uppercase tracking-[0.14em] text-slate-300">
+                <span className="inline-flex rounded-full border border-slate-300 px-2 py-0.5 text-[16px] font-bold uppercase tracking-[0.14em] text-slate-600">
                   {assigneeState}
                 </span>
               ) : null}
             </div>
           </td>
         )}
-        {visibleColumns.includes("layout") && <td className="px-4 py-4 text-slate-300">{item.layout || "-"}</td>}
-        {visibleColumns.includes("articles") && <td className="px-4 py-4 text-slate-300">{item.articles || "-"}</td>}
-        {visibleColumns.includes("services") && <td className="px-4 py-4 text-slate-300">{item.services || "-"}</td>}
-        {visibleColumns.includes("notes") && <td className="px-4 py-4 text-slate-300">{item.notes || "-"}</td>}
+        {visibleColumns.includes("layout") && <td className="px-4 py-4 font-medium text-slate-700">{item.layout || "-"}</td>}
+        {visibleColumns.includes("articles") && <td className="px-4 py-4 font-medium text-slate-700">{item.articles || "-"}</td>}
+        {visibleColumns.includes("services") && <td className="px-4 py-4 font-medium text-slate-700">{item.services || "-"}</td>}
+        {visibleColumns.includes("notes") && <td className="px-4 py-4 font-medium text-slate-700">{item.notes || "-"}</td>}
       </tr>
     );
   }
@@ -92,11 +95,12 @@ export default function HousekeepingRow(props) {
   const {
     room,
     housekeepers = [],
-    onStatusChange,
-    onAssigneeChange,
+    onStatusChange = NOOP,
+    onAssigneeChange = NOOP,
   } = props;
 
   const tone = STATUS_TONE[room.status] || "bg-slate-100 text-slate-700 border-slate-200";
+  const assigneeValue = room.assignee ?? "No Housekeeper";
 
   return (
     <div className="rounded-[26px] border border-slate-200/80 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-5 shadow-[0_12px_35px_rgba(15,23,42,0.08)]">
@@ -130,7 +134,7 @@ export default function HousekeepingRow(props) {
         <div className="rounded-[1.35rem] border border-slate-200 bg-slate-50/80 p-4">
           <p className="text-[15px] font-semibold uppercase tracking-[0.22em] text-slate-500">Assignee</p>
           <select
-            value={room.assignee || "No Housekeeper"}
+            value={assigneeValue}
             onChange={(e) => onAssigneeChange(room.id, e.target.value)}
             className="mt-3 w-full text-xl rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-violet-300 focus:ring-4 focus:ring-violet-100"
           >

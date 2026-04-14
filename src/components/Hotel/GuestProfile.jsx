@@ -239,7 +239,7 @@ const GuestProfile = () => {
                               {document.booking_code || `#${document.booking_id}`}
                             </td>
                             <td className="px-4 py-4 text-lg font-medium text-slate-600">
-                              {new Date(document.uploaded_at).toLocaleDateString("en-IN")}
+                              {formatDate(document.uploaded_at)}
                             </td>
                             <td className="px-4 py-4">
                               <span

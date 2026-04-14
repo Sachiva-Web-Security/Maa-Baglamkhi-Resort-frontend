@@ -17,7 +17,7 @@ const fieldCls =
   "w-full rounded-2xl text-xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:ring-4 focus:ring-sky-100";
 
 const labelCls =
-  "mb-2 block text-xl font-bold text-slate-1000";
+  "mb-2 block text-xl font-bold text-slate-900";
 
 const panelCls =
   "rounded-[30px]   border border-slate-200/80 bg-white p-6 shadow-[0_24px_60px_rgba(15,23,42,0.06)] sm:p-7";
@@ -37,6 +37,8 @@ const mergeGuestName = (firstName = "", lastName = "") =>
   [String(firstName).trim(), String(lastName).trim()].filter(Boolean).join(" ");
 
 const isValidTime = (value) => /^\d{2}:\d{2}$/.test(value);
+const isValidEmail = (value) =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || "").trim());
 
 const isEarlierTime = (left, right) => {
   if (!isValidTime(left) || !isValidTime(right)) return false;
@@ -90,6 +92,7 @@ const Guest = () => {
   const freshStart = Boolean(location.state?.resetBookingDraft);
   const activeBookingId = location.state?.bookingId || getStoredBookingId();
   const activeBookingCode = location.state?.bookingCode || getStoredBookingCode();
+  const [emailError, setEmailError] = useState("");
   const [formData, setFormData] = useState(() =>
     freshStart ? initialGuestForm : getBookingDraft("guest") || initialGuestForm,
   );
@@ -157,6 +160,20 @@ const Guest = () => {
   // ✅ SUBMIT FUNCTION (UPDATED)
   const handleSubmit = async () => {
     try {
+      const email = String(formData.guestEmail || "").trim();
+
+      if (!email) {
+        setEmailError("Please enter a valid email address.");
+        showPopup("error", "Email Required", "Please enter an email address before continuing.");
+        return;
+      }
+
+      if (!isValidEmail(email)) {
+        setEmailError("Please enter a valid email address.");
+        showPopup("error", "Invalid Email", "Please enter a valid email address.");
+        return;
+      }
+
       if (!formData.checkIn) {
         showPopup("error", "Missing Check-in Date", "Please select a check-in date before continuing.");
         return;
@@ -200,6 +217,7 @@ const Guest = () => {
 
       const payload = {
         ...formData,
+        guestEmail: email,
         bookingStatus: "Confirmed",
       };
 
@@ -247,6 +265,17 @@ const Guest = () => {
 
     if (name === "departure" && next.arrival && isEarlierTime(value, next.arrival)) {
       next.departure = next.arrival;
+    }
+
+    if (name === "guestEmail") {
+      const nextEmail = String(value || "").trim();
+      if (!nextEmail) {
+        setEmailError("");
+      } else if (!isValidEmail(nextEmail)) {
+        setEmailError("Please enter a valid email address.");
+      } else {
+        setEmailError("");
+      }
     }
 
     setFormData(next);
@@ -373,7 +402,7 @@ const Guest = () => {
         className="min-h-screen rounded-[36px] bg-[radial-gradient(circle_at_top,_rgba(219,234,254,0.55),_rgba(255,255,255,0.96)_36%,_rgba(248,250,252,1)_100%)] p-4 shadow-[0_30px_80px_rgba(148,163,184,0.18)] sm:p-6"
         style={{ fontFamily: '"Segoe UI", "Helvetica Neue", Arial, sans-serif' }}
       >
-        <div className="mx-auto grid max-w-9xl gap-6 xl:grid-cols-[minmax(0,1fr)_300px]">
+        <div className="mx-auto grid max-w-9xl gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(360px,420px)]">
           <div className="rounded-[34px] border border-slate-200/80 bg-white px-5 py-7 shadow-[0_28px_70px_rgba(15,23,42,0.08)] sm:px-8 sm:py-9">
             <div className="max-w-3xl">
               <div className="text-4xl font-[800] tracking-[-0.03em] text-slate-900">
@@ -417,8 +446,13 @@ const Guest = () => {
                     value={formData.guestEmail}
                     onChange={handleChange}
                     placeholder="Enter your email"
-                    className={fieldCls}
+                    className={`${fieldCls} ${
+                      emailError ? "border-rose-400 focus:border-rose-400 focus:ring-rose-100" : ""
+                    }`}
                   />
+                  {emailError ? (
+                    <p className="mt-2 text-sm font-semibold text-rose-600">{emailError}</p>
+                  ) : null}
                 </div>
 
                 <div>
@@ -435,31 +469,15 @@ const Guest = () => {
               </div>
 
               <div className="rounded-[26px] border border-slate-200/80 bg-slate-50/70 p-5 sm:p-6">
-                <div className="mb-5 flex flex-col gap-4 border-b border-slate-200 pb-5 sm:flex-row sm:items-center sm:justify-between">
+                <div className="mb-5 border-b border-slate-200 pb-5">
                   <div>
                     <div className="text-xl font-[700] tracking-[-0.02em] text-slate-900">
                       Stay Details
                     </div>
-                    <p className="mt-2 text-sm leading-6 text-xl text-slate-500">
+                    <p className="mt-2 text-xl leading-6  text-slate-500">
                       Select stay dates and expected guest timing for this booking.
                     </p>
                   </div>
-
-                  <label className="inline-flex w-fit cursor-pointer items-center gap-3 rounded-full border border-slate-200 bg-white px-4 py-2.5 shadow-sm">
-                    <input
-                      type="checkbox"
-                      name="agentBooking"
-                      checked={formData.agentBooking}
-                      onChange={handleChange}
-                      className="peer sr-only"
-                    />
-                    <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                      Agent Booking
-                    </span>
-                    <span className="relative h-6 w-11 rounded-full bg-slate-200 transition peer-checked:bg-sky-500">
-                      <span className="absolute left-1 top-1 h-4 w-4 rounded-full bg-white shadow-sm transition peer-checked:translate-x-5" />
-                    </span>
-                  </label>
                 </div>
 
                 <div className="grid gap-6 md:grid-cols-2">
@@ -520,21 +538,21 @@ const Guest = () => {
                   <button
                     type="button"
                     onClick={() => navigate("/hotel/all-bookings")}
-                    className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-xl font-bold text-slate-700 transition hover:bg-slate-50"
+                    className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-[22px] font-bold text-slate-700 transition hover:bg-slate-50"
                   >
                     Go Back
                   </button>
                   <button
                     type="button"
                     onClick={() => setCancelFlowModal({ open: true, reason: "", submitting: false })}
-                    className="inline-flex items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 px-5 py-3 text-xl font-bold text-rose-700 transition hover:bg-rose-100"
+                    className="inline-flex items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 px-5 py-3 text-[22px] font-bold text-rose-700 transition hover:bg-rose-100"
                   >
                     {activeBookingId ? "Cancel Booking" : "Discard Booking"}
                   </button>
                   <button
                     type="button"
                     onClick={handleSubmit}
-                    className="inline-flex items-center justify-center rounded-2xl bg-[linear-gradient(180deg,#39a6eb_0%,#2a8fd4_100%)] px-7 py-3 text-xl font-bold text-white shadow-[0_16px_35px_rgba(14,165,233,0.24)] transition hover:brightness-105"
+                    className="inline-flex items-center justify-center rounded-2xl bg-[linear-gradient(180deg,#39a6eb_0%,#2a8fd4_100%)] px-7 py-3 text-[22px] font-bold text-white shadow-[0_16px_35px_rgba(14,165,233,0.24)] transition hover:brightness-105"
                   >
                     Save & Next
                   </button>
@@ -543,44 +561,44 @@ const Guest = () => {
             </div>
           </div>
 
-          <div className="space-y-4">
-            <div className={panelCls}>
-              <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-sky-700">
+          <div className="w-full space-y-4">
+            <div className={`${panelCls} w-full`}>
+              <div className="text-sm font-bold uppercase tracking-[0.24em] text-sky-700 sm:text-base">
                 Quick Snapshot
               </div>
               <div className="mt-5 space-y-4">
-                <div className="rounded-2xl bg-slate-50 p-4">
-                  <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                <div className="rounded-2xl bg-slate-50 p-5">
+                  <div className="text-sm font-bold uppercase tracking-[0.18em] text-slate-500 sm:text-[15px]">
                     Booking Ref
                   </div>
-                  <div className="mt-2 text-xl font-bold text-slate-900">
+                  <div className="mt-2 break-words text-2xl font-black leading-snug text-slate-900 sm:text-[30px]">
                     {activeBookingCode || activeBookingId || "Draft not saved"}
                   </div>
                 </div>
-                <div className="rounded-2xl bg-slate-50 p-4">
-                  <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                <div className="rounded-2xl bg-slate-50 p-5">
+                  <div className="text-sm font-bold uppercase tracking-[0.18em] text-slate-500 sm:text-[15px]">
                     Guest Name
                   </div>
-                  <div className="mt-2 text-lg font-bold text-slate-900">
+                  <div className="mt-2 break-words text-2xl font-black leading-snug text-slate-900 sm:text-[28px]">
                     {formData.guestName || "Not entered"}
                   </div>
                 </div>
-                <div className="rounded-2xl bg-slate-50 p-4">
-                  <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                <div className="rounded-2xl bg-slate-50 p-5">
+                  <div className="text-sm font-bold uppercase tracking-[0.18em] text-slate-500 sm:text-[15px]">
                     Phone
                   </div>
-                  <div className="mt-2 text-lg font-bold text-slate-900">
+                  <div className="mt-2 break-words text-2xl font-black leading-snug text-slate-900 sm:text-[28px]">
                     {formData.mobile || "Not entered"}
                   </div>
                 </div>
-                <div className="rounded-2xl bg-[linear-gradient(135deg,#eff6ff_0%,#f0fdfa_100%)] p-4">
-                  <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                <div className="rounded-2xl bg-[linear-gradient(135deg,#eff6ff_0%,#f0fdfa_100%)] p-5">
+                  <div className="text-sm font-bold uppercase tracking-[0.18em] text-slate-500 sm:text-[15px]">
                     Stay Window
                   </div>
-                  <div className="mt-2 text-lg font-bold text-slate-900">
+                  <div className="mt-2 break-words text-2xl font-black leading-snug text-slate-900 sm:text-[28px]">
                     {formData.checkIn || "-"} to {formData.checkOut || "-"}
                   </div>
-                  <p className="mt-2 text-sm leading-6 text-slate-500">
+                  <p className="mt-3 text-base leading-7 text-slate-600 sm:text-lg">
                     Keep the guest profile complete so the booking can move smoothly to the next section.
                   </p>
                 </div>

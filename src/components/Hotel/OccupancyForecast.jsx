@@ -484,16 +484,16 @@ const OccupancyForecast = () => {
 
                 {!selectedData?.bookings?.length &&
                   !selectedData?.blocks?.length && (
-                    <p className="mt-4 rounded-[14px] bg-emerald-50 px-4 py-3 text-base font-bold text-emerald-700">
-                      ✅ all room available in this day
-                    </p>
+                   <p className="mt-4 rounded-[14px] bg-emerald-50 px-4 py-3 text-base font-bold text-emerald-700">
++                      ✅ All rooms available this day
++                    </p>
                   )}
               </div>
             ) : (
               <div className="rounded-[28px] border-2 border-dashed border-slate-200 py-12 text-center">
                 <div className="text-3xl">📅</div>
                 <p className="mt-3 text-base font-bold text-slate-500">
-“Select any day to view the details.”
+         Select any day to view the details.
                 </p>
               </div>
             )}

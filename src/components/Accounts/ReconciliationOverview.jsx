@@ -79,34 +79,40 @@ const ReconciliationOverview = ({
     if (!bankLedgerId) return;
 
     setBusyKey(key);
-    await onLink({
-      bankLedgerId,
-      sourceType: item.sourceType,
-      sourceId: item.sourceId,
-      matchedAmount: item.sourceAmount,
-    });
-    setBusyKey("");
-    setSelectedLinks((prev) => ({ ...prev, [key]: "" }));
+    try {
+      await onLink({
+        bankLedgerId,
+        sourceType: item.sourceType,
+        sourceId: item.sourceId,
+        matchedAmount: item.sourceAmount,
+      });
+      setSelectedLinks((prev) => ({ ...prev, [key]: "" }));
+    } finally {
+      setBusyKey("");
+    }
   };
 
   const handleUnlink = async (item) => {
     if (!item.linkedBankLedgerId) return;
     setBusyKey(toKey(item));
-    await onUnlink({ bankLedgerId: item.linkedBankLedgerId });
-    setBusyKey("");
+    try {
+      await onUnlink({ bankLedgerId: item.linkedBankLedgerId });
+    } finally {
+      setBusyKey("");
+    }
   };
 
   return (
     <section className="rounded-[26px] border border-white/60 bg-white/82 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <div className="text-lg font-semibold uppercase tracking-[0.18em] text-cyan-700">
+          <div className="text-[18px] font-semibold uppercase tracking-[0.18em] text-cyan-800">
             Linked Reconciliation Flow
           </div>
-          <h2 className="mt-2 text-4xl font-black text-slate-900">
+          <h2 className="mt-2 text-[2.6rem] font-black text-slate-950">
             Billing to bank reconciliation view
           </h2>
-          <p className="mt-3 max-w-3xl text-xl leading-8 text-slate-500">
+          <p className="mt-3 max-w-3xl text-[20px] font-semibold leading-8 text-slate-800">
             Match paid hotel invoices, restaurant bills, banquet invoices, and vendor payouts with
             bank ledger rows so the accounts team can verify what is billed, what reached the bank,
             and what still needs action.
@@ -124,10 +130,10 @@ const ReconciliationOverview = ({
               key={card.label}
               className="min-w-[180px] rounded-[20px] border border-slate-200 bg-slate-50 px-5 py-4"
             >
-              <div className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">
+              <div className="text-[16px] font-semibold uppercase tracking-[0.16em] text-slate-700">
                 {card.label}
               </div>
-              <div className={`mt-3 text-3xl font-black ${card.tone}`}>{card.value}</div>
+              <div className={`mt-3 text-[2.2rem] font-black ${card.tone}`}>{card.value}</div>
             </div>
           ))}
         </div>
@@ -135,13 +141,13 @@ const ReconciliationOverview = ({
 
       <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         <label className="block">
-          <span className="mb-2 block text-sm font-semibold uppercase tracking-[0.14em] text-slate-500">
+          <span className="mb-2 block text-[16px] font-semibold uppercase tracking-[0.14em] text-slate-700">
             Source Filter
           </span>
           <select
             value={sourceFilter}
             onChange={(event) => onSourceFilterChange(event.target.value)}
-            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-lg text-slate-900 outline-none"
+            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-[18px] font-semibold text-slate-950 outline-none"
           >
             <option value="all">All Sources</option>
             <option value="invoice">Hotel Invoices</option>
@@ -152,13 +158,13 @@ const ReconciliationOverview = ({
         </label>
 
         <label className="block">
-          <span className="mb-2 block text-sm font-semibold uppercase tracking-[0.14em] text-slate-500">
+          <span className="mb-2 block text-[16px] font-semibold uppercase tracking-[0.14em] text-slate-700">
             Match Filter
           </span>
           <select
             value={matchFilter}
             onChange={(event) => onMatchFilterChange(event.target.value)}
-            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-lg text-slate-900 outline-none"
+            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-[18px] font-semibold text-slate-950 outline-none"
           >
             <option value="all">All Match States</option>
             <option value="unmatched">Unmatched</option>
@@ -168,8 +174,8 @@ const ReconciliationOverview = ({
           </select>
         </label>
 
-        <div className="rounded-[18px] border border-slate-200 bg-slate-50 px-5 py-4 text-lg text-slate-600">
-          <div className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">
+        <div className="rounded-[18px] border border-slate-200 bg-slate-50 px-5 py-4 text-[18px] font-semibold text-slate-800">
+          <div className="text-[16px] font-semibold uppercase tracking-[0.16em] text-slate-700">
             Flow Hint
           </div>
           <div className="mt-2 leading-7">
@@ -180,8 +186,8 @@ const ReconciliationOverview = ({
       </div>
 
       <div className="mt-5 overflow-x-auto rounded-[18px] border border-slate-200">
-        <table className="min-w-full text-left text-base">
-          <thead className="bg-slate-50 text-sm uppercase tracking-[0.14em] text-slate-500">
+        <table className="min-w-full text-left text-[16px]">
+          <thead className="bg-slate-50 text-[16px] font-semibold uppercase tracking-[0.14em] text-slate-700">
             <tr>
               <th className="px-3 py-4">Source</th>
               <th className="px-3 py-4">Reference</th>
@@ -204,23 +210,23 @@ const ReconciliationOverview = ({
 
               return (
                 <tr key={key} className="border-t border-slate-200">
-                  <td className="px-3 py-4 text-base text-slate-700">{item.sourceType}</td>
-                  <td className="px-3 py-4 text-lg font-semibold text-slate-900">{item.sourceReference}</td>
-                  <td className="px-3 py-4 text-base text-slate-700">{item.partyName || "-"}</td>
-                  <td className="px-3 py-4 text-base text-slate-700">{item.sourceLabel || "-"}</td>
-                  <td className="px-3 py-4 text-base text-slate-700">{item.paymentMode || "-"}</td>
-                  <td className="px-3 py-4 text-lg font-semibold text-slate-900">
+                  <td className="px-3 py-4 text-[16px] font-semibold text-slate-800">{item.sourceType}</td>
+                  <td className="px-3 py-4 text-[18px] font-semibold text-slate-950">{item.sourceReference}</td>
+                  <td className="px-3 py-4 text-[16px] font-semibold text-slate-800">{item.partyName || "-"}</td>
+                  <td className="px-3 py-4 text-[16px] font-semibold text-slate-800">{item.sourceLabel || "-"}</td>
+                  <td className="px-3 py-4 text-[16px] font-semibold text-slate-800">{item.paymentMode || "-"}</td>
+                  <td className="px-3 py-4 text-[18px] font-semibold text-slate-950">
                     {formatINR(item.sourceAmount)}
                   </td>
-                  <td className="px-3 py-4 text-base text-slate-700">{formatINR(item.bankAmount)}</td>
-                  <td className="px-3 py-4 text-base text-slate-700">{formatINR(item.difference)}</td>
+                  <td className="px-3 py-4 text-[16px] font-semibold text-slate-800">{formatINR(item.bankAmount)}</td>
+                  <td className="px-3 py-4 text-[16px] font-semibold text-slate-800">{formatINR(item.difference)}</td>
                   <td className="px-3 py-4">
-                    <span className="rounded-full border border-slate-200 bg-slate-50 px-3.5 py-1.5 text-sm font-bold text-slate-700">
+                    <span className="rounded-full border border-slate-200 bg-slate-50 px-3.5 py-1.5 text-[15px] font-semibold text-slate-800">
                       {item.matchStatus}
                     </span>
                   </td>
                   <td className="px-3 py-4">
-                    <span className="rounded-full border border-slate-200 bg-slate-50 px-3.5 py-1.5 text-sm font-bold text-slate-700">
+                    <span className="rounded-full border border-slate-200 bg-slate-50 px-3.5 py-1.5 text-[15px] font-semibold text-slate-800">
                       {item.reconciliationStatus}
                     </span>
                   </td>
@@ -230,7 +236,7 @@ const ReconciliationOverview = ({
                         type="button"
                         disabled={busy}
                         onClick={() => handleUnlink(item)}
-                        className="rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-bold text-rose-700 disabled:opacity-60"
+                        className="rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-[15px] font-semibold text-rose-700 disabled:opacity-60"
                       >
                         Unlink
                       </button>
@@ -241,7 +247,7 @@ const ReconciliationOverview = ({
                           onChange={(event) =>
                             setSelectedLinks((prev) => ({ ...prev, [key]: event.target.value }))
                           }
-                          className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none"
+                          className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-[15px] font-semibold text-slate-950 outline-none"
                         >
                           <option value="">Select bank row</option>
                           {candidates.map((entry) => (
@@ -254,13 +260,13 @@ const ReconciliationOverview = ({
                           type="button"
                           disabled={busy || !selectedLinks[key]}
                           onClick={() => handleLink(item)}
-                          className="rounded-full border border-cyan-200 bg-cyan-50 px-4 py-2 text-sm font-bold text-cyan-700 disabled:opacity-60"
+                          className="rounded-full border border-cyan-200 bg-cyan-50 px-4 py-2 text-[15px] font-semibold text-cyan-700 disabled:opacity-60"
                         >
                           Link
                         </button>
                       </div>
                     ) : (
-                      <span className="text-sm text-slate-500">No free bank row</span>
+                      <span className="text-[15px] font-semibold text-slate-700">No free bank row</span>
                     )}
                   </td>
                 </tr>
@@ -268,7 +274,7 @@ const ReconciliationOverview = ({
             })}
             {!items?.length ? (
               <tr>
-                <td colSpan={11} className="px-3 py-8 text-center text-lg text-slate-500">
+                <td colSpan={11} className="px-3 py-8 text-center text-[18px] font-semibold text-slate-700">
                   No reconciliation items for the selected filters.
                 </td>
               </tr>

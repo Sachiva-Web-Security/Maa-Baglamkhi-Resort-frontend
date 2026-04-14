@@ -71,12 +71,12 @@ function ExpandableJsonCell({ value }) {
 
   return (
     <details className="group max-w-[240px] rounded-2xl border border-slate-200 bg-slate-50">
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2 text-xs font-semibold text-slate-700">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2 text-[14px] font-semibold text-black">
         <span className="truncate">{formatJsonPreview(value)}</span>
         <FaChevronDown className="shrink-0 text-slate-400 transition group-open:rotate-180" />
       </summary>
       <div className="border-t border-slate-200 px-3 py-2">
-        <pre className="max-h-48 overflow-auto whitespace-pre-wrap break-words text-xs leading-5 text-slate-600">
+        <pre className="max-h-48 overflow-auto whitespace-pre-wrap break-words text-[14px] font-semibold leading-6 text-black">
           {JSON.stringify(value, null, 2)}
         </pre>
       </div>
@@ -187,21 +187,21 @@ export default function AuditReport() {
         <section className="overflow-hidden rounded-[30px] border border-slate-900/10 bg-[linear-gradient(120deg,#071b34_0%,#0d4a53_52%,#1d4ed8_100%)] px-5 py-6 shadow-[0_28px_70px_rgba(15,23,42,0.16)] sm:px-7 sm:py-8">
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.95fr)] lg:items-end">
             <div className="space-y-4">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-cyan-200">
+              <p className="text-[18px] font-bold uppercase tracking-[0.3em] text-cyan-100">
                 Security And Compliance
               </p>
               <div className="space-y-2">
-                <h1 className="text-3xl font-black text-white sm:text-4xl">
+                <h1 className="text-[2.6rem] font-black leading-tight text-white sm:text-[3.2rem]">
                   Audit log dashboard
                 </h1>
-                <p className="max-w-3xl text-sm leading-6 text-slate-100/85 sm:text-base">
+                <p className="max-w-3xl text-[1.1rem] font-semibold leading-7 text-slate-50 sm:text-[1.2rem]">
                   Login, update, delete, and system API activity ko ek jagah trace karo with user, endpoint, request metadata, status codes, and old/new values.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => loadLogs(pagination.page)}
-                className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-bold text-slate-900 shadow-[0_16px_35px_rgba(255,255,255,0.14)] transition hover:-translate-y-0.5"
+                className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-xl font-bold text-slate-900 shadow-[0_16px_35px_rgba(255,255,255,0.14)] transition hover:-translate-y-0.5"
               >
                 <FaSyncAlt className={loading ? "animate-spin text-cyan-600" : "text-cyan-600"} />
                 Refresh Logs
@@ -228,23 +228,23 @@ export default function AuditReport() {
           <div className="h-full rounded-[28px] border border-white/70 bg-white/88 p-5 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
             <div className="mb-4 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-500">
+                <p className="text-[16px] font-bold uppercase tracking-[0.24em] text-emerald-600">
                   Filters
                 </p>
-                <h2 className="mt-1 text-xl font-bold text-slate-900">Search audit events</h2>
+                <h2 className="mt-1 text-[24px] font-black text-black sm:text-[28px]">Search audit events</h2>
               </div>
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
                   onClick={clearFilters}
-                  className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-300"
+                  className="rounded-full border border-slate-300 bg-white px-5 py-2.5 text-[16px] font-bold text-black transition hover:border-slate-400"
                 >
                   Clear
                 </button>
                 <button
                   type="button"
                   onClick={applyFilters}
-                  className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-sky-600 to-cyan-500 px-4 py-2 text-sm font-bold text-white shadow-[0_14px_30px_rgba(14,165,233,0.22)] transition hover:-translate-y-0.5"
+                  className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-sky-600 to-cyan-500 px-5 py-2.5 text-[16px] font-bold text-white shadow-[0_14px_30px_rgba(14,165,233,0.22)] transition hover:-translate-y-0.5"
                 >
                   <FaFilter />
                   Apply Filters
@@ -253,20 +253,20 @@ export default function AuditReport() {
             </div>
 
             <div className="grid gap-3 md:grid-cols-2 2xl:grid-cols-5">
-              <label className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm md:col-span-2 2xl:col-span-2">
+              <label className="flex items-center gap-2 rounded-2xl border border-slate-300 bg-white px-4 py-3.5 text-[16px] font-bold text-black shadow-sm md:col-span-2 2xl:col-span-2">
                 <FaSearch className="text-cyan-500" />
                 <input
                   value={filters.search}
                   onChange={(e) => handleFilterChange("search", e.target.value)}
                   placeholder="Search action, endpoint, user"
-                  className="w-full bg-transparent outline-none placeholder:text-slate-400"
+                  className="w-full bg-transparent text-[16px] font-bold text-black outline-none placeholder:text-slate-500"
                 />
               </label>
 
               <select
                 value={filters.action}
                 onChange={(e) => handleFilterChange("action", e.target.value)}
-                className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm outline-none"
+                className="rounded-2xl border border-slate-300 bg-white px-4 py-3.5 text-[16px] font-bold text-black shadow-sm outline-none"
               >
                 <option value="">All actions</option>
                 {ACTION_OPTIONS.filter(Boolean).map((action) => (
@@ -277,7 +277,7 @@ export default function AuditReport() {
               <select
                 value={filters.status}
                 onChange={(e) => handleFilterChange("status", e.target.value)}
-                className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm outline-none"
+                className="rounded-2xl border border-slate-300 bg-white px-4 py-3.5 text-[16px] font-bold text-black shadow-sm outline-none"
               >
                 <option value="">All status</option>
                 {STATUS_OPTIONS.filter(Boolean).map((status) => (
@@ -286,22 +286,22 @@ export default function AuditReport() {
               </select>
 
               <div className="grid gap-3 sm:grid-cols-2 md:col-span-2 2xl:col-span-5">
-                <label className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm">
+                <label className="flex items-center gap-2 rounded-2xl border border-slate-300 bg-white px-4 py-3.5 text-[16px] font-bold text-black shadow-sm">
                   <FaCalendarAlt className="text-cyan-500" />
                   <input
                     type="date"
                     value={filters.dateFrom}
                     onChange={(e) => handleFilterChange("dateFrom", e.target.value)}
-                    className="w-full bg-transparent outline-none"
+                    className="w-full bg-transparent text-[16px] font-bold text-black outline-none"
                   />
                 </label>
-                <label className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm">
+                <label className="flex items-center gap-2 rounded-2xl border border-slate-300 bg-white px-4 py-3.5 text-[16px] font-bold text-black shadow-sm">
                   <FaCalendarAlt className="text-cyan-500" />
                   <input
                     type="date"
                     value={filters.dateTo}
                     onChange={(e) => handleFilterChange("dateTo", e.target.value)}
-                    className="w-full bg-transparent outline-none"
+                    className="w-full bg-transparent text-[16px] font-bold text-black outline-none"
                   />
                 </label>
               </div>
@@ -311,35 +311,35 @@ export default function AuditReport() {
           <div className="h-full rounded-[28px] border border-white/70 bg-white/88 p-5 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
             <div className="flex h-full flex-col gap-4">
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-amber-500">
+                <p className="text-[16px] font-bold uppercase tracking-[0.24em] text-amber-500">
                   Snapshot
                 </p>
-                <h2 className="mt-1 text-xl font-bold text-slate-900">Live audit health</h2>
+                <h2 className="mt-1 text-[24px] font-black text-black sm:text-[28px]">Live audit health</h2>
               </div>
               <div className="grid flex-1 gap-3 sm:grid-cols-2 2xl:grid-cols-3">
                 <div className="flex h-full flex-col rounded-[22px] border border-emerald-200 bg-emerald-50 p-4">
-                  <div className="flex items-center gap-2 text-emerald-700">
+                  <div className="flex items-center gap-2 text-black">
                     <FaCheckCircle />
-                    <span className="text-sm font-bold">Success rate</span>
+                    <span className="text-[18px] font-black text-black">Success rate</span>
                   </div>
-                  <div className="mt-3 text-3xl font-black text-emerald-800">{successRate}</div>
+                  <div className="mt-3 text-[2.25rem] font-black leading-none text-black">{successRate}</div>
                 </div>
                 <div className="flex h-full flex-col rounded-[22px] border border-rose-200 bg-rose-50 p-4">
-                  <div className="flex items-center gap-2 text-rose-700">
+                  <div className="flex items-center gap-2 text-black">
                     <FaExclamationTriangle />
-                    <span className="text-sm font-bold">Failed calls</span>
+                    <span className="text-[18px] font-black text-black">Failed calls</span>
                   </div>
-                  <div className="mt-3 text-3xl font-black text-rose-800">{liveSummary.errorCount}</div>
-                  <div className="mt-2 text-xs font-semibold text-rose-700/80">
+                  <div className="mt-3 text-[2.25rem] font-black leading-none text-black">{liveSummary.errorCount}</div>
+                  <div className="mt-2 text-[18px] font-semibold leading-8 text-black">
                     Latest endpoint state ke hisaab se unresolved failures.
                   </div>
                 </div>
                 <div className="flex h-full flex-col rounded-[22px] border border-cyan-200 bg-cyan-50 p-4">
-                  <div className="flex items-center gap-2 text-cyan-700">
+                  <div className="flex items-center gap-2 text-black">
                     <FaUserShield />
-                    <span className="text-sm font-bold">Traced users</span>
+                    <span className="text-[18px] font-black text-black">Traced users</span>
                   </div>
-                  <div className="mt-3 text-3xl font-black text-cyan-800">{summary.uniqueUsers}</div>
+                  <div className="mt-3 text-[2.25rem] font-black leading-none text-black">{summary.uniqueUsers}</div>
                 </div>
               </div>
             </div>
@@ -364,8 +364,8 @@ export default function AuditReport() {
             <>
               <div className="overflow-hidden rounded-[28px] border border-white/70 bg-white/92 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
                 <div className="overflow-x-auto">
-                  <table className="min-w-full text-sm">
-                    <thead className="bg-[linear-gradient(180deg,#f8fafc_0%,#eef2ff_100%)] text-left text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                  <table className="min-w-full text-[14px]">
+                    <thead className="bg-[linear-gradient(180deg,#f8fafc_0%,#eef2ff_100%)] text-left text-[14px] font-semibold uppercase tracking-[0.16em] text-black">
                       <tr>
                         <th className="px-4 py-4">Log ID</th>
                         <th className="px-4 py-4">User</th>
@@ -391,11 +391,11 @@ export default function AuditReport() {
                                 <div className="font-semibold text-slate-900">
                                   {log.user_name || `User #${log.user_id || "--"}`}
                                 </div>
-                                <div className="mt-1 text-xs text-slate-500">{log.user_email || "--"}</div>
+                                <div className="mt-1 text-[14px] font-semibold text-black">{log.user_email || "--"}</div>
                               </div>
                             </td>
                             <td className="px-4 py-4">
-                              <span className="rounded-full bg-cyan-50 px-3 py-1 text-xs font-bold text-cyan-700">
+                              <span className="rounded-full bg-cyan-50 px-3 py-1 text-[14px] font-bold text-black">
                                 {log.action}
                               </span>
                             </td>
@@ -403,16 +403,16 @@ export default function AuditReport() {
                               <div className="min-w-[220px] break-words font-semibold text-slate-800">{log.endpoint}</div>
                             </td>
                             <td className="px-4 py-4">
-                              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold uppercase text-slate-700">
+                              <span className="rounded-full bg-slate-100 px-3 py-1 text-[14px] font-bold uppercase text-black">
                                 {log.http_method}
                               </span>
                             </td>
                             <td className="px-4 py-4">
-                              <span className={`rounded-full px-3 py-1 text-xs font-bold ${statusTone}`}>
+                              <span className={`rounded-full px-3 py-1 text-[14px] font-bold ${statusTone}`}>
                                 {log.response_status}
                               </span>
                             </td>
-                            <td className="px-4 py-4 text-slate-600">{log.ip_address || "--"}</td>
+                            <td className="px-4 py-4 text-[14px] font-semibold text-black">{log.ip_address || "--"}</td>
                             <td className="px-4 py-4">
                               <ExpandableJsonCell value={log.request_data} />
                             </td>
@@ -423,7 +423,7 @@ export default function AuditReport() {
                               <ExpandableJsonCell value={log.new_value} />
                             </td>
                             <td className="px-4 py-4">
-                              <div className="min-w-[150px] text-sm font-semibold text-slate-700">
+                              <div className="min-w-[150px] text-[14px] font-semibold text-black">
                                 {formatDateTime(log.created_at)}
                               </div>
                             </td>

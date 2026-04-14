@@ -1,9 +1,9 @@
 const fieldCls =
-  "w-full rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100";
+  "w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-[13px] font-semibold text-black outline-none transition focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100";
 
 const Field = ({ label, children }) => (
   <div className="flex flex-col gap-2">
-    <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+    <div className="text-[13px] font-semibold uppercase tracking-[0.18em] text-slate-800">
       {label}
     </div>
     {children}
@@ -30,10 +30,10 @@ const ReportFilters = ({ value, onChange, visible, options }) => {
   return (
     <div className="rounded-[26px] border border-white/60 bg-white/82 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
       <div className="mb-4">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
+        <p className="text-[13px] font-semibold uppercase tracking-[0.24em] text-emerald-500">
           Smart Filters
         </p>
-        <h2 className="mt-1 text-xl font-bold text-slate-900">
+        <h2 className="mt-1 text-2xl font-bold text-black">
           Narrow down report results
         </h2>
       </div>

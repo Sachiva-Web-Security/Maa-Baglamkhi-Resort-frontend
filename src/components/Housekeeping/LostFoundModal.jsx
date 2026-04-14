@@ -16,6 +16,7 @@ export default function LostFoundModal({ rooms, onClose, apiBase }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [tab, setTab] = useState("list");
+  const [error, setError] = useState("");
 
   // Filters
   const [search, setSearch] = useState("");
@@ -41,9 +42,13 @@ export default function LostFoundModal({ rooms, onClose, apiBase }) {
   const fetchItems = useCallback(async () => {
     setLoading(true);
     try {
+      setError("");
       const res = await API.get("/housekeeping/lost-found");
       setItems(res.data);
-    } catch { setItems([]); }
+    } catch (err) {
+      setItems([]);
+      setError("Failed to load lost and found items. Please try again.");
+    }
     finally { setLoading(false); }
   }, [apiBase]);
 
@@ -58,15 +63,22 @@ export default function LostFoundModal({ rooms, onClose, apiBase }) {
 
   const handleStatusUpdate = async (id, status, extra = {}) => {
     try {
+      setError("");
       await API.put(`/housekeeping/lost-found/${id}`, { status, ...extra });
-      fetchItems();
-    } catch { /* ignore */ }
+      await fetchItems();
+    } catch (err) {
+      setError("Failed to update status. Please try again.");
+    }
   };
 
   const handleSubmit = async () => {
-    if (!form.description) return;
+    if (!form.description) {
+      setError("Please enter an item description before submitting.");
+      return;
+    }
     setSaving(true);
     try {
+      setError("");
       await API.post("/housekeeping/lost-found", {
         foundDate: form.foundDate,
         roomNo: form.foundRoom,
@@ -80,10 +92,13 @@ export default function LostFoundModal({ rooms, onClose, apiBase }) {
         notes: form.notes,
       });
       setForm(prev => ({ ...prev, description: "", guestName: "", storageLocation: "", notes: "" }));
-      fetchItems();
+      await fetchItems();
       setTab("list");
-    } catch { /* ignore */ }
-    setSaving(false);
+    } catch (err) {
+      setError("Failed to report item. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const exportCSV = () => {
@@ -117,6 +132,12 @@ export default function LostFoundModal({ rooms, onClose, apiBase }) {
         </div>
 
         <div className="p-6">
+          {error ? (
+            <div className="mb-5 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+              {error}
+            </div>
+          ) : null}
+
           {/* Stats */}
           <div className="mb-5 grid grid-cols-3 gap-3">
             <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">

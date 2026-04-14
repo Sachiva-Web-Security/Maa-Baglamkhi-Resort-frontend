@@ -102,7 +102,6 @@ const defaultWizard = {
   paymentMode: "Pending",
   paymentReferenceId: "",
   receiptFileName: "",
-  receiptFileDataUrl: "",
   refundAmount: 0,
   selectedCustomMenuItems: [],
   selectedRestaurantMenuItems: [],
@@ -285,15 +284,6 @@ function PaginationControls({
   );
 }
 
-function readFileAsDataUrl(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result || ""));
-    reader.onerror = () => reject(new Error("file_read_failed"));
-    reader.readAsDataURL(file);
-  });
-}
-
 function formatBookingDate(dateValue) {
   if (!dateValue) return "Date pending";
 
@@ -385,6 +375,7 @@ const Banquet = () => {
   const [isSavingReservation, setIsSavingReservation] = useState(false);
   const [reservationSuccess, setReservationSuccess] = useState(null);
   const [receiptInputKey, setReceiptInputKey] = useState(0);
+  const [receiptPreviewUrl, setReceiptPreviewUrl] = useState("");
   const [bookingFiltersDraft, setBookingFiltersDraft] = useState(() => ({
     ...bookingFilterDefaults,
   }));
@@ -823,6 +814,14 @@ const Banquet = () => {
   ]);
 
   useEffect(() => {
+    return () => {
+      if (receiptPreviewUrl && receiptPreviewUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(receiptPreviewUrl);
+      }
+    };
+  }, [receiptPreviewUrl]);
+
+  useEffect(() => {
     const focusBookingId = location.state?.focusBookingId;
     if (!focusBookingId || !bookings.length) return;
 
@@ -963,6 +962,12 @@ const Banquet = () => {
     setReservationError("");
     setEditingBookingId(null);
     setReceiptInputKey((prev) => prev + 1);
+    setReceiptPreviewUrl((prev) => {
+      if (prev && prev.startsWith("blob:")) {
+        URL.revokeObjectURL(prev);
+      }
+      return "";
+    });
     setWizard({
       ...defaultWizard,
       eventSupportFee: pricingConfig.eventSupportFee,
@@ -975,6 +980,12 @@ const Banquet = () => {
     setReservationError("");
     setEditingBookingId(null);
     setReceiptInputKey((prev) => prev + 1);
+    setReceiptPreviewUrl((prev) => {
+      if (prev && prev.startsWith("blob:")) {
+        URL.revokeObjectURL(prev);
+      }
+      return "";
+    });
     setWizard({
       ...defaultWizard,
       eventSupportFee: pricingConfig.eventSupportFee,
@@ -1016,6 +1027,12 @@ const Banquet = () => {
     setReservationError("");
     setEditingBookingId(booking.id);
     setReceiptInputKey((prev) => prev + 1);
+    setReceiptPreviewUrl((prev) => {
+      if (prev && prev.startsWith("blob:")) {
+        URL.revokeObjectURL(prev);
+      }
+      return "";
+    });
     setWizard({
       ...defaultWizard,
       ...normalizedBooking,
@@ -1134,25 +1151,30 @@ const Banquet = () => {
       return;
     }
 
-    try {
-      const fileDataUrl = await readFileAsDataUrl(file);
-      setReservationError("");
-      setWizard((prev) => ({
-        ...prev,
-        receiptFileName: file.name,
-        receiptFileDataUrl: fileDataUrl,
-      }));
-    } catch {
-      setReservationError("Receipt file read nahi ho paayi. Dobara try kijiye.");
-      setReceiptInputKey((prev) => prev + 1);
-    }
+    const nextPreviewUrl = URL.createObjectURL(file);
+    setReceiptPreviewUrl((prev) => {
+      if (prev && prev.startsWith("blob:")) {
+        URL.revokeObjectURL(prev);
+      }
+      return nextPreviewUrl;
+    });
+    setReservationError("");
+    setWizard((prev) => ({
+      ...prev,
+      receiptFileName: file.name,
+    }));
   };
 
   const handleRemoveReceipt = () => {
+    setReceiptPreviewUrl((prev) => {
+      if (prev && prev.startsWith("blob:")) {
+        URL.revokeObjectURL(prev);
+      }
+      return "";
+    });
     setWizard((prev) => ({
       ...prev,
       receiptFileName: "",
-      receiptFileDataUrl: "",
     }));
     setReceiptInputKey((prev) => prev + 1);
   };
@@ -2101,7 +2123,7 @@ const Banquet = () => {
               ))
             ) : (
               <div className="rounded-[22px] border border-dashed border-slate-300 bg-white/70 p-6 text-base font-medium text-slate-500">
-      No reservations are available. Create your first booking using ‘Add New.
+      No reservations are available. Create your first booking using 'Add New'.
               </div>
             )}
           </div>
@@ -2235,17 +2257,17 @@ const Banquet = () => {
       </div>
 
       <div className="w-full space-y-6">
-        <section className="overflow-hidden rounded-[30px] border border-slate-200/80 bg-white/95 px-5 py-6 shadow-[0_22px_55px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:px-7 sm:py-8">
+        <section className="overflow-hidden rounded-[30px] border border-white/15 bg-[linear-gradient(90deg,#1C3F8A_0%,#243B52_100%)] px-5 py-6 shadow-[0_22px_55px_rgba(15,23,42,0.18)] backdrop-blur-xl sm:px-7 sm:py-8">
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(340px,1fr)] xl:items-start">
             <div className="space-y-4">
-              <p className="text-sm font-bold uppercase tracking-[0.28em] text-sky-500">
+              <p className="text-sm font-bold uppercase tracking-[0.28em] text-sky-200">
                 Dashboard
               </p>
               <div className="space-y-2">
-                <h1 className="text-4xl font-black leading-tight text-slate-950 sm:text-5xl">
+                <h1 className="text-4xl font-black leading-tight text-white sm:text-5xl">
                   Banquet operations dashboard
                 </h1>
-                <p className="max-w-3xl text-base font-medium leading-7 text-slate-600 sm:text-lg">
+                <p className="max-w-3xl text-base font-medium leading-7 text-slate-100 sm:text-lg">
                   Reservation activity, hall readiness, menu pricing, and billing actions are
                   shown in a clean workspace so the team can scan information faster.
                 </p>
@@ -2254,7 +2276,7 @@ const Banquet = () => {
                 <button
                   type="button"
                   onClick={() => window.location.reload()}
-                  className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2.5 text-base font-bold text-white shadow-[0_12px_28px_rgba(15,23,42,0.16)] transition hover:-translate-y-0.5 hover:bg-slate-800"
+                  className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2.5 text-base font-bold text-slate-900 shadow-[0_12px_28px_rgba(15,23,42,0.16)] transition hover:-translate-y-0.5 hover:bg-sky-500 hover:text-white hover:shadow-[0_14px_32px_rgba(59,130,246,0.32)]"
                 >
                   <FaSyncAlt />
                   Refresh
@@ -2262,7 +2284,7 @@ const Banquet = () => {
                 <button
                   type="button"
                   onClick={openAddHallForm}
-                  className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-base font-bold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                  className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2.5 text-base font-bold text-white transition hover:border-sky-300 hover:bg-sky-500 hover:text-white hover:shadow-[0_14px_32px_rgba(59,130,246,0.32)]"
                 >
                   <FaPlus />
                   Add hall
@@ -2270,7 +2292,7 @@ const Banquet = () => {
                 <button
                   type="button"
                   onClick={openCreateReservationForm}
-                  className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-base font-bold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                  className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2.5 text-base font-bold text-white transition hover:border-sky-300 hover:bg-sky-500 hover:text-white hover:shadow-[0_14px_32px_rgba(59,130,246,0.32)]"
                 >
                   <FaPlus />
                   New reservation
@@ -2283,7 +2305,7 @@ const Banquet = () => {
                       key={section.id}
                       type="button"
                       onClick={() => setActiveQuickSection(section.id)}
-                      className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2.5 text-base font-bold text-slate-700 transition hover:border-slate-300 hover:bg-white"
+                      className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2.5 text-base font-bold text-white transition hover:border-sky-300 hover:bg-sky-500 hover:text-white hover:shadow-[0_14px_32px_rgba(59,130,246,0.32)]"
                     >
                       <Icon />
                       {section.label}
@@ -2297,15 +2319,15 @@ const Banquet = () => {
               {stats.map((item) => (
                 <div
                   key={item.label}
-                  className="rounded-[24px] border border-slate-200/80 bg-slate-50/90 p-4 shadow-[0_10px_24px_rgba(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:shadow-[0_14px_32px_rgba(15,23,42,0.08)]"
+                  className="rounded-[24px] border border-white/15 bg-white/10 p-4 shadow-[0_10px_24px_rgba(15,23,42,0.12)] backdrop-blur-sm transition hover:-translate-y-0.5 hover:border-sky-300 hover:bg-sky-500/45 hover:shadow-[0_14px_32px_rgba(59,130,246,0.28)]"
                 >
-                  <div className="text-sm font-bold uppercase tracking-[0.16em] text-slate-500">
+                  <div className="text-sm font-bold uppercase tracking-[0.16em] text-slate-200">
                     {item.label}
                   </div>
-                  <div className="mt-3 text-4xl font-black leading-none text-slate-950 sm:text-[42px]">
+                  <div className="mt-3 text-4xl font-black leading-none text-white sm:text-[42px]">
                     {item.value}
                   </div>
-                  <div className="mt-2 h-1.5 w-12 rounded-full bg-sky-200" />
+                  <div className="mt-2 h-1.5 w-12 rounded-full bg-sky-300" />
                 </div>
               ))}
             </div>
@@ -3274,9 +3296,9 @@ const Banquet = () => {
                     {wizard.receiptFileName ? (
                       <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
                         <span className="font-semibold">{wizard.receiptFileName}</span>
-                        {wizard.receiptFileDataUrl ? (
+                        {receiptPreviewUrl ? (
                           <a
-                            href={wizard.receiptFileDataUrl}
+                            href={receiptPreviewUrl}
                             target="_blank"
                             rel="noreferrer"
                             className="font-semibold text-cyan-700"
@@ -3393,7 +3415,7 @@ const Banquet = () => {
                           </button>
                         </div>
                         <div className="text-sm text-slate-500">
-              “You can select from the full menu or manually add a custom item here.”
+              You can select from the full menu or manually add a custom item here.
                         </div>
                       </div>
                     </div>

@@ -35,15 +35,13 @@ describe("restaurantService", () => {
     });
   });
 
-  test("uses multipart headers when menu payload is FormData", async () => {
+  test("passes FormData menu payload without overriding multipart headers", async () => {
     apiMock.post.mockResolvedValue({ data: { ok: true } });
     const payload = new FormData();
     payload.append("name", frontendSeed.restaurant.menuItem.name);
 
     await expect(restaurantService.addMenuItem(payload)).resolves.toEqual({ ok: true });
-    expect(apiMock.post).toHaveBeenCalledWith("/restaurant/menu", payload, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+    expect(apiMock.post).toHaveBeenCalledWith("/restaurant/menu", payload);
   });
 
   test("creates order by posting each item and returns latest order id", async () => {
@@ -81,7 +79,8 @@ describe("restaurantService", () => {
   test("falls back to generic pay endpoint when billId is absent", async () => {
     apiMock.post.mockResolvedValue({ data: { message: "paid" } });
 
-    await restaurantService.payBill({ mode: "Cash" });
+   
+    await expect(restaurantService.payBill({ mode: "Cash" })).resolves.toEqual({ message: "paid" });
 
     expect(apiMock.post).toHaveBeenCalledWith("/restaurant/bill/pay", { mode: "Cash" });
   });

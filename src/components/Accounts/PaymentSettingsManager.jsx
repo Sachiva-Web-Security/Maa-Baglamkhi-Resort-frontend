@@ -14,7 +14,7 @@ const emptyForm = {
 };
 
 const inputClass =
-  "w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-cyan-200";
+  "w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[15px] text-slate-950 outline-none placeholder:text-slate-700 focus:ring-2 focus:ring-cyan-200";
 
 const PaymentSettingsManager = ({ rows, onSubmit, onUpdate, onDelete }) => {
   const [form, setForm] = useState(emptyForm);
@@ -77,10 +77,14 @@ const PaymentSettingsManager = ({ rows, onSubmit, onUpdate, onDelete }) => {
   const removeRow = async (row) => {
     const confirmed = window.confirm("Delete this payment setup?");
     if (!confirmed) return;
-    await onDelete(row.id);
-    if (editingId === row.id) {
-      setEditingId(null);
-      setForm(emptyForm);
+    try {
+      const success = await onDelete(row.id);
+      if (success && editingId === row.id) {
+        setEditingId(null);
+        setForm(emptyForm);
+      }
+    } catch {
+      // Parent handles delete errors.
     }
   };
 
@@ -88,23 +92,23 @@ const PaymentSettingsManager = ({ rows, onSubmit, onUpdate, onDelete }) => {
     <div className="space-y-5 rounded-[24px] border border-white/60 bg-white/82 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-700">
+          <div className="text-[15px] font-semibold uppercase tracking-[0.18em] text-slate-950">
             Payment Settings
           </div>
-          <h3 className="mt-2 text-xl font-black text-slate-900">UPI and scanner setup</h3>
-          <p className="mt-2 max-w-3xl text-sm text-slate-500">
+          <h3 className="mt-2 text-[15px] font-black text-slate-900">UPI and scanner setup</h3>
+          <p className="mt-2 max-w-3xl text-[15px] text-slate-800">
             Save the client&apos;s UPI ID, provider details, bank name, and QR scanner so staff can
             show the correct payment setup for hotel, restaurant, or banquet payments.
           </p>
         </div>
-        <div className="rounded-[20px] border border-cyan-100 bg-cyan-50 px-4 py-3 text-sm text-cyan-800">
+        <div className="rounded-[20px] border border-cyan-100 bg-cyan-50 px-4 py-3 text-[15px] text-slate-950">
           Active setups: <span className="font-bold">{activeRows.length}</span>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-2">
         <label className="block">
-          <span className="mb-1 block text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+          <span className="mb-1 block text-[15px] font-semibold uppercase tracking-[0.14em] text-slate-950">
             Payment Mode
           </span>
           <select
@@ -121,7 +125,7 @@ const PaymentSettingsManager = ({ rows, onSubmit, onUpdate, onDelete }) => {
         </label>
 
         <label className="block">
-          <span className="mb-1 block text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+          <span className="mb-1 block text-[15px] font-semibold uppercase tracking-[0.14em] text-slate-950">
             Department
           </span>
           <select
@@ -138,7 +142,7 @@ const PaymentSettingsManager = ({ rows, onSubmit, onUpdate, onDelete }) => {
         </label>
 
         <label className="block">
-          <span className="mb-1 block text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+          <span className="mb-1 block text-[15px] font-semibold uppercase tracking-[0.14em] text-slate-950">
             Provider Name
           </span>
           <input
@@ -151,7 +155,7 @@ const PaymentSettingsManager = ({ rows, onSubmit, onUpdate, onDelete }) => {
         </label>
 
         <label className="block">
-          <span className="mb-1 block text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+          <span className="mb-1 block text-[15px] font-semibold uppercase tracking-[0.14em] text-slate-950">
             UPI ID
           </span>
           <input
@@ -164,7 +168,7 @@ const PaymentSettingsManager = ({ rows, onSubmit, onUpdate, onDelete }) => {
         </label>
 
         <label className="block">
-          <span className="mb-1 block text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+          <span className="mb-1 block text-[15px] font-semibold uppercase tracking-[0.14em] text-slate-950">
             Account Holder
           </span>
           <input
@@ -177,7 +181,7 @@ const PaymentSettingsManager = ({ rows, onSubmit, onUpdate, onDelete }) => {
         </label>
 
         <label className="block">
-          <span className="mb-1 block text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+          <span className="mb-1 block text-[15px] font-semibold uppercase tracking-[0.14em] text-slate-950">
             Bank Name
           </span>
           <input
@@ -190,7 +194,7 @@ const PaymentSettingsManager = ({ rows, onSubmit, onUpdate, onDelete }) => {
         </label>
 
         <label className="block">
-          <span className="mb-1 block text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+          <span className="mb-1 block text-[15px] font-semibold uppercase tracking-[0.14em] text-slate-950">
             QR Image URL
           </span>
           <input
@@ -203,7 +207,7 @@ const PaymentSettingsManager = ({ rows, onSubmit, onUpdate, onDelete }) => {
         </label>
 
         <label className="block">
-          <span className="mb-1 block text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+          <span className="mb-1 block text-[15px] font-semibold uppercase tracking-[0.14em] text-slate-950">
             Upload QR Image
           </span>
           <input
@@ -216,7 +220,7 @@ const PaymentSettingsManager = ({ rows, onSubmit, onUpdate, onDelete }) => {
         </label>
 
         <label className="block md:col-span-2">
-          <span className="mb-1 block text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+          <span className="mb-1 block text-[15px] font-semibold uppercase tracking-[0.14em] text-slate-950">
             Notes
           </span>
           <textarea
@@ -229,7 +233,7 @@ const PaymentSettingsManager = ({ rows, onSubmit, onUpdate, onDelete }) => {
           />
         </label>
 
-        <label className="flex items-center gap-3 text-sm font-semibold text-slate-700">
+        <label className="flex items-center gap-3 text-[15px] font-semibold text-slate-950">
           <input
             type="checkbox"
             name="isActive"
@@ -244,7 +248,7 @@ const PaymentSettingsManager = ({ rows, onSubmit, onUpdate, onDelete }) => {
           <button
             type="submit"
             disabled={saving}
-            className="rounded-xl bg-gradient-to-r from-cyan-600 to-teal-500 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+            className="rounded-xl bg-gradient-to-r from-cyan-600 to-teal-500 px-4 py-2 text-[15px] font-semibold text-white disabled:opacity-60"
           >
             {saving ? "Saving..." : editingId ? "Update Payment Setup" : "Save Payment Setup"}
           </button>
@@ -255,7 +259,7 @@ const PaymentSettingsManager = ({ rows, onSubmit, onUpdate, onDelete }) => {
                 setEditingId(null);
                 setForm(emptyForm);
               }}
-              className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700"
+              className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-[15px] font-semibold text-slate-700"
             >
               Cancel Edit
             </button>
@@ -271,29 +275,29 @@ const PaymentSettingsManager = ({ rows, onSubmit, onUpdate, onDelete }) => {
           >
             <div className="flex items-start justify-between gap-4">
               <div>
-                <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-cyan-700">
+                <div className="text-[15px] font-semibold uppercase tracking-[0.16em] text-slate-950">
                   {row.department} {row.payment_mode}
                 </div>
-                <div className="mt-2 text-lg font-black text-slate-900">
+                <div className="mt-2 text-[15px] font-black text-slate-900">
                   {row.provider_name || row.account_holder_name || "Payment Setup"}
                 </div>
-                <div className="mt-2 text-sm text-slate-600">
+                <div className="mt-2 text-[15px] text-slate-900">
                   UPI: {row.upi_id || "-"}
                 </div>
-                <div className="text-sm text-slate-600">Bank: {row.bank_name || "-"}</div>
+                <div className="text-[15px] text-slate-900">Bank: {row.bank_name || "-"}</div>
               </div>
               <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={() => startEdit(row)}
-                  className="rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1.5 text-xs font-bold text-cyan-700"
+                  className="rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1.5 text-[15px] font-bold text-cyan-700"
                 >
                   Edit
                 </button>
                 <button
                   type="button"
                   onClick={() => removeRow(row)}
-                  className="rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-700"
+                  className="rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-[15px] font-bold text-rose-700"
                 >
                   Delete
                 </button>
@@ -309,18 +313,18 @@ const PaymentSettingsManager = ({ rows, onSubmit, onUpdate, onDelete }) => {
                 />
               </div>
             ) : (
-              <div className="mt-4 rounded-[18px] border border-dashed border-slate-300 bg-white p-5 text-center text-sm text-slate-500">
+              <div className="mt-4 rounded-[18px] border border-dashed border-slate-300 bg-white p-5 text-center text-[15px] text-slate-800">
                 No QR image uploaded yet.
               </div>
             )}
 
             {row.notes ? (
-              <div className="mt-3 text-sm text-slate-600">{row.notes}</div>
+              <div className="mt-3 text-[15px] text-slate-900">{row.notes}</div>
             ) : null}
           </div>
         ))}
         {!activeRows.length ? (
-          <div className="rounded-[22px] border border-dashed border-slate-300 bg-slate-50 p-5 text-sm text-slate-500 lg:col-span-2">
+          <div className="rounded-[22px] border border-dashed border-slate-300 bg-slate-50 p-5 text-[15px] text-slate-800 lg:col-span-2">
             No active UPI or scanner setup saved yet.
           </div>
         ) : null}

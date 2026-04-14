@@ -86,7 +86,16 @@ const AccountsDashboard = () => {
 
     return merged.filter((booking) => {
       const key = String(booking.bookingId || booking.id || "");
-      if (!key || seen.has(key)) return false;
+      if (!key) {
+        console.warn("Booking missing identifier:", {
+          checkIn: booking.checkIn,
+          roomNumber: booking.roomNumber,
+        });
+        return false;
+      }
+
+      if (seen.has(key)) return false;
+
       seen.add(key);
       return true;
     });

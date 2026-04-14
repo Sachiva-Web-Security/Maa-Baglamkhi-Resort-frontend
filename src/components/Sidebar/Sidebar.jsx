@@ -23,7 +23,7 @@ import { getRoleHome } from "../../utils/roleHome";
 
 const HEADER_HEIGHT = 92;
 
-const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, footerOverlap = 0, setIsAuthenticated }) => {
+const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [hoveredItem, setHoveredItem] = useState(null);
@@ -178,7 +178,7 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, footerOverlap = 0, set
       <div
         className={`
           desktop-scale-sidebar
-          fixed left-0 z-40
+          fixed bottom-0 left-0 top-0 z-40
           flex translate-x-0 flex-col
           border-r border-slate-800/80 bg-[linear-gradient(180deg,#07111f_0%,#0b1728_52%,#09101b_100%)]
           text-gray-800 shadow-[0_18px_40px_rgba(2,8,23,0.45)]
@@ -187,10 +187,7 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, footerOverlap = 0, set
           ${sidebarOpen ? "w-[250px]" : "w-[88px]"}
         `}
         style={{
-          top: `${HEADER_HEIGHT}px`,
-          height: isMobile
-            ? "145vh"
-            : `calc(100dvh - ${HEADER_HEIGHT}px - ${Math.max(0, footerOverlap)}px)`,
+          height: isMobile ? "100dvh" : undefined,
         }}
       >
         <style>{`
@@ -212,136 +209,137 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, footerOverlap = 0, set
         `}</style>
 
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.22),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(14,165,233,0.14),transparent_30%)]" />
+        <div className="relative flex h-full min-h-0 flex-col p-3">
+          <div className={`-mx-3 shrink-0 border-b border-white/10 px-3 ${showLabels ? "pb-12" : "pb-12"}`}>
+            <button
+              type="button"
+              aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
+              onClick={() => setSidebarOpen((prev) => !prev)}
+              onMouseEnter={() => setHoveredControl("menu")}
+              onMouseMove={() => setHoveredControl("menu")}
+              onMouseLeave={() => setHoveredControl(null)}
+              onPointerEnter={handlePointerHover("menu")}
+              onPointerMove={handlePointerHover("menu")}
+              onPointerLeave={clearPointerHover("menu")}
+              onFocus={() => setHoveredControl("menu")}
+              onBlur={() => setHoveredControl(null)}
+              onTouchStart={() => setHoveredControl("menu")}
+              onTouchEnd={clearHoveredStates}
+              onTouchCancel={clearHoveredStates}
+              className={`mx-auto flex items-center rounded-2xl border border-white/10 bg-white/[0.06] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-sm transition-all duration-300 hover:border-blue-400 hover:bg-blue-600 active:border-blue-400 active:bg-blue-600 focus-visible:border-blue-400 focus-visible:bg-blue-600 ${
+                showLabels ? "w-[92%] justify-center gap-3 px-5 py-3.5" : "w-full justify-center px-4 py-3.5"
+              } ${
+                isControlHighlighted("menu")
+                  ? "border-blue-400 bg-blue-600 shadow-[0_14px_28px_rgba(37,99,235,0.3)]"
+                  : ""
+              }`}
+            >
+              <span className="text-[22px] text-blue-300">
+                <FaBars />
+              </span>
+              {showLabels ? <span className="text-[15px] font-semibold tracking-wide leading-none">Menu</span> : null}
+            </button>
+          </div>
 
-        <div className={`relative mt-4 shrink-0 border-b border-white/10 ${showLabels ? "px-4 pt-2 pb-3" : "px-3 py-4"}`}>
-          <button
-            type="button"
-            aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
-            onClick={() => setSidebarOpen((prev) => !prev)}
-            onMouseEnter={() => setHoveredControl("menu")}
-            onMouseMove={() => setHoveredControl("menu")}
-            onMouseLeave={() => setHoveredControl(null)}
-            onPointerEnter={handlePointerHover("menu")}
-            onPointerMove={handlePointerHover("menu")}
-            onPointerLeave={clearPointerHover("menu")}
-            onFocus={() => setHoveredControl("menu")}
-            onBlur={() => setHoveredControl(null)}
-            onTouchStart={() => setHoveredControl("menu")}
-            onTouchEnd={clearHoveredStates}
-            onTouchCancel={clearHoveredStates}
-            className={`flex items-center rounded-2xl border border-white/10 bg-white/[0.06] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-sm transition-all duration-300 hover:border-blue-400 hover:bg-blue-600 active:border-blue-400 active:bg-blue-600 focus-visible:border-blue-400 focus-visible:bg-blue-600 ${
-              showLabels ? "w-full justify-start gap-3 px-4 py-3" : "w-full justify-center px-3 py-3"
-            } ${
-              isControlHighlighted("menu")
-                ? "border-blue-400 bg-blue-600 shadow-[0_14px_28px_rgba(37,99,235,0.3)]"
-                : ""
-            }`}
-          >
-            <span className="text-xl text-blue-300">
-              <FaBars />
-            </span>
-            {showLabels ? <span className="text-sm font-semibold tracking-wide leading-none">Menu</span> : null}
-          </button>
-        </div>
+          <nav className={`sidebar-scroll mt-8 min-h-0 flex-1 space-y-3 overflow-y-auto font-bold ${showLabels ? "px-1 py-0 pr-1.5" : "px-0 py-0 pr-1"}`}>
+            {menuItems.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(item.path);
+              const hovered = hoveredItem === item.id;
+              const highlighted = isItemHighlighted(item.id, active);
 
-        <nav className={`sidebar-scroll relative min-h-0 flex-1 space-y-2.5 overflow-y-auto font-bold ${showLabels ? "px-4 py-3" : "px-3 py-3"}`}>
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            const active = isActive(item.path);
-            const hovered = hoveredItem === item.id;
-            const highlighted = isItemHighlighted(item.id, active);
-
-            return (
-              <button
-                type="button"
-                key={item.id}
-                onClick={() => handleNavClick(item.path)}
-                onMouseEnter={() => setHoveredItem(item.id)}
-                onMouseMove={() => setHoveredItem(item.id)}
-                onMouseLeave={() => setHoveredItem(null)}
-                onPointerEnter={handlePointerHover(item.id)}
-                onPointerMove={handlePointerHover(item.id)}
-                onPointerLeave={clearPointerHover(item.id)}
-                onFocus={() => setHoveredItem(item.id)}
-                onBlur={() => setHoveredItem(null)}
-                onTouchStart={() => setHoveredItem(item.id)}
-                onTouchEnd={clearHoveredStates}
-                onTouchCancel={clearHoveredStates}
-                title={!showLabels ? item.name : undefined}
-                className={`
-                  sidebar-nav-button group relative isolate flex w-full cursor-pointer items-center overflow-hidden rounded-2xl border transition-all duration-300
-                  ${showLabels ? "justify-start gap-3 px-4 py-3" : "justify-center px-3 py-3"}
-                  ${
-                    highlighted
-                      ? "is-highlighted border-blue-400/60 bg-white/[0.03] text-white shadow-[0_14px_28px_rgba(37,99,235,0.3)]"
-                      : "border-transparent bg-white/[0.03] text-slate-200 hover:border-blue-400/40 hover:text-white hover:shadow-[0_14px_28px_rgba(37,99,235,0.25)]"
-                  }
-                  ${hovered && !active ? "scale-[1.01] border-blue-400/40 text-white shadow-[0_14px_28px_rgba(37,99,235,0.3)]" : ""}
-                `}
-              >
-                <span
-                  aria-hidden="true"
-                  className={`sidebar-nav-fill absolute inset-0 rounded-2xl bg-[linear-gradient(270deg,#2563eb_0%,#2f6df6_48%,#4f8dff_100%)] ${
-                    highlighted ? "scale-x-100" : ""
-                  }`}
-                />
-                <span
-                  className={`relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all duration-300 ${
-                    highlighted
-                      ? "bg-white/18 text-white"
-                      : "bg-slate-800/80 text-slate-100 group-hover:bg-white/18 group-hover:text-white"
-                  }`}
+              return (
+                <button
+                  type="button"
+                  key={item.id}
+                  onClick={() => handleNavClick(item.path)}
+                  onMouseEnter={() => setHoveredItem(item.id)}
+                  onMouseMove={() => setHoveredItem(item.id)}
+                  onMouseLeave={() => setHoveredItem(null)}
+                  onPointerEnter={handlePointerHover(item.id)}
+                  onPointerMove={handlePointerHover(item.id)}
+                  onPointerLeave={clearPointerHover(item.id)}
+                  onFocus={() => setHoveredItem(item.id)}
+                  onBlur={() => setHoveredItem(null)}
+                  onTouchStart={() => setHoveredItem(item.id)}
+                  onTouchEnd={clearHoveredStates}
+                  onTouchCancel={clearHoveredStates}
+                  title={!showLabels ? item.name : undefined}
+                  className={`
+                    sidebar-nav-button group relative isolate flex w-full cursor-pointer items-center overflow-hidden rounded-2xl border transition-all duration-300
+                    ${showLabels ? "justify-start gap-3 px-4 py-3" : "justify-center px-3 py-3"}
+                    ${
+                      highlighted
+                        ? "is-highlighted border-blue-400/60 bg-white/[0.03] text-white shadow-[0_14px_28px_rgba(37,99,235,0.3)]"
+                        : "border-transparent bg-white/[0.03] text-slate-200 hover:border-blue-400/40 hover:text-white hover:shadow-[0_14px_28px_rgba(37,99,235,0.25)]"
+                    }
+                    ${hovered && !active ? "scale-[1.01] border-blue-400/40 text-white shadow-[0_14px_28px_rgba(37,99,235,0.3)]" : ""}
+                  `}
                 >
-                  <Icon className="text-base" />
-                </span>
-                {showLabels ? (
-                  <span className="relative z-10 text-left text-base font-semibold leading-tight text-white">
-                    {item.name}
+                  <span
+                    aria-hidden="true"
+                    className={`sidebar-nav-fill absolute inset-0 rounded-2xl bg-[linear-gradient(270deg,#2563eb_0%,#2f6df6_48%,#4f8dff_100%)] ${
+                      highlighted ? "scale-x-100" : ""
+                    }`}
+                  />
+                  <span
+                    className={`relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all duration-300 ${
+                      highlighted
+                        ? "bg-white/18 text-white"
+                        : "bg-slate-800/80 text-slate-100 group-hover:bg-white/18 group-hover:text-white"
+                    }`}
+                  >
+                    <Icon className="text-base" />
                   </span>
-                ) : null}
-              </button>
-            );
-          })}
-        </nav>
+                  {showLabels ? (
+                    <span className="relative z-10 text-left text-base font-semibold leading-tight text-white">
+                      {item.name}
+                    </span>
+                  ) : null}
+                </button>
+              );
+            })}
+          </nav>
 
-        <div className={`relative mt-auto shrink-0 border-t border-white/10 px-3 pb-4 pt-4 ${showLabels ? "" : "flex justify-center"}`}>
-          <button
-            type="button"
-            onClick={handleLogout}
-            onMouseEnter={() => setHoveredControl("logout")}
-            onMouseMove={() => setHoveredControl("logout")}
-            onMouseLeave={() => setHoveredControl(null)}
-            onPointerEnter={handlePointerHover("logout")}
-            onPointerMove={handlePointerHover("logout")}
-            onPointerLeave={clearPointerHover("logout")}
-            onFocus={() => setHoveredControl("logout")}
-            onBlur={() => setHoveredControl(null)}
-            onTouchStart={() => setHoveredControl("logout")}
-            onTouchEnd={clearHoveredStates}
-            onTouchCancel={clearHoveredStates}
-            title="Logout"
-            className={`flex w-full items-center rounded-2xl border transition-all duration-300 ${
-              showLabels
-                ? "cursor-pointer gap-3 bg-rose-500/14 px-4 py-3 text-left hover:border-rose-400/80 hover:bg-rose-500/18"
-                : "cursor-pointer justify-center bg-rose-500/14 p-3 hover:border-rose-400/80 hover:bg-rose-500/18"
-            } ${
-              isControlHighlighted("logout")
-                ? "border-rose-400/90 bg-rose-500/20 shadow-[0_14px_28px_rgba(244,63,94,0.25)]"
-                : "border-rose-400/40"
-            }`}
-          >
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-500/20 text-rose-100">
-              <FaSignOutAlt className="text-base" />
-            </div>
-            {showLabels ? (
-              <div className="min-w-0 flex-1">
-                <p className="text-base font-semibold leading-tight text-white">Logout</p>
-                <p className="text-xs font-medium text-rose-100/80">
-                  End the current admin session
-                </p>
+          <div className={`mt-auto border-t border-white/10 pt-4 ${showLabels ? "px-1 pb-0" : "flex justify-center px-0 pb-0"}`}>
+            <button
+              type="button"
+              onClick={handleLogout}
+              onMouseEnter={() => setHoveredControl("logout")}
+              onMouseMove={() => setHoveredControl("logout")}
+              onMouseLeave={() => setHoveredControl(null)}
+              onPointerEnter={handlePointerHover("logout")}
+              onPointerMove={handlePointerHover("logout")}
+              onPointerLeave={clearPointerHover("logout")}
+              onFocus={() => setHoveredControl("logout")}
+              onBlur={() => setHoveredControl(null)}
+              onTouchStart={() => setHoveredControl("logout")}
+              onTouchEnd={clearHoveredStates}
+              onTouchCancel={clearHoveredStates}
+              title="Logout"
+              className={`flex w-full items-center rounded-2xl border transition-all duration-300 ${
+                showLabels
+                  ? "cursor-pointer gap-1 bg-rose-500/14 px-3 py-1.5 text-left hover:border-rose-400/80 hover:bg-rose-500/18"
+                  : "cursor-pointer justify-center bg-rose-500/14 p-2 hover:border-rose-400/80 hover:bg-rose-500/18"
+              } ${
+                isControlHighlighted("logout")
+                  ? "border-rose-400/90 bg-rose-500/20 shadow-[0_14px_28px_rgba(244,63,94,0.25)]"
+                  : "border-rose-400/40"
+              }`}
+            >
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-rose-500/20 text-rose-100">
+                <FaSignOutAlt className="text-base" />
               </div>
-            ) : null}
-          </button>
+              {showLabels ? (
+                <div className="flex-1">
+                  <p className="text-sm font-semibold leading-tight text-white">Logout</p>
+                  <p className="text-[11px] font-medium leading-tight text-rose-100/80">
+                    End your current session
+                  </p>
+                </div>
+              ) : null}
+            </button>
+          </div>
         </div>
       </div>
     </>

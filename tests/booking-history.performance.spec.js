@@ -95,9 +95,11 @@ test.describe("Booking history performance baseline", () => {
 
     expect(metrics.renderReadyMs).toBeLessThan(15_000);
     expect(metrics.apiResponseMs).toBeLessThan(15_000);
-    expect(metrics.domContentLoadedMs ?? 0).toBeGreaterThan(0);
-    expect(metrics.domContentLoadedMs ?? 0).toBeLessThan(8_000);
-    expect(metrics.loadEventMs ?? 0).toBeGreaterThan(0);
-    expect(metrics.loadEventMs ?? 0).toBeLessThan(12_000);
+    expect(metrics.domContentLoadedMs).not.toBeNull();
+    expect(metrics.domContentLoadedMs).toBeGreaterThan(0);
+    expect(metrics.domContentLoadedMs).toBeLessThan(8_000);
+    expect(metrics.loadEventMs).not.toBeNull();
+    expect(metrics.loadEventMs).toBeGreaterThan(0);
+    expect(metrics.loadEventMs).toBeLessThan(12_000);
   });
 });

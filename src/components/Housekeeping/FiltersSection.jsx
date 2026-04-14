@@ -33,11 +33,12 @@ export default function FiltersSection(props) {
           />
 
           <select
-            value={filters.status || ""}
+             value={filters.status || "All Status"}
             onChange={(e) => onFilterChange("status", e.target.value)}
-            className="rounded-2xl border text-xl border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-300 focus:bg-white focus:ring-4 focus:ring-sky-100"
+            className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-300 focus:bg-white focus:ring-4 focus:ring-sky-100"
+
           >
-            <option value="">All Status</option>
+            <option value="All Status">All Status</option>
             <option value="Vacant Dirty">Vacant Dirty</option>
             <option value="Vacant Clean">Vacant Clean</option>
             <option value="Vacant Clean Inspected">Vacant Clean Inspected</option>

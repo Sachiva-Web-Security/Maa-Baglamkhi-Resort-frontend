@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import {
   FaCamera,
   FaEnvelope,
@@ -11,6 +12,8 @@ import API, { getBackendBaseURL } from "../api";
 import { withAudit } from "../utils/auditAction";
 
 const Profile = () => {
+  const location = useLocation();
+  const securitySectionRef = useRef(null);
   const [name, setName] = useState(localStorage.getItem("name") || "");
   const [role, setRole] = useState(localStorage.getItem("role") || "");
   const [email, setEmail] = useState(localStorage.getItem("email") || "");
@@ -64,6 +67,15 @@ const Profile = () => {
       }
     };
   }, [cameraStream]);
+
+  useEffect(() => {
+    if (location.state?.focusSection !== "security") return;
+
+    securitySectionRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }, [location.state]);
 
   const handleAvatarChange = (e) => {
     const file = e.target.files?.[0];
@@ -263,7 +275,10 @@ const Profile = () => {
 
         <section className="grid gap-4 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,1.2fr)]">
           <div className="space-y-4">
-            <div className="profile-card rounded-[26px] border border-white/60 bg-white/82 p-6 backdrop-blur-xl">
+            <div
+  ref={securitySectionRef}
+  className="profile-card rounded-[26px] border border-white/60 bg-white/82 p-6 backdrop-blur-xl"
+>
               <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
                 <div className="relative mx-auto sm:mx-0">
                   <div className="flex h-36 w-36 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-sky-500 to-cyan-500 text-5xl font-black text-white shadow-[0_16px_35px_rgba(14,165,233,0.25)]">
@@ -280,20 +295,20 @@ const Profile = () => {
                 </div>
 
                 <div className="min-w-0 flex-1 text-center sm:text-left">
-                  <div className="profile-section-title text-slate-900">
+                  <div className="profile-section-title text-black">
                     {name || "User"}
                   </div>
-                  <div className="profile-chip mt-3 inline-flex items-center gap-2 rounded-full bg-cyan-50 px-4 py-2 font-bold text-cyan-700">
+                  <div className="profile-chip mt-3 inline-flex items-center gap-2 rounded-full bg-cyan-50 px-4 py-2 font-bold text-slate-900">
                     <FaUserCircle />
                     {prettyRole}
                   </div>
-                  <div className="mt-4 flex flex-col gap-2 text-base text-slate-600">
+                  <div className="mt-4 flex flex-col gap-2 text-base font-semibold text-slate-800">
                     <span className="inline-flex items-center justify-center gap-2 sm:justify-start">
-                      <FaEnvelope className="text-slate-400" />
+                      <FaEnvelope className="text-slate-600" />
                       {email || "Email not set"}
                     </span>
                     <span className="inline-flex items-center justify-center gap-2 sm:justify-start">
-                      <FaShieldAlt className="text-slate-400" />
+                      <FaShieldAlt className="text-slate-600" />
                       Secure profile controls available
                     </span>
                   </div>
@@ -303,10 +318,10 @@ const Profile = () => {
 
             <div className="profile-card rounded-[26px] border border-white/60 bg-white/82 p-6 backdrop-blur-xl">
               <div className="mb-5">
-                <p className="profile-label text-emerald-400">
+                <p className="profile-label text-slate-700">
                   Profile Picture
                 </p>
-                <h2 className="profile-section-title mt-2 text-slate-900">
+                <h2 className="profile-section-title mt-2 text-black">
                   Update avatar
                 </h2>
               </div>
@@ -316,15 +331,15 @@ const Profile = () => {
                   type="file"
                   accept="image/png,image/jpeg,image/webp"
                   onChange={handleAvatarChange}
-                  className="profile-input w-full rounded-[20px] border border-slate-200/80 bg-white px-4 py-4 text-base text-slate-700 file:mr-3 file:rounded-full file:border-0 file:bg-sky-600 file:px-4 file:py-3 file:text-sm file:font-semibold file:text-white hover:file:bg-sky-700"
+                  className="profile-input w-full rounded-[20px] border border-slate-200/80 bg-white px-4 py-4 text-base font-semibold text-black file:mr-3 file:rounded-full file:border-0 file:bg-sky-600 file:px-4 file:py-3 file:text-sm file:font-semibold file:text-white hover:file:bg-sky-700"
                 />
 
                 <div className="space-y-3">
                   <button
                     type="button"
                     onClick={handleStartCamera}
-                    className="profile-action inline-flex w-full items-center justify-center gap-2 rounded-[20px] border border-slate-200 bg-slate-50 px-5 py-4 font-bold text-slate-700 transition hover:border-cyan-200 hover:text-cyan-700"
-                  >
+                      className="profile-action inline-flex w-full items-center justify-center gap-2 rounded-[20px] border border-slate-200 bg-slate-50 px-5 py-4 font-bold text-black transition hover:border-cyan-200 hover:text-black"
+                    >
                     <FaCamera />
                     Open Camera
                   </button>
@@ -374,16 +389,16 @@ const Profile = () => {
                   <FaLock />
                 </span>
                 <div>
-                  <p className="profile-label text-emerald-400">
+                  <p className="profile-label text-[16px] font-bold tracking-[0.22em] text-slate-700">
                     Security Center
                   </p>
-                  <h2 className="profile-section-title mt-2 text-slate-900">
+                  <h2 className="profile-section-title mt-2 text-[2.3rem] font-black leading-tight text-black sm:text-[2.8rem]">
                     Change password
                   </h2>
                 </div>
               </div>
 
-              <p className="profile-body-lg mb-5 text-slate-600">
+              <p className="profile-body-lg mb-5 text-[1.2rem] font-semibold leading-8 text-black">
                 Yahan se aap apna password safely update kar sakte hain. Current
                 credentials screen par expose nahi honge aur update directly account security ke liye use hoga.
               </p>
@@ -402,40 +417,43 @@ const Profile = () => {
 
               <form onSubmit={handlePasswordChange} className="space-y-4">
                 <div>
-                  <label className="profile-label mb-2 block font-semibold uppercase text-slate-500">
+                     <label htmlFor="current-password" className="profile-label mb-2 block text-[16px] font-bold uppercase tracking-[0.2em] text-slate-700">
                     Current Password
                   </label>
                   <input
+                   id="current-password"
                     type="password"
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
-                    className="profile-input w-full rounded-[20px] border border-slate-200/80 bg-white px-4 py-4 text-base text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100"
+                    className="profile-input w-full rounded-[20px] border border-slate-200/80 bg-white px-4 py-4 text-[18px] font-semibold text-black outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100"
                     placeholder="Enter current password"
+                    
                   />
                 </div>
 
                 <div>
-                  <label className="profile-label mb-2 block font-semibold uppercase text-slate-500">
+                  <label className="profile-label mb-2 block text-[16px] font-bold uppercase tracking-[0.2em] text-slate-700">
                     New Password
                   </label>
                   <input
                     type="password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="profile-input w-full rounded-[20px] border border-slate-200/80 bg-white px-4 py-4 text-base text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100"
+                    className="profile-input w-full rounded-[20px] border border-slate-200/80 bg-white px-4 py-4 text-[18px] font-semibold text-black outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100"
                     placeholder="Enter new password"
                   />
                 </div>
 
                 <div>
-                  <label className="profile-label mb-2 block font-semibold uppercase text-slate-500">
+                  <label className="profile-label mb-2 block text-[16px] font-bold uppercase tracking-[0.2em] text-slate-700">
                     Confirm Password
                   </label>
                   <input
+
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="profile-input w-full rounded-[20px] border border-slate-200/80 bg-white px-4 py-4 text-base text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100"
+                    className="profile-input w-full rounded-[20px] border border-slate-200/80 bg-white px-4 py-4 text-[18px] font-semibold text-black outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100"
                     placeholder="Re-enter new password"
                   />
                 </div>
@@ -443,7 +461,7 @@ const Profile = () => {
                 <button
                   type="submit"
                   disabled={loadingPassword}
-                  className="profile-primary inline-flex w-full items-center justify-center gap-2 rounded-[22px] bg-gradient-to-r from-sky-600 to-cyan-500 px-5 py-4 font-bold text-white shadow-[0_16px_35px_rgba(14,165,233,0.24)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="profile-primary inline-flex w-full items-center justify-center gap-2 rounded-[22px] bg-gradient-to-r from-sky-600 to-cyan-500 px-5 py-4 text-[18px] font-bold text-white shadow-[0_16px_35px_rgba(14,165,233,0.24)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <FaLock />
                   {loadingPassword ? "Updating..." : "Update Password"}

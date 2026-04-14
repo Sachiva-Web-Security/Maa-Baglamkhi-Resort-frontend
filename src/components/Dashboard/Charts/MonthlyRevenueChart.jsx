@@ -13,7 +13,7 @@ import API from "../../../api";
 
 const formatCompactValue = (value) => {
   const amount = Number(value || 0);
-  if (amount >= 10000000) return `$${(amount / 1000000).toFixed(2)}M`;
+  if (amount >= 1000000) return `$${(amount / 1000000).toFixed(2)}M`;
   if (amount >= 100000) return `$${(amount / 1000).toFixed(0)}K`;
   return `$${amount.toLocaleString("en-US")}`;
 };
@@ -25,7 +25,7 @@ const RevenueTooltip = ({ active, payload, label }) => {
 
   return (
     <div className="rounded-xl bg-[#0b223d] px-4 py-2 text-xs font-semibold text-white shadow-[0_16px_40px_rgba(11,34,61,0.28)]">
-      {`${label}: ${formatTooltipValue(payload[0].value)} Reservations`}
+      {`${label}: $${formatTooltipValue(payload[0].value)}`}
     </div>
   );
 };

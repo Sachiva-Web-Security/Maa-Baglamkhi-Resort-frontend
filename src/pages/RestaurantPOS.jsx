@@ -1,5 +1,6 @@
 import React from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { usePendingOrdersCount } from "../hooks/usePendingOrdersCount";
 import {
   FaConciergeBell,
   FaCashRegister,
@@ -36,12 +37,13 @@ const RestaurantPOS = () => {
 
   const isLinkActive = (path) =>
     location.pathname === path ||
-    (path !== "/restaurant" && location.pathname.startsWith(path));
+    (path !== "/restaurant" && location.pathname.startsWith(`${path}/`));
 
   const activeLink =
     links.find((link) => isLinkActive(link.path)) ||
     links[0];
 
+  const pendingCount = usePendingOrdersCount();
   const heroStats = [
     {
       label: actor.isWaiter ? "WAITER STATION" : "RESTAURANT + POS",
@@ -50,7 +52,7 @@ const RestaurantPOS = () => {
     },
     {
       label: "LIVE QUEUE",
-      value: actor.isWaiter ? "Orders In Motion" : "4 Pending",
+      value: actor.isWaiter ? "Orders In Motion" : `${pendingCount} Pending`,
       icon: FaLayerGroup,
     },
     {

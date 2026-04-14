@@ -769,6 +769,18 @@ const AllBooking = () => {
     </div>
   );
 
+  const renderNoResultsState = () => (
+    <div className="mt-6 rounded-[28px] border border-dashed border-slate-300 bg-slate-50 px-5 py-16 text-center">
+      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white text-slate-400 shadow-sm">
+        <FaSearch />
+      </div>
+      <h3 className="mt-4 text-3xl font-black text-slate-900">No results found</h3>
+      <p className="mt-2 text-lg font-medium leading-8 text-slate-500">
+        No bookings match your search "{searchQuery}". Try a different search term.
+      </p>
+    </div>
+  );
+
   return (
     <div className="min-h-screen w-full bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.14),_transparent_28%),radial-gradient(circle_at_top_right,_rgba(59,130,246,0.1),_transparent_24%),linear-gradient(180deg,#f8fbff_0%,#f8fafc_52%,#fefaf5_100%)] p-4 sm:p-6">
       <div className="w-full space-y-6">
@@ -1005,7 +1017,7 @@ const AllBooking = () => {
             <div className="mt-6 rounded-[28px] border border-dashed border-slate-200 bg-slate-50 px-5 py-16 text-center text-base font-medium text-slate-500">
               Loading bookings...
             </div>
-          ) : visibleBookings.length ? (
+          ) : filteredBookings.length ? (
             <>
               {viewMode === "history"
                 ? renderBookingCards("md:grid-cols-2 2xl:grid-cols-3")
@@ -1017,6 +1029,8 @@ const AllBooking = () => {
                 )}
               {renderPagination()}
             </>
+          ) : visibleBookings.length ? (
+            renderNoResultsState()
           ) : (
             renderEmptyState()
           )}

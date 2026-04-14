@@ -495,20 +495,19 @@ const Dashboard = () => {
       title: "Expected Arrivals",
       subtitle: "Guests expected to arrive today with booking date details.",
       items: apiMetrics.expectedArrivalDetails || [],
-      empty: "there was no expected arrival today.",
+      empty: "There was no expected arrival today.",
     },
     expected_checkouts: {
       title: "Expected Check-outs",
       subtitle: "Guests scheduled to check out today.",
       items: apiMetrics.expectedCheckoutDetails || [],
-      empty: "there was no expected checkout today.",
+     empty: "There was no expected checkout today.",
     },
     today_checkins: {
       title: "Today's Check-ins",
       subtitle: "Guests who are already marked as checked in today.",
       items: apiMetrics.todayCheckinDetails || [],
-      empty: "there was no checked-in arrival record today.",
-    },
+ empty: "There was no checked-in arrival record today.",    },
   };
   const activeMetricPanel = metricPanelData[openMetricPanel] || null;
   const activeMetricPanelTotalPages = activeMetricPanel
@@ -1085,6 +1084,7 @@ const Dashboard = () => {
         new Date(existingTask.dueAt).getTime() > Date.now()
       ) {
         toast.info("Ye cleaning task already active hai.");
+        setAssigningCleaning(false);
         return;
       }
 
@@ -1768,7 +1768,7 @@ const Dashboard = () => {
                 ))
               ) : (
                 <div className="rounded-[18px] border border-dashed border-slate-200 bg-slate-50 px-4 py-5 text-sm text-slate-500">
-       there was no notification at that time
+     There are no notifications at this time.
                 </div>
               )}
             </div>

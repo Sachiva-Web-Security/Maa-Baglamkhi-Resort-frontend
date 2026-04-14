@@ -20,13 +20,13 @@ const formatCompactNumber = (value) => Number(value || 0).toLocaleString("en-IN"
 const Card = ({ title, subtitle, children }) => (
   <div className="min-w-0 rounded-[26px] border border-white/60 bg-white/82 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
     <div className="mb-4">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
+      <p className="text-[13px] font-semibold uppercase tracking-[0.24em] text-emerald-500">
         Visual Summary
       </p>
-      <h2 className="mt-1 text-xl font-bold text-slate-900">{title}</h2>
-      {subtitle ? <div className="mt-1 text-sm text-slate-500">{subtitle}</div> : null}
+      <h2 className="mt-1 text-2xl font-bold text-black">{title}</h2>
+      {subtitle ? <div className="mt-1 text-[13px] font-semibold text-black">{subtitle}</div> : null}
     </div>
-    <div className="h-[320px] w-full min-w-0">{children}</div>
+    <div className="mx-auto h-[320px] w-full max-w-[1120px] min-w-0">{children}</div>
   </div>
 );
 
@@ -35,10 +35,10 @@ const EmptyChartState = ({ title, subtitle }) => (
     <div className="flex h-full items-center justify-center rounded-[22px] border border-dashed border-slate-200 bg-slate-50 px-6 text-center">
       <div>
         <div className="text-base font-bold text-slate-900">
-          graph dosen't available wait for a moment
+          No data available
         </div>
-        <p className="mt-2 text-sm leading-6 text-slate-500">
-          there was no data for a current chart showing 
+        <p className="mt-2 text-[13px] font-semibold leading-6 text-black">
+              Try adjusting your filters to see chart data.
         </p>
       </div>
     </div>
@@ -102,11 +102,11 @@ const CustomPieTooltip = ({ active, payload }) => {
           className="h-3 w-3 rounded-full"
           style={{ backgroundColor: item.fill || payload[0]?.color || "#3b82f6" }}
         />
-        <span className="text-sm font-bold text-slate-900">{item.name}</span>
+        <span className="text-[13px] font-bold text-black">{item.name}</span>
       </div>
-      <div className="mt-2 text-xs uppercase tracking-[0.18em] text-slate-400">Rooms</div>
-      <div className="mt-1 text-lg font-black text-slate-900">{formatCompactNumber(item.value)}</div>
-      <div className="mt-1 text-sm text-slate-500">{item.percentLabel || "--"} of visible mix</div>
+      <div className="mt-2 text-[13px] font-semibold uppercase tracking-[0.18em] text-slate-700">Rooms</div>
+      <div className="mt-1 text-lg font-black text-black">{formatCompactNumber(item.value)}</div>
+      <div className="mt-1 text-[13px] font-semibold text-black">{item.percentLabel || "--"} of visible mix</div>
     </div>
   );
 };
@@ -127,12 +127,12 @@ const ReportCharts = ({ reportType, rows }) => {
     return (
       <Card title="All Bills by Source" subtitle="Combined amount grouped by billing module">
         <ResponsiveContainer width="100%" height={320}>
-          <BarChart data={data}>
+          <BarChart data={data} margin={{ top: 12, right: 30, left: 18, bottom: 12 }} barCategoryGap="32%">
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             <XAxis dataKey="name" stroke="#64748b" tick={{ fontSize: 12 }} />
             <YAxis stroke="#64748b" tick={{ fontSize: 12 }} />
             <Tooltip contentStyle={tooltipStyle} />
-            <Bar dataKey="value" fill="#14b8a6" radius={[12, 12, 0, 0]} />
+            <Bar dataKey="value" fill="#14b8a6" radius={[12, 12, 0, 0]} maxBarSize={140} />
           </BarChart>
         </ResponsiveContainer>
       </Card>
@@ -145,12 +145,12 @@ const ReportCharts = ({ reportType, rows }) => {
     return (
       <Card title="Banquet Revenue by Hall" subtitle="See which hall is generating the highest revenue">
         <ResponsiveContainer width="100%" height={320}>
-          <BarChart data={data}>
+          <BarChart data={data} margin={{ top: 12, right: 30, left: 18, bottom: 12 }} barCategoryGap="30%">
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             <XAxis dataKey="name" stroke="#64748b" tick={{ fontSize: 12 }} />
             <YAxis stroke="#64748b" tick={{ fontSize: 12 }} />
             <Tooltip contentStyle={tooltipStyle} />
-            <Bar dataKey="value" fill="#0ea5e9" radius={[12, 12, 0, 0]} />
+            <Bar dataKey="value" fill="#0ea5e9" radius={[12, 12, 0, 0]} maxBarSize={128} />
           </BarChart>
         </ResponsiveContainer>
       </Card>
@@ -163,19 +163,30 @@ const ReportCharts = ({ reportType, rows }) => {
     return (
       <Card title="Restaurant Sales Trend" subtitle="Track selected date range food billing movement">
         <ResponsiveContainer width="100%" height={320}>
-          <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-            <XAxis dataKey="date" stroke="#64748b" tick={{ fontSize: 12 }} />
-            <YAxis stroke="#64748b" tick={{ fontSize: 12 }} />
-            <Tooltip contentStyle={tooltipStyle} />
-            <Line
-              type="monotone"
-              dataKey="value"
-              stroke="#2563eb"
-              strokeWidth={3}
-              dot={{ r: 4 }}
-            />
-          </LineChart>
+          {data.length <= 1 ? (
+            <BarChart data={data} margin={{ top: 12, right: 24, left: 12, bottom: 12 }} barCategoryGap="35%">
+              <CartesianGrid strokeDasharray="3 3" stroke="#dbe4f0" />
+              <XAxis dataKey="date" stroke="#334155" tick={{ fontSize: 13, fill: "#000000", fontWeight: 600 }} />
+              <YAxis stroke="#334155" tick={{ fontSize: 13, fill: "#000000", fontWeight: 600 }} />
+              <Tooltip contentStyle={tooltipStyle} />
+              <Bar dataKey="value" fill="#2563eb" radius={[14, 14, 0, 0]} barSize={64} maxBarSize={72} />
+            </BarChart>
+          ) : (
+            <LineChart data={data} margin={{ top: 12, right: 24, left: 12, bottom: 12 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#dbe4f0" />
+              <XAxis dataKey="date" stroke="#334155" tick={{ fontSize: 13, fill: "#000000", fontWeight: 600 }} />
+              <YAxis stroke="#334155" tick={{ fontSize: 13, fill: "#000000", fontWeight: 600 }} />
+              <Tooltip contentStyle={tooltipStyle} />
+              <Line
+                type="monotone"
+                dataKey="value"
+                stroke="#2563eb"
+                strokeWidth={4}
+                dot={{ r: 5, strokeWidth: 2, fill: "#ffffff" }}
+                activeDot={{ r: 7, strokeWidth: 2, fill: "#ffffff" }}
+              />
+            </LineChart>
+          )}
         </ResponsiveContainer>
       </Card>
     );
@@ -187,12 +198,12 @@ const ReportCharts = ({ reportType, rows }) => {
     return (
       <Card title="Housekeeping Status Mix" subtitle="Room condition distribution for selected rows">
         <ResponsiveContainer width="100%" height={320}>
-          <BarChart data={data}>
+          <BarChart data={data} margin={{ top: 12, right: 30, left: 18, bottom: 12 }} barCategoryGap="30%">
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             <XAxis dataKey="name" stroke="#64748b" tick={{ fontSize: 12 }} />
             <YAxis stroke="#64748b" tick={{ fontSize: 12 }} />
             <Tooltip contentStyle={tooltipStyle} />
-            <Bar dataKey="value" fill="#f59e0b" radius={[12, 12, 0, 0]} />
+            <Bar dataKey="value" fill="#f59e0b" radius={[12, 12, 0, 0]} maxBarSize={128} />
           </BarChart>
         </ResponsiveContainer>
       </Card>
@@ -215,12 +226,12 @@ const ReportCharts = ({ reportType, rows }) => {
     return (
       <Card title="Accounts Overview" subtitle="Income vs expense vs net impact">
         <ResponsiveContainer width="100%" height={320}>
-          <BarChart data={data}>
+          <BarChart data={data} margin={{ top: 12, right: 30, left: 18, bottom: 12 }} barCategoryGap="30%">
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             <XAxis dataKey="name" stroke="#64748b" tick={{ fontSize: 12 }} />
             <YAxis stroke="#64748b" tick={{ fontSize: 12 }} />
             <Tooltip contentStyle={tooltipStyle} />
-            <Bar dataKey="value" fill="#8b5cf6" radius={[12, 12, 0, 0]} />
+            <Bar dataKey="value" fill="#8b5cf6" radius={[12, 12, 0, 0]} maxBarSize={128} />
           </BarChart>
         </ResponsiveContainer>
       </Card>
@@ -243,16 +254,16 @@ const ReportCharts = ({ reportType, rows }) => {
         <div className="rounded-[24px] border border-slate-100 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.10),transparent_38%),linear-gradient(180deg,rgba(248,250,252,0.95)_0%,rgba(255,255,255,0.92)_100%)] p-3">
           <div className="mb-2 flex flex-wrap items-center justify-between gap-2 px-2 pt-1">
             <div>
-              <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+              <div className="text-[13px] font-semibold uppercase tracking-[0.22em] text-slate-700">
                 Room Overview
               </div>
-              <div className="mt-1 text-sm text-slate-500">
-                Total visible rooms <span className="font-bold text-slate-900">{formatCompactNumber(total)}</span>
+              <div className="mt-1 text-[13px] font-semibold text-black">
+                Total visible rooms <span className="font-bold text-black">{formatCompactNumber(total)}</span>
               </div>
             </div>
             {topStatus ? (
-              <div className="rounded-full border border-slate-200 bg-white/90 px-3 py-2 text-xs font-semibold text-slate-600 shadow-sm">
-                Top: <span className="text-slate-900">{topStatus.name}</span> ({topStatus.percentLabel})
+              <div className="rounded-full border border-slate-300 bg-white/90 px-3 py-2 text-[13px] font-semibold text-black shadow-sm">
+                Top: <span className="text-black">{topStatus.name}</span> ({topStatus.percentLabel})
               </div>
             ) : null}
           </div>
@@ -299,13 +310,13 @@ const ReportCharts = ({ reportType, rows }) => {
                     style={{ backgroundColor: item.fill }}
                   />
                   <div>
-                    <div className="text-sm font-bold text-slate-900">{item.name}</div>
-                    <div className="text-xs text-slate-500">{item.percentLabel} share</div>
+                    <div className="text-[13px] font-bold text-black">{item.name}</div>
+                    <div className="text-[13px] font-semibold text-black">{item.percentLabel} share</div>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-lg font-black text-slate-900">{formatCompactNumber(item.value)}</div>
-                  <div className="text-[11px] uppercase tracking-[0.16em] text-slate-400">rooms</div>
+                  <div className="text-lg font-black text-black">{formatCompactNumber(item.value)}</div>
+                  <div className="text-[13px] font-semibold uppercase tracking-[0.16em] text-slate-700">rooms</div>
                 </div>
               </div>
             </div>

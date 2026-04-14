@@ -21,6 +21,7 @@ const Header = ({ setIsAuthenticated, sidebarOffset = 0, isMobile = false }) => 
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
   const userName = localStorage.getItem("name") || "Admin User";
   const userRole = localStorage.getItem("role") || "admin";
   const avatarUrl = localStorage.getItem("avatarUrl") || "";
@@ -39,6 +40,10 @@ const Header = ({ setIsAuthenticated, sidebarOffset = 0, isMobile = false }) => 
       window.removeEventListener("storage", syncNotifications);
     };
   }, []);
+
+  useEffect(() => {
+    setAvatarError(false);
+  }, [avatarUrl]);
 
   useEffect(() => {
     const handleOutsideClick = (event) => {
@@ -79,10 +84,10 @@ const Header = ({ setIsAuthenticated, sidebarOffset = 0, isMobile = false }) => 
     navigate("/login");
   };
 
-  const handleMenuAction = (path) => {
+  const handleMenuAction = (path, options) => {
     setNotificationMenuOpen(false);
     setProfileMenuOpen(false);
-    navigate(path);
+    navigate(path, options);
   };
 
   const handleNotificationClick = (item) => {
@@ -120,17 +125,15 @@ const Header = ({ setIsAuthenticated, sidebarOffset = 0, isMobile = false }) => 
             />
           </div>
           <div className="min-w-0 leading-tight">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-sky-600">
-              Resort operations
-            </p>
-            <h1 className="truncate text-lg font-semibold text-slate-900 sm:text-xl">
+            
+            <h1 className="truncate text-[19px] font-bold text-slate-900 sm:text-[20px]">
               Maa Baglamukhi Resort
             </h1>
           </div>
         </div>
 
-        <div className="hidden min-w-0 max-w-2xl flex-1 md:block">
-          <div className="relative">
+        <div className="hidden min-w-0 flex-1 md:flex md:justify-center">
+          <div className="relative w-full max-w-3xl">
             <label className="group relative block">
               <span className="pointer-events-none absolute inset-y-0 left-0 z-[1] flex items-center pl-5 text-slate-400 transition group-focus-within:text-sky-600">
                 <FaSearch className="text-base" />
@@ -147,7 +150,7 @@ const Header = ({ setIsAuthenticated, sidebarOffset = 0, isMobile = false }) => 
                   }
                 }}
                 placeholder="Search..."
-                className="h-14 w-full rounded-full border border-slate-200/90 bg-white/96 pl-12 pr-12 text-sm font-semibold text-slate-700 shadow-[0_12px_28px_rgba(15,23,42,0.06)] outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
+                className="h-16 w-full rounded-full border border-slate-200/90 bg-white/96 pl-12 pr-12 text-[14px] font-semibold text-slate-700 shadow-[0_12px_28px_rgba(15,23,42,0.06)] outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
               />
               {searchQuery ? (
                 <button
@@ -156,7 +159,7 @@ const Header = ({ setIsAuthenticated, sidebarOffset = 0, isMobile = false }) => 
                   onClick={() => setSearchQuery("")}
                   className="absolute right-4 top-1/2 z-[1] flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition hover:bg-slate-200 hover:text-slate-700"
                 >
-                  <FaTimes className="text-[12px]" />
+                  <FaTimes className="text-[13px]" />
                 </button>
               ) : null}
             </label>
@@ -174,16 +177,16 @@ const Header = ({ setIsAuthenticated, sidebarOffset = 0, isMobile = false }) => 
                         className="flex w-full items-center justify-between rounded-[20px] border border-slate-200/80 px-4 py-3.5 text-left transition hover:border-sky-200 hover:bg-sky-50/60"
                       >
                         <div>
-                          <div className="text-sm font-bold text-slate-900">{target.label}</div>
-                          <div className="mt-1 text-xs text-slate-500">{target.helper}</div>
+                          <div className="text-[16px] font-black text-black">{target.label}</div>
+                          <div className="mt-1 text-[14px] font-semibold text-slate-700">{target.helper}</div>
                         </div>
-                        <span className="rounded-full border border-slate-300 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-700">
+                        <span className="rounded-full border border-slate-300 px-3 py-1.5 text-[12px] font-bold uppercase tracking-[0.14em] text-black">
                           Open
                         </span>
                       </button>
                     ))
                   ) : (
-                    <div className="rounded-[20px] border border-dashed border-slate-300 px-4 py-4 text-sm text-slate-600">
+                    <div className="rounded-[20px] border border-dashed border-slate-300 px-4 py-4 text-[14px] font-semibold text-slate-700">
                       No page found. Try keywords like <span className="font-semibold text-slate-900">housekeeping</span>,
                       <span className="font-semibold text-slate-900"> booking</span>, <span className="font-semibold text-slate-900">accounts</span>.
                     </div>
@@ -213,7 +216,7 @@ const Header = ({ setIsAuthenticated, sidebarOffset = 0, isMobile = false }) => 
                 }
               }}
               placeholder="Search..."
-              className="h-11 w-[150px] rounded-full border border-slate-200/90 bg-white/96 pl-10 pr-10 text-sm font-semibold text-slate-700 shadow-[0_10px_24px_rgba(15,23,42,0.05)] outline-none transition placeholder:text-slate-400 focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
+              className="h-11 w-[150px] rounded-full border border-slate-200/90 bg-white/96 pl-10 pr-10 text-[14px] font-semibold text-slate-700 shadow-[0_10px_24px_rgba(15,23,42,0.05)] outline-none transition placeholder:text-slate-400 focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
             />
             {searchQuery ? (
               <button
@@ -240,16 +243,16 @@ const Header = ({ setIsAuthenticated, sidebarOffset = 0, isMobile = false }) => 
                       className="flex w-full items-center justify-between rounded-[18px] border border-slate-200/80 px-4 py-3 text-left transition hover:border-sky-200 hover:bg-sky-50/60"
                     >
                       <div>
-                        <div className="text-sm font-bold text-slate-900">{target.label}</div>
-                        <div className="mt-1 text-xs text-slate-500">{target.helper}</div>
+                        <div className="text-[16px] font-black text-black">{target.label}</div>
+                        <div className="mt-1 text-[14px] font-semibold text-slate-700">{target.helper}</div>
                       </div>
-                      <span className="rounded-full border border-slate-300 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-700">
+                      <span className="rounded-full border border-slate-300 px-3 py-1.5 text-[12px] font-bold uppercase tracking-[0.14em] text-black">
                         Open
                       </span>
                     </button>
                   ))
                 ) : (
-                  <div className="rounded-[18px] border border-dashed border-slate-300 px-4 py-4 text-sm text-slate-600">
+                  <div className="rounded-[18px] border border-dashed border-slate-300 px-4 py-4 text-[14px] font-semibold text-slate-700">
                     No page found. Try keywords like <span className="font-semibold text-slate-900">housekeeping</span>,
                     <span className="font-semibold text-slate-900"> booking</span>, <span className="font-semibold text-slate-900">accounts</span>.
                   </div>
@@ -266,12 +269,12 @@ const Header = ({ setIsAuthenticated, sidebarOffset = 0, isMobile = false }) => 
               setNotificationMenuOpen((open) => !open);
               setProfileMenuOpen(false);
             }}
-            className="group relative inline-flex h-12 w-12 items-center justify-center rounded-[18px] border border-slate-200/80 bg-white/95 text-slate-600 shadow-[0_12px_28px_rgba(15,23,42,0.08)] transition-all duration-200 hover:-translate-y-0.5 hover:border-sky-200 hover:text-sky-700 hover:shadow-[0_16px_36px_rgba(14,165,233,0.16)] focus:outline-none focus:ring-4 focus:ring-sky-100"
+            className="group relative inline-flex h-14 w-14 items-center justify-center rounded-[20px] border border-slate-200/80 bg-white/95 text-slate-600 shadow-[0_12px_28px_rgba(15,23,42,0.08)] transition-all duration-200 hover:-translate-y-0.5 hover:border-sky-200 hover:text-sky-700 hover:shadow-[0_16px_36px_rgba(14,165,233,0.16)] focus:outline-none focus:ring-4 focus:ring-sky-100"
             aria-haspopup="menu"
             aria-expanded={notificationMenuOpen}
             aria-label="Open notifications"
           >
-            <FaBell className="text-[21px]" />
+            <FaBell className="text-[24px]" />
             {unreadCount ? (
               <span className="absolute right-2 top-2 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold leading-none text-white shadow-[0_8px_18px_rgba(244,63,94,0.35)]">
                 {unreadCount > 9 ? "9+" : unreadCount}
@@ -346,13 +349,13 @@ const Header = ({ setIsAuthenticated, sidebarOffset = 0, isMobile = false }) => 
             aria-expanded={profileMenuOpen}
           >
             <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-sky-500 via-cyan-500 to-blue-700 text-sm font-bold text-white shadow-[0_10px_24px_rgba(14,165,233,0.28)] ring-2 ring-white">
-              {avatarUrl ? (
+              {avatarUrl && !avatarError ? (
                 <img
                   src={avatarUrl}
                   alt={`${userName} avatar`}
                   className="h-full w-full object-cover"
-                  onError={(event) => {
-                    event.currentTarget.style.display = "none";
+                  onError={() => {
+                    setAvatarError(true);
                   }}
                 />
               ) : (
@@ -360,8 +363,8 @@ const Header = ({ setIsAuthenticated, sidebarOffset = 0, isMobile = false }) => 
               )}
             </div>
             <div className="hidden min-w-0 sm:block">
-              <p className="truncate text-sm font-semibold text-slate-900">{userName}</p>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+              <p className="truncate text-[14px] font-semibold text-slate-900">{userName}</p>
+              <p className="text-[14px] font-semibold uppercase tracking-[0.16em] text-slate-500">
                 {userRole}
               </p>
             </div>
@@ -393,7 +396,11 @@ const Header = ({ setIsAuthenticated, sidebarOffset = 0, isMobile = false }) => 
 
               <button
                 type="button"
-                onClick={() => handleMenuAction("/profile")}
+                onClick={() =>
+                  handleMenuAction("/profile", {
+                    state: { focusSection: "security" },
+                  })
+                }
                 className="mt-1 flex w-full items-center gap-3 rounded-[18px] px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-sky-50 hover:text-sky-700"
                 role="menuitem"
               >

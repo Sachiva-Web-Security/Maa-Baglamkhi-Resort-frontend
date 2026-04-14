@@ -10,7 +10,7 @@
  *   5. Confirm → creates booking with all rooms linked
  */
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { FaExclamationTriangle, FaTimes } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import API from "../../api";
@@ -28,10 +28,41 @@ const formatCurrency = (v) =>
   }).format(Number(v) || 0);
 
 const today = () => new Date().toISOString().slice(0, 10);
+const formatStayDate = (value) => {
+  if (!value) return "";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+};
 
 const STEPS = ["Guest", "Rooms", "Tariff", "Payment", "Confirm"];
 const PAYMENT_MODES = ["Cash", "UPI", "Card", "Bank Transfer"];
 const GST_RATES = [0, 5, 12, 18];
+const UNAVAILABLE_ROOM_STATUSES = new Set([
+  "occupied",
+  "booked",
+  "blocked",
+  "out of service",
+]);
+const defaultGuestState = () => ({
+  guestName: "",
+  mobile: "",
+  guestEmail: "",
+  checkIn: today(),
+  checkOut: today(),
+  bookingStatus: "Confirmed",
+  groupLabel: "",
+});
+const defaultPaymentState = () => ({
+  amount: "",
+  discount: "",
+  paymentMode: "Cash",
+  remarks: "",
+});
 
 const inputCls =
   "w-full rounded-xl border border-slate-200 px-4 py-3 text-lg font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:ring-4 focus:ring-sky-100 xl:text-xl";
@@ -85,6 +116,9 @@ const StepBar = ({ current }) => (
 // ─── Main Component ─────────────────────────────────────────────────────────
 const GroupBooking = () => {
   const navigate = useNavigate();
+  const feedbackDialogRef = useRef(null);
+  const feedbackCloseButtonRef = useRef(null);
+  const lastFocusedElementRef = useRef(null);
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
   const [resultBooking, setResultBooking] = useState(null);
@@ -96,15 +130,7 @@ const GroupBooking = () => {
   });
 
   // Step 1 — Guest
-  const [guest, setGuest] = useState({
-    guestName: "",
-    mobile: "",
-    guestEmail: "",
-    checkIn: today(),
-    checkOut: today(),
-    bookingStatus: "Confirmed",
-    groupLabel: "",
-  });
+  const [guest, setGuest] = useState(defaultGuestState);
 
   // Step 2 — Room selection
   const [inventory, setInventory] = useState([]);
@@ -114,30 +140,87 @@ const GroupBooking = () => {
   const [tariffs, setTariffs] = useState([]);
 
   // Step 4 — Payment
-  const [payment, setPayment] = useState({
-    amount: "",
-    discount: "",
-    paymentMode: "Cash",
-    remarks: "",
-  });
+  const [payment, setPayment] = useState(defaultPaymentState);
 
   useEffect(() => {
-    API.get("/hotel/rooms/setup")
-      .then((res) => setInventory(Array.isArray(res.data) ? res.data : []))
-      .catch(console.error);
-  }, []);
+    let ignore = false;
+
+    API.get("/hotel/rooms/setup", {
+      params: {
+        checkIn: guest.checkIn || undefined,
+        checkOut: guest.checkOut || undefined,
+      },
+    })
+      .then((res) => {
+        if (!ignore) {
+          setInventory(Array.isArray(res.data) ? res.data : []);
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+        if (!ignore) {
+          setInventory([]);
+        }
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [guest.checkIn, guest.checkOut]);
 
   useEffect(() => {
-    if (!feedbackModal.open) return undefined;
+    if (!feedbackModal.open) {
+      lastFocusedElementRef.current?.focus?.();
+      return undefined;
+    }
 
-    const handleEscape = (event) => {
+    lastFocusedElementRef.current = document.activeElement;
+
+    const focusableSelector = [
+      "button:not([disabled])",
+      "[href]",
+      "input:not([disabled])",
+      "select:not([disabled])",
+      "textarea:not([disabled])",
+      "[tabindex]:not([tabindex='-1'])",
+    ].join(", ");
+
+    const handleModalKeydown = (event) => {
       if (event.key === "Escape") {
         setFeedbackModal((current) => ({ ...current, open: false }));
+        return;
+      }
+
+      if (event.key !== "Tab") return;
+
+      const dialogNode = feedbackDialogRef.current;
+      if (!dialogNode) return;
+
+      const focusableItems = Array.from(
+        dialogNode.querySelectorAll(focusableSelector),
+      ).filter((element) => !element.hasAttribute("disabled"));
+
+      if (!focusableItems.length) {
+        event.preventDefault();
+        dialogNode.focus();
+        return;
+      }
+
+      const firstItem = focusableItems[0];
+      const lastItem = focusableItems[focusableItems.length - 1];
+
+      if (event.shiftKey && document.activeElement === firstItem) {
+        event.preventDefault();
+        lastItem.focus();
+      } else if (!event.shiftKey && document.activeElement === lastItem) {
+        event.preventDefault();
+        firstItem.focus();
       }
     };
 
-    window.addEventListener("keydown", handleEscape);
-    return () => window.removeEventListener("keydown", handleEscape);
+    feedbackCloseButtonRef.current?.focus();
+    window.addEventListener("keydown", handleModalKeydown);
+    return () => window.removeEventListener("keydown", handleModalKeydown);
   }, [feedbackModal.open]);
 
   // When rooms are selected, seed tariff rows
@@ -157,12 +240,25 @@ const GroupBooking = () => {
 
   // Compute nights from dates
   const nightsFromDates = useMemo(() => {
-    if (!guest.checkIn || !guest.checkOut) return 1;
+    if (!guest.checkIn || !guest.checkOut) return 0;
     const diff =
       (new Date(guest.checkOut) - new Date(guest.checkIn)) /
       (1000 * 60 * 60 * 24);
-    return Math.max(Math.round(diff), 1);
+    return Math.max(Math.round(diff), 0);
   }, [guest.checkIn, guest.checkOut]);
+
+  const staySummaryText = useMemo(() => {
+    if (!guest.checkIn || !guest.checkOut) return "";
+
+    const checkInLabel = formatStayDate(guest.checkIn);
+    const checkOutLabel = formatStayDate(guest.checkOut);
+
+    if (guest.checkIn === guest.checkOut) {
+      return `Stay date: ${checkInLabel} (same-day stay)`;
+    }
+
+    return `${nightsFromDates} night${nightsFromDates === 1 ? "" : "s"} stay: ${checkInLabel} to ${checkOutLabel}`;
+  }, [guest.checkIn, guest.checkOut, nightsFromDates]);
 
   // Room totals
   const roomTotals = useMemo(
@@ -256,6 +352,41 @@ const GroupBooking = () => {
     setStep((s) => s + 1);
   };
 
+  const resetGroupBookingForm = () => {
+    clearBookingSession();
+    setStep(0);
+    setGuest(defaultGuestState());
+    setSelectedRooms([]);
+    setTariffs([]);
+    setPayment(defaultPaymentState());
+    setResultBooking(null);
+  };
+
+  const handleCancelBooking = () => {
+    const hasProgress =
+      guest.guestName.trim() ||
+      guest.mobile.trim() ||
+      guest.guestEmail.trim() ||
+      guest.groupLabel.trim() ||
+      selectedRooms.length > 0 ||
+      payment.amount ||
+      payment.discount ||
+      payment.remarks ||
+      step > 0;
+
+    if (
+      hasProgress &&
+      !window.confirm(
+        "Cancel this group booking? All entered details will be cleared.",
+      )
+    ) {
+      return;
+    }
+
+    resetGroupBookingForm();
+    navigate("/hotel/all-bookings");
+  };
+
   // ─── Submit ───────────────────────────────────────────────────────────────
   const handleSubmit = async () => {
     setSaving(true);
@@ -321,6 +452,8 @@ const GroupBooking = () => {
               aria-modal="true"
               aria-labelledby="group-booking-feedback-title"
               aria-describedby="group-booking-feedback-message"
+              ref={feedbackDialogRef}
+              tabIndex={-1}
               className="w-full max-w-lg overflow-hidden rounded-[32px] border border-white/80 bg-[linear-gradient(180deg,#ffffff_0%,#fff7f8_100%)] shadow-[0_30px_90px_rgba(15,23,42,0.28)]"
               onClick={(event) => event.stopPropagation()}
             >
@@ -345,6 +478,7 @@ const GroupBooking = () => {
                 </div>
                 <button
                   type="button"
+                  ref={feedbackCloseButtonRef}
                   onClick={closeFeedbackModal}
                   className="relative rounded-full border border-white/15 p-2 text-white/85 transition hover:bg-white/10 hover:text-white"
                   aria-label="Close popup"
@@ -477,13 +611,14 @@ const GroupBooking = () => {
                 />
               </div>
             </div>
-            {nightsFromDates > 0 && (
+            {staySummaryText ? (
               <p className="mt-4 rounded-xl bg-sky-50 px-4 py-3 text-base font-bold text-sky-700">
-                <span className="xl:text-base">
+                <span className="hidden xl:block xl:text-base">
                 📅 {nightsFromDates} night{nightsFromDates > 1 ? "s" : ""} ka stay
                 </span>
+                <span className="xl:text-base">{staySummaryText}</span>
               </p>
-            )}
+            ) : null}
           </div>
         )}
 
@@ -506,33 +641,52 @@ const GroupBooking = () => {
                     {cat.name} — ₹{cat.defaultPrice}/night
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {(cat.rooms || []).map((roomNo) => {
+                    {(cat.roomDetails || []).map((room) => {
+                      const roomNo = room.roomNumber;
                       const isSelected = selectedRooms.some(
                         (r) => r.roomNumber === roomNo,
                       );
+                      const normalized = String(room.status || "").trim().toLowerCase();
+                      const isOccupied = normalized === "occupied";
+                      const isUnavailable = UNAVAILABLE_ROOM_STATUSES.has(normalized);
+                      const unavailableLabel =
+                        normalized === "blocked" || normalized === "out of service"
+                          ? "Blocked"
+                          : isOccupied || normalized === "booked"
+                          ? "Occupied"
+                          : "Unavailable";
                       return (
                         <button
                           key={roomNo}
                           type="button"
-                          onClick={() =>
+                          disabled={isUnavailable}
+                          onClick={() => {
+                            if (isUnavailable) return;
                             toggleRoom({
                               roomNumber: roomNo,
                               categoryName: cat.name,
                               defaultPrice: cat.defaultPrice,
-                            })
-                          }
+                            });
+                          }}
                           className={`rounded-[14px] border px-4 py-2.5 text-base font-bold transition xl:text-lg ${
                             isSelected
                               ? "border-indigo-400 bg-indigo-600 text-white shadow-[0_4px_12px_rgba(79,70,229,0.3)]"
+                              : isUnavailable
+                              ? "cursor-not-allowed border-rose-200 bg-rose-50 text-rose-700 opacity-90"
                               : "border-slate-200 bg-white text-slate-700 hover:border-indigo-200 hover:bg-indigo-50"
                           }`}
                         >
-                          {roomNo}
+                          <span>{roomNo}</span>
+                          {isUnavailable ? (
+                            <span className="ml-2 rounded-full bg-rose-100 px-2 py-0.5 text-xs font-black uppercase tracking-[0.12em] text-rose-700">
+                              {unavailableLabel}
+                            </span>
+                          ) : null}
                           {isSelected && " ✓"}
                         </button>
                       );
                     })}
-                    {(!cat.rooms || cat.rooms.length === 0) && (
+                    {(!cat.roomDetails || cat.roomDetails.length === 0) && (
                       <span className="text-sm font-medium italic text-slate-400">
                         No rooms in this category
                       </span>
@@ -776,11 +930,7 @@ const GroupBooking = () => {
               <button
                 type="button"
                 onClick={() => {
-                  clearBookingSession();
-                  setStep(0);
-                  setGuest({ guestName: "", mobile: "", guestEmail: "", checkIn: today(), checkOut: today(), bookingStatus: "Confirmed", groupLabel: "" });
-                  setSelectedRooms([]);
-                  setResultBooking(null);
+                  resetGroupBookingForm();
                 }}
                 className="rounded-full border border-slate-200 bg-white px-6 py-3 text-base font-bold text-slate-700 xl:text-lg"
               >
@@ -792,7 +942,7 @@ const GroupBooking = () => {
 
         {/* Navigation Buttons */}
         {step < 4 && (
-          <div className="flex justify-between gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <button
               type="button"
               onClick={() =>
@@ -801,6 +951,15 @@ const GroupBooking = () => {
               className="rounded-full border border-slate-200 bg-white px-6 py-3 text-base font-bold text-slate-700 transition hover:bg-slate-50 xl:text-lg"
             >
               ← Back
+            </button>
+
+            <div className="flex flex-wrap items-center justify-end gap-3">
+            <button
+              type="button"
+              onClick={handleCancelBooking}
+              className="rounded-full border border-rose-200 bg-rose-50 px-6 py-3 text-base font-bold text-rose-700 transition hover:bg-rose-100 xl:text-lg"
+            >
+              Cancel Booking
             </button>
 
             {step < 3 ? (
@@ -821,6 +980,7 @@ const GroupBooking = () => {
                 {saving ? "Booking…" : "Confirm Group Booking"}
               </button>
             )}
+            </div>
           </div>
         )}
       </div>

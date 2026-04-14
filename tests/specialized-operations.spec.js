@@ -141,9 +141,10 @@ test.describe("Specialized operations testing", () => {
     await page.locator('textarea[name="notes"]').fill("Specialized automation coverage");
     await page.getByRole("button", { name: "Assign Task" }).click();
 
-    const row = page.locator("tr").filter({ hasText: taskName }).first();
-    await expect(row).toBeVisible();
-    await row.getByRole("button", { name: "Delete" }).click();
+    const row = page.locator("tr").filter({ hasText: taskName });
+    const singleRow = row.first();
+    await expect(singleRow).toBeVisible();
+    await singleRow.getByRole("button", { name: "Delete" }).click();
     await expect(row).toHaveCount(0);
   });
 

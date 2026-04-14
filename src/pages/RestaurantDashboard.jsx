@@ -16,7 +16,7 @@ import { getCurrentActor } from "../utils/currentActor";
 const normalizeName = (value) => String(value || "").trim().toLowerCase();
 
 const RestaurantDashboard = () => {
-  const actor = getCurrentActor();
+  const actor = getCurrentActor() || {};
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [orders, setOrders] = useState([]);

@@ -7,21 +7,26 @@ import { getRoleHome } from "../utils/roleHome";
 import { withAudit } from "../utils/auditAction";
 import bgImage from "../assets/bg.jpg";
 
-const ROLE_CREDENTIALS = [
-  { role: "admin", email: "admin@test.com", password: "Admin@123", label: "Admin" },
-  { role: "manager", email: "manager@test.com", password: "Manager@123", label: "Manager" },
-  { role: "receptionist", email: "reception@test.com", password: "Staff@123", label: "Reception" },
-  { role: "accountant", email: "accounts@test.com", password: "Staff@123", label: "Accounts" },
-  { role: "housekeeping", email: "hk@test.com", password: "Staff@123", label: "Housekeeping" },
-  { role: "waiter", email: "waiter@resort.com", password: "password", label: "Waiter" },
+const ROLE_LOGIN_HINTS = [
+  { role: "admin", email: "admin@resort.com", label: "Admin" },
+  { role: "manager", email: "manager@resort.com", label: "Manager" },
+  { role: "receptionist", email: "reception@resort.com", label: "Reception" },
+  { role: "accountant", email: "accounts@resort.com", label: "Accounts" },
+  { role: "housekeeping", email: "tarun@resort.com", label: "Housekeeping" },
+  { role: "waiter", email: "waiter@resort.com", label: "Waiter" },
 ];
 
 const LOGIN_EMAIL_ALIASES = {
   "admin@resort.com": "admin@test.com",
+  "admin@test.com": "admin@resort.com",
   "manager@resort.com": "manager@test.com",
+  "manager@test.com": "manager@resort.com",
   "reception@resort.com": "reception@test.com",
+  "reception@test.com": "reception@resort.com",
   "accounts@resort.com": "accounts@test.com",
+  "accounts@test.com": "accounts@resort.com",
   "tarun@resort.com": "hk@test.com",
+  "hk@test.com": "tarun@resort.com",
   "waiter@resort.com": "waiter@test.com",
   "waiter@test.com": "waiter@resort.com",
 };
@@ -58,7 +63,7 @@ const Login = ({ setIsAuthenticated }) => {
         const shouldRetryWithAlias =
           aliasEmail &&
           err.response?.status === 400 &&
-          /invalid email/i.test(String(err.response?.data?.message || ""));
+         /invalid email/i.test(String(err.response?.data?.message || "").toLowerCase());
 
         if (!shouldRetryWithAlias) {
           throw err;
@@ -98,9 +103,10 @@ const Login = ({ setIsAuthenticated }) => {
     }
   };
 
-  const quickLogin = (credential) => {
+  const applyLoginHint = (credential) => {
     setEmail(credential.email);
-    setPassword(credential.password);
+    setPassword("");
+    setError("");
   };
 
   return (
@@ -186,16 +192,17 @@ const Login = ({ setIsAuthenticated }) => {
               </button>
             </form>
 
-            {/* Quick login chips */}
+            {/* Role email shortcuts */}
             <div className="mt-6">
               <p className="mb-2.5 text-center text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                Quick Login (Dev / Testing)
+                Role Email Shortcuts
               </p>
               <div className="flex flex-wrap justify-center gap-1.5">
-                {ROLE_CREDENTIALS.map((rc) => (
+                {ROLE_LOGIN_HINTS.map((rc) => (
                   <button
                     key={rc.role}
-                    onClick={() => quickLogin(rc)}
+                    type="button"
+                    onClick={() => applyLoginHint(rc)}
                     className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 hover:border-slate-300"
                   >
                     {rc.label}
@@ -203,7 +210,7 @@ const Login = ({ setIsAuthenticated }) => {
                 ))}
               </div>
               <p className="mt-2 text-center text-[10px] text-slate-400">
-                Quick login ab current local DB credentials use karta hai.
+                These buttons only fill the email. Enter the current password manually.
               </p>
             </div>
           </div>

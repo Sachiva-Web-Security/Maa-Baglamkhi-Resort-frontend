@@ -25,6 +25,10 @@ import {
 import { frontendSeed } from "./fixtures/frontendSeed.js";
 
 describe("frontend utility coverage", () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   test("roleHome utilities normalize roles and resolve labels/home routes", () => {
     expect(normalizeRole("  MANAGER ")).toBe("manager");
     expect(getRoleHome("receptionist")).toBe("/reception-dashboard");

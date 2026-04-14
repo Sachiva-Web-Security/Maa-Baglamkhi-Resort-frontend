@@ -16,7 +16,6 @@ import Reference from "../components/Hotel/Reference";
 import Room from "../components/Hotel/Room";
 import RoomTariff from "../components/Hotel/RoomTariff";
 
-// â”€â”€â”€ NEW MISSING FEATURE MODULES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 import FolioView from "../components/Hotel/FolioView";
 import GroupBooking from "../components/Hotel/GroupBooking";
 import GuestProfile from "../components/Hotel/GuestProfile";

@@ -392,17 +392,17 @@ const Assignment = () => {
       </div>
 
       <div className="w-full space-y-7">
-        <section className="overflow-hidden rounded-[28px] border border-slate-900/10 bg-[linear-gradient(120deg,#071b34_0%,#0d4a53_52%,#162d45_100%)] px-5 py-6 shadow-[0_22px_55px_rgba(15,23,42,0.12)] sm:px-7 sm:py-8">
+        <section className="overflow-hidden rounded-[28px] border border-sky-500/45 bg-[linear-gradient(120deg,#1e3a8a_0%,#075985_52%,#0f172a_100%)] px-5 py-6 shadow-[0_22px_55px_rgba(15,23,42,0.2)] sm:px-7 sm:py-8">
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(360px,1fr)] lg:items-center">
             <div className="space-y-4">
-              <p className="text-[15px] font-semibold uppercase tracking-[0.26em] text-cyan-200">
+              <p className="text-[15px] font-semibold uppercase tracking-[0.26em] text-white">
                 Task Assignment
               </p>
               <h1 className="text-4xl font-black leading-tight text-white sm:text-4xl">
                 Assignment operations board
               </h1>
-              <p className="max-w-3xl text-3xl  font-semibold leading-6 text-slate-100/85 sm:text-base">
-           “Tasks assigned by reception, managers, and admins are shown here in real time. Housekeeping, accounts, and staff teams can start and complete their assigned work.”
+              <p className="max-w-3xl text-3xl  font-semibold leading-6 text-white sm:text-base">
+             Tasks assigned by reception, managers, and admins are shown here in real time. Housekeeping, accounts, and staff teams can start and complete their assigned work.
               </p>
             </div>
 
@@ -412,14 +412,14 @@ const Assignment = () => {
                 return (
                   <div
                     key={item.label}
-                    className="rounded-[22px] border text-xl border-white/12 bg-white/10 px-4 py-4 text-white backdrop-blur-md"
+                    className="rounded-[22px] border text-xl border-sky-100/35 bg-white/14 px-4 py-4 text-white backdrop-blur-md"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <span className="text-[15px] font-bold text-slate-100/75">{item.label}</span>
-                        <div className="mt-3 text-2xl font-bold leading-none">{item.value}</div>
+                        <span className="text-[15px] font-bold text-white">{item.label}</span>
+                        <div className="mt-3 text-2xl font-bold leading-none text-white">{item.value}</div>
                       </div>
-                      <span className="rounded-2xl bg-white/10 p-3 text-cyan-100">
+                      <span className="rounded-2xl bg-white/14 p-3 text-white">
                         <Icon />
                       </span>
                     </div>
@@ -676,7 +676,7 @@ const Assignment = () => {
                 {!pageLoading && assignments.length === 0 && (
                   <tr>
                     <td
-                      colSpan="9"
+                      colSpan="10"
                       className="px-5 py-12 text-center text-xl font-semibold text-slate-500"
                     >
                       No tasks assigned yet
@@ -687,7 +687,7 @@ const Assignment = () => {
                 {pageLoading && (
                   <tr>
                     <td
-                      colSpan="9"
+                      colSpan="10"
                       className="px-5 py-12 text-center text-xl font-semibold text-slate-500"
                     >
                       Loading assignments...

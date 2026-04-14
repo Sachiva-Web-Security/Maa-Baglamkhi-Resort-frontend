@@ -43,7 +43,7 @@ const BookingSteps = () => {
   return (
     <div className="mx-auto flex w-full max-w-full flex-col gap-4 xl:flex-row xl:items-center xl:gap-4 2xl:gap-5">
       <div className="min-w-0 xl:flex-none">
-        <div className="flex flex-nowrap items-center gap-3 whitespace-nowrap xl:gap-4 2xl:gap-5">
+         <div className="flex flex-nowrap items-center gap-3 overflow-x-auto whitespace-nowrap xl:gap-4 2xl:gap-5">
           {WIZARD_STEPS.map((step) => (
             <NavLink
               key={step.path}
@@ -85,9 +85,9 @@ const BookingSteps = () => {
       </div>
 
       <div className="min-w-0 xl:flex-none">
-        <div className="flex flex-nowrap items-center gap-3 whitespace-nowrap xl:justify-end xl:gap-4 2xl:gap-5">
+          <div className="flex flex-nowrap items-center gap-3 overflow-x-auto whitespace-nowrap xl:justify-end xl:gap-4 2xl:gap-5">
           {MGMT_LINKS.map((link) => (
-            <NavLink key={link.path} to={link.path} className={linkClassName}>
+           <NavLink key={link.path} to={link.path} state={location.state} className={linkClassName}>
               {link.name}
             </NavLink>
           ))}

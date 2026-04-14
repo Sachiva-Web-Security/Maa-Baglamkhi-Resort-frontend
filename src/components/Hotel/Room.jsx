@@ -1,5 +1,5 @@
 // src/components/Hotel/Room.jsx
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import API from "../../api";
@@ -95,6 +95,7 @@ const AVAILABILITY_BADGE = {
 const Room = () => {
   const navigate  = useNavigate();
   const location  = useLocation();
+  const noticeDialogRef = useRef(null);
   const bookingId   = location.state?.bookingId   || getStoredBookingId();
   const bookingCode = location.state?.bookingCode || getStoredBookingCode();
   const bookingRef  = bookingCode || bookingId;
@@ -323,6 +324,24 @@ const Room = () => {
     });
   }, []);
 
+  useEffect(() => {
+    if (!notice.open) return undefined;
+
+    const handleNoticeKeydown = (event) => {
+      if (event.key === "Escape") {
+        setNotice((prev) => ({ ...prev, open: false }));
+      }
+    };
+
+    const dialogNode = noticeDialogRef.current;
+    dialogNode?.focus();
+    window.addEventListener("keydown", handleNoticeKeydown);
+
+    return () => {
+      window.removeEventListener("keydown", handleNoticeKeydown);
+    };
+  }, [notice.open]);
+
   // ─── Handlers ─────────────────────────────────────────────────────────────────
   const handleAvailability = (index) => {
     setActiveRoom(activeRoom === index ? null : index);
@@ -517,7 +536,8 @@ const Room = () => {
 
         {/* Legend */}
         <div className="flex flex-wrap gap-3 rounded-[18px] border border-white/70 bg-white/80 px-5 py-3 text-xs font-semibold shadow-sm backdrop-blur">
-          <span className="text-black-400  text-xl font-bold  self-center">Legend:</span>
+                   <span className="text-slate-900 text-xl font-bold self-center">Legend:</span>
+
           {Object.entries(AVAILABILITY_BADGE).map(([state, meta]) => (
             <span
               key={state}
@@ -696,7 +716,8 @@ const Room = () => {
                             }))
                           }
                           placeholder="Room no."
-                          className="h-[55px] w-full rounded-3xl border border-black-200/80 bg-white px-4 py-3 text-xl text-black-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100"
+                       className="h-[55px] w-full rounded-3xl border border-slate-200/80 bg-white px-4 py-3 text-xl text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100"
+
                         />
                       </div>
                       <button
@@ -879,7 +900,15 @@ const Room = () => {
 
         {notice.open && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-sm">
-            <div className="w-full max-w-md rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_28px_70px_rgba(15,23,42,0.22)]">
+            <div
+              ref={noticeDialogRef}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="room-notice-title"
+              aria-describedby="room-notice-message"
+              tabIndex={-1}
+              className="w-full max-w-md rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_28px_70px_rgba(15,23,42,0.22)]"
+            >
               <div className="flex items-start gap-4">
                 <div
                   className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-lg font-black ${
@@ -893,8 +922,12 @@ const Room = () => {
                   !
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h3 className="text-xl font-black text-slate-900">{notice.title}</h3>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">{notice.message}</p>
+                  <h3 id="room-notice-title" className="text-xl font-black text-slate-900">
+                    {notice.title}
+                  </h3>
+                  <p id="room-notice-message" className="mt-2 text-sm leading-6 text-slate-600">
+                    {notice.message}
+                  </p>
                 </div>
               </div>
 

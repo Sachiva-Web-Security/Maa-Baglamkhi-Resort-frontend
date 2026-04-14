@@ -32,7 +32,7 @@ const AddMenuItemModal = ({
     <div className={outerClassName}>
       <div className={innerClassName}>
         <div className="text-xl uppercase tracking-[0.26em] text-blue-700">Add Menu Item</div>
-        <div className={`mt-2 font-black text-slate-900 ${isInline ? "text-4xl" : "text-4xl"}`}>
+ <div className="mt-2 font-black text-slate-900 text-4xl">
           Create a new menu option
         </div>
 
@@ -94,7 +94,7 @@ const AddMenuItemModal = ({
               </div>
               <div className="min-w-0 flex-1">
                 <div className="text-xl font-bold text-slate-900 ">Upload Image</div>
-                <div className="mt-1 text-base text-slate-500 text-xl">
+                <div className="mt-1 text-xl text-slate-500">
                   JPG, PNG or WEBP. This image will show on the menu card.
                 </div>
                 <div className="mt-3 inline-flex rounded-full bg-blue-600 px-5 py-2.5 text-xl font-bold text-white">

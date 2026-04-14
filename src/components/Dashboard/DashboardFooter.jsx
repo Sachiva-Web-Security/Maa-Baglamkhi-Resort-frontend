@@ -8,18 +8,17 @@ const DashboardFooter = ({ contentOffset = 0 }) => {
       id="dashboard-footer"
       className="relative z-50 mt-8 overflow-hidden border-t border-white/10 bg-[linear-gradient(180deg,#020617_0%,#07101f_48%,#030712_100%)] px-5 py-4 shadow-[0_-20px_60px_rgba(2,6,23,0.4)] sm:px-6"
       style={{
-        marginLeft: contentOffset ? `-${contentOffset}px` : 0,
-        width: contentOffset ? `calc(100% + ${contentOffset}px)` : "100%",
+        marginLeft: contentOffset ? `${contentOffset}px` : 0,
+        width: contentOffset ? `calc(100% - ${contentOffset}px)` : "100%",
       }}
     >
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(20,184,166,0.18),transparent_26%),radial-gradient(circle_at_top_right,rgba(59,130,246,0.18),transparent_24%)]" />
       <div className="relative mx-auto flex min-h-[74px] w-full max-w-7xl items-center justify-between gap-4">
         <div>
-          
           <p className=" ml-14 text-xl font-semibold text-slate-200">
-    Website secured and maintained by Sachiva Web & Security
-
-© 2026 All copyright reserved for sachiva web and security
+            Website secured and maintained by Sachiva Web & Security
+            <br />
+            &copy; {currentYear} All rights reserved for Sachiva Web & Security
           </p>
         </div>
 
@@ -32,9 +31,6 @@ const DashboardFooter = ({ contentOffset = 0 }) => {
               {item}
             </span>
           ))}
-          <span className="hidden text-xs text-slate-400 sm:inline">
-            &copy; {currentYear}
-          </span>
         </div>
       </div>
     </footer>

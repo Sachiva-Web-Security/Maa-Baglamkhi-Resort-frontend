@@ -21,7 +21,7 @@ const formatCurrency = (value) =>
 const PAYMENT_MODES = ["Cash", "Card", "UPI", "Bank Transfer", "Mixed"];
 
 const fieldCls =
-  "w-full rounded-[18px] border border-slate-200 bg-white px-4 py-3.5 text-base font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-4 focus:ring-sky-100";
+  "w-full rounded-[18px] border border-slate-200 bg-white px-4 py-3.5 text-lg font-semibold text-slate-900 outline-none transition placeholder:text-base placeholder:text-slate-400 focus:border-sky-500 focus:ring-4 focus:ring-sky-100";
 
 const panelCls =
   "rounded-[28px] border border-slate-200/70 bg-white/90 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur";
@@ -160,13 +160,13 @@ const Advance = () => {
         <section className="overflow-hidden rounded-[28px] border border-white/70 bg-[linear-gradient(135deg,#0f172a_0%,#1d4ed8_58%,#0f766e_100%)] px-6 py-7 text-white shadow-[0_22px_60px_rgba(15,23,42,0.22)]">
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(300px,0.8fr)] lg:items-center">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-100/80">
+              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-sky-100/80">
                 Advance Payment
               </p>
-              <h1 className="mt-3 text-3xl font-black sm:text-4xl">
+              <h1 className="mt-3 text-4xl font-black leading-tight sm:text-5xl">
                 Collect and review the booking advance
               </h1>
-              <p className="mt-3 max-w-2xl text-base leading-7 text-white/85">
+              <p className="mt-3 max-w-2xl text-lg leading-8 text-white/85 sm:text-xl">
                 Review the room-wise totals, collect the advance, and move to the
                 communication step with a clear payment summary.
               </p>
@@ -174,24 +174,24 @@ const Advance = () => {
 
             <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
               <div className="rounded-[22px] border border-white/15 bg-white/10 p-4 backdrop-blur">
-                <div className="text-xs uppercase tracking-[0.22em] text-sky-100/80">
+                <div className="text-sm uppercase tracking-[0.22em] text-sky-100/80">
                   Booking ID
                 </div>
-                <div className="mt-2 text-2xl font-black">{bookingRef || "Pending"}</div>
+                <div className="mt-2 text-3xl font-black">{bookingRef || "Pending"}</div>
               </div>
 
               <div className="rounded-[22px] border border-white/15 bg-white/10 p-4 backdrop-blur">
-                <div className="text-xs uppercase tracking-[0.22em] text-sky-100/80">
+                <div className="text-sm uppercase tracking-[0.22em] text-sky-100/80">
                   Guests
                 </div>
-                <div className="mt-2 text-2xl font-black">{totalGuests || 0}</div>
+                <div className="mt-2 text-3xl font-black">{totalGuests || 0}</div>
               </div>
 
               <div className="rounded-[22px] border border-white/15 bg-white/10 p-4 backdrop-blur">
-                <div className="text-xs uppercase tracking-[0.22em] text-sky-100/80">
+                <div className="text-sm uppercase tracking-[0.22em] text-sky-100/80">
                   Rooms
                 </div>
-                <div className="mt-2 text-2xl font-black">{roomSummary.length}</div>
+                <div className="mt-2 text-3xl font-black">{roomSummary.length}</div>
               </div>
             </div>
           </div>
@@ -201,13 +201,13 @@ const Advance = () => {
           <div className={panelCls}>
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <p className="text-[13px] font-semibold uppercase tracking-[0.28em] text-sky-700">
+                <p className="text-[15px] font-semibold uppercase tracking-[0.28em] text-sky-700">
                   Billing Breakdown
                 </p>
-                <h2 className="mt-2 text-[30px] font-black text-slate-900">
+                <h2 className="mt-2 text-[36px] font-black text-slate-900">
                   Booking amount summary
                 </h2>
-                <p className="mt-2 max-w-3xl text-base leading-7 text-slate-600">
+                <p className="mt-2 max-w-3xl text-lg leading-8 text-slate-600">
                   Check each room tariff, quantity, GST, and final amount before
                   collecting advance payment.
                 </p>
@@ -216,7 +216,7 @@ const Advance = () => {
               <button
                 type="button"
                 onClick={() => navigate("/hotel/room-tariff")}
-                className="rounded-full border border-slate-200 bg-slate-50 px-5 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-100"
+                className="rounded-full border border-slate-200 bg-slate-50 px-5 py-3 text-base font-bold text-slate-700 transition hover:bg-slate-100"
               >
                 Edit Tariff
               </button>
@@ -224,28 +224,28 @@ const Advance = () => {
 
             <div className="mt-6 grid gap-3 sm:grid-cols-3">
               <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
                   Booking Ref
                 </p>
-                <p className="mt-2 text-lg font-black text-slate-900">
+                <p className="mt-2 text-2xl font-black text-slate-900">
                   {bookingRef || "Pending"}
                 </p>
               </div>
 
               <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
                   Guest
                 </p>
-                <p className="mt-2 text-lg font-black text-slate-900">
+                <p className="mt-2 text-2xl font-black text-slate-900">
                   {guestDraft.guestName || guestDraft.guest_name || "Walk-in Guest"}
                 </p>
               </div>
 
               <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
                   Payment Status
                 </p>
-                <p className="mt-2 text-lg font-black text-emerald-700">
+                <p className="mt-2 text-2xl font-black text-emerald-700">
                   {enteredPaidAmount > 0 ? "Advance entered" : "Awaiting advance"}
                 </p>
               </div>
@@ -254,7 +254,7 @@ const Advance = () => {
             {roomSummary.length ? (
               <div className="mt-6 overflow-x-auto">
                 <table className="min-w-full overflow-hidden rounded-[22px] border border-slate-200">
-                  <thead className="bg-slate-100 text-left text-sm font-bold text-slate-700">
+                  <thead className="bg-slate-100 text-left text-base font-bold text-slate-700">
                     <tr>
                       <th className="px-5 py-4">Room</th>
                       <th className="px-5 py-4">Type</th>
@@ -271,22 +271,22 @@ const Advance = () => {
                         key={`${row.roomNo || row.name}-${index}`}
                         className="border-t border-slate-200 bg-white"
                       >
-                        <td className="px-5 py-4 text-lg font-black text-slate-900">
+                        <td className="px-5 py-4 text-xl font-black text-slate-900">
                           {row.roomNo || row.name}
                         </td>
-                        <td className="px-5 py-4 text-base font-semibold text-slate-600">
+                        <td className="px-5 py-4 text-lg font-semibold text-slate-600">
                           {row.roomType || "-"}
                         </td>
-                        <td className="px-5 py-4 text-base font-semibold text-slate-600">
+                        <td className="px-5 py-4 text-lg font-semibold text-slate-600">
                           {row.quantity}
                         </td>
-                        <td className="px-5 py-4 text-base font-semibold text-slate-600">
+                        <td className="px-5 py-4 text-lg font-semibold text-slate-600">
                           {formatCurrency(row.price)}
                         </td>
-                        <td className="px-5 py-4 text-base font-semibold text-slate-600">
+                        <td className="px-5 py-4 text-lg font-semibold text-slate-600">
                           {row.gst}%
                         </td>
-                        <td className="px-5 py-4 text-lg font-black text-emerald-700">
+                        <td className="px-5 py-4 text-xl font-black text-emerald-700">
                           {formatCurrency(row.total)}
                         </td>
                       </tr>
@@ -303,13 +303,13 @@ const Advance = () => {
 
           <div className="space-y-6">
             <div className={panelCls}>
-              <p className="text-[13px] font-semibold uppercase tracking-[0.28em] text-emerald-600">
+              <p className="text-[15px] font-semibold uppercase tracking-[0.28em] text-emerald-600">
                 Payment Collection
               </p>
-              <h2 className="mt-2 text-[30px] font-black text-slate-900">
+              <h2 className="mt-2 text-[36px] font-black text-slate-900">
                 Receive advance payment
               </h2>
-              <p className="mt-2 text-base leading-7 text-slate-600">
+              <p className="mt-2 text-lg leading-8 text-slate-600">
                 Enter the received amount, choose the payment mode, and save notes
                 for the front desk team.
               </p>
@@ -322,41 +322,41 @@ const Advance = () => {
                 ) : null}
 
                 <div className="rounded-[22px] bg-slate-50 p-5">
-                  <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  <div className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
                     Guest
                   </div>
-                <div className="mt-2 text-xl font-black text-slate-900">
+                <div className="mt-2 text-2xl font-black text-slate-900">
                     {guestDraft.guestName || guestDraft.guest_name || "Walk-in Guest"}
                   </div>
-                  <div className="mt-2 text-sm text-slate-500">
+                  <div className="mt-2 text-base text-slate-500">
                     {guestDraft.mobile || "No mobile"} | {guestDraft.city || "No city"}
                   </div>
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-3">
                   <div className="rounded-[22px] bg-blue-50 p-5">
-                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">
+                    <div className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-700">
                       Total
                     </div>
-                    <div className="mt-3 text-[28px] font-black leading-none text-blue-900">
+                    <div className="mt-3 text-[34px] font-black leading-none text-blue-900">
                       {formatCurrency(totalAmount)}
                     </div>
                   </div>
 
                   <div className="rounded-[22px] bg-emerald-50 p-5">
-                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">
+                    <div className="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-700">
                       Received
                     </div>
-                    <div className="mt-3 text-[28px] font-black leading-none text-emerald-900">
+                    <div className="mt-3 text-[34px] font-black leading-none text-emerald-900">
                       {formatCurrency(enteredPaidAmount)}
                     </div>
                   </div>
 
                   <div className="rounded-[22px] bg-amber-50 p-5">
-                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-700">
+                    <div className="text-sm font-semibold uppercase tracking-[0.18em] text-amber-700">
                       Balance
                     </div>
-                    <div className="mt-3 text-[28px] font-black leading-none text-amber-900">
+                    <div className="mt-3 text-[34px] font-black leading-none text-amber-900">
                       {formatCurrency(remainingAmount)}
                     </div>
                   </div>
@@ -364,7 +364,7 @@ const Advance = () => {
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="mb-2 block text-sm font-semibold text-slate-700">
+                    <label className="mb-2 block text-base font-semibold text-slate-700">
                       Paid Amount
                     </label>
                     <input
@@ -379,7 +379,7 @@ const Advance = () => {
                   </div>
 
                   <div>
-                    <label className="mb-2 block text-sm font-semibold text-slate-700">
+                    <label className="mb-2 block text-base font-semibold text-slate-700">
                       Payment Mode
                     </label>
                     <select

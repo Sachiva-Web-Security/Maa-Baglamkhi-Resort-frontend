@@ -233,34 +233,38 @@ if (exists) {
     }
   };
 
-  const displayedTableRows = tables.map((table) => {
-    const snapshot = tokenSnapshots[table.name] || {};
-    const latestTokenBill =
-      billByTable[createBillLookupKey("Table", table.name, snapshot.tokenId || null)] ||
-      null;
-    const latestTableBill =
-      billByTable[createBillLookupKey("Table", table.name, null)] ||
-      null;
-    const relatedBill = latestTokenBill || latestTableBill;
-    const paidBill = isPaidBill(relatedBill);
-    const openBill = Boolean(relatedBill) && !paidBill;
-    const itemCount = (snapshot.items || []).length;
-    const hasMeaningfulToken = itemCount > 0 || openBill;
-    const displaySnapshot = hasMeaningfulToken
-      ? snapshot
-      : { tokenId: null, tokenCode: null, items: [], waiterName: "Waiter" };
-    const status = hasMeaningfulToken ? "Occupied" : "Available";
+  const displayedTableRows = useMemo(
+    () =>
+      tables.map((table) => {
+        const snapshot = tokenSnapshots[table.name] || {};
+        const latestTokenBill =
+          billByTable[createBillLookupKey("Table", table.name, snapshot.tokenId || null)] ||
+          null;
+        const latestTableBill =
+          billByTable[createBillLookupKey("Table", table.name, null)] ||
+          null;
+        const relatedBill = latestTokenBill || latestTableBill;
+        const paidBill = isPaidBill(relatedBill);
+        const openBill = Boolean(relatedBill) && !paidBill;
+        const itemCount = (snapshot.items || []).length;
+        const hasMeaningfulToken = itemCount > 0 || openBill;
+        const displaySnapshot = hasMeaningfulToken
+          ? snapshot
+          : { tokenId: null, tokenCode: null, items: [], waiterName: "Waiter" };
+        const status = hasMeaningfulToken ? "Occupied" : "Available";
 
-    return {
-      table,
-      status,
-      occupied: status === "Occupied",
-      snapshot: displaySnapshot,
-      itemCount,
-      relatedBill,
-      showPayNow: openBill,
-    };
-  });
+        return {
+          table,
+          status,
+          occupied: status === "Occupied",
+          snapshot: displaySnapshot,
+          itemCount,
+          relatedBill,
+          showPayNow: openBill,
+        };
+      }),
+    [tables, tokenSnapshots, billByTable],
+  );
 
   const runningTables = displayedTableRows.filter((row) => row.occupied).length;
   const blankTables = displayedTableRows.filter((row) => row.status === "Available").length;
@@ -469,7 +473,7 @@ if (exists) {
             <div>
               <div className="text-lg font-semibold uppercase tracking-[0.24em] text-sky-500">Table Management</div>
               <h3 className="mt-2 text-[40px] font-black tracking-[-0.02em] text-slate-900">Restaurant tables in list view</h3>
-              <p className="mt-3 text-lg text-slate-500">Table status, section, token info, person count, and actions in one clean workspace.</p>
+              <p className="mt-3 text-lg text-slate-500">Table status, section, booking info, person count, and actions in one clean workspace.</p>
           </div>
 
             <button
@@ -488,7 +492,7 @@ if (exists) {
                   <th className="px-5 py-6 text-sm font-bold uppercase tracking-[0.2em] text-slate-500">Table ID</th>
                   <th className="px-5 py-6 text-sm font-bold uppercase tracking-[0.2em] text-slate-500">Status</th>
                   <th className="px-5 py-6 text-sm font-bold uppercase tracking-[0.2em] text-slate-500">Section</th>
-                  <th className="px-5 py-6 text-sm font-bold uppercase tracking-[0.2em] text-slate-500">Token Info</th>
+                  <th className="px-5 py-6 text-sm font-bold uppercase tracking-[0.2em] text-slate-500">Booking Info</th>
                   <th className="px-5 py-6 text-sm font-bold uppercase tracking-[0.2em] text-slate-500">Persons</th>
                   <th className="px-5 py-6 text-right text-sm font-bold uppercase tracking-[0.2em] text-slate-500">Actions</th>
                 </tr>
@@ -524,7 +528,7 @@ if (exists) {
                       </td>
                       <td className="px-5 py-5">
                         <div className="inline-flex rounded-lg bg-[#eef3ff] px-4 py-2 text-base font-semibold text-slate-600">
-                          {snapshot.tokenCode || "No Active Token"}
+                          {snapshot.tokenCode || "No Active Booking"}
                         </div>
                         <div className="mt-3 text-base text-slate-500">
                           {itemCount ? `${itemCount} menu items added` : "No items yet"}
@@ -573,7 +577,7 @@ if (exists) {
                               navigate(`/restaurant/token/${table.name}`);
                             }}
                           >
-                            {waiterLocked ? "Assigned" : "+ Token"}
+                            {waiterLocked ? "Assigned" : "+ Booking"}
                           </button>
 
                           {occupied && itemCount ? (

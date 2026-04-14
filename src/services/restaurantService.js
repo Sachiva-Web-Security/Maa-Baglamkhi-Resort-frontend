@@ -29,18 +29,12 @@ export const restaurantService = {
   },
 
   async addMenuItem(payload) {
-    const isFormData = payload instanceof FormData;
-    const response = await API.post("/restaurant/menu", payload, {
-      headers: isFormData ? { "Content-Type": "multipart/form-data" } : {},
-    });
+    const response = await API.post("/restaurant/menu", payload);
     return response.data;
   },
 
   async updateMenuItem(id, payload) {
-    const isFormData = payload instanceof FormData;
-    const response = await API.put(`/restaurant/menu/${id}`, payload, {
-      headers: isFormData ? { "Content-Type": "multipart/form-data" } : {},
-    });
+    const response = await API.put(`/restaurant/menu/${id}`, payload);
     return response.data;
   },
 

@@ -14,7 +14,7 @@ import {
 
 const ACTIVE_INVOICE_KEY = "restaurant-active-invoice";
 const SAVED_INVOICE_KEY = "restaurant-saved-invoice";
-const PAYMENT_CARD_PAGE_SIZE = 8;
+const PAYMENT_CARD_PAGE_SIZE = 7;
 const normalizeInvoiceStatus = (value) => String(value || "").trim().toLowerCase();
 const isPaidInvoice = (value) => normalizeInvoiceStatus(value) === "paid";
 const isPostedToRoomInvoice = (value) => normalizeInvoiceStatus(value) === "posted to room";
@@ -932,7 +932,7 @@ const Payment = ({
   }, [chargeableRooms, roomChargeQuery]);
   const isRoomChargeMode = paymentMethod === "Charge To Room";
   const waiterDiscountLocked = actor.isWaiter;
-  const canChargeToRoom = !actor.isWaiter && String(entityType || "").toLowerCase() !== "room";
+  const canChargeToRoom = chargeableRooms.length > 0;
 
   const saveInvoiceState = (patch = {}) => {
     setInvoice((current) => {
@@ -990,19 +990,25 @@ const Payment = ({
   const handleRoomSelection = (roomNumber) => {
     setSelectedRoomNumber(roomNumber);
     const selectedRoom = chargeableRooms.find((room) => String(room.roomNumber) === String(roomNumber));
+    const sanitizedName = sanitizeCustomerName(selectedRoom?.guestName || "");
+    const sanitizedPhone = sanitizePhoneNumber(selectedRoom?.mobile || "");
     saveInvoiceState({
       selectedRoomNumber: roomNumber || "",
+      customerName: sanitizedName,
+      phone: sanitizedPhone,
       roomBookingId: selectedRoom?.bookingId || null,
       roomBookingCode: selectedRoom?.bookingCode || "",
     });
     if (!selectedRoom) return;
 
-    if (!String(customerName || "").trim()) {
-      handleCustomerNameChange(selectedRoom.guestName || "");
-    }
-    if (!String(phone || "").trim()) {
-      handlePhoneChange(selectedRoom.mobile || "");
-    }
+    setCustomerName(sanitizedName);
+    setPhone(sanitizedPhone);
+    setFieldErrors(
+      getCustomerFieldErrors({
+        customerName: sanitizedName,
+        phone: sanitizedPhone,
+      }),
+    );
   };
 
   const updateCardDetails = (patch) => {
@@ -1055,11 +1061,6 @@ const Payment = ({
     }
 
     if (isRoomChargeMode) {
-      if (String(entityType || "").toLowerCase() === "room") {
-        alert("Room invoice ko dobara room par post nahi kiya ja sakta.");
-        return false;
-      }
-
       if (!selectedChargeRoom) {
         alert("Charge karne ke liye occupied in-house room select kijiye.");
         return false;
@@ -1316,16 +1317,16 @@ const Payment = ({
                 <p className="mt-2 text-xl text-white/80">{invoiceHeading}</p>
               </div>
               <div className="rounded-[22px] border border-white/15 bg-white/10 px-5 py-4 backdrop-blur">
-                <div className="text-base uppercase tracking-[0.18em] text-cyan-100/80">Token</div>
+                <div className="text-base uppercase tracking-[0.18em] text-cyan-100/80">Booking</div>
                 <div className="mt-2 text-4xl font-black">{formatVisitId(invoice?.tokenCode, invoice?.tokenId)}</div>
               </div>
             </div>
           </section>
         ) : null}
 
-        <section className={asModal || !showCardList ? "flex justify-center" : "grid gap-4 xl:grid-cols-[minmax(560px,0.98fr)_minmax(420px,0.88fr)] 2xl:grid-cols-[minmax(640px,1fr)_minmax(460px,0.84fr)]"}>
+        <section className={asModal || !showCardList ? "flex justify-center" : "flex flex-col gap-4"}>
           {!asModal && showCardList ? (
-            <div className="rounded-[24px] border border-slate-200/80 bg-white p-4 shadow-[0_14px_34px_rgba(15,23,42,0.07)]">
+            <div className="order-2 rounded-[24px] border border-slate-200/80 bg-white p-4 shadow-[0_14px_34px_rgba(15,23,42,0.07)]">
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <p className="text-sm font-semibold uppercase tracking-[0.28em] text-sky-500">Review Queue</p>
@@ -1482,57 +1483,90 @@ const Payment = ({
             </div>
           ) : null}
 
-          <div className={`w-full ${asModal ? "max-w-[420px]" : ""}`}>
+          <div className={`order-1 w-full ${asModal ? "max-w-[420px]" : ""}`}>
             {!invoice ? (
               <div className="w-full max-w-[420px] rounded-[28px] border border-slate-200/70 bg-white/95 p-6 text-base text-slate-500 shadow-[0_18px_50px_rgba(15,23,42,0.1)]">
                 “Select a payment card. The full payment form for the selected invoice will open here.”
               </div>
             ) : (
-            <div className="rounded-[24px] border border-slate-200/70 bg-white/95 p-4 shadow-[0_14px_36px_rgba(15,23,42,0.09)]">
-              <div className="flex items-center justify-between gap-3 text-sm font-semibold uppercase tracking-[0.22em] text-slate-400">
+            <div className="rounded-[30px] border border-[#dfe5f3] bg-[linear-gradient(180deg,#f8faff_0%,#ffffff_100%)] p-5 shadow-[0_18px_48px_rgba(15,23,42,0.08)]">
+              <div className="flex items-center justify-between gap-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
                 <span>{asModal ? "Invoice Popup" : "Secure Payment"}</span>
-                <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-700">Restaurant POS</span>
+                <span className="text-slate-500">Restaurant POS</span>
               </div>
 
-            <div className="mt-3 text-center">
-                <div className="text-2xl font-black text-slate-900">Payment</div>
-                <div className="mt-1 text-base font-semibold text-slate-500">{entityType}</div>
-                <div className="text-xl font-bold text-slate-900">{invoice.table}</div>
-                <div className="mt-2 text-4xl font-black text-emerald-600">{formatCurrency(computedTotal)}</div>
-                <div className="mt-1 text-sm text-slate-500">
-                  Subtotal {formatCurrency(invoice.subtotal)} | Tax {formatCurrency(invoice.gst)}
-                </div>
-                <div className="mt-1.5 text-sm font-semibold text-slate-600">
-                  {personCount} Person{personCount > 1 ? "s" : ""} | Per Person {formatCurrency(perPersonAmount)}
+              <div className="mt-4 rounded-[26px] border border-[#e6ebf5] bg-white px-4 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
+                <div className="grid gap-4 sm:grid-cols-[1.05fr_0.95fr] sm:items-start">
+                  <div>
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Active {String(entityType || "Table").toLowerCase()}</div>
+                    <div className="mt-1 flex items-center gap-2">
+                      <div className="text-[30px] font-black uppercase leading-none text-slate-950">
+                        {String(entityType || "Table").toLowerCase() === "room" ? "Room" : "Table"} {invoice.table}
+                      </div>
+                      <span className="rounded-full bg-indigo-600 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-white">
+                        {activeStationLabel}
+                      </span>
+                    </div>
+                    <div className="mt-5 grid grid-cols-3 gap-3">
+                      <div>
+                        <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Subtotal</div>
+                        <div className="mt-1 text-lg font-black text-slate-900">{formatCurrency(invoice.subtotal)}</div>
+                      </div>
+                      <div>
+                        <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Tax (5%)</div>
+                        <div className="mt-1 text-lg font-black text-slate-900">{formatCurrency(invoice.gst)}</div>
+                      </div>
+                      <div>
+                        <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Service</div>
+                        <div className="mt-1 text-lg font-black text-slate-900">{formatCurrency(0)}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="text-left sm:text-right">
+                    <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Grand Total</div>
+                    <div className="mt-1 text-[38px] font-black leading-none text-indigo-600">{formatCurrency(computedTotal)}</div>
+                    <div className="mt-3 rounded-[18px] bg-slate-50 px-3 py-3 text-sm text-slate-600">
+                      <div>{personCount} Person{personCount > 1 ? "s" : ""}</div>
+                      <div className="mt-1 font-semibold text-slate-800">Per Person {formatCurrency(perPersonAmount)}</div>
+                      {invoice.tokenId ? (
+                        <div className="mt-1 text-xs text-slate-500">Visit ID: {formatVisitId(invoice.tokenCode, invoice.tokenId)}</div>
+                      ) : null}
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div className="mt-4 rounded-[20px] border border-slate-200 bg-[linear-gradient(135deg,#f8fbff_0%,#ffffff_100%)] p-3.5">
-                <div className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-700">Selected Row Card</div>
+              <div className="mt-5 rounded-[24px] border border-[#e6ebf5] bg-white p-4">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-sky-600">Selected Row Card</div>
                 {selectedItem ? (
-                  <div className="mt-3 space-y-3">
-                    <div className="rounded-[16px] bg-white px-3.5 py-3.5 shadow-sm">
-                      <div className="text-xl font-black text-slate-900">{selectedItem.name}</div>
-                      <div className="mt-2 grid gap-2 sm:grid-cols-3">
-                        <div className="rounded-[14px] bg-slate-50 px-3 py-2.5">
-                          <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500">Qty</div>
-                          <div className="mt-1 text-base font-black text-slate-900">{selectedItem.qty}</div>
+                  <div className="mt-4 space-y-3">
+                    <div className="rounded-[18px] bg-[#f6f8fc] px-4 py-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className="text-[16px] font-semibold text-slate-900">{selectedItem.name}</div>
                         </div>
-                        <div className="rounded-[14px] bg-slate-50 px-3 py-2.5">
-                          <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500">Rate</div>
-                          <div className="mt-1 text-base font-black text-slate-900">{formatCurrency(selectedItem.rate)}</div>
-                        </div>
-                        <div className="rounded-[14px] bg-slate-50 px-3 py-2.5">
-                          <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500">Amount</div>
-                          <div className="mt-1 text-base font-black text-slate-900">
+                        <div className="text-right">
+                          <div className="text-[16px] font-semibold uppercase tracking-[0.04em] text-slate-900">Amount</div>
+                          <div className="mt-1 text-[16px] font-semibold text-slate-900">
                             {formatCurrency(Number(selectedItem.qty || 0) * Number(selectedItem.rate || 0))}
                           </div>
                         </div>
                       </div>
+                      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                        <div className="rounded-[14px] bg-white px-3 py-3">
+                          <div className="text-[16px] font-semibold uppercase tracking-[0.04em] text-slate-900">Qty</div>
+                          <div className="mt-1 text-[16px] font-semibold text-slate-900">{selectedItem.qty}</div>
+                        </div>
+                        <div className="rounded-[14px] bg-white px-3 py-3">
+                          <div className="text-[16px] font-semibold uppercase tracking-[0.04em] text-slate-900">Rate</div>
+                          <div className="mt-1 text-[16px] font-semibold text-slate-900">{formatCurrency(selectedItem.rate)}</div>
+                        </div>
+                      </div>
                     </div>
 
-                <div className="rounded-[16px] bg-white px-4 py-4 shadow-sm">
-                  <div className="space-y-2 text-base text-slate-700">
+                    <div className="rounded-[18px] border border-[#eef2f8] bg-white px-4 py-4">
+                      <div className="space-y-2 text-[16px] font-semibold text-slate-900">
                         <div className="flex justify-between">
                           <span>Subtotal</span>
                           <span>{formatCurrency(invoice.subtotal)}</span>
@@ -1549,39 +1583,36 @@ const Payment = ({
                           <span>Per Person</span>
                           <span>{formatCurrency(perPersonAmount)}</span>
                         </div>
-                        <div className="flex justify-between text-lg font-black text-slate-900">
+                        <div className="flex justify-between pt-1 text-[16px] font-semibold text-slate-900">
                           <span>Total</span>
                           <span>{formatCurrency(computedTotal)}</span>
                         </div>
-                        {invoice.tokenId ? (
-                          <div className="text-base text-slate-500">Visit ID: {formatVisitId(invoice.tokenCode, invoice.tokenId)}</div>
-                        ) : null}
                       </div>
                     </div>
                   </div>
                 ) : (
-                  <div className="mt-4 rounded-[18px] bg-white px-4 py-5 text-base text-slate-500 shadow-sm">
+                  <div className="mt-4 rounded-[18px] bg-[#f6f8fc] px-4 py-5 text-base text-slate-500">
                     Koi row select nahi hai.
                   </div>
                 )}
               </div>
 
-              <div className="mt-4 rounded-[20px] border border-slate-200 bg-white p-4">
-                <div className="text-xl font-semibold text-slate-700">Customer Details</div>
-                <div className="mt-3 space-y-2.5">
+              <div className="mt-5 grid gap-4 md:grid-cols-2">
+                <div className="rounded-[22px] border border-[#e6ebf5] bg-white p-4">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Customer Name</div>
                   <input
                     type="text"
                     value={customerName}
                     onChange={(event) => handleCustomerNameChange(event.target.value)}
                     placeholder="Customer Name"
-                    className={`w-full rounded-xl border px-4 py-3.5 text-xl text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 ${
+                    className={`mt-3 w-full rounded-[16px] border px-4 py-3 text-[16px] text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 ${
                       fieldErrors.customerName
                         ? "border-rose-400 bg-rose-50 focus:ring-rose-400"
-                        : "border-slate-200 focus:ring-blue-500"
+                        : "border-slate-200 bg-slate-50 focus:ring-indigo-500"
                     }`}
                   />
                   {fieldErrors.customerName ? (
-                    <div className="text-lg font-semibold text-rose-600">{fieldErrors.customerName}</div>
+                    <div className="mt-2 text-[16px] font-semibold text-rose-600">{fieldErrors.customerName}</div>
                   ) : null}
                   <input
                     type="tel"
@@ -1590,49 +1621,140 @@ const Payment = ({
                     placeholder="Phone Number"
                     inputMode="numeric"
                     maxLength="10"
-                    className={`w-full rounded-xl border px-4 py-3.5 text-xl text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 ${
+                    className={`mt-3 w-full rounded-[16px] border px-4 py-3 text-[16px] text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 ${
                       fieldErrors.phone
                         ? "border-rose-400 bg-rose-50 focus:ring-rose-400"
-                        : "border-slate-200 focus:ring-blue-500"
+                        : "border-slate-200 bg-slate-50 focus:ring-indigo-500"
                     }`}
                   />
                   {fieldErrors.phone ? (
-                    <div className="text-lg font-semibold text-rose-600">{fieldErrors.phone}</div>
+                    <div className="mt-2 text-[16px] font-semibold text-rose-600">{fieldErrors.phone}</div>
                   ) : null}
+                </div>
+
+                <div className="rounded-[22px] border border-[#e6ebf5] bg-white p-4">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Payment Method</div>
+                  <select
+                    value={paymentMethod}
+                    onChange={(event) => handlePaymentMethodChange(event.target.value)}
+                    className="mt-3 w-full rounded-[16px] border border-slate-200 bg-slate-50 px-4 py-3 text-[16px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <option value="Cash">Cash</option>
+                    <option value="Card">Card</option>
+                    <option value="UPI">UPI</option>
+                    {canChargeToRoom ? (
+                      <option value="Charge To Room">Charge To Room</option>
+                    ) : null}
+                  </select>
+
+                  {paymentMethod === "Card" ? (
+                    <div className="mt-3 grid gap-3">
+                      <input
+                        type="text"
+                        value={cardDetails.cardHolderName}
+                        onChange={(event) => updateCardDetails({ cardHolderName: event.target.value })}
+                        placeholder="Card Holder Name"
+                        className="w-full rounded-[16px] border border-slate-200 bg-slate-50 px-4 py-3 text-[16px] text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      />
+                      <div className="grid grid-cols-2 gap-3">
+                        <select
+                          value={cardDetails.cardType}
+                          onChange={(event) => updateCardDetails({ cardType: event.target.value })}
+                          className="w-full rounded-[16px] border border-slate-200 bg-slate-50 px-4 py-3 text-[16px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        >
+                          <option value="Credit Card">Credit Card</option>
+                          <option value="Debit Card">Debit Card</option>
+                          <option value="RuPay Card">RuPay Card</option>
+                        </select>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          maxLength="4"
+                          value={cardDetails.cardLast4}
+                          onChange={(event) => updateCardDetails({ cardLast4: event.target.value.replace(/\D/g, "").slice(0, 4) })}
+                          placeholder="Last 4 Digits"
+                          className="w-full rounded-[16px] border border-slate-200 bg-slate-50 px-4 py-3 text-[16px] text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </div>
+                      <input
+                        type="text"
+                        value={cardDetails.transactionRef}
+                        onChange={(event) => updateCardDetails({ transactionRef: event.target.value })}
+                        placeholder="Transaction / Approval Ref"
+                        className="w-full rounded-[16px] border border-slate-200 bg-slate-50 px-4 py-3 text-[16px] text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      />
+                    </div>
+                  ) : null}
+                </div>
+
+                <div className="rounded-[22px] border border-[#e6ebf5] bg-white p-4">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Apply Discount (%)</div>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={discountAmount}
+                    onChange={(event) => handleDiscountChange(event.target.value)}
+                    disabled={waiterDiscountLocked}
+                    placeholder="Enter discount amount"
+                    className="mt-3 w-full rounded-[16px] border border-slate-200 bg-slate-50 px-4 py-3 text-[16px] text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                  <div className="mt-3 flex items-center justify-between rounded-[16px] bg-emerald-50 px-4 py-3 text-[16px] font-semibold text-emerald-700">
+                    <span>-{formatCurrency(discountAmount)}</span>
+                    <span>{formatCurrency(computedTotal)}</span>
+                  </div>
+                  {waiterDiscountLocked ? (
+                    <div className="mt-2 text-[16px] font-semibold text-slate-500">
+                      Waiter role par manual discount lock kiya gaya hai.
+                    </div>
+                  ) : null}
+                </div>
+
+                <div className="rounded-[22px] border border-[#e6ebf5] bg-white p-4">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Split Bill (Persons)</div>
+                  <div className="mt-3 flex items-center gap-3">
+                    <input
+                      type="number"
+                      min="1"
+                      max="10"
+                      value={splitCount}
+                      onChange={(event) => handleSplitCountChange(event.target.value)}
+                      className="w-24 rounded-[16px] border border-slate-200 bg-slate-50 px-4 py-3 text-[16px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                    <button
+                      onClick={handleCreateSplitBill}
+                      disabled={submitting}
+                      className="rounded-[14px] bg-gradient-to-r from-violet-500 to-indigo-600 px-4 py-3 text-[16px] font-semibold text-white shadow-sm disabled:opacity-60"
+                    >
+                      Save Split Bill
+                    </button>
+                  </div>
+                  <div className="mt-3 space-y-2">
+                    {splitPreview.map((split) => (
+                      <div key={split.splitNo} className="flex items-center justify-between rounded-[14px] bg-[#f6f8fc] px-3 py-3 text-[16px] text-slate-700">
+                        <span>Person {split.splitNo}</span>
+                        <span className="font-bold text-slate-900">{formatCurrency(split.total)}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
 
-              <div className="mt-4 rounded-[20px] border border-slate-200 bg-white p-4">
-                <div className="text-xl font-semibold text-slate-700">Payment Method</div>
-                <select
-                  value={paymentMethod}
-                  onChange={(event) => handlePaymentMethodChange(event.target.value)}
-                  className="mt-3 w-full rounded-xl border border-slate-200 px-4 py-3.5 text-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="Cash">Cash</option>
-                  <option value="Card">Card</option>
-                  <option value="UPI">UPI</option>
-                  {canChargeToRoom ? (
-                    <option value="Charge To Room">Charge To Room</option>
-                  ) : null}
-                </select>
-              </div>
-
               {isRoomChargeMode ? (
-                <div className="mt-4 rounded-[20px] border border-slate-200 bg-white p-4">
-                  <div className="text-xl font-semibold text-slate-700">Charge To Room</div>
+                <div className="mt-4 rounded-[22px] border border-[#e6ebf5] bg-white p-4">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Charge To Room</div>
                   <div className="mt-3 grid gap-3">
                     <input
                       type="text"
                       value={roomChargeQuery}
                       onChange={(event) => setRoomChargeQuery(event.target.value)}
                       placeholder="Search room / guest / booking"
-                      className="w-full rounded-xl border border-slate-200 px-4 py-3.5 text-xl text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full rounded-[16px] border border-slate-200 bg-slate-50 px-4 py-3 text-[16px] text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     />
                     <select
                       value={selectedRoomNumber}
                       onChange={(event) => handleRoomSelection(event.target.value)}
-                      className="w-full rounded-xl border border-slate-200 px-4 py-3.5 text-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full rounded-[16px] border border-slate-200 bg-slate-50 px-4 py-3 text-[16px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     >
                       <option value="">Select occupied room</option>
                       {filteredChargeableRooms.map((room) => (
@@ -1642,11 +1764,11 @@ const Payment = ({
                       ))}
                     </select>
                     {selectedChargeRoom ? (
-                      <div className="rounded-xl bg-sky-50 px-4 py-3.5 text-lg font-semibold text-sky-900">
+                      <div className="rounded-[16px] bg-sky-50 px-4 py-3 text-[16px] font-semibold text-sky-900">
                         Room {selectedChargeRoom.roomNumber} | {selectedChargeRoom.guestName || "Guest"} | Booking {selectedChargeRoom.bookingCode || "--"}
                       </div>
                     ) : (
-                      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-lg font-semibold text-amber-800">
+                      <div className="rounded-[16px] bg-amber-50 px-4 py-3 text-[16px] font-semibold text-amber-800">
                         Sirf occupied aur checked-in rooms ko yahan room-charge ke liye allow kiya gaya hai.
                       </div>
                     )}
@@ -1654,105 +1776,10 @@ const Payment = ({
                 </div>
               ) : null}
 
-              <div className="mt-4 rounded-[20px] border border-slate-200 bg-white p-4">
-                <div className="text-xl font-semibold text-slate-700">Discount</div>
-                <div className="mt-3 grid gap-3">
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={discountAmount}
-                    onChange={(event) => handleDiscountChange(event.target.value)}
-                    disabled={waiterDiscountLocked}
-                    placeholder="Enter discount amount"
-                    className="w-full rounded-xl border border-slate-200 px-4 py-3.5 text-xl text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <div className="rounded-xl bg-amber-50 px-4 py-3 text-lg font-semibold text-amber-800">
-                    Discount {formatCurrency(discountAmount)} | Final Total {formatCurrency(computedTotal)}
-                  </div>
-                  {waiterDiscountLocked ? (
-                    <div className="rounded-xl bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-600">
-                      Waiter role par manual discount lock kiya gaya hai.
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-
-              {paymentMethod === "Card" ? (
-                <div className="mt-4 rounded-[20px] border border-slate-200 bg-white p-4">
-                  <div className="text-xl font-semibold text-slate-700">Card Details</div>
-                  <div className="mt-3 grid gap-3">
-                    <input
-                      type="text"
-                      value={cardDetails.cardHolderName}
-                      onChange={(event) => updateCardDetails({ cardHolderName: event.target.value })}
-                      placeholder="Card Holder Name"
-                      className="w-full rounded-xl border border-slate-200 px-4 py-3.5 text-xl text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <div className="grid grid-cols-2 gap-3">
-                      <select
-                        value={cardDetails.cardType}
-                        onChange={(event) => updateCardDetails({ cardType: event.target.value })}
-                        className="w-full rounded-xl border border-slate-200 px-4 py-3.5 text-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="Credit Card">Credit Card</option>
-                        <option value="Debit Card">Debit Card</option>
-                        <option value="RuPay Card">RuPay Card</option>
-                      </select>
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        maxLength="4"
-                        value={cardDetails.cardLast4}
-                        onChange={(event) => updateCardDetails({ cardLast4: event.target.value.replace(/\D/g, "").slice(0, 4) })}
-                        placeholder="Last 4 Digits"
-                        className="w-full rounded-xl border border-slate-200 px-4 py-3.5 text-xl text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                    <input
-                      type="text"
-                      value={cardDetails.transactionRef}
-                      onChange={(event) => updateCardDetails({ transactionRef: event.target.value })}
-                      placeholder="Transaction / Approval Ref"
-                      className="w-full rounded-xl border border-slate-200 px-4 py-3.5 text-xl text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                </div>
-              ) : null}
-
-              <div className="mt-4 rounded-[20px] border border-slate-200 bg-white p-4">
-                <div className="text-xl font-semibold text-slate-700">Person-wise Bill</div>
-                <div className="mt-3 flex items-center gap-3">
-                  <input
-                    type="number"
-                    min="1"
-                    max="10"
-                    value={splitCount}
-                    onChange={(event) => handleSplitCountChange(event.target.value)}
-                    className="w-28 rounded-xl border border-slate-200 px-4 py-3.5 text-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <button
-                    onClick={handleCreateSplitBill}
-                    disabled={submitting}
-                    className="rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-600 px-5 py-3.5 text-lg font-semibold text-white shadow-lg disabled:opacity-60"
-                  >
-                    Save Split Bill
-                  </button>
-                </div>
-                <div className="mt-3 space-y-2">
-                  {splitPreview.map((split) => (
-                    <div key={split.splitNo} className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3.5 text-lg text-slate-700">
-                      <span>Person {split.splitNo}</span>
-                      <span className="font-bold text-slate-900">{formatCurrency(split.total)}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mt-5 flex flex-col gap-3">
+              <div className="mt-5 flex flex-col gap-2.5">
                 {generatedBill?.id ? (
                   <div
-                    className={`rounded-xl px-4 py-3.5 text-lg font-semibold ${
+                    className={`rounded-[18px] px-4 py-3 text-sm font-semibold ${
                       isCurrentBillPaid
                         ? "border border-emerald-200 bg-emerald-50 text-emerald-800"
                         : isCurrentBillPostedToRoom
@@ -1763,38 +1790,40 @@ const Payment = ({
                     Bill #{generatedBill.id} {isCurrentBillPaid ? "payment already done" : isCurrentBillPostedToRoom ? "room folio me posted hai" : "pending"}.
                   </div>
                 ) : null}
-                <button
-                  type="button"
-                  onClick={handleClose}
-                  className="w-full rounded-2xl bg-slate-200 px-4 py-4 text-xl font-semibold text-slate-700 transition hover:bg-slate-300"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handlePayment}
-                  disabled={submitting || hasCustomerValidationErrors || isCurrentBillPaid || isCurrentBillPostedToRoom}
-                  className="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 px-4 py-3.5 text-xl font-semibold text-white shadow-lg transition hover:from-emerald-600 hover:to-green-700 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {submitting
-                    ? "Processing..."
-                    : isCurrentBillPaid
-                      ? "Payment Already Done"
-                      : isCurrentBillPostedToRoom
-                        ? "Already Posted To Room"
-                        : isRoomChargeMode
-                          ? "Post To Room Folio"
-                          : generatedBill?.id
-                            ? "Pay Now"
-                            : "Pay Now & Save Bill"}
-                </button>
-                <button
-                  type="button"
-                  onClick={handlePrint}
-                  className="w-full rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-3.5 text-xl font-semibold text-white shadow-lg transition hover:from-blue-600 hover:to-indigo-700"
-                >
-                  Print Bill
-                </button>
+                <div className="flex flex-wrap justify-end gap-2.5">
+                  <button
+                    type="button"
+                    onClick={handlePayment}
+                    disabled={submitting || hasCustomerValidationErrors || isCurrentBillPaid || isCurrentBillPostedToRoom}
+                    className="min-w-[150px] rounded-[12px] bg-gradient-to-r from-emerald-500 to-teal-600 px-4 py-2.5 text-[13px] font-semibold text-slate-900 shadow-[0_10px_18px_rgba(16,185,129,0.18)] transition hover:from-emerald-600 hover:to-teal-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {submitting
+                      ? "Processing..."
+                      : isCurrentBillPaid
+                        ? "Payment Already Done"
+                        : isCurrentBillPostedToRoom
+                          ? "Already Posted To Room"
+                          : isRoomChargeMode
+                            ? "Post To Room Folio"
+                            : generatedBill?.id
+                              ? "Pay Now"
+                              : "Pay Now & Save Bill"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handlePrint}
+                    className="min-w-[150px] rounded-[12px] border border-slate-200 bg-white px-4 py-2.5 text-[13px] font-semibold text-slate-900 transition hover:bg-slate-50"
+                  >
+                    Print Bill
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleClose}
+                    className="min-w-[150px] rounded-[12px] border border-rose-100 bg-rose-50 px-4 py-2.5 text-[13px] font-semibold text-slate-900 transition hover:bg-rose-100"
+                  >
+                    Cancel Transaction
+                  </button>
+                </div>
               </div>
             </div>
             )}

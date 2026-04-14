@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
 
@@ -44,10 +44,14 @@ const ReconciliationDataModuleCard = ({
   onDelete,
   toFormState,
 }) => {
-  const initialState = fields.reduce((acc, field) => {
-    acc[field.name] = field.defaultValue ?? "";
-    return acc;
-  }, {});
+  const initialState = useMemo(
+    () =>
+      fields.reduce((acc, field) => {
+        acc[field.name] = field.defaultValue ?? "";
+        return acc;
+      }, {}),
+    [fields],
+  );
   const [form, setForm] = useState(initialState);
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -63,7 +67,7 @@ const ReconciliationDataModuleCard = ({
     if (!editingId) {
       setForm(initialState);
     }
-  }, [editingId]);
+  }, [editingId, initialState]);
 
   useEffect(() => {
     setPage(1);
@@ -108,13 +112,14 @@ const ReconciliationDataModuleCard = ({
     const confirmed = window.confirm(`Delete this ${title.toLowerCase()} record?`);
     if (!confirmed) return;
 
-    await onDelete(row.id);
-
-    if (editingId === row.id) {
-      setEditingId(null);
-      setForm(initialState);
-    }
-  };
+   const success = await onDelete(row.id);
+    if (!success) return;
+ 
+     if (editingId === row.id) {
+       setEditingId(null);
+       setForm(initialState);
+     }
+   };
 
   const closeFormModal = () => {
     setShowFormModal(false);
@@ -574,7 +579,7 @@ const ReconciliationDataPage = () => {
             referenceNo: row.reference_no || "",
             description: row.description || "",
             paymentMode: row.payment_mode || "Bank Transfer",
-            amount: row.amount || row.credit || row.debit || 0,
+             amount: row.amount ?? row.credit ?? row.debit ?? 0,
             direction: row.direction || (Number(row.debit || 0) > 0 ? "out" : "in"),
             debit: row.debit || 0,
             credit: row.credit || 0,

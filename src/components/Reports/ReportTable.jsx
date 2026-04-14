@@ -150,21 +150,21 @@ const ReportTable = ({ reportType, rows, loading }) => {
     <div className="rounded-[26px] border border-white/60 bg-white/82 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl">
       <div className="flex flex-col gap-2 border-b border-slate-200/80 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
+          <p className="text-[14px] font-semibold uppercase tracking-[0.24em] text-emerald-500">
             Report Table
           </p>
-          <h2 className="mt-1 text-xl font-bold text-slate-900">
+          <h2 className="mt-1 text-2xl font-bold text-black">
             Detailed report rows
           </h2>
         </div>
-        <div className="text-sm font-semibold text-slate-500">
+        <div className="text-[14px] font-semibold text-black">
           {loading ? "Loading..." : `${rows.length} row(s) found`}
         </div>
       </div>
 
       <div className="overflow-x-auto">
         <table className="min-w-full text-left">
-          <thead className="bg-slate-50 text-xs uppercase tracking-[0.18em] text-slate-500">
+          <thead className="bg-slate-50 text-[14px] uppercase tracking-[0.18em] text-slate-800">
             <tr>
               {columns.map((column) => (
                 <th key={column.key} className="px-4 py-4 font-semibold sm:px-5">
@@ -182,11 +182,11 @@ const ReportTable = ({ reportType, rows, loading }) => {
                 {columns.map((column) => (
                   <td
                     key={column.key}
-                    className="px-4 py-4 text-sm text-slate-700 sm:px-5"
+                    className="px-4 py-4 text-[14px] font-semibold text-black sm:px-5"
                   >
                     {column.key === "status" ? (
                       <span
-                        className={`inline-flex rounded-full border px-3 py-1 text-xs font-bold ${getStatusClass(
+                        className={`inline-flex rounded-full border px-3 py-1.5 text-[14px] font-semibold ${getStatusClass(
                           row[column.key]
                         )}`}
                       >
@@ -196,7 +196,7 @@ const ReportTable = ({ reportType, rows, loading }) => {
                       <span
                         className={
                           column.key === "amount" || column.key === "revenue"
-                            ? "font-bold text-slate-900"
+                            ? "font-bold text-black"
                             : ""
                         }
                       >
@@ -212,7 +212,7 @@ const ReportTable = ({ reportType, rows, loading }) => {
               <tr>
                 <td
                   colSpan={columns.length}
-                  className="px-4 py-10 text-center text-sm font-semibold text-slate-500 sm:px-5"
+                  className="px-4 py-10 text-center text-[14px] font-semibold text-black sm:px-5"
                 >
                   No data found for current filters.
                 </td>
@@ -224,10 +224,10 @@ const ReportTable = ({ reportType, rows, loading }) => {
 
       {showPagination ? (
         <div className="flex flex-col gap-3 border-t border-slate-200/80 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
-          <div className="text-sm text-slate-500">
-            Showing <span className="font-semibold text-slate-900">{visibleStart}</span> to{" "}
-            <span className="font-semibold text-slate-900">{visibleEnd}</span> of{" "}
-            <span className="font-semibold text-slate-900">{rows.length}</span> rows
+          <div className="text-[14px] font-semibold text-black">
+            Showing <span className="font-semibold text-black">{visibleStart}</span> to{" "}
+            <span className="font-semibold text-black">{visibleEnd}</span> of{" "}
+            <span className="font-semibold text-black">{rows.length}</span> rows
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
@@ -235,7 +235,7 @@ const ReportTable = ({ reportType, rows, loading }) => {
               type="button"
               onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
               disabled={currentPage === 1}
-              className="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 transition hover:border-emerald-200 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-full border border-red-950 bg-red-500 px-5 py-2.5 text-[14px] font-bold text-black transition  disabled:cursor-not-allowed disabled:opacity-50"
             >
               Previous
             </button>
@@ -246,10 +246,10 @@ const ReportTable = ({ reportType, rows, loading }) => {
                   key={item}
                   type="button"
                   onClick={() => setCurrentPage(item)}
-                  className={`h-10 min-w-10 rounded-full px-3 text-sm font-semibold transition ${
+                  className={`h-11 min-w-11 rounded-full px-4 text-[14px] font-semibold transition ${
                     currentPage === item
-                      ? "bg-emerald-500 text-white shadow-[0_10px_25px_rgba(16,185,129,0.25)]"
-                      : "border border-slate-200 bg-white text-slate-600 hover:border-emerald-200 hover:text-emerald-700"
+                      ? "bg-slate-800 text-white shadow-[0_10px_25px_rgba(15,23,42,0.22)]"
+                      : "border border-slate-300 bg-white text-slate-900 hover:border-slate-500 hover:bg-slate-100"
                   }`}
                 >
                   {item}
@@ -257,7 +257,7 @@ const ReportTable = ({ reportType, rows, loading }) => {
               ) : (
                 <span
                   key={item}
-                  className="px-1 text-sm font-semibold tracking-[0.2em] text-slate-400"
+                  className="px-1 text-[14px] font-semibold tracking-[0.2em] text-slate-500"
                 >
                   ...
                 </span>
@@ -268,7 +268,7 @@ const ReportTable = ({ reportType, rows, loading }) => {
               type="button"
               onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
               disabled={currentPage === totalPages}
-              className="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 transition hover:border-emerald-200 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-full border border-emerald-950 bg-emerald-500 px-5 py-2.5 text-[14px] font-bold text-black transition hover:bg-emerald-900 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Next
             </button>

@@ -98,7 +98,7 @@ const MenuPage = () => {
   const roomData = location.state?.roomData || null;
   const { menuItems, setSelectedTable } = useContext(RestaurantContext);
   const actor = getCurrentActor();
-  const waiterName = actor.name || (entityType === "Room" ? "Room Service" : "Waiter");
+ const waiterName = actor?.name || (entityType === "Room" ? "Room Service" : "Waiter");
 
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [qty, setQty] = useState({});

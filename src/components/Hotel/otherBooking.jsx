@@ -48,6 +48,7 @@ const OtherBooking = () => {
   const [countries, setCountries] = useState([]);
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
+  const [locationRestoreError, setLocationRestoreError] = useState("");
 
   useEffect(() => {
     const loadCountries = async () => {
@@ -68,6 +69,71 @@ const OtherBooking = () => {
       setStoredBookingId(bookingId);
     }
   }, [bookingId]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const restoreCascade = async () => {
+      if (!formData.country || !countries.length) return;
+
+      const countryOption = countries.find(
+        (country) => country.label === formData.country,
+      );
+      if (!countryOption) return;
+
+      let nextStates = states;
+      if (!states.length) {
+        try {
+          const statesData = await GetState(countryOption.value);
+          if (cancelled) return;
+
+          nextStates = statesData.map((state) => ({
+            label: state.name,
+            value: state.id,
+            countryId: countryOption.value,
+          }));
+          setStates(nextStates);
+          setLocationRestoreError("");
+        } catch (error) {
+          if (cancelled) return;
+          console.error("Failed to restore states for saved country:", error);
+          setStates([]);
+          setCities([]);
+          setLocationRestoreError("Saved location details could not be fully restored.");
+          return;
+        }
+      }
+
+      if (!formData.state) return;
+
+      const stateOption = nextStates.find((state) => state.label === formData.state);
+      if (!stateOption || cities.length) return;
+
+      try {
+        const citiesData = await GetCity(stateOption.countryId, stateOption.value);
+        if (cancelled) return;
+
+        setCities(
+          citiesData.map((city) => ({
+            label: city.name,
+            value: city.name,
+          })),
+        );
+        setLocationRestoreError("");
+      } catch (error) {
+        if (cancelled) return;
+        console.error("Failed to restore cities for saved state:", error);
+        setCities([]);
+        setLocationRestoreError("Saved location details could not be fully restored.");
+      }
+    };
+
+    restoreCascade();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [cities.length, countries, formData.country, formData.state, states]);
 
   const updateForm = (patch) => {
     const next = { ...formData, ...patch };
@@ -240,6 +306,16 @@ const OtherBooking = () => {
                       className={fieldCls}
                     />
                   </div>
+
+                  {locationRestoreError ? (
+                    <div
+                      role="alert"
+                      aria-live="assertive"
+                      className="md:col-span-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800"
+                    >
+                      {locationRestoreError}
+                    </div>
+                  ) : null}
 
                   <div className="md:col-span-2">
                     <div className="flex w-full flex-col items-end justify-end gap-3 pt-2 text-right sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">

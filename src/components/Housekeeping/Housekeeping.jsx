@@ -21,14 +21,14 @@ const rawApiBase = String(API.defaults.baseURL || "/api").replace(/\/$/, "");
 const API_BASE = rawApiBase.endsWith("/api") ? rawApiBase : `${rawApiBase}/api`;
 
 const HOUSEKEEPING_OPTIONS = [
-  { key: "parameters",   label: "Parameters",                  icon: FaCog,           color: "text-slate-600" },
-  { key: "costing",      label: "Room Costing",                icon: FaCalculator,    color: "text-indigo-600" },
-  { key: "report",       label: "Room Report",                 icon: FaFileAlt,       color: "text-cyan-600" },
-  { key: "amenities",    label: "Amenities Consumption",       icon: FaBoxOpen,       color: "text-amber-600" },
-  { key: "checkout",     label: "Checkout Report",             icon: FaSignOutAlt,    color: "text-rose-600" },
-  { key: "inspection",   label: "Room Inspection Checklist",   icon: FaClipboardList, color: "text-emerald-600" },
-  { key: "lostfound",    label: "Lost & Found",                icon: FaSearch,        color: "text-violet-600" },
-  { key: "shiftroster",  label: "Shift / Duty Roster",         icon: FaBroom,         color: "text-orange-600" },
+  { key: "parameters",   label: "Parameters",                  icon: FaCog,           color: "text-blue-600" },
+  { key: "costing",      label: "Room Costing",                icon: FaCalculator,    color: "text-blue-600" },
+  { key: "report",       label: "Room Report",                 icon: FaFileAlt,       color: "text-blue-600" },
+  { key: "amenities",    label: "Amenities Consumption",       icon: FaBoxOpen,       color: "text-blue-600" },
+  { key: "checkout",     label: "Checkout Report",             icon: FaSignOutAlt,    color: "text-blue-600" },
+  { key: "lostfound",    label: "Lost & Found",                icon: FaSearch,        color: "text-blue-600" },
+  { key: "shiftroster",  label: "Shift / Duty Roster",         icon: FaBroom,         color: "text-blue-600" },
+  { key: "inspection",   label: "Room Inspection Checklist",   icon: FaClipboardList, color: "text-blue-600" },
 ];
 
 const STATUS_COLORS = {
@@ -38,12 +38,19 @@ const STATUS_COLORS = {
   "Occupied Clean":         { dot: "bg-blue-400",    badge: "bg-blue-50 text-blue-700 border-blue-200" },
   "Occupied Dirty":         { dot: "bg-orange-400",  badge: "bg-orange-50 text-orange-700 border-orange-200" },
   "Out of Service":         { dot: "bg-rose-500",    badge: "bg-rose-50 text-rose-700 border-rose-200" },
-  "Cleaning In Progress":   { dot: "bg-violet-400",  badge: "bg-violet-50 text-violet-700 border-violet-200 text-2xl" },
+  "Cleaning In Progress":   { dot: "bg-violet-400",  badge: "bg-violet-50 text-violet-700 border-violet-200" },
 };
 
 const ALL_COLUMNS = ["type","roomNo","building","floor","section","guestStatus","roomType","status","assignee","layout","articles","services","notes"];
 const DEFAULT_COLUMNS = ["type","roomNo","floor","guestStatus","roomType","status","assignee","notes"];
 const BOARD_PAGE_SIZE = 10;
+
+const getLocalDateISO = (value = new Date()) => {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return localDate.toISOString().slice(0, 10);
+};
 
 export default function Housekeeping() {
   const [rooms, setRooms] = useState([]);
@@ -100,7 +107,7 @@ export default function Housekeeping() {
 
   const fetchCompletedCleaningLogs = useCallback(async () => {
     try {
-      const today = new Date().toISOString().slice(0, 10);
+      const today = getLocalDateISO();
       const res = await API.get("/housekeeping/completed-cleaning", { params: { date: today } });
       setCompletedTodayRows(
         Array.isArray(res.data)
@@ -268,13 +275,20 @@ export default function Housekeeping() {
   const handleMarkCleaningComplete = async (room) => {
     try {
       await API.put(`/housekeeping/status/${room.id}`, { status: "Vacant Clean" });
-      await API.post("/housekeeping/completed-cleaning", {
-        roomId: room.id,
-        roomNo: room.roomNo,
-        assignee: room.assignee,
-        guestStatus: room.guestStatus || room.guest || null,
-        finalStatus: "Vacant Clean",
-      });
+      try {
+        await API.post("/housekeeping/completed-cleaning", {
+          roomId: room.id,
+          roomNo: room.roomNo,
+          assignee: room.assignee,
+          guestStatus: room.guestStatus || room.guest || null,
+          finalStatus: "Vacant Clean",
+        });
+      } catch (logError) {
+        await API.put(`/housekeeping/status/${room.id}`, {
+          status: room.status || "Cleaning In Progress",
+        });
+        throw logError;
+      }
       setCleaningTasks((prev) => prev.filter((task) => String(task.roomId) !== String(room.id)));
       await fetchRooms();
       await fetchCompletedCleaningLogs();
@@ -321,7 +335,7 @@ export default function Housekeeping() {
       </div>
 
       {/* Stats */}
-      <div className="mb-6 text-6xl grid grid-cols-2 gap-3 sm:grid-cols-5">
+      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-5">
         {[
           { label: "Total Rooms", value: stats.total, color: "text-slate-900 text-4xl" },
           { label: "Clean", value: stats.clean, color: "text-emerald-600" },
@@ -395,9 +409,9 @@ export default function Housekeeping() {
                 <button
                   key={status}
                   onClick={() => setFilters(prev => ({ ...prev, status: prev.status === status ? "" : status }))}
-                  className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${filters.status === status ? badge + " ring-2 ring-offset-1 ring-slate-400" : badge}`}
+                  className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[14px] font-bold transition ${filters.status === status ? badge + " ring-2 ring-offset-1 ring-slate-400" : badge}`}
                 >
-                  <span className={`h-2 w-2 rounded-full ${dot}`} />
+                  <span className={`h-2.5 w-2.5 rounded-full ${dot}`} />
                   {status} ({count})
                 </button>
               );
@@ -414,24 +428,24 @@ export default function Housekeeping() {
               <FaExclamationTriangle /> {error}
             </div>
           ) : (
-            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-[#071826] shadow-xl">
+            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
-                    <tr className="border-b border-white/10 bg-white/5">
-                      {visibleColumns.includes("type")       && <th className="px-4 py-3 text-xl font-semibold uppercase tracking-wide text-slate-400">Type / Room No</th>}
-                      {visibleColumns.includes("roomNo")     && <th className="px-4 py-3 text-xl font-semibold uppercase tracking-wide text-slate-400">Room No</th>}
-                      {visibleColumns.includes("building")   && <th className="px-4 py-3 text-xl font-semibold uppercase tracking-wide text-slate-400">Building</th>}
-                      {visibleColumns.includes("floor")      && <th className="px-4 py-3 text-xl font-semibold uppercase tracking-wide text-slate-400">Floor</th>}
-                      {visibleColumns.includes("section")    && <th className="px-4 py-3 text-xl font-semibold uppercase tracking-wide text-slate-400">Section</th>}
-                      {visibleColumns.includes("guestStatus") && <th className="px-4 py-3 text-xl font-semibold uppercase tracking-wide text-slate-400">Guest Status</th>}
-                      {visibleColumns.includes("roomType")   && <th className="px-4 py-3 text-xl font-semibold uppercase tracking-wide text-slate-400">Room Type</th>}
-                      {visibleColumns.includes("status")     && <th className="px-4 py-3 text-xl font-semibold uppercase tracking-wide text-slate-400">HK Status</th>}
-                      {visibleColumns.includes("assignee")   && <th className="px-4 py-3 text-xl font-semibold uppercase tracking-wide text-slate-400">Assignee</th>}
-                      {visibleColumns.includes("layout")     && <th className="px-4 py-3 text-xl font-semibold uppercase tracking-wide text-slate-400">Layout</th>}
-                      {visibleColumns.includes("articles")   && <th className="px-4 py-3 text-xl font-semibold uppercase tracking-wide text-slate-400">Articles</th>}
-                      {visibleColumns.includes("services")   && <th className="px-4 py-3 text-xl font-semibold uppercase tracking-wide text-slate-400">Services</th>}
-                      {visibleColumns.includes("notes")      && <th className="px-4 py-3 text-xl font-semibold uppercase tracking-wide text-slate-400">Notes</th>}
+                    <tr className="border-b border-slate-200 bg-slate-50">
+                      {visibleColumns.includes("type")       && <th className="px-4 py-3 text-xl font-semibold uppercase tracking-wide text-slate-600">Type / Room No</th>}
+                      {visibleColumns.includes("roomNo")     && <th className="px-4 py-3 text-xl font-semibold uppercase tracking-wide text-slate-600">Room No</th>}
+                      {visibleColumns.includes("building")   && <th className="px-4 py-3 text-xl font-semibold uppercase tracking-wide text-slate-600">Building</th>}
+                      {visibleColumns.includes("floor")      && <th className="px-4 py-3 text-xl font-semibold uppercase tracking-wide text-slate-600">Floor</th>}
+                      {visibleColumns.includes("section")    && <th className="px-4 py-3 text-xl font-semibold uppercase tracking-wide text-slate-600">Section</th>}
+                      {visibleColumns.includes("guestStatus") && <th className="px-4 py-3 text-xl font-semibold uppercase tracking-wide text-slate-600">Guest Status</th>}
+                      {visibleColumns.includes("roomType")   && <th className="px-4 py-3 text-xl font-semibold uppercase tracking-wide text-slate-600">Room Type</th>}
+                      {visibleColumns.includes("status")     && <th className="px-4 py-3 text-xl font-semibold uppercase tracking-wide text-slate-600">HK Status</th>}
+                      {visibleColumns.includes("assignee")   && <th className="px-4 py-3 text-xl font-semibold uppercase tracking-wide text-slate-600">Assignee</th>}
+                      {visibleColumns.includes("layout")     && <th className="px-4 py-3 text-xl font-semibold uppercase tracking-wide text-slate-600">Layout</th>}
+                      {visibleColumns.includes("articles")   && <th className="px-4 py-3 text-xl font-semibold uppercase tracking-wide text-slate-600">Articles</th>}
+                      {visibleColumns.includes("services")   && <th className="px-4 py-3 text-xl font-semibold uppercase tracking-wide text-slate-600">Services</th>}
+                      {visibleColumns.includes("notes")      && <th className="px-4 py-3 text-xl font-semibold uppercase tracking-wide text-slate-600">Notes</th>}
                     </tr>
                   </thead>
                   <tbody>
@@ -457,8 +471,8 @@ export default function Housekeeping() {
                 </table>
               </div>
               {filteredRooms.length > BOARD_PAGE_SIZE && (
-                <div className="flex flex-col gap-3 border-t border-white/10 bg-white/[0.03] px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="text-sm text-slate-300">
+                <div className="flex flex-col gap-3 border-t border-slate-200 bg-slate-50 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="text-sm text-slate-600">
                     Showing {(boardPage - 1) * BOARD_PAGE_SIZE + 1}-{Math.min(boardPage * BOARD_PAGE_SIZE, filteredRooms.length)} of {filteredRooms.length} rooms
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
@@ -466,7 +480,7 @@ export default function Housekeeping() {
                       type="button"
                       onClick={() => setBoardPage((current) => Math.max(1, current - 1))}
                       disabled={boardPage === 1}
-                      className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xl font-semibold text-slate-200 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
+                      className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xl font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
                     >
                       Previous
                     </button>
@@ -477,8 +491,8 @@ export default function Housekeeping() {
                         onClick={() => setBoardPage(page)}
                         className={`min-w-[40px] rounded-xl px-3 py-2 text-sm font-semibold transition ${
                           boardPage === page
-                            ? "bg-white text-slate-900"
-                            : "border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
+                            ? "bg-slate-900 text-white"
+                            : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-100"
                         }`}
                       >
                         {page}
@@ -488,7 +502,7 @@ export default function Housekeeping() {
                       type="button"
                       onClick={() => setBoardPage((current) => Math.min(totalBoardPages, current + 1))}
                       disabled={boardPage === totalBoardPages}
-                      className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xl font-semibold text-slate-200 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
+                      className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xl font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
                     >
                       Next
                     </button>
@@ -632,6 +646,8 @@ function ParametersForm({ onClose, apiBase }) {
     shiftStartTime: "08:00",
     shiftEndTime: "20:00",
   });
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
   useEffect(() => {
     let mounted = true;
@@ -662,10 +678,16 @@ function ParametersForm({ onClose, apiBase }) {
   }, []);
 
   const handleSave = async () => {
+    setSaving(true);
+    setSaveError("");
     try {
       await API.post("/housekeeping/parameters", params);
       onClose();
-    } catch { onClose(); }
+    } catch {
+      setSaveError("Failed to save parameters. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -700,9 +722,16 @@ function ParametersForm({ onClose, apiBase }) {
           Require inspection before marking room Clean
         </label>
       </div>
+      {saveError ? (
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+          {saveError}
+        </div>
+      ) : null}
       <div className="flex justify-end gap-4 pt-4">
-        <button onClick={onClose} className="rounded-2xl border border-slate-200 px-6 py-3 text-xl font-semibold text-slate-700">Cancel</button>
-        <button onClick={handleSave} className="rounded-2xl bg-slate-900 px-8 py-3 text-xl font-semibold text-white">Save Parameters</button>
+        <button onClick={onClose} disabled={saving} className="rounded-2xl border border-slate-200 px-6 py-3 text-xl font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-50">Cancel</button>
+        <button onClick={handleSave} disabled={saving} className="rounded-2xl bg-slate-900 px-8 py-3 text-xl font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">
+          {saving ? "Saving..." : "Save Parameters"}
+        </button>
       </div>
     </div>
   );

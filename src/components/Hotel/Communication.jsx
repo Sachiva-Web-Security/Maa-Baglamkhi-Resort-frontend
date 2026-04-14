@@ -248,7 +248,7 @@ const Communication = () => {
       return {
         title: "Check-in booking data",
         buttonLabel: "Open Check In",
-        emptyLabel: "Abhi check-in ke liye koi active booking ready nahi hai.",
+        emptyLabel: "There are currently no active bookings ready for check-in.",
       };
     }
 
@@ -256,7 +256,7 @@ const Communication = () => {
       return {
         title: "Check-out booking data",
         buttonLabel: "Open Check Out",
-        emptyLabel: "Abhi check-out ke liye koi checked-in guest nahi mila.",
+        emptyLabel: "There are currently no checked-in guests available for check-out.",
       };
     }
 
@@ -576,7 +576,7 @@ const Communication = () => {
       openFeedbackModal(
         "success",
         "Document uploaded",
-        "Guest ka hardcopy form ya related image booking ke saath save ho gaya.",
+        "The guest’s hard copy form or related image has been saved along with the booking",
       );
     } catch (error) {
       console.error(error);

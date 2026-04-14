@@ -203,7 +203,7 @@ const Attendance = () => {
 
           <button
             onClick={() => setCurrentPage((prev) => prev + 1)}
-            disabled={currentPage === totalPages}
+             disabled={currentPage >= totalPages || totalPages === 0}
             className="px-3 py-1 bg-green-500 rounded"
           >
             Next

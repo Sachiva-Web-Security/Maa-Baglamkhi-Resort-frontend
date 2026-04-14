@@ -409,17 +409,17 @@ const Kitchen = () => {
       </div>
 
       <div className="w-full space-y-7">
-        <section className="overflow-hidden rounded-[26px] border border-slate-900/10 bg-[linear-gradient(120deg,#071b34_0%,#0d4a53_52%,#162d45_100%)] px-4 py-5 shadow-[0_22px_55px_rgba(15,23,42,0.12)] sm:px-6 sm:py-6 lg:px-8">
+        <section className="overflow-hidden rounded-[26px] border border-sky-400/60 bg-[linear-gradient(90deg,#0EA5E9_0%,#0284C7_45%,#0369A1_100%)] px-4 py-5 shadow-[0_22px_55px_rgba(14,165,233,0.24)] sm:px-6 sm:py-6 lg:px-8">
           <div className="relative z-[1] grid gap-5 lg:grid-cols-[minmax(0,1.5fr)_minmax(300px,0.8fr)] lg:items-center">
             <div className="space-y-3">
-              <p className="text-sm font-semibold uppercase tracking-[0.26em] text-cyan-200 sm:text-base">
+              <p className="text-sm font-semibold uppercase tracking-[0.26em] text-slate-950 sm:text-base">
                 Resort Command Center
               </p>
               <div className="space-y-1">
-                <h1 className="text-3xl font-black leading-tight text-white sm:text-5xl">
+                <h1 className="text-3xl font-black leading-tight text-slate-950 sm:text-5xl">
                   Operational snapshot for kitchen
                 </h1>
-                <p className="max-w-3xl text-base leading-6 text-slate-100/88 sm:text-xl sm:leading-8">
+                <p className="max-w-3xl text-base leading-6 text-slate-950 sm:text-xl sm:leading-8">
                   Track order queues, ready movement, ETA promises, and warning alerts in one flow.
                 </p>
               </div>
@@ -432,7 +432,7 @@ const Kitchen = () => {
                   <FaSyncAlt className="text-cyan-600" />
                   Refresh Queue
                 </button>
-                <div className="rounded-full border border-white/20 bg-white/10 px-5 py-3 text-base font-semibold text-white backdrop-blur-md">
+                <div className="rounded-full border border-sky-100/50 bg-white/20 px-5 py-3 text-base font-semibold text-slate-950 backdrop-blur-md">
                   Auto refresh every 4 seconds
                 </div>
               </div>
@@ -447,10 +447,10 @@ const Kitchen = () => {
               ].map((item) => (
                 <div
                   key={item.label}
-                  className="rounded-[22px] border border-white/12 bg-white/10 px-4 py-4 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md"
+                  className="rounded-[22px] border border-sky-100/45 bg-white/18 px-4 py-4 text-slate-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-md"
                 >
-                  <span className="text-sm text-slate-100/75">{item.label}</span>
-                  <div className="mt-3 text-3xl font-bold leading-none">{item.value}</div>
+                  <span className="text-[14px] text-slate-950">{item.label}</span>
+                  <div className="mt-3 text-[14px] font-bold leading-none text-slate-950">{item.value}</div>
                 </div>
               ))}
             </div>
@@ -640,7 +640,7 @@ const Kitchen = () => {
                 <FiAlertCircle className="mx-auto mb-3 text-3xl text-slate-400" />
                 <div className="text-2xl font-bold text-slate-900">No orders in kitchen queue</div>
                 <div className="mt-2 text-lg">
-           “New orders from the restaurant will automatically appear here as they come in.”
+           New orders from the restaurant will automatically appear here as they come in
                 </div>
               </div>
             )}

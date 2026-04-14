@@ -118,6 +118,12 @@ export const RestaurantProvider = ({ children }) => {
     return () => {
       unsubscribed = true;
       Promise.resolve(teardownPromise).then((teardown) => teardown && teardown());
+
+ if (activeSocket) {
+     activeSocket.disconnect();
+   }
+
+
       activeSocket = null;
       releaseRestaurantSocket();
     };

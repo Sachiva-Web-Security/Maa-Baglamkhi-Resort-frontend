@@ -318,6 +318,28 @@ test.describe("Hotel all-bookings smoke flow", () => {
     await expect(card.getByText(booking.guestName)).toBeVisible();
     await expect(card.getByRole("button", { name: "Edit" })).toBeVisible();
     await expect(card.getByRole("button", { name: "Cancel Booking" })).toBeVisible();
+
+
+
+  const snapshot = await fetchHotelSnapshot(request, baseURL);
+  const createdBooking = snapshot.active.find(
+    (row) => row.guest_name === booking.guestName,
+  );
+  if (createdBooking) {
+    await cancelHotelBookingViaApi(
+      request,
+      baseURL,
+      createdBooking.bookingId,
+      "Playwright test cleanup",
+    );
+  }
+
+
+
+
+
+
+
   });
 
   test("edits a created booking and shows updated guest details", async ({ page, request, baseURL }) => {
@@ -346,6 +368,20 @@ test.describe("Hotel all-bookings smoke flow", () => {
     const updatedCard = getBookingCardByGuestName(page, updatedName);
     await expect(updatedCard).toBeVisible();
     await expect(updatedCard.getByText(updatedName)).toBeVisible();
+
+
+
+await cancelHotelBookingViaApi(
+    request,
+    baseURL,
+    booking.bookingId,
+    "Playwright edit test cleanup",
+  );
+
+
+
+
+
   });
 
   test("cancels a confirmed booking with reason and removes it from active bookings", async ({ page, request, baseURL }) => {

@@ -414,11 +414,11 @@ const BankReconciliation = () => {
               key={item.label}
               className="rounded-[24px] border border-white/60 bg-white/82 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)]"
             >
-              <div className="text-base font-semibold uppercase tracking-[0.18em] text-slate-500">
+              <div className="text-[16px] font-semibold uppercase tracking-[0.18em] text-slate-700">
                 {item.label}
               </div>
-              <div className={`mt-3 text-4xl font-black ${item.tone}`}>{item.value}</div>
-              <div className="mt-2 text-base text-slate-500">
+              <div className={`mt-3 text-[2.35rem] font-black ${item.tone}`}>{item.value}</div>
+              <div className="mt-2 text-[16px] font-semibold text-slate-700">
                 Live backend summary from invoices, restaurant bills, and department-tagged expenses.
               </div>
             </div>
@@ -431,12 +431,12 @@ const BankReconciliation = () => {
               key={item.label}
               className="rounded-[24px] border border-white/60 bg-white/82 p-5 text-left shadow-[0_18px_45px_rgba(15,23,42,0.08)]"
             >
-              <div className="text-base font-semibold uppercase tracking-[0.18em] text-slate-500">
+              <div className="text-[16px] font-semibold uppercase tracking-[0.18em] text-slate-700">
                 {item.label}
               </div>
-              <div className={`mt-3 text-4xl font-black ${item.tone}`}>{item.value}</div>
+              <div className={`mt-3 text-[2.35rem] font-black ${item.tone}`}>{item.value}</div>
               {item.helper ? (
-                <div className="mt-2 text-base text-slate-500">{item.helper}</div>
+                <div className="mt-2 text-[16px] font-semibold text-slate-700">{item.helper}</div>
               ) : null}
             </div>
           ))}

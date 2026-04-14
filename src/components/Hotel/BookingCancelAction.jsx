@@ -86,7 +86,7 @@ const BookingCancelAction = ({
                   {bookingId ? "Cancel Booking" : "Discard Draft"}
                 </div>
                 <h2 className="text-lg font-black leading-tight">
-                  {bookingId ? "guest can't interested in this time?" : "do you want to discard this booking  draft?"}
+                {bookingId ? "Guest isn't interested at this time?" : "Do you want to discard this booking draft?"}
                 </h2>
               </div>
               <button

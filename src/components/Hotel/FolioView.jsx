@@ -282,7 +282,7 @@ const FolioView = () => {
   if (!bookingId) {
     return (
       <div className="p-8 text-center text-slate-500">
-“Booking ID is missing. Please open it from ‘All Bookings.’”
+Booking ID is missing. Please open it from All Bookings.
       </div>
     );
   }
@@ -300,7 +300,7 @@ const FolioView = () => {
       )}
 
       <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(14,165,233,0.12),_transparent_30%),linear-gradient(135deg,#f8fbff_0%,#f7fffb_55%,#fff8ef_100%)] p-4 sm:p-6">
-        <div className="mx-auto max-w-6xl space-y-5">
+        <div className="mx-auto max-w-[88rem] space-y-5">
           {/* Header */}
           <section className="overflow-hidden rounded-[32px] border border-white/70 bg-[linear-gradient(135deg,#020617_0%,#1e3a8a_45%,#0f766e_100%)] px-6 py-7 text-white shadow-[0_22px_70px_rgba(15,23,42,0.22)]">
             <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)] lg:items-center">
@@ -312,8 +312,7 @@ const FolioView = () => {
                   Booking #{bookingRef}
                 </h1>
                 <p className="mt-3 max-w-2xl text-base font-medium leading-7 text-slate-100/85">
-                  Har din ke room charges, extra charges (minibar, laundry, etc.)
-                  aur payments ka itemised ledger.
+                  An itemized ledger of daily room charges, additional charges (such as minibar, laundry, etc.), and payments
                 </p>
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -403,7 +402,7 @@ const FolioView = () => {
               <div className="rounded-[28px] border-2 border-dashed border-slate-200 p-14 text-center">
                 <div className="text-5xl">📋</div>
                 <p className="mt-4 text-xl font-black text-slate-500">
-                  Abhi koi folio entry nahi hai.
+            There are currently no folio entries available
                 </p>
                 <button
                   type="button"
