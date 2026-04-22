@@ -1289,7 +1289,7 @@ const Payment = ({
 
   const shellClassName = asModal
     ? "w-full"
-    : "min-h-screen bg-[linear-gradient(180deg,#1a243a_0%,#24324b_100%)] p-4 sm:p-6";
+    : "min-h-screen bg-[linear-gradient(180deg,#eef3fb_0%,#f8fbff_46%,#fff9f0_100%)] p-4 sm:p-6";
 
   const invoiceHeading = invoice
     ? `${entityType} ${invoice.table} | Visit ID ${formatVisitId(invoice.tokenCode, invoice.tokenId)} | Total ${formatCurrency(invoice.total)}`
@@ -1309,16 +1309,16 @@ const Payment = ({
     <div className={shellClassName}>
       <div className={`${asModal ? "w-full max-w-[460px]" : "w-full space-y-6"}`}>
         {!asModal ? (
-          <section className="rounded-[28px] border border-white/10 bg-[linear-gradient(135deg,#0f172a_0%,#1d4ed8_50%,#0f766e_100%)] px-7 py-7 text-white shadow-[0_24px_70px_rgba(15,23,42,0.25)]">
+          <section className="rounded-[28px] border border-white/10 bg-[linear-gradient(135deg,#0f172a_0%,#1d4ed8_50%,#0f766e_100%)] px-6 py-6 text-white shadow-[0_22px_60px_rgba(15,23,42,0.22)]">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
                 <p className="text-base font-semibold uppercase tracking-[0.28em] text-cyan-200">Restaurant Payment</p>
-                <h1 className="mt-2 text-5xl font-black leading-tight">Row-wise bill review and payment card</h1>
-                <p className="mt-2 text-xl text-white/80">{invoiceHeading}</p>
+                <h1 className="mt-2 max-w-3xl text-4xl font-black leading-tight xl:text-5xl">Row-wise bill review and payment card</h1>
+                <p className="mt-2 max-w-3xl text-lg text-white/78 xl:text-xl">{invoiceHeading}</p>
               </div>
               <div className="rounded-[22px] border border-white/15 bg-white/10 px-5 py-4 backdrop-blur">
-                <div className="text-base uppercase tracking-[0.18em] text-cyan-100/80">Booking</div>
-                <div className="mt-2 text-4xl font-black">{formatVisitId(invoice?.tokenCode, invoice?.tokenId)}</div>
+                <div className="text-sm uppercase tracking-[0.18em] text-cyan-100/80">Booking</div>
+                <div className="mt-2 text-3xl font-black xl:text-4xl">{formatVisitId(invoice?.tokenCode, invoice?.tokenId)}</div>
               </div>
             </div>
           </section>

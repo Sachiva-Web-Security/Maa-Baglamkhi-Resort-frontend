@@ -375,6 +375,30 @@ html, body {
   }
 }
 
+/* ─── Restaurant readability overrides ───────────────────────────── */
+@media (min-width: 1024px) {
+  .desktop-scale-content .restaurant-workspace {
+    /* Keep restaurant views readable but not oversized to avoid excessive scrolling. */
+    zoom: calc(0.78 / var(--desktop-ui-scale));
+  }
+}
+
+.restaurant-workspace :is(input, select, textarea, button) {
+  font-size: 1rem;
+}
+
+.restaurant-workspace .overflow-x-auto > table,
+.restaurant-workspace table[class*="min-w-"] {
+  min-width: 100% !important;
+  width: 100%;
+}
+
+.restaurant-workspace th,
+.restaurant-workspace td {
+  white-space: normal;
+  word-break: break-word;
+}
+
 /* ─── Scrollbars ─────────────────────────────────────────────────── */
 * {
   scrollbar-width: thin;

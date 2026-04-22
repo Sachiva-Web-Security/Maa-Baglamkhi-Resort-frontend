@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiPlusCircle, FiHome, FiGrid, FiRefreshCw, FiFilter } from "react-icons/fi";
+import { FiPlusCircle, FiHome, FiGrid, FiRefreshCw, FiSearch, FiX } from "react-icons/fi";
 import API from "../../api";
 import RestaurantContext from "../../Context/restaurantContext";
 import AddTableModal from "./AddTableModal";
@@ -80,6 +80,7 @@ const TablePage = () => {
   const [removingTableId, setRemovingTableId] = useState(null);
   const [tablePage, setTablePage] = useState(1);
   const [removeDialogTable, setRemoveDialogTable] = useState(null);
+  const [tableSearchQuery, setTableSearchQuery] = useState("");
 
   const getDisplayWaiterName = (value) => {
     const normalized = String(value || "").trim();
@@ -269,23 +270,51 @@ if (exists) {
   const runningTables = displayedTableRows.filter((row) => row.occupied).length;
   const blankTables = displayedTableRows.filter((row) => row.status === "Available").length;
   const pendingInvoice = displayedTableRows.filter((row) => row.itemCount > 0 && row.showPayNow).length;
-  const totalTablePages = Math.max(1, Math.ceil(displayedTableRows.length / TABLE_PAGE_SIZE));
+  const filteredTableRows = useMemo(() => {
+    const query = String(tableSearchQuery || "").trim().toLowerCase();
+    if (!query) return displayedTableRows;
+
+    return displayedTableRows.filter(({ table, status, snapshot, itemCount }) => {
+      const searchableText = [
+        `t${table.name}`,
+        table.name,
+        String(table.id),
+        status,
+        table.floorName,
+        table.sectionName,
+        snapshot.tokenCode,
+        snapshot.waiterName,
+        itemCount ? `${itemCount} items` : "no items",
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return searchableText.includes(query);
+    });
+  }, [displayedTableRows, tableSearchQuery]);
+
+  const totalTablePages = Math.max(1, Math.ceil(filteredTableRows.length / TABLE_PAGE_SIZE));
   const paginatedTableRows = useMemo(
     () =>
-      displayedTableRows.slice(
+      filteredTableRows.slice(
         (tablePage - 1) * TABLE_PAGE_SIZE,
         tablePage * TABLE_PAGE_SIZE,
       ),
-    [displayedTableRows, tablePage],
+    [filteredTableRows, tablePage],
   );
-  const visibleTableStart = displayedTableRows.length ? (tablePage - 1) * TABLE_PAGE_SIZE + 1 : 0;
-  const visibleTableEnd = Math.min(tablePage * TABLE_PAGE_SIZE, displayedTableRows.length);
+  const visibleTableStart = filteredTableRows.length ? (tablePage - 1) * TABLE_PAGE_SIZE + 1 : 0;
+  const visibleTableEnd = Math.min(tablePage * TABLE_PAGE_SIZE, filteredTableRows.length);
 
   useEffect(() => {
     if (tablePage > totalTablePages) {
       setTablePage(totalTablePages);
     }
   }, [tablePage, totalTablePages]);
+
+  useEffect(() => {
+    setTablePage(1);
+  }, [tableSearchQuery]);
 
   const openCreateInvoice = async (tableName) => {
     const snapshot = tokenSnapshots[tableName];
@@ -411,56 +440,56 @@ if (exists) {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="rounded-[28px] border border-slate-200/80 bg-[linear-gradient(180deg,#ffffff_0%,#f7f9ff_100%)] p-6 shadow-[0_18px_40px_rgba(15,23,42,0.06)] sm:p-7">
+    <div className="space-y-2.5">
+      <div className="rounded-[18px] border border-slate-200/80 bg-[linear-gradient(180deg,#ffffff_0%,#f7f9ff_100%)] p-3 shadow-[0_10px_24px_rgba(15,23,42,0.05)] sm:p-3.5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h2 className="text-4xl font-black tracking-[-0.03em] text-slate-900">Dashboard</h2>
-            <p className="mt-2 text-base font-medium text-slate-500">
+            <h2 className="text-2xl font-black tracking-[-0.02em] text-slate-900">Dashboard</h2>
+            <p className="mt-1 text-sm font-medium text-slate-500">
               Real-time floor occupancy and invoicing
             </p>
           </div>
           {!isWaiter ? (
             <button
               onClick={() => setShowAddTable(true)}
-              className="inline-flex items-center gap-2.5 rounded-2xl bg-[#0b7d79] px-6 py-3.5 text-base font-bold text-white shadow-[0_14px_28px_rgba(11,125,121,0.18)] transition hover:-translate-y-0.5 hover:bg-[#096b68]"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#0b7d79] px-4 py-2 text-sm font-bold text-white shadow-[0_10px_20px_rgba(11,125,121,0.16)] transition hover:-translate-y-0.5 hover:bg-[#096b68]"
             >
-              <FiPlusCircle className="text-lg" /> Add Table
+              <FiPlusCircle className="text-base" /> Add Table
             </button>
           ) : null}
         </div>
       </div>
 
-      <div className="grid gap-3 md:grid-cols-3">
-        <div className="rounded-[22px] bg-[#eef4ff] px-6 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)]">
+      <div className="grid gap-2 md:grid-cols-3">
+        <div className="rounded-[16px] bg-[#eef4ff] px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)]">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-600">Running Tables</p>
-              <p className="mt-1 text-5xl font-black leading-none text-[#0f5ed7]">{runningTables}</p>
+              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-600">Running Tables</p>
+              <p className="mt-0.5 text-3xl font-black leading-none text-[#0f5ed7]">{runningTables}</p>
             </div>
-            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#dcebff] text-2xl text-[#0f5ed7]">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#dcebff] text-lg text-[#0f5ed7]">
               <FiHome />
             </span>
           </div>
         </div>
-        <div className="rounded-[22px] bg-[#eef4ff] px-6 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)]">
+        <div className="rounded-[16px] bg-[#eef4ff] px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)]">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-600">Blank Tables</p>
-              <p className="mt-1 text-5xl font-black leading-none text-[#0b7d79]">{blankTables}</p>
+              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-600">Blank Tables</p>
+              <p className="mt-0.5 text-3xl font-black leading-none text-[#0b7d79]">{blankTables}</p>
             </div>
-            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#dff4f3] text-2xl text-[#0b7d79]">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#dff4f3] text-lg text-[#0b7d79]">
               <FiGrid />
             </span>
           </div>
         </div>
-        <div className="rounded-[22px] bg-[#eef4ff] px-6 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)]">
+        <div className="rounded-[16px] bg-[#eef4ff] px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)]">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-600">Invoice Pending</p>
-              <p className="mt-1 text-5xl font-black leading-none text-slate-900">{pendingInvoice}</p>
+              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-600">Invoice Pending</p>
+              <p className="mt-0.5 text-3xl font-black leading-none text-slate-900">{pendingInvoice}</p>
             </div>
-            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#e8eef9] text-2xl text-slate-700">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#e8eef9] text-lg text-slate-700">
               <FiRefreshCw />
             </span>
           </div>
@@ -468,21 +497,34 @@ if (exists) {
       </div>
 
       <div>
-        <div className="overflow-hidden rounded-[30px] border border-slate-200 bg-white shadow-[0_20px_45px_rgba(15,23,42,0.08)]">
-          <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-6 py-5">
+        <div className="overflow-hidden rounded-[20px] border border-slate-200 bg-white shadow-[0_16px_36px_rgba(15,23,42,0.07)]">
+          <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-4 py-3">
             <div>
-              <div className="text-lg font-semibold uppercase tracking-[0.24em] text-sky-500">Table Management</div>
-              <h3 className="mt-2 text-[40px] font-black tracking-[-0.02em] text-slate-900">Restaurant tables in list view</h3>
-              <p className="mt-3 text-lg text-slate-500">Table status, section, booking info, person count, and actions in one clean workspace.</p>
-          </div>
+              <div className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-500">Table Management</div>
+              <h3 className="mt-1 text-2xl font-black tracking-[-0.02em] text-slate-900">Restaurant tables</h3>
+              <p className="mt-1 text-sm text-slate-500">Only table list scrolls below.</p>
+            </div>
 
-            <button
-              type="button"
-              className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-50 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
-              aria-label="Filter table list"
-            >
-              <FiFilter className="text-lg" />
-            </button>
+            <div className="flex w-full max-w-sm items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2">
+              <FiSearch className="shrink-0 text-slate-400" />
+              <input
+                type="text"
+                value={tableSearchQuery}
+                onChange={(event) => setTableSearchQuery(event.target.value)}
+                placeholder="Search table, status, section, booking"
+                className="w-full border-0 bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
+              />
+              {tableSearchQuery ? (
+                <button
+                  type="button"
+                  onClick={() => setTableSearchQuery("")}
+                  className="inline-flex h-6 w-6 items-center justify-center rounded-md text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                  aria-label="Clear table search"
+                >
+                  <FiX className="text-sm" />
+                </button>
+              ) : null}
+            </div>
           </div>
 
           <div className="overflow-x-auto">
@@ -626,6 +668,13 @@ if (exists) {
                     </tr>
                   );
                 })}
+                {!paginatedTableRows.length ? (
+                  <tr>
+                    <td colSpan={6} className="px-5 py-10 text-center text-base font-medium text-slate-500">
+                      No tables match your search.
+                    </td>
+                  </tr>
+                ) : null}
               </tbody>
             </table>
           </div>
@@ -635,7 +684,7 @@ if (exists) {
               Showing{" "}
               <span className="font-semibold text-slate-900">{visibleTableStart}</span>-
               <span className="font-semibold text-slate-900">{visibleTableEnd}</span> of{" "}
-              <span className="font-semibold text-slate-900">{displayedTableRows.length}</span> tables
+              <span className="font-semibold text-slate-900">{filteredTableRows.length}</span> tables
             </div>
 
             {totalTablePages > 1 ? (
