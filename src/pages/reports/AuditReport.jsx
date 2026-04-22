@@ -184,38 +184,38 @@ export default function AuditReport() {
       </div>
 
       <div className="w-full space-y-6">
-        <section className="overflow-hidden rounded-[30px] border border-slate-900/10 bg-[linear-gradient(120deg,#071b34_0%,#0d4a53_52%,#1d4ed8_100%)] px-5 py-6 shadow-[0_28px_70px_rgba(15,23,42,0.16)] sm:px-7 sm:py-8">
+        <section className="overflow-hidden rounded-[30px] border border-stone-200 bg-[linear-gradient(100deg,#fffdf8_0%,#fffaf2_45%,#fdf7ed_100%)] px-5 py-6 shadow-[0_20px_45px_rgba(120,113,108,0.14)] sm:px-7 sm:py-8">
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.95fr)] lg:items-end">
             <div className="space-y-4">
-              <p className="text-[18px] font-bold uppercase tracking-[0.3em] text-cyan-100">
+              <p className="text-[18px] font-bold uppercase tracking-[0.3em] text-slate-600">
                 Security And Compliance
               </p>
               <div className="space-y-2">
-                <h1 className="text-[2.6rem] font-black leading-tight text-white sm:text-[3.2rem]">
+                <h1 className="text-[2.6rem] font-black leading-tight text-slate-900 sm:text-[3.2rem]">
                   Audit log dashboard
                 </h1>
-                <p className="max-w-3xl text-[1.1rem] font-semibold leading-7 text-slate-50 sm:text-[1.2rem]">
+                <p className="max-w-3xl text-[1.1rem] font-semibold leading-7 text-slate-700 sm:text-[1.2rem]">
                   Login, update, delete, and system API activity ko ek jagah trace karo with user, endpoint, request metadata, status codes, and old/new values.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => loadLogs(pagination.page)}
-                className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-xl font-bold text-slate-900 shadow-[0_16px_35px_rgba(255,255,255,0.14)] transition hover:-translate-y-0.5"
+                className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-5 py-3 text-xl font-bold text-slate-900 shadow-[0_10px_24px_rgba(120,113,108,0.12)] transition hover:-translate-y-0.5 hover:border-stone-300 hover:bg-stone-50"
               >
-                <FaSyncAlt className={loading ? "animate-spin text-cyan-600" : "text-cyan-600"} />
+                <FaSyncAlt className={loading ? "animate-spin text-amber-600" : "text-amber-600"} />
                 Refresh Logs
               </button>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               {[
-                { label: "Total Events", value: summary.total, tone: "bg-white/10 text-white border-white/12" },
-                { label: "Success", value: summary.successCount, tone: "bg-emerald-500/18 text-emerald-100 border-emerald-300/20" },
-                { label: "Errors", value: summary.errorCount, tone: "bg-rose-500/18 text-rose-100 border-rose-300/20" },
-                { label: "Unique Users", value: summary.uniqueUsers, tone: "bg-cyan-500/18 text-cyan-100 border-cyan-300/20" },
+                { label: "Total Events", value: summary.total, tone: "bg-white/90 text-slate-900 border-stone-200" },
+                { label: "Success", value: summary.successCount, tone: "bg-emerald-50 text-emerald-800 border-emerald-200" },
+                { label: "Errors", value: summary.errorCount, tone: "bg-rose-50 text-rose-800 border-rose-200" },
+                { label: "Unique Users", value: summary.uniqueUsers, tone: "bg-sky-50 text-sky-800 border-sky-200" },
               ].map((item) => (
-                <div key={item.label} className={`rounded-[22px] border px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl ${item.tone}`}>
+                <div key={item.label} className={`rounded-[22px] border px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)] ${item.tone}`}>
                   <div className="text-[11px] font-semibold uppercase tracking-[0.18em] opacity-75">{item.label}</div>
                   <div className="mt-3 text-2xl font-black">{item.value}</div>
                 </div>

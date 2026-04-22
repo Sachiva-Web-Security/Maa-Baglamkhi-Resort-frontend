@@ -81,14 +81,14 @@ const RestaurantPOS = () => {
       </div>
 
       <div className="w-full space-y-5">
-        <section className="overflow-hidden rounded-[26px] bg-[linear-gradient(135deg,#135db9_0%,#1768b8_34%,#18739f_70%,#0b837d_100%)] px-6 py-6 shadow-[0_20px_40px_rgba(17,94,183,0.18)] sm:px-7 sm:py-7">
+        <section className="overflow-hidden rounded-[26px] border border-stone-200 bg-[linear-gradient(100deg,#fffdf8_0%,#fffaf2_45%,#fdf7ed_100%)] px-6 py-6 shadow-[0_20px_40px_rgba(120,113,108,0.14)] sm:px-7 sm:py-7">
           <div className="space-y-5">
             <div className="max-w-3xl space-y-3">
               <div className="space-y-2">
-                <h1 className="text-[34px] font-bold leading-tight tracking-[-0.03em] text-white sm:text-[46px]">
+                <h1 className="text-[34px] font-bold leading-tight tracking-[-0.03em] text-slate-900 sm:text-[46px]">
                   {heroTitle}
                 </h1>
-                <p className="max-w-3xl text-base font-medium leading-7 text-blue-50/92 sm:text-[19px] sm:leading-8">
+                <p className="max-w-3xl text-base font-medium leading-7 text-slate-700 sm:text-[19px] sm:leading-8">
                   {heroCopy}
                 </p>
               </div>
@@ -97,7 +97,7 @@ const RestaurantPOS = () => {
                 <button
                   type="button"
                   onClick={() => navigate(activeLink.path)}
-                  className="inline-flex items-center gap-2.5 rounded-xl bg-white px-5 py-3.5 text-base font-bold text-[#1155b6] shadow-[0_10px_24px_rgba(7,23,65,0.14)] transition hover:-translate-y-0.5"
+                  className="inline-flex items-center gap-2.5 rounded-xl border border-stone-200 bg-white px-5 py-3.5 text-base font-bold text-slate-900 shadow-[0_10px_24px_rgba(120,113,108,0.12)] transition hover:-translate-y-0.5"
                 >
                   <FaExternalLinkAlt className="text-[15px]" />
                   Open Active Section
@@ -107,7 +107,7 @@ const RestaurantPOS = () => {
                   <button
                     type="button"
                     onClick={() => navigate("/kitchen")}
-                    className="inline-flex items-center gap-2.5 rounded-xl border border-white/18 bg-white/10 px-5 py-3.5 text-base font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md transition hover:bg-white/14"
+                    className="inline-flex items-center gap-2.5 rounded-xl border border-stone-200 bg-white px-5 py-3.5 text-base font-bold text-slate-900 transition hover:border-stone-300 hover:bg-stone-50"
                   >
                     <FaUtensils className="text-[15px]" />
                     Go To Kitchen
@@ -123,17 +123,17 @@ const RestaurantPOS = () => {
                 return (
                   <div
                     key={item.label}
-                    className="rounded-[16px] border border-white/12 bg-white/10 px-5 py-5 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md"
+                    className="rounded-[16px] border border-stone-200 bg-white/90 px-5 py-5 text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)]"
                   >
                     <div className="flex items-center gap-3">
-                      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/14 text-[20px] text-white">
+                      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-stone-100 text-[20px] text-slate-700">
                         <Icon />
                       </span>
                       <div className="min-w-0">
-                        <div className="text-xs font-bold uppercase tracking-[0.1em] text-blue-50/75">
+                        <div className="text-xs font-bold uppercase tracking-[0.1em] text-slate-500">
                           {item.label}
                         </div>
-                        <div className="mt-1.5 text-[30px] font-bold leading-tight text-white">
+                        <div className="mt-1.5 text-[30px] font-bold leading-tight text-slate-900">
                           {item.value}
                         </div>
                       </div>

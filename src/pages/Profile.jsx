@@ -254,7 +254,7 @@ const Profile = () => {
       </div>
 
       <div className="w-full space-y-7">
-        <section className="profile-hero overflow-hidden rounded-[28px] border border-slate-900/10 bg-[linear-gradient(120deg,#071b34_0%,#0d4a53_52%,#162d45_100%)] px-6 py-7 shadow-[0_22px_55px_rgba(15,23,42,0.12)] sm:px-8 sm:py-10">
+        <section className="profile-hero overflow-hidden rounded-[28px] border border-stone-200 bg-[linear-gradient(100deg,#fffdf8_0%,#fffaf2_45%,#fdf7ed_100%)] px-6 py-7 shadow-[0_20px_45px_rgba(120,113,108,0.14)] sm:px-8 sm:py-10">
           <div className="space-y-5">
             <div className="space-y-5">
               <p className="profile-hero-text text-xl font-semibold uppercase tracking-[0.3em]">

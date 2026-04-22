@@ -19,6 +19,23 @@ function formatLabel(value) {
     .replace(/^./, (char) => char.toUpperCase());
 }
 
+function formatDateTime(value) {
+  if (!value) return "---";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "---";
+  return date.toLocaleString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function getRowDateTime(row) {
+  return row.updated_at || row.created_at || row.updatedAt || row.createdAt || null;
+}
+
 function FieldInput({ field, value, onChange }) {
   if (field.type === "select") {
     return (
@@ -242,6 +259,7 @@ export default function InventoryMastersManager() {
                   {activeSection.columns.map((column) => (
                     <th key={column} className="px-4 py-3">{formatLabel(column)}</th>
                   ))}
+                  <th className="px-4 py-3">Date &amp; Time</th>
                   <th className="px-4 py-3">Actions</th>
                 </tr>
               </thead>
@@ -253,6 +271,9 @@ export default function InventoryMastersManager() {
                         {row[column] || "---"}
                       </td>
                     ))}
+                    <td className="px-4 py-3 text-slate-700 whitespace-nowrap">
+                      {formatDateTime(getRowDateTime(row))}
+                    </td>
                     <td className="px-4 py-3">
                       <div className="flex gap-2">
                         <button
@@ -274,7 +295,7 @@ export default function InventoryMastersManager() {
                   </tr>
                 )) : (
                   <tr>
-                    <td colSpan={activeSection.columns.length + 1} className="px-4 py-10 text-center text-sm text-slate-400">
+                    <td colSpan={activeSection.columns.length + 2} className="px-4 py-10 text-center text-sm text-slate-400">
                       No records found.
                     </td>
                   </tr>

@@ -209,7 +209,7 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
         `}</style>
 
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.22),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(14,165,233,0.14),transparent_30%)]" />
-        <div className="relative flex h-full min-h-0 flex-col p-3">
+        <div className="relative flex h-full min-h-0 flex-col px-3 pb-1 pt-3">
           <div className={`-mx-3 shrink-0 border-b border-white/10 px-3 ${showLabels ? "pb-12" : "pb-12"}`}>
             <button
               type="button"
@@ -301,7 +301,7 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
             })}
           </nav>
 
-          <div className={`mt-auto border-t border-white/10 pt-4 ${showLabels ? "px-1 pb-0" : "flex justify-center px-0 pb-0"}`}>
+          <div className={`mt-auto border-t border-white/10 pt-2 ${showLabels ? "px-1 pb-0" : "flex justify-center px-0 pb-0"}`}>
             <button
               type="button"
               onClick={handleLogout}

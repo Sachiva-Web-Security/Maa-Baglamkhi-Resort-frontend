@@ -280,15 +280,15 @@ html, body {
 
 .profile-page .profile-hero,
 .profile-page .profile-hero-text {
-  color: #ffffff !important;
+  color: #0f172a !important;
 }
 
 .profile-page .profile-hero p,
 .profile-page .profile-hero h1,
 .profile-page .profile-hero span {
-  color: #ffffff !important;
+  color: #1f2937 !important;
   opacity: 1 !important;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
+  text-shadow: none;
 }
 
 @media (min-width: 1024px) {

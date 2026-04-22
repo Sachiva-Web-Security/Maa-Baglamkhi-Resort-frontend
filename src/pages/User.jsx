@@ -386,17 +386,17 @@ const User = () => {
       </div>
 
       <div className="w-full space-y-7">
-        <section className="overflow-hidden rounded-[28px] border border-slate-900/10 bg-[linear-gradient(120deg,#071b34_0%,#0d4a53_52%,#162d45_100%)] px-5 py-6 shadow-[0_22px_55px_rgba(15,23,42,0.12)] sm:px-7 sm:py-8">
+        <section className="overflow-hidden rounded-[28px] border border-stone-200 bg-[linear-gradient(100deg,#fffdf8_0%,#fffaf2_45%,#fdf7ed_100%)] px-5 py-6 shadow-[0_20px_45px_rgba(120,113,108,0.14)] sm:px-7 sm:py-8">
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.9fr)] lg:items-center">
             <div className="space-y-7">
-              <p className="text-xl  font-semibold uppercase tracking-[0.29em] text-cyan-200">
+              <p className="text-xl  font-semibold uppercase tracking-[0.29em] text-slate-600">
                 Team Directory
               </p>
               <div className="space-y-2">
-                <h1 className="text-3xl font-black leading-tight text-white sm:text-4xl">
+                <h1 className="text-3xl font-black leading-tight text-slate-900 sm:text-4xl">
                   User management made cleaner and faster
                 </h1>
-                <p className="max-w-3xl text-2xl leading-6 text-slate-100/85 sm:text-base">
+                <p className="max-w-3xl text-2xl leading-6 text-slate-700 sm:text-base">
                  Dashboard-style user directory where you can search, review, and onboard team members with better clarity.
                 </p>
               </div>
@@ -405,9 +405,9 @@ const User = () => {
                   type="button"
                   onClick={() => setShowCreateModal(true)}
                   disabled={!isAdmin}
-                  className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-xl font-bold text-slate-900 shadow-[0_16px_35px_rgba(255,255,255,0.15)] transition hover:-translate-y-0.5"
+                  className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-5 py-3 text-xl font-bold text-slate-900 shadow-[0_10px_24px_rgba(120,113,108,0.12)] transition hover:-translate-y-0.5 hover:border-stone-300 hover:bg-stone-50"
                 >
-                  <FaUserPlus className="text-cyan-600" />
+                  <FaUserPlus className="text-amber-600" />
                   Add New User
                 </button>
               </div>
@@ -421,9 +421,9 @@ const User = () => {
               ].map((item) => (
                 <div
                   key={item.label}
-                  className="rounded-[22px] border border-white/12 bg-white/10 px-4 py-4 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md"
+                  className="rounded-[22px] border border-stone-200 bg-white/90 px-4 py-4 text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)]"
                 >
-                  <span className="text-[18px] text-slate-100/75">{item.label}</span>
+                  <span className="text-[18px] text-slate-600">{item.label}</span>
                   <div className="mt-3 text-3xl font-bold leading-none">
                     {item.value}
                   </div>

@@ -52,6 +52,7 @@ import CollectionReport from "./pages/reports/CollectionReport";
 import DaywiseCollection from "./pages/reports/DaywiseCollection";
 import IncomeExpenditure from "./pages/reports/IncomeExpenditure";
 import SalesReport from "./pages/reports/SalesReport";
+import { normalizeRole, ROLE_HOME } from "./utils/roleHome";
 
 const ROLES = {
   ALL: ["admin", "manager", "receptionist", "waiter", "kitchen", "housekeeping", "accountant", "staff"],
@@ -284,8 +285,14 @@ function AppRoutes({ isAuthenticated, setIsAuthenticated, protect }) {
 }
 
 function App() {
+  const hasValidSession = () => {
+    const token = localStorage.getItem("token");
+    const role = normalizeRole(localStorage.getItem("role"));
+    return Boolean(token) && Boolean(ROLE_HOME[role]);
+  };
+
   const [isAuthenticated, setIsAuthenticated] = useState(
-    Boolean(localStorage.getItem("token")),
+    hasValidSession(),
   );
 
   const protect = (element, roles) => (

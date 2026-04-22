@@ -2257,17 +2257,17 @@ const Banquet = () => {
       </div>
 
       <div className="w-full space-y-6">
-        <section className="overflow-hidden rounded-[30px] border border-white/15 bg-[linear-gradient(90deg,#1C3F8A_0%,#243B52_100%)] px-5 py-6 shadow-[0_22px_55px_rgba(15,23,42,0.18)] backdrop-blur-xl sm:px-7 sm:py-8">
+        <section className="overflow-hidden rounded-[30px] border border-stone-200 bg-[linear-gradient(100deg,#fffdf8_0%,#fffaf2_45%,#fdf7ed_100%)] px-5 py-6 shadow-[0_20px_45px_rgba(120,113,108,0.14)] sm:px-7 sm:py-8">
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(340px,1fr)] xl:items-start">
             <div className="space-y-4">
-              <p className="text-sm font-bold uppercase tracking-[0.28em] text-sky-200">
+              <p className="text-sm font-bold uppercase tracking-[0.28em] text-slate-600">
                 Dashboard
               </p>
               <div className="space-y-2">
-                <h1 className="text-4xl font-black leading-tight text-white sm:text-5xl">
+                <h1 className="text-4xl font-black leading-tight text-slate-900 sm:text-5xl">
                   Banquet operations dashboard
                 </h1>
-                <p className="max-w-3xl text-base font-medium leading-7 text-slate-100 sm:text-lg">
+                <p className="max-w-3xl text-base font-medium leading-7 text-slate-700 sm:text-lg">
                   Reservation activity, hall readiness, menu pricing, and billing actions are
                   shown in a clean workspace so the team can scan information faster.
                 </p>
@@ -2276,7 +2276,7 @@ const Banquet = () => {
                 <button
                   type="button"
                   onClick={() => window.location.reload()}
-                  className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2.5 text-base font-bold text-slate-900 shadow-[0_12px_28px_rgba(15,23,42,0.16)] transition hover:-translate-y-0.5 hover:bg-sky-500 hover:text-white hover:shadow-[0_14px_32px_rgba(59,130,246,0.32)]"
+                  className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-4 py-2.5 text-base font-bold text-slate-900 shadow-[0_10px_24px_rgba(120,113,108,0.12)] transition hover:-translate-y-0.5 hover:border-stone-300 hover:bg-stone-50"
                 >
                   <FaSyncAlt />
                   Refresh
@@ -2284,7 +2284,7 @@ const Banquet = () => {
                 <button
                   type="button"
                   onClick={openAddHallForm}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2.5 text-base font-bold text-white transition hover:border-sky-300 hover:bg-sky-500 hover:text-white hover:shadow-[0_14px_32px_rgba(59,130,246,0.32)]"
+                  className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-4 py-2.5 text-base font-bold text-slate-900 transition hover:border-stone-300 hover:bg-stone-50"
                 >
                   <FaPlus />
                   Add hall
@@ -2292,7 +2292,7 @@ const Banquet = () => {
                 <button
                   type="button"
                   onClick={openCreateReservationForm}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2.5 text-base font-bold text-white transition hover:border-sky-300 hover:bg-sky-500 hover:text-white hover:shadow-[0_14px_32px_rgba(59,130,246,0.32)]"
+                  className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-4 py-2.5 text-base font-bold text-slate-900 transition hover:border-stone-300 hover:bg-stone-50"
                 >
                   <FaPlus />
                   New reservation
@@ -2305,7 +2305,7 @@ const Banquet = () => {
                       key={section.id}
                       type="button"
                       onClick={() => setActiveQuickSection(section.id)}
-                      className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2.5 text-base font-bold text-white transition hover:border-sky-300 hover:bg-sky-500 hover:text-white hover:shadow-[0_14px_32px_rgba(59,130,246,0.32)]"
+                      className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-4 py-2.5 text-base font-bold text-slate-900 transition hover:border-stone-300 hover:bg-stone-50"
                     >
                       <Icon />
                       {section.label}
@@ -2319,15 +2319,15 @@ const Banquet = () => {
               {stats.map((item) => (
                 <div
                   key={item.label}
-                  className="rounded-[24px] border border-white/15 bg-white/10 p-4 shadow-[0_10px_24px_rgba(15,23,42,0.12)] backdrop-blur-sm transition hover:-translate-y-0.5 hover:border-sky-300 hover:bg-sky-500/45 hover:shadow-[0_14px_32px_rgba(59,130,246,0.28)]"
+                  className="rounded-[24px] border border-stone-200 bg-white/90 p-4 shadow-[0_10px_24px_rgba(120,113,108,0.1)] transition hover:-translate-y-0.5 hover:border-stone-300 hover:bg-white"
                 >
-                  <div className="text-sm font-bold uppercase tracking-[0.16em] text-slate-200">
+                  <div className="text-sm font-bold uppercase tracking-[0.16em] text-slate-600">
                     {item.label}
                   </div>
-                  <div className="mt-3 text-4xl font-black leading-none text-white sm:text-[42px]">
+                  <div className="mt-3 text-4xl font-black leading-none text-slate-900 sm:text-[42px]">
                     {item.value}
                   </div>
-                  <div className="mt-2 h-1.5 w-12 rounded-full bg-sky-300" />
+                  <div className="mt-2 h-1.5 w-12 rounded-full bg-amber-300" />
                 </div>
               ))}
             </div>

@@ -409,7 +409,7 @@ const Kitchen = () => {
       </div>
 
       <div className="w-full space-y-7">
-        <section className="overflow-hidden rounded-[26px] border border-sky-400/60 bg-[linear-gradient(90deg,#0EA5E9_0%,#0284C7_45%,#0369A1_100%)] px-4 py-5 shadow-[0_22px_55px_rgba(14,165,233,0.24)] sm:px-6 sm:py-6 lg:px-8">
+        <section className="overflow-hidden rounded-[26px] border border-stone-200 bg-[linear-gradient(100deg,#fffdf8_0%,#fffaf2_45%,#fdf7ed_100%)] px-4 py-5 shadow-[0_20px_45px_rgba(120,113,108,0.14)] sm:px-6 sm:py-6 lg:px-8">
           <div className="relative z-[1] grid gap-5 lg:grid-cols-[minmax(0,1.5fr)_minmax(300px,0.8fr)] lg:items-center">
             <div className="space-y-3">
               <p className="text-sm font-semibold uppercase tracking-[0.26em] text-slate-950 sm:text-base">
@@ -427,12 +427,12 @@ const Kitchen = () => {
                 <button
                   type="button"
                   onClick={fetchOrders}
-                  className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-base font-bold text-slate-900 shadow-[0_16px_35px_rgba(255,255,255,0.15)] transition hover:-translate-y-0.5"
+                  className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-5 py-3 text-base font-bold text-slate-900 shadow-[0_12px_25px_rgba(120,113,108,0.12)] transition hover:-translate-y-0.5"
                 >
-                  <FaSyncAlt className="text-cyan-600" />
+                  <FaSyncAlt className="text-amber-600" />
                   Refresh Queue
                 </button>
-                <div className="rounded-full border border-sky-100/50 bg-white/20 px-5 py-3 text-base font-semibold text-slate-950 backdrop-blur-md">
+                <div className="rounded-full border border-stone-200 bg-white px-5 py-3 text-base font-semibold text-slate-900">
                   Auto refresh every 4 seconds
                 </div>
               </div>
@@ -447,10 +447,10 @@ const Kitchen = () => {
               ].map((item) => (
                 <div
                   key={item.label}
-                  className="rounded-[22px] border border-sky-100/45 bg-white/18 px-4 py-4 text-slate-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-md"
+                  className="rounded-[22px] border border-stone-200 bg-white/90 px-4 py-4 text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)]"
                 >
-                  <span className="text-[14px] text-slate-950">{item.label}</span>
-                  <div className="mt-3 text-[14px] font-bold leading-none text-slate-950">{item.value}</div>
+                  <span className="text-[14px] text-slate-700">{item.label}</span>
+                  <div className="mt-3 text-[14px] font-bold leading-none text-slate-900">{item.value}</div>
                 </div>
               ))}
             </div>

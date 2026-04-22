@@ -543,17 +543,17 @@ const Reports = () => {
       </div>
 
       <div className="w-full space-y-7">
-        <section className="overflow-hidden rounded-[28px] border border-white/12 bg-[linear-gradient(90deg,#1C3F8A_0%,#243B52_100%)] px-5 py-6 shadow-[0_22px_55px_rgba(15,23,42,0.16)] sm:px-7 sm:py-8">
+        <section className="overflow-hidden rounded-[28px] border border-stone-200 bg-[linear-gradient(100deg,#fffdf8_0%,#fffaf2_45%,#fdf7ed_100%)] px-5 py-6 shadow-[0_20px_45px_rgba(120,113,108,0.14)] sm:px-7 sm:py-8">
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.9fr)] lg:items-center">
             <div className="space-y-4">
-              <p className="text-[15px] font-semibold uppercase tracking-[0.26em] text-cyan-200">
+              <p className="text-[15px] font-semibold uppercase tracking-[0.26em] text-slate-600">
                 Insight Studio
               </p>
               <div className="space-y-2">
-                <h1 className="text-4xl font-black leading-tight text-white sm:text-4xl">
+                <h1 className="text-4xl font-black leading-tight text-slate-900 sm:text-4xl">
                   Reports built for faster daily decisions
                 </h1>
-                <p className="max-w-3xl text-sm font-semibold leading-relaxed text-slate-100/85 sm:text-base">
+                <p className="max-w-3xl text-sm font-semibold leading-relaxed text-slate-700 sm:text-base">
                   A clean, dashboard-style analytics workspace from which room, banquet, restaurant, housekeeping, accounts, and combined billing reports can all be managed in one place.
                 </p>
               </div>
@@ -562,7 +562,7 @@ const Reports = () => {
                   type="button"
                   onClick={fetchData}
                   disabled={loading}
-                  className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-bold text-slate-900 shadow-[0_16px_35px_rgba(255,255,255,0.15)] transition hover:-translate-y-0.5 hover:bg-sky-500 hover:text-white hover:shadow-[0_16px_35px_rgba(59,130,246,0.28)] disabled:cursor-not-allowed disabled:opacity-70"
+                  className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-5 py-3 text-sm font-bold text-slate-900 shadow-[0_10px_24px_rgba(120,113,108,0.12)] transition hover:-translate-y-0.5 hover:border-stone-300 hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-70"
                 >
                   <FaSyncAlt />
                   {loading ? "Refreshing..." : "Refresh Reports"}
@@ -570,7 +570,7 @@ const Reports = () => {
                 <button
                   type="button"
                   onClick={exportCSV}
-                  className="rounded-full border border-white/18 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur-md transition hover:border-sky-300 hover:bg-sky-500 hover:text-white hover:shadow-[0_16px_35px_rgba(59,130,246,0.28)]"
+                  className="rounded-full border border-stone-200 bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:border-stone-300 hover:bg-stone-50"
                 >
                   Export Current Report
                 </button>
@@ -590,9 +590,9 @@ const Reports = () => {
               ].map((item) => (
                 <div
                   key={item.label}
-                  className="rounded-[22px] border border-white/14 bg-white/10 px-4 py-4 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md transition hover:-translate-y-0.5 hover:border-sky-300 hover:bg-sky-500/45 hover:shadow-[0_14px_32px_rgba(59,130,246,0.26)]"
+                  className="rounded-[22px] border border-stone-200 bg-white/90 px-4 py-4 text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)] transition hover:-translate-y-0.5 hover:border-stone-300 hover:bg-white"
                 >
-                  <span className="text-[13px] font-semibold text-slate-100/85">{item.label}</span>
+                  <span className="text-[13px] font-semibold text-slate-600">{item.label}</span>
                   <div className="mt-3 text-2xl font-bold leading-none">
                     {item.value}
                   </div>

@@ -1582,7 +1582,7 @@ const Accounts = () => {
       </div>
 
       <div className="w-full space-y-7">
-        <section className="overflow-hidden rounded-[28px] border border-sky-500/55 bg-[linear-gradient(90deg,#1E40AF_0%,#0369A1_52%,#075985_100%)] px-5 py-6 text-slate-950 shadow-[0_22px_55px_rgba(30,64,175,0.28)] sm:px-7 sm:py-8">
+        <section className="overflow-hidden rounded-[28px] border border-stone-200 bg-[linear-gradient(100deg,#fffdf8_0%,#fffaf2_45%,#fdf7ed_100%)] px-5 py-6 text-slate-900 shadow-[0_20px_45px_rgba(120,113,108,0.14)] sm:px-7 sm:py-8">
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.9fr)] lg:items-center">
             <div className="space-y-4">
               <p className="text-2xl font-semibold uppercase tracking-[0.26em] text-slate-950">
@@ -1597,55 +1597,55 @@ const Accounts = () => {
               </p>
               <div className="flex flex-wrap gap-3">
                 <button
-                  className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-base font-bold text-slate-900 shadow-[0_16px_35px_rgba(255,255,255,0.15)]"
+                  className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-5 py-3 text-base font-bold text-slate-900 shadow-[0_12px_25px_rgba(120,113,108,0.12)]"
                   onClick={() => setShowIncome(true)}
                 >
-                  <FaPlus className="text-cyan-600" />
+                  <FaPlus className="text-amber-600" />
                   Add Income
                 </button>
                 <button
-                  className="inline-flex items-center gap-2 rounded-full border border-sky-100/40 bg-white/18 px-5 py-3 text-base font-semibold text-slate-950 backdrop-blur-md"
+                  className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-5 py-3 text-base font-semibold text-slate-900"
                   onClick={() => setShowExpense(true)}
                 >
                   <FaMoneyBillWave />
                   Add Expense
                 </button>
                 <button
-                  className="inline-flex items-center gap-2 rounded-full border border-sky-100/40 bg-white/18 px-5 py-3 text-base font-semibold text-slate-950 backdrop-blur-md"
+                  className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-5 py-3 text-base font-semibold text-slate-900"
                   onClick={() => setShowInvoice(true)}
                 >
                   <FaReceipt />
                   Invoice
                 </button>
                 <button
-                  className="inline-flex items-center gap-2 rounded-full border border-sky-100/40 bg-white/18 px-5 py-3 text-base font-bold text-slate-950 backdrop-blur-md transition hover:border-sky-100"
+                  className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-5 py-3 text-base font-bold text-slate-900 transition hover:border-stone-300"
                   onClick={openAccountsTabsPage}
                 >
-                  <FaThLarge className="text-slate-950" />
+                  <FaThLarge className="text-slate-900" />
                   Accounts Tab
                 </button>
                 <button
-                  className="inline-flex items-center gap-2 rounded-full border border-sky-100/40 bg-white/22 px-5 py-3 text-base font-bold text-slate-950 backdrop-blur-md transition hover:border-sky-100 hover:bg-white/26"
+                  className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-5 py-3 text-base font-bold text-slate-900 transition hover:border-stone-300 hover:bg-stone-50"
                   onClick={openBankReconciliationModule}
                 >
-                  <FaChartLine className="text-slate-950" />
+                  <FaChartLine className="text-slate-900" />
                   Bank Reconciliation
                 </button>
                 <button
-                  className="inline-flex items-center gap-2 rounded-full border border-sky-100/40 bg-white/18 px-5 py-3 text-base font-bold text-slate-950 backdrop-blur-md transition hover:border-sky-100"
+                  className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-5 py-3 text-base font-bold text-slate-900 transition hover:border-stone-300"
                   onClick={openCustomerInvoicesPage}
                 >
-                  <FaFileInvoiceDollar className="text-slate-950" />
+                  <FaFileInvoiceDollar className="text-slate-900" />
                   Customer Invoices
                 </button>
-                <label className="min-w-[220px] rounded-[20px] border border-sky-100/40 bg-white/18 px-4 py-3 text-left backdrop-blur-md">
-                  <span className="block text-base font-semibold uppercase tracking-[0.2em] text-slate-950">
+                <label className="min-w-[220px] rounded-[20px] border border-stone-200 bg-white px-4 py-3 text-left">
+                  <span className="block text-base font-semibold uppercase tracking-[0.2em] text-slate-900">
                     Payment Filter
                   </span>
                   <select
                     value={selectedPaymentMode}
                     onChange={(event) => setSelectedPaymentMode(event.target.value)}
-                    className="mt-2 w-full bg-transparent text-lg font-semibold text-slate-950 outline-none"
+                    className="mt-2 w-full bg-transparent text-lg font-semibold text-slate-900 outline-none"
                   >
                     {paymentModeOptions.map((mode) => (
                       <option key={mode} value={mode} className="text-slate-900">
@@ -1662,9 +1662,9 @@ const Accounts = () => {
                 { label: "Net Position", value: formatINR(totals.net) },
                 { label: "GST Payable", value: formatINR(totals.gstPayable) },
               ].map((item) => (
-                <div key={item.label} className="rounded-[22px] border border-sky-100/40 bg-white/18 px-4 py-4 backdrop-blur-md">
-                  <span className="text-base text-slate-950">{item.label}</span>
-                  <div className="mt-3 text-4xl font-bold leading-none text-slate-950">{item.value}</div>
+                <div key={item.label} className="rounded-[22px] border border-stone-200 bg-white/90 px-4 py-4">
+                  <span className="text-base text-slate-700">{item.label}</span>
+                  <div className="mt-3 text-4xl font-bold leading-none text-slate-900">{item.value}</div>
                 </div>
               ))}
             </div>
