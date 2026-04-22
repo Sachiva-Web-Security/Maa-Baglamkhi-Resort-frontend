@@ -23,15 +23,17 @@ const MGMT_LINKS = [
 ];
 
 const linkClassName = ({ isActive }) =>
-  `text-[15px] font-bold leading-none transition xl:text-[16px] 2xl:text-[17px] ${
-    isActive ? "text-sky-600" : "text-slate-700 hover:text-sky-600"
+  `rounded-full px-4 py-2 text-[15px] font-semibold leading-none transition xl:px-4.5 xl:text-[16px] 2xl:text-[17px] ${
+    isActive
+      ? "bg-white text-slate-950 shadow-[0_10px_24px_rgba(15,23,42,0.18)]"
+      : "text-slate-200 hover:bg-white/10 hover:text-white"
   }`;
 
 const actionButtonClassName = (isActive) =>
-  `rounded-full border border-sky-200/70 bg-[linear-gradient(135deg,rgba(219,234,254,0.72),rgba(191,219,254,0.38))] px-4 py-2 text-[15px] font-bold leading-none text-sky-950 shadow-[0_10px_28px_rgba(59,130,246,0.16)] backdrop-blur-md transition xl:px-4.5 xl:py-2.5 xl:text-[16px] 2xl:text-[17px] ${
+  `rounded-full border px-4 py-2 text-[15px] font-bold leading-none shadow-[0_10px_28px_rgba(2,8,23,0.18)] backdrop-blur-md transition xl:px-4.5 xl:py-2.5 xl:text-[16px] 2xl:text-[17px] ${
     isActive
-      ? "border-sky-300/80 bg-[linear-gradient(135deg,rgba(191,219,254,0.92),rgba(125,211,252,0.52))] text-blue-950 shadow-[0_14px_34px_rgba(37,99,235,0.22)]"
-      : "hover:border-sky-300/80 hover:bg-[linear-gradient(135deg,rgba(219,234,254,0.84),rgba(186,230,253,0.46))] hover:text-blue-950"
+      ? "border-white/20 bg-white text-slate-950 shadow-[0_14px_34px_rgba(2,8,23,0.2)]"
+      : "border-white/10 bg-white/8 text-slate-100 hover:border-white/20 hover:bg-white/12 hover:text-white"
   }`;
 
 const BookingSteps = () => {
@@ -41,9 +43,9 @@ const BookingSteps = () => {
     new URLSearchParams(location.search).get("mode") || location.state?.bookingAction || "";
 
   return (
-    <div className="mx-auto flex w-full max-w-full flex-col gap-4 xl:flex-row xl:items-center xl:gap-4 2xl:gap-5">
-      <div className="min-w-0 xl:flex-none">
-         <div className="flex flex-nowrap items-center gap-3 overflow-x-auto whitespace-nowrap xl:gap-4 2xl:gap-5">
+    <div className="mx-auto flex w-full max-w-full flex-col gap-4 rounded-[26px] border border-white/10 bg-[linear-gradient(90deg,#07111f_0%,#0b1728_52%,#09101b_100%)] px-4 py-4 shadow-[0_18px_40px_rgba(2,8,23,0.28)] xl:flex-row xl:flex-wrap xl:items-start xl:gap-4 2xl:gap-5">
+      <div className="min-w-0 flex-1 xl:flex-none">
+        <div className="flex flex-nowrap items-center gap-2 overflow-x-auto whitespace-nowrap xl:gap-3 2xl:gap-4">
           {WIZARD_STEPS.map((step) => (
             <NavLink
               key={step.path}
@@ -57,7 +59,7 @@ const BookingSteps = () => {
         </div>
       </div>
 
-      <div className="flex flex-nowrap items-center justify-center gap-2 border-y border-slate-100 py-4 xl:mx-auto xl:border-y-0 xl:border-x xl:px-4 xl:py-0">
+      <div className="flex flex-wrap items-center justify-center gap-2 rounded-full border border-white/10 bg-white/8 px-3 py-2 xl:mx-auto xl:px-4 xl:py-2.5">
         <button
           type="button"
           onClick={() =>
@@ -84,10 +86,10 @@ const BookingSteps = () => {
         </button>
       </div>
 
-      <div className="min-w-0 xl:flex-none">
-          <div className="flex flex-nowrap items-center gap-3 overflow-x-auto whitespace-nowrap xl:justify-end xl:gap-4 2xl:gap-5">
+      <div className="min-w-0 flex-1 xl:flex-none">
+        <div className="flex flex-wrap items-center gap-2 overflow-visible whitespace-normal xl:justify-end xl:gap-3 2xl:gap-4">
           {MGMT_LINKS.map((link) => (
-           <NavLink key={link.path} to={link.path} state={location.state} className={linkClassName}>
+            <NavLink key={link.path} to={link.path} state={location.state} className={linkClassName}>
               {link.name}
             </NavLink>
           ))}

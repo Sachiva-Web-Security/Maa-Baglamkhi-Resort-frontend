@@ -178,11 +178,11 @@ const Attendance = () => {
         </table>
 
         {/* ✅ PAGINATION UI */}
-        <div className="flex justify-center gap-2 p-4">
+        <div className="flex flex-wrap items-center justify-center gap-2 border-t border-slate-100 bg-slate-50/60 p-4">
           <button
             onClick={() => setCurrentPage((prev) => prev - 1)}
             disabled={currentPage === 1}
-            className="px-3 py-1 bg-red-600 rounded"
+            className="inline-flex min-h-10 items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-[0_8px_18px_rgba(15,23,42,0.06)] transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
           >
             Prev
           </button>
@@ -191,10 +191,10 @@ const Attendance = () => {
             <button
               key={i}
               onClick={() => setCurrentPage(i + 1)}
-              className={`px-3 py-1 rounded ${
+              className={`inline-flex min-h-10 min-w-10 items-center justify-center rounded-full border px-3 py-2 text-sm font-semibold transition ${
                 currentPage === i + 1
-                  ? "bg-blue-900 text-white"
-                  : "bg-gray-200"
+                  ? "border-transparent bg-[linear-gradient(180deg,#07111f_0%,#0b1728_100%)] text-white shadow-[0_10px_24px_rgba(2,8,23,0.2)]"
+                  : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
               }`}
             >
               {i + 1}
@@ -204,7 +204,7 @@ const Attendance = () => {
           <button
             onClick={() => setCurrentPage((prev) => prev + 1)}
              disabled={currentPage >= totalPages || totalPages === 0}
-            className="px-3 py-1 bg-green-500 rounded"
+            className="inline-flex min-h-10 items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-[0_8px_18px_rgba(15,23,42,0.06)] transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
           >
             Next
           </button>

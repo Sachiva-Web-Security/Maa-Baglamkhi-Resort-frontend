@@ -49,11 +49,11 @@ const Hotel = () => {
   const isAllBookingsPage = location.pathname.includes("/all-bookings");
 
   return (
-    <div className="min-h-screen w-full bg-[radial-gradient(circle_at_top,_rgba(14,165,233,0.16),_transparent_24%),linear-gradient(180deg,#f8fbff_0%,#f7fffb_55%,#fff8ef_100%)] p-4 sm:p-6">
+    <div className="min-h-screen w-full bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.14),transparent_24%),linear-gradient(180deg,#eef3fb_0%,#f7fbff_48%,#fffaf1_100%)] p-4 sm:p-6">
       <div className="w-full space-y-5">
     
 
-        <div className="rounded-[28px] border border-white/70 bg-white/80 p-4 shadow-[0_15px_45px_rgba(15,23,42,0.08)] backdrop-blur">
+        <div className="rounded-[28px] border border-white/70 bg-white/82 p-4 shadow-[0_15px_45px_rgba(15,23,42,0.08)] backdrop-blur">
           <BookingSteps />
         </div>
 

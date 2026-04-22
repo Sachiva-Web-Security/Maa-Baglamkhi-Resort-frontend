@@ -1065,15 +1065,15 @@ function InventoryHeaderStrip({
   setActiveSection,
 }) {
   const overviewCards = [
-    { key: "total", label: "Total Items", value: summaryMetrics.totalItems, icon: FaWarehouse, accent: "from-sky-50 to-blue-50", iconTone: "bg-sky-100 text-sky-600", valueTone: "text-slate-950", meta: "+12%" },
-    { key: "value", label: "Stock Value", value: formatCurrency(summaryMetrics.totalStockValue), icon: FaChartBar, accent: "from-violet-50 to-indigo-50", iconTone: "bg-violet-100 text-violet-600", valueTone: "text-slate-950", meta: "Live backend sync" },
-    { key: "low", label: "Low Stock", value: `${summaryMetrics.lowStockCount} Items`, icon: FaExclamationTriangle, accent: "from-amber-50 to-orange-50", iconTone: "bg-amber-100 text-amber-600", valueTone: "text-orange-600", meta: "Needs reorder" },
-    { key: "expired", label: "Expired", value: `${summaryMetrics.expiredCount} Items`, icon: FaCalendarAlt, accent: "from-rose-50 to-red-50", iconTone: "bg-rose-100 text-rose-600", valueTone: "text-rose-600", meta: "Expiry alerts" },
+    { key: "total", label: "Total Items", value: summaryMetrics.totalItems, icon: FaWarehouse, iconTone: "bg-sky-100 text-sky-700", valueTone: "text-slate-950", meta: "+12%" },
+    { key: "value", label: "Stock Value", value: formatCurrency(summaryMetrics.totalStockValue), icon: FaChartBar, iconTone: "bg-violet-100 text-violet-700", valueTone: "text-slate-950", meta: "Live backend sync" },
+    { key: "low", label: "Low Stock", value: `${summaryMetrics.lowStockCount} Items`, icon: FaExclamationTriangle, iconTone: "bg-amber-100 text-amber-700", valueTone: "text-orange-600", meta: "Needs reorder" },
+    { key: "expired", label: "Expired", value: `${summaryMetrics.expiredCount} Items`, icon: FaCalendarAlt, iconTone: "bg-rose-100 text-rose-700", valueTone: "text-rose-600", meta: "Expiry alerts" },
   ];
 
   return (
-    <section className="mb-5 overflow-hidden rounded-[28px] border border-[#c7cbff] bg-white p-2 shadow-[0_22px_50px_rgba(15,23,42,0.1)]">
-      <div className="rounded-[22px] bg-[linear-gradient(90deg,#17315c_0%,#224f94_60%,#2d67cb_100%)] px-4 py-3 text-white">
+    <section className="mb-5 overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,#07111f_0%,#0b1728_52%,#09101b_100%)] p-2 shadow-[0_22px_50px_rgba(2,8,23,0.24)]">
+      <div className="rounded-[22px] bg-[linear-gradient(135deg,rgba(13,36,62,0.92)_0%,rgba(18,49,86,0.94)_60%,rgba(12,30,52,0.96)_100%)] px-4 py-3 text-white">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex min-w-0 items-center gap-3">
             <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/10">
@@ -1081,7 +1081,7 @@ function InventoryHeaderStrip({
             </span>
             <div className="min-w-0">
               <div className="font-bold text-white text-[20px] leading-[1.2] sm:text-[32px]">Inventory Management</div>
-              <div className="inventory-body-text text-blue-100/85">{activeGroupLabel} workspace with live stock overview</div>
+              <div className="inventory-body-text text-slate-300/85">{activeGroupLabel} workspace with live stock overview</div>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -1095,7 +1095,7 @@ function InventoryHeaderStrip({
                     setOpenNavGroup(group.label);
                     setActiveSection(group.ids[0]);
                   }}
-                  className={`rounded-full px-5 py-2.5 text-[14px] font-medium transition ${active ? "bg-white text-slate-950 shadow-[0_10px_30px_rgba(15,23,42,0.2)]" : "bg-white/8 text-blue-100 hover:bg-white/14"}`}
+                  className={`rounded-full px-5 py-2.5 text-[14px] font-medium transition ${active ? "bg-white text-slate-950 shadow-[0_10px_30px_rgba(15,23,42,0.2)]" : "bg-white/10 text-slate-200 hover:bg-white/18"}`}
                 >
                   {group.label}
                 </button>
@@ -1109,7 +1109,7 @@ function InventoryHeaderStrip({
           {overviewCards.map((card) => {
             const Icon = card.icon;
             return (
-              <div key={card.key} className="rounded-[22px] border border-white/10 bg-white/95 p-4 shadow-[0_14px_26px_rgba(15,23,42,0.10)]">
+              <div key={card.key} className="rounded-[22px] border border-white/10 bg-white/92 p-4 shadow-[0_14px_26px_rgba(2,8,23,0.16)]">
                 <div className="flex items-start justify-between gap-3">
                   <span className={`inline-flex h-[70px] w-[70px] items-center justify-center rounded-[24px] ${card.iconTone}`}>
                     <Icon size={30} />
