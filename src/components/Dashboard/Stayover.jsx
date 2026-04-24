@@ -911,9 +911,9 @@ const Stayover = () => {
                   Refreshing live booking data...
                 </div>
               ) : null}
-              <div className="mt-6">
-                <div className="min-w-[1260px] overflow-hidden rounded-[24px] border border-slate-200 bg-white">
-                  <div className="grid grid-cols-[220px_repeat(7,minmax(0,1fr))]">
+              <div className="mt-6 overflow-x-auto" style={{ WebkitOverflowScrolling: "touch" }}>
+                <div className="overflow-hidden rounded-[24px] border border-slate-200 bg-white" style={{ minWidth: "1260px" }}>
+                  <div className="grid" style={{ gridTemplateColumns: "220px repeat(7, minmax(0, 1fr))" }}>
                     <div className="sticky left-0 z-30 border-r border-b border-slate-200 bg-slate-700 px-4 py-3 text-sm font-bold uppercase tracking-[0.18em] text-white">
                       Rooms
                     </div>
@@ -970,7 +970,7 @@ const Stayover = () => {
                   </div>
 
                   <div className="max-h-[52vh] overflow-y-auto">
-                    <div className="grid grid-cols-[220px_repeat(7,minmax(0,1fr))]">
+                    <div className="grid" style={{ gridTemplateColumns: "220px repeat(7, minmax(0, 1fr))" }}>
                       {sortedRooms.map((room) => (
                         <React.Fragment key={room.id}>
                     <div className="sticky left-0 z-20 border-r border-b border-slate-200 bg-slate-50 px-4 py-3">

@@ -6,19 +6,19 @@ const DashboardFooter = ({ contentOffset = 0 }) => {
   return (
     <footer
       id="dashboard-footer"
-      className="relative z-50 mt-8 overflow-hidden border-t border-white/10 bg-[linear-gradient(180deg,#020617_0%,#07101f_48%,#030712_100%)] px-5 py-4 shadow-[0_-20px_60px_rgba(2,6,23,0.4)] sm:px-6"
+      className="relative z-50 overflow-hidden border-t border-white/10 bg-[linear-gradient(180deg,#020617_0%,#07101f_48%,#030712_100%)] px-5 py-3 shadow-[0_-12px_30px_rgba(2,6,23,0.3)] sm:px-6"
       style={{
         marginLeft: contentOffset ? `${contentOffset}px` : 0,
         width: contentOffset ? `calc(100% - ${contentOffset}px)` : "100%",
       }}
     >
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(20,184,166,0.18),transparent_26%),radial-gradient(circle_at_top_right,rgba(59,130,246,0.18),transparent_24%)]" />
-      <div className="relative mx-auto flex min-h-18.5 w-full max-w-7xl flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-        <div className="w-full min-w-0">
-          <p className="text-sm font-medium leading-6 text-slate-200 sm:text-base lg:text-lg">
-            Website secured and maintained by Sachiva Web & Security
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(20,184,166,0.12),transparent_26%),radial-gradient(circle_at_top_right,rgba(59,130,246,0.12),transparent_24%)]" />
+      <div className="relative mx-auto flex w-full max-w-7xl items-center justify-center">
+        <div className="text-center">
+          <p className="text-xs font-medium leading-5 text-slate-400 sm:text-sm">
+            Website secured and maintained by Sachiva Web &amp; Security
             <br />
-            &copy; {currentYear} All rights reserved for Sachiva Web & Security
+            &copy; {currentYear} All rights reserved for Sachiva Web &amp; Security
           </p>
         </div>
 

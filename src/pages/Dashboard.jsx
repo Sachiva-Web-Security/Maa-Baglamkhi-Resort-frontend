@@ -989,7 +989,7 @@ const Dashboard = () => {
   };
 
   const renderExpandedBoard = (day) => (
-    <div className="grid grid-cols-[150px_minmax(230px,1.25fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)] border-t border-sky-400 bg-[linear-gradient(180deg,rgba(255,255,255,0.32)_0%,rgba(255,255,255,0.16)_100%)]">
+    <div className="grid border-t border-sky-400 bg-[linear-gradient(180deg,rgba(255,255,255,0.32)_0%,rgba(255,255,255,0.16)_100%)]" style={{ gridTemplateColumns: "150px minmax(230px,1.25fr) minmax(220px,1.15fr) minmax(220px,1.15fr) minmax(220px,1.15fr) minmax(220px,1.15fr) minmax(220px,1.15fr)" }}>
       <div className="border-r border-sky-400 bg-[linear-gradient(180deg,rgba(224,242,254,0.55)_0%,rgba(240,249,255,0.2)_100%)]" />
       {boardOrder.map((key) => {
         const meta = BOARD_BUCKET_META[key];
@@ -1444,8 +1444,8 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              <div className="mt-5 overflow-x-auto">
-                <div className="min-w-[1700px] space-y-3">
+              <div className="mt-5 overflow-x-auto" style={{ WebkitOverflowScrolling: "touch" }}>
+                <div className="space-y-3" style={{ minWidth: "1700px" }}>
                   {stayOverview.map((day) => {
                     const isExpanded = expandedBoardDay === day.date;
 
@@ -1461,7 +1461,7 @@ const Dashboard = () => {
                         <button
                           type="button"
                           onClick={() => toggleBoardDay(day.date)}
-                          className="grid w-full grid-cols-[150px_minmax(230px,1.25fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)] text-left"
+                          className="grid w-full text-left" style={{ gridTemplateColumns: "150px minmax(230px,1.25fr) minmax(220px,1.15fr) minmax(220px,1.15fr) minmax(220px,1.15fr) minmax(220px,1.15fr) minmax(220px,1.15fr)" }}
                         >
                           <div
                             className={`flex items-center justify-between gap-3 border-r px-4 py-4 text-lg font-bold ${
