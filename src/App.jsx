@@ -140,7 +140,7 @@ function Layout({ children, setIsAuthenticated }) {
         setIsAuthenticated={setIsAuthenticated}
       />
       <div
-        className="flex min-h-screen flex-col transition-all duration-300"
+        className="layout-main-column flex min-h-screen flex-col transition-all duration-300"
         style={{
           marginLeft: isMobile ? 0 : sidebarWidth,
           width: isMobile ? "100%" : `calc(100% - ${sidebarWidth}px)`,
@@ -160,8 +160,8 @@ function Layout({ children, setIsAuthenticated }) {
         >
           <div className="p-3 sm:p-4 lg:p-5">{children}</div>
         </div>
+        <DashboardFooter />
       </div>
-      <DashboardFooter contentOffset={isMobile ? 0 : sidebarWidth} />
     </div>
   );
 }

@@ -187,7 +187,8 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
           ${isMobile ? "w-[min(82vw,280px)]" : sidebarOpen ? "w-[250px]" : "w-[88px]"}
         `}
         style={{
-          height: isMobile ? "100dvh" : undefined,
+          top: isMobile ? `${HEADER_HEIGHT}px` : undefined,
+          height: isMobile ? `calc(100dvh - ${HEADER_HEIGHT}px)` : undefined,
           transform: isMobile && !sidebarOpen ? "translateX(-100%)" : "translateX(0)",
         }}
       >
@@ -210,8 +211,8 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
         `}</style>
 
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.22),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(14,165,233,0.14),transparent_30%)]" />
-        <div className="relative flex h-full min-h-0 flex-col px-3 pb-1 pt-3">
-          <div className={`-mx-3 shrink-0 border-b border-white/10 px-3 ${showLabels ? "pb-12" : "pb-12"}`}>
+        <div className="relative flex h-full min-h-0 flex-col px-3 pb-0 pt-3">
+          <div className="-mx-3 shrink-0 border-b border-white/10 px-3 pb-3">
             <button
               type="button"
               aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
@@ -242,7 +243,8 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
             </button>
           </div>
 
-          <nav className={`sidebar-scroll mt-8 min-h-0 flex-1 space-y-3 overflow-y-auto font-bold ${showLabels ? "px-1 py-0 pr-1.5" : "px-0 py-0 pr-1"}`}>
+          <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+          <nav className={`sidebar-scroll mt-4 min-h-0 flex-1 space-y-3 overflow-y-auto font-bold pb-16 ${showLabels ? "px-1 py-0 pr-1.5" : "px-0 py-0 pr-1"}`}>
             {menuItems.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.path);
@@ -302,7 +304,7 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
             })}
           </nav>
 
-          <div className={`mt-auto border-t border-white/10 pt-2 ${showLabels ? "px-1 pb-0" : "flex justify-center px-0 pb-0"}`}>
+          <div className={`absolute bottom-0 left-0 right-0 z-10 border-t border-white/10 bg-[#09101b] pb-2 pt-2 ${showLabels ? "px-3" : "flex justify-center px-2"}`}>
             <button
               type="button"
               onClick={handleLogout}
@@ -340,6 +342,7 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
                 </div>
               ) : null}
             </button>
+          </div>
           </div>
         </div>
       </div>

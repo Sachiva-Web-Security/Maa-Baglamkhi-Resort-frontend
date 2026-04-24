@@ -352,6 +352,7 @@ textarea {
 @media (min-width: 1024px) {
   .desktop-scale-content {
     zoom: var(--desktop-ui-scale);
+    min-height: calc(100vh / var(--desktop-ui-scale));
   }
 
   .auth-route-content {
@@ -360,6 +361,10 @@ textarea {
 
   .desktop-scale-sidebar {
     height: calc((100vh - 70px) / var(--desktop-ui-scale)) !important;
+  }
+
+  .layout-main-column {
+    min-height: calc(100vh / var(--desktop-ui-scale));
   }
 }
 
