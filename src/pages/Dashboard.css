@@ -2,7 +2,10 @@
 
 .dashboard {
   /* Base responsive padding using media queries for Tailwind compatibility */
-  padding: 20px 30px;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  padding: clamp(12px, 3vw, 20px) clamp(10px, 4vw, 30px);
   background-color: #f3f4f6;
   min-height: calc(100vh - 70px);
 }
@@ -22,6 +25,8 @@
 
 .chart-item {
   min-height: 400px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 /* Large screens */
@@ -120,7 +125,8 @@
   }
 
   .Toastify__toast {
+    min-height: auto !important;
     font-size: 16px !important;
-    padding: 30px !important;
+    padding: 20px !important;
   }
 }

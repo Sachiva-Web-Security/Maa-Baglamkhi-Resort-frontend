@@ -12,10 +12,10 @@ const TopBar = () => {
     };
 
     return (
-        <div className="w-full bg-slate-900/80 backdrop-blur-md shadow-lg rounded-2xl px-5 py-3 flex items-center justify-between border border-slate-700">
+        <div className="flex w-full flex-col gap-3 rounded-2xl border border-slate-700 bg-slate-900/80 px-3 py-3 shadow-lg backdrop-blur-md sm:px-5 md:flex-row md:items-center md:justify-between">
 
             {/* Search */}
-            <div className="flex items-center bg-slate-800 px-4 py-2 rounded-xl w-[320px] focus-within:ring-2 ring-blue-500 transition-all">
+            <div className="flex w-full min-w-0 items-center rounded-xl bg-slate-800 px-4 py-2 transition-all focus-within:ring-2 focus-within:ring-blue-500 md:max-w-[320px]">
 
                 <FiSearch className="text-gray-400 text-lg mr-3" />
 
@@ -30,7 +30,7 @@ const TopBar = () => {
             </div>
 
             {/* Icons */}
-            <div className="flex items-center gap-6 text-white text-xl">
+            <div className="flex items-center justify-end gap-3 text-xl text-white sm:gap-6">
 
                 {/* Notifications */}
                 <div className="relative group cursor-pointer">

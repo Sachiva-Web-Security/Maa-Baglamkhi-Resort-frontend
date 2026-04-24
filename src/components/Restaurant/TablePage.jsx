@@ -527,7 +527,123 @@ if (exists) {
             </div>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="md:hidden">
+            <div className="space-y-3 p-3">
+              {paginatedTableRows.map(({ table, status, occupied, snapshot, itemCount, showPayNow }) => {
+                const assignedWaiterName = getDisplayWaiterName(snapshot.waiterName);
+                const tableOwnedByCurrentWaiter =
+                  !snapshot.tokenId ||
+                  !snapshot.waiterName ||
+                  namesMatch(snapshot.waiterName, actor.name);
+                const waiterLocked = isWaiter && !tableOwnedByCurrentWaiter;
+
+                return (
+                  <div key={table.id} className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="text-lg font-black text-[#165DFF]">T{table.name}</div>
+                        <div className="text-xs font-medium text-slate-500">ID #{table.id}</div>
+                      </div>
+                      <span
+                        className={`inline-flex rounded-full border px-3 py-1 text-xs font-bold ${
+                          occupied
+                            ? "border-amber-200 bg-amber-50 text-amber-700"
+                            : "border-cyan-200 bg-cyan-50 text-cyan-700"
+                        }`}
+                      >
+                        {status}
+                      </span>
+                    </div>
+
+                    <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                      <div className="rounded-xl bg-slate-50 px-3 py-2">
+                        <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">Section</div>
+                        <div className="mt-1 font-medium text-slate-700">
+                          {[table.floorName, table.sectionName].filter(Boolean).join(" / ") || "Unmapped section"}
+                        </div>
+                      </div>
+                      <div className="rounded-xl bg-slate-50 px-3 py-2">
+                        <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">Booking</div>
+                        <div className="mt-1 truncate font-medium text-slate-700">{snapshot.tokenCode || "No Active Booking"}</div>
+                      </div>
+                      <div className="rounded-xl bg-slate-50 px-3 py-2">
+                        <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">Persons</div>
+                        <div className="mt-1 font-medium text-slate-700">{table.seatCount || 1} guests</div>
+                      </div>
+                      <div className="rounded-xl bg-slate-50 px-3 py-2">
+                        <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">Waiter</div>
+                        <div className="mt-1 truncate font-medium text-slate-700">{assignedWaiterName}</div>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <button
+                        className="rounded-xl bg-[#1f2937] px-3 py-2 text-sm font-bold text-white"
+                        disabled={waiterLocked}
+                        onClick={() => {
+                          setSelectedTable(table.name);
+                          navigate(`/restaurant/token/${table.name}`);
+                        }}
+                      >
+                        {waiterLocked ? "Assigned" : "+ Booking"}
+                      </button>
+
+                      {occupied && itemCount ? (
+                        <button
+                          className="rounded-xl bg-[#0b7d79] px-3 py-2 text-sm font-bold text-white"
+                          disabled={waiterLocked}
+                          onClick={() => openCreateInvoice(table.name)}
+                        >
+                          Invoice
+                        </button>
+                      ) : null}
+
+                      {showPayNow ? (
+                        <button
+                          className="rounded-xl bg-[#f59e0b] px-3 py-2 text-sm font-bold text-white"
+                          disabled={waiterLocked}
+                          onClick={() => openPayNow(table.name)}
+                        >
+                          Pay
+                        </button>
+                      ) : null}
+
+                      <button
+                        className="rounded-xl bg-[#ff8a00] px-3 py-2 text-sm font-bold text-white"
+                        disabled={waiterLocked}
+                        onClick={() => {
+                          setSelectedTable(table.name);
+                          navigate(`/restaurant/token-items/${table.name}`);
+                        }}
+                      >
+                        Items
+                      </button>
+
+                      {!isWaiter ? (
+                        <button
+                          type="button"
+                          onClick={() => setRemoveDialogTable(table)}
+                          disabled={removingTableId === table.id}
+                          className="rounded-xl bg-[#b42318] px-3 py-2 text-sm font-bold text-white disabled:opacity-60"
+                        >
+                          {removingTableId === table.id ? "Removing..." : "Remove"}
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                );
+              })}
+
+              {!paginatedTableRows.length ? (
+                <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center text-sm font-medium text-slate-500">
+                  No tables match your search.
+                </div>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="hidden md:block">
+            <div className="overflow-x-auto">
             <table className="min-w-[980px] w-full border-collapse">
               <thead className="bg-white">
                 <tr className="text-left">
@@ -677,6 +793,7 @@ if (exists) {
                 ) : null}
               </tbody>
             </table>
+            </div>
           </div>
 
           <div className="flex flex-col gap-3 border-t border-slate-200 px-6 py-4 lg:flex-row lg:items-center lg:justify-between">

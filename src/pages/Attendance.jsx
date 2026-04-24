@@ -124,7 +124,7 @@ const Attendance = () => {
   /* ================= UI ================= */
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6 p-4 sm:p-6">
 
       <FiltersSection
         date={date}
@@ -139,7 +139,7 @@ const Attendance = () => {
       />
 
       {/* Summary */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-5">
         <SummaryCard label="Total" value={totalStaff} icon={FaUsers} />
         <SummaryCard label="Present" value={presentStaff} color="green" icon={FaUserCheck} />
         <SummaryCard label="Absent" value={absentStaff} color="red" icon={FaClipboardCheck} />
@@ -148,8 +148,9 @@ const Attendance = () => {
       </div>
 
       {/* TABLE */}
-      <div className="bg-white rounded-xl shadow overflow-hidden">
-        <table className="w-full text-sm">
+      <div className="overflow-hidden rounded-xl bg-white shadow">
+        <div className="overflow-x-auto">
+        <table className="min-w-[760px] w-full text-sm">
           <thead className="bg-gray-100">
             <tr>
               <th className="p-3">Employee</th>
@@ -176,6 +177,7 @@ const Attendance = () => {
             )}
           </tbody>
         </table>
+        </div>
 
         {/* ✅ PAGINATION UI */}
         <div className="flex flex-wrap items-center justify-center gap-2 border-t border-slate-100 bg-slate-50/60 p-4">
@@ -213,8 +215,8 @@ const Attendance = () => {
 
       {/* MODAL */}
       {showManualEntry && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/40">
-          <div className="bg-white p-6 rounded-xl w-full max-w-lg">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="max-h-[92dvh] w-full max-w-lg overflow-y-auto rounded-xl bg-white p-4 sm:p-6">
             <AttendanceForm
               onSubmit={handleManualSubmit}
               onCancel={() => setShowManualEntry(false)}

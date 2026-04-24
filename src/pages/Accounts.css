@@ -1,6 +1,9 @@
 /* Dark theme for Accounts page - Responsive with Tailwind */
 .accounts-page {
-  padding: 20px 30px;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  padding: clamp(10px, 3vw, 20px) clamp(10px, 4vw, 30px);
   background: linear-gradient(180deg, #061226 0%, #071226 40%, #041019 100%);
   min-height: 100vh;
 }
@@ -20,6 +23,7 @@
 }
 
 .accounts-action-btn {
+  min-width: 0;
   border: none;
   border-radius: 10px;
   padding: 10px 14px;
@@ -83,14 +87,16 @@
 }
 
 .accounts-table-wrap {
+  max-width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .accounts-table {
-  width: 100%;
+  width: max-content;
   border-collapse: collapse;
   text-align: left;
-  min-width: 600px;
+  min-width: 100%;
 }
 
 .accounts-thead {
@@ -181,11 +187,11 @@
   }
 
   .accounts-summary-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
   }
 
   .accounts-reports-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
   }
 
   .accounts-title {
@@ -239,7 +245,7 @@
 
   .accounts-table {
     font-size: 12px;
-    min-width: 500px;
+    min-width: max-content;
   }
 
   .accounts-th {
@@ -319,7 +325,7 @@
 
   .accounts-table {
     font-size: 11px;
-    min-width: 450px;
+    min-width: max-content;
   }
 
   .accounts-th {

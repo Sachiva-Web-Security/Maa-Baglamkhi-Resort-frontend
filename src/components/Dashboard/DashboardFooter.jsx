@@ -13,20 +13,20 @@ const DashboardFooter = ({ contentOffset = 0 }) => {
       }}
     >
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(20,184,166,0.18),transparent_26%),radial-gradient(circle_at_top_right,rgba(59,130,246,0.18),transparent_24%)]" />
-      <div className="relative mx-auto flex min-h-[74px] w-full max-w-7xl items-center justify-between gap-4">
-        <div>
-          <p className=" ml-14 text-xl font-semibold text-slate-200">
+      <div className="relative mx-auto flex min-h-18.5 w-full max-w-7xl flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+        <div className="w-full min-w-0">
+          <p className="text-sm font-medium leading-6 text-slate-200 sm:text-base lg:text-lg">
             Website secured and maintained by Sachiva Web & Security
             <br />
             &copy; {currentYear} All rights reserved for Sachiva Web & Security
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 self-end sm:self-auto">
           {dashboardFooterHighlights.map((item) => (
             <span
               key={item}
-              className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-200 shadow-[0_10px_25px_rgba(0,0,0,0.22)] backdrop-blur-sm"
+              className="rounded-full border border-white/10 bg-white/6 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-200 shadow-[0_10px_25px_rgba(0,0,0,0.22)] backdrop-blur-sm"
             >
               {item}
             </span>

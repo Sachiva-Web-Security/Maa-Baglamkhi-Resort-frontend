@@ -1741,7 +1741,53 @@ const Accounts = () => {
         </section>
 
         <section className="rounded-[26px] border border-white/60 bg-white/82 shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
-          <div className="overflow-x-auto">
+          <div className="grid gap-3 p-3 md:hidden">
+            {paginatedTransactionRecords.map((r) => (
+              <article
+                key={`mobile-transaction-${r.id}`}
+                className="rounded-[20px] border border-slate-200 bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.07)]"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">{r.date}</p>
+                    <h3 className="mt-2 text-base font-bold leading-6 text-slate-900">{r.description}</h3>
+                  </div>
+                  <span className={`inline-flex shrink-0 rounded-full border px-3 py-1 text-xs font-bold ${r.type === "Income" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-rose-200 bg-rose-50 text-rose-700"}`}>
+                    {r.type}
+                  </span>
+                </div>
+
+                <div className="mt-4 grid gap-3 rounded-2xl bg-slate-50 px-4 py-3 text-sm">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="font-semibold text-slate-500">Amount</span>
+                    <span className="font-black text-slate-900">{formatINR(r.amount)}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="font-semibold text-slate-500">Payment Mode</span>
+                    <span className="font-semibold text-slate-700">{r.paymentMode}</span>
+                  </div>
+                </div>
+
+                <button
+                  className="mt-4 w-full rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700"
+                  onClick={() => {
+                    setSelectedRecord(r);
+                    setShowView(true);
+                  }}
+                >
+                  View
+                </button>
+              </article>
+            ))}
+
+            {!filteredRecords.length ? (
+              <div className="rounded-[20px] border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-sm font-semibold text-slate-500">
+                No transaction records match the selected payment mode.
+              </div>
+            ) : null}
+          </div>
+
+          <div className="hidden overflow-x-auto md:block">
             <table className="min-w-full text-left">
               <thead className="bg-slate-50 text-base uppercase tracking-[0.18em] text-slate-500">
                 <tr>

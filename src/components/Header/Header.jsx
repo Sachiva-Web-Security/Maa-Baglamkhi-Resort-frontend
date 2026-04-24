@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { createPortal } from "react-dom";
 import {
   FaBell,
+  FaBars,
   FaChevronDown,
   FaCog,
   FaSearch,
@@ -13,12 +15,24 @@ import {
 import { getDashboardNotifications } from "../Dashboard/dashboardNotifications";
 import { getDashboardSearchResults } from "../../utils/dashboardSearch";
 
-const Header = ({ setIsAuthenticated, sidebarOffset = 0, isMobile = false }) => {
+const Header = ({
+  setIsAuthenticated,
+  sidebarOffset = 0,
+  isMobile = false,
+  sidebarOpen = false,
+  setSidebarOpen,
+}) => {
   const navigate = useNavigate();
   const headerActionsRef = useRef(null);
+  const notificationButtonRef = useRef(null);
+  const notificationMenuRef = useRef(null);
+  const profileButtonRef = useRef(null);
+  const profileMenuRef = useRef(null);
   const [notifications, setNotifications] = useState([]);
   const [notificationMenuOpen, setNotificationMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [notificationMenuStyle, setNotificationMenuStyle] = useState({});
+  const [profileMenuStyle, setProfileMenuStyle] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
@@ -47,7 +61,11 @@ const Header = ({ setIsAuthenticated, sidebarOffset = 0, isMobile = false }) => 
 
   useEffect(() => {
     const handleOutsideClick = (event) => {
-      if (headerActionsRef.current && !headerActionsRef.current.contains(event.target)) {
+      const clickedInsideHeader = headerActionsRef.current?.contains(event.target);
+      const clickedInsideNotificationMenu = notificationMenuRef.current?.contains(event.target);
+      const clickedInsideProfileMenu = profileMenuRef.current?.contains(event.target);
+
+      if (!clickedInsideHeader && !clickedInsideNotificationMenu && !clickedInsideProfileMenu) {
         setNotificationMenuOpen(false);
         setProfileMenuOpen(false);
       }
@@ -68,6 +86,68 @@ const Header = ({ setIsAuthenticated, sidebarOffset = 0, isMobile = false }) => 
       document.removeEventListener("keydown", handleEscape);
     };
   }, []);
+
+  useEffect(() => {
+    if (!notificationMenuOpen) return;
+
+    const updateNotificationMenuPosition = () => {
+      const bellRect = notificationButtonRef.current?.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const width = Math.min(520, Math.max(280, viewportWidth - 16));
+      const top = Math.min((bellRect?.bottom || 72) + 10, viewportHeight - 120);
+      const rawLeft = (bellRect?.right || viewportWidth - 8) - width;
+      const left = Math.max(8, Math.min(rawLeft, viewportWidth - width - 8));
+
+      setNotificationMenuStyle({
+        position: "fixed",
+        top: `${top}px`,
+        left: `${left}px`,
+        width: `${width}px`,
+        zIndex: 9999,
+      });
+    };
+
+    updateNotificationMenuPosition();
+    window.addEventListener("resize", updateNotificationMenuPosition);
+    window.addEventListener("scroll", updateNotificationMenuPosition, true);
+
+    return () => {
+      window.removeEventListener("resize", updateNotificationMenuPosition);
+      window.removeEventListener("scroll", updateNotificationMenuPosition, true);
+    };
+  }, [notificationMenuOpen]);
+
+  useEffect(() => {
+    if (!profileMenuOpen) return;
+
+    const updateProfileMenuPosition = () => {
+      const buttonRect = profileButtonRef.current?.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const width = Math.min(280, Math.max(220, viewportWidth - 16));
+      const top = Math.min((buttonRect?.bottom || 72) + 10, viewportHeight - 120);
+      const rawLeft = (buttonRect?.right || viewportWidth - 8) - width;
+      const left = Math.max(8, Math.min(rawLeft, viewportWidth - width - 8));
+
+      setProfileMenuStyle({
+        position: "fixed",
+        top: `${top}px`,
+        left: `${left}px`,
+        width: `${width}px`,
+        zIndex: 9999,
+      });
+    };
+
+    updateProfileMenuPosition();
+    window.addEventListener("resize", updateProfileMenuPosition);
+    window.addEventListener("scroll", updateProfileMenuPosition, true);
+
+    return () => {
+      window.removeEventListener("resize", updateProfileMenuPosition);
+      window.removeEventListener("scroll", updateProfileMenuPosition, true);
+    };
+  }, [profileMenuOpen]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -99,6 +179,14 @@ const Header = ({ setIsAuthenticated, sidebarOffset = 0, isMobile = false }) => 
 
   const unreadCount = notifications.length;
   const searchResults = useMemo(() => getDashboardSearchResults(searchQuery), [searchQuery]);
+  const formatNotificationTime = (createdAt) => {
+    if (!createdAt) return "--:--";
+
+    return new Date(createdAt).toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
   const openSearchTarget = (target) => {
     setSearchQuery("");
@@ -115,18 +203,30 @@ const Header = ({ setIsAuthenticated, sidebarOffset = 0, isMobile = false }) => 
         width: isMobile ? "100%" : `calc(100% - ${sidebarOffset}px)`,
       }}
     >
-      <div className="flex min-w-0 flex-1 items-center gap-4 lg:gap-6">
+      <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4 lg:gap-6">
+        {isMobile ? (
+          <button
+            type="button"
+            aria-label={sidebarOpen ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={sidebarOpen}
+            onClick={() => setSidebarOpen?.((open) => !open)}
+            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-slate-200/80 bg-white/95 text-slate-700 shadow-[0_10px_24px_rgba(15,23,42,0.08)] transition hover:border-sky-200 hover:text-sky-700 focus:outline-none focus:ring-4 focus:ring-sky-100 md:hidden"
+          >
+            <FaBars className="text-lg" />
+          </button>
+        ) : null}
+
         <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-slate-900 shadow-lg ring-1 ring-slate-900/10">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-slate-900 shadow-lg ring-1 ring-slate-900/10 sm:h-12 sm:w-12">
             <img
               className="h-full w-full object-cover"
               src="https://www.maabaglamukhinalkehda.com/assets/images/maa2.jpg"
               alt="Logo"
             />
           </div>
-          <div className="min-w-0 leading-tight">
+          <div className="hidden min-w-0 leading-tight min-[430px]:block">
             
-            <h1 className="truncate text-[19px] font-bold text-slate-900 sm:text-[20px]">
+            <h1 className="max-w-[34vw] truncate text-[15px] font-bold text-slate-900 sm:max-w-none sm:text-[20px]">
               Maa Baglamukhi Resort
             </h1>
           </div>
@@ -198,7 +298,7 @@ const Header = ({ setIsAuthenticated, sidebarOffset = 0, isMobile = false }) => 
         </div>
       </div>
 
-      <div className="ml-4 flex items-center gap-3 sm:gap-4" ref={headerActionsRef}>
+      <div className="ml-2 flex shrink-0 items-center gap-2 sm:ml-4 sm:gap-4" ref={headerActionsRef}>
         <div className="relative md:hidden">
           <label className="group relative block">
             <span className="pointer-events-none absolute inset-y-0 left-0 z-[1] flex items-center pl-4 text-slate-400 transition group-focus-within:text-sky-600">
@@ -216,7 +316,7 @@ const Header = ({ setIsAuthenticated, sidebarOffset = 0, isMobile = false }) => 
                 }
               }}
               placeholder="Search..."
-              className="h-11 w-[150px] rounded-full border border-slate-200/90 bg-white/96 pl-10 pr-10 text-[14px] font-semibold text-slate-700 shadow-[0_10px_24px_rgba(15,23,42,0.05)] outline-none transition placeholder:text-slate-400 focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
+              className="h-11 w-[92px] rounded-full border border-slate-200/90 bg-white/96 pl-10 pr-9 text-[13px] font-semibold text-slate-700 shadow-[0_10px_24px_rgba(15,23,42,0.05)] outline-none transition placeholder:text-slate-400 focus:border-sky-300 focus:ring-4 focus:ring-sky-100 min-[430px]:w-[120px] sm:w-[150px] sm:pr-10 sm:text-[14px]"
             />
             {searchQuery ? (
               <button
@@ -264,17 +364,18 @@ const Header = ({ setIsAuthenticated, sidebarOffset = 0, isMobile = false }) => 
 
         <div className="relative">
           <button
+            ref={notificationButtonRef}
             type="button"
             onClick={() => {
               setNotificationMenuOpen((open) => !open);
               setProfileMenuOpen(false);
             }}
-            className="group relative inline-flex h-14 w-14 items-center justify-center rounded-[20px] border border-slate-200/80 bg-white/95 text-slate-600 shadow-[0_12px_28px_rgba(15,23,42,0.08)] transition-all duration-200 hover:-translate-y-0.5 hover:border-sky-200 hover:text-sky-700 hover:shadow-[0_16px_36px_rgba(14,165,233,0.16)] focus:outline-none focus:ring-4 focus:ring-sky-100"
+            className="group relative inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200/80 bg-white/95 text-slate-600 shadow-[0_12px_28px_rgba(15,23,42,0.08)] transition-all duration-200 hover:-translate-y-0.5 hover:border-sky-200 hover:text-sky-700 hover:shadow-[0_16px_36px_rgba(14,165,233,0.16)] focus:outline-none focus:ring-4 focus:ring-sky-100 sm:h-14 sm:w-14 sm:rounded-[20px]"
             aria-haspopup="menu"
             aria-expanded={notificationMenuOpen}
             aria-label="Open notifications"
           >
-            <FaBell className="text-[24px]" />
+            <FaBell className="text-[19px] sm:text-[24px]" />
             {unreadCount ? (
               <span className="absolute right-2 top-2 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold leading-none text-white shadow-[0_8px_18px_rgba(244,63,94,0.35)]">
                 {unreadCount > 9 ? "9+" : unreadCount}
@@ -284,71 +385,77 @@ const Header = ({ setIsAuthenticated, sidebarOffset = 0, isMobile = false }) => 
             )}
           </button>
 
-          {notificationMenuOpen ? (
-            <div className="absolute right-0 top-[calc(100%+12px)] w-[min(94vw,520px)] overflow-hidden rounded-[30px] border border-white/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(249,247,255,0.94)_100%)] p-4 shadow-[0_24px_58px_rgba(15,23,42,0.14)] backdrop-blur-xl">
-              <div className="mb-4 flex items-center justify-between">
-                <div>
-                  <p className="text-[16px] font-semibold uppercase tracking-[0.26em] text-violet-500">
-                    Notifications
-                  </p>
-                  <h3 className="mt-1 text-2xl font-bold text-slate-900">Messages and updates</h3>
-                </div>
-                <span className="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-3 py-1 text-xl font-semibold text-violet-700">
-                  <FaBell />
-                  {unreadCount}
-                </span>
-              </div>
-
-              <div className="max-h-[360px] space-y-3 overflow-y-auto pr-1">
-                {notifications.length ? (
-                  notifications.map((item) => (
-                    <button
-                      type="button"
-                      key={item.id}
-                      onClick={() => handleNotificationClick(item)}
-                      className="w-full rounded-[18px] border border-slate-200 bg-white px-4 py-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-                      role="menuitem"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <div className="text-xl font-semibold text-slate-900">
-                            {item.title || "Notification"}
-                          </div>
-                          <div className="mt-1 text-[14px] leading-5 text-slate-500">
-                            {item.message || "New update available."}
-                          </div>
-                        </div>
-                        <div className="rounded-full bg-slate-50 px-2.5 py-1 text-[15px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-                          {new Date(item.createdAt || Date.now()).toLocaleTimeString("en-IN", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </div>
-                      </div>
-                    </button>
-                  ))
-                ) : (
-                  <div className="rounded-[18px] border border-dashed border-slate-200 bg-slate-50 px-4 py-5 text-sm text-slate-500">
-                    No notifications yet. Booking, cleaning aur messages yahan show honge.
+          {notificationMenuOpen && typeof document !== "undefined"
+            ? createPortal(
+                <div
+                  ref={notificationMenuRef}
+                  className="header-notification-menu origin-top-right overflow-hidden rounded-[22px] border border-white/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(249,247,255,0.94)_100%)] p-2.5 shadow-[0_24px_58px_rgba(15,23,42,0.14)] backdrop-blur-xl sm:rounded-[30px] sm:p-4"
+                  style={notificationMenuStyle}
+                >
+                  <div className="mb-4 flex items-center justify-between">
+                    <div>
+                      <p className="text-[12px] font-semibold uppercase tracking-[0.2em] text-violet-500 sm:text-[16px] sm:tracking-[0.26em]">
+                        Notifications
+                      </p>
+                      <h3 className="mt-1 text-lg font-bold text-slate-900 sm:text-2xl">Messages and updates</h3>
+                    </div>
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-violet-200 bg-violet-50 px-2.5 py-1 text-base font-semibold text-violet-700 sm:gap-2 sm:px-3 sm:text-xl" style={{ flexWrap: "nowrap" }}>
+                      <FaBell />
+                      {unreadCount}
+                    </span>
                   </div>
-                )}
-              </div>
-            </div>
-          ) : null}
+
+                  <div className="max-h-[360px] space-y-3 overflow-y-auto pr-1">
+                    {notifications.length ? (
+                      notifications.map((item) => (
+                        <button
+                          type="button"
+                          key={item.id}
+                          onClick={() => handleNotificationClick(item)}
+                          className="w-full rounded-[18px] border border-slate-200 bg-white px-3 py-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:px-4"
+                          style={{ overflowWrap: "normal", wordBreak: "normal" }}
+                          role="menuitem"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0 whitespace-normal" style={{ overflowWrap: "normal", wordBreak: "normal" }}>
+                              <div className="text-base font-semibold text-slate-900 sm:text-xl">
+                                {item.title || "Notification"}
+                              </div>
+                              <div className="mt-1 text-[13px] leading-5 text-slate-500 sm:text-[14px]">
+                                {item.message || "New update available."}
+                              </div>
+                            </div>
+                            <div className="shrink-0 rounded-full bg-slate-50 px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-400 sm:px-2.5 sm:text-[15px] sm:tracking-[0.16em]">
+                              {formatNotificationTime(item.createdAt)}
+                            </div>
+                          </div>
+                        </button>
+                      ))
+                    ) : (
+                      <div className="rounded-[18px] border border-dashed border-slate-200 bg-slate-50 px-4 py-5 text-sm text-slate-500">
+                        No notifications yet. Booking, cleaning aur messages yahan show honge.
+                      </div>
+                    )}
+                  </div>
+                </div>,
+                document.body,
+              )
+            : null}
         </div>
 
         <div className="relative">
           <button
+            ref={profileButtonRef}
             type="button"
             onClick={() => {
               setProfileMenuOpen((open) => !open);
               setNotificationMenuOpen(false);
             }}
-            className="group inline-flex items-center gap-3 rounded-[24px] border border-slate-200/80 bg-white/95 px-3 py-2.5 text-left shadow-[0_12px_28px_rgba(15,23,42,0.08)] transition-all duration-200 hover:-translate-y-0.5 hover:border-sky-200 hover:shadow-[0_16px_36px_rgba(14,165,233,0.16)] focus:outline-none focus:ring-4 focus:ring-sky-100"
+            className="group inline-flex items-center gap-2 rounded-2xl border border-slate-200/80 bg-white/95 px-2 py-2 text-left shadow-[0_12px_28px_rgba(15,23,42,0.08)] transition-all duration-200 hover:-translate-y-0.5 hover:border-sky-200 hover:shadow-[0_16px_36px_rgba(14,165,233,0.16)] focus:outline-none focus:ring-4 focus:ring-sky-100 sm:gap-3 sm:rounded-[24px] sm:px-3 sm:py-2.5"
             aria-haspopup="menu"
             aria-expanded={profileMenuOpen}
           >
-            <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-sky-500 via-cyan-500 to-blue-700 text-sm font-bold text-white shadow-[0_10px_24px_rgba(14,165,233,0.28)] ring-2 ring-white">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-sky-500 via-cyan-500 to-blue-700 text-sm font-bold text-white shadow-[0_10px_24px_rgba(14,165,233,0.28)] ring-2 ring-white sm:h-12 sm:w-12">
               {avatarUrl && !avatarError ? (
                 <img
                   src={avatarUrl}
@@ -375,52 +482,59 @@ const Header = ({ setIsAuthenticated, sidebarOffset = 0, isMobile = false }) => 
             </span>
           </button>
 
-          {profileMenuOpen ? (
-            <div className="absolute right-0 top-[calc(100%+12px)] w-60 overflow-hidden rounded-[24px] border border-slate-200/80 bg-white/98 p-2 shadow-[0_22px_55px_rgba(15,23,42,0.16)] backdrop-blur-xl">
-              <div className="mb-2 rounded-[18px] bg-slate-50 px-4 py-3">
-                <p className="truncate text-sm font-semibold text-slate-900">{userName}</p>
-                <p className="mt-1 text-xs text-slate-500">
-                  Manage your profile, preferences, and session.
-                </p>
-              </div>
+          {profileMenuOpen && typeof document !== "undefined"
+            ? createPortal(
+                <div
+                  ref={profileMenuRef}
+                  className="overflow-hidden rounded-[24px] border border-slate-200/80 bg-white/98 p-2 shadow-[0_22px_55px_rgba(15,23,42,0.16)] backdrop-blur-xl"
+                  style={profileMenuStyle}
+                >
+                  <div className="mb-2 rounded-[18px] bg-slate-50 px-4 py-3">
+                    <p className="truncate text-sm font-semibold text-slate-900">{userName}</p>
+                    <p className="mt-1 text-xs leading-5 text-slate-500">
+                      Manage your profile, preferences, and session.
+                    </p>
+                  </div>
 
-              <button
-                type="button"
-                onClick={() => handleMenuAction("/profile")}
-                className="flex w-full items-center gap-3 rounded-[18px] px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-sky-50 hover:text-sky-700"
-                role="menuitem"
-              >
-                <FaUserCircle className="text-base" />
-                <span>View Profile</span>
-              </button>
+                  <button
+                    type="button"
+                    onClick={() => handleMenuAction("/profile")}
+                    className="flex w-full items-center gap-3 rounded-[18px] px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-sky-50 hover:text-sky-700"
+                    role="menuitem"
+                  >
+                    <FaUserCircle className="text-base" />
+                    <span className="whitespace-normal">View Profile</span>
+                  </button>
 
-              <button
-                type="button"
-                onClick={() =>
-                  handleMenuAction("/profile", {
-                    state: { focusSection: "security" },
-                  })
-                }
-                className="mt-1 flex w-full items-center gap-3 rounded-[18px] px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-sky-50 hover:text-sky-700"
-                role="menuitem"
-              >
-                <FaCog className="text-base" />
-                <span>Settings</span>
-              </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleMenuAction("/profile", {
+                        state: { focusSection: "security" },
+                      })
+                    }
+                    className="mt-1 flex w-full items-center gap-3 rounded-[18px] px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-sky-50 hover:text-sky-700"
+                    role="menuitem"
+                  >
+                    <FaCog className="text-base" />
+                    <span className="whitespace-normal">Settings</span>
+                  </button>
 
-              <div className="my-2 h-px bg-slate-200" />
+                  <div className="my-2 h-px bg-slate-200" />
 
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="flex w-full items-center gap-3 rounded-[18px] px-4 py-3 text-sm font-semibold text-rose-600 transition hover:bg-rose-50"
-                role="menuitem"
-              >
-                <FaSignOutAlt className="text-base" />
-                <span>Logout</span>
-              </button>
-            </div>
-          ) : null}
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="flex w-full items-center gap-3 rounded-[18px] px-4 py-3 text-left text-sm font-semibold text-rose-600 transition hover:bg-rose-50"
+                    role="menuitem"
+                  >
+                    <FaSignOutAlt className="text-base" />
+                    <span className="whitespace-normal">Logout</span>
+                  </button>
+                </div>,
+                document.body,
+              )
+            : null}
         </div>
       </div>
     </header>

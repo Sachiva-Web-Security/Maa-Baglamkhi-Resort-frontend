@@ -14,10 +14,10 @@ import {
 import { todayISO } from "../Dashboard/stayoverUtils";
 
 const fieldCls =
-  "w-full rounded-2xl text-xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:ring-4 focus:ring-sky-100";
+  "w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:ring-4 focus:ring-sky-100";
 
 const labelCls =
-  "mb-2 block text-xl font-bold text-slate-900";
+  "mb-1.5 block text-sm font-semibold text-slate-700";
 
 const panelCls =
   "rounded-[30px]   border border-slate-200/80 bg-white p-6 shadow-[0_24px_60px_rgba(15,23,42,0.06)] sm:p-7";
@@ -399,21 +399,21 @@ const Guest = () => {
       )}
 
       <div
-        className="min-h-screen rounded-[36px] bg-[radial-gradient(circle_at_top,_rgba(219,234,254,0.55),_rgba(255,255,255,0.96)_36%,_rgba(248,250,252,1)_100%)] p-4 shadow-[0_30px_80px_rgba(148,163,184,0.18)] sm:p-6"
+        className="rounded-2xl bg-transparent p-0"
         style={{ fontFamily: '"Segoe UI", "Helvetica Neue", Arial, sans-serif' }}
       >
-        <div className="mx-auto grid max-w-9xl gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(360px,420px)]">
-          <div className="rounded-[34px] border border-slate-200/80 bg-white px-5 py-7 shadow-[0_28px_70px_rgba(15,23,42,0.08)] sm:px-8 sm:py-9">
+        <div className="mx-auto grid max-w-7xl gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(300px,360px)]">
+          <div className="rounded-2xl border border-slate-200/80 bg-white px-5 py-6 shadow-[0_8px_30px_rgba(15,23,42,0.06)] sm:px-7 sm:py-8">
             <div className="max-w-3xl">
-              <div className="text-4xl font-[800] tracking-[-0.03em] text-slate-900">
+              <div className="text-2xl font-bold tracking-tight text-slate-900">
                 Guest Information
               </div>
-              <p className="mt-3 text-lg leading-8 text-slate-600">
-                Please fill in the form below to continue the hotel booking with proper guest details.
+              <p className="mt-1.5 text-sm leading-6 text-slate-500">
+                Fill in the form below to continue the hotel booking with proper guest details.
               </p>
             </div>
 
-            <div className="mt-10 space-y-8">
+            <div className="mt-6 space-y-6">
               <div className="grid gap-6 md:grid-cols-2">
                 <div>
                   <label className={labelCls}>First Name</label>
@@ -469,12 +469,12 @@ const Guest = () => {
               </div>
 
               <div className="rounded-[26px] border border-slate-200/80 bg-slate-50/70 p-5 sm:p-6">
-                <div className="mb-5 border-b border-slate-200 pb-5">
+                <div className="mb-4 border-b border-slate-200 pb-4">
                   <div>
-                    <div className="text-xl font-[700] tracking-[-0.02em] text-slate-900">
+                    <div className="text-base font-semibold text-slate-800">
                       Stay Details
                     </div>
-                    <p className="mt-2 text-xl leading-6  text-slate-500">
+                    <p className="mt-1 text-sm leading-5 text-slate-500">
                       Select stay dates and expected guest timing for this booking.
                     </p>
                   </div>
@@ -530,29 +530,29 @@ const Guest = () => {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-4 border-t border-slate-200 pt-6 sm:flex-row sm:items-center sm:justify-between">
-                <div className="text-xl leading-6 text-slate-500">
-                  Review guest details carefully before moving to the next booking step.
+              <div className="flex flex-col gap-3 border-t border-slate-200 pt-5 sm:flex-row sm:items-center sm:justify-between">
+                <div className="text-sm leading-5 text-slate-500">
+                  Review guest details carefully before moving to the next step.
                 </div>
-                <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-end">
+                <div className="flex flex-wrap gap-2 sm:justify-end">
                   <button
                     type="button"
                     onClick={() => navigate("/hotel/all-bookings")}
-                    className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-[22px] font-bold text-slate-700 transition hover:bg-slate-50"
+                    className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                   >
                     Go Back
                   </button>
                   <button
                     type="button"
                     onClick={() => setCancelFlowModal({ open: true, reason: "", submitting: false })}
-                    className="inline-flex items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 px-5 py-3 text-[22px] font-bold text-rose-700 transition hover:bg-rose-100"
+                    className="inline-flex items-center justify-center rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-700 transition hover:bg-rose-100"
                   >
                     {activeBookingId ? "Cancel Booking" : "Discard Booking"}
                   </button>
                   <button
                     type="button"
                     onClick={handleSubmit}
-                    className="inline-flex items-center justify-center rounded-2xl bg-[linear-gradient(180deg,#39a6eb_0%,#2a8fd4_100%)] px-7 py-3 text-[22px] font-bold text-white shadow-[0_16px_35px_rgba(14,165,233,0.24)] transition hover:brightness-105"
+                    className="inline-flex items-center justify-center rounded-xl bg-[linear-gradient(180deg,#39a6eb_0%,#2a8fd4_100%)] px-6 py-2.5 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(14,165,233,0.24)] transition hover:brightness-105"
                   >
                     Save & Next
                   </button>
@@ -563,43 +563,43 @@ const Guest = () => {
 
           <div className="w-full space-y-4">
             <div className={`${panelCls} w-full`}>
-              <div className="text-sm font-bold uppercase tracking-[0.24em] text-sky-700 sm:text-base">
+              <div className="text-xs font-bold uppercase tracking-[0.2em] text-sky-700">
                 Quick Snapshot
               </div>
-              <div className="mt-5 space-y-4">
-                <div className="rounded-2xl bg-slate-50 p-5">
-                  <div className="text-sm font-bold uppercase tracking-[0.18em] text-slate-500 sm:text-[15px]">
+              <div className="mt-4 space-y-3">
+                <div className="rounded-xl bg-slate-50 p-4">
+                  <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
                     Booking Ref
                   </div>
-                  <div className="mt-2 break-words text-2xl font-black leading-snug text-slate-900 sm:text-[30px]">
+                  <div className="mt-1.5 wrap-break-word text-lg font-bold leading-snug text-slate-900">
                     {activeBookingCode || activeBookingId || "Draft not saved"}
                   </div>
                 </div>
-                <div className="rounded-2xl bg-slate-50 p-5">
-                  <div className="text-sm font-bold uppercase tracking-[0.18em] text-slate-500 sm:text-[15px]">
+                <div className="rounded-xl bg-slate-50 p-4">
+                  <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
                     Guest Name
                   </div>
-                  <div className="mt-2 break-words text-2xl font-black leading-snug text-slate-900 sm:text-[28px]">
+                  <div className="mt-1.5 wrap-break-word text-base font-bold leading-snug text-slate-900">
                     {formData.guestName || "Not entered"}
                   </div>
                 </div>
-                <div className="rounded-2xl bg-slate-50 p-5">
-                  <div className="text-sm font-bold uppercase tracking-[0.18em] text-slate-500 sm:text-[15px]">
+                <div className="rounded-xl bg-slate-50 p-4">
+                  <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
                     Phone
                   </div>
-                  <div className="mt-2 break-words text-2xl font-black leading-snug text-slate-900 sm:text-[28px]">
+                  <div className="mt-1.5 wrap-break-word text-base font-bold leading-snug text-slate-900">
                     {formData.mobile || "Not entered"}
                   </div>
                 </div>
-                <div className="rounded-2xl bg-[linear-gradient(135deg,#eff6ff_0%,#f0fdfa_100%)] p-5">
-                  <div className="text-sm font-bold uppercase tracking-[0.18em] text-slate-500 sm:text-[15px]">
+                <div className="rounded-xl bg-[linear-gradient(135deg,#eff6ff_0%,#f0fdfa_100%)] p-4">
+                  <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
                     Stay Window
                   </div>
-                  <div className="mt-2 break-words text-2xl font-black leading-snug text-slate-900 sm:text-[28px]">
-                    {formData.checkIn || "-"} to {formData.checkOut || "-"}
+                  <div className="mt-1.5 wrap-break-word text-base font-bold leading-snug text-slate-900">
+                    {formData.checkIn || "-"} → {formData.checkOut || "-"}
                   </div>
-                  <p className="mt-3 text-base leading-7 text-slate-600 sm:text-lg">
-                    Keep the guest profile complete so the booking can move smoothly to the next section.
+                  <p className="mt-2 text-xs leading-5 text-slate-500">
+                    Complete the guest profile to proceed smoothly.
                   </p>
                 </div>
               </div>

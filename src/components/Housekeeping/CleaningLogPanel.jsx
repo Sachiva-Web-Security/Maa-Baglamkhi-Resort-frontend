@@ -179,7 +179,7 @@ export default function CleaningLogPanel({
               Housekeeping Page
             </p>
             <h3 className="mt-1 text-2xl font-semibold text-white">Cleaning Log</h3>
-            <p className="mt-2 max-w-xl text-xl leading-6 text-slate-200">
+            <p className="mt-2 max-w-xl text-sm leading-6 text-slate-200 sm:text-base">
          View room-wise cleaning activity, timer status, assignee updates, and reception notes in a polished live board.
             </p>
 
@@ -189,7 +189,7 @@ export default function CleaningLogPanel({
                   Rooms
                 </div>
                 <div className="mt-2 flex items-end gap-2">
-                  <span className="text-[34px] font-black leading-none text-white">{rows.length}</span>
+                  <span className="text-3xl font-black leading-none text-white sm:text-[34px]">{rows.length}</span>
                   <span className="pb-1 text-[12px] font-medium text-slate-400">Total</span>
                 </div>
               </div>
@@ -198,7 +198,7 @@ export default function CleaningLogPanel({
                   Warnings
                 </div>
                 <div className="mt-2 flex items-end gap-2">
-                  <span className="text-[34px] font-black leading-none text-rose-300">
+                  <span className="text-3xl font-black leading-none text-rose-300 sm:text-[34px]">
                     {String(warningRows.length).padStart(2, "0")}
                   </span>
                   <span className="pb-1 text-[12px] font-medium text-rose-200">Urgent</span>
@@ -209,7 +209,7 @@ export default function CleaningLogPanel({
                   Assignees
                 </div>
                 <div className="mt-2 flex items-end gap-2">
-                  <span className="text-[34px] font-black leading-none text-white">{housekeepers.length}</span>
+                  <span className="text-3xl font-black leading-none text-white sm:text-[34px]">{housekeepers.length}</span>
                   <span className="pb-1 text-[12px] font-medium text-sky-200">Active</span>
                 </div>
               </div>
@@ -218,7 +218,7 @@ export default function CleaningLogPanel({
                   Completed
                 </div>
                 <div className="mt-2 flex items-end gap-2">
-                  <span className="text-[34px] font-black leading-none text-emerald-300">
+                  <span className="text-3xl font-black leading-none text-emerald-300 sm:text-[34px]">
                     {completedTodayRows.length}
                   </span>
                   <span className="pb-1 text-[12px] font-medium text-emerald-200">Today</span>

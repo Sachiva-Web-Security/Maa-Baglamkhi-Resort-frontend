@@ -169,7 +169,7 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
     <>
       {isMobile && sidebarOpen && (
         <div
-          className="fixed inset-0 left-[88px] z-30 bg-black/50"
+          className="fixed inset-0 z-30 bg-black/50"
           style={{ top: `${HEADER_HEIGHT}px` }}
           onClick={() => setSidebarOpen(false)}
         />
@@ -179,15 +179,16 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
         className={`
           desktop-scale-sidebar
           fixed bottom-0 left-0 top-0 z-40
-          flex translate-x-0 flex-col
+          flex flex-col
           border-r border-slate-800/80 bg-[linear-gradient(180deg,#07111f_0%,#0b1728_52%,#09101b_100%)]
           text-gray-800 shadow-[0_18px_40px_rgba(2,8,23,0.45)]
           transition-all duration-300 ease-in-out
           overflow-hidden
-          ${sidebarOpen ? "w-[250px]" : "w-[88px]"}
+          ${isMobile ? "w-[min(82vw,280px)]" : sidebarOpen ? "w-[250px]" : "w-[88px]"}
         `}
         style={{
           height: isMobile ? "100dvh" : undefined,
+          transform: isMobile && !sidebarOpen ? "translateX(-100%)" : "translateX(0)",
         }}
       >
         <style>{`

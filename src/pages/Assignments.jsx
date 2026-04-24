@@ -568,7 +568,108 @@ const Assignment = () => {
           </section>
         )}
 
-        <section className="rounded-[26px] border border-white/60 bg-white/82 shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
+        <section className="grid gap-3 md:hidden">
+          {assignments.map((assignment) => (
+            <article
+              key={`mobile-assignment-${assignment.id}`}
+              className="rounded-[22px] border border-white/70 bg-white/90 p-4 shadow-[0_14px_34px_rgba(15,23,42,0.08)]"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Staff</p>
+                  <h3 className="mt-1 text-lg font-black text-slate-900">{assignment.staff_name}</h3>
+                  <p className="mt-1 text-sm font-semibold text-slate-500">Room {assignment.room_number || "--"}</p>
+                </div>
+                <span
+                  className={`inline-flex shrink-0 rounded-full border px-3 py-1 text-xs font-bold ${getStatusBadge(assignment.status)}`}
+                >
+                  {assignment.status || "Pending"}
+                </span>
+              </div>
+
+              <div className="mt-4 rounded-2xl bg-slate-50 px-4 py-3">
+                <p className="text-sm font-bold text-slate-800">{assignment.task}</p>
+                {assignment.notes ? (
+                  <p className="mt-2 text-sm leading-5 text-slate-500">{assignment.notes}</p>
+                ) : null}
+              </div>
+
+              <div className="mt-4 grid gap-3 text-sm text-slate-600">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="font-semibold text-slate-500">Priority</span>
+                  <span
+                    className={`inline-flex rounded-full border px-3 py-1 text-xs font-bold ${getPriorityBadge(assignment.priority)}`}
+                  >
+                    {assignment.priority || "Normal"}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="font-semibold text-slate-500">Due</span>
+                  <span className="font-semibold text-slate-700">{assignment.due_time || "--"}</span>
+                </div>
+                <div>
+                  <span className="font-semibold text-slate-500">Assigned on</span>
+                  <p className="mt-1 font-medium text-slate-700">{formatTimestamp(assignment.created_at)}</p>
+                </div>
+                <div>
+                  <span className="font-semibold text-slate-500">Updated</span>
+                  <p className="mt-1 font-medium text-slate-700">
+                    {formatTimestamp(assignment.updated_at || assignment.created_at)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-4 flex flex-wrap gap-2">
+                {normalizeLower(assignment.status) === "pending" && (
+                  <button
+                    onClick={() => updateTaskStatus(assignment.id, "In Progress")}
+                    className="rounded-full bg-sky-600 px-4 py-2 text-sm font-bold text-white"
+                  >
+                    Start
+                  </button>
+                )}
+                {normalizeLower(assignment.status) === "in progress" && (
+                  <button
+                    onClick={() => updateTaskStatus(assignment.id, "Completed")}
+                    className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-bold text-white"
+                  >
+                    Complete
+                  </button>
+                )}
+                {canManageAssignments && (
+                  <button
+                    onClick={() => editTask(assignment)}
+                    className="rounded-full bg-sky-50 px-4 py-2 text-sm font-bold text-sky-700"
+                  >
+                    Edit
+                  </button>
+                )}
+                {canManageAssignments && (
+                  <button
+                    onClick={() => deleteTask(assignment.id)}
+                    className="rounded-full bg-rose-50 px-4 py-2 text-sm font-bold text-rose-700"
+                  >
+                    Delete
+                  </button>
+                )}
+              </div>
+            </article>
+          ))}
+
+          {!pageLoading && assignments.length === 0 && (
+            <div className="rounded-[22px] border border-dashed border-slate-200 bg-white/80 p-6 text-center text-sm font-semibold text-slate-500">
+              No tasks assigned yet
+            </div>
+          )}
+
+          {pageLoading && (
+            <div className="rounded-[22px] border border-dashed border-slate-200 bg-white/80 p-6 text-center text-sm font-semibold text-slate-500">
+              Loading assignments...
+            </div>
+          )}
+        </section>
+
+        <section className="hidden rounded-[26px] border border-white/60 bg-white/82 shadow-[0_18px_45px_rgba(15,23,42,0.08)] md:block">
           <div className="overflow-x-auto">
             <table className="min-w-full text-left">
               <thead className="bg-slate-50 text-xl uppercase tracking-[0.18em] text-slate-500">

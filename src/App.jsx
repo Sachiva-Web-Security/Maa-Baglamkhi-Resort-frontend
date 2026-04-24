@@ -150,6 +150,8 @@ function Layout({ children, setIsAuthenticated }) {
           setIsAuthenticated={setIsAuthenticated}
           sidebarOffset={isMobile ? 0 : sidebarWidth}
           isMobile={isMobile}
+          sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
         />
         <div
           ref={scrollContainerRef}
@@ -159,9 +161,7 @@ function Layout({ children, setIsAuthenticated }) {
           <div className="p-3 sm:p-4 lg:p-5">{children}</div>
         </div>
       </div>
-      {showDashboardFooter ? (
-        <DashboardFooter contentOffset={isMobile ? 0 : sidebarWidth} />
-      ) : null}
+      <DashboardFooter contentOffset={isMobile ? 0 : sidebarWidth} />
     </div>
   );
 }
