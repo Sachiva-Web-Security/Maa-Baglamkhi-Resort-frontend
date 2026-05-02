@@ -1,136 +1,106 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api";
-import bgImage from "../assets/bg.jpg";
 
 const Login = ({ setIsAuthenticated }) => {
-  const [formData, setFormData] = useState({
-    username: "",
-    password: "",
-    role: "Admin",
-  });
-
-
+  const [formData, setFormData] = useState({ username: "", password: "" });
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!formData.username || !formData.password) {
       alert("Please fill in all fields");
       return;
     }
-
+    setLoading(true);
     try {
-      // ✅ Correct backend endpoint: /api/auth/login
       const res = await API.post("/auth/login", {
         email: formData.username,
         password: formData.password,
       });
-
       const user = res.data;
-
-      // ✅ Save Data
       localStorage.setItem("token", user.token);
       localStorage.setItem("role", user.role.toLowerCase());
       localStorage.setItem("name", user.name);
       localStorage.setItem("email", user.email);
       localStorage.setItem("isAuthenticated", "true");
-
-      if (setIsAuthenticated) {
-        setIsAuthenticated(true);
-      }
-      // Direct navigate with state
+      if (setIsAuthenticated) setIsAuthenticated(true);
       navigate("/dashboard", { state: { loginSuccess: true } });
-
     } catch (error) {
       let errorMsg;
       if (error.message === "Network Error") {
-        errorMsg = `Unable to reach server. Please make sure the backend is running at ${import.meta.env.VITE_BACKEND_URL || "http://localhost:5001"}.`;
+        errorMsg = `Unable to reach server. Please make sure the backend is running.`;
       } else {
         errorMsg = error.response?.data?.message || "Invalid Credentials";
       }
-
       alert(errorMsg);
-      console.error("Login error:", error);
-      return; // Added return to prevent continuing Execution
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-
-
-    <div
-      className={`min-h-screen flex items-center justify-center font-[Poppins] bg-cover bg-center `}
-      style={{
-        backgroundImage: `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url(${bgImage})`,
-      }}
-    >
-      <div className="w-[380px] p-10 rounded-2xl bg-black/20 backdrop-blur-xl shadow-2xl border border-white/30">
-
-        {/* Header */}
-        <div className="text-center mb-8 text-white">
-          <div className="text-xl font-bold mb-2">LOGO</div>
-          <h1 className="text-2xl font-semibold">
-            Maa Baglamukhi Resort
-          </h1>
+    <div className="simple-login-page">
+      <div className="simple-login-card">
+        {/* Logo */}
+        <div style={{ textAlign: "center", marginBottom: 20 }}>
+          <div style={{
+            width: 56, height: 56, background: "#1565c0", borderRadius: "50%",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            margin: "0 auto 10px", color: "#fff", fontSize: 22, fontWeight: 700,
+          }}>M</div>
+          <div className="simple-login-title">Maa Baglamukhi Resort</div>
+          <div className="simple-login-subtitle">Management System — Please sign in</div>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-5">
-
-          {/* Email */}
-          <div className="text-left">
-            <label className="text-sm text-white font-semibold">
-              Email Address
-            </label>
+        <form onSubmit={handleSubmit}>
+          <div className="simple-form-group" style={{ marginBottom: 14 }}>
+            <label className="simple-label">Email Address</label>
             <input
               type="email"
               name="username"
               value={formData.username}
               onChange={handleChange}
-              placeholder="Enter email (admin@hotel.com)"
+              placeholder="Enter your email"
               required
-              className="w-full bg-white/40 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none"
+              className="simple-input"
             />
           </div>
 
-          {/* Password */}
-          <div className="text-left">
-            <label className="text-sm text-white font-semibold">
-              Password
-            </label>
+          <div className="simple-form-group" style={{ marginBottom: 20 }}>
+            <label className="simple-label">Password</label>
             <input
               type="password"
               name="password"
               value={formData.password}
               onChange={handleChange}
-              placeholder="Enter password"
+              placeholder="Enter your password"
               required
-              className="w-full bg-white/40 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none"
+              className="simple-input"
             />
           </div>
 
-          {/* Button */}
           <button
             type="submit"
-            className="w-full py-3 rounded-full bg-gradient-to-r from-pink-400 to-purple-500 text-white font-bold hover:opacity-90 transition"
+            disabled={loading}
+            className="simple-btn simple-btn-primary w-full simple-btn-lg"
+            style={{ width: "100%", justifyContent: "center" }}
           >
-            Login
+            {loading ? "Signing in..." : "Sign In"}
           </button>
-
         </form>
+
+        <div style={{ textAlign: "center", marginTop: 16, color: "#aaa", fontSize: 11 }}>
+          Maa Baglamukhi Resort &copy; {new Date().getFullYear()}
+        </div>
       </div>
     </div>
-
   );
 };
 

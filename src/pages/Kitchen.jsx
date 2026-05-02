@@ -39,7 +39,7 @@ const markReady = async(id)=>{
 
 return (
 
-<div className=" min-h-screen w-290  bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 pl-0.3">
+<div>
 
 {/* HEADER */}
 

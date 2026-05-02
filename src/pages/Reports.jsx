@@ -145,10 +145,9 @@ const Reports = () => {
   const printReport = () => window.print();
 
   return (
-    <div className="min-h-screen w-280 pt-[10px] px-[30px] pb-[30px] bg-gradient-to-br from-[#071226] via-[#081827] to-[#041019] text-gray-100 ">
-      <div className="mb-6">
-        <h1 className="text-2xl font-extrabold text-white mb-1">Reports</h1>
-        <div className="text-sm text-gray-500">Home / Reports</div>
+    <div>
+      <div className="simple-page-header">
+        <h1 className="simple-page-title">Reports</h1>
         {summary && (
           <div className="mt-2 text-xs text-gray-600 font-semibold">
             Rooms: <span className="font-bold">{summary.totalRooms}</span> ·

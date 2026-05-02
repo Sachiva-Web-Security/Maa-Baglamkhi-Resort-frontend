@@ -69,10 +69,8 @@ const Attendance = () => {
   };
 
   return (
-    <div className="min-h-screen w-280  bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      
-
-      <h1 className="text-2xl text-white font-bold mb-6 pl-100 pt-10">Attendance Management</h1>
+    <div>
+      <div className="simple-page-header"><h1 className="simple-page-title">Attendance Management</h1></div>
 
       <FiltersSection
         date={date}

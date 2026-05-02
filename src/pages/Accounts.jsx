@@ -130,8 +130,8 @@ const handleGenerateInvoice = async (invoice) => {
   };
 
   return (
-    <div className="min-h-screen w-280 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-slate-100 p-8">
-      <h1 className="accounts-title pl-100">Accounts & Finance</h1>
+    <div>
+      <div className="simple-page-header"><h1 className="simple-page-title">Accounts &amp; Finance</h1></div>
 
       {/* Top Action Buttons */}
       <div className="accounts-actions">

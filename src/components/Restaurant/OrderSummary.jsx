@@ -1,93 +1,47 @@
-import './OrderSummary.css';
-
 const OrderSummary = ({ orderItems, onRemoveItem, onUpdateQuantity }) => {
-  const calculateSubtotal = () => {
-    return orderItems.reduce((total, item) => total + (item.price * item.quantity), 0);
-  };
+  const subtotal = orderItems.reduce((t, i) => t + i.price * i.quantity, 0);
+  const gst = subtotal * 0.05;
+  const total = subtotal + gst;
 
-  const calculateGST = () => {
-    return calculateSubtotal() * 0.05; // 5% GST
-  };
-
-  const calculateGrandTotal = () => {
-    return calculateSubtotal() + calculateGST();
-  };
-
-  const handleQuantityChange = (itemId, newQuantity) => {
-    if (newQuantity < 1) {
-      onRemoveItem(itemId);
-    } else {
-      onUpdateQuantity(itemId, newQuantity);
-    }
+  const handleQty = (id, qty) => {
+    if (qty < 1) onRemoveItem(id);
+    else onUpdateQuantity(id, qty);
   };
 
   return (
-    <div className="order-summary">
-      <h2 className="order-summary-title">Order Summary</h2>
-
-      <div className="order-items">
-        {orderItems.length === 0 ? (
-          <div className="empty-order">
-            <p>No items in order</p>
-            <p className="empty-order-hint">Select items from menu to add</p>
-          </div>
-        ) : (
-          <>
-            {orderItems.map((item) => (
-              <div key={item.id} className="order-item">
-                <div className="order-item-info">
-                  <div className="order-item-name">{item.name}</div>
-                  <div className="order-item-price">₹{item.price}</div>
-                </div>
-                <div className="order-item-controls">
-                  <button 
-                    className="quantity-btn"
-                    onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
-                  >
-                    −
-                  </button>
-                  <span className="quantity-value">{item.quantity}</span>
-                  <button 
-                    className="quantity-btn"
-                    onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-                  >
-                    +
-                  </button>
-                  <button 
-                    className="remove-btn"
-                    onClick={() => onRemoveItem(item.id)}
-                  >
-                    ×
-                  </button>
-                </div>
-                <div className="order-item-total">
-                  ₹{item.price * item.quantity}
-                </div>
+    <div className="simple-card" style={{ marginBottom: 10 }}>
+      <div className="simple-card-title">Order Summary</div>
+      {orderItems.length === 0 ? (
+        <div style={{ textAlign: "center", padding: "20px 0", color: "#aaa", fontSize: 13 }}>
+          No items — select from menu
+        </div>
+      ) : (
+        <>
+          {orderItems.map((item) => (
+            <div key={item.id} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6, fontSize: 13 }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 600 }}>{item.name}</div>
+                <div style={{ color: "#888", fontSize: 11 }}>₹{item.price} each</div>
               </div>
-            ))}
-
-            <hr className="order-divider" />
-
-            <div className="order-totals">
-              <div className="total-row">
-                <span>Subtotal</span>
-                <span>₹{calculateSubtotal().toFixed(2)}</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <button onClick={() => handleQty(item.id, item.quantity - 1)} style={{ width: 22, height: 22, border: "1px solid #ccc", borderRadius: 3, background: "#f5f5f5", cursor: "pointer", fontWeight: 700 }}>−</button>
+                <span style={{ minWidth: 18, textAlign: "center" }}>{item.quantity}</span>
+                <button onClick={() => handleQty(item.id, item.quantity + 1)} style={{ width: 22, height: 22, border: "1px solid #ccc", borderRadius: 3, background: "#f5f5f5", cursor: "pointer", fontWeight: 700 }}>+</button>
+                <button onClick={() => onRemoveItem(item.id)} style={{ width: 22, height: 22, border: "none", borderRadius: 3, background: "#ffebee", color: "#c62828", cursor: "pointer", fontWeight: 700 }}>×</button>
               </div>
-              <div className="total-row gst-row">
-                <span>GST (5%)</span>
-                <span>₹{calculateGST().toFixed(2)}</span>
-              </div>
-              <div className="total-row grand-total">
-                <span>Grand Total</span>
-                <span>₹{calculateGrandTotal().toFixed(2)}</span>
-              </div>
+              <div style={{ minWidth: 54, textAlign: "right", fontWeight: 600 }}>₹{item.price * item.quantity}</div>
             </div>
-          </>
-        )}
-      </div>
+          ))}
+          <hr className="simple-divider" />
+          <div className="simple-summary">
+            <div className="simple-summary-row"><span>Subtotal</span><span>₹{subtotal.toFixed(2)}</span></div>
+            <div className="simple-summary-row"><span>GST (5%)</span><span>₹{gst.toFixed(2)}</span></div>
+            <div className="simple-summary-total"><span>Grand Total</span><span>₹{total.toFixed(2)}</span></div>
+          </div>
+        </>
+      )}
     </div>
   );
 };
 
 export default OrderSummary;
-

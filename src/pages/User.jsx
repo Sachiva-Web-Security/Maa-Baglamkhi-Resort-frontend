@@ -47,10 +47,9 @@ const User = () => {
   });
 
   return (
-    <div className="   min-h-screen w-280 p-6 bg-slate-900">
-      
-      <div className="flex justify-between mb-6">
-        <h1 className="text-2xl text-white text-align-center  pl-100 font-bold">User Management</h1>
+    <div>
+      <div className="simple-page-header">
+        <h1 className="simple-page-title">User Management</h1>
 
         <button
           onClick={() => navigate("/create-user")}

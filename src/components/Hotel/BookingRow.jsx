@@ -80,79 +80,42 @@ const BookingRow = ({ booking, onExtend, onShiftRoom, onCheckOut, onBillGenerate
     return d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "2-digit" });
   };
 
+  const statusBadge = booking.status === "Occupied" ? "badge-green" :
+    booking.status === "CheckedOut" ? "badge-gray" : "badge-blue";
+
   return (
     <>
-      <tr className="hover:bg-white/5 transition duration-200 border-b border-white/10 shadow-sm">
-        <td className="px-4 py-4 font-semibold text-white">
-          {booking.guestName}
-        </td>
-
-        <td className="px-4 py-4">
-          <span className="bg-white/10 text-gray-200 px-3 py-1 rounded-full text-sm font-medium border border-white/10">
-            Room {booking.room}
-          </span>
-        </td>
-
-        <td className="px-4 py-4 text-gray-300">
-          {fmtDate(booking.checkIn)}
-        </td>
-
-        <td className="px-4 py-4 text-gray-300">
-          {fmtDate(booking.checkOut)}
-        </td>
-
-        <td className="px-4 py-4">
-          <span className={`px-3 py-1 rounded-full text-sm font-semibold shadow-sm ${
-            booking.status === "Occupied" ? "bg-emerald-500/20 text-emerald-400" :
-            booking.status === "CheckedOut" ? "bg-gray-500/20 text-gray-400" :
-            "bg-blue-500/20 text-blue-400"
-          }`}>
-            {booking.status}
-          </span>
-        </td>
-
-        <td className="px-4 py-4">
-          <div className="flex gap-2 flex-wrap items-center">
+      <tr>
+        <td style={{ fontWeight: 600 }}>{booking.guestName}</td>
+        <td><span className="simple-badge badge-blue">Rm {booking.room}</span></td>
+        <td>{fmtDate(booking.checkIn)}</td>
+        <td>{fmtDate(booking.checkOut)}</td>
+        <td><span className={`simple-badge ${statusBadge}`}>{booking.status}</span></td>
+        <td>
+          <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
             {!isBillGenerated ? (
-              <Btn onClick={handleGenerateBill} color="from-purple-500 to-indigo-600">Generate Bill</Btn>
+              <Btn onClick={handleGenerateBill} cls="simple-btn-primary">Generate Bill</Btn>
             ) : (
               <>
-                <Btn onClick={handleViewBill} color="from-green-500 to-teal-500">View Bill</Btn>
-                <Btn onClick={handleEditBill} color="from-amber-400 to-orange-500" title="Edit Bill">✏️ Edit</Btn>
+                <Btn onClick={handleViewBill} cls="simple-btn-success">View Bill</Btn>
+                <Btn onClick={handleEditBill} cls="simple-btn-warning">Edit Bill</Btn>
               </>
             )}
-
-            <Btn onClick={() => onExtend(booking)} color="from-blue-500 to-indigo-500">Extend</Btn>
-            <Btn onClick={() => onShiftRoom(booking)} color="from-yellow-400 to-orange-500">Shift</Btn>
-            <Btn onClick={() => onCheckOut(booking)} color="from-red-500 to-pink-500">Check-Out</Btn>
+            <Btn onClick={() => onExtend(booking)} cls="simple-btn-info">Extend</Btn>
+            <Btn onClick={() => onShiftRoom(booking)} cls="simple-btn-gray">Shift</Btn>
+            <Btn onClick={() => onCheckOut(booking)} cls="simple-btn-danger">Check-Out</Btn>
           </div>
         </td>
       </tr>
 
-      {/* InvoiceForm Modal (Generate or Edit) */}
       {showInvoice && (
         <tr>
-          <td colSpan={6} className="p-0 m-0">
-            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50 p-4">
-              <div className="bg-white rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl">
+          <td colSpan={6} style={{ padding: 0 }}>
+            <div className="simple-modal-overlay">
+              <div className="simple-modal" style={{ maxWidth: 720 }}>
                 <InvoiceForm
                   initialData={invoiceMode === "edit" && savedInvoice
-                    ? {
-                      invoiceNo: savedInvoice.invoice_no,
-                      customerName: savedInvoice.customer_name,
-                      phone: savedInvoice.phone,
-                      roomNo: savedInvoice.room_no,
-                      checkIn: toDateInput(savedInvoice.check_in),
-                      checkOut: toDateInput(savedInvoice.check_out),
-                      pricePerDay: savedInvoice.price_per_day,
-                      foodCharge: savedInvoice.food_charge,
-                      extraCharge: savedInvoice.extra_charge,
-                      gst: savedInvoice.gst,
-                      discount: savedInvoice.discount,
-                      paymentMode: savedInvoice.payment_mode,
-                      status: savedInvoice.status,
-                      notes: savedInvoice.notes,
-                    }
+                    ? { invoiceNo: savedInvoice.invoice_no, customerName: savedInvoice.customer_name, phone: savedInvoice.phone, roomNo: savedInvoice.room_no, checkIn: toDateInput(savedInvoice.check_in), checkOut: toDateInput(savedInvoice.check_out), pricePerDay: savedInvoice.price_per_day, foodCharge: savedInvoice.food_charge, extraCharge: savedInvoice.extra_charge, gst: savedInvoice.gst, discount: savedInvoice.discount, paymentMode: savedInvoice.payment_mode, status: savedInvoice.status, notes: savedInvoice.notes }
                     : getInvoiceInitialData()
                   }
                   bookingId={booking.id}
@@ -166,27 +129,16 @@ const BookingRow = ({ booking, onExtend, onShiftRoom, onCheckOut, onBillGenerate
         </tr>
       )}
 
-      {/* Bill View Modal */}
       {showBillView && (
-        <BillViewModal
-          invoice={savedInvoice}
-          onClose={() => setShowBillView(false)}
-          onEdit={() => {
-            setShowBillView(false);
-            handleEditBill();
-          }}
-        />
+        <BillViewModal invoice={savedInvoice} onClose={() => setShowBillView(false)}
+          onEdit={() => { setShowBillView(false); handleEditBill(); }} />
       )}
     </>
   );
 };
 
-const Btn = ({ children, onClick, color, title }) => (
-  <button
-    onClick={onClick}
-    title={title}
-    className={`px-3 py-1 text-xs font-semibold rounded-full bg-gradient-to-r ${color} text-white shadow-md hover:scale-105 transition transform duration-200 whitespace-nowrap`}
-  >
+const Btn = ({ children, onClick, cls }) => (
+  <button onClick={onClick} className={`simple-btn simple-btn-sm ${cls}`} style={{ whiteSpace: "nowrap" }}>
     {children}
   </button>
 );

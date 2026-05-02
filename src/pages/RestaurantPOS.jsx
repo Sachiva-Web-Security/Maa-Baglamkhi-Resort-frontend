@@ -277,100 +277,66 @@ const RestaurantPOS = () => {
   };
 
   return (
-    <div className="min-h-screen w-280 pt-100 -mt-80 restaurant-pos-container">
-      {/* Left Section - Tables */}
-      <div className="tables-section min-h-screen w-280 -mt-120 ">
-        <h2 className="section-title">Tables</h2>
-        <div className="tables-grid ">
-          {tables.map((table) => (
-            <TableCard
-              key={table.id}
-              table={table}
-              onClick={handleTableClick}
-              isSelected={selectedTable?.id === table.id}
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* Center Section - Menu Items */}
-      <div className="menu-section min-h-screen w- -mt-120">
-        <h2 className="section-title">Menu</h2>
+    <div>
+      <div className="simple-page-header">
+        <h1 className="simple-page-title">Restaurant POS</h1>
         {selectedTable && (
-          <div className="selected-table-info">
-            Selected: Table {selectedTable.number} ({selectedTable.status})
-          </div>
+          <span className="simple-badge badge-green" style={{ fontSize: 13, padding: "4px 12px" }}>
+            Table {selectedTable.number} selected
+          </span>
         )}
-        <div className="menu-grid">
-          {menuItems.map((item) => (
-            <MenuItem
-              key={item.id}
-              item={item}
-              onAddToOrder={handleAddToOrder}
-            />
-          ))}
-        </div>
       </div>
 
-      {/* Right Section - Billing */}
-      <div className="billing-section min-h-screen w-280 -mt-120">
-        <OrderSummary
-          orderItems={orderItems}
-          onRemoveItem={handleRemoveItem}
-          onUpdateQuantity={handleUpdateQuantity}
-        />
+      {/* Three-column layout */}
+      <div style={{ display: "grid", gridTemplateColumns: "220px 1fr 280px", gap: 14, alignItems: "start" }}>
 
-        <PaymentSection
-          totalAmount={calculateTotal()}
-          selectedTable={selectedTable}
-          onGenerateBill={handleGenerateBill}
-          onTransferToRoom={handleTransferToRoom}
-          onSplitBill={handleSplitBill}
-        />
+        {/* Tables */}
+        <div className="simple-card">
+          <div className="simple-card-title">Tables</div>
+          <div className="simple-table-grid" style={{ gridTemplateColumns: "1fr 1fr" }}>
+            {tables.map((table) => (
+              <TableCard key={table.id} table={table} onClick={handleTableClick} isSelected={selectedTable?.id === table.id} />
+            ))}
+          </div>
+        </div>
+
+        {/* Menu */}
+        <div className="simple-card">
+          <div className="simple-card-title">
+            Menu
+            {!selectedTable && <span className="simple-text-muted" style={{ marginLeft: 8 }}>— Select a table first</span>}
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 8 }}>
+            {menuItems.map((item) => (
+              <MenuItem key={item.id} item={item} onAddToOrder={handleAddToOrder} />
+            ))}
+          </div>
+        </div>
+
+        {/* Billing */}
+        <div>
+          <OrderSummary orderItems={orderItems} onRemoveItem={handleRemoveItem} onUpdateQuantity={handleUpdateQuantity} />
+          <PaymentSection totalAmount={calculateTotal()} selectedTable={selectedTable}
+            onGenerateBill={handleGenerateBill} onTransferToRoom={handleTransferToRoom} onSplitBill={handleSplitBill} />
+        </div>
       </div>
 
       {/* Split Bill Modal */}
-      <Modal
-        isOpen={showSplitBillModal}
-        onClose={() => setShowSplitBillModal(false)}
-        title="Split Bill"
-      >
-        <div className="split-bill-form">
-          <div className="form-group">
-            <label>Number of Parts</label>
-            <input
-              type="number"
-              min="2"
-              max="10"
-              value={splitBillData.parts}
-              onChange={(e) =>
-                setSplitBillData({
-                  ...splitBillData,
-                  parts: parseInt(e.target.value) || 2,
-                })
-              }
-              className="form-input"
-            />
+      <Modal isOpen={showSplitBillModal} onClose={() => setShowSplitBillModal(false)} title="Split Bill">
+        <div>
+          <div className="simple-form-group" style={{ marginBottom: 12 }}>
+            <label className="simple-label">Number of Parts</label>
+            <input type="number" min="2" max="10" value={splitBillData.parts}
+              onChange={(e) => setSplitBillData({ ...splitBillData, parts: parseInt(e.target.value) || 2 })}
+              className="simple-input" />
           </div>
-          <div className="split-bill-info">
-            <p>Total Amount: ₹{splitBillData.totalAmount?.toFixed(2)}</p>
-            <p>
-              Amount per part: ₹
-              {((splitBillData.totalAmount || 0) / splitBillData.parts).toFixed(
-                2,
-              )}
-            </p>
+          <div className="simple-summary" style={{ marginBottom: 14 }}>
+            <div className="simple-summary-row"><span>Total Amount</span><span>₹{splitBillData.totalAmount?.toFixed(2)}</span></div>
+            <div className="simple-summary-row"><span>Per Person</span><span>₹{((splitBillData.totalAmount || 0) / splitBillData.parts).toFixed(2)}</span></div>
           </div>
-          <div className="form-actions">
-            <button
-              className="btn-cancel"
-              onClick={() => setShowSplitBillModal(false)}
-            >
-              Cancel
-            </button>
-            <button className="btn-submit" onClick={handleSplitBillSubmit}>
-              Confirm Split
-            </button>
+          <div className="simple-btn-row" style={{ justifyContent: "flex-end" }}>
+            <button className="simple-btn simple-btn-gray" onClick={() => setShowSplitBillModal(false)}>Cancel</button>
+            <button className="simple-btn simple-btn-primary" onClick={handleSplitBillSubmit}>Confirm Split</button>
           </div>
         </div>
       </Modal>

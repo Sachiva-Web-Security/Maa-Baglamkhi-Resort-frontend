@@ -125,11 +125,10 @@ const Assignment = () => {
 
 
   return (
-    <div className="p-6">
-
+    <div>
       {/* HEADER */}
-      <div className="bg-slate-800 from-indigo-500 to-purple-500 text-white p-6 rounded-2xl shadow-lg mb-6">
-        <h2 className="text-2xl font-Extrabold pl-100">Task Assignment</h2>
+      <div className="simple-page-header">
+        <h2 className="simple-page-title">Task Assignment</h2>
         <p className="text-sm opacity-90 pl-100">
           Assign tasks to staff members and track completion
         </p>

@@ -245,363 +245,142 @@ const Banquet = () => {
     return { total, upcoming, completed, billed };
   }, [halls.length, bookings]);
 
+  const F = (val) => `₹${Number(val || 0).toLocaleString('en-IN')}`;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#071226] via-[#081827] to-[#041019] pt-[100px] px-[30px] pb-[30px] text-gray-100">
-      <h1 className="text-2xl font-extrabold text-white mb-5">Banquet Management</h1>
-
-      <div className="flex flex-wrap gap-3 mb-5">
-        <button
-          className="bg-blue-600 text-white px-4 py-2.5 rounded-lg font-extrabold hover:opacity-90 hover:-translate-y-0.5 active:translate-y-0 transition-all"
-          onClick={resetWizard}
-        >
-          + New Booking
-        </button>
-        <button
-          className="bg-green-600 text-white px-4 py-2.5 rounded-lg font-extrabold hover:opacity-90 hover:-translate-y-0.5 active:translate-y-0 transition-all"
-          onClick={() => alert(`Upcoming: ${hallStats.upcoming}\nCompleted: ${hallStats.completed}\nBilled: ${hallStats.billed}`)}
-        >
-          Quick Summary
-        </button>
+    <div>
+      {/* Header */}
+      <div className="simple-page-header">
+        <h1 className="simple-page-title">Banquet Management</h1>
+        <button className="simple-btn simple-btn-primary" onClick={resetWizard}>+ New Booking</button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
-        <div className="bg-[#071826] rounded-xl shadow p-4 border border-white/5">
-          <div className="text-gray-300 font-extrabold text-xs mb-2">Total Halls</div>
-          <div className="text-white font-black text-xl">{hallStats.total}</div>
-        </div>
-        <div className="bg-[#06281e] rounded-xl shadow p-4 border border-white/5">
-          <div className="text-gray-300 font-extrabold text-xs mb-2">Upcoming Events</div>
-          <div className="text-emerald-300 font-black text-xl">{hallStats.upcoming}</div>
-        </div>
-        <div className="bg-[#2b2310] rounded-xl shadow p-4 border border-white/5">
-          <div className="text-gray-300 font-extrabold text-xs mb-2">Completed</div>
-          <div className="text-yellow-300 font-black text-xl">{hallStats.completed}</div>
-        </div>
-        <div className="bg-[#21102a] rounded-xl shadow p-4 border border-white/5">
-          <div className="text-gray-300 font-extrabold text-xs mb-2">Billed</div>
-          <div className="text-purple-300 font-black text-xl">{hallStats.billed}</div>
-        </div>
+      {/* Stats */}
+      <div className="simple-metrics-grid" style={{ marginBottom: 16 }}>
+        <div className="simple-metric-tile tile-blue"><div className="simple-metric-tile-value">{hallStats.total}</div><div className="simple-metric-tile-label">Total Halls</div></div>
+        <div className="simple-metric-tile tile-green"><div className="simple-metric-tile-value">{hallStats.upcoming}</div><div className="simple-metric-tile-label">Upcoming</div></div>
+        <div className="simple-metric-tile tile-orange"><div className="simple-metric-tile-value">{hallStats.completed}</div><div className="simple-metric-tile-label">Completed</div></div>
+        <div className="simple-metric-tile tile-purple"><div className="simple-metric-tile-value">{hallStats.billed}</div><div className="simple-metric-tile-label">Billed</div></div>
       </div>
 
-      <div className="bg-[#071826] rounded-xl shadow overflow-hidden mb-5 border border-white/5">
-        <div className="p-4 border-b border-white/5">
-          <h2 className="text-base font-black text-white">Booking Flow</h2>
-          <div className="text-gray-300 text-xs font-semibold mt-1.5">Select Hall → Details → Date/Time → Confirm → Completed → Bill</div>
+      {/* Booking Wizard */}
+      <div className="simple-card" style={{ marginBottom: 16 }}>
+        <div className="simple-card-title">New Booking — Step {activeStep + 1} of {steps.length}: {steps[activeStep]}</div>
+
+        {/* Step indicator */}
+        <div className="simple-tabs" style={{ marginBottom: 16 }}>
+          {steps.map((s, i) => (
+            <div key={i} className={`simple-tab ${i === activeStep ? 'simple-tab-active' : ''}`}
+              style={{ cursor: i < activeStep ? 'pointer' : 'default' }}
+              onClick={() => i < activeStep && setActiveStep(i)}>
+              {i + 1}. {s}
+            </div>
+          ))}
         </div>
 
-        <BanquetStepper steps={steps} activeStep={activeStep} />
-
-        <div className="p-4">
-          {activeStep === 0 && (
-              <div>
-              <h3 className="text-sm font-black text-white mb-3">Select Banquet Hall</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                {halls.map((hall) => (
-                  <BanquetHallCard
-                    key={hall.id}
-                    hall={hall}
-                    selected={wizard.hallId === (hall.code || hall.id)}
-                    onSelect={() => setWizard((prev) => ({ ...prev, hallId: hall.code || hall.id }))}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {activeStep === 1 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-black text-gray-300">Customer Name</label>
-                <input
-                  className="border border-white/10 bg-transparent rounded-lg px-3 py-2.5 font-bold text-white focus:outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-900"
-                  value={wizard.customerName}
-                  onChange={(e) => setWizard((p) => ({ ...p, customerName: e.target.value }))}
-                  placeholder="Enter customer name"
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-black text-gray-300">Phone</label>
-                <input
-                  className="border border-white/10 bg-transparent rounded-lg px-3 py-2.5 font-bold text-white focus:outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-900"
-                  value={wizard.phone}
-                  onChange={(e) => setWizard((p) => ({ ...p, phone: e.target.value }))}
-                  placeholder="Enter phone number"
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-black text-gray-300">Event Type</label>
-                <select
-                  className="border border-white/10 bg-transparent rounded-lg px-3 py-2.5 font-bold text-white focus:outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-900"
-                  value={wizard.eventType}
-                  onChange={(e) => setWizard((p) => ({ ...p, eventType: e.target.value }))}
-                >
-                  <option>Wedding</option>
-                  <option>Reception</option>
-                  <option>Birthday</option>
-                  <option>Engagement</option>
-                  <option>Conference</option>
-                  <option>Corporate</option>
-                </select>
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-black text-gray-300">Guests</label>
-                <input
-                  type="number"
-                  className="border border-white/10 bg-transparent rounded-lg px-3 py-2.5 font-bold text-white focus:outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-900"
-                  value={wizard.guests}
-                  onChange={(e) => setWizard((p) => ({ ...p, guests: e.target.value }))}
-                  min={1}
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-black text-gray-300">Menu Package</label>
-                <select
-                  className="border border-white/10 bg-transparent rounded-lg px-3 py-2.5 font-bold text-white focus:outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-900"
-                  value={wizard.menuPackageId}
-                  onChange={(e) => setWizard((p) => ({ ...p, menuPackageId: e.target.value }))}
-                >
-                  {menuPackages.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name} ({formatINR(p.perGuest)}/guest)
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-black text-gray-300">Decoration Fee</label>
-                <input
-                  type="number"
-                  className="border border-white/10 bg-transparent rounded-lg px-3 py-2.5 font-bold text-white focus:outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-900"
-                  value={wizard.decorationFee}
-                  onChange={(e) => setWizard((p) => ({ ...p, decorationFee: e.target.value }))}
-                  min={0}
-                />
-              </div>
-              <div className="flex flex-col gap-1.5 md:col-span-2">
-                <label className="text-xs font-black text-gray-300">Notes</label>
-                <textarea
-                  className="border border-white/10 bg-transparent rounded-lg px-3 py-2.5 font-bold text-white min-h-[90px] focus:outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-900 resize-y"
-                  value={wizard.notes}
-                  onChange={(e) => setWizard((p) => ({ ...p, notes: e.target.value }))}
-                  placeholder="Any special instructions..."
-                />
-              </div>
-            </div>
-          )}
-
-          {activeStep === 2 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-black text-gray-300">Event Date</label>
-                <input
-                  type="date"
-                  className="border border-white/10 bg-transparent rounded-lg px-3 py-2.5 font-bold text-white focus:outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-900"
-                  value={wizard.date}
-                  onChange={(e) => setWizard((p) => ({ ...p, date: e.target.value }))}
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-black text-gray-700">Start Time</label>
-                <input
-                  type="time"
-                  className="border border-gray-300 rounded-lg px-3 py-2.5 font-bold text-gray-900 focus:outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
-                  value={wizard.startTime}
-                  onChange={(e) => setWizard((p) => ({ ...p, startTime: e.target.value }))}
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-black text-gray-700">End Time</label>
-                <input
-                  type="time"
-                  className="border border-gray-300 rounded-lg px-3 py-2.5 font-bold text-gray-900 focus:outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
-                  value={wizard.endTime}
-                  onChange={(e) => setWizard((p) => ({ ...p, endTime: e.target.value }))}
-                />
-              </div>
-                <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-black text-gray-300">Duration</label>
-                <div className="bg-transparent border border-white/10 rounded-lg px-3 py-2.5 font-extrabold text-white">
-                  {wizardHours > 0 ? `${wizardHours} hour(s)` : 'Select valid times'}
+        {activeStep === 0 && (
+          <div>
+            <div className="simple-section-title">Select Banquet Hall</div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 10 }}>
+              {halls.map((hall) => (
+                <div key={hall.id}
+                  onClick={() => setWizard(p => ({ ...p, hallId: hall.code || hall.id }))}
+                  style={{ border: `2px solid ${wizard.hallId === (hall.code || hall.id) ? '#1565c0' : '#ddd'}`, borderRadius: 6, padding: 12, cursor: "pointer", background: wizard.hallId === (hall.code || hall.id) ? '#e3f0ff' : '#fff' }}>
+                  <div style={{ fontWeight: 700, color: "#1565c0", marginBottom: 4 }}>{hall.name}</div>
+                  <div style={{ fontSize: 12, color: "#666" }}>Capacity: {hall.capacity} | ₹{hall.ratePerHour}/hr</div>
+                  <span className={`simple-badge ${hall.status === 'Available' ? 'badge-green' : 'badge-red'}`} style={{ marginTop: 4 }}>{hall.status}</span>
                 </div>
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-black text-gray-700">Discount</label>
-                <input
-                  type="number"
-                  className="border border-gray-300 rounded-lg px-3 py-2.5 font-bold text-gray-900 focus:outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
-                  value={wizard.discount}
-                  onChange={(e) => setWizard((p) => ({ ...p, discount: e.target.value }))}
-                  min={0}
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-black text-gray-700">GST %</label>
-                <input
-                  type="number"
-                  className="border border-gray-300 rounded-lg px-3 py-2.5 font-bold text-gray-900 focus:outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
-                  value={wizard.gstPercent}
-                  onChange={(e) => setWizard((p) => ({ ...p, gstPercent: e.target.value }))}
-                  min={0}
-                />
-              </div>
+              ))}
             </div>
-          )}
+          </div>
+        )}
 
-          {activeStep === 3 && (
-            <div>
-              <h3 className="text-sm font-black text-gray-900 mb-3">Confirm Booking</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div className="border border-gray-200 rounded-xl p-3.5">
-                  <div className="flex justify-between gap-2.5 py-2.5 border-b border-gray-100">
-                    <span className="text-gray-600 font-extrabold text-xs">Hall</span>
-                    <span className="text-gray-900 font-extrabold text-xs text-right">{selectedHall ? selectedHall.name : '-'}</span>
-                  </div>
-                  <div className="flex justify-between gap-2.5 py-2.5 border-b border-gray-100">
-                    <span className="text-gray-600 font-extrabold text-xs">Customer</span>
-                    <span className="text-gray-900 font-extrabold text-xs text-right">{wizard.customerName || '-'}</span>
-                  </div>
-                  <div className="flex justify-between gap-2.5 py-2.5 border-b border-gray-100">
-                    <span className="text-gray-600 font-extrabold text-xs">Event</span>
-                    <span className="text-gray-900 font-extrabold text-xs text-right">{wizard.eventType}</span>
-                  </div>
-                  <div className="flex justify-between gap-2.5 py-2.5 border-b border-gray-100">
-                    <span className="text-gray-600 font-extrabold text-xs">Guests</span>
-                    <span className="text-gray-900 font-extrabold text-xs text-right">{wizard.guests}</span>
-                  </div>
-                  <div className="flex justify-between gap-2.5 py-2.5">
-                    <span className="text-gray-600 font-extrabold text-xs">Date & Time</span>
-                    <span className="text-gray-900 font-extrabold text-xs text-right">
-                      {wizard.date || '-'} ({wizard.startTime} - {wizard.endTime})
-                    </span>
-                  </div>
-                </div>
+        {activeStep === 1 && (
+          <div className="simple-form-grid">
+            <div className="simple-form-group"><label className="simple-label">Customer Name *</label><input className="simple-input" value={wizard.customerName} onChange={e => setWizard(p => ({ ...p, customerName: e.target.value }))} placeholder="Customer name" /></div>
+            <div className="simple-form-group"><label className="simple-label">Phone *</label><input className="simple-input" value={wizard.phone} onChange={e => setWizard(p => ({ ...p, phone: e.target.value }))} placeholder="Phone number" /></div>
+            <div className="simple-form-group"><label className="simple-label">Event Type</label><select className="simple-select" value={wizard.eventType} onChange={e => setWizard(p => ({ ...p, eventType: e.target.value }))}><option>Wedding</option><option>Reception</option><option>Birthday</option><option>Engagement</option><option>Conference</option><option>Corporate</option></select></div>
+            <div className="simple-form-group"><label className="simple-label">Guests</label><input type="number" className="simple-input" value={wizard.guests} min={1} onChange={e => setWizard(p => ({ ...p, guests: e.target.value }))} /></div>
+            <div className="simple-form-group"><label className="simple-label">Menu Package</label><select className="simple-select" value={wizard.menuPackageId} onChange={e => setWizard(p => ({ ...p, menuPackageId: e.target.value }))}>{menuPackages.map(p => <option key={p.id} value={p.id}>{p.name} (₹{p.perGuest}/guest)</option>)}</select></div>
+            <div className="simple-form-group"><label className="simple-label">Decoration Fee (₹)</label><input type="number" className="simple-input" value={wizard.decorationFee} min={0} onChange={e => setWizard(p => ({ ...p, decorationFee: e.target.value }))} /></div>
+            <div className="simple-form-group" style={{ gridColumn: "span 2" }}><label className="simple-label">Notes</label><textarea className="simple-textarea" value={wizard.notes} onChange={e => setWizard(p => ({ ...p, notes: e.target.value }))} placeholder="Special instructions..." /></div>
+          </div>
+        )}
 
-                <div className="border border-gray-200 rounded-xl p-3.5">
-                  <div className="flex justify-between gap-2.5 py-2.5 border-b border-gray-100">
-                    <span className="text-gray-600 font-extrabold text-xs">Hall Charges</span>
-                    <span className="text-gray-900 font-extrabold text-xs text-right">{formatINR(wizardTotals.hallCharge)}</span>
-                  </div>
-                  <div className="flex justify-between gap-2.5 py-2.5 border-b border-gray-100">
-                    <span className="text-gray-600 font-extrabold text-xs">Food Charges</span>
-                    <span className="text-gray-900 font-extrabold text-xs text-right">{formatINR(wizardTotals.foodCharge)}</span>
-                  </div>
-                  <div className="flex justify-between gap-2.5 py-2.5 border-b border-gray-100">
-                    <span className="text-gray-600 font-extrabold text-xs">Decoration</span>
-                    <span className="text-gray-900 font-extrabold text-xs text-right">{formatINR(wizardTotals.decoration)}</span>
-                  </div>
-                  <div className="flex justify-between gap-2.5 py-2.5 border-b border-gray-100">
-                    <span className="text-gray-600 font-extrabold text-xs">Discount</span>
-                    <span className="text-gray-900 font-extrabold text-xs text-right">- {formatINR(wizardTotals.discount)}</span>
-                  </div>
-                  <div className="flex justify-between gap-2.5 py-2.5 border-b border-gray-100">
-                    <span className="text-gray-600 font-extrabold text-xs">GST</span>
-                    <span className="text-gray-900 font-extrabold text-xs text-right">{formatINR(wizardTotals.gst)}</span>
-                  </div>
-                  <div className="flex justify-between gap-2.5 py-2.5">
-                    <span className="text-gray-900 font-black text-xs">Grand Total</span>
-                    <span className="text-gray-900 font-black text-xs text-right">{formatINR(wizardTotals.grandTotal)}</span>
-                  </div>
-                </div>
-              </div>
+        {activeStep === 2 && (
+          <div className="simple-form-grid">
+            <div className="simple-form-group"><label className="simple-label">Event Date *</label><input type="date" className="simple-input" value={wizard.date} onChange={e => setWizard(p => ({ ...p, date: e.target.value }))} /></div>
+            <div className="simple-form-group"><label className="simple-label">Start Time *</label><input type="time" className="simple-input" value={wizard.startTime} onChange={e => setWizard(p => ({ ...p, startTime: e.target.value }))} /></div>
+            <div className="simple-form-group"><label className="simple-label">End Time *</label><input type="time" className="simple-input" value={wizard.endTime} onChange={e => setWizard(p => ({ ...p, endTime: e.target.value }))} /></div>
+            <div className="simple-form-group"><label className="simple-label">Duration</label><div className="simple-input" style={{ background: "#f5f5f5" }}>{wizardHours > 0 ? `${wizardHours} hour(s)` : '—'}</div></div>
+            <div className="simple-form-group"><label className="simple-label">Discount (₹)</label><input type="number" className="simple-input" value={wizard.discount} min={0} onChange={e => setWizard(p => ({ ...p, discount: e.target.value }))} /></div>
+            <div className="simple-form-group"><label className="simple-label">GST %</label><input type="number" className="simple-input" value={wizard.gstPercent} min={0} onChange={e => setWizard(p => ({ ...p, gstPercent: e.target.value }))} /></div>
+          </div>
+        )}
 
-              <div className="mt-3 flex justify-end">
-                <button
-                  className="bg-blue-600 text-white px-4 py-2.5 rounded-lg font-extrabold hover:opacity-90 hover:-translate-y-0.5 active:translate-y-0 transition-all"
-                  onClick={handleConfirmBooking}
-                >
-                  Confirm Booking
-                </button>
-              </div>
+        {activeStep === 3 && (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+            <div className="simple-summary">
+              <div style={{ fontWeight: 700, marginBottom: 8, color: "#1565c0" }}>Booking Details</div>
+              {[["Hall", selectedHall?.name || '-'], ["Customer", wizard.customerName], ["Event", wizard.eventType], ["Guests", wizard.guests], ["Date", wizard.date], ["Time", `${wizard.startTime} – ${wizard.endTime}`]].map(([k, v]) => (
+                <div key={k} className="simple-summary-row"><span>{k}</span><span style={{ fontWeight: 600 }}>{v}</span></div>
+              ))}
             </div>
-          )}
-
-          {activeStep === 4 && (
-            <div>
-              <h3 className="text-sm font-black text-gray-900 mb-3">Event Completed</h3>
-              <p className="text-gray-600 text-xs font-semibold mb-3">
-                You can mark the event as completed from the booking list below, then generate the bill.
-              </p>
-              <div className="flex justify-end">
-                <button
-                  className="bg-blue-600 text-white px-4 py-2.5 rounded-lg font-extrabold hover:opacity-90 hover:-translate-y-0.5 active:translate-y-0 transition-all"
-                  onClick={() => setActiveStep(5)}
-                >
-                  Go to Generate Bill
-                </button>
-              </div>
+            <div className="simple-summary">
+              <div style={{ fontWeight: 700, marginBottom: 8, color: "#1565c0" }}>Cost Breakdown</div>
+              {[["Hall Charges", F(wizardTotals.hallCharge)], ["Food Charges", F(wizardTotals.foodCharge)], ["Decoration", F(wizardTotals.decoration)], ["Discount", `- ${F(wizardTotals.discount)}`], ["GST", F(wizardTotals.gst)]].map(([k, v]) => (
+                <div key={k} className="simple-summary-row"><span>{k}</span><span>{v}</span></div>
+              ))}
+              <div className="simple-summary-total"><span>Grand Total</span><span>{F(wizardTotals.grandTotal)}</span></div>
             </div>
-          )}
-
-          {activeStep === 5 && (
-            <div>
-              <h3 className="text-sm font-black text-gray-900 mb-3">Generate Bill</h3>
-              <p className="text-gray-600 text-xs font-semibold">Select a completed/confirmed event from the list and click "Generate Bill".</p>
+            <div style={{ gridColumn: "span 2", textAlign: "right" }}>
+              <button className="simple-btn simple-btn-success" onClick={handleConfirmBooking}>Confirm Booking</button>
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
-        <div className="p-4 border-t border-gray-200 flex justify-end gap-2.5">
-          <button
-            className="bg-gray-100 text-gray-900 px-4 py-2.5 rounded-lg font-extrabold hover:opacity-90 hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
-            onClick={goBack}
-            disabled={activeStep === 0}
-          >
-            Back
-          </button>
-          <button
-            className="bg-blue-600 text-white px-4 py-2.5 rounded-lg font-extrabold hover:opacity-90 hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
-            onClick={goNext}
-            disabled={activeStep >= 3 || !canNext}
-            title={activeStep >= 3 ? 'Use Confirm Booking' : !canNext ? 'Complete this step to continue' : 'Next'}
-          >
-            Next
-          </button>
+        {activeStep === 4 && (
+          <div>
+            <p style={{ color: "#666", marginBottom: 12, fontSize: 13 }}>Booking confirmed. Mark the event as completed from the list below, then generate the bill.</p>
+            <button className="simple-btn simple-btn-primary" onClick={() => setActiveStep(5)}>Go to Generate Bill</button>
+          </div>
+        )}
+
+        {activeStep === 5 && (
+          <p style={{ color: "#666", fontSize: 13 }}>Select a completed/confirmed event from the list below and click "Generate Bill".</p>
+        )}
+
+        <div className="simple-btn-row" style={{ justifyContent: "flex-end", marginTop: 16 }}>
+          <button className="simple-btn simple-btn-gray" onClick={goBack} disabled={activeStep === 0}>Back</button>
+          <button className="simple-btn simple-btn-primary" onClick={goNext} disabled={activeStep >= 3 || !canNext}>Next</button>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-gray-200 flex items-baseline justify-between gap-3">
-          <h2 className="text-base font-black text-gray-900">Bookings</h2>
-          <div className="text-gray-600 text-xs font-bold">Use actions to complete event and generate bill.</div>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-left">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="px-3 py-3 text-xs font-black text-gray-700">Hall</th>
-                <th className="px-3 py-3 text-xs font-black text-gray-700">Customer</th>
-                <th className="px-3 py-3 text-xs font-black text-gray-700">Event</th>
-                <th className="px-3 py-3 text-xs font-black text-gray-700">Date</th>
-                <th className="px-3 py-3 text-xs font-black text-gray-700">Time</th>
-                <th className="px-3 py-3 text-xs font-black text-gray-700">Status</th>
-                <th className="px-3 py-3 text-xs font-black text-gray-700">Action</th>
-              </tr>
+      {/* Bookings Table */}
+      <div className="simple-card">
+        <div className="simple-card-title">All Bookings</div>
+        <div className="simple-table-wrapper">
+          <table className="simple-table">
+            <thead>
+              <tr><th>Hall</th><th>Customer</th><th>Event</th><th>Date</th><th>Time</th><th>Status</th><th>Actions</th></tr>
             </thead>
             <tbody>
               {bookings.map((b) => (
-                <BanquetBookingRow
-                  key={b.id}
-                  booking={b}
+                <BanquetBookingRow key={b.id} booking={b}
                   onComplete={() => markCompleted(b)}
                   onGenerateBill={() => generateBill(b)}
-                  onView={() => {
-                    setSelectedBooking(b);
-                    openModal('viewBill');
-                  }}
-                />
+                  onView={() => { setSelectedBooking(b); openModal('viewBill'); }} />
               ))}
+              {bookings.length === 0 && <tr><td colSpan={7} style={{ textAlign: "center", padding: 20, color: "#999" }}>No bookings yet.</td></tr>}
             </tbody>
           </table>
         </div>
       </div>
 
-      <Modal isOpen={modals.viewBill} onClose={() => closeModal('viewBill')} title="Banquet Bill / Invoice (Demo)">
-        {selectedBooking ? (
-          <BanquetBill booking={selectedBooking} halls={halls} menuPackages={menuPackages} formatINR={formatINR} />
-        ) : (
-          <div className="text-gray-600 text-xs font-semibold">No booking selected.</div>
-        )}
+      <Modal isOpen={modals.viewBill} onClose={() => closeModal('viewBill')} title="Banquet Bill">
+        {selectedBooking
+          ? <BanquetBill booking={selectedBooking} halls={halls} menuPackages={menuPackages} formatINR={formatINR} />
+          : <p style={{ color: "#666" }}>No booking selected.</p>}
       </Modal>
     </div>
   );
