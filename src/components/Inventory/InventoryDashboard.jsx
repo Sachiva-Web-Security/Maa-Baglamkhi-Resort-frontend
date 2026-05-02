@@ -193,52 +193,55 @@ export default function InventoryDashboard() {
 
   // 🔹 Dashboard view
   return (
-    <div className="min-h-screen w-280 p-6 bg-gradient-to-br from-[#071226] via-[#081827] to-[#041019] text-gray-100">
+    <div className="p-2">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="simple-page-header">
         <div>
-          <h1 className="text-3xl font-bold text-white">Inventory Dashboard</h1>
-          <p className="text-sm text-gray-300">Hotel inventory overview</p>
+          <h1 className="simple-page-title">Inventory Dashboard</h1>
+          <p className="text-sm text-gray-500">Hotel inventory overview</p>
         </div>
-
         <div className="flex gap-3">
           <button
             onClick={() => setShowCategoryModal(true)}
-            className="bg-gradient-to-r from-[#60a5fa] to-[#10b981] text-black px-4 py-2 rounded"
+            className="simple-btn simple-btn-outline flex items-center gap-2"
           >
             <FaPlus /> Category
           </button>
           <button
             onClick={() => setShowItemModal(true)}
-            className="bg-blue-500 text-white px-4 py-2 rounded"
+            className="simple-btn simple-btn-primary flex items-center gap-2"
           >
             <FaPlus /> Item
           </button>
         </div>
       </div>
 
-      {/* Alerts */}
+      {/* Alert tiles */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-[#2b1210] p-4 rounded-xl flex gap-2 items-center border border-white/5">
-          <FaBell className="text-yellow-300"/> <span className="ml-1">Low Stock: <span className="font-bold text-white">{lowStockItems.length}</span></span>
+        <div className="simple-metric-tile tile-orange">
+          <div className="simple-metric-tile-label">Low Stock</div>
+          <div className="simple-metric-tile-value">{lowStockItems.length}</div>
         </div>
-        <div className="bg-[#2b1210] p-4 rounded-xl flex gap-2 items-center border border-white/5">
-          <FaBell className="text-red-400"/> <span className="ml-1">Out of Stock: <span className="font-bold text-white">{outOfStock.length}</span></span>
+        <div className="simple-metric-tile tile-red">
+          <div className="simple-metric-tile-label">Out of Stock</div>
+          <div className="simple-metric-tile-value">{outOfStock.length}</div>
         </div>
-        <div className="bg-[#102233] p-4 rounded-xl flex gap-2 items-center border border-white/5">
-          <FaBell className="text-sky-300"/> <span className="ml-1">Expiring Soon: <span className="font-bold text-white">{expiringSoon.length}</span></span>
+        <div className="simple-metric-tile tile-blue">
+          <div className="simple-metric-tile-label">Expiring Soon</div>
+          <div className="simple-metric-tile-value">{expiringSoon.length}</div>
         </div>
-        <div className="bg-[#122b1f] p-4 rounded-xl flex gap-2 items-center border border-white/5">
-          <FaRupeeSign className="text-emerald-300"/> <span className="ml-1">₹ <span className="font-bold text-white">{totalValue.toLocaleString()}</span></span>
+        <div className="simple-metric-tile tile-green">
+          <div className="simple-metric-tile-label">Total Value</div>
+          <div className="simple-metric-tile-value">₹{totalValue.toLocaleString()}</div>
         </div>
       </div>
 
       {/* Filters + search */}
-      <div className="bg-[#071826] p-4 rounded-xl mb-6 flex flex-col md:flex-row items-center gap-4 border border-white/5">
+      <div className="simple-card mb-6 flex flex-col md:flex-row items-center gap-4">
         <select
           value={filterCategory}
           onChange={(e) => setFilterCategory(e.target.value)}
-          className="border border-white/10 bg-transparent text-white px-3 py-2 rounded w-full md:w-auto"
+          className="simple-select w-full md:w-auto"
         >
           <option>All</option>
           {categories.map((c) => (
@@ -248,35 +251,35 @@ export default function InventoryDashboard() {
         <select
           value={expiryFilter}
           onChange={(e) => setExpiryFilter(e.target.value)}
-          className="border border-white/10 bg-transparent text-white px-3 py-2 rounded w-full md:w-auto"
+          className="simple-select w-full md:w-auto"
         >
           <option>All</option>
           <option>Expired</option>
           <option>Expiring Soon</option>
         </select>
-        <div className="relative w-full md:w-auto flex-1">
+        <div className="relative w-full flex-1">
           <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
             placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-white/10 bg-transparent rounded text-white"
+            className="simple-input pl-10 w-full"
           />
         </div>
       </div>
 
       {/* Table of items */}
-      <div className="bg-[#071826] rounded-xl shadow overflow-x-auto mb-6 border border-white/5">
-        <table className="w-full text-sm">
-          <thead className="bg-white/5">
+      <div className="simple-table-wrapper mb-6">
+        <table className="simple-table">
+          <thead>
             <tr>
-              <th className="p-3 text-left text-gray-300">Item Name</th>
-              <th className="p-3 text-left text-gray-300">Category</th>
-              <th className="p-3 text-left text-gray-300">Quantity</th>
-              <th className="p-3 text-left text-gray-300">Unit</th>
-              <th className="p-3 text-left text-gray-300">Expiry</th>
-              <th className="p-3 text-left text-gray-300">Actions</th>
+              <th>Item Name</th>
+              <th>Category</th>
+              <th>Quantity</th>
+              <th>Unit</th>
+              <th>Expiry</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -288,25 +291,22 @@ export default function InventoryDashboard() {
               </tr>
             ) : (
               displayedItems.map((item) => (
-                <tr
-                  key={item.id}
-                  className="border-t border-white/5 hover:bg-white/5"
-                >
-                  <td className="p-3 text-white">{item.name}</td>
-                  <td className="p-3 text-gray-300">{item.category}</td>
-                  <td className="p-3 text-white">{item.stock}</td>
-                  <td className="p-3 text-gray-300">{item.unit}</td>
-                  <td className="p-3 text-gray-300">{item.expiry}</td>
-                  <td className="p-3 flex gap-2">
+                <tr key={item.id}>
+                  <td className="font-medium">{item.name}</td>
+                  <td>{item.category}</td>
+                  <td>{item.stock}</td>
+                  <td>{item.unit}</td>
+                  <td>{item.expiry}</td>
+                  <td className="flex gap-2">
                     <button
                       onClick={() => handleEditClick(item)}
-                      className="text-sky-300"
+                      className="text-blue-500 hover:text-blue-700"
                     >
                       <FaEdit />
                     </button>
                     <button
                       onClick={() => handleDeleteItem(item.id)}
-                      className="text-rose-400"
+                      className="text-red-500 hover:text-red-700"
                     >
                       <FaTrash />
                     </button>
@@ -320,10 +320,10 @@ export default function InventoryDashboard() {
 
       {/* Expiry alerts */}
       {expiryAlerts.length > 0 && (
-        <div className="bg-[#2b1111] p-4 rounded-xl mb-6 border border-red-700/20">
-          <h3 className="font-semibold text-red-400">Expiry Alerts</h3>
+        <div className="bg-red-50 border border-red-200 p-4 rounded-xl mb-6">
+          <h3 className="font-semibold text-red-600 mb-1">Expiry Alerts</h3>
           {expiryAlerts.map((i) => (
-            <p key={i.id} className="text-sm text-gray-300">
+            <p key={i.id} className="text-sm text-gray-600">
               {i.name} expired on {i.expiry}
             </p>
           ))}
@@ -357,131 +357,141 @@ export default function InventoryDashboard() {
 
       {/* Add Category Modal */}
       {showCategoryModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
-          <form
-            onSubmit={handleAddNewCategory}
-            className="bg-[#071826] p-6 rounded-xl w-96 border border-white/5 text-white"
-          >
-            <h2 className="font-semibold mb-3 text-white">Add Category</h2>
-            <input
-              value={newCategoryName}
-              onChange={(e) => setNewCategoryName(e.target.value)}
-              className="border border-white/10 bg-transparent p-2 w-full mb-3 text-white"
-              required
-            />
-            <div className="flex justify-end gap-2">
-              <button type="button" onClick={() => setShowCategoryModal(false)} className="text-gray-300">
-                Cancel
-              </button>
-              <button className="bg-emerald-500 text-black px-3 py-1 rounded">
-                Add
-              </button>
+        <div className="simple-modal-overlay">
+          <div className="simple-modal">
+            <div className="simple-modal-header">
+              <h2>Add Category</h2>
+              <button className="simple-modal-close" onClick={() => setShowCategoryModal(false)}>✕</button>
             </div>
-          </form>
+            <div className="simple-modal-body">
+              <form onSubmit={handleAddNewCategory}>
+                <div className="simple-form-group">
+                  <label className="simple-label">Category Name</label>
+                  <input
+                    value={newCategoryName}
+                    onChange={(e) => setNewCategoryName(e.target.value)}
+                    className="simple-input w-full"
+                    placeholder="Category name"
+                    required
+                  />
+                </div>
+                <div className="flex justify-end gap-2 mt-4">
+                  <button type="button" onClick={() => setShowCategoryModal(false)} className="simple-btn simple-btn-outline">Cancel</button>
+                  <button type="submit" className="simple-btn simple-btn-success">Add</button>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
       )}
 
       {/* Add Item Modal */}
       {showItemModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
-          <form
-            onSubmit={addItem}
-            className="bg-[#071826] p-6 rounded-xl w-96 border border-white/5 text-white"
-          >
-            <h2 className="font-semibold mb-3 text-white">Add Item</h2>
-            <input name="name" placeholder="Item name" className="border border-white/10 bg-transparent p-2 w-full mb-2 text-white" />
-            <select name="category" className="border border-white/10 bg-transparent p-2 w-full mb-2 text-white">
-              {categories.map((c) => (
-                <option key={c} className="bg-[#071826]">{c}</option>
-              ))}
-            </select>
-            <input name="stock" type="number" className="border border-white/10 bg-transparent p-2 w-full mb-2 text-white" />
-            <input name="unit" className="border border-white/10 bg-transparent p-2 w-full mb-2 text-white" />
-            <input name="price" type="number" className="border border-white/10 bg-transparent p-2 w-full mb-2 text-white" />
-            <input name="expiry" type="date" className="border border-white/10 bg-transparent p-2 w-full mb-2 text-white" />
-            <select name="branch" className="border border-white/10 bg-transparent p-2 w-full mb-3 text-white">
-              <option className="bg-[#071826]">Main</option>
-              <option className="bg-[#071826]">Branch 2</option>
-            </select>
-            <div className="flex justify-end gap-2">
-              <button type="button" onClick={() => setShowItemModal(false)} className="text-gray-300">
-                Cancel
-              </button>
-              <button className="bg-blue-500 text-white px-3 py-1 rounded">
-                Save
-              </button>
+        <div className="simple-modal-overlay">
+          <div className="simple-modal">
+            <div className="simple-modal-header">
+              <h2>Add Item</h2>
+              <button className="simple-modal-close" onClick={() => setShowItemModal(false)}>✕</button>
             </div>
-          </form>
+            <div className="simple-modal-body">
+              <form onSubmit={addItem}>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="simple-form-group col-span-2">
+                    <label className="simple-label">Item Name</label>
+                    <input name="name" placeholder="Item name" className="simple-input w-full" required />
+                  </div>
+                  <div className="simple-form-group">
+                    <label className="simple-label">Category</label>
+                    <select name="category" className="simple-select w-full">
+                      {categories.map((c) => <option key={c}>{c}</option>)}
+                    </select>
+                  </div>
+                  <div className="simple-form-group">
+                    <label className="simple-label">Branch</label>
+                    <select name="branch" className="simple-select w-full">
+                      <option>Main</option>
+                      <option>Branch 2</option>
+                    </select>
+                  </div>
+                  <div className="simple-form-group">
+                    <label className="simple-label">Stock</label>
+                    <input name="stock" type="number" placeholder="0" className="simple-input w-full" required />
+                  </div>
+                  <div className="simple-form-group">
+                    <label className="simple-label">Unit</label>
+                    <input name="unit" placeholder="kg / L / pcs" className="simple-input w-full" required />
+                  </div>
+                  <div className="simple-form-group">
+                    <label className="simple-label">Price (₹)</label>
+                    <input name="price" type="number" placeholder="0" className="simple-input w-full" required />
+                  </div>
+                  <div className="simple-form-group">
+                    <label className="simple-label">Expiry Date</label>
+                    <input name="expiry" type="date" className="simple-input w-full" required />
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2 mt-4">
+                  <button type="button" onClick={() => setShowItemModal(false)} className="simple-btn simple-btn-outline">Cancel</button>
+                  <button type="submit" className="simple-btn simple-btn-primary">Save</button>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
       )}
 
       {/* Edit Item Modal */}
       {showEditItemModal && editingItem && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
-          <form
-            onSubmit={saveEditedItem}
-            className="bg-[#071826] p-6 rounded-xl w-96 border border-white/5 text-white"
-          >
-            <h2 className="font-semibold mb-3 text-white">Edit Item</h2>
-            <input
-              name="name"
-              placeholder="Item name"
-              defaultValue={editingItem.name}
-              className="border border-white/10 bg-transparent p-2 w-full mb-2 text-white"
-            />
-            <select
-              name="category"
-              defaultValue={editingItem.category}
-              className="border border-white/10 bg-transparent p-2 w-full mb-2 text-white"
-            >
-              {categories.map((c) => (
-                <option key={c} className="bg-[#071826]">{c}</option>
-              ))}
-            </select>
-            <input
-              name="stock"
-              type="number"
-              defaultValue={editingItem.stock}
-              className="border border-white/10 bg-transparent p-2 w-full mb-2 text-white"
-            />
-            <input
-              name="unit"
-              defaultValue={editingItem.unit}
-              className="border border-white/10 bg-transparent p-2 w-full mb-2 text-white"
-            />
-            <input
-              name="price"
-              type="number"
-              defaultValue={editingItem.price}
-              className="border border-white/10 bg-transparent p-2 w-full mb-2 text-white"
-            />
-            <input
-              name="expiry"
-              type="date"
-              defaultValue={editingItem.expiry}
-              className="border border-white/10 bg-transparent p-2 w-full mb-2 text-white"
-            />
-            <select
-              name="branch"
-              defaultValue={editingItem.branch}
-              className="border border-white/10 bg-transparent p-2 w-full mb-3 text-white"
-            >
-              <option className="bg-[#071826]">Main</option>
-              <option className="bg-[#071826]">Branch 2</option>
-            </select>
-            <div className="flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setShowEditItemModal(false)}
-                className="text-gray-300"
-              >
-                Cancel
-              </button>
-              <button className="bg-blue-500 text-white px-3 py-1 rounded">
-                Save
-              </button>
+        <div className="simple-modal-overlay">
+          <div className="simple-modal">
+            <div className="simple-modal-header">
+              <h2>Edit Item</h2>
+              <button className="simple-modal-close" onClick={() => setShowEditItemModal(false)}>✕</button>
             </div>
-          </form>
+            <div className="simple-modal-body">
+              <form onSubmit={saveEditedItem}>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="simple-form-group col-span-2">
+                    <label className="simple-label">Item Name</label>
+                    <input name="name" placeholder="Item name" defaultValue={editingItem.name} className="simple-input w-full" required />
+                  </div>
+                  <div className="simple-form-group">
+                    <label className="simple-label">Category</label>
+                    <select name="category" defaultValue={editingItem.category} className="simple-select w-full">
+                      {categories.map((c) => <option key={c}>{c}</option>)}
+                    </select>
+                  </div>
+                  <div className="simple-form-group">
+                    <label className="simple-label">Branch</label>
+                    <select name="branch" defaultValue={editingItem.branch} className="simple-select w-full">
+                      <option>Main</option>
+                      <option>Branch 2</option>
+                    </select>
+                  </div>
+                  <div className="simple-form-group">
+                    <label className="simple-label">Stock</label>
+                    <input name="stock" type="number" defaultValue={editingItem.stock} className="simple-input w-full" required />
+                  </div>
+                  <div className="simple-form-group">
+                    <label className="simple-label">Unit</label>
+                    <input name="unit" defaultValue={editingItem.unit} className="simple-input w-full" required />
+                  </div>
+                  <div className="simple-form-group">
+                    <label className="simple-label">Price (₹)</label>
+                    <input name="price" type="number" defaultValue={editingItem.price} className="simple-input w-full" required />
+                  </div>
+                  <div className="simple-form-group">
+                    <label className="simple-label">Expiry Date</label>
+                    <input name="expiry" type="date" defaultValue={editingItem.expiry} className="simple-input w-full" required />
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2 mt-4">
+                  <button type="button" onClick={() => setShowEditItemModal(false)} className="simple-btn simple-btn-outline">Cancel</button>
+                  <button type="submit" className="simple-btn simple-btn-primary">Save</button>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
       )}
     </div>

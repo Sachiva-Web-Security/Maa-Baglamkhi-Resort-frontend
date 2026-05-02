@@ -15,10 +15,10 @@ import {
 
 const Card = ({ title, subtitle, children }) => {
   return (
-    <div className="bg-transparent rounded-xl shadow-sm border border-white/5 p-4">
+    <div className="simple-card">
       <div className="mb-2">
-        <div className="text-base font-extrabold text-white">{title}</div>
-        {subtitle ? <div className="text-xs text-gray-300 font-semibold mt-1">{subtitle}</div> : null}
+        <div className="text-base font-bold text-gray-800">{title}</div>
+        {subtitle ? <div className="text-xs text-gray-500 font-semibold mt-1">{subtitle}</div> : null}
       </div>
       <div className="h-[320px]">{children}</div>
     </div>
@@ -63,9 +63,9 @@ const ReportCharts = ({ reportType, rows }) => {
       <Card title="Banquet Revenue by Hall" subtitle="Total amount grouped by hall (demo)">
         <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
           <BarChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-            <XAxis dataKey="name" stroke="#94a3b8" tick={{ fontSize: 12 }} />
-            <YAxis stroke="#94a3b8" tick={{ fontSize: 12 }} />
+            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <XAxis dataKey="name" stroke="#6b7280" tick={{ fontSize: 12 }} />
+            <YAxis stroke="#6b7280" tick={{ fontSize: 12 }} />
             <Tooltip />
             <Bar dataKey="value" fill="#14b8a6" radius={[8, 8, 0, 0]} />
           </BarChart>
@@ -80,9 +80,9 @@ const ReportCharts = ({ reportType, rows }) => {
       <Card title="Restaurant Sales Trend" subtitle="Sales by date (demo)">
         <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
           <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-            <XAxis dataKey="date" stroke="#94a3b8" tick={{ fontSize: 12 }} />
-            <YAxis stroke="#94a3b8" tick={{ fontSize: 12 }} />
+            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <XAxis dataKey="date" stroke="#6b7280" tick={{ fontSize: 12 }} />
+            <YAxis stroke="#6b7280" tick={{ fontSize: 12 }} />
             <Tooltip />
             <Line type="monotone" dataKey="value" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4 }} />
           </LineChart>
@@ -97,9 +97,9 @@ const ReportCharts = ({ reportType, rows }) => {
       <Card title="Housekeeping Status" subtitle="Count by status (demo)">
         <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
           <BarChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-            <XAxis dataKey="name" stroke="#94a3b8" tick={{ fontSize: 12 }} />
-            <YAxis stroke="#94a3b8" tick={{ fontSize: 12 }} />
+            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <XAxis dataKey="name" stroke="#6b7280" tick={{ fontSize: 12 }} />
+            <YAxis stroke="#6b7280" tick={{ fontSize: 12 }} />
             <Tooltip />
             <Bar dataKey="value" fill="#f59e0b" radius={[8, 8, 0, 0]} />
           </BarChart>
@@ -120,9 +120,9 @@ const ReportCharts = ({ reportType, rows }) => {
       <Card title="Accounts Overview" subtitle="Income vs Expense (demo)">
         <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
           <BarChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-            <XAxis dataKey="name" stroke="#94a3b8" tick={{ fontSize: 12 }} />
-            <YAxis stroke="#94a3b8" tick={{ fontSize: 12 }} />
+            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <XAxis dataKey="name" stroke="#6b7280" tick={{ fontSize: 12 }} />
+            <YAxis stroke="#6b7280" tick={{ fontSize: 12 }} />
             <Tooltip />
             <Bar dataKey="value" fill="#8b5cf6" radius={[8, 8, 0, 0]} />
           </BarChart>

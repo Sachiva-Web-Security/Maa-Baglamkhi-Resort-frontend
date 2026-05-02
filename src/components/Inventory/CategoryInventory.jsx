@@ -94,42 +94,31 @@ export default function CategoryInventory({
   };
 
   return (
-    <div
-      className="
-        min-h-screen p-6 
-        bg-gradient-to-br from-blue-50 via-white to-indigo-100
-        dark:from-gray-900 dark:via-gray-800 dark:to-gray-900
-        text-gray-800 dark:text-white
-      "
-    >
+    <div className="p-2">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-4">
+      <div className="simple-page-header">
         <div className="flex items-center gap-3">
-          <button onClick={onBack} className="text-blue-600 dark:text-blue-400">
+          <button onClick={onBack} className="text-blue-600 hover:text-blue-800">
             <FaArrowLeft size={22} />
           </button>
           <div>
-            <h1 className="text-3xl font-bold">{categoryName}</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Manage {categoryName.toLowerCase()} inventory
-            </p>
+            <h1 className="simple-page-title">{categoryName}</h1>
+            <p className="text-sm text-gray-500">Manage {categoryName.toLowerCase()} inventory</p>
           </div>
         </div>
-
         <div className="flex gap-3">
           <select
             value={branch}
             onChange={(e) => setBranch(e.target.value)}
-            className="border rounded-lg px-3 py-2 dark:bg-gray-800"
+            className="simple-select"
           >
             <option>All</option>
             <option>Main</option>
             <option>Branch 2</option>
           </select>
-
           <button
             onClick={() => setShowModal(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+            className="simple-btn simple-btn-primary flex items-center gap-2"
           >
             <FaPlus /> Add Item
           </button>
@@ -138,23 +127,26 @@ export default function CategoryInventory({
 
       {/* Alerts */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-yellow-100 dark:bg-yellow-900/40 p-4 rounded-xl flex gap-3">
-          <FaBell /> Low Stock: {lowStockItems.length}
+        <div className="simple-metric-tile tile-orange">
+          <div className="simple-metric-tile-label">Low Stock</div>
+          <div className="simple-metric-tile-value">{lowStockItems.length}</div>
         </div>
-        <div className="bg-red-100 dark:bg-red-900/40 p-4 rounded-xl flex gap-3">
-          <FaBell /> Out of Stock: {outOfStock.length}
+        <div className="simple-metric-tile tile-red">
+          <div className="simple-metric-tile-label">Out of Stock</div>
+          <div className="simple-metric-tile-value">{outOfStock.length}</div>
         </div>
-        <div className="bg-green-100 dark:bg-green-900/40 p-4 rounded-xl flex gap-3">
-          <FaRupeeSign /> Total Value: ₹{totalValue.toLocaleString()}
+        <div className="simple-metric-tile tile-green">
+          <div className="simple-metric-tile-label">Total Value</div>
+          <div className="simple-metric-tile-value">₹{totalValue.toLocaleString()}</div>
         </div>
       </div>
 
       {/* Expiry Alerts */}
       {expiryAlerts.length > 0 && (
-        <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 p-4 rounded-xl mb-6">
-          <h3 className="font-semibold text-red-600">Expiry Alerts</h3>
+        <div className="bg-red-50 border border-red-200 p-4 rounded-xl mb-6">
+          <h3 className="font-semibold text-red-600 mb-1">Expiry Alerts</h3>
           {expiryAlerts.map((item) => (
-            <p key={item.id} className="text-sm">
+            <p key={item.id} className="text-sm text-gray-600">
               {item.name} – {item.expiry}
             </p>
           ))}
@@ -162,17 +154,17 @@ export default function CategoryInventory({
       )}
 
       {/* Table */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-100 dark:bg-gray-700">
+      <div className="simple-table-wrapper">
+        <table className="simple-table">
+          <thead>
             <tr>
-              <th className="p-3 text-left">Item</th>
-              <th className="p-3 text-left">Stock</th>
-              <th className="p-3 text-left">Unit</th>
-              <th className="p-3 text-left">Price</th>
-              <th className="p-3 text-left">Expiry</th>
-              <th className="p-3 text-left">Branch</th>
-              <th className="p-3 text-center">Actions</th>
+              <th>Item</th>
+              <th>Stock</th>
+              <th>Unit</th>
+              <th>Price</th>
+              <th>Expiry</th>
+              <th>Branch</th>
+              <th className="text-center">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -184,18 +176,18 @@ export default function CategoryInventory({
               </tr>
             ) : (
               filtered.map((item) => (
-                <tr key={item.id} className="border-t hover:bg-gray-50 dark:hover:bg-gray-700">
-                  <td className="p-3 font-medium">{item.name}</td>
-                  <td className="p-3">{item.stock}</td>
-                  <td className="p-3">{item.unit}</td>
-                  <td className="p-3">₹{item.price}</td>
-                  <td className="p-3">{item.expiry}</td>
-                  <td className="p-3">{item.branch}</td>
-                  <td className="p-3 flex gap-2 justify-center">
-                    <button onClick={() => handleEditClick(item)} className="text-blue-500">
+                <tr key={item.id}>
+                  <td className="font-medium">{item.name}</td>
+                  <td>{item.stock}</td>
+                  <td>{item.unit}</td>
+                  <td>₹{item.price}</td>
+                  <td>{item.expiry}</td>
+                  <td>{item.branch}</td>
+                  <td className="flex gap-2 justify-center">
+                    <button onClick={() => handleEditClick(item)} className="text-blue-500 hover:text-blue-700">
                       <FaEdit />
                     </button>
-                    <button onClick={() => handleDeleteItem(item.id)} className="text-red-500">
+                    <button onClick={() => handleDeleteItem(item.id)} className="text-red-500 hover:text-red-700">
                       <FaTrash />
                     </button>
                   </td>
@@ -205,8 +197,6 @@ export default function CategoryInventory({
           </tbody>
         </table>
       </div>
-
-      {/* Add & Edit modals SAME as before – already correct */}
     </div>
   );
 }

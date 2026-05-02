@@ -1,7 +1,7 @@
 const Field = ({ label, children }) => {
   return (
     <div className="flex flex-col gap-1.5">
-      <div className="text-xs font-extrabold text-gray-300">{label}</div>
+      <div className="simple-label">{label}</div>
       {children}
     </div>
   );
@@ -12,12 +12,10 @@ const Select = ({ value, onChange, options }) => {
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full px-3 py-2 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-900 bg-transparent font-semibold text-sm text-white"
+      className="simple-select w-full"
     >
       {options.map((o) => (
-        <option key={o} value={o} className="bg-[#071826] text-white">
-          {o}
-        </option>
+        <option key={o} value={o}>{o}</option>
       ))}
     </select>
   );
@@ -27,14 +25,14 @@ const ReportFilters = ({ value, onChange, visible, options }) => {
   const set = (patch) => onChange((prev) => ({ ...prev, ...patch }));
 
   return (
-    <div className="bg-[#071826] rounded-xl shadow-sm border border-white/5 p-4 mb-4 text-white">
+    <div className="simple-card mb-4">
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-3 items-end">
         <Field label="Date From">
           <input
             type="date"
             value={value.dateFrom}
             onChange={(e) => set({ dateFrom: e.target.value })}
-            className="w-full px-3 py-2 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-900 bg-transparent font-semibold text-sm text-white"
+            className="simple-input w-full"
           />
         </Field>
         <Field label="Date To">
@@ -42,7 +40,7 @@ const ReportFilters = ({ value, onChange, visible, options }) => {
             type="date"
             value={value.dateTo}
             onChange={(e) => set({ dateTo: e.target.value })}
-            className="w-full px-3 py-2 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-900 bg-transparent font-semibold text-sm text-white"
+            className="simple-input w-full"
           />
         </Field>
 
