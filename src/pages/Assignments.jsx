@@ -125,48 +125,42 @@ const Assignment = () => {
 
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-200 p-4 sm:p-6 lg:p-8 overflow-x-hidden">
+    <div>
       {/* HEADER */}
-      <div className="bg-slate-800 from-indigo-500 to-purple-500 text-white p-4 sm:p-6 rounded-2xl shadow-lg mb-6 w-full">
-        <h2 className="text-xl sm:text-2xl font-extrabold">Task Assignment</h2>
-        <p className="text-xs sm:text-sm opacity-90">
+      <div className="simple-page-header">
+        <h2 className="simple-page-title">Task Assignment</h2>
+        <p className="text-sm opacity-90 pl-100">
           Assign tasks to staff members and track completion
         </p>
       </div>
 
       {/*stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-6 w-full">
-        <div className="bg-slate-800 p-4 rounded-xl shadow">
-          <h4 className="font-semibold text-sm sm:text-base">Total Tasks</h4>
-          <p className="text-xl sm:text-2xl font-bold">{stats.total || 0}</p>
+      <div className="grid md:grid-cols-3 gap-4 mb-6">
+        <div className="bg-blue-100 p-4 rounded-xl shadow">
+          <h4 className="font-semibold">Total Tasks</h4>
+          <p className="text-2xl font-bold">{stats.total || 0}</p>
         </div>
-        <div className="bg-slate-800 p-4 rounded-xl shadow">
-          <h4 className="font-semibold text-sm sm:text-base">Completed</h4>
-          <p className="text-xl sm:text-2xl font-bold">
-            {stats.completed || 0}
-          </p>
+        <div className="bg-green-100 p-4 rounded-xl shadow">
+          <h4 className="font-semibold">Completed</h4>
+          <p className="text-2xl font-bold">{stats.completed || 0}</p>
         </div>
-        <div className="bg-slate-800 p-4 rounded-xl shadow">
-          <h4 className="font-semibold text-sm sm:text-base">Pending</h4>
-          <p className="text-xl sm:text-2xl font-bold">{stats.pending || 0}</p>
+        <div className="bg-yellow-100 p-4 rounded-xl shadow">
+          <h4 className="font-semibold">Pending</h4>
+          <p className="text-2xl font-bold">{stats.pending || 0}</p>
         </div>
       </div>
 
       {role !== "housekeeping" && (
-        <div className="bg-slate-800 rounded-2xl shadow-md p-4 sm:p-6 mb-8 w-full overflow-x-hidden">
-          <h3 className="text-base sm:text-lg font-semibold mb-4">
-            Assign New Task
-          </h3>
+        <div className="bg-slate-800 rounded-2xl shadow-md p-6 mb-8">
+          <h3 className="text-lg font-semibold mb-4">Assign New Task</h3>
 
-          <form
-            onSubmit={handleSubmit}
-            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 text-white w-full"
-          >
+          <form onSubmit={handleSubmit} className="grid md:grid-cols-4 gap-4 text-white ">
+
             <select
               name="staff_name"
               value={form.staff_name}
               onChange={handleChange}
-              className="border rounded-lg p-2 focus:ring-2 focus:ring-indigo-400 bg-slate-700 text-sm w-full"
+              className="border rounded-lg p-2 focus:ring-2 focus:ring-indigo-400 bg-slate-700"
               required
             >
               <option value="">Select Staff</option>
@@ -186,7 +180,7 @@ const Assignment = () => {
               placeholder="Room Number"
               value={form.room_number}
               onChange={handleChange}
-              className="border rounded-lg p-2 bg-slate-700 text-sm w-full"
+              className="border rounded-lg p-2 bg-slate-700"
               required
             />
 
@@ -196,13 +190,13 @@ const Assignment = () => {
               placeholder="Task"
               value={form.task}
               onChange={handleChange}
-              className="border rounded-lg p-2 bg-slate-700 text-sm w-full"
+              className="border rounded-lg p-2 bg-slate-700"
               required
             />
 
             <button
               type="submit"
-              className="bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg px-4 py-2 font-semibold text-sm sm:col-span-2 md:col-span-1 w-full"
+              className="bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg px-4 py-2 font-semibold"
             >
               {editId ? "Update Task" : "Assign Task"}
             </button>
@@ -212,25 +206,19 @@ const Assignment = () => {
       )}
 
       {/* TABLE CARD */}
-      <div className="bg-slate-800 rounded-2xl shadow-md p-4 sm:p-6 w-full overflow-hidden">
-        <h3 className="text-base sm:text-lg font-semibold mb-4">
-          Assigned Tasks
-        </h3>
+      <div className="bg-slate-800 rounded-2xl shadow-md p-6">
+        <h3 className="text-lg font-semibold mb-4">Assigned Tasks</h3>
 
-        <div className="overflow-x-auto -mx-4 sm:-mx-6 px-4 sm:px-6">
-          <table className="w-full border-collapse min-w-full">
+        <div className="overflow-x-auto ">
+          <table className="w-full border-collapse ">
             <thead>
-              <tr className="bg-blue-900 text-left text-white text-xs sm:text-sm">
-                <th className="px-2 sm:px-3 py-2 sm:py-3">Staff</th>
-                <th className="px-2 sm:px-3 py-2 sm:py-3">Room</th>
-                <th className="px-2 sm:px-3 py-2 sm:py-3">Task</th>
-                <th className="px-2 sm:px-3 py-2 sm:py-3 hidden sm:table-cell">
-                  Status
-                </th>
-                <th className="px-2 sm:px-3 py-2 sm:py-3 hidden md:table-cell">
-                  Assigned By
-                </th>
-                <th className="px-2 sm:px-3 py-2 sm:py-3">Action</th>
+              <tr className="bg-blue-900 text-left text-white rounded-lg ">
+                <th className="p-3">Staff</th>
+                <th className="p-3">Room</th>
+                <th className="p-3">Task</th>
+                <th className="p-3">Status</th>
+                <th className="p-3">Assigned By</th>
+                <th className="p-3">Action</th>
               </tr>
             </thead>
 
@@ -238,7 +226,7 @@ const Assignment = () => {
               {assignments.map((a) => (
                 <tr
                   key={a.id}
-                  className="border-b hover:bg-blue-500 transition text-xs sm:text-sm"
+                  className="border-b hover:bg-gray-50 transition "
                 >
                   <td className="p-3 font-medium">{a.staff_name}</td>
                   <td className="p-3">{a.room_number}</td>
@@ -246,44 +234,27 @@ const Assignment = () => {
 
                   <td className="p-3">
                     <span
-                      className={`px-2 sm:px-3 py-1 rounded-full text-xs font-semibold
-                        ${
-                          a.status === "Completed"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-yellow-100 text-yellow-700"
+                      className={`px-3 py-1 rounded-full text-xs font-semibold
+                        ${a.status === "Completed"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-yellow-100 text-yellow-700"
                         }`}
                     >
                       {a.status}
                     </span>
                   </td>
 
-                  <td className="px-2 sm:px-3 py-2 sm:py-3 hidden md:table-cell">
-                    {a.assigned_by}
-                  </td>
+                  <td className="p-3">{a.assigned_by}</td>
 
-                  <td className="px-2 sm:px-3 py-2 sm:py-3">
-                    <div className="flex flex-wrap gap-2">
-                      {a.status !== "Completed" && (
-                        <button
-                          onClick={() => markComplete(a.id)}
-                          className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-lg text-sm"
-                        >
-                          Complete
-                        </button>
-                      )}
+                  <td className="p-3">
+                    {a.status !== "Completed" && (
                       <button
-                        onClick={() => editTask(a)}
-                        className="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded-lg text-sm"
+                        onClick={() => markComplete(a.id)}
+                        className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-lg text-sm"
                       >
-                        Edit
+                        Complete
                       </button>
-                      <button
-                        onClick={() => deleteTask(a.id)}
-                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm"
-                      >
-                        Delete
-                      </button>
-                    </div>
+                    )}
                   </td>
                 </tr>
               ))}
