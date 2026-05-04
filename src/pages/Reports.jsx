@@ -160,13 +160,13 @@ const Reports = () => {
         )}
       </div>
 
-      <div className="bg-gradient-to-b from-[#0f1a2b] to-[#0b1622] rounded-xl shadow-lg border border-white/5 p-7 mb-4">
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(280px,1fr)_auto] gap-3 items-center">
+      <div className="simple-card mb-4">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(280px,1fr)_auto] gap-3 items-center mb-3">
           <ReportTypeSelector value={reportType} onChange={setReportType} types={REPORT_TYPES} />
 
           <div className="flex flex-wrap gap-2 justify-start lg:justify-end">
             <button
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg font-extrabold text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+              className="simple-btn simple-btn-primary flex items-center gap-2"
               onClick={fetchData}
               disabled={loading}
             >
@@ -174,14 +174,14 @@ const Reports = () => {
               {loading ? 'Fetching...' : 'Fetch Data'}
             </button>
             <button
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg font-extrabold text-white bg-green-600 hover:bg-green-700 transition-colors"
+              className="simple-btn simple-btn-success flex items-center gap-2"
               onClick={exportCSV}
             >
               <FaDownload />
               Export CSV
             </button>
             <button
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg font-extrabold text-white bg-gray-900 hover:bg-black transition-colors"
+              className="simple-btn simple-btn-gray flex items-center gap-2"
               onClick={printReport}
             >
               <FaPrint />
@@ -190,23 +190,23 @@ const Reports = () => {
           </div>
         </div>
 
-        <div className="mt-3 grid grid-cols-1 lg:grid-cols-[minmax(320px,1fr)_auto] gap-3 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(320px,1fr)_auto] gap-3 items-center">
           <div className="relative w-full">
             <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search in report..."
-              className="w-full pl-10 pr-4 py-2 border border-teal-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-400 bg-transparent text-gray-100 font-semibold"
+              className="simple-input pl-10 w-full"
             />
           </div>
 
           <div className="text-xs text-gray-500 font-semibold">
-            Rows: <span className="font-extrabold text-gray-700">{filtered.length}</span>
+            Rows: <span className="font-bold text-gray-700">{filtered.length}</span>
             {lastFetchedAt ? (
               <span className="ml-3">
                 Last fetched:{' '}
-                <span className="font-extrabold text-gray-700">{lastFetchedAt.toLocaleString()}</span>
+                <span className="font-bold text-gray-700">{lastFetchedAt.toLocaleString()}</span>
               </span>
             ) : null}
           </div>
@@ -222,10 +222,10 @@ const Reports = () => {
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-4">
         <ReportCharts reportType={reportType} rows={filtered} />
-        <div className="bg-gradient-to-b from-[#0f1a2b] to-[#0b1622] rounded-xl shadow-lg border border-white/5 p-4">
-          <h2 className="text-base font-extrabold text-white mb-1">Report Summary</h2>
-          <div className="text-xs text-gray-300 font-semibold mb-3">
-            Quick totals based on current filters (demo).
+        <div className="simple-card">
+          <h2 className="text-base font-bold text-gray-800 mb-1">Report Summary</h2>
+          <div className="text-xs text-gray-500 font-semibold mb-3">
+            Quick totals based on current filters.
           </div>
           <SummaryPanel reportType={reportType} rows={filtered} />
         </div>

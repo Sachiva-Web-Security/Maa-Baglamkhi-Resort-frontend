@@ -200,11 +200,14 @@ function Housekeeping() {
       {/* Header */}
       <div className="simple-page-header">
         <h1 className="simple-page-title">Housekeeping</h1>
+        <button className="simple-btn simple-btn-success flex items-center gap-2">
+          <FaFilePdf /> Export PDF
+        </button>
       </div>
 
       {/* Top Control Bar */}
-      <div className="bg-gradient-to-b from-[#0f1a2b] to-[#0b1622] rounded-lg shadow-lg border border-white/5 p-4 mb-4">
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(240px,1fr)_auto_260px_auto] gap-3 items-center">
+      <div className="simple-card mb-4">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(240px,1fr)_auto_260px] gap-3 items-center mb-3">
           {/* Search Bar */}
           <div className="relative w-full">
             <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -213,125 +216,93 @@ function Housekeeping() {
               placeholder="Search rooms..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-teal-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-400 bg-transparent text-gray-100"
+              className="simple-input pl-10 w-full"
             />
           </div>
 
-          {/* Hide Columns Shortcut */}
-          <div className="flex justify-center lg:justify-start">
-            <button
-              onClick={() => setShowColumns(!showColumns)}
-              className="px-4 py-2 bg-transparent border border-white/10 text-white rounded-lg text-sm font-medium hover:bg-white/5 transition-colors"
-            >
-              {showColumns ? 'Hide Columns' : 'Show Columns'}
-            </button>
-          </div>
+          <button
+            onClick={() => setShowColumns(!showColumns)}
+            className="simple-btn simple-btn-outline"
+          >
+            {showColumns ? 'Hide Columns' : 'Show Columns'}
+          </button>
 
-          {/* Housekeeper Filter */}
-          <div className="w-full">
-            <select
-              value={housekeeperFilter}
-              onChange={(e) => setHousekeeperFilter(e.target.value)}
-              className="w-full px-4 py-2 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-900 bg-transparent text-white"
-            >
-              <option className="bg-[#071826]">All Housekeeper</option>
-              <option className="bg-[#071826]">John Doe</option>
-              <option className="bg-[#071826]">Jane Smith</option>
-            </select>
-          </div>
-
-          {/* Export PDF Button */}
-          <div className="flex lg:justify-end">
-            <button className="w-full lg:w-auto flex items-center justify-center gap-2 px-5 py-2 bg-gradient-to-r from-[#10b981] to-[#06b6d4] text-white rounded-lg hover:opacity-95 transition">
-              <FaFilePdf />
-              <span className="text-sm font-medium">Export PDF</span>
-            </button>
-          </div>
+          <select
+            value={housekeeperFilter}
+            onChange={(e) => setHousekeeperFilter(e.target.value)}
+            className="simple-select w-full"
+          >
+            <option>All Housekeeper</option>
+            <option>John Doe</option>
+            <option>Jane Smith</option>
+          </select>
         </div>
 
-        <div className="mt-3 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-300">Selected: {selectedCount}</span>
-          </div>
-
-          {/* Room Type Tabs */}
-          <div className="inline-flex rounded-lg border border-white/5 overflow-hidden w-full md:w-auto bg-transparent">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+          <span className="text-sm text-gray-500">Selected: {selectedCount}</span>
+          <div className="simple-tabs">
             <button
               onClick={() => setRoomTypeTab('Accommodation Rooms')}
-              className={`flex-1 md:flex-none px-4 py-2 text-sm font-medium transition-colors ${
-                roomTypeTab === 'Accommodation Rooms'
-                  ? 'bg-white/5 text-white'
-                  : 'bg-transparent text-gray-300 hover:bg-white/5'
-              }`}
+              className={`simple-tab${roomTypeTab === 'Accommodation Rooms' ? ' simple-tab-active' : ''}`}
             >
               Accommodation Rooms
             </button>
             <button
               onClick={() => setRoomTypeTab('Event Rooms')}
-              className={`flex-1 md:flex-none px-4 py-2 text-sm font-medium transition-colors border-l border-white/5 ${
-                roomTypeTab === 'Event Rooms'
-                  ? 'bg-white/5 text-white'
-                  : 'bg-transparent text-gray-300 hover:bg-white/5'
-              }`}
+              className={`simple-tab${roomTypeTab === 'Event Rooms' ? ' simple-tab-active' : ''}`}
             >
               Event Rooms
             </button>
           </div>
         </div>
 
-        {/* Summary Cards */}
-        <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="flex items-center gap-3 p-4 rounded-lg bg-[#2b1210] border border-white/5">
-            <div className="p-2 bg-orange-500 text-white rounded-full">
+        {/* Summary tiles */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="simple-metric-tile tile-orange">
+            <div className="flex items-center gap-2 mb-1">
               <FaBroom />
+              <span className="simple-metric-tile-label">Rooms to Clean</span>
             </div>
-            <div>
-              <div className="text-sm text-orange-300">Rooms to Clean</div>
-              <div className="text-xl font-semibold text-white">{roomsToClean}</div>
-            </div>
+            <div className="simple-metric-tile-value">{roomsToClean}</div>
           </div>
-          <div className="flex items-center gap-3 p-4 rounded-lg bg-[#102214] border border-white/5">
-            <div className="p-2 bg-green-500 text-white rounded-full">
+          <div className="simple-metric-tile tile-green">
+            <div className="flex items-center gap-2 mb-1">
               <FaCheck />
+              <span className="simple-metric-tile-label">Rooms Inspected</span>
             </div>
-            <div>
-              <div className="text-sm text-emerald-300">Rooms Inspected</div>
-              <div className="text-xl font-semibold text-white">{roomsInspected}</div>
-            </div>
+            <div className="simple-metric-tile-value">{roomsInspected}</div>
           </div>
-          <div className="flex items-center gap-3 p-4 rounded-lg bg-[#21102a] border border-white/5">
-            <div className="p-2 bg-purple-500 text-white rounded-full">
+          <div className="simple-metric-tile tile-purple" style={{background:'#6a1b9a'}}>
+            <div className="flex items-center gap-2 mb-1">
               <FaBed />
+              <span className="simple-metric-tile-label">Occupied Rooms</span>
             </div>
-            <div>
-              <div className="text-sm text-purple-300">Occupied Rooms</div>
-              <div className="text-xl font-semibold text-white">{occupiedRooms}</div>
-            </div>
+            <div className="simple-metric-tile-value">{occupiedRooms}</div>
           </div>
         </div>
       </div>
 
       {/* Column Customization Bar */}
       {showColumns && (
-        <div className="mb-4 bg-[#071826] rounded-lg shadow-sm border border-white/5 p-3 flex items-center gap-2 flex-wrap text-white">
-          <div className="px-3 py-1 bg-teal-500 text-white rounded-full text-sm font-medium">
+        <div className="mb-4 bg-white rounded-lg shadow-sm border border-gray-200 p-3 flex items-center gap-2 flex-wrap">
+          <div className="px-3 py-1 bg-blue-600 text-white rounded-full text-sm font-medium">
             Columns
           </div>
           {allColumns.map((column) => (
             <div
               key={column.key}
-              className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm ${
+              className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm border ${
                 visibleColumns.includes(column.key)
-                  ? 'bg-white/5 text-white'
-                  : 'bg-transparent text-gray-300 border border-white/5'
+                  ? 'bg-blue-50 text-blue-700 border-blue-200'
+                  : 'bg-gray-50 text-gray-400 border-gray-200'
               }`}
             >
-              {column.required && <span className="text-teal-500">*</span>}
+              {column.required && <span className="text-blue-500">*</span>}
               <span>{column.label}</span>
               {!column.required && (
                 <button
                   onClick={() => toggleColumn(column.key)}
-                  className="ml-1 hover:text-red-500"
+                  className="ml-1 hover:text-red-500 text-gray-400"
                 >
                   <FaTimes className="w-3 h-3" />
                 </button>
@@ -342,76 +313,50 @@ function Housekeeping() {
       )}
 
       {/* Table */}
-      <div className="bg-[#071826] rounded-lg shadow-md overflow-hidden border border-white/5">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead className="bg-white/5 text-gray-300 text-xs uppercase">
-              <tr>
-                {visibleColumns.includes('type') && (
-                  <th className="px-4 py-3 font-semibold border-r border-white/5 text-gray-300">
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={selectAll}
-                        onChange={(e) => handleSelectAll(e.target.checked)}
-                        className="cursor-pointer"
-                      />
-                      Type
-                    </div>
-                  </th>
-                )}
-                {visibleColumns.includes('roomNo') && (
-                  <th className="px-4 py-3 font-semibold border-r border-gray-200">Room No. / Name</th>
-                )}
-                {visibleColumns.includes('building') && (
-                  <th className="px-4 py-3 font-semibold border-r border-gray-200">Building</th>
-                )}
-                {visibleColumns.includes('floor') && (
-                  <th className="px-4 py-3 font-semibold border-r border-gray-200">Floor</th>
-                )}
-                {visibleColumns.includes('section') && (
-                  <th className="px-4 py-3 font-semibold border-r border-gray-200">Section</th>
-                )}
-                {visibleColumns.includes('guestStatus') && (
-                  <th className="px-4 py-3 font-semibold border-r border-gray-200">Guest Status</th>
-                )}
-                {visibleColumns.includes('roomType') && (
-                  <th className="px-4 py-3 font-semibold border-r border-gray-200">Room Type</th>
-                )}
-                {visibleColumns.includes('status') && (
-                  <th className="px-4 py-3 font-semibold border-r border-gray-200">Status</th>
-                )}
-                {visibleColumns.includes('assignee') && (
-                  <th className="px-4 py-3 font-semibold border-r border-gray-200">Assignee</th>
-                )}
-                {visibleColumns.includes('layout') && (
-                  <th className="px-4 py-3 font-semibold border-r border-gray-200">Layout</th>
-                )}
-                {visibleColumns.includes('articles') && (
-                  <th className="px-4 py-3 font-semibold border-r border-gray-200">Articles</th>
-                )}
-                {visibleColumns.includes('services') && (
-                  <th className="px-4 py-3 font-semibold border-r border-gray-200">Services</th>
-                )}
-                {visibleColumns.includes('notes') && (
-                  <th className="px-4 py-3 font-semibold">Notes</th>
-                )}
-              </tr>
-            </thead>
-            <tbody>
-              {filteredData.map(item => (
-                <HousekeepingRow
-                  key={item.id}
-                  item={item}
-                  visibleColumns={visibleColumns}
-                  onSelectChange={handleSelectChange}
-                  onStatusChange={handleStatusChange}
-                  onAssigneeChange={handleAssigneeChange}
-                />
-              ))}
-            </tbody>
-          </table>
-        </div>
+      <div className="simple-table-wrapper">
+        <table className="simple-table">
+          <thead>
+            <tr>
+              {visibleColumns.includes('type') && (
+                <th>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={selectAll}
+                      onChange={(e) => handleSelectAll(e.target.checked)}
+                      className="cursor-pointer"
+                    />
+                    Type
+                  </div>
+                </th>
+              )}
+              {visibleColumns.includes('roomNo') && <th>Room No. / Name</th>}
+              {visibleColumns.includes('building') && <th>Building</th>}
+              {visibleColumns.includes('floor') && <th>Floor</th>}
+              {visibleColumns.includes('section') && <th>Section</th>}
+              {visibleColumns.includes('guestStatus') && <th>Guest Status</th>}
+              {visibleColumns.includes('roomType') && <th>Room Type</th>}
+              {visibleColumns.includes('status') && <th>Status</th>}
+              {visibleColumns.includes('assignee') && <th>Assignee</th>}
+              {visibleColumns.includes('layout') && <th>Layout</th>}
+              {visibleColumns.includes('articles') && <th>Articles</th>}
+              {visibleColumns.includes('services') && <th>Services</th>}
+              {visibleColumns.includes('notes') && <th>Notes</th>}
+            </tr>
+          </thead>
+          <tbody>
+            {filteredData.map(item => (
+              <HousekeepingRow
+                key={item.id}
+                item={item}
+                visibleColumns={visibleColumns}
+                onSelectChange={handleSelectChange}
+                onStatusChange={handleStatusChange}
+                onAssigneeChange={handleAssigneeChange}
+              />
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
