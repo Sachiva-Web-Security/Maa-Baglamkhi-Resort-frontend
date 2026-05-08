@@ -201,64 +201,54 @@ const Profile = () => {
       : "Role";
 
   return (
-    <div className="w-full h-full min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900  flex items-start justify-center p-6">
-      <div className="w-full max-w-5xl bg-white/10 backdrop-blur-2xl border border-white/20 rounded-3xl shadow-2xl grid md:grid-cols-2 gap-8 p-8 mt-6">
+    <div className="flex items-start justify-center p-6">
+      <div className="w-full max-w-5xl bg-white border border-gray-200 rounded-2xl shadow-sm grid md:grid-cols-2 gap-8 p-8 mt-2">
         {/* Left: avatar + basic info */}
         <div className="flex flex-col items-center text-center space-y-6">
-          <div className="relative">
-            <div className="w-32 h-32 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-4xl text-white shadow-lg overflow-hidden">
-              {avatarUrl ? (
-                <img
-                  src={avatarUrl}
-                  alt="Profile"
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                (name || "U").charAt(0).toUpperCase()
-              )}
-            </div>
+          <div className="w-32 h-32 rounded-full bg-linear-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-4xl text-white shadow overflow-hidden">
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+            ) : (
+              (name || "U").charAt(0).toUpperCase()
+            )}
           </div>
 
           <div>
-            <h2 className="text-2xl font-bold text-white">{name || "User"}</h2>
-            <p className="text-sm text-indigo-100">{prettyRole}</p>
+            <h2 className="text-2xl font-bold text-gray-800">{name || "User"}</h2>
+            <p className="text-sm text-blue-600 font-medium">{prettyRole}</p>
           </div>
 
-          <form onSubmit={handleAvatarUpload} className="w-full space-y-3 mt-2">
-            {/* File from system */}
+          <form onSubmit={handleAvatarUpload} className="w-full space-y-3">
             <input
               type="file"
               accept="image/*"
               onChange={handleAvatarChange}
-              className="w-full text-sm text-indigo-100 file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-500 file:text-white hover:file:bg-indigo-600"
+              className="w-full text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700"
             />
 
-            {/* Camera controls */}
             <div className="space-y-2">
               <button
                 type="button"
                 onClick={handleStartCamera}
-                className="w-full py-2 rounded-full bg-slate-800 text-white text-xs font-semibold hover:bg-slate-700 transition"
+                className="simple-btn simple-btn-outline w-full"
               >
                 Open Camera
               </button>
 
-              {cameraError && (
-                <p className="text-[11px] text-red-300">{cameraError}</p>
-              )}
+              {cameraError && <p className="text-xs text-red-500">{cameraError}</p>}
 
               {cameraStream && (
                 <div className="space-y-2">
                   <video
                     id="profile-camera-video"
-                    className="w-full rounded-2xl border border-white/20 bg-black/40"
+                    className="w-full rounded-xl border border-gray-200"
                     autoPlay
                     muted
                   />
                   <button
                     type="button"
                     onClick={handleCaptureFromCamera}
-                    className="w-full py-2 rounded-full bg-purple-500 text-white text-xs font-semibold hover:bg-purple-600 transition"
+                    className="simple-btn simple-btn-primary w-full"
                   >
                     Capture Photo
                   </button>
@@ -269,7 +259,7 @@ const Profile = () => {
             <button
               type="submit"
               disabled={loadingAvatar || !avatarFile}
-              className="w-full py-2 rounded-full bg-indigo-500 text-white font-semibold text-sm hover:bg-indigo-600 disabled:opacity-60 disabled:hover:bg-indigo-500 transition"
+              className="simple-btn simple-btn-primary w-full disabled:opacity-60"
             >
               {loadingAvatar ? "Uploading..." : "Update Profile Picture"}
             </button>
@@ -277,64 +267,54 @@ const Profile = () => {
         </div>
 
         {/* Right: password change */}
-        <div className="bg-slate-900/60 rounded-2xl p-6 flex flex-col justify-center space-y-4">
-          <h3 className="text-xl font-semibold text-white mb-2">
-            Change Password
-          </h3>
-          <p className="text-xs text-slate-300 mb-2">
-            Yahan aap apna password change kar sakte hain. Email ya current
-            password screen par kahi show nahi ho raha, sirf aap aur admin ke
-            database me update hoga.
+        <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6 flex flex-col justify-center space-y-4">
+          <h3 className="text-xl font-semibold text-gray-800 mb-2">Change Password</h3>
+          <p className="text-xs text-gray-500 mb-2">
+            Update your password below. Your current password is required for verification.
           </p>
 
           {error && (
-            <div className="text-sm text-red-400 bg-red-900/30 border border-red-500/40 rounded-lg px-3 py-2">
+            <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
               {error}
             </div>
           )}
 
           {message && (
-            <div className="text-sm text-emerald-300 bg-emerald-900/30 border border-emerald-500/40 rounded-lg px-3 py-2">
+            <div className="text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
               {message}
             </div>
           )}
 
           <form onSubmit={handlePasswordChange} className="space-y-4 mt-2">
-            <div>
-              <label className="block text-xs text-slate-200 mb-1">
-                Current Password
-              </label>
+            <div className="simple-form-group">
+              <label className="simple-label">Current Password</label>
               <input
                 type="password"
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-slate-800/80 text-sm text-white border border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="simple-input w-full"
                 placeholder="Enter current password"
               />
             </div>
 
-            <div>
-              <label className="block text-xs text-slate-200 mb-1">
-                New Password
-              </label>
+            <div className="simple-form-group">
+              <label className="simple-label">New Password</label>
               <input
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-slate-800/80 text-sm text-white border border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="simple-input w-full"
                 placeholder="Enter new password"
               />
             </div>
 
-            <div>
-              <label className="block text-xs text-slate-200 mb-1">
-                Confirm New Password
-              </label>
+            <div className="simple-form-group">
+              <label className="simple-label">Confirm New Password</label>
               <input
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-slate-800/80 text-sm text-white border border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="simple-input w-full"
                 placeholder="Re-enter new password"
               />
             </div>
@@ -342,15 +322,15 @@ const Profile = () => {
             <button
               type="submit"
               disabled={loadingPassword}
-              className="w-full py-2.5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold text-sm hover:from-indigo-600 hover:to-purple-600 disabled:opacity-60 transition"
+              className="simple-btn simple-btn-primary w-full disabled:opacity-60"
             >
               {loadingPassword ? "Updating..." : "Update Password"}
             </button>
           </form>
 
           {loadingProfile && (
-            <p className="text-xs text-slate-400 mt-2">
-              Profile details load ho rahe hain...
+            <p className="text-xs text-gray-400 mt-2">
+              Loading profile details...
             </p>
           )}
         </div>

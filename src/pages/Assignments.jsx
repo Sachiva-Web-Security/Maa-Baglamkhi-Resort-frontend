@@ -151,20 +151,17 @@ const Assignment = () => {
       </div>
 
       {role !== "housekeeping" && (
-        <div className="bg-slate-800 rounded-2xl shadow-md p-6 mb-8">
-          <h3 className="text-lg font-semibold mb-4">Assign New Task</h3>
-
-          <form onSubmit={handleSubmit} className="grid md:grid-cols-4 gap-4 text-white ">
-
+        <div className="simple-card mb-6">
+          <h3 className="simple-card-title mb-4">Assign New Task</h3>
+          <form onSubmit={handleSubmit} className="grid md:grid-cols-4 gap-4">
             <select
               name="staff_name"
               value={form.staff_name}
               onChange={handleChange}
-              className="border rounded-lg p-2 focus:ring-2 focus:ring-indigo-400 bg-slate-700"
+              className="simple-select"
               required
             >
               <option value="">Select Staff</option>
-
               {users
                 .filter((u) => u.role === "Housekeeping")
                 .map((u) => (
@@ -173,46 +170,40 @@ const Assignment = () => {
                   </option>
                 ))}
             </select>
-
             <input
               type="text"
               name="room_number"
               placeholder="Room Number"
               value={form.room_number}
               onChange={handleChange}
-              className="border rounded-lg p-2 bg-slate-700"
+              className="simple-input"
               required
             />
-
             <input
               type="text"
               name="task"
               placeholder="Task"
               value={form.task}
               onChange={handleChange}
-              className="border rounded-lg p-2 bg-slate-700"
+              className="simple-input"
               required
             />
-
-            <button
-              type="submit"
-              className="bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg px-4 py-2 font-semibold"
-            >
+            <button type="submit" className="simple-btn simple-btn-primary">
               {editId ? "Update Task" : "Assign Task"}
             </button>
-
           </form>
         </div>
       )}
 
       {/* TABLE CARD */}
-      <div className="bg-slate-800 rounded-2xl shadow-md p-6">
-        <h3 className="text-lg font-semibold mb-4">Assigned Tasks</h3>
-
-        <div className="overflow-x-auto ">
-          <table className="w-full border-collapse ">
+      <div className="simple-table-wrapper">
+        <div className="px-4 py-3 border-b border-gray-200">
+          <h3 className="text-base font-semibold text-gray-800">Assigned Tasks</h3>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="simple-table">
             <thead>
-              <tr className="bg-blue-900 text-left text-white rounded-lg ">
+              <tr>
                 <th className="p-3">Staff</th>
                 <th className="p-3">Room</th>
                 <th className="p-3">Task</th>
@@ -250,7 +241,7 @@ const Assignment = () => {
                     {a.status !== "Completed" && (
                       <button
                         onClick={() => markComplete(a.id)}
-                        className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-lg text-sm"
+                        className="simple-btn simple-btn-success simple-btn-sm"
                       >
                         Complete
                       </button>
@@ -270,7 +261,6 @@ const Assignment = () => {
           </table>
         </div>
       </div>
-
     </div>
   );
 };
