@@ -18,7 +18,16 @@ const Dashboard = () => {
     todayCheckins: 0,
     availableRooms: 0,
     todayCheckouts: 0,
+    expectedArrivals: 0,
+    expectedCheckouts: 0,
+    totalRevenueGenerated: 0,
   });
+  const [chartData, setChartData] = useState({
+    monthlyRevenue: [],
+    roomOccupancy: [],
+    foodSales: [],
+  });
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (location.state?.loginSuccess) {
@@ -27,15 +36,26 @@ const Dashboard = () => {
   }, [location]);
 
   useEffect(() => {
-    const fetchMetrics = async () => {
+    const fetchDashboardData = async () => {
+      setIsLoading(true);
       try {
-        const res = await API.get("/dashboard/metrics");
-        setMetrics((prev) => ({ ...prev, ...res.data }));
+        const [metricsRes, chartsRes] = await Promise.all([
+          API.get("/dashboard/metrics"),
+          API.get("/dashboard/charts"),
+        ]);
+        setMetrics((prev) => ({ ...prev, ...metricsRes.data }));
+        setChartData({
+          monthlyRevenue: chartsRes.data?.monthlyRevenue || [],
+          roomOccupancy: chartsRes.data?.roomOccupancy || [],
+          foodSales: chartsRes.data?.foodSales || [],
+        });
       } catch (err) {
-        console.error("Error fetching dashboard metrics:", err);
+        console.error("Error fetching dashboard data:", err);
+      } finally {
+        setIsLoading(false);
       }
     };
-    fetchMetrics();
+    fetchDashboardData();
   }, []);
 
   const tiles = [
@@ -44,7 +64,10 @@ const Dashboard = () => {
     { label: "Available Rooms", value: metrics.availableRooms || (metrics.totalRooms - metrics.occupiedRooms), cls: "tile-green", route: "/hotel" },
     { label: "Today's Check-ins", value: metrics.todayCheckins, cls: "tile-orange", route: "/hotel" },
     { label: "Today's Checkouts", value: metrics.todayCheckouts || 0, cls: "tile-teal", route: "/hotel" },
+    { label: "Expected Arrivals", value: metrics.expectedArrivals || 0, cls: "tile-blue", route: "/hotel" },
+    { label: "Expected Checkouts", value: metrics.expectedCheckouts || 0, cls: "tile-red", route: "/hotel" },
     { label: "Today's Revenue", value: `₹${(metrics.todayRevenue || 0).toLocaleString()}`, cls: "tile-purple", route: "/accounts" },
+    { label: "Total Revenue", value: `₹${(metrics.totalRevenueGenerated || 0).toLocaleString()}`, cls: "tile-green", route: "/accounts" },
   ];
 
   const role = (localStorage.getItem("role") || "").toLowerCase();
@@ -70,13 +93,14 @@ const Dashboard = () => {
           {new Date().toLocaleDateString("en-IN", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
         </span>
       </div>
+      {isLoading && <div className="simple-text-muted simple-mb">Loading live dashboard data...</div>}
 
       {/* Metric Tiles */}
-      <div className="simple-metrics-grid">
+      <div className="simple-metrics-grid simple-metrics-grid-admin">
         {tiles.map((t, i) => (
           <div
             key={i}
-            className={`simple-metric-tile ${t.cls}`}
+            className={`simple-metric-tile simple-metric-tile-admin ${t.cls}`}
             onClick={() => navigate(t.route)}
           >
             <div className="simple-metric-tile-value">{t.value}</div>
@@ -86,42 +110,33 @@ const Dashboard = () => {
       </div>
 
       {/* Charts */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "14px", marginBottom: "20px" }}>
-        <div className="simple-card" style={{ gridColumn: "span 1" }}>
+      <div className="simple-dashboard-chart-grid">
+        <div className="simple-card">
           <div className="simple-card-title">Monthly Revenue</div>
-          <MonthlyRevenueChart />
+          <MonthlyRevenueChart data={chartData.monthlyRevenue} />
         </div>
         <div className="simple-card">
           <div className="simple-card-title">Room Occupancy</div>
-          <RoomOccupancyChart />
+          <RoomOccupancyChart data={chartData.roomOccupancy} />
         </div>
         <div className="simple-card">
           <div className="simple-card-title">Food Sales</div>
-          <FoodSalesChart />
+          <FoodSalesChart data={chartData.foodSales} />
         </div>
       </div>
 
       {/* Module Quick Access */}
       <div className="simple-card">
         <div className="simple-card-title">Quick Access</div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: "10px" }}>
+        <div className="simple-dashboard-modules-grid">
           {modules.map((m) => (
             <div
               key={m.path}
               onClick={() => navigate(m.path)}
-              style={{
-                border: "1px solid #e0e0e0",
-                borderRadius: "6px",
-                padding: "14px",
-                cursor: "pointer",
-                background: "#fafafa",
-                transition: "background .15s, box-shadow .15s",
-              }}
-              onMouseEnter={e => { e.currentTarget.style.background = "#e3f0ff"; e.currentTarget.style.boxShadow = "0 2px 8px rgba(21,101,192,.12)"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "#fafafa"; e.currentTarget.style.boxShadow = "none"; }}
+              className="simple-dashboard-module-card"
             >
-              <div style={{ fontWeight: 700, fontSize: 14, color: "#1565c0", marginBottom: 4 }}>{m.name}</div>
-              <div style={{ fontSize: 11, color: "#888" }}>{m.desc}</div>
+              <div className="simple-dashboard-module-name">{m.name}</div>
+              <div className="simple-dashboard-module-desc">{m.desc}</div>
             </div>
           ))}
         </div>

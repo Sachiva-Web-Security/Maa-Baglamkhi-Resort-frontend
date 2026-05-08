@@ -1,27 +1,6 @@
-import { useEffect, useState } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
-import API from "../../../api";
 
-const RoomOccupancyChart = () => {
-  const [data, setData] = useState([
-    { name: "Occupied", value: 85 },
-    { name: "Available", value: 28 },
-    { name: "Cleaning", value: 7 },
-  ]);
-
-  useEffect(() => {
-    const fetchCharts = async () => {
-      try {
-        const res = await API.get("/dashboard/charts");
-        if (res.data && res.data.roomOccupancy) {
-          setData(res.data.roomOccupancy);
-        }
-      } catch (err) {
-        console.error("Error fetching room occupancy chart data:", err);
-      }
-    };
-    fetchCharts();
-  }, []);
+const RoomOccupancyChart = ({ data = [] }) => {
 
   const COLORS = ["#6366f1", "#22c55e", "#f59e0b", "#eab308", "#ef4444"];
 
@@ -32,7 +11,7 @@ const RoomOccupancyChart = () => {
     <div className="bg-white  shadow-lg  flex items-center justify-between">
 
       {/* Chart */}
-      <div className="w-screen h-48 relative">
+      <div className="w-full h-48 relative">
         <ResponsiveContainer>
           <PieChart>
             <Pie

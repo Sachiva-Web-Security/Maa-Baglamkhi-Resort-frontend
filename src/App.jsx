@@ -21,10 +21,13 @@ import Assignment from './pages/Assignments';
 import Kitchen from './pages/Kitchen';
 
 function Layout({ children, setIsAuthenticated }) {
+  const role = (localStorage.getItem("role") || "").toLowerCase();
+  const isAdmin = role === "admin";
+
   return (
-    <div className="simple-layout">
+    <div className={`simple-layout ${isAdmin ? "simple-layout-admin" : ""}`}>
       <Navbar setIsAuthenticated={setIsAuthenticated} />
-      <main className="simple-main">
+      <main className={`simple-main ${isAdmin ? "simple-main-admin" : ""}`}>
         {children}
       </main>
     </div>
@@ -132,6 +135,8 @@ function App() {
             <Layout setIsAuthenticated={setIsAuthenticated}><Kitchen /></Layout>
           </ProtectedRoute>
         } />
+
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </Router>
   );

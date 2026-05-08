@@ -15,7 +15,7 @@ const toDateInput = (val) => {
   return `${yyyy}-${mm}-${dd}`;
 };
 
-const BookingRow = ({ booking, onExtend, onShiftRoom, onCheckOut, onBillGenerated }) => {
+const BookingRow = ({ booking, onExtend, onShiftRoom, onCheckOut, onBillGenerated, onOpenInvoice }) => {
   const [showInvoice, setShowInvoice] = useState(false);
   const [invoiceMode, setInvoiceMode] = useState("generate"); // "generate" | "edit"
   const [showBillView, setShowBillView] = useState(false);
@@ -101,6 +101,7 @@ const BookingRow = ({ booking, onExtend, onShiftRoom, onCheckOut, onBillGenerate
                 <Btn onClick={handleEditBill} cls="simple-btn-warning">Edit Bill</Btn>
               </>
             )}
+            {onOpenInvoice && <Btn onClick={() => onOpenInvoice(booking)} cls="simple-btn-outline">Invoice</Btn>}
             <Btn onClick={() => onExtend(booking)} cls="simple-btn-info">Extend</Btn>
             <Btn onClick={() => onShiftRoom(booking)} cls="simple-btn-gray">Shift</Btn>
             <Btn onClick={() => onCheckOut(booking)} cls="simple-btn-danger">Check-Out</Btn>

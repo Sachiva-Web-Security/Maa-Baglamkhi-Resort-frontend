@@ -28,6 +28,17 @@ body {
   min-height: calc(100vh - 58px);
 }
 
+.simple-layout-admin {
+  background: #eef1f4;
+}
+
+.simple-main-admin {
+  margin-top: 0;
+  margin-left: 210px;
+  min-height: 100vh;
+  padding: 14px 18px;
+}
+
 .simple-loading {
   display: flex;
   align-items: center;
@@ -116,6 +127,144 @@ body {
 .simple-navbar-username { font-size: 13px; color: #444; white-space: nowrap; }
 .simple-navbar-role { color: #888; font-size: 11px; }
 
+/* ── Admin Sidebar (reference layout) ── */
+.simple-admin-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 210px;
+  background: #0f1318;
+  color: #d2d8df;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #1d2530;
+  z-index: 1200;
+}
+
+.simple-admin-brand {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  border-bottom: 1px solid #1d2530;
+  cursor: pointer;
+}
+
+.simple-admin-brand-logo {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  background: #fff;
+  color: #111;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.simple-admin-brand-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f2f4f7;
+}
+
+.simple-admin-user {
+  border-bottom: 1px solid #1d2530;
+  padding: 10px;
+}
+
+.simple-admin-user-name {
+  font-size: 12px;
+  color: #fff;
+  font-weight: 600;
+}
+
+.simple-admin-user-role {
+  font-size: 11px;
+  color: #8a98a8;
+  margin-top: 2px;
+}
+
+.simple-admin-nav-wrap {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 0 10px;
+}
+
+.simple-admin-group {
+  margin-bottom: 8px;
+}
+
+.simple-admin-group-title {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: #738196;
+  padding: 6px 12px 4px;
+}
+
+.simple-admin-link {
+  width: 100%;
+  border: 0;
+  border-top: 1px solid #1a212b;
+  border-bottom: 1px solid #1a212b;
+  background: transparent;
+  color: #d9dee4;
+  text-align: left;
+  padding: 7px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.simple-admin-link-parent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 600;
+}
+
+.simple-admin-caret {
+  font-size: 13px;
+  color: #8fa2b6;
+}
+
+.simple-admin-submenu-items {
+  background: #0b1016;
+}
+
+.simple-admin-link-child {
+  padding-left: 24px;
+  font-size: 11px;
+  color: #bec9d6;
+}
+
+.simple-admin-link:hover {
+  background: #1a212b;
+}
+
+.simple-admin-link-active {
+  background: #222b37;
+  color: #ffffff;
+}
+
+.simple-admin-logout {
+  margin: 10px;
+  border: 1px solid #304155;
+  background: #111821;
+  color: #dbe5ef;
+  border-radius: 4px;
+  padding: 7px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.simple-admin-logout:hover {
+  background: #1d2733;
+}
+
 /* ── Page Header ── */
 .simple-page-header {
   display: flex;
@@ -166,8 +315,20 @@ body {
 }
 .simple-metric-tile:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,.15); }
 
+.simple-metrics-grid-admin {
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.simple-metric-tile-admin {
+  border-radius: 2px;
+  padding: 12px;
+  box-shadow: none;
+}
+
 .simple-metric-tile-value {
-  font-size: 28px;
+  font-size: 23px;
   font-weight: 700;
   line-height: 1;
 }
@@ -183,6 +344,45 @@ body {
 .tile-red    { background: #b71c1c; }
 .tile-teal   { background: #00695c; }
 .tile-purple { background: #4527a0; }
+
+.simple-dashboard-chart-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.simple-dashboard-modules-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 10px;
+}
+
+.simple-dashboard-module-card {
+  border: 1px solid #d9dee5;
+  border-radius: 2px;
+  padding: 10px;
+  cursor: pointer;
+  background: #f9fbfd;
+  transition: background .15s, border-color .15s;
+}
+
+.simple-dashboard-module-card:hover {
+  background: #edf3f8;
+  border-color: #b9c8d8;
+}
+
+.simple-dashboard-module-name {
+  font-weight: 700;
+  font-size: 13px;
+  color: #243447;
+  margin-bottom: 3px;
+}
+
+.simple-dashboard-module-desc {
+  font-size: 11px;
+  color: #67778a;
+}
 
 /* ── Tables ── */
 .simple-table-wrapper {
@@ -538,3 +738,48 @@ body {
 ::-webkit-scrollbar-track { background: #f1f1f1; }
 ::-webkit-scrollbar-thumb { background: #bbb; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #999; }
+
+@media (max-width: 1024px) {
+  .simple-dashboard-chart-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .simple-main-admin {
+    margin-left: 0;
+    padding-top: 56px;
+  }
+
+  .simple-admin-sidebar {
+    width: 100%;
+    height: 52px;
+    bottom: auto;
+    flex-direction: row;
+    align-items: center;
+    overflow-x: auto;
+  }
+
+  .simple-admin-user,
+  .simple-admin-group-title,
+  .simple-admin-logout {
+    display: none;
+  }
+
+  .simple-admin-nav-wrap {
+    display: flex;
+    padding: 0;
+    overflow: visible;
+  }
+
+  .simple-admin-group {
+    margin: 0;
+    display: flex;
+  }
+
+  .simple-admin-link {
+    border: 0;
+    border-right: 1px solid #1f2833;
+    white-space: nowrap;
+  }
+}

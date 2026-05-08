@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from "react";
 import API from "../api";
-import SummaryCard from '../components/Hotel/SummaryCard';
-import RoomCard from '../components/Hotel/RoomCard';
 import BookingRow from '../components/Hotel/BookingRow';
 import Modal from '../components/Hotel/Modal';
 import BookingForm from '../components/Hotel/BookingForm';
@@ -23,6 +21,12 @@ const Hotel = () => {
 
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [selectedRoom, setSelectedRoom] = useState(null);
+  const [hotelView, setHotelView] = useState("rooms");
+  const [roomSearch, setRoomSearch] = useState("");
+  const [roomStatusFilter, setRoomStatusFilter] = useState("All");
+  const [invoiceBooking, setInvoiceBooking] = useState(null);
+  const [invoiceTab, setInvoiceTab] = useState("basic");
+  const [paymentDraft, setPaymentDraft] = useState({ amount: "", mode: "Cash", details: "", paidBy: "" });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -44,6 +48,12 @@ const Hotel = () => {
   const availableRooms = rooms.filter(r => r.status === 'Available').length;
   const occupiedRooms = rooms.filter(r => r.status === 'Occupied').length;
   const cleaningRooms = rooms.filter(r => r.status === 'Cleaning').length;
+  const filteredRooms = rooms.filter((room) => {
+    const roomNo = String(room.number || "");
+    const statusOk = roomStatusFilter === "All" || String(room.status) === roomStatusFilter;
+    const searchOk = !roomSearch || roomNo.includes(roomSearch.trim());
+    return statusOk && searchOk;
+  });
 
   const openModal = (modalName) => {
     setModals(prev => ({ ...prev, [modalName]: true }));
@@ -321,14 +331,29 @@ const Hotel = () => {
     ));
   };
 
+  const openInvoiceWorkspace = (booking) => {
+    setInvoiceBooking(booking);
+    setInvoiceTab("basic");
+    setHotelView("invoice");
+    setPaymentDraft({ amount: "", mode: "Cash", details: "", paidBy: booking?.guestName || "" });
+  };
+
   return (
     <div>
       {/* Page Header */}
       <div className="simple-page-header">
         <h1 className="simple-page-title">Hotel / PMS</h1>
-        <button className="simple-btn simple-btn-primary" onClick={() => openModal('newBooking')}>
-          + New Booking
-        </button>
+        <div className="simple-btn-row" style={{ marginTop: 0 }}>
+          <button className={`simple-btn ${hotelView === "rooms" ? "simple-btn-primary" : "simple-btn-outline"}`} onClick={() => setHotelView("rooms")}>
+            Room Inventory
+          </button>
+          <button className={`simple-btn ${hotelView === "invoice" ? "simple-btn-primary" : "simple-btn-outline"}`} onClick={() => setHotelView("invoice")}>
+            Invoice Workspace
+          </button>
+          <button className="simple-btn simple-btn-primary" onClick={() => openModal('newBooking')}>
+            + New Booking
+          </button>
+        </div>
       </div>
 
       {/* Summary Tiles */}
@@ -355,6 +380,68 @@ const Hotel = () => {
         </div>
       </div>
 
+      {hotelView === "rooms" && (
+        <div className="simple-card" style={{ marginBottom: 16 }}>
+          <div className="simple-card-title">Room Inventory</div>
+          <div className="hotel-room-toolbar">
+            <input
+              className="simple-input"
+              style={{ maxWidth: 160 }}
+              placeholder="Search room no"
+              value={roomSearch}
+              onChange={(e) => setRoomSearch(e.target.value)}
+            />
+            <select
+              className="simple-select"
+              style={{ maxWidth: 180 }}
+              value={roomStatusFilter}
+              onChange={(e) => setRoomStatusFilter(e.target.value)}
+            >
+              <option value="All">All Status</option>
+              <option value="Available">Available</option>
+              <option value="Occupied">Occupied</option>
+              <option value="Cleaning">Cleaning</option>
+              <option value="Maintenance">Maintenance</option>
+            </select>
+          </div>
+          <div className="hotel-room-grid">
+            {filteredRooms.map((room) => (
+              <div key={room.id || room.number} className={`hotel-room-card ${String(room.status).toLowerCase()}`}>
+                <div className="hotel-room-name">Rm {room.number}</div>
+                <div className="hotel-room-type">{room.type || room.category || "Executive"}</div>
+                <div className="hotel-room-status">{room.status}</div>
+                <div className="hotel-room-meta">{room.guest ? `Guest: ${room.guest}` : "No guest assigned"}</div>
+                <div className="hotel-room-actions">
+                  {room.status === "Available" && (
+                    <button className="simple-btn simple-btn-sm simple-btn-success" onClick={() => handleRoomCheckIn(room)}>
+                      Check-In
+                    </button>
+                  )}
+                  {room.status === "Occupied" && (
+                    <>
+                      <button className="simple-btn simple-btn-sm simple-btn-warning" onClick={() => handleRoomCheckOut(room)}>
+                        Check-Out
+                      </button>
+                      <button className="simple-btn simple-btn-sm simple-btn-outline" onClick={() => {
+                        const booking = bookings.find((b) => String(b.room) === String(room.number));
+                        if (booking) openInvoiceWorkspace(booking);
+                      }}>
+                        Invoice
+                      </button>
+                    </>
+                  )}
+                  {room.status !== "Available" && (
+                    <button className="simple-btn simple-btn-sm simple-btn-gray" onClick={() => handleMarkAvailable(room)}>
+                      Mark Available
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Active Bookings Table */}
       <div className="simple-card">
         <div className="simple-card-title">Active Bookings</div>
@@ -375,6 +462,7 @@ const Hotel = () => {
                 <BookingRow
                   key={booking.id}
                   booking={booking}
+                  onOpenInvoice={openInvoiceWorkspace}
                   onExtend={handleExtend}
                   onShiftRoom={handleShiftRoom}
                   onCheckOut={handleCheckOut}
@@ -388,6 +476,19 @@ const Hotel = () => {
           </table>
         </div>
       </div>
+
+      {hotelView === "invoice" && (
+        <HotelInvoiceWorkspace
+          booking={invoiceBooking}
+          invoiceTab={invoiceTab}
+          setInvoiceTab={setInvoiceTab}
+          paymentDraft={paymentDraft}
+          setPaymentDraft={setPaymentDraft}
+          onSelectBooking={openInvoiceWorkspace}
+          bookings={bookings}
+          onCheckOut={handleCheckOut}
+        />
+      )}
 
       {/* Modals */}
       <Modal isOpen={modals.newBooking} onClose={() => closeModal('newBooking')} title="New Booking">
@@ -454,6 +555,199 @@ const Hotel = () => {
           </div>
         </form>
       </Modal>
+    </div>
+  );
+};
+
+const HotelInvoiceWorkspace = ({
+  booking,
+  invoiceTab,
+  setInvoiceTab,
+  paymentDraft,
+  setPaymentDraft,
+  onSelectBooking,
+  bookings,
+  onCheckOut,
+}) => {
+  const activeBookings = bookings.filter((b) => b.status !== "CheckedOut");
+  const pricePerDay = Number(booking?.pricePerDay || 0);
+  const checkIn = booking?.checkIn ? new Date(booking.checkIn) : null;
+  const checkOut = booking?.checkOut ? new Date(booking.checkOut) : null;
+  const nights =
+    checkIn && checkOut && checkOut > checkIn
+      ? Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24))
+      : 0;
+  const roomTotal = nights * pricePerDay;
+  const paymentReceived = Number(paymentDraft.amount || 0);
+  const balance = Math.max(roomTotal - paymentReceived, 0);
+
+  const actionCheckout = () => {
+    if (!booking) return;
+    if (balance > 0) {
+      alert("Please settle the balance amount before checkout.");
+      return;
+    }
+    onCheckOut(booking);
+  };
+
+  const tabs = [
+    { id: "basic", label: "Basic Information" },
+    { id: "tariff", label: "Tariff Detail" },
+    { id: "services", label: "Services" },
+    { id: "payment", label: "Payment Detail" },
+    { id: "checkout", label: "Checkout & Print Invoice" },
+  ];
+
+  return (
+    <div className="simple-card" style={{ marginTop: 16 }}>
+      <div className="simple-card-title">Invoice Workspace</div>
+      {!booking ? (
+        <div>
+          <p className="simple-text-muted" style={{ marginBottom: 10 }}>
+            Select an occupied booking to open invoice workflow.
+          </p>
+          <div className="simple-btn-row" style={{ marginTop: 0 }}>
+            {activeBookings.map((b) => (
+              <button key={b.id} className="simple-btn simple-btn-outline" onClick={() => onSelectBooking(b)}>
+                Room {b.room} - {b.guestName}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="hotel-invoice-head">
+            <div><strong>INVOICE Room No: {booking.room}</strong></div>
+            <div className="simple-text-muted">Checkout Type: 24hrs | Grace: 1 Hour</div>
+          </div>
+          <div className="hotel-invoice-tabs">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                className={`hotel-tab ${invoiceTab === tab.id ? "active" : ""}`}
+                onClick={() => setInvoiceTab(tab.id)}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {invoiceTab === "basic" && (
+            <div className="hotel-form-grid">
+              <div className="simple-summary">
+                <div><strong>Invoice Information</strong></div>
+                <div>Invoice No: INV-{booking.id}</div>
+                <div>Invoice Date: {new Date().toLocaleDateString("en-IN")}</div>
+                <div>Walk In</div>
+              </div>
+              <div className="simple-summary">
+                <div><strong>Primary Guest Details</strong></div>
+                <div>Name: {booking.guestName}</div>
+                <div>Mobile: {booking.phone || "-"}</div>
+                <div>Check-In: {booking.checkIn}</div>
+                <div>Check-Out: {booking.checkOut}</div>
+              </div>
+              <div className="simple-summary">
+                <div><strong>Room Details</strong></div>
+                <div>Room No: {booking.room}</div>
+                <div>Nights: {nights}</div>
+                <div>Rate: ₹{pricePerDay.toFixed(2)}</div>
+              </div>
+            </div>
+          )}
+
+          {invoiceTab === "tariff" && (
+            <div className="simple-table-wrapper">
+              <table className="simple-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Room No</th>
+                    <th>Particulars</th>
+                    <th>Tariff</th>
+                    <th>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>{new Date().toLocaleDateString("en-IN")}</td>
+                    <td>{booking.room}</td>
+                    <td>Room Charges ({nights} nights)</td>
+                    <td>₹{pricePerDay.toFixed(2)}</td>
+                    <td>₹{roomTotal.toFixed(2)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {invoiceTab === "services" && (
+            <div className="simple-summary">
+              <strong>Services</strong>
+              <p className="simple-text-muted">No service found. Add service from restaurant/room service modules.</p>
+            </div>
+          )}
+
+          {invoiceTab === "payment" && (
+            <div className="hotel-form-grid">
+              <div className="simple-form-group">
+                <label className="simple-label">Amount</label>
+                <input
+                  className="simple-input"
+                  value={paymentDraft.amount}
+                  onChange={(e) => setPaymentDraft((p) => ({ ...p, amount: e.target.value }))}
+                  placeholder="Enter paid amount"
+                />
+              </div>
+              <div className="simple-form-group">
+                <label className="simple-label">Payment Mode</label>
+                <select
+                  className="simple-select"
+                  value={paymentDraft.mode}
+                  onChange={(e) => setPaymentDraft((p) => ({ ...p, mode: e.target.value }))}
+                >
+                  <option>Cash</option>
+                  <option>Card</option>
+                  <option>UPI</option>
+                  <option>Online</option>
+                </select>
+              </div>
+              <div className="simple-form-group">
+                <label className="simple-label">Payment Detail</label>
+                <input
+                  className="simple-input"
+                  value={paymentDraft.details}
+                  onChange={(e) => setPaymentDraft((p) => ({ ...p, details: e.target.value }))}
+                  placeholder="Reference / txn id"
+                />
+              </div>
+              <div className="simple-form-group">
+                <label className="simple-label">Paid By</label>
+                <input
+                  className="simple-input"
+                  value={paymentDraft.paidBy}
+                  onChange={(e) => setPaymentDraft((p) => ({ ...p, paidBy: e.target.value }))}
+                  placeholder="Payer name"
+                />
+              </div>
+            </div>
+          )}
+
+          {invoiceTab === "checkout" && (
+            <div className="simple-summary">
+              <div className="simple-summary-row"><span>Room Total</span><span>₹{roomTotal.toFixed(2)}</span></div>
+              <div className="simple-summary-row"><span>Total Received</span><span>₹{paymentReceived.toFixed(2)}</span></div>
+              <div className="simple-summary-total"><span>Balance</span><span>₹{balance.toFixed(2)}</span></div>
+            </div>
+          )}
+
+          <div className="simple-btn-row" style={{ justifyContent: "flex-end" }}>
+            <button className="simple-btn simple-btn-success" onClick={() => alert("Saved successfully")}>Save</button>
+            <button className="simple-btn simple-btn-primary" onClick={() => window.print()}>Print</button>
+            <button className="simple-btn simple-btn-warning" onClick={actionCheckout}>Checkout</button>
+          </div>
+        </>
+      )}
     </div>
   );
 };
