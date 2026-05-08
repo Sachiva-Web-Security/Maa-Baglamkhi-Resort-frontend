@@ -1,50 +1,35 @@
 const AttendanceRow = ({ employee }) => {
-  const statusColors = {
-    Present: "bg-green-500/20 text-green-400",
-    Absent: "bg-red-500/20 text-red-400",
-    Late: "bg-yellow-500/20 text-yellow-400",
-    "On Leave": "bg-blue-500/20 text-blue-400",
+  const statusBadge = {
+    Present: "simple-badge badge-green",
+    Absent: "simple-badge badge-red",
+    Late: "simple-badge badge-orange",
+    "On Leave": "simple-badge badge-blue",
   };
 
-  const methodColors = {
-    Biometric: "bg-purple-500/20 text-purple-300",
-    Manual: "bg-blue-500/20 text-blue-300",
+  const methodBadge = {
+    Biometric: "simple-badge badge-blue",
+    Manual: "simple-badge badge-gray",
   };
 
   return (
-    <tr className="border-b border-white/10 hover:bg-white/5 transition">
-      <td className="p-3">{employee.name}</td>
-      <td className="p-3">{employee.role}</td>
-      <td className="p-3">{employee.checkIn || "—"}</td>
-      <td className="p-3">{employee.checkOut || "—"}</td>
-
-      <td className="p-3">
-        <span
-          className={`px-2 py-1 rounded-md text-xs ${
-            statusColors[employee.status]
-          }`}
-        >
+    <tr>
+      <td className="font-medium">{employee.name}</td>
+      <td>{employee.role}</td>
+      <td>{employee.checkIn || "—"}</td>
+      <td>{employee.checkOut || "—"}</td>
+      <td>
+        <span className={statusBadge[employee.status] || "simple-badge badge-gray"}>
           {employee.status}
         </span>
       </td>
-
-      <td className="p-3">
-        <span
-          className={`px-2 py-1 rounded-md text-xs ${
-            methodColors[employee.method]
-          }`}
-        >
+      <td>
+        <span className={methodBadge[employee.method] || "simple-badge badge-gray"}>
           {employee.method}
         </span>
       </td>
-
-      <td className="p-3 flex gap-2">
-        <button className="bg-green-600 px-3 py-1 rounded-md text-xs">
-          Check In
-        </button>
-        <button className="bg-red-600 px-3 py-1 rounded-md text-xs">
-          Check Out
-        </button>
+      <td className="flex gap-2">
+        <button className="simple-btn simple-btn-success simple-btn-sm">Check In</button>
+        <button className="simple-btn simple-btn-danger simple-btn-sm">Check Out</button>
       </td>
     </tr>
   );

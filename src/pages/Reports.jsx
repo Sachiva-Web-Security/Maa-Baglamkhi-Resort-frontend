@@ -281,9 +281,9 @@ const SummaryPanel = ({ reportType, rows }) => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
       {cards.map((c) => (
-        <div key={c.label} className="bg-transparent border border-white/5 rounded-xl p-3">
-          <div className="text-xs text-gray-300 font-extrabold">{c.label}</div>
-          <div className="mt-1 text-lg text-white font-black">{c.value}</div>
+        <div key={c.label} className="bg-blue-50 border border-blue-100 rounded-xl p-3">
+          <div className="text-xs text-gray-500 font-bold">{c.label}</div>
+          <div className="mt-1 text-lg text-gray-900 font-black">{c.value}</div>
         </div>
       ))}
     </div>

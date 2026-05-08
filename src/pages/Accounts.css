@@ -1,17 +1,4 @@
-/* Dark theme for Accounts page */
-.accounts-page {
-  padding: 100px 30px 30px;
-  background: linear-gradient(180deg, #061226 0%, #071226 40%, #041019 100%);
-  min-height: 100vh;
-}
-
-.accounts-title {
-  font-size: 24px;
-  font-weight: 800;
-  margin: 0 0 24px 0;
-  color: #e6eef8;
-}
-
+/* Light theme for Accounts page */
 .accounts-actions {
   display: flex;
   flex-wrap: wrap;
@@ -22,60 +9,49 @@
 .accounts-action-btn {
   border: none;
   border-radius: 10px;
-  padding: 10px 14px;
-  font-weight: 800;
+  padding: 10px 18px;
+  font-weight: 700;
   color: #ffffff;
   cursor: pointer;
   transition: opacity 0.15s ease, transform 0.1s ease;
+  font-size: 14px;
 }
 
 .accounts-action-btn:hover {
-  opacity: 0.92;
+  opacity: 0.9;
   transform: translateY(-1px);
 }
+
 .accounts-action-btn:active {
   transform: translateY(0);
 }
 
-.accounts-action-btn--green {
-  background: #16a34a;
-}
-.accounts-action-btn--red {
-  background: #dc2626;
-}
-.accounts-action-btn--blue {
-  background: #2563eb;
-}
-.accounts-action-btn--purple {
-  background: #7c3aed;
-}
-
 .accounts-summary-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 16px;
   margin-bottom: 22px;
 }
 
 .accounts-table-card {
-  background: rgba(255,255,255,0.02);
+  background: #ffffff;
   border-radius: 12px;
-  box-shadow: 0 6px 18px rgba(2,6,23,0.6);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
   overflow: hidden;
   margin-bottom: 22px;
-  border: 1px solid rgba(255,255,255,0.04);
+  border: 1px solid #e5e7eb;
 }
 
 .accounts-table-card__header {
   padding: 16px;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .accounts-table-card__title {
   margin: 0;
   font-size: 16px;
-  font-weight: 800;
-  color: #e6eef8;
+  font-weight: 700;
+  color: #1f2937;
 }
 
 .accounts-table-wrap {
@@ -89,14 +65,14 @@
 }
 
 .accounts-thead {
-  background: rgba(255,255,255,0.03);
+  background: #1565c0;
 }
 
 .accounts-th {
   padding: 12px;
   font-size: 13px;
-  font-weight: 800;
-  color: #cbd5e1;
+  font-weight: 700;
+  color: #ffffff;
 }
 
 .accounts-reports-grid {
@@ -110,18 +86,18 @@
   justify-content: space-between;
   gap: 12px;
   padding: 10px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.02);
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .accounts-view__label {
-  color: #9ca3af;
-  font-weight: 800;
+  color: #6b7280;
+  font-weight: 700;
   font-size: 13px;
 }
 
 .accounts-view__value {
-  color: #e6eef8;
-  font-weight: 700;
+  color: #1f2937;
+  font-weight: 600;
   font-size: 13px;
   text-align: right;
 }
@@ -134,15 +110,16 @@
 
 .accounts-audit__text {
   margin: 0 0 10px 0;
-  color: #cbd5e1;
+  color: #374151;
   font-size: 14px;
 }
 
 .accounts-audit__list {
   margin: 0;
   padding-left: 18px;
-  color: #e6eef8;
+  color: #1f2937;
   font-size: 14px;
+  line-height: 2;
 }
 
 .accounts-audit__actions {
@@ -152,9 +129,21 @@
   margin-top: 14px;
 }
 
-@media (max-width: 768px) {
-  .accounts-page {
-    padding: 100px 15px 15px;
-  }
+.accounts-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 14px;
 }
 
+.accounts-btn--primary {
+  background: #1565c0;
+  color: #fff;
+}
+
+.accounts-btn--ghost {
+  background: #f3f4f6;
+  color: #374151;
+}

@@ -11,8 +11,19 @@ import API from "../api";
 const formatINR = (amount) =>
   new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
 
+const sampleRecords = [
+  { id: 1, date: "2026-05-01", type: "Income", description: "Room Booking - Suite 101 (Sharma Family)", amount: 12000, paymentMode: "UPI" },
+  { id: 2, date: "2026-05-02", type: "Income", description: "Restaurant Bill - Table 5", amount: 3400, paymentMode: "Cash" },
+  { id: 3, date: "2026-05-02", type: "Expense", description: "Kitchen Supplies - Vegetables & Groceries", amount: 2800, paymentMode: "Cash" },
+  { id: 4, date: "2026-05-03", type: "Income", description: "Banquet Hall - Wedding Event", amount: 45000, paymentMode: "Bank Transfer" },
+  { id: 5, date: "2026-05-03", type: "Expense", description: "Staff Salary - May Week 1", amount: 18000, paymentMode: "Bank Transfer" },
+  { id: 6, date: "2026-05-04", type: "Income", description: "Room Booking - Deluxe 203 (Kumar)", amount: 6500, paymentMode: "Card" },
+  { id: 7, date: "2026-05-05", type: "Expense", description: "Housekeeping Supplies", amount: 1500, paymentMode: "Cash" },
+  { id: 8, date: "2026-05-06", type: "Income", description: "Restaurant Bill - Table 8 & 9", amount: 5200, paymentMode: "UPI" },
+];
+
 const Accounts = () => {
-  const [records, setRecords] = useState([]);
+  const [records, setRecords] = useState(sampleRecords);
 
   const [modals, setModals] = useState({
     addIncome: false,
@@ -46,7 +57,7 @@ const Accounts = () => {
     const fetchRecords = async () => {
       try {
         const res = await API.get("/accounts/transactions");
-        setRecords(res.data || []);
+        if (res.data && res.data.length > 0) setRecords(res.data);
       } catch (err) {
         console.error("Error loading accounts records", err);
       }

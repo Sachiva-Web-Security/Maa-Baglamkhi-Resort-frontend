@@ -8,11 +8,11 @@ const SummaryCard = ({
   onClick,
 }) => {
   const valueColorClasses = {
-    green: "text-green-400",
-    red: "text-red-400",
-    blue: "text-blue-400",
-    purple: "text-purple-400",
-    default: "text-slate-100",
+    green: "text-green-700",
+    red: "text-red-600",
+    blue: "text-blue-700",
+    purple: "text-purple-700",
+    default: "text-gray-900",
   };
 
   const [displayValue, setDisplayValue] = useState(0);
@@ -46,13 +46,12 @@ const SummaryCard = ({
     <div
       className={`
         relative overflow-hidden
-        bg-white/5 backdrop-blur-xl
-        border border-white/10
+        bg-white border border-gray-200
         rounded-2xl p-6
-        shadow-xl
+        shadow-sm
         transition-all duration-300
-        hover:shadow-2xl hover:-translate-y-1
-        ${onClick ? "cursor-pointer hover:bg-white/10" : ""}
+        hover:shadow-md hover:-translate-y-1
+        ${onClick ? "cursor-pointer" : ""}
       `}
       onClick={onClick}
       role={onClick ? "button" : undefined}
@@ -69,7 +68,7 @@ const SummaryCard = ({
       <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-blue-500/10 to-green-500/10 opacity-0 hover:opacity-100 transition duration-500 pointer-events-none"></div>
 
       {/* Label */}
-      <p className="text-sm text-slate-400 tracking-wide mb-2">
+      <p className="text-sm text-gray-500 tracking-wide mb-2">
         {label}
       </p>
 
@@ -92,13 +91,13 @@ const SummaryCard = ({
           {trendUp ? "▲" : "▼"} {trendPercent}% this month
         </span>
 
-        <span className="text-xs text-slate-500">
+        <span className="text-xs text-gray-400">
           Updated now
         </span>
       </div>
 
       {/* Progress Bar */}
-      <div className="mt-3 h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+      <div className="mt-3 h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
         <div
           className={`h-full rounded-full ${
             trendUp ? "bg-green-400" : "bg-red-400"

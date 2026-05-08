@@ -10,33 +10,41 @@ const FiltersSection = ({
   onAddManualEntry,
 }) => {
   return (
-    <div className="flex flex-wrap gap-3 bg-white/5 border border-white/10 p-4 rounded-xl backdrop-blur-xl">
-
+    <div className="simple-card flex flex-wrap gap-3 items-center">
       <input
         type="date"
         value={date}
         onChange={(e) => onDateChange(e.target.value)}
-        className="bg-black/30 border border-white/20 rounded-lg px-3 py-2"
+        className="simple-input"
       />
 
       <select
         value={department}
         onChange={(e) => onDepartmentChange(e.target.value)}
-        className="bg-black/30 border border-white/20 rounded-lg px-3 py-2"
+        className="simple-select"
       >
         <option>All Departments</option>
         <option>Reception</option>
         <option>Kitchen</option>
+        <option>Housekeeping</option>
+        <option>Restaurant</option>
+        <option>Accounts</option>
+        <option>Security</option>
       </select>
 
       <select
         value={role}
         onChange={(e) => onRoleChange(e.target.value)}
-        className="bg-black/30 border border-white/20 rounded-lg px-3 py-2"
+        className="simple-select"
       >
         <option>All Roles</option>
         <option>Manager</option>
-        <option>Staff</option>
+        <option>Receptionist</option>
+        <option>Chef</option>
+        <option>Waiter</option>
+        <option>Housekeeper</option>
+        <option>Accountant</option>
+        <option>Security</option>
       </select>
 
       <input
@@ -44,12 +52,12 @@ const FiltersSection = ({
         placeholder="Search Employee"
         value={searchQuery}
         onChange={(e) => onSearchChange(e.target.value)}
-        className="bg-black/30 border border-white/20 rounded-lg px-3 py-2"
+        className="simple-input flex-1 min-w-40"
       />
 
       <button
         onClick={onAddManualEntry}
-        className="ml-auto bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-2 rounded-lg font-medium shadow-lg"
+        className="simple-btn simple-btn-primary ml-auto"
       >
         + Add Manual Entry
       </button>
