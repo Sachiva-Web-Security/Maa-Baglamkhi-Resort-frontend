@@ -103,7 +103,7 @@ const Items = () => {
                   </td>
                 </tr>
               ))}
-              {filtered.length === 0 && !loading && <tr><td colSpan="8" className="text-center p-4 text-gray-400">No items found</td></tr>}
+              {filtered.length === 0 && !loading && <tr><td colSpan="8" className="empty-order">No items found</td></tr>}
             </tbody>
           </table>
         </div>

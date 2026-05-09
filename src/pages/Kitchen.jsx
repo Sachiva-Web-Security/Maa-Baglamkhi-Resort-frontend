@@ -47,11 +47,11 @@ const Kitchen = () => {
     <div>
       <div className="simple-page-header">
         <h2 className="simple-page-title">Kitchen Orders</h2>
-        <p className="text-sm text-gray-500">Manage restaurant food orders</p>
+        <p className="simple-text-muted">Manage restaurant food orders</p>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="simple-metrics-grid">
         <div className="simple-metric-tile tile-orange">
           <div className="simple-metric-tile-label">Pending</div>
           <div className="simple-metric-tile-value">{orders.filter(o => o.status === "Pending").length}</div>
@@ -67,7 +67,7 @@ const Kitchen = () => {
       </div>
 
       {loading ? (
-        <div className="text-center p-4 text-gray-400">Loading orders...</div>
+        <div className="empty-order">Loading orders...</div>
       ) : (
         <div className="simple-table-wrapper">
           <table className="simple-table">
@@ -83,11 +83,11 @@ const Kitchen = () => {
             <tbody>
               {orders.map((o) => (
                 <tr key={o.id}>
-                  <td className="font-medium">{o.waiter_name}</td>
+                  <td>{o.waiter_name}</td>
                   <td>{o.table}</td>
                   <td>
                     {o.items?.map((item, i) => (
-                      <div key={i} className="text-sm">{item.name} x {item.quantity}</div>
+                      <div key={i}>{item.name} x {item.quantity}</div>
                     ))}
                   </td>
                   <td>
@@ -121,7 +121,7 @@ const Kitchen = () => {
               ))}
               {orders.length === 0 && (
                 <tr>
-                  <td colSpan="5" className="text-center p-4 text-gray-400">No orders yet - Print KOT from Restaurant POS</td>
+                  <td colSpan="5" className="empty-order">No orders yet - Print KOT from Restaurant POS</td>
                 </tr>
               )}
             </tbody>

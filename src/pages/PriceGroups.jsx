@@ -43,15 +43,15 @@ const PriceGroups = () => {
               {groups.map(g => (
                 <tr key={g.id}>
                   <td className="font-medium">{g.name}</td>
-                  <td className="text-gray-600">{g.description || "—"}</td>
-                  <td>{g.discount > 0 ? <span className="simple-badge badge-orange">{g.discount}%</span> : <span className="text-gray-400">—</span>}</td>
+                  <td className="simple-text-muted">{g.description || "—"}</td>
+                  <td>{g.discount > 0 ? <span className="simple-badge badge-orange">{g.discount}%</span> : <span className="simple-text-muted">—</span>}</td>
                   <td>
                     <button className="simple-btn simple-btn-outline simple-btn-sm" onClick={() => { setEditing(g); setForm({ name: g.name, description: g.description || "", discount: g.discount }); setShowModal(true); }}>Edit</button>
                     <button className="simple-btn simple-btn-gray simple-btn-sm" onClick={() => handleDelete(g.id)} style={{marginLeft: "6px"}}>Delete</button>
                   </td>
                 </tr>
               ))}
-              {groups.length === 0 && <tr><td colSpan="4" className="text-center p-4 text-gray-400">No price groups found</td></tr>}
+              {groups.length === 0 && <tr><td colSpan="4" className="empty-order">No price groups found</td></tr>}
             </tbody>
           </table>
         </div>

@@ -125,7 +125,7 @@ const Attendance = () => {
       />
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 my-6">
+      <div className="simple-metrics-grid">
         <SummaryCard label="Total Staff" value={totalStaff} />
         <SummaryCard label="Present" value={presentStaff} color="green" />
         <SummaryCard label="Absent" value={absentStaff} color="red" />
@@ -135,7 +135,7 @@ const Attendance = () => {
 
       {/* Table */}
       {loading ? (
-        <div className="text-center p-4 text-gray-400">Loading...</div>
+        <div className="empty-order">Loading...</div>
       ) : (
         <div className="simple-table-wrapper">
           <table className="simple-table">
@@ -155,7 +155,7 @@ const Attendance = () => {
                 <AttendanceRow key={employee.id} employee={employee} onCheckIn={handleCheckIn} onCheckOut={handleCheckOut} />
               ))}
               {filteredEmployees.length === 0 && (
-                <tr><td colSpan="7" className="p-4 text-center text-gray-400">No attendance records found</td></tr>
+                <tr><td colSpan="7" className="empty-order">No attendance records found</td></tr>
               )}
             </tbody>
           </table>

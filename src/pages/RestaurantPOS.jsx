@@ -590,7 +590,7 @@ const RestaurantPOS = () => {
                       </td>
                     </tr>
                   ))}
-                  {menuItems.length === 0 && <tr><td colSpan="6" className="text-center p-4 text-gray-400">No menu items found</td></tr>}
+                  {menuItems.length === 0 && <tr><td colSpan="6" className="empty-order">No menu items found</td></tr>}
                 </tbody>
               </table>
             </div>
@@ -630,7 +630,7 @@ const RestaurantPOS = () => {
                       </td>
                     </tr>
                   ))}
-                  {tables.length === 0 && <tr><td colSpan="6" className="text-center p-4 text-gray-400">No tables found</td></tr>}
+                  {tables.length === 0 && <tr><td colSpan="6" className="empty-order">No tables found</td></tr>}
                 </tbody>
               </table>
             </div>
@@ -665,7 +665,7 @@ const RestaurantPOS = () => {
                       <td>{inv.date ? new Date(inv.date).toLocaleDateString() : "-"}</td>
                     </tr>
                   ))}
-                  {invoiceGroups.length === 0 && <tr><td colSpan="5" className="text-center p-4 text-gray-400">No invoices found</td></tr>}
+                  {invoiceGroups.length === 0 && <tr><td colSpan="5" className="empty-order">No invoices found</td></tr>}
                 </tbody>
               </table>
             </div>
@@ -697,7 +697,7 @@ const RestaurantPOS = () => {
                       <td><span className="simple-badge badge-blue">{cap.role}</span></td>
                     </tr>
                   ))}
-                  {captains.length === 0 && <tr><td colSpan="3" className="text-center p-4 text-gray-400">No captains found</td></tr>}
+                  {captains.length === 0 && <tr><td colSpan="3" className="empty-order">No captains found</td></tr>}
                 </tbody>
               </table>
             </div>

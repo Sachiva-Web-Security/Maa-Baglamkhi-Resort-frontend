@@ -49,14 +49,14 @@ const BarToFood = () => {
                   <td><span className="simple-badge badge-purple">{item.category}</span></td>
                   <td>{item.barCode}</td>
                   <td>₹{item.price}</td>
-                  <td>{item.linkedTo ? <span className="simple-badge badge-green">{item.linkedTo}</span> : <span className="text-gray-400 text-sm">—</span>}</td>
+                  <td>{item.linkedTo ? <span className="simple-badge badge-green">{item.linkedTo}</span> : <span className="simple-text-muted">—</span>}</td>
                   <td>
                     <button className="simple-btn simple-btn-outline simple-btn-sm" onClick={() => { setEditing(item); setForm({ name: item.name, category: item.category, barCode: item.barCode, price: item.price, linkedTo: item.linkedTo || "" }); setShowModal(true); }}>Edit</button>
                     <button className="simple-btn simple-btn-gray simple-btn-sm" onClick={() => handleDelete(item.id)} style={{marginLeft: "6px"}}>Delete</button>
                   </td>
                 </tr>
               ))}
-              {items.length === 0 && <tr><td colSpan="6" className="text-center p-4 text-gray-400">No bar items mapped</td></tr>}
+              {items.length === 0 && <tr><td colSpan="6" className="empty-order">No bar items mapped</td></tr>}
             </tbody>
           </table>
         </div>

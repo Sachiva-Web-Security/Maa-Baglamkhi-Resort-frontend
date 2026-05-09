@@ -51,7 +51,7 @@ const ItemGroups = () => {
                   </td>
                 </tr>
               ))}
-              {groups.length === 0 && <tr><td colSpan="3" className="text-center p-4 text-gray-400">No item groups found</td></tr>}
+              {groups.length === 0 && <tr><td colSpan="3" className="empty-order">No item groups found</td></tr>}
             </tbody>
           </table>
         </div>

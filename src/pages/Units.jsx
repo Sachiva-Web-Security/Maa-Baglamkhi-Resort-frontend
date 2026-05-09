@@ -47,14 +47,14 @@ const Units = () => {
                 <tr key={u.id}>
                   <td className="font-medium">{u.name}</td>
                   <td><span className="simple-badge badge-gray">{u.abbr}</span></td>
-                  <td className="text-gray-600">{u.description || "—"}</td>
+                  <td className="simple-text-muted">{u.description || "—"}</td>
                   <td>
                     <button className="simple-btn simple-btn-outline simple-btn-sm" onClick={() => { setEditing(u); setForm({ name: u.name, description: u.description || "", abbr: u.abbr }); setShowModal(true); }}>Edit</button>
                     <button className="simple-btn simple-btn-gray simple-btn-sm" onClick={() => handleDelete(u.id)} style={{marginLeft: "6px"}}>Delete</button>
                   </td>
                 </tr>
               ))}
-              {units.length === 0 && <tr><td colSpan="4" className="text-center p-4 text-gray-400">No units found</td></tr>}
+              {units.length === 0 && <tr><td colSpan="4" className="empty-order">No units found</td></tr>}
             </tbody>
           </table>
         </div>

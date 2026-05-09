@@ -135,16 +135,16 @@ const Assignment = () => {
       </div>
 
       {/*stats */}
-      <div className="grid md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-blue-100 p-4 rounded-xl shadow">
+      <div className="simple-metrics-grid">
+        <div className="stat-tile stat-tile-blue">
           <h4 className="font-semibold">Total Tasks</h4>
           <p className="text-2xl font-bold">{stats.total || 0}</p>
         </div>
-        <div className="bg-green-100 p-4 rounded-xl shadow">
+        <div className="stat-tile stat-tile-green">
           <h4 className="font-semibold">Completed</h4>
           <p className="text-2xl font-bold">{stats.completed || 0}</p>
         </div>
-        <div className="bg-yellow-100 p-4 rounded-xl shadow">
+        <div className="stat-tile stat-tile-yellow">
           <h4 className="font-semibold">Pending</h4>
           <p className="text-2xl font-bold">{stats.pending || 0}</p>
         </div>
@@ -153,7 +153,7 @@ const Assignment = () => {
       {role !== "housekeeping" && (
         <div className="simple-card mb-6">
           <h3 className="simple-card-title mb-4">Assign New Task</h3>
-          <form onSubmit={handleSubmit} className="grid md:grid-cols-4 gap-4">
+          <form onSubmit={handleSubmit} className="assign-form">
             <select
               name="staff_name"
               value={form.staff_name}
@@ -197,8 +197,8 @@ const Assignment = () => {
 
       {/* TABLE CARD */}
       <div className="simple-table-wrapper">
-        <div className="px-4 py-3 border-b border-gray-200">
-          <h3 className="text-base font-semibold text-gray-800">Assigned Tasks</h3>
+        <div className="table-section-header">
+          <h3 className="table-section-title">Assigned Tasks</h3>
         </div>
         <div className="overflow-x-auto">
           <table className="simple-table">
@@ -215,10 +215,7 @@ const Assignment = () => {
 
             <tbody>
               {assignments.map((a) => (
-                <tr
-                  key={a.id}
-                  className="border-b hover:bg-gray-50 transition "
-                >
+                <tr key={a.id} className="task-row">
                   <td className="p-3 font-medium">{a.staff_name}</td>
                   <td className="p-3">{a.room_number}</td>
                   <td className="p-3">{a.task}</td>
@@ -252,7 +249,7 @@ const Assignment = () => {
 
               {assignments.length === 0 && (
                 <tr>
-                  <td colSpan="6" className="text-center p-4 text-gray-500">
+                  <td colSpan="6" className="empty-order">
                     No tasks assigned yet
                   </td>
                 </tr>

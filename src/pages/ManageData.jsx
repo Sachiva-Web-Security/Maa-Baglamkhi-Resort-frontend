@@ -93,7 +93,7 @@ const ManageData = () => {
                 </tr>
               ))}
               {data.length === 0 && !loading && (
-                <tr><td colSpan="10" className="text-center p-6 text-gray-400">No data found for this category</td></tr>
+                <tr><td colSpan="10" className="empty-order">No data found for this category</td></tr>
               )}
             </tbody>
           </table>

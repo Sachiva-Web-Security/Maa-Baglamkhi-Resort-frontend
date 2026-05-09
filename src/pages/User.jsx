@@ -53,7 +53,7 @@ const User = () => {
 
         <button
           onClick={() => navigate("/create-user")}
-          className="flex items-center gap-2  bg-indigo-500 text-white px-4 py-2 rounded-xl"
+          className="add-user-btn"
         >
           <FaUserPlus />
           Add User
@@ -62,25 +62,25 @@ const User = () => {
 
       {/* Error */}
       {error && (
-        <p className="mb-4 text-sm text-red-600">
+        <p className="error-message">
           {error}
         </p>
       )}
 
       {/* Search */}
-      <div className="relative mb-6">
+      <div className="user-search-bar">
         <FaSearch className="absolute left-3 top-3 text-gray-400" />
         <input
           type="text"
           placeholder="Search users..."
-          className="w-full pl-10 pr-4 py-2 rounded-xl border"
+          className="user-search-input"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
       </div>
 
       {/* Cards */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 pl-100">
+      <div className="user-cards-grid">
         {filteredUsers.map((user, index) => {
           const displayName =
             user.name || user.fullName || user.username || "Unknown User";
@@ -98,12 +98,9 @@ const User = () => {
             "";
 
           return (
-            <div
-              key={user.id || user._id || index}
-              className="bg-white p-4 rounded-2xl shadow-lg"
-            >
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold overflow-hidden">
+            <div className="user-card">
+              <div className="user-card-header">
+                <div className="user-avatar">
                   {avatarSrc ? (
                     <img
                       src={avatarSrc}
@@ -115,13 +112,13 @@ const User = () => {
                   )}
                 </div>
 
-                <div>
-                  <h2 className="font-semibold">{displayName}</h2>
-                  <p className="text-sm text-gray-500">{email}</p>
+                <div className="user-card-info">
+                  <h2 className="user-name">{displayName}</h2>
+                  <p className="user-email">{email}</p>
                 </div>
               </div>
 
-              <span className="px-3 py-1 rounded-full text-xs bg-green-100 text-green-600">
+              <span className="user-role-badge">
                 {role}
               </span>
             </div>
@@ -130,7 +127,7 @@ const User = () => {
       </div>
 
       {users.length === 0 && (
-        <p className="text-center mt-10 text-gray-500">
+        <p className="empty-order">
           No users created yet
         </p>
       )}

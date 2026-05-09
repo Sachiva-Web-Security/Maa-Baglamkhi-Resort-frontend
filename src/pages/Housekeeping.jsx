@@ -139,13 +139,13 @@ function Housekeeping() {
     <div>
       <div className="simple-page-header">
         <h1 className="simple-page-title">Housekeeping</h1>
-        <button className="simple-btn simple-btn-success flex items-center gap-2">
+        <button className="simple-btn simple-btn-success">
           <FaFilePdf /> Export PDF
         </button>
       </div>
 
       <div className="simple-card mb-4">
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(240px,1fr)_auto_260px] gap-3 items-center mb-3">
+        <div style={{ display: "grid", gridTemplateColumns: "minmax(240px,1fr) auto 260px", gap: "12px", alignItems: "center", marginBottom: "12px" }}>
           <div className="relative w-full">
             <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
@@ -173,8 +173,8 @@ function Housekeeping() {
           </select>
         </div>
 
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
-          <span className="text-sm text-gray-500">Selected: {selectedCount}</span>
+        <div className="simple-tabs-wrapper">
+          <span className="simple-text-muted">Selected: {selectedCount}</span>
           <div className="simple-tabs">
             <button
               onClick={() => setRoomTypeTab('Accommodation Rooms')}
@@ -191,23 +191,23 @@ function Housekeeping() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="simple-metrics-grid">
           <div className="simple-metric-tile tile-orange">
-            <div className="flex items-center gap-2 mb-1">
+            <div className="metric-tile-header">
               <FaBroom />
               <span className="simple-metric-tile-label">Rooms to Clean</span>
             </div>
             <div className="simple-metric-tile-value">{roomsToClean}</div>
           </div>
           <div className="simple-metric-tile tile-green">
-            <div className="flex items-center gap-2 mb-1">
+            <div className="metric-tile-header">
               <FaCheck />
               <span className="simple-metric-tile-label">Rooms Inspected</span>
             </div>
             <div className="simple-metric-tile-value">{roomsInspected}</div>
           </div>
           <div className="simple-metric-tile tile-purple" style={{background:'#6a1b9a'}}>
-            <div className="flex items-center gap-2 mb-1">
+            <div className="metric-tile-header">
               <FaBed />
               <span className="simple-metric-tile-label">Occupied Rooms</span>
             </div>
@@ -217,27 +217,21 @@ function Housekeeping() {
       </div>
 
       {showColumns && (
-        <div className="mb-4 bg-white rounded-lg shadow-sm border border-gray-200 p-3 flex items-center gap-2 flex-wrap">
-          <div className="px-3 py-1 bg-blue-600 text-white rounded-full text-sm font-medium">
-            Columns
-          </div>
+        <div className="columns-panel">
+          <div className="columns-header">Columns</div>
           {allColumns.map((column) => (
             <div
               key={column.key}
-              className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm border ${
-                visibleColumns.includes(column.key)
-                  ? 'bg-blue-50 text-blue-700 border-blue-200'
-                  : 'bg-gray-50 text-gray-400 border-gray-200'
-              }`}
+              className={`column-chip ${visibleColumns.includes(column.key) ? "active" : ""}`}
             >
-              {column.required && <span className="text-blue-500">*</span>}
+              {column.required && <span className="required-star">*</span>}
               <span>{column.label}</span>
               {!column.required && (
                 <button
                   onClick={() => toggleColumn(column.key)}
-                  className="ml-1 hover:text-red-500 text-gray-400"
+                  className="column-chip-remove"
                 >
-                  <FaTimes className="w-3 h-3" />
+                  <FaTimes />
                 </button>
               )}
             </div>
@@ -246,7 +240,7 @@ function Housekeeping() {
       )}
 
       {loading ? (
-        <div className="text-center p-8 text-gray-400">Loading rooms...</div>
+        <div className="empty-order">Loading rooms...</div>
       ) : (
         <div className="simple-table-wrapper">
           <table className="simple-table">
@@ -254,12 +248,12 @@ function Housekeeping() {
               <tr>
                 {visibleColumns.includes('type') && (
                   <th>
-                    <div className="flex items-center gap-2">
+                    <div className="table-header-cell">
                       <input
                         type="checkbox"
                         checked={selectAll}
                         onChange={(e) => handleSelectAll(e.target.checked)}
-                        className="cursor-pointer"
+                        className="table-checkbox"
                       />
                       Type
                     </div>
@@ -292,7 +286,7 @@ function Housekeeping() {
               ))}
               {filteredData.length === 0 && (
                 <tr>
-                  <td colSpan={visibleColumns.length} className="p-8 text-center text-gray-400">
+                  <td colSpan={visibleColumns.length} className="empty-order">
                     No rooms found
                   </td>
                 </tr>

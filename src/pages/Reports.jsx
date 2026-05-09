@@ -149,7 +149,7 @@ const Reports = () => {
       <div className="simple-page-header">
         <h1 className="simple-page-title">Reports</h1>
         {summary && (
-          <div className="mt-2 text-xs text-gray-600 font-semibold">
+          <div className="mt-2 simple-text-muted font-semibold">
             Rooms: <span className="font-bold">{summary.totalRooms}</span> ·
             Hotel bookings: <span className="font-bold">{summary.hotelBookings}</span> ·
             Restaurant bills: <span className="font-bold">{summary.restaurantBills}</span> ·
@@ -166,7 +166,7 @@ const Reports = () => {
 
           <div className="flex flex-wrap gap-2 justify-start lg:justify-end">
             <button
-              className="simple-btn simple-btn-primary flex items-center gap-2"
+              className="simple-btn simple-btn-primary"
               onClick={fetchData}
               disabled={loading}
             >
@@ -174,14 +174,14 @@ const Reports = () => {
               {loading ? 'Fetching...' : 'Fetch Data'}
             </button>
             <button
-              className="simple-btn simple-btn-success flex items-center gap-2"
+              className="simple-btn simple-btn-success"
               onClick={exportCSV}
             >
               <FaDownload />
               Export CSV
             </button>
             <button
-              className="simple-btn simple-btn-gray flex items-center gap-2"
+              className="simple-btn simple-btn-gray"
               onClick={printReport}
             >
               <FaPrint />
@@ -190,7 +190,8 @@ const Reports = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(320px,1fr)_auto] gap-3 items-center">
+        <div className="report-filters-row">
+          <div className="report-filters-row-inner">
           <div className="relative w-full">
             <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
@@ -201,7 +202,7 @@ const Reports = () => {
             />
           </div>
 
-          <div className="text-xs text-gray-500 font-semibold">
+          <div className="report-meta">
             Rows: <span className="font-bold text-gray-700">{filtered.length}</span>
             {lastFetchedAt ? (
               <span className="ml-3">
@@ -220,7 +221,7 @@ const Reports = () => {
         options={options}
       />
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-4">
+      <div className="report-summary-grid">
         <ReportCharts reportType={reportType} rows={filtered} />
         <div className="simple-card">
           <h2 className="text-base font-bold text-gray-800 mb-1">Report Summary</h2>
@@ -279,11 +280,11 @@ const SummaryPanel = ({ reportType, rows }) => {
   }, [reportType, rows]);
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+    <div className="simple-summary-grid">
       {cards.map((c) => (
         <div key={c.label} className="bg-blue-50 border border-blue-100 rounded-xl p-3">
           <div className="text-xs text-gray-500 font-bold">{c.label}</div>
-          <div className="mt-1 text-lg text-gray-900 font-black">{c.value}</div>
+          <div className="mt-1 text-lg font-black">{c.value}</div>
         </div>
       ))}
     </div>

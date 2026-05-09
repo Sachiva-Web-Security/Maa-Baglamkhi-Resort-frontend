@@ -54,7 +54,7 @@ const Modifiers = () => {
                   </td>
                 </tr>
               ))}
-              {modifiers.length === 0 && <tr><td colSpan="4" className="text-center p-4 text-gray-400">No modifiers found</td></tr>}
+              {modifiers.length === 0 && <tr><td colSpan="4" className="empty-order">No modifiers found</td></tr>}
             </tbody>
           </table>
         </div>

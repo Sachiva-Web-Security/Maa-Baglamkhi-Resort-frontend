@@ -201,11 +201,11 @@ const Profile = () => {
       : "Role";
 
   return (
-    <div className="flex items-start justify-center p-6">
-      <div className="w-full max-w-5xl bg-white border border-gray-200 rounded-2xl shadow-sm grid md:grid-cols-2 gap-8 p-8 mt-2">
+    <div className="profile-page">
+      <div className="profile-container">
         {/* Left: avatar + basic info */}
-        <div className="flex flex-col items-center text-center space-y-6">
-          <div className="w-32 h-32 rounded-full bg-linear-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-4xl text-white shadow overflow-hidden">
+        <div className="profile-section">
+          <div className="profile-avatar">
             {avatarUrl ? (
               <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" />
             ) : (
@@ -213,35 +213,27 @@ const Profile = () => {
             )}
           </div>
 
-          <div>
-            <h2 className="text-2xl font-bold text-gray-800">{name || "User"}</h2>
-            <p className="text-sm text-blue-600 font-medium">{prettyRole}</p>
+          <div className="profile-info">
+            <h2 className="profile-name">{name || "User"}</h2>
+            <p className="profile-role">{prettyRole}</p>
           </div>
 
-          <form onSubmit={handleAvatarUpload} className="w-full space-y-3">
+          <form className="profile-form">
             <input
               type="file"
               accept="image/*"
               onChange={handleAvatarChange}
-              className="w-full text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700"
+              className="simple-input-file"
             />
 
-            <div className="space-y-2">
-              <button
-                type="button"
-                onClick={handleStartCamera}
-                className="simple-btn simple-btn-outline w-full"
-              >
-                Open Camera
-              </button>
-
-              {cameraError && <p className="text-xs text-red-500">{cameraError}</p>}
+            <div className="camera-section">
+              {cameraError && <p className="camera-error">{cameraError}</p>}
 
               {cameraStream && (
-                <div className="space-y-2">
+                <div className="camera-controls">
                   <video
                     id="profile-camera-video"
-                    className="w-full rounded-xl border border-gray-200"
+                    className="camera-video"
                     autoPlay
                     muted
                   />
@@ -267,25 +259,25 @@ const Profile = () => {
         </div>
 
         {/* Right: password change */}
-        <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6 flex flex-col justify-center space-y-4">
-          <h3 className="text-xl font-semibold text-gray-800 mb-2">Change Password</h3>
-          <p className="text-xs text-gray-500 mb-2">
+        <div className="password-section">
+          <h3 className="section-title mb-2">Change Password</h3>
+          <p className="form-help-text">
             Update your password below. Your current password is required for verification.
           </p>
 
           {error && (
-            <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+            <div className="simple-error">
               {error}
             </div>
           )}
 
           {message && (
-            <div className="text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+            <div className="simple-success">
               {message}
             </div>
           )}
 
-          <form onSubmit={handlePasswordChange} className="space-y-4 mt-2">
+          <form onSubmit={handlePasswordChange} className="password-form">
             <div className="simple-form-group">
               <label className="simple-label">Current Password</label>
               <input
@@ -329,7 +321,7 @@ const Profile = () => {
           </form>
 
           {loadingProfile && (
-            <p className="text-xs text-gray-400 mt-2">
+            <p className="loading-hint">
               Loading profile details...
             </p>
           )}

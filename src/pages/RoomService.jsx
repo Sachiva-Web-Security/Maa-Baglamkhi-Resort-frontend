@@ -143,7 +143,7 @@ const RoomService = () => {
       {/* Orders Table */}
       <div className="simple-card">
         {loading ? (
-          <div className="text-center p-6 text-gray-400">Loading...</div>
+          <div className="empty-order">Loading...</div>
         ) : (
           <div className="simple-table-wrapper">
             <table className="simple-table">
@@ -178,7 +178,7 @@ const RoomService = () => {
                   </tr>
                 ))}
                 {filtered.length === 0 && (
-                  <tr><td colSpan="7" className="text-center p-6 text-gray-400">No orders found</td></tr>
+                  <tr><td colSpan="7" className="empty-order">No orders found</td></tr>
                 )}
               </tbody>
             </table>
@@ -207,7 +207,7 @@ const RoomService = () => {
                   <small>₹{item.price || item.effectivePrice}</small>
                 </button>
               ))}
-              {menuItems.length === 0 && <div className="text-gray-400 p-4 text-sm">No menu items available</div>}
+              {menuItems.length === 0 && <div className="empty-order">No menu items available</div>}
             </div>
 
             {newOrder.items.length > 0 && (
