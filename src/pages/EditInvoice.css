@@ -1,0 +1,19 @@
+.ei-page { padding: 20px; }
+.ei-layout { display: grid; grid-template-columns: 340px 1fr; gap: 16px; }
+.ei-list-header { padding: 10px 14px; font-size: 12px; font-weight: 700; color: #666; border-bottom: 1px solid #f0f2ed; }
+.ei-list-items { max-height: 500px; overflow-y: auto; }
+.ei-list-row { padding: 10px 14px; border-bottom: 1px solid #f0f2ed; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+.ei-list-row:hover { background: #f9faf8; }
+.ei-list-row.selected { background: #e3f0ff; border-left: 3px solid #1565c0; }
+.ei-list-id { font-size: 11px; font-weight: 700; color: #1565c0; min-width: 40px; }
+.ei-list-name { flex: 1; font-size: 12px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ei-list-amount { font-size: 12px; font-weight: 700; color: #2d7d2d; }
+.ei-list-status { min-width: 60px; text-align: right; }
+.ei-empty { padding: 20px; text-align: center; color: #999; font-size: 12px; }
+.ei-placeholder { display: flex; align-items: center; justify-content: center; height: 200px; color: #999; font-size: 13px; }
+.ei-edit-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.ei-edit-header h3 { font-size: 14px; font-weight: 700; margin: 0; }
+.ei-edit-amounts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
+.ei-total-row { display: flex; justify-content: space-between; font-size: 16px; font-weight: 700; padding: 10px 0; border-top: 2px solid #333; margin-top: 8px; }
+.ei-total-val { color: #2d7d2d; }
+.ei-page .simple-form-group { margin-bottom: 10px; }

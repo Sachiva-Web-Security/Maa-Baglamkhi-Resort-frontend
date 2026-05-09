@@ -1,0 +1,8 @@
+.items-page { padding: 20px; }
+.items-toolbar { display: flex; gap: 10px; align-items: center; margin: 14px 0; }
+.items-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 999; }
+.items-modal { background: #fff; border-radius: 10px; width: 460px; padding: 20px; }
+.items-modal-title { font-size: 16px; font-weight: 700; margin: 0 0 14px; }
+.items-modal .simple-form-group { margin-bottom: 10px; }
+.items-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.items-page .simple-form-group { margin-bottom: 10px; }

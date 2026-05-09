@@ -30,6 +30,10 @@ import ItemGroups from './pages/ItemGroups';
 import PriceGroups from './pages/PriceGroups';
 import PrintGroups from './pages/PrintGroups';
 import Units from './pages/Units';
+import InvoiceGroups from './pages/InvoiceGroups';
+import EditInvoice from './pages/EditInvoice';
+import Items from './pages/Items';
+import ManageData from './pages/ManageData';
 
 function Layout({ children, setIsAuthenticated }) {
   const role = (localStorage.getItem("role") || "").toLowerCase();
@@ -203,6 +207,26 @@ function App() {
         <Route path="/units" element={
           <ProtectedRoute allowedRoles={["admin","manager"]}>
             <Layout setIsAuthenticated={setIsAuthenticated}><Units /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/invoice-groups" element={
+          <ProtectedRoute allowedRoles={["admin","manager"]}>
+            <Layout setIsAuthenticated={setIsAuthenticated}><InvoiceGroups /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/edit-invoice" element={
+          <ProtectedRoute allowedRoles={["admin","manager"]}>
+            <Layout setIsAuthenticated={setIsAuthenticated}><EditInvoice /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/items" element={
+          <ProtectedRoute allowedRoles={["admin","manager"]}>
+            <Layout setIsAuthenticated={setIsAuthenticated}><Items /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/manage-data" element={
+          <ProtectedRoute allowedRoles={["admin","manager"]}>
+            <Layout setIsAuthenticated={setIsAuthenticated}><ManageData /></Layout>
           </ProtectedRoute>
         } />
 
