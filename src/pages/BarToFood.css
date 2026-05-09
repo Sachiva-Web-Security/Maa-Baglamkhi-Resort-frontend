@@ -1,0 +1,5 @@
+.bf-page { padding: 20px; }
+.bf-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 999; }
+.bf-modal { background: #fff; border-radius: 10px; width: 400px; padding: 20px; }
+.bf-modal-title { font-size: 16px; font-weight: 700; margin: 0 0 14px; }
+.bf-modal .simple-form-group { margin-bottom: 10px; }

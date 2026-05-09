@@ -1,0 +1,5 @@
+.ig-page { padding: 20px; }
+.ig-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 999; }
+.ig-modal { background: #fff; border-radius: 10px; width: 360px; padding: 20px; }
+.ig-modal-title { font-size: 16px; font-weight: 700; margin: 0 0 14px; }
+.ig-modal .simple-form-group { margin-bottom: 10px; }

@@ -22,6 +22,14 @@ import Kitchen from './pages/Kitchen';
 import QuickSales from './pages/QuickSales';
 import RestaurantSettings from './pages/RestaurantSettings';
 import RoomService from './pages/RoomService';
+import TableGroups from './pages/TableGroups';
+import Modifiers from './pages/Modifiers';
+import ParcelSetting from './pages/ParcelSetting';
+import BarToFood from './pages/BarToFood';
+import ItemGroups from './pages/ItemGroups';
+import PriceGroups from './pages/PriceGroups';
+import PrintGroups from './pages/PrintGroups';
+import Units from './pages/Units';
 
 function Layout({ children, setIsAuthenticated }) {
   const role = (localStorage.getItem("role") || "").toLowerCase();
@@ -154,6 +162,47 @@ function App() {
         <Route path="/room-service" element={
           <ProtectedRoute allowedRoles={["admin","manager","waiter"]}>
             <Layout setIsAuthenticated={setIsAuthenticated}><RoomService /></Layout>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/table-groups" element={
+          <ProtectedRoute allowedRoles={["admin","manager"]}>
+            <Layout setIsAuthenticated={setIsAuthenticated}><TableGroups /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/modifiers" element={
+          <ProtectedRoute allowedRoles={["admin","manager"]}>
+            <Layout setIsAuthenticated={setIsAuthenticated}><Modifiers /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/parcel-setting" element={
+          <ProtectedRoute allowedRoles={["admin","manager"]}>
+            <Layout setIsAuthenticated={setIsAuthenticated}><ParcelSetting /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/bar-to-food" element={
+          <ProtectedRoute allowedRoles={["admin","manager"]}>
+            <Layout setIsAuthenticated={setIsAuthenticated}><BarToFood /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/item-groups" element={
+          <ProtectedRoute allowedRoles={["admin","manager"]}>
+            <Layout setIsAuthenticated={setIsAuthenticated}><ItemGroups /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/price-groups" element={
+          <ProtectedRoute allowedRoles={["admin","manager"]}>
+            <Layout setIsAuthenticated={setIsAuthenticated}><PriceGroups /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/print-groups" element={
+          <ProtectedRoute allowedRoles={["admin","manager"]}>
+            <Layout setIsAuthenticated={setIsAuthenticated}><PrintGroups /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/units" element={
+          <ProtectedRoute allowedRoles={["admin","manager"]}>
+            <Layout setIsAuthenticated={setIsAuthenticated}><Units /></Layout>
           </ProtectedRoute>
         } />
 
