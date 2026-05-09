@@ -12,40 +12,74 @@ const Attendance = () => {
   const [role, setRole] = useState("All Roles");
   const [searchQuery, setSearchQuery] = useState("");
   const [showManualEntryModal, setShowManualEntryModal] = useState(false);
-
-  const sampleEmployees = [
-    { id: 1, name: "Rahul Sharma", role: "Receptionist", department: "Reception", checkIn: "09:02", checkOut: "18:05", status: "Present", method: "Biometric" },
-    { id: 2, name: "Priya Singh", role: "Housekeeper", department: "Housekeeping", checkIn: "08:55", checkOut: "17:00", status: "Present", method: "Manual" },
-    { id: 3, name: "Anil Kumar", role: "Chef", department: "Kitchen", checkIn: "07:30", checkOut: "16:30", status: "Present", method: "Biometric" },
-    { id: 4, name: "Sunita Devi", role: "Waiter", department: "Restaurant", checkIn: "10:15", checkOut: "", status: "Late", method: "Manual" },
-    { id: 5, name: "Vikram Patel", role: "Manager", department: "Reception", checkIn: "", checkOut: "", status: "Absent", method: "—" },
-    { id: 6, name: "Meena Joshi", role: "Accountant", department: "Accounts", checkIn: "09:00", checkOut: "18:00", status: "Present", method: "Biometric" },
-    { id: 7, name: "Raju Verma", role: "Security", department: "Security", checkIn: "", checkOut: "", status: "On Leave", method: "—" },
-    { id: 8, name: "Kavita Rao", role: "Cook", department: "Kitchen", checkIn: "07:45", checkOut: "16:45", status: "Present", method: "Biometric" },
-  ];
-
-  const [employees, setEmployees] = useState(sampleEmployees);
+  const [employees, setEmployees] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchAttendance = async () => {
       try {
+        setLoading(true);
         const res = await API.get("/attendance", { params: { date } });
-        if (res.data && res.data.length > 0) setEmployees(res.data);
+        if (res.data && res.data.length > 0) {
+          setEmployees(res.data.map(e => ({
+            id: e.id || e.user_id,
+            name: e.name || e.userName || e.employee_name,
+            role: e.role || e.designation || "Staff",
+            department: e.department || "General",
+            checkIn: e.checkIn || e.check_in || "",
+            checkOut: e.checkOut || e.check_out || "",
+            status: e.status || "Present",
+            method: e.method || e.entryMethod || "Manual",
+          })));
+        } else {
+          setEmployees([]);
+        }
       } catch (err) {
         console.error("Error loading attendance", err);
+        setEmployees([]);
+      } finally {
+        setLoading(false);
       }
     };
     fetchAttendance();
   }, [date]);
 
-  const filteredEmployees = employees.filter((emp) => {
-    const matchesDepartment =
-      department === "All Departments" || emp.department === department;
-    const matchesRole = role === "All Roles" || emp.role === role;
-    const matchesSearch =
-      searchQuery === "" ||
-      emp.name.toLowerCase().includes(searchQuery.toLowerCase());
+  const handleCheckIn = async (employee) => {
+    try {
+      const res = await API.post("/attendance", {
+        name: employee.name,
+        role: employee.role,
+        department: employee.department,
+        date,
+        checkIn: new Date().toLocaleTimeString("en-US", { hour12: false }),
+        status: "Present",
+        method: "Manual",
+      });
+      setEmployees(prev => prev.map(e => e.id === employee.id ? { ...e, checkIn: res.data?.checkIn || new Date().toLocaleTimeString(), status: "Present" } : e));
+      alert(`${employee.name} checked in`);
+    } catch (err) {
+      console.error("Check-in error:", err);
+      alert("Check-in failed");
+    }
+  };
 
+  const handleCheckOut = async (employee) => {
+    try {
+      const res = await API.put(`/attendance/${employee.id}`, {
+        checkOut: new Date().toLocaleTimeString("en-US", { hour12: false }),
+      });
+      setEmployees(prev => prev.map(e => e.id === employee.id ? { ...e, checkOut: res.data?.checkOut || new Date().toLocaleTimeString() } : e));
+      alert(`${employee.name} checked out`);
+    } catch (err) {
+      console.error("Check-out error:", err);
+      alert("Check-out failed");
+    }
+  };
+
+  const filteredEmployees = employees.filter((emp) => {
+    const matchesDepartment = department === "All Departments" || emp.department === department;
+    const matchesRole = role === "All Roles" || emp.role === role;
+    const matchesSearch = searchQuery === "" || (emp.name || "").toLowerCase().includes(searchQuery.toLowerCase());
     return matchesDepartment && matchesRole && matchesSearch;
   });
 
@@ -53,22 +87,17 @@ const Attendance = () => {
   const presentStaff = employees.filter((e) => e.status === "Present").length;
   const absentStaff = employees.filter((e) => e.status === "Absent").length;
   const lateStaff = employees.filter((e) => e.status === "Late").length;
-  const onLeaveStaff = employees.filter(
-    (e) => e.status === "On Leave"
-  ).length;
+  const onLeaveStaff = employees.filter((e) => e.status === "On Leave").length;
 
   const handleAddManualEntry = () => setShowManualEntryModal(true);
 
   const handleManualSubmit = async (data) => {
     try {
-      const payload = {
-        ...data,
-        date,
-      };
+      const payload = { ...data, date };
       const res = await API.post("/attendance", payload);
       const newId = res.data?.id || Date.now();
       setEmployees((prev) => [
-        { id: newId, ...payload },
+        { id: newId, name: data.employeeName, role: data.role, department: data.department, checkIn: data.checkIn, checkOut: data.checkOut, status: data.status, method: data.method },
         ...prev,
       ]);
       setShowManualEntryModal(false);
@@ -105,36 +134,36 @@ const Attendance = () => {
       </div>
 
       {/* Table */}
-      <div className="simple-table-wrapper">
-        <table className="simple-table">
-          <thead>
-            <tr>
-              <th>Employee</th>
-              <th>Role</th>
-              <th>Check In</th>
-              <th>Check Out</th>
-              <th>Status</th>
-              <th>Method</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredEmployees.map((employee) => (
-              <AttendanceRow key={employee.id} employee={employee} />
-            ))}
-            {filteredEmployees.length === 0 && (
-              <tr><td colSpan="7" className="p-4 text-center text-gray-400">No attendance records found</td></tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      {loading ? (
+        <div className="text-center p-4 text-gray-400">Loading...</div>
+      ) : (
+        <div className="simple-table-wrapper">
+          <table className="simple-table">
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Role</th>
+                <th>Check In</th>
+                <th>Check Out</th>
+                <th>Status</th>
+                <th>Method</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredEmployees.map((employee) => (
+                <AttendanceRow key={employee.id} employee={employee} onCheckIn={handleCheckIn} onCheckOut={handleCheckOut} />
+              ))}
+              {filteredEmployees.length === 0 && (
+                <tr><td colSpan="7" className="p-4 text-center text-gray-400">No attendance records found</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
 
-      <Modal
-        isOpen={showManualEntryModal}
-        onClose={() => setShowManualEntryModal(false)}
-        title="Add Manual Entry"
-      >
-        <AttendanceForm onSubmit={handleManualSubmit} />
+      <Modal isOpen={showManualEntryModal} onClose={() => setShowManualEntryModal(false)} title="Add Manual Entry">
+        <AttendanceForm onSubmit={handleManualSubmit} onCancel={() => setShowManualEntryModal(false)} />
       </Modal>
     </div>
   );

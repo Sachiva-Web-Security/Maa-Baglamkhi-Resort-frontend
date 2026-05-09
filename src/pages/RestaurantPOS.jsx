@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import API from "../api";
 import Modal from "../components/Hotel/Modal";
 import "./RestaurantPOS.css";
 
 const RestaurantPOS = () => {
+  const navigate = useNavigate();
   const [selectedTable, setSelectedTable] = useState(null);
   const [orderItems, setOrderItems] = useState([]);
   const [showSplitBillModal, setShowSplitBillModal] = useState(false);
@@ -14,10 +16,15 @@ const RestaurantPOS = () => {
   const [loading, setLoading] = useState(false);
   const [showKOTModal, setShowKOTModal] = useState(false);
   const [showKOTPanel, setShowKOTPanel] = useState(true);
-  // Track multiple KOTs for the current table
   const [kotHistory, setKotHistory] = useState([]);
-
   const [tables, setTables] = useState([]);
+  const [activeTab, setActiveTab] = useState("pos");
+
+  // Management states
+  const [captains, setCaptains] = useState([]);
+  const [invoiceGroups, setInvoiceGroups] = useState([]);
+
+  const sections = ["RESTAURANT", "GARDEN", "PARSAL", "ROOM DINING"];
 
   useEffect(() => {
     const fetchTables = async () => {
@@ -35,16 +42,47 @@ const RestaurantPOS = () => {
         const res = await API.get("/restaurant/menu");
         if (res.data) {
           setMenuItems(res.data);
+          // Extract categories from menu items
+          const categories = [...new Set(res.data.map(i => i.category).filter(Boolean))];
+          if (categories.length === 0) categories.push("Beverages", "Starters", "Main Course", "Desserts");
+          // Categories extracted for potential future use
         }
       } catch (err) {
         console.error("Error fetching menu items:", err);
       }
     };
+    const fetchBills = async () => {
+      try {
+        const res = await API.get("/restaurant/bills");
+        if (res.data) {
+          setInvoiceGroups(res.data.map(b => ({
+            id: b.id,
+            invoiceNo: b.id,
+            table: b.tableNumber || b.table,
+            amount: b.total,
+            status: b.invoiceStatus,
+            date: b.created_at
+          })));
+        }
+      } catch (err) {
+        console.error("Error fetching bills:", err);
+      }
+    };
+    const fetchUsers = async () => {
+      try {
+        const res = await API.get("/users");
+        if (res.data) {
+          setCaptains(res.data.filter(u => u.role === "Waiter" || u.role === "waiter"));
+        }
+      } catch (err) {
+        console.error("Error fetching captains:", err);
+      }
+    };
     fetchTables();
     fetchMenuItems();
+    fetchBills();
+    fetchUsers();
   }, []);
-
-  const sections = ["RESTAURANT", "GARDEN", "PARSAL", "ROOM DINING"];
 
   const filteredMenuItems = menuItems.filter((item) =>
     item.name.toLowerCase().includes(searchTerm.toLowerCase()),
@@ -69,30 +107,34 @@ const RestaurantPOS = () => {
     return sectionMatch && searchMatch;
   });
 
-  const handleTableClick = (table) => {
-    // Normalize IDs for reliable comparison and add logs for debugging
-    const prevId = selectedTable ? String(selectedTable.id) : null;
-    const newId = String(table.id);
-    console.debug("handleTableClick: prevId=", prevId, "newId=", newId, "orderItemsCount=", orderItems.length);
+  const getTableKey = (table) => String(table.id || table.number || table.tableNumber || table.table_no);
 
-    if (selectedTable && prevId !== newId) {
+  const handleTableClick = (table) => {
+    const tableKey = getTableKey(table);
+    const prevKey = selectedTable ? getTableKey(selectedTable) : null;
+
+    if (selectedTable && prevKey !== tableKey) {
       if (orderItems.length > 0) {
-        if (window.confirm("Switch table? Current order will be cleared.")) {
-          // Mark previous table as available (normalize id comparison)
-          setTables((prev) =>
-            prev.map((t) =>
-              String(t.id) === prevId ? { ...t, status: "Available" } : t
-            )
-          );
-          setOrderItems([]);
-          setSelectedTable(table);
-        }
-      } else {
-        setSelectedTable(table);
+        if (!window.confirm("Switch table? Current order will be cleared.")) return;
       }
-    } else {
-      setSelectedTable(table);
     }
+
+    // Mark previous table as available
+    if (prevKey && prevKey !== tableKey) {
+      setTables((prev) =>
+        prev.map((t) => getTableKey(t) === prevKey ? { ...t, status: "Available" } : t)
+      );
+    }
+
+    // Mark new table as occupied if it has items
+    if (orderItems.length > 0 || selectedTable) {
+      setTables((prev) =>
+        prev.map((t) => getTableKey(t) === tableKey ? { ...t, status: "Occupied" } : t)
+      );
+    }
+
+    setOrderItems([]);
+    setSelectedTable(table);
   };
 
   // Clear order - also mark table as available
@@ -161,6 +203,28 @@ const RestaurantPOS = () => {
     }
   };
 
+  const handleDeleteTable = async (id) => {
+    if (!confirm("Delete this table?")) return;
+    try {
+      await API.delete(`/restaurant/tables/${id}`);
+      setTables(prev => prev.filter(t => t.id !== id));
+    } catch (err) {
+      console.error("Error deleting table:", err);
+      alert("Failed to delete table");
+    }
+  };
+
+  const handleDeleteMenuItem = async (id) => {
+    if (!confirm("Delete this menu item?")) return;
+    try {
+      await API.delete(`/restaurant/menu/${id}`);
+      setMenuItems(prev => prev.filter(m => m.id !== id));
+    } catch (err) {
+      console.error("Error deleting menu item:", err);
+      alert("Failed to delete menu item");
+    }
+  };
+
   const handleAddToOrder = (item) => {
     if (!selectedTable) {
       alert("Please select a table first");
@@ -206,7 +270,7 @@ const RestaurantPOS = () => {
     }
   };
 
-  const handleRemoveItem = (itemId) => {
+  const _handleRemoveItem = (itemId) => {
     setOrderItems((prev) => prev.filter((item) => item.id !== itemId));
   };
 
@@ -477,18 +541,172 @@ const RestaurantPOS = () => {
     <div className="pos-screen">
       <div className="pos-topbar">
         <div className="pos-topbar-left">
-          <button className="pos-tab active">Dashboard</button>
-          <button className="pos-tab active-green">New Order</button>
-          <button className="pos-tab">Quick Bill</button>
-          <button className="pos-tab" onClick={() => setShowKOTModal(true)}>KDS (KOT)</button>
-          <button className="pos-tab">Daily Transaction</button>
+          <button className={`pos-tab ${activeTab === "pos" ? "active" : ""}`} onClick={() => setActiveTab("pos")}>Dashboard</button>
+          <button className={`pos-tab ${activeTab === "pos" ? "active-green" : ""}`} onClick={() => setActiveTab("pos")}>New Order</button>
+          <button className={`pos-tab ${activeTab === "quick" ? "active" : ""}`} onClick={() => setActiveTab("quick")}>Quick Bill</button>
+          <button className={`pos-tab ${activeTab === "kds" ? "active" : ""}`} onClick={() => setActiveTab("kds")}>KDS (KOT)</button>
+          <button className={`pos-tab ${activeTab === "transaction" ? "active" : ""}`} onClick={() => setActiveTab("transaction")}>Daily Transaction</button>
+          {/* Management tabs */}
+          <button className={`pos-tab ${activeTab === "items" ? "active" : ""}`} onClick={() => setActiveTab("items")}>Items</button>
+          <button className={`pos-tab ${activeTab === "tables" ? "active" : ""}`} onClick={() => setActiveTab("tables")}>Tables</button>
+          <button className={`pos-tab ${activeTab === "invoices" ? "active" : ""}`} onClick={() => setActiveTab("invoices")}>Invoices</button>
+          <button className={`pos-tab ${activeTab === "captains" ? "active" : ""}`} onClick={() => setActiveTab("captains")}>Captains</button>
         </div>
         <div className="pos-topbar-right">
           <span>{new Date().toLocaleDateString("en-IN")}</span>
         </div>
       </div>
 
-      <div className="pos-content">
+      {activeTab === "items" && (
+        <div className="pos-content" style={{ padding: "20px" }}>
+          <div className="simple-card">
+            <div className="simple-page-header">
+              <h2 className="simple-page-title">Menu Items Management</h2>
+              <button className="simple-btn simple-btn-primary" onClick={() => alert("Use Restaurant POS to add new items via menu")}>+ Add Item</button>
+            </div>
+            <div className="simple-table-wrapper">
+              <table className="simple-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                    <th>Food Type</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {menuItems.map(item => (
+                    <tr key={item.id}>
+                      <td className="font-medium">{item.name}</td>
+                      <td>{item.category}</td>
+                      <td>₹{item.price}</td>
+                      <td><span className={`simple-badge ${item.foodType === "Veg" ? "badge-green" : "badge-red"}`}>{item.foodType}</span></td>
+                      <td><span className={`simple-badge ${item.status === "Available" ? "badge-green" : "badge-orange"}`}>{item.status}</span></td>
+                      <td>
+                        <button onClick={() => alert("Menu item editing coming soon")} className="simple-btn simple-btn-outline simple-btn-sm" style={{marginRight: "5px"}}>Edit</button>
+                        <button onClick={() => handleDeleteMenuItem(item.id)} className="simple-btn simple-btn-gray simple-btn-sm">Delete</button>
+                      </td>
+                    </tr>
+                  ))}
+                  {menuItems.length === 0 && <tr><td colSpan="6" className="text-center p-4 text-gray-400">No menu items found</td></tr>}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === "tables" && (
+        <div className="pos-content" style={{ padding: "20px" }}>
+          <div className="simple-card">
+            <div className="simple-page-header">
+              <h2 className="simple-page-title">Tables Management</h2>
+              <button className="simple-btn simple-btn-primary" onClick={handleCreateTable}>+ Add Table</button>
+            </div>
+            <div className="simple-table-wrapper">
+              <table className="simple-table">
+                <thead>
+                  <tr>
+                    <th>Table No</th>
+                    <th>Section</th>
+                    <th>Floor</th>
+                    <th>Seats</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tables.map(table => (
+                    <tr key={table.id}>
+                      <td className="font-medium">{table.number}</td>
+                      <td>{table.sectionName || table.section || "-"}</td>
+                      <td>{table.floorName || "-"}</td>
+                      <td>{table.seatCount || 4}</td>
+                      <td><span className={`simple-badge ${table.status === "Available" ? "badge-green" : "badge-orange"}`}>{table.status}</span></td>
+                      <td>
+                        <button onClick={() => handleDeleteTable(table.id)} className="simple-btn simple-btn-gray simple-btn-sm">Delete</button>
+                      </td>
+                    </tr>
+                  ))}
+                  {tables.length === 0 && <tr><td colSpan="6" className="text-center p-4 text-gray-400">No tables found</td></tr>}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === "invoices" && (
+        <div className="pos-content" style={{ padding: "20px" }}>
+          <div className="simple-card">
+            <div className="simple-page-header">
+              <h2 className="simple-page-title">Invoice History</h2>
+            </div>
+            <div className="simple-table-wrapper">
+              <table className="simple-table">
+                <thead>
+                  <tr>
+                    <th>Invoice No</th>
+                    <th>Table</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {invoiceGroups.map(inv => (
+                    <tr key={inv.id}>
+                      <td className="font-medium">{inv.invoiceNo}</td>
+                      <td>{inv.table || "-"}</td>
+                      <td>₹{inv.amount?.toLocaleString() || 0}</td>
+                      <td><span className={`simple-badge ${inv.status === "Paid" ? "badge-green" : "badge-orange"}`}>{inv.status || "Generated"}</span></td>
+                      <td>{inv.date ? new Date(inv.date).toLocaleDateString() : "-"}</td>
+                    </tr>
+                  ))}
+                  {invoiceGroups.length === 0 && <tr><td colSpan="5" className="text-center p-4 text-gray-400">No invoices found</td></tr>}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === "captains" && (
+        <div className="pos-content" style={{ padding: "20px" }}>
+          <div className="simple-card">
+            <div className="simple-page-header">
+              <h2 className="simple-page-title">Captains / Waiters</h2>
+              <button className="simple-btn simple-btn-primary" onClick={() => navigate("/create-user")}>+ Add Captain</button>
+            </div>
+            <div className="simple-table-wrapper">
+              <table className="simple-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {captains.map(cap => (
+                    <tr key={cap.id}>
+                      <td className="font-medium">{cap.name}</td>
+                      <td>{cap.email}</td>
+                      <td><span className="simple-badge badge-blue">{cap.role}</span></td>
+                    </tr>
+                  ))}
+                  {captains.length === 0 && <tr><td colSpan="3" className="text-center p-4 text-gray-400">No captains found</td></tr>}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {(activeTab === "pos" || activeTab === "quick" || activeTab === "kds" || activeTab === "transaction") && (
+        <div className="pos-content">
         <div className="table-booking-panel">
           <div className="table-booking-header">
             <div className="table-section-tabs">
@@ -658,6 +876,7 @@ const RestaurantPOS = () => {
           </div>
         </div>
       </div>
+      )}
 
       {/* KOT Popup Modal */}
       <Modal isOpen={showKOTModal} onClose={() => setShowKOTModal(false)} title={`KOT Details - Table ${selectedTable?.number || "N/A"}`}>
@@ -668,7 +887,7 @@ const RestaurantPOS = () => {
               return <div className="empty-order">No KOT entries.</div>;
             }
 
-            return tableKots.map((kot, kidx) => (
+            return tableKots.map((kot, _kidx) => (
               <div key={kot.id} className="kot-card">
                 <div className="kot-row-head">
                   <strong>{kot.kotNo}</strong>

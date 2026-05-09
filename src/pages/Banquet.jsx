@@ -15,13 +15,6 @@ const menuPackages = [
   { id: 'royal', name: 'Royal', perGuest: 1250 },
 ];
 
-const initialHalls = [
-  { id: 'grand', name: 'Grand Ballroom', capacity: 500, ratePerHour: 12000, status: 'Available' },
-  { id: 'garden', name: 'Garden Banquet', capacity: 300, ratePerHour: 9000, status: 'Available' },
-  { id: 'crystal', name: 'Crystal Hall', capacity: 200, ratePerHour: 6500, status: 'Available' },
-  { id: 'board', name: 'Board Room', capacity: 60, ratePerHour: 2500, status: 'Available' },
-];
-
 const steps = [
   'Select Banquet Hall',
   'Add Event Details',
@@ -42,8 +35,15 @@ function hoursBetween(start, end) {
   return Math.max(1, Math.ceil(diff / 60));
 }
 
+const defaultHalls = [
+  { id: 'grand', name: 'Grand Ballroom', capacity: 500, ratePerHour: 12000, status: 'Available' },
+  { id: 'garden', name: 'Garden Banquet', capacity: 300, ratePerHour: 9000, status: 'Available' },
+  { id: 'crystal', name: 'Crystal Hall', capacity: 200, ratePerHour: 6500, status: 'Available' },
+  { id: 'board', name: 'Board Room', capacity: 60, ratePerHour: 2500, status: 'Available' },
+];
+
 const Banquet = () => {
-  const [halls, setHalls] = useState(initialHalls);
+  const [halls, setHalls] = useState([]);
   const [activeStep, setActiveStep] = useState(0);
 
   const [wizard, setWizard] = useState({

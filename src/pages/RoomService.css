@@ -1,0 +1,128 @@
+.rs-page {
+  padding: 20px;
+}
+
+.rs-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.rs-filter-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.rs-filter-tab {
+  border: 1px solid #cfd4c7;
+  background: #fff;
+  font-size: 12px;
+  padding: 5px 12px;
+  cursor: pointer;
+}
+
+.rs-filter-tab.active {
+  background: #4db1d4;
+  color: #fff;
+  border-color: #3a9cbd;
+}
+
+.rs-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.rs-modal {
+  background: #fff;
+  border-radius: 10px;
+  width: 480px;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.rs-modal-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0 0 14px;
+}
+
+.rs-modal-items-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.rs-modal-menu {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #e3e6e0;
+  border-radius: 6px;
+  padding: 8px;
+}
+
+.rs-modal-item {
+  border: 1px solid #cfd4c7;
+  background: #fafaf8;
+  padding: 8px;
+  text-align: left;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+}
+
+.rs-modal-item:hover {
+  background: #f0f7ff;
+  border-color: #4db1d4;
+}
+
+.rs-modal-item small {
+  color: #666;
+}
+
+.rs-modal-cart {
+  margin-top: 10px;
+  border: 1px solid #e3e6e0;
+  border-radius: 6px;
+  padding: 8px;
+}
+
+.rs-modal-cart-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #666;
+  margin-bottom: 6px;
+}
+
+.rs-modal-cart-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 4px 0;
+  font-size: 12px;
+  border-bottom: 1px solid #f0f2ed;
+}
+
+.rs-modal-cart-row span:first-child { flex: 1; }
+.rs-modal-cart-row span:nth-child(2) { color: #666; }
+.rs-modal-cart-row span:nth-child(3) { font-weight: 600; }
+
+.rs-remove-btn {
+  background: none;
+  border: none;
+  color: #d94848;
+  cursor: pointer;
+  font-size: 12px;
+}

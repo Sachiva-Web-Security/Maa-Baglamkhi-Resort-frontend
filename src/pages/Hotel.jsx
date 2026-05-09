@@ -31,12 +31,24 @@ const Hotel = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await API.get("/hotel");
-        setRooms(res.data.rooms || []);
-        setBookings(res.data.bookings || []);
+        const [roomsRes, bookingsRes] = await Promise.all([
+          API.get("/hotel/rooms/setup"),
+          API.get("/hotel/all-bookings"),
+        ]);
+        setRooms(roomsRes.data?.rooms || roomsRes.data || []);
+        setBookings(bookingsRes.data?.map(b => ({
+          id: b.bookingId || b.id,
+          guestName: b.guest_name || b.guestName,
+          room: Array.isArray(b.rooms) ? b.rooms[0] : b.rooms || "",
+          checkIn: b.check_in || b.checkIn,
+          checkOut: b.check_out || b.checkOut,
+          pricePerDay: b.default_price || b.pricePerDay || 0,
+          phone: b.mobile || b.phone || "",
+          status: b.booking_status === "CheckedIn" || b.booking_status === "Checked Out" ? "Occupied" : (b.booking_status || "Occupied"),
+          billGenerated: 0,
+        })) || []);
       } catch (err) {
         console.error("Error loading hotel data", err);
-        alert("Error loading hotel data from server");
       }
     };
 

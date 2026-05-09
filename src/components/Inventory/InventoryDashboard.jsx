@@ -1,158 +1,155 @@
-import React, { useState } from "react";
-import { FaRupeeSign, FaPlus, FaBell, FaSearch, FaEdit, FaTrash } from "react-icons/fa";
+import React, { useState, useEffect } from "react";
+import { FaRupeeSign, FaPlus, FaBell, FaSearch, FaEdit, FaTrash, FaSync } from "react-icons/fa";
 import CategoryInventory from "./CategoryInventory";
 import CategoryCard from "./CategoryCard";
-
-// 🔹 Default categories
-const defaultCategories = [
-  "Raw Ingredients",
-  "Housekeeping",
-  "Beverages",
-];
-
-// 🔹 Initial items (WITH ID)
-const initialItems = [
-  {
-    id: 1,
-    name: "Tomatoes",
-    category: "Raw Ingredients",
-    stock: 25,
-    unit: "kg",
-    price: 40,
-    expiry: "2026-02-25",
-    branch: "Main",
-  },
-  {
-    id: 2,
-    name: "Milk",
-    category: "Raw Ingredients",
-    stock: 5,
-    unit: "L",
-    price: 55,
-    expiry: "2026-02-19",
-    branch: "Main",
-  },
-  {
-    id: 3,
-    name: "Rice",
-    category: "Raw Ingredients",
-    stock: 0,
-    unit: "kg",
-    price: 70,
-    expiry: "2026-06-01",
-    branch: "Branch 2",
-  },
-];
+import API from "../../api";
 
 export default function InventoryDashboard() {
-  const [items, setItems] = useState(initialItems);
-  const [categories, setCategories] = useState(defaultCategories);
+  const [items, setItems] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [activeView, setActiveView] = useState("dashboard");
-
   const [showItemModal, setShowItemModal] = useState(false);
   const [showEditItemModal, setShowEditItemModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
-
-  // filter / search state
   const [filterCategory, setFilterCategory] = useState("All");
   const [expiryFilter, setExpiryFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [lowStockAlerts, setLowStockAlerts] = useState([]);
+  const [expiringItems, setExpiringItems] = useState([]);
 
-  // 🔹 Alerts (overall counts)
   const today = new Date();
-  const lowStockItems = items.filter((i) => i.stock > 0 && i.stock < 10);
-  const outOfStock = items.filter((i) => i.stock === 0);
-  const expiringSoon = items.filter((i) => {
-    const diff = (new Date(i.expiry) - today) / (1000 * 60 * 60 * 24);
-    return diff > 0 && diff <= 7;
-  });
+
+  // Fetch items and categories from backend
+  useEffect(() => {
+    fetchInventory();
+    fetchAlerts();
+  }, []);
+
+  const fetchInventory = async () => {
+    try {
+      setLoading(true);
+      const res = await API.get('/inventory');
+      const data = res.data;
+      setItems(data.items || data || []);
+      // Extract unique categories
+      const cats = [...new Set((data.items || data || []).map(i => i.category).filter(Boolean))];
+      if (cats.length === 0) cats.push("Raw Ingredients", "Housekeeping", "Beverages");
+      setCategories(cats);
+    } catch (err) {
+      console.error('Error loading inventory:', err);
+      // Fallback to default categories
+      setCategories(["Raw Ingredients", "Housekeeping", "Beverages"]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchAlerts = async () => {
+    try {
+      const [lowStockRes, expiringRes] = await Promise.all([
+        API.get('/inventory/alerts/low-stock'),
+        API.get('/inventory/alerts/expiring')
+      ]);
+      setLowStockAlerts(lowStockRes.data || []);
+      setExpiringItems(expiringRes.data || []);
+    } catch (err) {
+      console.error('Error loading alerts:', err);
+    }
+  };
 
   const totalValue = items.reduce(
-    (sum, i) => sum + i.stock * (Number(i.price) || 0),
+    (sum, i) => sum + (Number(i.stock) || 0) * (Number(i.price) || 0),
     0
   );
 
-  // 🔹 Expiry alerts (for listing expired items)
-  const expiryAlerts = items.filter((i) => new Date(i.expiry) <= today);
+  const lowStockItems = items.filter((i) => (Number(i.stock) || 0) > 0 && (Number(i.stock) || 0) < 10);
+  const outOfStock = items.filter((i) => (Number(i.stock) || 0) === 0);
 
-  // filtered items for display in table
   const displayedItems = items.filter((i) => {
-    const categoryMatch =
-      filterCategory === "All" || i.category === filterCategory;
+    const categoryMatch = filterCategory === "All" || i.category === filterCategory;
     let expiryMatch = true;
-    const diff = (new Date(i.expiry) - today) / (1000 * 60 * 60 * 24);
-    if (expiryFilter === "Expired") expiryMatch = new Date(i.expiry) <= today;
-    else if (expiryFilter === "Expiring Soon") expiryMatch = diff > 0 && diff <= 7;
-    const searchMatch =
-      searchQuery === "" ||
-      i.name.toLowerCase().includes(searchQuery.toLowerCase());
+    if (i.expiry) {
+      const diff = (new Date(i.expiry) - today) / (1000 * 60 * 60 * 24);
+      if (expiryFilter === "Expired") expiryMatch = new Date(i.expiry) <= today;
+      else if (expiryFilter === "Expiring Soon") expiryMatch = diff > 0 && diff <= 7;
+    }
+    const searchMatch = searchQuery === "" || (i.name || '').toLowerCase().includes(searchQuery.toLowerCase());
     return categoryMatch && expiryMatch && searchMatch;
   });
 
-  // 🔹 Add item
-  const addItem = (e) => {
+  const addItem = async (e) => {
     e.preventDefault();
     const form = e.target;
-
-    const newItem = {
-      id: Date.now(),
-      name: form.name.value,
-      category: form.category.value,
-      stock: Number(form.stock.value),
-      unit: form.unit.value,
-      price: Number(form.price.value),
-      expiry: form.expiry.value,
-      branch: form.branch.value,
-    };
-
-    setItems([...items, newItem]);
-    setShowItemModal(false);
-    form.reset();
+    try {
+      const newItem = {
+        name: form.name.value,
+        category: form.category.value,
+        stock: Number(form.stock.value),
+        unit: form.unit.value,
+        price: Number(form.price.value),
+        expiry: form.expiry.value,
+        branch: form.branch.value,
+      };
+      const res = await API.post('/inventory', newItem);
+      setItems(prev => [...prev, { ...newItem, id: res.data?.id || Date.now() }]);
+      setShowItemModal(false);
+      form.reset();
+      fetchAlerts();
+    } catch (err) {
+      console.error('Error adding item:', err);
+      alert('Failed to add item');
+    }
   };
 
-  // 🔹 Add item from category page
   const handleAddItemFromCategory = (item) => {
-    setItems([...items, item]);
+    setItems(prev => [...prev, item]);
   };
 
-  // 🔹 click edit icon in table
   const handleEditClick = (item) => {
     setEditingItem(item);
     setShowEditItemModal(true);
   };
 
-  // 🔹 save changes from edit modal
-  const saveEditedItem = (e) => {
+  const saveEditedItem = async (e) => {
     e.preventDefault();
     const form = e.target;
-    const updated = {
-      ...editingItem,
-      name: form.name.value,
-      category: form.category.value,
-      stock: Number(form.stock.value),
-      unit: form.unit.value,
-      price: Number(form.price.value),
-      expiry: form.expiry.value,
-      branch: form.branch.value,
-    };
-    handleUpdateItem(editingItem.id, updated);
-    setShowEditItemModal(false);
-    setEditingItem(null);
+    try {
+      const updated = {
+        ...editingItem,
+        name: form.name.value,
+        category: form.category.value,
+        stock: Number(form.stock.value),
+        unit: form.unit.value,
+        price: Number(form.price.value),
+        expiry: form.expiry.value,
+        branch: form.branch.value,
+      };
+      await API.put(`/inventory/${editingItem.id}`, updated);
+      setItems(prev => prev.map(i => i.id === editingItem.id ? { ...updated, id: editingItem.id } : i));
+      setShowEditItemModal(false);
+      setEditingItem(null);
+      fetchAlerts();
+    } catch (err) {
+      console.error('Error updating item:', err);
+      alert('Failed to update item');
+    }
   };
 
-  // 🔹 Update item (ID based)
-  const handleUpdateItem = (id, updatedItem) => {
-    setItems(items.map((i) => (i.id === id ? updatedItem : i)));
+  const handleDeleteItem = async (id) => {
+    if (!confirm('Are you sure you want to delete this item?')) return;
+    try {
+      await API.delete(`/inventory/${id}`);
+      setItems(prev => prev.filter(i => i.id !== id));
+      fetchAlerts();
+    } catch (err) {
+      console.error('Error deleting item:', err);
+      alert('Failed to delete item');
+    }
   };
 
-  // 🔹 Delete item (ID based)
-  const handleDeleteItem = (id) => {
-    setItems(items.filter((i) => i.id !== id));
-  };
-
-  // 🔹 Category navigation
   const handleCategoryClick = (category) => {
     setActiveView(category);
   };
@@ -161,23 +158,21 @@ export default function InventoryDashboard() {
     setActiveView("dashboard");
   };
 
-  // 🔹 Add category
   const handleAddNewCategory = (e) => {
     e.preventDefault();
     if (newCategoryName && !categories.includes(newCategoryName)) {
-      setCategories([...categories, newCategoryName]);
+      setCategories(prev => [...prev, newCategoryName]);
       setNewCategoryName("");
       setShowCategoryModal(false);
     }
   };
 
-  // 🔹 Delete category
   const handleDeleteCategory = (category) => {
-    setCategories(categories.filter((c) => c !== category));
-    setItems(items.filter((i) => i.category !== category));
+    if (!confirm(`Delete category "${category}" and all its items?`)) return;
+    setCategories(prev => prev.filter(c => c !== category));
+    setItems(prev => prev.filter(i => i.category !== category));
   };
 
-  // 🔹 Category view
   if (activeView !== "dashboard") {
     return (
       <CategoryInventory
@@ -185,38 +180,32 @@ export default function InventoryDashboard() {
         items={items}
         onBack={handleBackToDashboard}
         onAddItem={handleAddItemFromCategory}
-        onUpdateItem={handleUpdateItem}
+        onUpdateItem={(id, updated) => setItems(prev => prev.map(i => i.id === id ? updated : i))}
         onDeleteItem={handleDeleteItem}
       />
     );
   }
 
-  // 🔹 Dashboard view
   return (
     <div className="p-2">
-      {/* Header */}
       <div className="simple-page-header">
         <div>
           <h1 className="simple-page-title">Inventory Dashboard</h1>
           <p className="text-sm text-gray-500">Hotel inventory overview</p>
         </div>
         <div className="flex gap-3">
-          <button
-            onClick={() => setShowCategoryModal(true)}
-            className="simple-btn simple-btn-outline flex items-center gap-2"
-          >
+          <button onClick={fetchInventory} className="simple-btn simple-btn-outline flex items-center gap-2">
+            <FaSync /> Refresh
+          </button>
+          <button onClick={() => setShowCategoryModal(true)} className="simple-btn simple-btn-outline flex items-center gap-2">
             <FaPlus /> Category
           </button>
-          <button
-            onClick={() => setShowItemModal(true)}
-            className="simple-btn simple-btn-primary flex items-center gap-2"
-          >
+          <button onClick={() => setShowItemModal(true)} className="simple-btn simple-btn-primary flex items-center gap-2">
             <FaPlus /> Item
           </button>
         </div>
       </div>
 
-      {/* Alert tiles */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="simple-metric-tile tile-orange">
           <div className="simple-metric-tile-label">Low Stock</div>
@@ -228,7 +217,7 @@ export default function InventoryDashboard() {
         </div>
         <div className="simple-metric-tile tile-blue">
           <div className="simple-metric-tile-label">Expiring Soon</div>
-          <div className="simple-metric-tile-value">{expiringSoon.length}</div>
+          <div className="simple-metric-tile-value">{expiringItems.length}</div>
         </div>
         <div className="simple-metric-tile tile-green">
           <div className="simple-metric-tile-label">Total Value</div>
@@ -236,111 +225,75 @@ export default function InventoryDashboard() {
         </div>
       </div>
 
-      {/* Filters + search */}
       <div className="simple-card mb-6 flex flex-col md:flex-row items-center gap-4">
-        <select
-          value={filterCategory}
-          onChange={(e) => setFilterCategory(e.target.value)}
-          className="simple-select w-full md:w-auto"
-        >
+        <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="simple-select w-full md:w-auto">
           <option>All</option>
-          {categories.map((c) => (
-            <option key={c}>{c}</option>
-          ))}
+          {categories.map((c) => <option key={c}>{c}</option>)}
         </select>
-        <select
-          value={expiryFilter}
-          onChange={(e) => setExpiryFilter(e.target.value)}
-          className="simple-select w-full md:w-auto"
-        >
+        <select value={expiryFilter} onChange={(e) => setExpiryFilter(e.target.value)} className="simple-select w-full md:w-auto">
           <option>All</option>
           <option>Expired</option>
           <option>Expiring Soon</option>
         </select>
         <div className="relative w-full flex-1">
           <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="simple-input pl-10 w-full"
-          />
+          <input type="text" placeholder="Search..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="simple-input pl-10 w-full" />
         </div>
       </div>
 
-      {/* Table of items */}
-      <div className="simple-table-wrapper mb-6">
-        <table className="simple-table">
-          <thead>
-            <tr>
-              <th>Item Name</th>
-              <th>Category</th>
-              <th>Quantity</th>
-              <th>Unit</th>
-              <th>Expiry</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {displayedItems.length === 0 ? (
+      {loading ? (
+        <div className="text-center p-8 text-gray-400">Loading inventory...</div>
+      ) : (
+        <div className="simple-table-wrapper mb-6">
+          <table className="simple-table">
+            <thead>
               <tr>
-                <td colSpan="6" className="p-4 text-center text-gray-400">
-                  No items found
-                </td>
+                <th>Item Name</th>
+                <th>Category</th>
+                <th>Quantity</th>
+                <th>Unit</th>
+                <th>Price (₹)</th>
+                <th>Expiry</th>
+                <th>Actions</th>
               </tr>
-            ) : (
-              displayedItems.map((item) => (
-                <tr key={item.id}>
-                  <td className="font-medium">{item.name}</td>
-                  <td>{item.category}</td>
-                  <td>{item.stock}</td>
-                  <td>{item.unit}</td>
-                  <td>{item.expiry}</td>
-                  <td className="flex gap-2">
-                    <button
-                      onClick={() => handleEditClick(item)}
-                      className="text-blue-500 hover:text-blue-700"
-                    >
-                      <FaEdit />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteItem(item.id)}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      <FaTrash />
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {displayedItems.length === 0 ? (
+                <tr><td colSpan="7" className="p-4 text-center text-gray-400">No items found</td></tr>
+              ) : (
+                displayedItems.map((item) => (
+                  <tr key={item.id || item._id}>
+                    <td className="font-medium">{item.name}</td>
+                    <td>{item.category}</td>
+                    <td className={item.stock === 0 ? 'text-red-600 font-bold' : item.stock < 10 ? 'text-orange-600' : ''}>{item.stock}</td>
+                    <td>{item.unit}</td>
+                    <td>₹{item.price?.toLocaleString()}</td>
+                    <td>{item.expiry || '-'}</td>
+                    <td className="flex gap-2">
+                      <button onClick={() => handleEditClick(item)} className="text-blue-500 hover:text-blue-700"><FaEdit /></button>
+                      <button onClick={() => handleDeleteItem(item.id || item._id)} className="text-red-500 hover:text-red-700"><FaTrash /></button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
 
-      {/* Expiry alerts */}
-      {expiryAlerts.length > 0 && (
+      {expiringItems.length > 0 && (
         <div className="bg-red-50 border border-red-200 p-4 rounded-xl mb-6">
           <h3 className="font-semibold text-red-600 mb-1">Expiry Alerts</h3>
-          {expiryAlerts.map((i) => (
-            <p key={i.id} className="text-sm text-gray-600">
-              {i.name} expired on {i.expiry}
-            </p>
+          {expiringItems.map((i, idx) => (
+            <p key={idx} className="text-sm text-gray-600">{i.name} - {i.expiry}</p>
           ))}
         </div>
       )}
 
-      {/* Categories */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {categories.map((category) => {
-          const categoryItems = items.filter(
-            (i) => i.category === category
-          );
-          const total = categoryItems.reduce(
-            (sum, i) => sum + i.stock * i.price,
-            0
-          );
-
+          const categoryItems = items.filter(i => i.category === category);
+          const total = categoryItems.reduce((sum, i) => sum + (Number(i.stock) || 0) * (Number(i.price) || 0), 0);
           return (
             <CategoryCard
               key={category}
@@ -349,7 +302,7 @@ export default function InventoryDashboard() {
               totalValue={total}
               onClick={() => handleCategoryClick(category)}
               onDeleteCategory={handleDeleteCategory}
-              isDefault={defaultCategories.includes(category)}
+              isDefault={["Raw Ingredients", "Housekeeping", "Beverages"].includes(category)}
             />
           );
         })}
@@ -367,13 +320,7 @@ export default function InventoryDashboard() {
               <form onSubmit={handleAddNewCategory}>
                 <div className="simple-form-group">
                   <label className="simple-label">Category Name</label>
-                  <input
-                    value={newCategoryName}
-                    onChange={(e) => setNewCategoryName(e.target.value)}
-                    className="simple-input w-full"
-                    placeholder="Category name"
-                    required
-                  />
+                  <input value={newCategoryName} onChange={(e) => setNewCategoryName(e.target.value)} className="simple-input w-full" placeholder="Category name" required />
                 </div>
                 <div className="flex justify-end gap-2 mt-4">
                   <button type="button" onClick={() => setShowCategoryModal(false)} className="simple-btn simple-btn-outline">Cancel</button>
@@ -427,7 +374,7 @@ export default function InventoryDashboard() {
                   </div>
                   <div className="simple-form-group">
                     <label className="simple-label">Expiry Date</label>
-                    <input name="expiry" type="date" className="simple-input w-full" required />
+                    <input name="expiry" type="date" className="simple-input w-full" />
                   </div>
                 </div>
                 <div className="flex justify-end gap-2 mt-4">
@@ -453,7 +400,7 @@ export default function InventoryDashboard() {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="simple-form-group col-span-2">
                     <label className="simple-label">Item Name</label>
-                    <input name="name" placeholder="Item name" defaultValue={editingItem.name} className="simple-input w-full" required />
+                    <input name="name" defaultValue={editingItem.name} className="simple-input w-full" required />
                   </div>
                   <div className="simple-form-group">
                     <label className="simple-label">Category</label>
@@ -482,7 +429,7 @@ export default function InventoryDashboard() {
                   </div>
                   <div className="simple-form-group">
                     <label className="simple-label">Expiry Date</label>
-                    <input name="expiry" type="date" defaultValue={editingItem.expiry} className="simple-input w-full" required />
+                    <input name="expiry" type="date" defaultValue={editingItem.expiry} className="simple-input w-full" />
                   </div>
                 </div>
                 <div className="flex justify-end gap-2 mt-4">

@@ -1,111 +1,7 @@
-import React, { useState } from 'react';
-import { FaSearch, FaFilePdf, FaChevronUp, FaTimes, FaExclamationCircle, FaBroom, FaCheck, FaBed } from 'react-icons/fa';
+import React, { useState, useEffect } from 'react';
+import { FaSearch, FaFilePdf, FaTimes, FaExclamationCircle, FaBroom, FaCheck, FaBed } from 'react-icons/fa';
 import HousekeepingRow from '../components/Housekeeping/HousekeepingRow';
-
-const initialData = [
-  {
-    id: 1,
-    selected: false,
-    type: 'Accommodation',
-    roomNo: '100',
-    building: '',
-    floor: '',
-    section: '',
-    guestStatus: '',
-    roomType: 'Executive King Room',
-    status: 'Vacant Dirty',
-    assignee: 'No Housekeeper',
-    layout: '',
-    articles: '',
-    services: '',
-    notes: false,
-  },
-  {
-    id: 2,
-    selected: false,
-    type: 'Accommodation',
-    roomNo: '3',
-    building: '',
-    floor: '',
-    section: '',
-    guestStatus: '',
-    roomType: 'King Room with seaview',
-    status: 'Vacant Clean Inspected',
-    assignee: 'No Housekeeper',
-    layout: '',
-    articles: '',
-    services: '',
-    notes: false,
-  },
-  {
-    id: 3,
-    selected: false,
-    type: 'Accommodation',
-    roomNo: '4',
-    building: '',
-    floor: '',
-    section: '',
-    guestStatus: 'Arrives today',
-    roomType: 'Suite',
-    status: 'Occupied Dirty',
-    assignee: 'No Housekeeper',
-    layout: '',
-    articles: '',
-    services: '',
-    notes: true,
-  },
-  {
-    id: 4,
-    selected: false,
-    type: 'Accommodation',
-    roomNo: '5',
-    building: '',
-    floor: '',
-    section: '',
-    guestStatus: '',
-    roomType: 'Executive King Room',
-    status: 'Vacant Dirty',
-    assignee: 'No Housekeeper',
-    layout: '',
-    articles: '',
-    services: '',
-    notes: false,
-  },
-  {
-    id: 5,
-    selected: false,
-    type: 'Accommodation',
-    roomNo: '6',
-    building: '',
-    floor: '',
-    section: '',
-    guestStatus: 'Arrives today',
-    roomType: 'Standard Room',
-    status: 'Occupied Clean',
-    assignee: 'No Housekeeper',
-    layout: '',
-    articles: '',
-    services: '',
-    notes: true,
-  },
-  {
-    id: 6,
-    selected: false,
-    type: 'Accommodation',
-    roomNo: '7',
-    building: '',
-    floor: '',
-    section: '',
-    guestStatus: '',
-    roomType: 'Standard Room',
-    status: 'Vacant Dirty',
-    assignee: 'No Housekeeper',
-    layout: '',
-    articles: '',
-    services: '',
-    notes: false,
-  },
-];
+import API from '../api';
 
 const allColumns = [
   { key: 'type', label: 'Type', required: true },
@@ -124,7 +20,7 @@ const allColumns = [
 ];
 
 function Housekeeping() {
-  const [data, setData] = useState(initialData);
+  const [rooms, setRooms] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [housekeeperFilter, setHousekeeperFilter] = useState('All Housekeeper');
@@ -133,36 +29,84 @@ function Housekeeping() {
   const [visibleColumns, setVisibleColumns] = useState(
     allColumns.map(col => col.key)
   );
+  const [loading, setLoading] = useState(true);
 
-  const selectedCount = data.filter(item => item.selected).length;
+  const role = localStorage.getItem("role");
+  const selectedCount = rooms.filter(item => item.selected).length;
+
+  // Load rooms from backend
+  useEffect(() => {
+    fetchRooms();
+  }, []);
+
+  const fetchRooms = async () => {
+    try {
+      setLoading(true);
+      const res = await API.get('/housekeeping');
+      const backendRooms = res.data?.rooms || res.data || [];
+      setRooms(backendRooms.map(r => ({
+        id: r.id || r._id,
+        selected: false,
+        type: r.type || 'Accommodation',
+        roomNo: r.roomNumber || r.roomNo || r.name || '',
+        building: r.building || '',
+        floor: r.floor || '',
+        section: r.section || '',
+        guestStatus: r.guestStatus || '',
+        roomType: r.roomType || '',
+        status: r.status || 'Vacant Dirty',
+        assignee: r.assignee || 'No Housekeeper',
+        layout: r.layout || '',
+        articles: r.articles || '',
+        services: r.services || '',
+        notes: r.notes || false,
+      })));
+    } catch (err) {
+      console.error('Error loading housekeeping rooms:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSelectChange = (id, checked) => {
-    setData(prev =>
+    setRooms(prev =>
       prev.map(item => (item.id === id ? { ...item, selected: checked } : item))
     );
   };
 
   const handleSelectAll = checked => {
     setSelectAll(checked);
-    setData(prev => prev.map(item => ({ ...item, selected: checked })));
+    setRooms(prev => prev.map(item => ({ ...item, selected: checked })));
   };
 
-  const handleStatusChange = (id, status) => {
-    setData(prev =>
-      prev.map(item => (item.id === id ? { ...item, status } : item))
-    );
+  const handleStatusChange = async (id, status) => {
+    try {
+      await API.put(`/housekeeping/status/${id}`, { status });
+      setRooms(prev =>
+        prev.map(item => (item.id === id ? { ...item, status } : item))
+      );
+    } catch (err) {
+      console.error('Error updating status:', err);
+      alert('Failed to update status');
+    }
   };
 
-  const handleAssigneeChange = (id, assignee) => {
-    setData(prev =>
-      prev.map(item => (item.id === id ? { ...item, assignee } : item))
-    );
+  const handleAssigneeChange = async (id, assignee) => {
+    try {
+      await API.put(`/housekeeping/assignee/${id}`, { assignee });
+      setRooms(prev =>
+        prev.map(item => (item.id === id ? { ...item, assignee } : item))
+      );
+    } catch (err) {
+      console.error('Error updating assignee:', err);
+      alert('Failed to update assignee');
+    }
   };
 
   const toggleColumn = (columnKey) => {
     const column = allColumns.find(col => col.key === columnKey);
-    if (column && column.required) return; // Don't allow hiding required columns
-    
+    if (column && column.required) return;
+
     setVisibleColumns(prev =>
       prev.includes(columnKey)
         ? prev.filter(key => key !== columnKey)
@@ -170,21 +114,17 @@ function Housekeeping() {
     );
   };
 
-  const filteredData = data.filter(item => {
-    const matchesSearch = searchQuery === '' || 
+  const filteredData = rooms.filter(item => {
+    const matchesSearch = searchQuery === '' ||
       item.roomNo.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.roomType.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesHousekeeper = housekeeperFilter === 'All Housekeeper' || 
+
+    const matchesHousekeeper = housekeeperFilter === 'All Housekeeper' ||
       item.assignee === housekeeperFilter;
-    
-    const matchesRoomType = roomTypeTab === 'Accommodation Rooms' || 
-      roomTypeTab === 'Event Rooms';
-    
-    return matchesSearch && matchesHousekeeper && matchesRoomType;
+
+    return matchesSearch && matchesHousekeeper;
   });
 
-  // summary counts based on filtered data
   const roomsToClean = filteredData.filter(item =>
     item.status.toLowerCase().includes('dirty')
   ).length;
@@ -197,7 +137,6 @@ function Housekeeping() {
 
   return (
     <div>
-      {/* Header */}
       <div className="simple-page-header">
         <h1 className="simple-page-title">Housekeeping</h1>
         <button className="simple-btn simple-btn-success flex items-center gap-2">
@@ -205,10 +144,8 @@ function Housekeeping() {
         </button>
       </div>
 
-      {/* Top Control Bar */}
       <div className="simple-card mb-4">
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(240px,1fr)_auto_260px] gap-3 items-center mb-3">
-          {/* Search Bar */}
           <div className="relative w-full">
             <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
@@ -233,8 +170,6 @@ function Housekeeping() {
             className="simple-select w-full"
           >
             <option>All Housekeeper</option>
-            <option>John Doe</option>
-            <option>Jane Smith</option>
           </select>
         </div>
 
@@ -256,7 +191,6 @@ function Housekeeping() {
           </div>
         </div>
 
-        {/* Summary tiles */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="simple-metric-tile tile-orange">
             <div className="flex items-center gap-2 mb-1">
@@ -282,7 +216,6 @@ function Housekeeping() {
         </div>
       </div>
 
-      {/* Column Customization Bar */}
       {showColumns && (
         <div className="mb-4 bg-white rounded-lg shadow-sm border border-gray-200 p-3 flex items-center gap-2 flex-wrap">
           <div className="px-3 py-1 bg-blue-600 text-white rounded-full text-sm font-medium">
@@ -312,52 +245,62 @@ function Housekeeping() {
         </div>
       )}
 
-      {/* Table */}
-      <div className="simple-table-wrapper">
-        <table className="simple-table">
-          <thead>
-            <tr>
-              {visibleColumns.includes('type') && (
-                <th>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={selectAll}
-                      onChange={(e) => handleSelectAll(e.target.checked)}
-                      className="cursor-pointer"
-                    />
-                    Type
-                  </div>
-                </th>
+      {loading ? (
+        <div className="text-center p-8 text-gray-400">Loading rooms...</div>
+      ) : (
+        <div className="simple-table-wrapper">
+          <table className="simple-table">
+            <thead>
+              <tr>
+                {visibleColumns.includes('type') && (
+                  <th>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={selectAll}
+                        onChange={(e) => handleSelectAll(e.target.checked)}
+                        className="cursor-pointer"
+                      />
+                      Type
+                    </div>
+                  </th>
+                )}
+                {visibleColumns.includes('roomNo') && <th>Room No. / Name</th>}
+                {visibleColumns.includes('building') && <th>Building</th>}
+                {visibleColumns.includes('floor') && <th>Floor</th>}
+                {visibleColumns.includes('section') && <th>Section</th>}
+                {visibleColumns.includes('guestStatus') && <th>Guest Status</th>}
+                {visibleColumns.includes('roomType') && <th>Room Type</th>}
+                {visibleColumns.includes('status') && <th>Status</th>}
+                {visibleColumns.includes('assignee') && <th>Assignee</th>}
+                {visibleColumns.includes('layout') && <th>Layout</th>}
+                {visibleColumns.includes('articles') && <th>Articles</th>}
+                {visibleColumns.includes('services') && <th>Services</th>}
+                {visibleColumns.includes('notes') && <th>Notes</th>}
+              </tr>
+            </thead>
+            <tbody>
+              {filteredData.map(item => (
+                <HousekeepingRow
+                  key={item.id}
+                  item={item}
+                  visibleColumns={visibleColumns}
+                  onSelectChange={handleSelectChange}
+                  onStatusChange={handleStatusChange}
+                  onAssigneeChange={handleAssigneeChange}
+                />
+              ))}
+              {filteredData.length === 0 && (
+                <tr>
+                  <td colSpan={visibleColumns.length} className="p-8 text-center text-gray-400">
+                    No rooms found
+                  </td>
+                </tr>
               )}
-              {visibleColumns.includes('roomNo') && <th>Room No. / Name</th>}
-              {visibleColumns.includes('building') && <th>Building</th>}
-              {visibleColumns.includes('floor') && <th>Floor</th>}
-              {visibleColumns.includes('section') && <th>Section</th>}
-              {visibleColumns.includes('guestStatus') && <th>Guest Status</th>}
-              {visibleColumns.includes('roomType') && <th>Room Type</th>}
-              {visibleColumns.includes('status') && <th>Status</th>}
-              {visibleColumns.includes('assignee') && <th>Assignee</th>}
-              {visibleColumns.includes('layout') && <th>Layout</th>}
-              {visibleColumns.includes('articles') && <th>Articles</th>}
-              {visibleColumns.includes('services') && <th>Services</th>}
-              {visibleColumns.includes('notes') && <th>Notes</th>}
-            </tr>
-          </thead>
-          <tbody>
-            {filteredData.map(item => (
-              <HousekeepingRow
-                key={item.id}
-                item={item}
-                visibleColumns={visibleColumns}
-                onSelectChange={handleSelectChange}
-                onStatusChange={handleStatusChange}
-                onAssigneeChange={handleAssigneeChange}
-              />
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

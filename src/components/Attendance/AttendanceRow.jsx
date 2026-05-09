@@ -1,4 +1,4 @@
-const AttendanceRow = ({ employee }) => {
+const AttendanceRow = ({ employee, onCheckIn, onCheckOut }) => {
   const statusBadge = {
     Present: "simple-badge badge-green",
     Absent: "simple-badge badge-red",
@@ -10,6 +10,9 @@ const AttendanceRow = ({ employee }) => {
     Biometric: "simple-badge badge-blue",
     Manual: "simple-badge badge-gray",
   };
+
+  const canCheckIn = !employee.checkIn;
+  const canCheckOut = employee.checkIn && !employee.checkOut;
 
   return (
     <tr>
@@ -28,8 +31,12 @@ const AttendanceRow = ({ employee }) => {
         </span>
       </td>
       <td className="flex gap-2">
-        <button className="simple-btn simple-btn-success simple-btn-sm">Check In</button>
-        <button className="simple-btn simple-btn-danger simple-btn-sm">Check Out</button>
+        {canCheckIn && (
+          <button onClick={() => onCheckIn?.(employee)} className="simple-btn simple-btn-success simple-btn-sm">Check In</button>
+        )}
+        {canCheckOut && (
+          <button onClick={() => onCheckOut?.(employee)} className="simple-btn simple-btn-danger simple-btn-sm">Check Out</button>
+        )}
       </td>
     </tr>
   );

@@ -19,6 +19,9 @@ import User from './pages/User';
 import CreateUser from "./components/Createuser/CreateUser";
 import Assignment from './pages/Assignments';
 import Kitchen from './pages/Kitchen';
+import QuickSales from './pages/QuickSales';
+import RestaurantSettings from './pages/RestaurantSettings';
+import RoomService from './pages/RoomService';
 
 function Layout({ children, setIsAuthenticated }) {
   const role = (localStorage.getItem("role") || "").toLowerCase();
@@ -133,6 +136,24 @@ function App() {
         <Route path="/kitchen" element={
           <ProtectedRoute allowedRoles={["admin","manager","kitchen"]}>
             <Layout setIsAuthenticated={setIsAuthenticated}><Kitchen /></Layout>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/quick-sales" element={
+          <ProtectedRoute allowedRoles={["admin","manager","waiter","receptionist"]}>
+            <Layout setIsAuthenticated={setIsAuthenticated}><QuickSales /></Layout>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/restaurant-settings" element={
+          <ProtectedRoute allowedRoles={["admin","manager"]}>
+            <Layout setIsAuthenticated={setIsAuthenticated}><RestaurantSettings /></Layout>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/room-service" element={
+          <ProtectedRoute allowedRoles={["admin","manager","waiter"]}>
+            <Layout setIsAuthenticated={setIsAuthenticated}><RoomService /></Layout>
           </ProtectedRoute>
         } />
 
