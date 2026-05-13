@@ -880,25 +880,51 @@ const RestaurantPOS = () => {
 
       {/* KOT Popup Modal */}
       <Modal isOpen={showKOTModal} onClose={() => setShowKOTModal(false)} title={`KOT Details - Table ${selectedTable?.number || "N/A"}`}>
-        <div className="kot-scroll" style={{ maxHeight: "400px", overflowY: "auto" }}>
+        <div className="kot-scroll" style={{ maxHeight: "500px", overflowY: "auto" }}>
+          {/* Current Order - Not yet printed */}
+          {orderItems.length > 0 && (
+            <div className="kot-card" style={{ marginBottom: "16px", border: "2px dashed #4f91d3", background: "#f8fbff" }}>
+              <div className="kot-row-head" style={{ background: "#e3f0ff" }}>
+                <strong style={{ color: "#1565c0" }}>📝 CURRENT ORDER (Not Printed)</strong>
+                <span style={{ fontSize: "10px", color: "#666" }}>{new Date().toLocaleTimeString()}</span>
+              </div>
+              {orderItems.map((item, idx) => (
+                <div key={`current-${item.id}-${idx}`} className="kot-item-row">
+                  <span>{item.name}</span>
+                  <span>{Number(item.quantity).toFixed(3)}</span>
+                  <span className="muted" style={{ marginLeft: 8, fontSize: "10px" }}>
+                    {item.addedAt ? new Date(item.addedAt).toLocaleTimeString() : ""}
+                  </span>
+                </div>
+              ))}
+              <div style={{ padding: "8px", textAlign: "center", background: "#fff3cd" }}>
+                <small style={{ color: "#856404" }}>⚠️ Add more items to current order, then Print KOT</small>
+              </div>
+            </div>
+          )}
+
+          {/* KOT History - Already printed */}
           {(() => {
             const tableKots = kotHistory.filter((k) => k.table === selectedTable?.number);
             if (!tableKots || tableKots.length === 0) {
-              return <div className="empty-order">No KOT entries.</div>;
+              return orderItems.length === 0 && <div className="empty-order">No orders yet. Add items and Print KOT.</div>;
             }
 
-            return tableKots.map((kot, _kidx) => (
-              <div key={kot.id} className="kot-card">
+            return tableKots.map((kot, kidx) => (
+              <div key={kot.id} className="kot-card" style={{ marginBottom: "12px" }}>
                 <div className="kot-row-head">
-                  <strong>{kot.kotNo}</strong>
-                  <div className="muted">{new Date(kot.timestamp).toLocaleString()}</div>
+                  <strong>KOT#{kidx + 1}</strong>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <span style={{ fontSize: "10px", color: "#666" }}>{new Date(kot.timestamp).toLocaleTimeString()}</span>
+                    <button className="mini-btn blue" onClick={() => alert(`Waiter: ${kot.waiter || "RECEPTION"}`)}>Waiter</button>
+                    <button className="mini-btn yellow" onClick={() => alert(`Transfer KOT#${kidx + 1}`)}>Transfer</button>
+                  </div>
                 </div>
 
                 {kot.items.map((item, idx) => (
-                  <div key={`${kot.id}-${idx}`} className="kot-item-row">
+                  <div key={`${kot.id}-${item.id || idx}`} className="kot-item-row">
                     <span>{item.name}</span>
                     <span>{Number(item.quantity).toFixed(3)}</span>
-                    <span className="muted" style={{ marginLeft: 12 }}>{new Date(item.addedAt).toLocaleTimeString()}</span>
                   </div>
                 ))}
               </div>

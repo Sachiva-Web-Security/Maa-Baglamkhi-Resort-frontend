@@ -240,44 +240,41 @@ const Reports = () => {
 const SummaryPanel = ({ reportType, rows }) => {
   const sum = (key) => rows.reduce((acc, r) => acc + (Number(r[key]) || 0), 0);
 
-  const cards = useMemo(() => {
-    if (reportType === 'banquet') {
-      return [
-        { label: 'Total Events', value: rows.length },
-        { label: 'Total Guests', value: sum('guests') },
-        { label: 'Total Amount', value: `₹${sum('amount').toLocaleString('en-IN')}` },
-      ];
-    }
-    if (reportType === 'restaurant') {
-      return [
-        { label: 'Total Days', value: new Set(rows.map((r) => r.date)).size },
-        { label: 'Total Orders', value: sum('orders') },
-        { label: 'Total Sales', value: `₹${sum('amount').toLocaleString('en-IN')}` },
-      ];
-    }
-    if (reportType === 'housekeeping') {
-      return [
-        { label: 'Total Rows', value: rows.length },
-        { label: 'Rooms Count', value: sum('rooms') },
-        { label: 'Assignees', value: new Set(rows.map((r) => r.assignee)).size },
-      ];
-    }
-    if (reportType === 'accounts') {
-      const income = rows.filter((r) => r.type === 'Income').reduce((a, r) => a + (Number(r.amount) || 0), 0);
-      const expense = rows.filter((r) => r.type === 'Expense').reduce((a, r) => a + (Number(r.amount) || 0), 0);
-      return [
-        { label: 'Income', value: `₹${income.toLocaleString('en-IN')}` },
-        { label: 'Expense', value: `₹${expense.toLocaleString('en-IN')}` },
-        { label: 'Net', value: `₹${(income - expense).toLocaleString('en-IN')}` },
-      ];
-    }
+  let cards = [];
+  if (reportType === 'banquet') {
+    cards = [
+      { label: 'Total Events', value: rows.length },
+      { label: 'Total Guests', value: sum('guests') },
+      { label: 'Total Amount', value: '₹' + sum('amount').toLocaleString('en-IN') },
+    ];
+  } else if (reportType === 'restaurant') {
+    cards = [
+      { label: 'Total Days', value: new Set(rows.map((r) => r.date)).size },
+      { label: 'Total Orders', value: sum('orders') },
+      { label: 'Total Sales', value: '₹' + sum('amount').toLocaleString('en-IN') },
+    ];
+  } else if (reportType === 'housekeeping') {
+    cards = [
+      { label: 'Total Rows', value: rows.length },
+      { label: 'Rooms Count', value: sum('rooms') },
+      { label: 'Assignees', value: new Set(rows.map((r) => r.assignee)).size },
+    ];
+  } else if (reportType === 'accounts') {
+    const income = rows.filter((r) => r.type === 'Income').reduce((a, r) => a + (Number(r.amount) || 0), 0);
+    const expense = rows.filter((r) => r.type === 'Expense').reduce((a, r) => a + (Number(r.amount) || 0), 0);
+    cards = [
+      { label: 'Income', value: '₹' + income.toLocaleString('en-IN') },
+      { label: 'Expense', value: '₹' + expense.toLocaleString('en-IN') },
+      { label: 'Net', value: '₹' + (income - expense).toLocaleString('en-IN') },
+    ];
+  } else {
     // room
-    return [
+    cards = [
       { label: 'Total Rows', value: rows.length },
       { label: 'Total Rooms', value: sum('rooms') },
-      { label: 'Revenue', value: `₹${sum('revenue').toLocaleString('en-IN')}` },
+      { label: 'Revenue', value: '₹' + sum('revenue').toLocaleString('en-IN') },
     ];
-  }, [reportType, rows]);
+  }
 
   return (
     <div className="simple-summary-grid">
