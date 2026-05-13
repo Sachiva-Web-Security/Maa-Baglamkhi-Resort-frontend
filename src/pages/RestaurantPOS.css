@@ -153,6 +153,15 @@
   background: #f5e8aa;
 }
 
+.table-map-card.occupied .table-meta {
+  color: #333;
+}
+
+.table-map-card.occupied .table-meta > div:last-child {
+  font-weight: 700;
+  font-size: 11px;
+}
+
 .table-map-card.selected {
   border: 2px solid #1565c0;
   background: #e3f0ff;

@@ -27,6 +27,19 @@ const RestaurantPOS = () => {
   const [captains, setCaptains] = useState([]);
   const [invoiceGroups, setInvoiceGroups] = useState([]);
 
+  // Calculate current bill amount for a table
+  const getTableBillAmount = (table) => {
+    const tableKey = getTableKey(table);
+    const savedOrder = tableOrders[tableKey];
+    if (savedOrder && savedOrder.length > 0) {
+      return savedOrder.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    }
+    if (selectedTable && getTableKey(selectedTable) === tableKey && orderItems.length > 0) {
+      return orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    }
+    return 0;
+  };
+
   const sections = ["RESTAURANT", "GARDEN", "PARSAL", "ROOM DINING"];
 
   useEffect(() => {
@@ -786,19 +799,21 @@ const RestaurantPOS = () => {
             {filteredTables.map((table) => {
               const selected = selectedTable?.id === table.id;
               const occupied = table.status === "Occupied";
+              const billAmount = getTableBillAmount(table);
+              const hasOrder = billAmount > 0;
               return (
                 <button
                   key={table.id}
                   className={`table-map-card ${selected ? "selected" : ""} ${
-                    occupied ? "occupied" : ""
+                    occupied || hasOrder ? "occupied" : ""
                   }`}
                   onClick={() => handleTableClick(table)}
                 >
                   <div className="table-number">{table.number}</div>
-                  {occupied ? (
+                  {hasOrder ? (
                     <div className="table-meta">
                       <div>RECEPTION</div>
-                      <div>₹ {(table.currentBill || 0).toFixed(2)}</div>
+                      <div style={{ color: '#1a1a1a', fontWeight: 700 }}>₹ {billAmount.toFixed(2)}</div>
                     </div>
                   ) : (
                     <div className="table-meta">Available</div>
