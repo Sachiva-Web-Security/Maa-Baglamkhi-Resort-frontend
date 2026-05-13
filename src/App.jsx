@@ -1,7 +1,8 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 
-import Navbar from './components/Navbar/Navbar';
+import Navbar from './components/Layout/UserNavbar';
+import AdminLayout from './components/Layout/AdminLayout';
 
 import Dashboard from './pages/Dashboard';
 import Attendance from './pages/Attendance';
@@ -35,17 +36,24 @@ import EditInvoice from './pages/EditInvoice';
 import Items from './pages/Items';
 import ManageData from './pages/ManageData';
 
-function Layout({ children, setIsAuthenticated }) {
-  const role = (localStorage.getItem("role") || "").toLowerCase();
-  const isAdmin = role === "admin";
-
+// Layout for non-admin users (using horizontal navbar)
+function UserLayout({ children, setIsAuthenticated }) {
   return (
-    <div className={`simple-layout ${isAdmin ? "simple-layout-admin" : ""}`}>
+    <div className="simple-layout">
       <Navbar setIsAuthenticated={setIsAuthenticated} />
-      <main className={`simple-main ${isAdmin ? "simple-main-admin" : ""}`}>
+      <main className="simple-main">
         {children}
       </main>
     </div>
+  );
+}
+
+// Layout for admin users (using sidebar)
+function AdminLayoutWrapper({ setIsAuthenticated, children }) {
+  return (
+    <AdminLayout setIsAuthenticated={setIsAuthenticated}>
+      {children}
+    </AdminLayout>
   );
 }
 
@@ -61,6 +69,48 @@ function App() {
 
   if (loading) return <div className="simple-loading">Loading...</div>;
 
+  // Helper to create route with admin layout
+  const AdminRoute = ({ element }) => (
+    <ProtectedRoute allowedRoles={["admin"]}>
+      <AdminLayoutWrapper setIsAuthenticated={setIsAuthenticated}>
+        {element}
+      </AdminLayoutWrapper>
+    </ProtectedRoute>
+  );
+
+  // Helper to create route with user layout (navbar)
+  const UserRoute = ({ element, allowedRoles }) => (
+    <ProtectedRoute allowedRoles={allowedRoles}>
+      <UserLayout setIsAuthenticated={setIsAuthenticated}>
+        {element}
+      </UserLayout>
+    </ProtectedRoute>
+  );
+
+  // Helper for routes that can be both admin and user
+  const FlexibleRoute = ({ element, allowedRoles }) => {
+    const role = (localStorage.getItem("role") || "").toLowerCase();
+    const isAdmin = role === "admin";
+
+    if (isAdmin) {
+      return (
+        <ProtectedRoute allowedRoles={["admin"]}>
+          <AdminLayoutWrapper setIsAuthenticated={setIsAuthenticated}>
+            {element}
+          </AdminLayoutWrapper>
+        </ProtectedRoute>
+      );
+    }
+
+    return (
+      <ProtectedRoute allowedRoles={allowedRoles}>
+        <UserLayout setIsAuthenticated={setIsAuthenticated}>
+          {element}
+        </UserLayout>
+      </ProtectedRoute>
+    );
+  };
+
   return (
     <Router>
       <Routes>
@@ -68,167 +118,74 @@ function App() {
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
         <Route path="/dashboard" element={
-          <ProtectedRoute>
-            <Layout setIsAuthenticated={setIsAuthenticated}><Dashboard /></Layout>
-          </ProtectedRoute>
+          <FlexibleRoute element={<Dashboard />} allowedRoles={["admin","manager","receptionist","staff","waiter","kitchen","housekeeping","accountant"]} />
         } />
 
         <Route path="/profile" element={
-          <ProtectedRoute>
-            <Layout setIsAuthenticated={setIsAuthenticated}><Profile /></Layout>
-          </ProtectedRoute>
+          <FlexibleRoute element={<Profile />} allowedRoles={["admin","manager","receptionist","staff","waiter","kitchen","housekeeping","accountant"]} />
         } />
 
         <Route path="/attendance" element={
-          <ProtectedRoute allowedRoles={["admin","manager","staff","waiter","receptionist"]}>
-            <Layout setIsAuthenticated={setIsAuthenticated}><Attendance /></Layout>
-          </ProtectedRoute>
+          <UserRoute element={<Attendance />} allowedRoles={["admin","manager","staff","waiter","receptionist"]} />
         } />
 
         <Route path="/hotel" element={
-          <ProtectedRoute allowedRoles={["admin","manager","receptionist"]}>
-            <Layout setIsAuthenticated={setIsAuthenticated}><Hotel /></Layout>
-          </ProtectedRoute>
+          <FlexibleRoute element={<Hotel />} allowedRoles={["admin","manager","receptionist"]} />
         } />
 
         <Route path="/restaurant" element={
-          <ProtectedRoute allowedRoles={["admin","manager","waiter","kitchen"]}>
-            <Layout setIsAuthenticated={setIsAuthenticated}><RestaurantPOS /></Layout>
-          </ProtectedRoute>
+          <UserRoute element={<RestaurantPOS />} allowedRoles={["admin","manager","waiter","kitchen"]} />
         } />
 
         <Route path="/accounts" element={
-          <ProtectedRoute allowedRoles={["admin","manager","accountant"]}>
-            <Layout setIsAuthenticated={setIsAuthenticated}><Accounts /></Layout>
-          </ProtectedRoute>
+          <FlexibleRoute element={<Accounts />} allowedRoles={["admin","manager","accountant"]} />
         } />
 
         <Route path="/inventory" element={
-          <ProtectedRoute allowedRoles={["admin","manager","kitchen"]}>
-            <Layout setIsAuthenticated={setIsAuthenticated}><InventoryDashboard /></Layout>
-          </ProtectedRoute>
+          <FlexibleRoute element={<InventoryDashboard />} allowedRoles={["admin","manager","kitchen"]} />
         } />
 
-        <Route path="/user" element={
-          <ProtectedRoute allowedRoles={["admin"]}>
-            <Layout setIsAuthenticated={setIsAuthenticated}><User /></Layout>
-          </ProtectedRoute>
-        } />
-
-        <Route path="/create-user" element={
-          <ProtectedRoute allowedRoles={["admin"]}>
-            <Layout setIsAuthenticated={setIsAuthenticated}><CreateUser /></Layout>
-          </ProtectedRoute>
-        } />
+        <Route path="/user" element={<AdminRoute element={<User />} />} />
+        <Route path="/create-user" element={<AdminRoute element={<CreateUser />} />} />
 
         <Route path="/housekeeping" element={
-          <ProtectedRoute allowedRoles={["admin","housekeeping","manager"]}>
-            <Layout setIsAuthenticated={setIsAuthenticated}><Housekeeping /></Layout>
-          </ProtectedRoute>
+          <UserRoute element={<Housekeeping />} allowedRoles={["admin","housekeeping","manager"]} />
         } />
 
         <Route path="/banquet" element={
-          <ProtectedRoute allowedRoles={["admin","manager","receptionist"]}>
-            <Layout setIsAuthenticated={setIsAuthenticated}><Banquet /></Layout>
-          </ProtectedRoute>
+          <FlexibleRoute element={<Banquet />} allowedRoles={["admin","manager","receptionist"]} />
         } />
 
         <Route path="/reports" element={
-          <ProtectedRoute allowedRoles={["admin","manager","accountant"]}>
-            <Layout setIsAuthenticated={setIsAuthenticated}><Reports /></Layout>
-          </ProtectedRoute>
+          <FlexibleRoute element={<Reports />} allowedRoles={["admin","manager","accountant"]} />
         } />
 
         <Route path="/assignments" element={
-          <ProtectedRoute allowedRoles={["admin","manager","housekeeping","staff"]}>
-            <Layout setIsAuthenticated={setIsAuthenticated}><Assignment /></Layout>
-          </ProtectedRoute>
+          <UserRoute element={<Assignment />} allowedRoles={["admin","manager","housekeeping","staff"]} />
         } />
 
         <Route path="/kitchen" element={
-          <ProtectedRoute allowedRoles={["admin","manager","kitchen"]}>
-            <Layout setIsAuthenticated={setIsAuthenticated}><Kitchen /></Layout>
-          </ProtectedRoute>
+          <UserRoute element={<Kitchen />} allowedRoles={["admin","manager","kitchen"]} />
         } />
 
         <Route path="/quick-sales" element={
-          <ProtectedRoute allowedRoles={["admin","manager","waiter","receptionist"]}>
-            <Layout setIsAuthenticated={setIsAuthenticated}><QuickSales /></Layout>
-          </ProtectedRoute>
+          <UserRoute element={<QuickSales />} allowedRoles={["admin","manager","waiter","receptionist"]} />
         } />
 
-        <Route path="/restaurant-settings" element={
-          <ProtectedRoute allowedRoles={["admin","manager"]}>
-            <Layout setIsAuthenticated={setIsAuthenticated}><RestaurantSettings /></Layout>
-          </ProtectedRoute>
-        } />
-
-        <Route path="/room-service" element={
-          <ProtectedRoute allowedRoles={["admin","manager","waiter"]}>
-            <Layout setIsAuthenticated={setIsAuthenticated}><RoomService /></Layout>
-          </ProtectedRoute>
-        } />
-
-        <Route path="/table-groups" element={
-          <ProtectedRoute allowedRoles={["admin","manager"]}>
-            <Layout setIsAuthenticated={setIsAuthenticated}><TableGroups /></Layout>
-          </ProtectedRoute>
-        } />
-        <Route path="/modifiers" element={
-          <ProtectedRoute allowedRoles={["admin","manager"]}>
-            <Layout setIsAuthenticated={setIsAuthenticated}><Modifiers /></Layout>
-          </ProtectedRoute>
-        } />
-        <Route path="/parcel-setting" element={
-          <ProtectedRoute allowedRoles={["admin","manager"]}>
-            <Layout setIsAuthenticated={setIsAuthenticated}><ParcelSetting /></Layout>
-          </ProtectedRoute>
-        } />
-        <Route path="/bar-to-food" element={
-          <ProtectedRoute allowedRoles={["admin","manager"]}>
-            <Layout setIsAuthenticated={setIsAuthenticated}><BarToFood /></Layout>
-          </ProtectedRoute>
-        } />
-        <Route path="/item-groups" element={
-          <ProtectedRoute allowedRoles={["admin","manager"]}>
-            <Layout setIsAuthenticated={setIsAuthenticated}><ItemGroups /></Layout>
-          </ProtectedRoute>
-        } />
-        <Route path="/price-groups" element={
-          <ProtectedRoute allowedRoles={["admin","manager"]}>
-            <Layout setIsAuthenticated={setIsAuthenticated}><PriceGroups /></Layout>
-          </ProtectedRoute>
-        } />
-        <Route path="/print-groups" element={
-          <ProtectedRoute allowedRoles={["admin","manager"]}>
-            <Layout setIsAuthenticated={setIsAuthenticated}><PrintGroups /></Layout>
-          </ProtectedRoute>
-        } />
-        <Route path="/units" element={
-          <ProtectedRoute allowedRoles={["admin","manager"]}>
-            <Layout setIsAuthenticated={setIsAuthenticated}><Units /></Layout>
-          </ProtectedRoute>
-        } />
-        <Route path="/invoice-groups" element={
-          <ProtectedRoute allowedRoles={["admin","manager"]}>
-            <Layout setIsAuthenticated={setIsAuthenticated}><InvoiceGroups /></Layout>
-          </ProtectedRoute>
-        } />
-        <Route path="/edit-invoice" element={
-          <ProtectedRoute allowedRoles={["admin","manager"]}>
-            <Layout setIsAuthenticated={setIsAuthenticated}><EditInvoice /></Layout>
-          </ProtectedRoute>
-        } />
-        <Route path="/items" element={
-          <ProtectedRoute allowedRoles={["admin","manager"]}>
-            <Layout setIsAuthenticated={setIsAuthenticated}><Items /></Layout>
-          </ProtectedRoute>
-        } />
-        <Route path="/manage-data" element={
-          <ProtectedRoute allowedRoles={["admin","manager"]}>
-            <Layout setIsAuthenticated={setIsAuthenticated}><ManageData /></Layout>
-          </ProtectedRoute>
-        } />
+        <Route path="/restaurant-settings" element={<AdminRoute element={<RestaurantSettings />} />} />
+        <Route path="/room-service" element={<AdminRoute element={<RoomService />} />} />
+        <Route path="/table-groups" element={<AdminRoute element={<TableGroups />} />} />
+        <Route path="/modifiers" element={<AdminRoute element={<Modifiers />} />} />
+        <Route path="/parcel-setting" element={<AdminRoute element={<ParcelSetting />} />} />
+        <Route path="/bar-to-food" element={<AdminRoute element={<BarToFood />} />} />
+        <Route path="/item-groups" element={<AdminRoute element={<ItemGroups />} />} />
+        <Route path="/price-groups" element={<AdminRoute element={<PriceGroups />} />} />
+        <Route path="/print-groups" element={<AdminRoute element={<PrintGroups />} />} />
+        <Route path="/units" element={<AdminRoute element={<Units />} />} />
+        <Route path="/invoice-groups" element={<AdminRoute element={<InvoiceGroups />} />} />
+        <Route path="/edit-invoice" element={<AdminRoute element={<EditInvoice />} />} />
+        <Route path="/items" element={<AdminRoute element={<Items />} />} />
+        <Route path="/manage-data" element={<AdminRoute element={<ManageData />} />} />
 
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>

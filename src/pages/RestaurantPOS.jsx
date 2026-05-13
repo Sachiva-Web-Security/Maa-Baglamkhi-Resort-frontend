@@ -755,6 +755,18 @@ const RestaurantPOS = () => {
         <div className="table-booking-panel">
           <div className="table-booking-header">
             <div className="table-section-tabs">
+              <div style={{ marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <input
+                  className="pos-input"
+                  placeholder="Table#"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <button className="pos-create-btn" onClick={handleCreateTable}>
+                  Create
+                </button>
+              </div>
+            <div className="section-tab-group">
               {sections.map((section) => (
                 <button
                   key={section}
@@ -767,17 +779,7 @@ const RestaurantPOS = () => {
                 </button>
               ))}
             </div>
-            <div className="table-booking-actions">
-              <input
-                className="pos-input"
-                placeholder="Table#"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              <button className="pos-create-btn" onClick={handleCreateTable}>
-                Create
-              </button>
-            </div>
+          </div>
           </div>
 
           <div className="table-map-grid">
