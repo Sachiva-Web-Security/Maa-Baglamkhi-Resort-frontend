@@ -7,7 +7,7 @@ import "./RestaurantPOS.css";
 const RestaurantPOS = () => {
   const navigate = useNavigate();
   const [selectedTable, setSelectedTable] = useState(null);
-  const [orderItems, setOrderItems] = useState([]);
+  const [orderItems, setOrderItems] = useState([]); // Current order items in memory
   const [showSplitBillModal, setShowSplitBillModal] = useState(false);
   const [splitBillData, setSplitBillData] = useState({ parts: 2 });
   const [selectedSection, setSelectedSection] = useState("RESTAURANT");
@@ -19,6 +19,9 @@ const RestaurantPOS = () => {
   const [kotHistory, setKotHistory] = useState([]);
   const [tables, setTables] = useState([]);
   const [activeTab, setActiveTab] = useState("pos");
+
+  // Track orders for each table - key: tableNumber, value: array of orderItems
+  const [tableOrders, setTableOrders] = useState({});
 
   // Management states
   const [captains, setCaptains] = useState([]);
@@ -113,45 +116,87 @@ const RestaurantPOS = () => {
     const tableKey = getTableKey(table);
     const prevKey = selectedTable ? getTableKey(selectedTable) : null;
 
-    if (selectedTable && prevKey !== tableKey) {
-      if (orderItems.length > 0) {
-        if (!window.confirm("Switch table? Current order will be cleared.")) return;
+    // If switching to a different table with items, save the order for that table
+    if (prevKey && prevKey !== tableKey && orderItems.length > 0) {
+      // Save current order to the previous table's orders
+      setTableOrders(prev => ({
+        ...prev,
+        [prevKey]: [...orderItems]
+      }));
+      // Mark previous table as Occupied (has pending order)
+      setTables(prevTables =>
+        prevTables.map(t => getTableKey(t) === prevKey ? { ...t, status: "Occupied" } : t)
+      );
+    }
+
+    // Check if this table has a saved order
+    const savedOrder = tableOrders[tableKey];
+
+    if (savedOrder && savedOrder.length > 0) {
+      // Restore the saved order for this table
+      setOrderItems(savedOrder);
+    } else {
+      // No saved order - if switching from another table with items, we already saved above
+      // If this is a fresh table selection, just clear (but not if returning to a table with saved items)
+      if (!prevKey || prevKey === tableKey) {
+        setOrderItems([]);
       }
     }
 
-    // Mark previous table as available
-    if (prevKey && prevKey !== tableKey) {
-      setTables((prev) =>
-        prev.map((t) => getTableKey(t) === prevKey ? { ...t, status: "Available" } : t)
-      );
-    }
-
-    // Mark new table as occupied if it has items
-    if (orderItems.length > 0 || selectedTable) {
-      setTables((prev) =>
-        prev.map((t) => getTableKey(t) === tableKey ? { ...t, status: "Occupied" } : t)
-      );
-    }
-
-    setOrderItems([]);
     setSelectedTable(table);
   };
 
-  // Clear order - also mark table as available
+  // Clear order - only when user explicitly clicks Clear (after payment or cancel)
+  // Don't clear when switching tables - keep order for that table
   const handleClearOrder = () => {
-    setOrderItems([]);
-    if (selectedTable) {
+    if (!selectedTable) {
+      setOrderItems([]);
+      return;
+    }
+
+    // Ask user if they want to clear or save the order
+    const action = window.prompt(
+      "Enter: 'clear' to cancel order, 'save' to save & print KOT, or 'pay' to generate bill.\nOr click Cancel to keep the order.",
+      ""
+    );
+
+    if (action === 'clear') {
+      // User wants to discard the order completely
+      setOrderItems([]);
+      // Clear saved order for this table too
+      const tableKey = getTableKey(selectedTable);
+      setTableOrders(prev => {
+        const updated = { ...prev };
+        delete updated[tableKey];
+        return updated;
+      });
+      // Mark table as available
       setTables((prev) =>
         prev.map((t) =>
           t.id === selectedTable.id ? { ...t, status: "Available" } : t
         )
       );
+    } else if (action === 'save') {
+      // Print KOT for the current order
+      handlePrintKOT();
+    } else if (action === 'pay') {
+      // Generate bill
+      handleSaveBill();
     }
+    // If Cancel or other - do nothing, keep the order
   };
 
-  // After bill is generated - mark table as available
+  // After bill is generated - mark table as available and clear its orders
   const handleBillGenerated = () => {
     if (selectedTable) {
+      const tableKey = getTableKey(selectedTable);
+      // Clear saved orders for this table
+      setTableOrders(prev => {
+        const updated = { ...prev };
+        delete updated[tableKey];
+        return updated;
+      });
+      // Mark table as available
       setTables((prev) =>
         prev.map((t) =>
           t.id === selectedTable.id ? { ...t, status: "Available" } : t
