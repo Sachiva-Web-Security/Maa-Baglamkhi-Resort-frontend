@@ -1,9 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { FaSearch, FaDownload, FaPrint, FaSyncAlt } from 'react-icons/fa';
-import ReportTypeSelector from '../components/Reports/ReportTypeSelector';
-import ReportFilters from '../components/Reports/ReportFilters';
-import ReportTable from '../components/Reports/ReportTable';
-import ReportCharts from '../components/Reports/ReportCharts';
 import API from "../api";
 
 const REPORT_TYPES = [
@@ -13,11 +9,6 @@ const REPORT_TYPES = [
   { id: 'housekeeping', label: 'Housekeeping' },
   { id: 'accounts', label: 'Accounts' },
 ];
-
-const PAYMENT_MODES = ['Cash', 'Card', 'UPI', 'Bank Transfer'];
-const ROOM_TYPES = ['Standard', 'Deluxe', 'Suite', 'Executive'];
-const HALLS = ['Grand Ballroom', 'Garden Banquet', 'Crystal Hall', 'Board Room'];
-const STATUSES = ['All', 'Pending', 'Confirmed', 'Completed', 'Billed', 'Vacant Dirty', 'Vacant Clean', 'Occupied'];
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
@@ -45,14 +36,11 @@ function downloadText(filename, content) {
   URL.revokeObjectURL(url);
 }
 
-// makeMockData removed
-
 const Reports = () => {
   const [reportType, setReportType] = useState('room');
   const [query, setQuery] = useState('');
   const [summary, setSummary] = useState(null);
-
-  const [filters, setFilters] = useState({
+  const [filters] = useState({
     dateFrom: '',
     dateTo: todayISO(),
     status: 'All',
@@ -60,28 +48,9 @@ const Reports = () => {
     roomType: 'All',
     paymentMode: 'All',
   });
-
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState([]);
   const [lastFetchedAt, setLastFetchedAt] = useState(null);
-
-  const options = useMemo(() => {
-    return {
-      statuses: STATUSES,
-      halls: ['All', ...HALLS],
-      roomTypes: ['All', ...ROOM_TYPES],
-      paymentModes: ['All', ...PAYMENT_MODES],
-    };
-  }, []);
-
-  const visibleFilters = useMemo(() => {
-    return {
-      hall: reportType === 'banquet',
-      roomType: reportType === 'room' || reportType === 'housekeeping',
-      paymentMode: reportType === 'accounts' || reportType === 'restaurant' || reportType === 'banquet' || reportType === 'room',
-      status: true,
-    };
-  }, [reportType]);
 
   useEffect(() => {
     const fetchSummary = async () => {
@@ -134,7 +103,7 @@ const Reports = () => {
 
   useEffect(() => {
     fetchData();
-  }, [reportType]); // Automatically fetch when report type changes
+  }, [reportType]);
 
   const exportCSV = () => {
     const csv = toCSV(filtered);
@@ -144,150 +113,122 @@ const Reports = () => {
 
   const printReport = () => window.print();
 
+  const getColumns = () => {
+    switch (reportType) {
+      case 'banquet':
+        return ['Date', 'Hall', 'Event', 'Guests', 'Status', 'Amount'];
+      case 'restaurant':
+        return ['Date', 'Table', 'Items', 'Status', 'Amount'];
+      case 'housekeeping':
+        return ['Room', 'Type', 'Status', 'Assignee', 'Notes'];
+      case 'accounts':
+        return ['Date', 'Type', 'Description', 'Amount', 'Mode'];
+      default:
+        return ['Room', 'Guest', 'Check In', 'Check Out', 'Status', 'Amount'];
+    }
+  };
+
+  const getCellValue = (row, key) => {
+    const value = row[key];
+    if (value === null || value === undefined) return '-';
+    if (typeof value === 'number' && key === 'amount') return '₹' + value.toLocaleString('en-IN');
+    return String(value);
+  };
+
   return (
-    <div>
+    <div className="p-4">
       <div className="simple-page-header">
         <h1 className="simple-page-title">Reports</h1>
         {summary && (
-          <div className="mt-2 simple-text-muted font-semibold">
-            Rooms: <span className="font-bold">{summary.totalRooms}</span> ·
-            Hotel bookings: <span className="font-bold">{summary.hotelBookings}</span> ·
-            Restaurant bills: <span className="font-bold">{summary.restaurantBills}</span> ·
-            Accounts txns: <span className="font-bold">{summary.accountsTransactions}</span> ·
-            Banquet bookings: <span className="font-bold">{summary.banquetBookings}</span> ·
-            Attendance rows: <span className="font-bold">{summary.attendanceRecords}</span>
+          <div className="mt-2 simple-text-muted font-semibold text-sm">
+            Hotel: {summary.totalRooms || 0} rooms, {summary.hotelBookings || 0} bookings |
+            Restaurant: {summary.restaurantBills || 0} bills |
+            Banquet: {summary.banquetBookings || 0} events |
+            Accounts: {summary.accountsTransactions || 0} transactions
           </div>
         )}
       </div>
 
       <div className="simple-card mb-4">
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(280px,1fr)_auto] gap-3 items-center mb-3">
-          <ReportTypeSelector value={reportType} onChange={setReportType} types={REPORT_TYPES} />
-
-          <div className="flex flex-wrap gap-2 justify-start lg:justify-end">
-            <button
-              className="simple-btn simple-btn-primary"
-              onClick={fetchData}
-              disabled={loading}
-            >
-              <FaSyncAlt />
-              {loading ? 'Fetching...' : 'Fetch Data'}
+        <div className="flex flex-wrap gap-2 items-center mb-3">
+          <div className="simple-tabs">
+            {REPORT_TYPES.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setReportType(t.id)}
+                className={`simple-tab${reportType === t.id ? ' simple-tab-active' : ''}`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+          <div className="flex gap-2 ml-auto">
+            <button className="simple-btn simple-btn-primary" onClick={fetchData} disabled={loading}>
+              <FaSyncAlt /> {loading ? 'Loading...' : 'Refresh'}
             </button>
-            <button
-              className="simple-btn simple-btn-success"
-              onClick={exportCSV}
-            >
-              <FaDownload />
-              Export CSV
+            <button className="simple-btn simple-btn-success" onClick={exportCSV}>
+              <FaDownload /> Export CSV
             </button>
-            <button
-              className="simple-btn simple-btn-gray"
-              onClick={printReport}
-            >
-              <FaPrint />
-              Print
+            <button className="simple-btn simple-btn-gray" onClick={printReport}>
+              <FaPrint /> Print
             </button>
           </div>
         </div>
 
-        <div className="report-filters-row">
-          <div className="report-filters-row-inner">
-          <div className="relative w-full">
-            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
+        <div className="flex flex-wrap gap-3 items-center mb-3">
+          <div className="flex items-center gap-2">
+            <FaSearch className="text-gray-400" />
+            <input type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search in report..."
-              className="simple-input pl-10 w-full"
+              placeholder="Search..."
+              className="simple-input"
             />
           </div>
-
-          <div className="report-meta">
-            Rows: <span className="font-bold text-gray-700">{filtered.length}</span>
-            {lastFetchedAt ? (
-              <span className="ml-3">
-                Last fetched:{' '}
-                <span className="font-bold text-gray-700">{lastFetchedAt.toLocaleString()}</span>
-              </span>
-            ) : null}
-          </div>
+          <span className="text-sm text-gray-500">
+            Rows: <b>{filtered.length}</b> {lastFetchedAt && <span>| Fetched: {lastFetchedAt.toLocaleTimeString()}</span>}
+          </span>
         </div>
       </div>
 
-      <ReportFilters
-        value={filters}
-        onChange={setFilters}
-        visible={visibleFilters}
-        options={options}
-      />
-
-      <div className="report-summary-grid">
-        <ReportCharts reportType={reportType} rows={filtered} />
-        <div className="simple-card">
-          <h2 className="text-base font-bold text-gray-800 mb-1">Report Summary</h2>
-          <div className="text-xs text-gray-500 font-semibold mb-3">
-            Quick totals based on current filters.
+      <div className="simple-card">
+        <h2 className="text-lg font-bold mb-3">{reportType.charAt(0).toUpperCase() + reportType.slice(1)} Report</h2>
+        {loading ? (
+          <div className="text-center p-8 text-gray-500">Loading data...</div>
+        ) : filtered.length === 0 ? (
+          <div className="text-center p-8 text-gray-500">No data found. Click Refresh to load data.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="simple-table">
+              <thead>
+                <tr>
+                  {getColumns().map((col) => (
+                    <th key={col}>{col}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.slice(0, 100).map((row, idx) => (
+                  <tr key={idx}>
+                    {getColumns().map((col) => {
+                      const key = col.toLowerCase().replace(' ', '');
+                      return <td key={key}>{getCellValue(row, key)}</td>;
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {filtered.length > 100 && (
+              <div className="text-center p-2 text-sm text-gray-500">
+                Showing first 100 of {filtered.length} rows
+              </div>
+            )}
           </div>
-          <SummaryPanel reportType={reportType} rows={filtered} />
-        </div>
+        )}
       </div>
-
-      <ReportTable reportType={reportType} rows={filtered} loading={loading} />
-    </div>
-  );
-};
-
-const SummaryPanel = ({ reportType, rows }) => {
-  const sum = (key) => rows.reduce((acc, r) => acc + (Number(r[key]) || 0), 0);
-
-  let cards = [];
-  if (reportType === 'banquet') {
-    cards = [
-      { label: 'Total Events', value: rows.length },
-      { label: 'Total Guests', value: sum('guests') },
-      { label: 'Total Amount', value: '₹' + sum('amount').toLocaleString('en-IN') },
-    ];
-  } else if (reportType === 'restaurant') {
-    cards = [
-      { label: 'Total Days', value: new Set(rows.map((r) => r.date)).size },
-      { label: 'Total Orders', value: sum('orders') },
-      { label: 'Total Sales', value: '₹' + sum('amount').toLocaleString('en-IN') },
-    ];
-  } else if (reportType === 'housekeeping') {
-    cards = [
-      { label: 'Total Rows', value: rows.length },
-      { label: 'Rooms Count', value: sum('rooms') },
-      { label: 'Assignees', value: new Set(rows.map((r) => r.assignee)).size },
-    ];
-  } else if (reportType === 'accounts') {
-    const income = rows.filter((r) => r.type === 'Income').reduce((a, r) => a + (Number(r.amount) || 0), 0);
-    const expense = rows.filter((r) => r.type === 'Expense').reduce((a, r) => a + (Number(r.amount) || 0), 0);
-    cards = [
-      { label: 'Income', value: '₹' + income.toLocaleString('en-IN') },
-      { label: 'Expense', value: '₹' + expense.toLocaleString('en-IN') },
-      { label: 'Net', value: '₹' + (income - expense).toLocaleString('en-IN') },
-    ];
-  } else {
-    // room
-    cards = [
-      { label: 'Total Rows', value: rows.length },
-      { label: 'Total Rooms', value: sum('rooms') },
-      { label: 'Revenue', value: '₹' + sum('revenue').toLocaleString('en-IN') },
-    ];
-  }
-
-  return (
-    <div className="simple-summary-grid">
-      {cards.map((c) => (
-        <div key={c.label} className="bg-blue-50 border border-blue-100 rounded-xl p-3">
-          <div className="text-xs text-gray-500 font-bold">{c.label}</div>
-          <div className="mt-1 text-lg font-black">{c.value}</div>
-        </div>
-      ))}
     </div>
   );
 };
 
 export default Reports;
-
-
