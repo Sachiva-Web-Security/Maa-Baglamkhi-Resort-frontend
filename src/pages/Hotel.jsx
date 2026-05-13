@@ -35,7 +35,25 @@ const Hotel = () => {
           API.get("/hotel/rooms/setup"),
           API.get("/hotel/all-bookings"),
         ]);
-        setRooms(roomsRes.data?.rooms || roomsRes.data || []);
+
+        // Extract rooms from the API response structure
+        let extractedRooms = [];
+        if (roomsRes.data && Array.isArray(roomsRes.data)) {
+          // API returns array of category objects with roomDetails inside
+          roomsRes.data.forEach(category => {
+            if (category.roomDetails && Array.isArray(category.roomDetails)) {
+              category.roomDetails.forEach(room => {
+                extractedRooms.push({
+                  ...room,
+                  categoryName: category.name,
+                  defaultPrice: category.defaultPrice,
+                });
+              });
+            }
+          });
+        }
+
+        setRooms(extractedRooms);
         setBookings(bookingsRes.data?.map(b => ({
           id: b.bookingId || b.id,
           guestName: b.guest_name || b.guestName,
@@ -57,9 +75,9 @@ const Hotel = () => {
 
   // Calculate summary statistics
   const totalRooms = rooms.length;
-  const availableRooms = rooms.filter(r => r.status === 'Available').length;
-  const occupiedRooms = rooms.filter(r => r.status === 'Occupied').length;
-  const cleaningRooms = rooms.filter(r => r.status === 'Cleaning').length;
+  const availableRooms = rooms.filter(r => String(r.status || "").toLowerCase().includes("vacant")).length;
+  const occupiedRooms = rooms.filter(r => String(r.status || "").toLowerCase().includes("occup")).length;
+  const cleaningRooms = rooms.filter(r => String(r.status || "").toLowerCase().includes("dirty")).length;
   const filteredRooms = rooms.filter((room) => {
     const roomNo = String(room.number || "");
     const statusOk = roomStatusFilter === "All" || String(room.status) === roomStatusFilter;

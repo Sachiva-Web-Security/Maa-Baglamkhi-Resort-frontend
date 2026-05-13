@@ -140,8 +140,8 @@ const Banquet = () => {
         if (res.data?.halls) {
           setHalls(
             res.data.halls.map((h) => ({
-              id: h.code || h.id,
-              code: h.code,
+              id: h.id || h.code || `hall-${Math.random()}`,
+              code: h.id,
               name: h.name,
               capacity: h.capacity,
               ratePerHour: h.ratePerHour,

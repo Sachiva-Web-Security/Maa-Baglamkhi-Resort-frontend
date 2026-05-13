@@ -68,6 +68,16 @@ const Accounts = () => {
     fetchRecords();
   }, []);
 
+  const getSummary = async () => {
+    try {
+      const res = await API.get("/accounts/summary");
+      return res.data || { income: 0, expense: 0, net: 0 };
+    } catch (err) {
+      console.error("Error fetching summary:", err);
+      return { income: 0, expense: 0, net: 0 };
+    }
+  };
+
   const handleAddIncome = async (data) => {
     try {
       const res = await API.post("/accounts/income", data);
