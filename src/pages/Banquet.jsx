@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import BanquetStepper from '../components/Banquet/BanquetStepper';
 import BanquetHallCard from '../components/Banquet/BanquetHallCard';
 import BanquetBookingRow from '../components/Banquet/BanquetBookingRow';
 import BanquetBill from '../components/Banquet/BanquetBill';
 import Modal from '../components/Hotel/Modal';
 import API from "../api";
+import "./Dashboard.css";
 
 const formatINR = (amount) =>
   new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
@@ -43,6 +45,7 @@ const defaultHalls = [
 ];
 
 const Banquet = () => {
+  const navigate = useNavigate();
   const [halls, setHalls] = useState([]);
   const [activeStep, setActiveStep] = useState(0);
 
@@ -249,8 +252,31 @@ const Banquet = () => {
 
   return (
     <div>
+      {/* Top Navigation Bar */}
+      <div className="urban-nav" style={{ marginBottom: 0 }}>
+        <div className="urban-nav-brand" onClick={() => navigate('/dashboard')} style={{ cursor: 'pointer' }}>
+          <div className="urban-logo">Q</div>
+          <span className="urban-brand-name">urbanPOS</span>
+        </div>
+        <div className="urban-nav-tabs">
+          <div className="urban-nav-tab" onClick={() => navigate('/dashboard')}>Dashboard</div>
+          <div className="urban-nav-tab" onClick={() => navigate('/restaurant')}>New Order</div>
+          <div className="urban-nav-tab" onClick={() => navigate('/kitchen')}>KDS</div>
+          <div className="urban-nav-tab" onClick={() => navigate('/reports')}>Daily Transaction</div>
+        </div>
+        <div className="urban-nav-user">
+          <span>{localStorage.getItem("userName") || localStorage.getItem("name") || "User"}</span>
+          <span className="urban-nav-arrow" onClick={() => {
+            if (confirm("Logout?")) {
+              localStorage.clear();
+              navigate("/login");
+            }
+          }}>🚪</span>
+        </div>
+      </div>
+
       {/* Header */}
-      <div className="simple-page-header">
+      <div className="simple-page-header" style={{ padding: '12px 16px', marginTop: 0 }}>
         <h1 className="simple-page-title">Banquet Management</h1>
         <button className="simple-btn simple-btn-primary" onClick={resetWizard}>+ New Booking</button>
       </div>
@@ -387,5 +413,3 @@ const Banquet = () => {
 };
 
 export default Banquet;
-
-

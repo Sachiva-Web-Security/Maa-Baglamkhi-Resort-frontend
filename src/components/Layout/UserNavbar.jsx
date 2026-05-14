@@ -91,41 +91,44 @@ const UserNavbar = ({ setIsAuthenticated }) => {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
-      height: '60px',
-      position: 'sticky',
+      height: '52px',
+      position: 'fixed',
       top: 0,
+      left: 0,
+      right: 0,
       zIndex: 1000,
       boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
+      marginBottom: 0,
     }}>
       {/* Logo */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
         <div style={{
-          width: '36px',
-          height: '36px',
-          borderRadius: '8px',
+          width: '32px',
+          height: '32px',
+          borderRadius: '6px',
           background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           fontWeight: 'bold',
-          fontSize: '18px',
+          fontSize: '16px',
         }}>
           {userName.charAt(0).toUpperCase()}
         </div>
         <div>
-          <div style={{ fontWeight: 'bold', fontSize: '16px' }}>Maa Baglamukhi</div>
-          <div style={{ fontSize: '10px', color: '#aaa' }}>{role ? role.charAt(0).toUpperCase() + role.slice(1) : 'User'}</div>
+          <div style={{ fontWeight: 'bold', fontSize: '14px' }}>Maa Baglamukhi</div>
+          <div style={{ fontSize: '9px', color: '#aaa' }}>{role ? role.charAt(0).toUpperCase() + role.slice(1) : 'User'}</div>
         </div>
       </div>
 
       {/* Menu Links */}
-      <div style={{ display: 'flex', gap: '4px', flex: 1, justifyContent: 'center' }}>
+      <div style={{ display: 'flex', gap: '2px', flex: 1, justifyContent: 'center' }}>
         {menus.map((menu) => (
           <button
             key={menu.path}
             onClick={() => navigate(menu.path)}
             style={{
-              padding: '10px 16px',
+              padding: '6px 14px',
               background: isActive(menu.path) ? 'rgba(102, 126, 234, 0.4)' : 'transparent',
               border: 'none',
               borderRadius: '8px',
@@ -154,21 +157,21 @@ const UserNavbar = ({ setIsAuthenticated }) => {
       </div>
 
       {/* User & Logout */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
         <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: '14px', fontWeight: '600' }}>{userName}</div>
-          <div style={{ fontSize: '11px', color: '#aaa' }}>{role ? role.charAt(0).toUpperCase() + role.slice(1) : 'User'}</div>
+          <div style={{ fontSize: '13px', fontWeight: '600' }}>{userName}</div>
+          <div style={{ fontSize: '10px', color: '#aaa' }}>{role ? role.charAt(0).toUpperCase() + role.slice(1) : 'User'}</div>
         </div>
         <button
           onClick={handleLogout}
           style={{
-            padding: '8px 16px',
+            padding: '6px 12px',
             background: 'rgba(255,107,107,0.2)',
             border: '1px solid rgba(255,107,107,0.4)',
-            borderRadius: '8px',
+            borderRadius: '6px',
             color: '#ff6b6b',
             cursor: 'pointer',
-            fontSize: '13px',
+            fontSize: '12px',
             transition: 'all 0.2s ease',
           }}
           onMouseEnter={(e) => {

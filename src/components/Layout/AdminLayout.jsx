@@ -90,7 +90,7 @@ const AdminLayout = ({ children, setIsAuthenticated }) => {
       {/* Sidebar */}
       <aside
         style={{
-          width: sidebarOpen ? '260px' : '60px',
+          width: sidebarOpen ? '220px' : '50px',
           background: 'linear-gradient(180deg, #1a1a2e 0%, #16213e 100%)',
           color: '#fff',
           transition: 'width 0.3s ease',
@@ -105,7 +105,7 @@ const AdminLayout = ({ children, setIsAuthenticated }) => {
         {/* Header */}
         <div
           style={{
-            padding: '16px',
+            padding: '12px',
             borderBottom: '1px solid rgba(255,255,255,0.1)',
             display: 'flex',
             alignItems: 'center',
@@ -114,8 +114,8 @@ const AdminLayout = ({ children, setIsAuthenticated }) => {
         >
           {sidebarOpen && (
             <div>
-              <div style={{ fontWeight: 'bold', fontSize: '16px' }}>Maa Baglamukhi</div>
-              <div style={{ fontSize: '11px', color: '#aaa' }}>Resort Admin</div>
+              <div style={{ fontWeight: 'bold', fontSize: '14px' }}>Maa Baglamukhi</div>
+              <div style={{ fontSize: '10px', color: '#aaa' }}>Admin Panel</div>
             </div>
           )}
           <button
@@ -137,32 +137,32 @@ const AdminLayout = ({ children, setIsAuthenticated }) => {
         {/* User Profile */}
         <div
           style={{
-            padding: '16px',
+            padding: '12px',
             borderBottom: '1px solid rgba(255,255,255,0.1)',
             display: sidebarOpen ? 'block' : 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            gap: '12px',
+            gap: '10px',
           }}
         >
           <div
             style={{
-              width: '40px',
-              height: '40px',
+              width: '32px',
+              height: '32px',
               borderRadius: '50%',
               background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '18px',
+              fontSize: '14px',
             }}
           >
             {userName.charAt(0).toUpperCase()}
           </div>
           {sidebarOpen && (
             <div>
-              <div style={{ fontWeight: '600', fontSize: '14px' }}>{userName}</div>
-              <div style={{ fontSize: '11px', color: '#aaa', textTransform: 'capitalize' }}>{userRole}</div>
+              <div style={{ fontWeight: '600', fontSize: '12px' }}>{userName}</div>
+              <div style={{ fontSize: '10px', color: '#aaa', textTransform: 'capitalize' }}>{userRole}</div>
             </div>
           )}
         </div>
@@ -247,7 +247,7 @@ const AdminLayout = ({ children, setIsAuthenticated }) => {
       {/* Main Content */}
       <main
         style={{
-          marginLeft: sidebarOpen ? '260px' : '60px',
+          marginLeft: sidebarOpen ? '220px' : '50px',
           flex: 1,
           background: '#f5f6fa',
           minHeight: '100vh',

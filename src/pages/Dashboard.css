@@ -1,1 +1,211 @@
-/* Dashboard page - styles handled in index.css */
+/* UrbanPOS Dashboard Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.urban-dashboard {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Top Navigation */
+.urban-nav {
+  background: linear-gradient(90deg, #1a1a2e 0%, #16213e 100%);
+  height: 52px;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 20px;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+.urban-nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.urban-logo {
+  width: 36px;
+  height: 36px;
+  background: #fff;
+  color: #1a1a2e;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 20px;
+}
+
+.urban-brand-name {
+  color: #fff;
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 1px;
+}
+
+.urban-nav-tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.urban-nav-tab {
+  padding: 10px 16px;
+  color: #ccc;
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.urban-nav-tab:hover {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+}
+
+.urban-nav-tab.active {
+  background: #fff;
+  color: #333;
+  font-weight: 600;
+}
+
+.urban-nav-user {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #fff;
+  font-size: 14px;
+}
+
+.urban-nav-arrow {
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.urban-nav-arrow:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+/* Main Content */
+.urban-main {
+  padding: 30px 20px;
+}
+
+/* Module Access Section */
+.urban-modules-section {
+  background: #fff;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.urban-modules-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 30px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #eee;
+}
+
+.urban-modules-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #333;
+}
+
+.urban-settings-btn {
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #555;
+  transition: all 0.2s;
+}
+
+.urban-settings-btn:hover {
+  background: #e8e8e8;
+  border-color: #ccc;
+}
+
+.urban-modules-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.urban-module-tile {
+  background: #f8f9fa;
+  border-radius: 10px;
+  padding: 30px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  border: 2px solid transparent;
+  min-height: 140px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.urban-module-tile:hover {
+  border-color: var(--module-color);
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.urban-module-tile:hover .urban-module-icon,
+.urban-module-tile:hover .urban-module-label {
+  color: var(--module-color);
+}
+
+.urban-module-tile.no-access {
+  filter: grayscale(100%);
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.urban-module-tile.no-access:hover {
+  transform: none;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.urban-module-icon {
+  font-size: 52px;
+  margin-bottom: 15px;
+}
+
+.urban-module-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #333;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .urban-modules-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 600px) {
+  .urban-modules-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .urban-module-tile { padding: 20px 15px; min-height: 120px; }
+  .urban-module-icon { font-size: 40px; }
+}

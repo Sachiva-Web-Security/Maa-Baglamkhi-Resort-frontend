@@ -5,74 +5,11 @@ import "./Login.css";
 
 const Login = ({ setIsAuthenticated }) => {
   const [formData, setFormData] = useState({
-    username: "admin@resort.com",
+    username: "",
     password: "",
   });
   const [loading, setLoading] = useState(false);
-  const [selectedRole, setSelectedRole] = useState("admin");
   const navigate = useNavigate();
-
-  const roleTiles = [
-    {
-      id: "admin",
-      label: "Admin",
-      image:
-        "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=900&q=80",
-    },
-    {
-      id: "manager",
-      label: "Manager",
-      image:
-        "https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=900&q=80",
-    },
-    {
-      id: "receptionist",
-      label: "Receptionist",
-      image:
-        "https://images.unsplash.com/photo-1557426272-fc759fdf7a8d?auto=format&fit=crop&w=900&q=80",
-    },
-    {
-      id: "waiter",
-      label: "Waiter",
-      image:
-        "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=900&q=80",
-    },
-    {
-      id: "kitchen",
-      label: "Kitchen",
-      image:
-        "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=900&q=80",
-    },
-    {
-      id: "accountant",
-      label: "Accountant",
-      image:
-        "https://images.unsplash.com/photo-1555244162-803834f70033?auto=format&fit=crop&w=900&q=80",
-    },
-    {
-      id: "housekeeping",
-      label: "Housekeeping",
-      image:
-        "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=900&q=80",
-    },
-    {
-      id: "staff",
-      label: "Staff",
-      image:
-        "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=900&q=80",
-    },
-  ];
-
-  const roleSeedEmailMap = {
-    admin: "admin@resort.com",
-    manager: "manager@resort.com",
-    receptionist: "reception@resort.com",
-    waiter: "waiter@resort.com",
-    kitchen: "kitchen@resort.com",
-    accountant: "accounts@resort.com",
-    housekeeping: "tarun@resort.com",
-    staff: "staff@resort.com",
-  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -94,10 +31,16 @@ const Login = ({ setIsAuthenticated }) => {
       const user = res.data;
       localStorage.setItem("token", user.token);
       localStorage.setItem("role", user.role.toLowerCase());
+      localStorage.setItem("userName", user.name);
       localStorage.setItem("name", user.name);
       localStorage.setItem("email", user.email);
       localStorage.setItem("isAuthenticated", "true");
-      localStorage.setItem("selectedRole", selectedRole);
+
+      // Get user permissions from backend
+      if (user.permissions) {
+        localStorage.setItem("permissions", JSON.stringify(user.permissions));
+      }
+
       if (setIsAuthenticated) setIsAuthenticated(true);
       navigate("/dashboard", { state: { loginSuccess: true } });
     } catch (error) {
@@ -114,95 +57,73 @@ const Login = ({ setIsAuthenticated }) => {
   };
 
   return (
-    <div className="module-login-page">
-      <div className="module-login-shell">
-        <div className="module-login-header">
-          <div>
-            <h1 className="module-login-title">Maa Baglamukhi Resort</h1>
-            <p className="module-login-subtitle">
-              Choose your department and sign in
-            </p>
+    <div className="urban-login-bg">
+      <div className="urban-login-card">
+        {/* Logo */}
+        <div className="urban-login-logo">
+          <div className="urban-logo-circle">Q</div>
+          <span className="urban-brand-text">urbanPOS</span>
+        </div>
+
+        {/* Welcome */}
+        <h1 className="urban-login-title">Welcome to urbanPOS.</h1>
+        <p className="urban-login-subtitle">Please sign in to continue.</p>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="urban-login-form">
+          <div className="urban-login-field">
+            <div className="urban-input-icon">👤</div>
+            <input
+              type="text"
+              name="username"
+              value={formData.username}
+              onChange={handleChange}
+              placeholder="Username"
+              className="urban-input"
+            />
           </div>
-          <button
-            type="button"
-            className="module-login-close"
-            onClick={() => setSelectedRole("")}
-          >
-            Close
+
+          <div className="urban-login-field">
+            <div className="urban-input-icon">🔒</div>
+            <input
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="Password"
+              className="urban-input"
+            />
+          </div>
+
+          <button type="submit" className="urban-login-btn" disabled={loading}>
+            {loading ? "Signing in..." : "Login"}
           </button>
-        </div>
+        </form>
 
-        <div className="module-grid">
-          {roleTiles.map((tile) => (
-            <button
-              key={tile.id}
-              type="button"
-              className={`module-tile ${
-                selectedRole === tile.id ? "is-selected" : ""
-              }`}
-              onClick={() => {
-                setSelectedRole(tile.id);
-                setFormData((prev) => ({
-                  ...prev,
-                  username: roleSeedEmailMap[tile.id] || "",
-                }));
-              }}
-              style={{ backgroundImage: `url(${tile.image})` }}
-            >
-              <span>{tile.label}</span>
-            </button>
-          ))}
-        </div>
-
-        <div className="module-login-form-wrap">
-          <div className="module-selected">
-            Selected Role:{" "}
-            <strong>
-              {roleTiles.find((role) => role.id === selectedRole)?.label ||
-                "Choose from above"}
-            </strong>
+        {/* Support */}
+        <div className="urban-login-support">
+          <strong>For Sales & Support</strong>
+          <div className="urban-contact-info">
+            Call us: 9826054590 / 9826254590 / 9324779107
           </div>
-
-          <form onSubmit={handleSubmit}>
-            <div className="simple-form-group" style={{ marginBottom: 12 }}>
-              <label className="simple-label">Email Address</label>
-              <input
-                type="email"
-                name="username"
-                value={formData.username}
-                onChange={handleChange}
-                placeholder="Enter your email"
-                required
-                className="simple-input"
-              />
-            </div>
-
-            <div className="simple-form-group" style={{ marginBottom: 16 }}>
-              <label className="simple-label">Password</label>
-              <input
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="Enter your password"
-                required
-                className="simple-input"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading || !selectedRole}
-              className="simple-btn simple-btn-primary w-full simple-btn-lg"
-              style={{ width: "100%", justifyContent: "center" }}
-            >
-              {loading ? "Signing in..." : "Sign In"}
-            </button>
-          </form>
+          <div className="urban-contact-info">
+            Email us: sales@urbanpos.com
+          </div>
         </div>
 
-        <div style={{ textAlign: "center", marginTop: 14, color: "#aaa", fontSize: 11 }}>
-          Maa Baglamukhi Resort &copy; {new Date().getFullYear()}
+        {/* Footer */}
+        <div className="urban-login-footer">
+          License Valid Upto: 10 Jun 2026
+        </div>
+      </div>
+
+      <div className="urban-login-bottom">
+        <a href="#">For restaurant demo Click Here</a>
+        <div className="urban-copyright">
+          © 2020 urbanpos.com, made with ❤ by PulpyOrange™
+        </div>
+        <div className="urban-legal">
+          <a href="#">Terms of Service</a> | <a href="#">Privacy</a>
         </div>
       </div>
     </div>

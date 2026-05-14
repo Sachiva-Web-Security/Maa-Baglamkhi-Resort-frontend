@@ -1,144 +1,124 @@
-import { useNavigate, useLocation } from "react-router-dom";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import { useEffect, useState } from "react";
-import API from "../api";
-import MonthlyRevenueChart from "../components/Dashboard/Charts/MonthlyRevenueChart";
-import RoomOccupancyChart from "../components/Dashboard/Charts/RoomOccupancyChart";
-import FoodSalesChart from "../components/Dashboard/Charts/FoodSalesChart";
+import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import "./Dashboard.css";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-
-  const [metrics, setMetrics] = useState({
-    totalRooms: 0,
-    occupiedRooms: 0,
-    todayRevenue: 0,
-    todayCheckins: 0,
-    availableRooms: 0,
-    todayCheckouts: 0,
-    expectedArrivals: 0,
-    expectedCheckouts: 0,
-    totalRevenueGenerated: 0,
-  });
-  const [chartData, setChartData] = useState({
-    monthlyRevenue: [],
-    roomOccupancy: [],
-    foodSales: [],
-  });
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (location.state?.loginSuccess) {
-      toast.success("Login Successful", { position: "top-center", autoClose: 2000 });
+    const auth = localStorage.getItem('isAuthenticated');
+    if (auth !== 'true') {
+      navigate('/login');
     }
-  }, [location]);
-
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      setIsLoading(true);
-      try {
-        const [metricsRes, chartsRes] = await Promise.all([
-          API.get("/dashboard/metrics"),
-          API.get("/dashboard/charts"),
-        ]);
-        setMetrics((prev) => ({ ...prev, ...metricsRes.data }));
-        setChartData({
-          monthlyRevenue: chartsRes.data?.monthlyRevenue || [],
-          roomOccupancy: chartsRes.data?.roomOccupancy || [],
-          foodSales: chartsRes.data?.foodSales || [],
-        });
-      } catch (err) {
-        console.error("Error fetching dashboard data:", err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchDashboardData();
-  }, []);
-
-  const tiles = [
-    { label: "Total Rooms", value: metrics.totalRooms, cls: "tile-blue", route: "/hotel" },
-    { label: "Occupied Rooms", value: metrics.occupiedRooms, cls: "tile-red", route: "/hotel" },
-    { label: "Available Rooms", value: metrics.availableRooms || (metrics.totalRooms - metrics.occupiedRooms), cls: "tile-green", route: "/hotel" },
-    { label: "Today's Check-ins", value: metrics.todayCheckins, cls: "tile-orange", route: "/hotel" },
-    { label: "Today's Checkouts", value: metrics.todayCheckouts || 0, cls: "tile-teal", route: "/hotel" },
-    { label: "Expected Arrivals", value: metrics.expectedArrivals || 0, cls: "tile-blue", route: "/hotel" },
-    { label: "Expected Checkouts", value: metrics.expectedCheckouts || 0, cls: "tile-red", route: "/hotel" },
-    { label: "Today's Revenue", value: `₹${(metrics.todayRevenue || 0).toLocaleString()}`, cls: "tile-purple", route: "/accounts" },
-    { label: "Total Revenue", value: `₹${(metrics.totalRevenueGenerated || 0).toLocaleString()}`, cls: "tile-green", route: "/accounts" },
-  ];
+  }, [navigate]);
 
   const role = (localStorage.getItem("role") || "").toLowerCase();
+  const userName = localStorage.getItem("userName") || localStorage.getItem("name") || "User";
+
+  const userPermissions = (() => {
+    const storedPerms = localStorage.getItem("permissions");
+    if (storedPerms) {
+      try {
+        return JSON.parse(storedPerms);
+      } catch {
+        return null;
+      }
+    }
+    const rolePermissions = {
+      admin: ["admin", "front_office", "room_dining", "restaurant", "quick_sales", "inventory", "banquet", "gaming_zone"],
+      manager: ["front_office", "restaurant", "room_dining", "banquet", "inventory"],
+      receptionist: ["front_office", "restaurant", "room_dining", "quick_sales", "banquet"],
+      waiter: ["restaurant", "room_dining", "quick_sales"],
+      kitchen: ["kitchen_kds", "restaurant"],
+      accountant: ["accounts", "reports"],
+      housekeeping: ["housekeeping", "assignments"],
+      staff: ["front_office"]
+    };
+    return rolePermissions[role] || [];
+  })();
+
+  const isAdmin = role === "admin";
+
   const modules = [
-    { name: "Hotel / PMS", desc: "Room reservations, check-in/out", path: "/hotel", roles: ["admin","manager","receptionist"] },
-    { name: "Restaurant POS", desc: "Table orders and billing", path: "/restaurant", roles: ["admin","manager","waiter","kitchen"] },
-    { name: "Kitchen", desc: "KOT and kitchen display", path: "/kitchen", roles: ["admin","manager","kitchen"] },
-    { name: "Banquet", desc: "Hall bookings and events", path: "/banquet", roles: ["admin","manager","receptionist"] },
-    { name: "Housekeeping", desc: "Room cleaning and status", path: "/housekeeping", roles: ["admin","manager","housekeeping"] },
-    { name: "Accounts", desc: "Revenue and payments", path: "/accounts", roles: ["admin","manager","accountant"] },
-    { name: "Inventory", desc: "Stock and purchases", path: "/inventory", roles: ["admin","manager","kitchen"] },
-    { name: "Reports", desc: "Analytics and exports", path: "/reports", roles: ["admin","manager","accountant"] },
-  ].filter(m => role === "admin" || m.roles.includes(role));
+    { id: "admin", name: "Admin", icon: "📊", path: "/user", color: "#6c5ce7" },
+    { id: "front_office", name: "Front Office", icon: "🏨", path: "/hotel", color: "#00b894" },
+    { id: "room_dining", name: "Room Dining", icon: "🛎️", path: "/room-service", color: "#e17055" },
+    { id: "restaurant", name: "Restaurant", icon: "🍽️", path: "/restaurant", color: "#fdcb6e" },
+    { id: "quick_sales", name: "Quick Sales", icon: "⚡", path: "/quick-sales", color: "#74b9ff" },
+    { id: "inventory", name: "Inventory", icon: "📦", path: "/inventory", color: "#a29bfe" },
+    { id: "banquet", name: "Banquet", icon: "🎉", path: "/banquet", color: "#fd79a8" },
+    { id: "gaming_zone", name: "Gaming Zone", icon: "🎮", path: "/reports", color: "#00cec9" },
+  ];
+
+  const handleLogout = () => {
+    if (confirm("Logout?")) {
+      localStorage.clear();
+      navigate("/login");
+    }
+  };
+
+  const setPermissions = () => {
+    const perms = prompt(
+      "Enter permissions (comma-separated):\n" +
+      "admin, front_office, room_dining, restaurant, quick_sales, inventory, banquet, gaming_zone"
+    );
+    if (perms !== null) {
+      localStorage.setItem("permissions", JSON.stringify(perms.split(",").map(p => p.trim())));
+      window.location.reload();
+    }
+  };
 
   return (
-    <div>
-      <ToastContainer />
-
-      {/* Page Title */}
-      <div className="simple-page-header">
-        <h1 className="simple-page-title">Dashboard</h1>
-        <span className="simple-text-muted">
-          {new Date().toLocaleDateString("en-IN", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
-        </span>
+    <div className="urban-dashboard">
+      {/* Top Navigation Bar */}
+      <div className="urban-nav">
+        <div className="urban-nav-brand" onClick={() => navigate('/dashboard')} style={{ cursor: 'pointer' }}>
+          <div className="urban-logo">Q</div>
+          <span className="urban-brand-name">urbanPOS</span>
+        </div>
+        <div className="urban-nav-tabs">
+          <div className="urban-nav-tab active">Application</div>
+        </div>
+        <div className="urban-nav-user">
+          <span>{userName}</span>
+          <span className="urban-nav-arrow" onClick={handleLogout}>🚪</span>
+        </div>
       </div>
-      {isLoading && <div className="simple-text-muted simple-mb">Loading live dashboard data...</div>}
 
-      {/* Metric Tiles */}
-      <div className="simple-metrics-grid simple-metrics-grid-admin">
-        {tiles.map((t, i) => (
-          <div
-            key={i}
-            className={`simple-metric-tile simple-metric-tile-admin ${t.cls}`}
-            onClick={() => navigate(t.route)}
-          >
-            <div className="simple-metric-tile-value">{t.value}</div>
-            <div className="simple-metric-tile-label">{t.label}</div>
+      {/* Main Content */}
+      <div className="urban-main">
+        {/* Module Access Grid - The Main Screen */}
+        <div className="urban-modules-section">
+          <div className="urban-modules-header">
+            <span className="urban-modules-title">Select Application</span>
+            {isAdmin && (
+              <button className="urban-settings-btn" onClick={setPermissions}>
+                ⚙️ Set Permissions
+              </button>
+            )}
           </div>
-        ))}
-      </div>
-
-      {/* Charts */}
-      <div className="simple-dashboard-chart-grid">
-        <div className="simple-card">
-          <div className="simple-card-title">Monthly Revenue</div>
-          <MonthlyRevenueChart data={chartData.monthlyRevenue} />
-        </div>
-        <div className="simple-card">
-          <div className="simple-card-title">Room Occupancy</div>
-          <RoomOccupancyChart data={chartData.roomOccupancy} />
-        </div>
-        <div className="simple-card">
-          <div className="simple-card-title">Food Sales</div>
-          <FoodSalesChart data={chartData.foodSales} />
-        </div>
-      </div>
-
-      {/* Module Quick Access */}
-      <div className="simple-card">
-        <div className="simple-card-title">Quick Access</div>
-        <div className="simple-dashboard-modules-grid">
-          {modules.map((m) => (
-            <div
-              key={m.path}
-              onClick={() => navigate(m.path)}
-              className="simple-dashboard-module-card"
-            >
-              <div className="simple-dashboard-module-name">{m.name}</div>
-              <div className="simple-dashboard-module-desc">{m.desc}</div>
-            </div>
-          ))}
+          <div className="urban-modules-grid">
+            {modules.map((mod) => {
+              const hasAccess = isAdmin || userPermissions.includes(mod.id);
+              return (
+                <div
+                  key={mod.id}
+                  className={`urban-module-tile ${!hasAccess ? 'no-access' : ''}`}
+                  onClick={() => {
+                    if (!hasAccess) {
+                      alert("You don't have permission to access this module.");
+                      return;
+                    }
+                    navigate(mod.path);
+                  }}
+                  style={hasAccess ? { '--module-color': mod.color } : { filter: 'grayscale(100%)', opacity: 0.5 }}
+                >
+                  <div className="urban-module-icon">{mod.icon}</div>
+                  <div className="urban-module-label">{mod.name}</div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>

@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api";
-import Modal from "../components/Hotel/Modal";
 import "./RestaurantPOS.css";
 
 const RestaurantPOS = () => {
   const navigate = useNavigate();
   const [selectedTable, setSelectedTable] = useState(null);
-  const [orderItems, setOrderItems] = useState([]); // Current order items in memory
   const [showSplitBillModal, setShowSplitBillModal] = useState(false);
   const [splitBillData, setSplitBillData] = useState({ parts: 2 });
   const [selectedSection, setSelectedSection] = useState("RESTAURANT");
@@ -15,249 +13,313 @@ const RestaurantPOS = () => {
   const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showKOTModal, setShowKOTModal] = useState(false);
-  const [showKOTPanel, setShowKOTPanel] = useState(true);
   const [kotHistory, setKotHistory] = useState([]);
   const [tables, setTables] = useState([]);
   const [activeTab, setActiveTab] = useState("pos");
-
-  // Track orders for each table - key: tableNumber, value: array of orderItems
-  const [tableOrders, setTableOrders] = useState({});
-
-  // Management states
+  const [orderType, setOrderType] = useState("DINE_IN");
+  const [orderTypeData, setOrderTypeData] = useState({
+    DINE_IN: { items: [], table: null },
+    TAKEAWAY: { items: [], customerName: "", phone: "" },
+    DELIVERY: { items: [], customerName: "", phone: "", address: "" },
+    PARCEL: { items: [] },
+  });
+  const [selectedCategory, setSelectedCategory] = useState("");
   const [captains, setCaptains] = useState([]);
   const [invoiceGroups, setInvoiceGroups] = useState([]);
-
-  // Calculate current bill amount for a table
-  const getTableBillAmount = (table) => {
-    const tableKey = getTableKey(table);
-    const savedOrder = tableOrders[tableKey];
-    if (savedOrder && savedOrder.length > 0) {
-      return savedOrder.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    }
-    if (selectedTable && getTableKey(selectedTable) === tableKey && orderItems.length > 0) {
-      return orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    }
-    return 0;
-  };
+  const [transBills, setTransBills] = useState([]);
+  const [showSplitBill, setShowSplitBill] = useState(false);
+  const [tableFilter, setTableFilter] = useState("ALL");
+  const [occupiedTableData, setOccupiedTableData] = useState({});
 
   const sections = ["RESTAURANT", "GARDEN", "PARSAL", "ROOM DINING"];
+  const categories = ["All", "Beverages", "Starters", "Main Course", "Desserts", "South Indian", "Chinese", "Tandoor"];
 
   useEffect(() => {
-    const fetchTables = async () => {
-      try {
-        const res = await API.get("/restaurant/tables");
-        if (res.data) {
-          setTables(res.data);
-        }
-      } catch (err) {
-        console.error("Error fetching restaurant tables:", err);
-      }
-    };
-    const fetchMenuItems = async () => {
-      try {
-        const res = await API.get("/restaurant/menu");
-        if (res.data) {
-          setMenuItems(res.data);
-          // Extract categories from menu items
-          const categories = [...new Set(res.data.map(i => i.category).filter(Boolean))];
-          if (categories.length === 0) categories.push("Beverages", "Starters", "Main Course", "Desserts");
-          // Categories extracted for potential future use
-        }
-      } catch (err) {
-        console.error("Error fetching menu items:", err);
-      }
-    };
-    const fetchBills = async () => {
-      try {
-        const res = await API.get("/restaurant/bills");
-        if (res.data) {
-          setInvoiceGroups(res.data.map(b => ({
-            id: b.id,
-            invoiceNo: b.id,
-            table: b.tableNumber || b.table,
-            amount: b.total,
-            status: b.invoiceStatus,
-            date: b.created_at
-          })));
-        }
-      } catch (err) {
-        console.error("Error fetching bills:", err);
-      }
-    };
-    const fetchUsers = async () => {
-      try {
-        const res = await API.get("/users");
-        if (res.data) {
-          setCaptains(res.data.filter(u => u.role === "Waiter" || u.role === "waiter"));
-        }
-      } catch (err) {
-        console.error("Error fetching captains:", err);
-      }
-    };
     fetchTables();
     fetchMenuItems();
     fetchBills();
     fetchUsers();
   }, []);
 
-  const filteredMenuItems = menuItems.filter((item) =>
-    item.name.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
-  const normalizedSection = selectedSection.toLowerCase();
-  const filteredTables = tables.filter((table) => {
-    // Check section via multiple possible field names
-    const sectionValue = String(
-      table.section || table.sectionName || table.area || table.zone || table.tableGroup || "",
-    ).toLowerCase();
+  const fetchTables = async () => {
+    try {
+      const res = await API.get("/restaurant/tables");
+      if (res.data) setTables(res.data);
+    } catch (err) {
+      console.error("Error fetching tables:", err);
+    }
+    try {
+      const billRes = await API.get("/restaurant/bills");
+      if (billRes.data) {
+        const occData = {};
+        billRes.data.forEach(b => {
+          const tNum = String(b.tableNumber || b.table || "");
+          if (tNum && !occData[tNum]) {
+            occData[tNum] = {
+              amount: b.total || 0,
+              captain: b.waiter || b.captain || "RECEPTION",
+              guests: b.guestCount || b.pax || 0,
+              orderId: b.id
+            };
+          }
+        });
+        setOccupiedTableData(occData);
+      }
+    } catch (err) {
+      console.error("Error fetching bills:", err);
+    }
+  };
 
-    // If table has no section assigned, show it in all sections
-    const hasNoSection = sectionValue === "" || sectionValue === "null" || sectionValue === "undefined";
+  const fetchMenuItems = async () => {
+    try {
+      const res = await API.get("/restaurant/menu");
+      if (res.data) {
+        setMenuItems(res.data);
+        if (res.data.length > 0 && !selectedCategory) {
+          setSelectedCategory(res.data[0].category || "Beverages");
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching menu:", err);
+    }
+  };
 
-    // Match if: table has no section (show in all) OR section matches selected
-    const sectionMatch = hasNoSection ||
-      sectionValue === normalizedSection ||
-      sectionValue.includes(normalizedSection);
+  const fetchBills = async () => {
+    try {
+      const res = await API.get("/restaurant/bills");
+      if (res.data) {
+        setInvoiceGroups(res.data.map(b => ({
+          id: b.id,
+          invoiceNo: b.id,
+          table: b.tableNumber || b.table,
+          amount: b.total,
+          status: b.invoiceStatus,
+          date: b.created_at
+        })));
+      }
+    } catch (err) {
+      console.error("Error fetching bills:", err);
+    }
+  };
 
-    const tableNumber = String(table.number || table.tableNumber || "");
-    const searchMatch = !searchTerm || tableNumber.includes(searchTerm.trim());
+  const fetchUsers = async () => {
+    try {
+      const res = await API.get("/users");
+      if (res.data) {
+        setCaptains(res.data.filter(u => u.role === "Waiter" || u.role === "waiter"));
+      }
+    } catch (err) {
+      console.error("Error fetching captains:", err);
+    }
+  };
+
+  const filteredMenuItems = menuItems.filter(item => {
+    const catMatch = selectedCategory === "All" || !selectedCategory || item.category === selectedCategory;
+    const searchMatch = !searchTerm || item.name.toLowerCase().includes(searchTerm.toLowerCase());
+    return catMatch && searchMatch;
+  });
+
+  const filteredTables = tables.filter(table => {
+    const sectionValue = String(table.section || table.sectionName || table.area || "").toLowerCase();
+    const hasNoSection = !sectionValue || sectionValue === "null" || sectionValue === "undefined";
+    const sectionMatch = hasNoSection || sectionValue === selectedSection.toLowerCase() || sectionValue.includes(selectedSection.toLowerCase());
+    const tableNum = String(table.number || table.tableNumber || "");
+    const searchMatch = !searchTerm || tableNum.includes(searchTerm.trim());
     return sectionMatch && searchMatch;
   });
 
   const getTableKey = (table) => String(table.id || table.number || table.tableNumber || table.table_no);
 
-  const handleTableClick = (table) => {
-    const tableKey = getTableKey(table);
-    const prevKey = selectedTable ? getTableKey(selectedTable) : null;
-
-    // If switching to a different table with items, save the order for that table
-    if (prevKey && prevKey !== tableKey && orderItems.length > 0) {
-      // Save current order to the previous table's orders
-      setTableOrders(prev => ({
-        ...prev,
-        [prevKey]: [...orderItems]
-      }));
-      // Mark previous table as Occupied (has pending order)
-      setTables(prevTables =>
-        prevTables.map(t => getTableKey(t) === prevKey ? { ...t, status: "Occupied" } : t)
-      );
-    }
-
-    // Check if this table has a saved order
-    const savedOrder = tableOrders[tableKey];
-
-    if (savedOrder && savedOrder.length > 0) {
-      // Restore the saved order for this table
-      setOrderItems(savedOrder);
-    } else {
-      // No saved order - if switching from another table with items, we already saved above
-      // If this is a fresh table selection, just clear (but not if returning to a table with saved items)
-      if (!prevKey || prevKey === tableKey) {
-        setOrderItems([]);
-      }
-    }
-
-    setSelectedTable(table);
-  };
-
-  // Clear order - only when user explicitly clicks Clear (after payment or cancel)
-  // Don't clear when switching tables - keep order for that table
-  const handleClearOrder = () => {
-    if (!selectedTable) {
-      setOrderItems([]);
-      return;
-    }
-
-    // Ask user if they want to clear or save the order
-    const action = window.prompt(
-      "Enter: 'clear' to cancel order, 'save' to save & print KOT, or 'pay' to generate bill.\nOr click Cancel to keep the order.",
-      ""
-    );
-
-    if (action === 'clear') {
-      // User wants to discard the order completely
-      setOrderItems([]);
-      // Clear saved order for this table too
-      const tableKey = getTableKey(selectedTable);
-      setTableOrders(prev => {
-        const updated = { ...prev };
-        delete updated[tableKey];
-        return updated;
-      });
-      // Mark table as available
-      setTables((prev) =>
-        prev.map((t) =>
-          t.id === selectedTable.id ? { ...t, status: "Available" } : t
-        )
-      );
-    } else if (action === 'save') {
-      // Print KOT for the current order
-      handlePrintKOT();
-    } else if (action === 'pay') {
-      // Generate bill
-      handleSaveBill();
-    }
-    // If Cancel or other - do nothing, keep the order
-  };
-
-  // After bill is generated - mark table as available and clear its orders
-  const handleBillGenerated = () => {
-    if (selectedTable) {
-      const tableKey = getTableKey(selectedTable);
-      // Clear saved orders for this table
-      setTableOrders(prev => {
-        const updated = { ...prev };
-        delete updated[tableKey];
-        return updated;
-      });
-      // Mark table as available
-      setTables((prev) =>
-        prev.map((t) =>
-          t.id === selectedTable.id ? { ...t, status: "Available" } : t
-        )
-      );
-    }
-    setOrderItems([]);
-    setSelectedTable(null);
-  };
+  const handleTableClick = (table) => setSelectedTable(table);
 
   const handleCreateTable = async () => {
     const newTableNumber = searchTerm.trim();
-    if (!newTableNumber) {
-      alert("Enter a table number first");
-      return;
-    }
-    const alreadyExists = tables.some(
-      (table) => String(table.number || table.tableNumber) === newTableNumber,
-    );
-    if (alreadyExists) {
-      alert("Table already exists");
-      return;
-    }
-
+    if (!newTableNumber) { alert("Enter a table number"); return; }
+    const exists = tables.some(t => String(t.number || t.tableNumber) === newTableNumber);
+    if (exists) { alert("Table already exists"); return; }
     try {
-      const res = await API.post("/restaurant/tables", {
-        number: newTableNumber,
-        sectionName: selectedSection,
-        seatCount: 4,
-      });
-
+      const res = await API.post("/restaurant/tables", { number: newTableNumber, sectionName: selectedSection, seatCount: 4 });
       if (res.data && res.data.id) {
-        setTables((prev) => [
-          ...prev,
-          {
-            id: res.data.id,
-            number: res.data.number || newTableNumber,
-            status: "Available",
-            section: selectedSection.toLowerCase(),
-            guestCount: 0,
-            currentBill: 0,
-          },
-        ]);
+        setTables(prev => [...prev, { id: res.data.id, number: res.data.number || newTableNumber, status: "Available", section: selectedSection.toLowerCase() }]);
         setSearchTerm("");
       }
     } catch (err) {
       console.error("Error creating table:", err);
       alert(err.response?.data?.message || "Error creating table");
+    }
+  };
+
+  const getCurrentOrderItems = () => orderTypeData[orderType]?.items || [];
+  const setCurrentOrderItems = (items) => setOrderTypeData(prev => ({ ...prev, [orderType]: { ...prev[orderType], items } }));
+
+  const handleAddToOrder = (item) => {
+    if (item.status === "Not Available") { alert(`${item.name} is not available`); return; }
+    const currentItems = getCurrentOrderItems();
+    const existing = currentItems.find(o => o.id === item.id);
+    let newItems;
+    if (existing) {
+      newItems = currentItems.map(o => o.id === item.id ? { ...o, quantity: o.quantity + 1 } : o);
+    } else {
+      newItems = [...currentItems, {
+        id: item.id,
+        name: item.name,
+        price: Number(item.effectivePrice || item.effective_price || item.price || 0),
+        quantity: 1,
+        category: item.category,
+        addedAt: new Date(),
+      }];
+    }
+    setCurrentOrderItems(newItems);
+    if (orderType === "DINE_IN" && selectedTable) {
+      setTables(prev => prev.map(t => t.id === selectedTable.id ? { ...t, status: "Occupied" } : t));
+    }
+  };
+
+  const handleUpdateQuantity = (itemId, quantity) => {
+    const currentItems = getCurrentOrderItems();
+    if (quantity < 1) {
+      setCurrentOrderItems(currentItems.filter(i => i.id !== itemId));
+      return;
+    }
+    setCurrentOrderItems(currentItems.map(i => i.id === itemId ? { ...i, quantity } : i));
+  };
+
+  const handleRemoveItem = (itemId) => setCurrentOrderItems(getCurrentOrderItems().filter(i => i.id !== itemId));
+
+  const calculateTotal = () => {
+    return getCurrentOrderItems().reduce((t, i) => t + i.price * i.quantity, 0);
+  };
+
+  const calculateTax = () => calculateTotal() * 0.05;
+
+  const calculateGrandTotal = () => calculateTotal() + calculateTax();
+
+  const handlePrintKOT = async () => {
+    const currentItems = getCurrentOrderItems();
+    if (!currentItems.length) return alert("Add items first");
+    if (orderType === "DINE_IN" && !selectedTable) { alert("Select a table first"); return; }
+    setLoading(true);
+    try {
+      const kitchenItems = currentItems.map(i => ({ name: i.name, quantity: i.quantity }));
+      try {
+        const resp = await API.post("/kitchen/order", {
+          table: orderType === "DINE_IN" ? selectedTable.number : orderType,
+          waiter: localStorage.getItem("name") || "RECEPTION",
+          items: kitchenItems,
+          entityType: orderType,
+          prepTimeMinutes: 20,
+        });
+        const newKOT = { id: resp?.data?.id || Date.now(), kotNo: resp?.data?.kotNo || `KOT-${Date.now()}`, table: orderType === "DINE_IN" ? selectedTable.number : orderType, timestamp: new Date(), items: kitchenItems };
+        setKotHistory(prev => [...prev, newKOT]);
+      } catch (e) {
+        const newKOT = { id: Date.now(), kotNo: `KOT-${Date.now()}`, table: orderType === "DINE_IN" ? selectedTable.number : orderType, timestamp: new Date(), items: kitchenItems };
+        setKotHistory(prev => [...prev, newKOT]);
+      }
+      alert("KOT printed — sent to Kitchen!");
+    } catch (err) {
+      console.error("Error printing KOT:", err);
+      alert(err.response?.data?.message || "Error printing KOT");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveBill = async () => {
+    const currentItems = getCurrentOrderItems();
+    if (!currentItems.length) return alert("Add items first");
+    if (orderType === "DINE_IN" && !selectedTable) { alert("Select a table first"); return; }
+    const subtotal = calculateTotal();
+    const tax = calculateTax();
+    const total = calculateGrandTotal();
+    const billData = {
+      table: orderType === "DINE_IN" ? selectedTable.number : orderType,
+      tableNumber: orderType === "DINE_IN" ? selectedTable.number : orderType,
+      subtotal, gst: tax, total,
+      paymentMethod: "Cash",
+      orderType: orderType,
+      items: currentItems.map(i => ({ name: i.name, price: i.price, quantity: i.quantity, amount: i.price * i.quantity })),
+      customerName: orderTypeData[orderType]?.customerName || "",
+      phone: orderTypeData[orderType]?.phone || "",
+    };
+    setLoading(true);
+    try {
+      const res = await API.post("/restaurant/bill", billData);
+      alert(`Bill Generated!\n\nType: ${orderType.replace('_', '+')}\nTotal: ₹${total.toFixed(2)}\nInvoice# ${res.data?.id || "N/A"}`);
+      setCurrentOrderItems([]);
+      if (orderType === "DINE_IN") { setSelectedTable(null); setTables(prev => prev.map(t => t.id === selectedTable?.id ? { ...t, status: "Available" } : t)); }
+      fetchBills();
+    } catch (err) {
+      console.error("Error saving bill:", err);
+      alert(err.response?.data?.message || "Error saving bill");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleClearOrder = () => {
+    if (orderType === "DINE_IN" && !selectedTable) { setCurrentOrderItems([]); return; }
+    const act = window.prompt("Enter 'clear' to cancel, 'save' to print KOT, 'pay' to generate bill:", "");
+    if (act === "clear") {
+      setCurrentOrderItems([]);
+      if (orderType === "DINE_IN" && selectedTable) setTables(prev => prev.map(t => t.id === selectedTable.id ? { ...t, status: "Available" } : t));
+    } else if (act === "save") {
+      handlePrintKOT();
+    } else if (act === "pay") {
+      handleSaveBill();
+    }
+  };
+
+  const handleTransferToRoom = async () => {
+    const roomNum = prompt("Enter room number:");
+    if (!roomNum) return;
+    if (orderType === "DINE_IN" && !selectedTable) { alert("Select a table first"); return; }
+    const subtotal = calculateTotal();
+    const tax = calculateTax();
+    setLoading(true);
+    try {
+      await API.post("/restaurant/bill", {
+        table: orderType === "DINE_IN" ? selectedTable.number : orderType,
+        tableNumber: orderType === "DINE_IN" ? selectedTable.number : orderType,
+        subtotal, gst: tax, total: subtotal + tax,
+        paymentMethod: "Room Transfer",
+        entityType: "Room",
+        customerName: `Room ${roomNum}`,
+        items: getCurrentOrderItems().map(i => ({ name: i.name, price: i.price, quantity: i.quantity, amount: i.price * i.quantity })),
+      });
+      alert(`Order transferred to Room ${roomNum}`);
+      setCurrentOrderItems([]);
+      if (orderType === "DINE_IN") setSelectedTable(null);
+    } catch (err) {
+      console.error("Error transferring:", err);
+      alert(err.response?.data?.message || "Error transferring to room");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSplitBillOpen = () => {
+    if (!getCurrentOrderItems().length) return alert("Add items first");
+    setShowSplitBill(true);
+  };
+
+  const handleOrderTypeChange = (type) => {
+    setOrderType(type);
+  };
+
+  const handleSplitBillConfirm = () => {
+    const perPerson = (calculateGrandTotal() / splitBillData.parts).toFixed(2);
+    alert(`Bill split into ${splitBillData.parts} parts\nAmount per person: ₹${perPerson}`);
+    setShowSplitBill(false);
+    setSplitBillData({ parts: 2 });
+  };
+
+  const handleDeleteMenuItem = async (id) => {
+    if (!confirm("Delete this item?")) return;
+    try {
+      await API.delete(`/restaurant/menu/${id}`);
+      setMenuItems(prev => prev.filter(m => m.id !== id));
+    } catch (err) {
+      console.error("Error deleting:", err);
     }
   };
 
@@ -267,753 +329,690 @@ const RestaurantPOS = () => {
       await API.delete(`/restaurant/tables/${id}`);
       setTables(prev => prev.filter(t => t.id !== id));
     } catch (err) {
-      console.error("Error deleting table:", err);
-      alert("Failed to delete table");
+      console.error("Error deleting:", err);
     }
   };
 
-  const handleDeleteMenuItem = async (id) => {
-    if (!confirm("Delete this menu item?")) return;
-    try {
-      await API.delete(`/restaurant/menu/${id}`);
-      setMenuItems(prev => prev.filter(m => m.id !== id));
-    } catch (err) {
-      console.error("Error deleting menu item:", err);
-      alert("Failed to delete menu item");
-    }
-  };
+  // Filter for KDS
+  const tableKots = kotHistory.filter(k => k.table === selectedTable?.number);
 
-  const handleAddToOrder = (item) => {
-    if (!selectedTable) {
-      alert("Please select a table first");
-      return;
-    }
-
-    if (item.status === "Not Available") {
-      alert(`${item.name} is currently unavailable`);
-      return;
-    }
-
-    // Mark table as occupied when adding first item
-    setTables((prev) =>
-      prev.map((t) =>
-        t.id === selectedTable.id ? { ...t, status: "Occupied" } : t
-      )
-    );
-
-    const existingItem = orderItems.find(
-      (orderItem) => orderItem.id === item.id,
-    );
-
-    if (existingItem) {
-      setOrderItems((prev) =>
-        prev.map((orderItem) =>
-          orderItem.id === item.id
-            ? { ...orderItem, quantity: orderItem.quantity + 1 }
-            : orderItem,
-        ),
-      );
-    } else {
-      setOrderItems((prev) => [
-        ...prev,
-        {
-          id: item.id,
-          name: item.name,
-          price: Number(item.effectivePrice || item.effective_price || item.price || 0),
-          quantity: 1,
-          category: item.category,
-          addedAt: new Date(),
-        },
-      ]);
-    }
-  };
-
-  const _handleRemoveItem = (itemId) => {
-    setOrderItems((prev) => prev.filter((item) => item.id !== itemId));
-  };
-
-  const handleUpdateQuantity = (itemId, quantity) => {
-    setOrderItems((prev) =>
-      prev.map((item) => (item.id === itemId ? { ...item, quantity } : item)),
-    );
-  };
-
-  const calculateTotal = () => {
-    const subtotal = orderItems.reduce(
-      (total, item) => total + item.price * item.quantity,
-      0,
-    );
-    const gst = subtotal * 0.05;
-    return subtotal + gst;
-  };
-
-  const handleGenerateBill = async ({ paymentMethod, totalAmount }) => {
-    if (!selectedTable) {
-      alert("Please select a table first");
-      return;
-    }
-
-    const subtotal = orderItems.reduce(
-      (total, item) => total + item.price * item.quantity,
-      0,
-    );
-    const gst = subtotal * 0.05;
-    const total = subtotal + gst;
-
-    const billData = {
-      table: selectedTable.number,
-      tableNumber: selectedTable.number,
-      subtotal: subtotal,
-      gst: gst,
-      total: total,
-      paymentMethod: paymentMethod || "Cash",
-      items: orderItems.map((item) => ({
-        name: item.name,
-        price: item.price,
-        quantity: item.quantity,
-        amount: item.price * item.quantity,
-      })),
-      customerName: "",
-      phone: "",
-    };
-
-    setLoading(true);
-    try {
-      const res = await API.post("/restaurant/bill", billData);
-
-      if (res.data && res.data.id) {
-        alert(
-          `Bill Generated!\n\nTable: ${selectedTable.number}\nTotal: ₹${total.toFixed(2)}\nPayment: ${paymentMethod}\nInvoice# ${res.data.id}`,
-        );
-      } else {
-        alert(
-          `Bill Generated!\n\nTable: ${selectedTable.number}\nTotal: ₹${total.toFixed(2)}\nPayment: ${paymentMethod}`,
-        );
-      }
-
-      // Clear order and table selection, mark table as available
-      handleBillGenerated();
-    } catch (err) {
-      console.error("Error saving restaurant bill:", err);
-      alert(err.response?.data?.message || "Error saving bill to server");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handlePrintKOT = async () => {
-    if (!calculateTotal()) return alert("Add items first");
-    if (!selectedTable) {
-      alert("Please select a table first");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      // Create order and add items to restaurant orders (persist each item)
-      for (const item of orderItems) {
-        await API.post("/restaurant/order/add", {
-          tableNumber: selectedTable.number,
-          item: {
-            name: item.name,
-            price: item.price,
-            quantity: item.quantity,
-          },
-        });
-      }
-
-      // Prepare kitchen items with timestamps
-      const kitchenItems = orderItems.map((item) => ({
-        name: item.name,
-        quantity: item.quantity,
-        addedAt: item.addedAt || new Date(),
-      }));
-
-      // If a KOT already exists for this table, append items to it instead of creating a new KOT
-      const existingKot = kotHistory.slice().reverse().find((k) => k.table === selectedTable.number);
-
-      if (existingKot) {
-        // Try to append to existing KOT on the server
-        try {
-          const resp = await API.post("/kitchen/order", {
-            table: selectedTable.number,
-            waiter: localStorage.getItem("name") || "RECEPTION",
-            items: kitchenItems,
-            entityType: "Table",
-            prepTimeMinutes: 20,
-            appendToKot: existingKot.kotNo,
-          });
-
-          if (resp?.data?.id) {
-            // Server appended and returned an order id - update local history with server id
-            setKotHistory((prev) =>
-              prev.map((k) =>
-                k.table === selectedTable.number
-                  ? { ...k, items: [...k.items, ...kitchenItems], updatedAt: new Date(), serverUpdated: true }
-                  : k,
-              ),
-            );
-          } else {
-            // Append acknowledged but no id - still update UI
-            setKotHistory((prev) =>
-              prev.map((k) =>
-                k.table === selectedTable.number
-                  ? { ...k, items: [...k.items, ...kitchenItems], updatedAt: new Date() }
-                  : k,
-              ),
-            );
-          }
-        } catch (e) {
-          console.error("Failed to append to existing KOT on server:", e);
-          // Inform user that kitchen push failed
-          alert("Warning: Could not push new items to Kitchen server. They are shown locally only.");
-          setKotHistory((prev) =>
-            prev.map((k) =>
-              k.table === selectedTable.number
-                ? { ...k, items: [...k.items, ...kitchenItems], updatedAt: new Date() }
-                : k,
-            ),
-          );
-        }
-      } else {
-        // Create new kitchen order
-        try {
-          const resp = await API.post("/kitchen/order", {
-            table: selectedTable.number,
-            waiter: localStorage.getItem("name") || "RECEPTION",
-            items: kitchenItems,
-            entityType: "Table",
-            prepTimeMinutes: 20,
-          });
-
-          const newKOT = {
-            id: resp?.data?.order?.id || resp?.data?.id || Date.now(),
-            kotNo: resp?.data?.kotNo || `KOT-${Date.now()}`,
-            table: selectedTable.number,
-            timestamp: new Date(),
-            items: kitchenItems,
-          };
-          setKotHistory((prev) => [...prev, newKOT]);
-        } catch (e) {
-          console.error("Failed to create kitchen order:", e);
-          alert("Warning: Could not send KOT to Kitchen server. It will be available locally only.");
-          const newKOT = {
-            id: Date.now(),
-            kotNo: `KOT-${Date.now()}`,
-            table: selectedTable.number,
-            timestamp: new Date(),
-            items: kitchenItems,
-          };
-          setKotHistory((prev) => [...prev, newKOT]);
-        }
-      }
-
-      // Show KOT panel if hidden
-      setShowKOTPanel(true);
-
-      alert("KOT printed successfully - Sent to Kitchen!");
-    } catch (err) {
-      console.error("Error printing KOT:", err);
-      alert(err.response?.data?.message || "Error printing KOT");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSaveBill = () => {
-    if (!calculateTotal()) return alert("Add items first");
-    handleGenerateBill({ paymentMethod: "Cash", totalAmount: calculateTotal() });
-  };
-
-  const handleTransferToRoom = async ({ paymentMethod, totalAmount, table }) => {
-    if (!table) {
-      alert("Select a table first");
-      return;
-    }
-    const roomNumber = prompt("Enter room number:");
-    if (roomNumber) {
-      setLoading(true);
-      try {
-        const subtotal = orderItems.reduce((a, i) => a + i.price * i.quantity, 0);
-        const gst = subtotal * 0.05;
-
-        // Create bill
-        const res = await API.post("/restaurant/bill", {
-          table: table.number,
-          tableNumber: table.number,
-          subtotal,
-          gst,
-          total: subtotal + gst,
-          paymentMethod: "Room Transfer",
-          entityType: "Room",
-          customerName: `Room ${roomNumber}`,
-          items: orderItems.map((item) => ({
-            name: item.name,
-            price: item.price,
-            quantity: item.quantity,
-            amount: item.price * item.quantity,
-          })),
-        });
-
-        // If bill created, try to charge to room
-        if (res.data && res.data.id) {
-          try {
-            await API.post(`/restaurant/bill/${res.data.id}/charge-to-room`, {
-              roomNumber: roomNumber,
-            });
-          } catch (chargeErr) {
-            console.warn("Could not charge to room (non-critical):", chargeErr);
-          }
-        }
-
-        alert(
-          `Order transferred to Room ${roomNumber}\n\nTable: ${table.number}\nTotal: ₹${totalAmount.toFixed(2)}\nPayment: ${paymentMethod}`,
-        );
-        handleBillGenerated();
-      } catch (err) {
-        console.error("Error transferring to room:", err);
-        alert(err.response?.data?.message || "Error transferring order to room");
-      } finally {
-        setLoading(false);
-      }
-    }
-  };
-
-  const handleSplitBill = ({ totalAmount }) => {
-    setShowSplitBillModal(true);
-    setSplitBillData({ parts: 2, totalAmount });
-  };
-
-  const handleSplitBillSubmit = () => {
-    const amountPerPerson = (
-      splitBillData.totalAmount / splitBillData.parts
-    ).toFixed(2);
-    alert(
-      `Bill Split into ${splitBillData.parts} parts\n\nAmount per person: ₹${amountPerPerson}`,
-    );
-    setShowSplitBillModal(false);
-    handleBillGenerated();
-  };
+  const today = new Date().toLocaleDateString("en-IN");
 
   return (
     <div className="pos-screen">
+      {/* TOP NAV BAR */}
       <div className="pos-topbar">
         <div className="pos-topbar-left">
-          <button className={`pos-tab ${activeTab === "pos" ? "active" : ""}`} onClick={() => setActiveTab("pos")}>Dashboard</button>
+          <button className="pos-logo-btn" onClick={() => navigate('/dashboard')}>
+            <span className="pos-logo-icon">Q</span>
+            <span>urbanPOS</span>
+          </button>
+          <button className={`pos-tab ${activeTab === "dashboard" ? "active" : ""}`} onClick={() => setActiveTab("dashboard")}>Dashboard</button>
           <button className={`pos-tab ${activeTab === "pos" ? "active-green" : ""}`} onClick={() => setActiveTab("pos")}>New Order</button>
           <button className={`pos-tab ${activeTab === "quick" ? "active" : ""}`} onClick={() => setActiveTab("quick")}>Quick Bill</button>
           <button className={`pos-tab ${activeTab === "kds" ? "active" : ""}`} onClick={() => setActiveTab("kds")}>KDS (KOT)</button>
           <button className={`pos-tab ${activeTab === "transaction" ? "active" : ""}`} onClick={() => setActiveTab("transaction")}>Daily Transaction</button>
-          {/* Management tabs */}
           <button className={`pos-tab ${activeTab === "items" ? "active" : ""}`} onClick={() => setActiveTab("items")}>Items</button>
           <button className={`pos-tab ${activeTab === "tables" ? "active" : ""}`} onClick={() => setActiveTab("tables")}>Tables</button>
           <button className={`pos-tab ${activeTab === "invoices" ? "active" : ""}`} onClick={() => setActiveTab("invoices")}>Invoices</button>
           <button className={`pos-tab ${activeTab === "captains" ? "active" : ""}`} onClick={() => setActiveTab("captains")}>Captains</button>
         </div>
-        <div className="pos-topbar-right">
-          <span>{new Date().toLocaleDateString("en-IN")}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: 'auto', paddingRight: '10px', flexShrink: 0 }}>
+          <span style={{ fontSize: '11px', color: '#aaa', marginRight: '4px' }}>{localStorage.getItem("userName") || localStorage.getItem("name") || "User"} |</span>
+          <span style={{ fontSize: '11px', color: '#aaa' }}>{today}</span>
         </div>
       </div>
 
-      {activeTab === "items" && (
-        <div className="pos-content" style={{ padding: "20px" }}>
-          <div className="simple-card">
-            <div className="simple-page-header">
-              <h2 className="simple-page-title">Menu Items Management</h2>
-              <button className="simple-btn simple-btn-primary" onClick={() => alert("Use Restaurant POS to add new items via menu")}>+ Add Item</button>
-            </div>
-            <div className="simple-table-wrapper">
-              <table className="simple-table">
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Category</th>
-                    <th>Price</th>
-                    <th>Food Type</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {menuItems.map(item => (
-                    <tr key={item.id}>
-                      <td className="font-medium">{item.name}</td>
-                      <td>{item.category}</td>
-                      <td>₹{item.price}</td>
-                      <td><span className={`simple-badge ${item.foodType === "Veg" ? "badge-green" : "badge-red"}`}>{item.foodType}</span></td>
-                      <td><span className={`simple-badge ${item.status === "Available" ? "badge-green" : "badge-orange"}`}>{item.status}</span></td>
-                      <td>
-                        <button onClick={() => alert("Menu item editing coming soon")} className="simple-btn simple-btn-outline simple-btn-sm" style={{marginRight: "5px"}}>Edit</button>
-                        <button onClick={() => handleDeleteMenuItem(item.id)} className="simple-btn simple-btn-gray simple-btn-sm">Delete</button>
-                      </td>
-                    </tr>
-                  ))}
-                  {menuItems.length === 0 && <tr><td colSpan="6" className="empty-order">No menu items found</td></tr>}
-                </tbody>
-              </table>
-            </div>
-          </div>
+      {/* ORDER TYPE BAR */}
+      <div className="pos-ordertype-bar">
+        {['DINE_IN', 'TAKEAWAY', 'DELIVERY', 'PARCEL'].map(type => (
+          <button
+            key={type}
+            className={`ordertype-btn ${orderType === type ? 'active' : ''}`}
+            onClick={() => handleOrderTypeChange(type)}
+          >
+            {type.replace('_', '+')}
+          </button>
+        ))}
+        <div className="ordertype-divider" />
+        <button className="ordertype-icon-btn" title="User">👤</button>
+        <button className="ordertype-icon-btn" title="Area">🔲</button>
+        <button className="ordertype-icon-btn" title="Currency">₹</button>
+        <button className="ordertype-icon-btn" title="Table Transfer">🔄</button>
+        <button className="ordertype-icon-btn" style={{ background: '#e3f2fd', color: '#1976d2', border: '1px solid #90caf9' }}>R</button>
+        <button className="ordertype-icon-btn" style={{ background: '#ffebee', color: '#c62828', border: '1px solid #ef9a9a' }}>↻</button>
+        <select
+          value={tableFilter}
+          onChange={e => setTableFilter(e.target.value)}
+          style={{ border: '1px solid #ccc', padding: '2px 6px', fontSize: '11px', borderRadius: '3px', height: '22px', background: '#fff' }}
+        >
+          <option>All Tables</option>
+          <option>Available</option>
+          <option>Occupied</option>
+        </select>
+        <button className="ordertype-btn" style={{ height: '22px', fontSize: '10px', padding: '0 8px', background: '#e3f2fd', color: '#1976d2', border: '1px solid #90caf9', fontWeight: 600 }}>All</button>
+        <div className="ordertype-right">
+          <input
+            placeholder="Table#"
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            style={{ border: '1px solid #ccc', padding: '2px 6px', fontSize: '11px', borderRadius: '3px', height: '22px', width: '70px' }}
+          />
+          <button className="pos-create-btn" onClick={handleCreateTable}>Create</button>
         </div>
-      )}
+      </div>
 
-      {activeTab === "tables" && (
-        <div className="pos-content" style={{ padding: "20px" }}>
-          <div className="simple-card">
-            <div className="simple-page-header">
-              <h2 className="simple-page-title">Tables Management</h2>
-              <button className="simple-btn simple-btn-primary" onClick={handleCreateTable}>+ Add Table</button>
-            </div>
-            <div className="simple-table-wrapper">
-              <table className="simple-table">
-                <thead>
-                  <tr>
-                    <th>Table No</th>
-                    <th>Section</th>
-                    <th>Floor</th>
-                    <th>Seats</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {tables.map(table => (
-                    <tr key={table.id}>
-                      <td className="font-medium">{table.number}</td>
-                      <td>{table.sectionName || table.section || "-"}</td>
-                      <td>{table.floorName || "-"}</td>
-                      <td>{table.seatCount || 4}</td>
-                      <td><span className={`simple-badge ${table.status === "Available" ? "badge-green" : "badge-orange"}`}>{table.status}</span></td>
-                      <td>
-                        <button onClick={() => handleDeleteTable(table.id)} className="simple-btn simple-btn-gray simple-btn-sm">Delete</button>
-                      </td>
-                    </tr>
-                  ))}
-                  {tables.length === 0 && <tr><td colSpan="6" className="empty-order">No tables found</td></tr>}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {activeTab === "invoices" && (
-        <div className="pos-content" style={{ padding: "20px" }}>
-          <div className="simple-card">
-            <div className="simple-page-header">
-              <h2 className="simple-page-title">Invoice History</h2>
-            </div>
-            <div className="simple-table-wrapper">
-              <table className="simple-table">
-                <thead>
-                  <tr>
-                    <th>Invoice No</th>
-                    <th>Table</th>
-                    <th>Amount</th>
-                    <th>Status</th>
-                    <th>Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {invoiceGroups.map(inv => (
-                    <tr key={inv.id}>
-                      <td className="font-medium">{inv.invoiceNo}</td>
-                      <td>{inv.table || "-"}</td>
-                      <td>₹{inv.amount?.toLocaleString() || 0}</td>
-                      <td><span className={`simple-badge ${inv.status === "Paid" ? "badge-green" : "badge-orange"}`}>{inv.status || "Generated"}</span></td>
-                      <td>{inv.date ? new Date(inv.date).toLocaleDateString() : "-"}</td>
-                    </tr>
-                  ))}
-                  {invoiceGroups.length === 0 && <tr><td colSpan="5" className="empty-order">No invoices found</td></tr>}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {activeTab === "captains" && (
-        <div className="pos-content" style={{ padding: "20px" }}>
-          <div className="simple-card">
-            <div className="simple-page-header">
-              <h2 className="simple-page-title">Captains / Waiters</h2>
-              <button className="simple-btn simple-btn-primary" onClick={() => navigate("/create-user")}>+ Add Captain</button>
-            </div>
-            <div className="simple-table-wrapper">
-              <table className="simple-table">
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {captains.map(cap => (
-                    <tr key={cap.id}>
-                      <td className="font-medium">{cap.name}</td>
-                      <td>{cap.email}</td>
-                      <td><span className="simple-badge badge-blue">{cap.role}</span></td>
-                    </tr>
-                  ))}
-                  {captains.length === 0 && <tr><td colSpan="3" className="empty-order">No captains found</td></tr>}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {(activeTab === "pos" || activeTab === "quick" || activeTab === "kds" || activeTab === "transaction") && (
+      {/* === NEW ORDER === */}
+      {activeTab === "pos" && (
         <div className="pos-content">
-        <div className="table-booking-panel">
-          <div className="table-booking-header">
-            <div className="table-section-tabs">
-              <div style={{ marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
-                <input
-                  className="pos-input"
-                  placeholder="Table#"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <button className="pos-create-btn" onClick={handleCreateTable}>
-                  Create
-                </button>
-              </div>
-            <div className="section-tab-group">
-              {sections.map((section) => (
+          {/* LEFT: Table Map - only for DINE_IN */}
+          {orderType === "DINE_IN" ? (
+          <div className="pos-left-panel">
+            <div className="pos-section-bar">
+              {sections.map(s => (
                 <button
-                  key={section}
-                  className={`section-tab ${
-                    selectedSection === section ? "selected" : ""
-                  }`}
-                  onClick={() => setSelectedSection(section)}
+                  key={s}
+                  className={`section-btn ${selectedSection === s ? 'selected' : ''}`}
+                  onClick={() => setSelectedSection(s)}
                 >
-                  {section}
+                  {s}
                 </button>
               ))}
             </div>
-          </div>
-          </div>
-
-          <div className="table-map-grid">
-            {filteredTables.map((table) => {
-              const selected = selectedTable?.id === table.id;
-              const occupied = table.status === "Occupied";
-              const billAmount = getTableBillAmount(table);
-              const hasOrder = billAmount > 0;
-              return (
-                <button
-                  key={table.id}
-                  className={`table-map-card ${selected ? "selected" : ""} ${
-                    occupied || hasOrder ? "occupied" : ""
-                  }`}
-                  onClick={() => handleTableClick(table)}
-                >
-                  <div className="table-number">{table.number}</div>
-                  {hasOrder ? (
-                    <div className="table-meta">
-                      <div>RECEPTION</div>
-                      <div style={{ color: '#1a1a1a', fontWeight: 700 }}>₹ {billAmount.toFixed(2)}</div>
+            <div className="pos-table-grid">
+              {filteredTables.map(table => {
+                const sel = selectedTable?.id === table.id;
+                const occ = table.status === "Occupied";
+                const occData = occupiedTableData[String(table.number || table.tableNumber || "")];
+                return (
+                  <div
+                    key={table.id}
+                    className={`table-card ${occ ? 'occupied' : ''} ${sel ? 'selected' : ''}`}
+                    onClick={() => handleTableClick(table)}
+                  >
+                    <div className="table-card-top">
+                      <span className="table-num">{table.number}</span>
+                      {occ && <span className="table-badge">RUN</span>}
                     </div>
-                  ) : (
-                    <div className="table-meta">Available</div>
-                  )}
-                </button>
-              );
-            })}
-            {filteredTables.length === 0 && (
-              <div className="empty-order">No tables found for this section.</div>
-            )}
-          </div>
-        </div>
-
-        <div className="pos-order-panel">
-          <div className="pos-order-header">
-            <div>
-              <strong>{selectedTable ? `Table No ${selectedTable.number}` : "Table No ?"}</strong>
-              <div className="muted">Captain RECEPTION</div>
+                    {occ && occData ? (
+                      <>
+                        <div className="table-card-meta" style={{ fontWeight: 700, color: '#333', fontSize: '12px', textAlign: 'center', paddingTop: '4px' }}>
+                          ₹ {occData.amount?.toFixed(2) || '0.00'}
+                        </div>
+                        <div className="table-card-meta" style={{ fontSize: '9px', color: '#666' }}>
+                          {occData.captain || 'RECEPTION'}
+                        </div>
+                        <div className="table-card-meta" style={{ fontSize: '9px', color: '#666' }}>
+                          Guests: {occData.guests || 1}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="table-card-meta">Available</div>
+                    )}
+                    <div className="table-card-bottom">
+                      <span style={{ fontSize: '10px', color: '#888' }}>#{table.number}</span>
+                      <span className="table-card-icon">➕</span>
+                    </div>
+                  </div>
+                );
+              })}
+              {filteredTables.length === 0 && (
+                <div className="empty-order">No tables found</div>
+              )}
             </div>
-            <div className="muted">
-              {selectedTable ? `Invoice ${selectedTable.id}` : "Invoice -"}
+          </div>
+          ) : (
+          /* NON-DINE_IN LEFT PANEL */
+          <div className="pos-left-panel">
+            <div style={{ padding: '10px', borderBottom: '1px solid #eee', background: '#fafafa' }}>
+              <div style={{ fontSize: '12px', fontWeight: 700, color: '#333', marginBottom: '8px' }}>
+                {orderType.replace('_', '+')} — Order
+              </div>
+              <input
+                placeholder="Customer Name"
+                value={orderTypeData[orderType]?.customerName || ""}
+                onChange={e => setOrderTypeData(prev => ({ ...prev, [orderType]: { ...prev[orderType], customerName: e.target.value } }))}
+                style={{ width: '100%', border: '1px solid #ccc', padding: '4px 6px', fontSize: '11px', borderRadius: '3px', marginBottom: '6px' }}
+              />
+              <input
+                placeholder="Phone"
+                value={orderTypeData[orderType]?.phone || ""}
+                onChange={e => setOrderTypeData(prev => ({ ...prev, [orderType]: { ...prev[orderType], phone: e.target.value } }))}
+                style={{ width: '100%', border: '1px solid #ccc', padding: '4px 6px', fontSize: '11px', borderRadius: '3px', marginBottom: '6px' }}
+              />
+              {(orderType === "DELIVERY") && (
+                <textarea
+                  placeholder="Delivery Address"
+                  value={orderTypeData[orderType]?.address || ""}
+                  onChange={e => setOrderTypeData(prev => ({ ...prev, [orderType]: { ...prev[orderType], address: e.target.value } }))}
+                  style={{ width: '100%', border: '1px solid #ccc', padding: '4px 6px', fontSize: '11px', borderRadius: '3px', resize: 'vertical', minHeight: '60px' }}
+                />
+              )}
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
+              <div style={{ fontSize: '11px', color: '#888', marginBottom: '8px', fontWeight: 600 }}>
+                Running Orders ({getCurrentOrderItems().length})
+              </div>
+              {getCurrentOrderItems().length === 0 ? (
+                <div className="empty-order">No items added</div>
+              ) : getCurrentOrderItems().map(item => (
+                <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #eee', fontSize: '11px' }}>
+                  <span>{item.name} × {item.quantity}</span>
+                  <span>₹{item.price * item.quantity}</span>
+                </div>
+              ))}
             </div>
           </div>
+          )}
 
-          <div className="pos-order-grid">
-            <div className="order-items-table">
-              <div className="order-table-head">
+          {/* CENTER: Order Items + Menu */}
+          <div className="pos-center-panel">
+            <div className="pos-order-header">
+              <div className="pos-order-header-left">
+                {orderType === "DINE_IN" ? (
+                  <>
+                    <strong>{selectedTable ? `Table No ${selectedTable.number}` : 'Table No ?'}</strong>
+                    <span className="captain">Captain RECEPTION</span>
+                  </>
+                ) : (
+                  <strong style={{ fontSize: '13px' }}>{orderType.replace('_', '+')} Order</strong>
+                )}
+              </div>
+              <div className="pos-order-header-right">
+                {orderType === "DINE_IN" && selectedTable ? `Invoice ${selectedTable.id || '-'}` : `Invoice -`}
+              </div>
+            </div>
+
+            <div className="pos-order-items">
+              <div className="order-item-head">
                 <span>Item Name</span>
                 <span>Qty</span>
                 <span>Rate</span>
                 <span>Amount</span>
               </div>
-              {orderItems.length === 0 ? (
+              {getCurrentOrderItems().length === 0 ? (
                 <div className="empty-order">No items selected.</div>
               ) : (
-                orderItems.map((item) => (
-                  <div key={item.id} className="order-row">
+                getCurrentOrderItems().map(item => (
+                  <div key={item.id} className="order-item-row">
                     <span>{item.name}</span>
-                    <span className="qty-controls">
-                      <button onClick={() => handleUpdateQuantity(item.id, Math.max(1, item.quantity - 1))}>-</button>
-                      <b>{item.quantity}</b>
-                      <button onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}>+</button>
+                    <span>
+                      <button className="qty-btn" onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}>−</button>
+                      <span className="qty-display">{item.quantity}</span>
+                      <button className="qty-btn" onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}>+</button>
                     </span>
                     <span>₹{item.price}</span>
-                    <span>₹{item.price * item.quantity}</span>
+                    <span>₹{item.price * item.quantity} <span onClick={() => handleRemoveItem(item.id)} style={{ cursor: 'pointer', color: '#e74c3c', marginLeft: '4px', fontSize: '10px' }}>✕</span></span>
                   </div>
                 ))
               )}
             </div>
 
-            <div className="menu-categories">
-              <div className="category-title">FAVOURITE ITEMS</div>
-              <div className="menu-item-grid">
-                {filteredMenuItems.map((item) => (
+            {/* MENU */}
+            <div className="pos-menu-area">
+              <div className="pos-category-list">
+                {categories.map(cat => (
+                  <div
+                    key={cat}
+                    className={`category-chip ${selectedCategory === cat ? 'selected' : ''}`}
+                    onClick={() => setSelectedCategory(cat)}
+                  >
+                    {cat}
+                  </div>
+                ))}
+              </div>
+              <div className="pos-menu-grid">
+                {filteredMenuItems.map(item => (
                   <button
                     key={item.id}
-                    className="menu-chip"
+                    className="menu-item-btn"
                     onClick={() => handleAddToOrder(item)}
                     disabled={item.status === "Not Available"}
                   >
-                    <div>{item.name}</div>
-                    <small>₹ {item.effectivePrice || item.effective_price || item.price}</small>
+                    <div className="menu-item-name">{item.name}</div>
+                    <div className="menu-item-price">₹ {item.effectivePrice || item.effective_price || item.price}</div>
                   </button>
                 ))}
+                {filteredMenuItems.length === 0 && (
+                  <div className="empty-order" style={{ gridColumn: '1/-1' }}>No items in this category</div>
+                )}
+              </div>
+            </div>
+
+            {/* BOTTOM BAR */}
+            <div className="pos-bottom-bar">
+              <div className="pos-summary">
+                <div>Total Items: {getCurrentOrderItems().reduce((a, i) => a + i.quantity, 0)}</div>
+                <div>Sub Total: ₹{calculateTotal().toFixed(2)}</div>
+                <div>Tax (5% GST): ₹{calculateTax().toFixed(2)}</div>
+                <div className="total-label">Net Total: ₹{calculateGrandTotal().toFixed(2)}</div>
+              </div>
+              <div className="pos-actions">
+                <button className="action-btn red" onClick={handleClearOrder} disabled={loading}>Clear</button>
+                <button className="action-btn yellow" onClick={handlePrintKOT} disabled={loading}>KOT</button>
+                <button className="action-btn green" onClick={handleSaveBill} disabled={loading}>Bill</button>
+                {orderType === "DINE_IN" && <button className="action-btn blue" onClick={handleTransferToRoom} disabled={loading}>Transfer</button>}
+                <button className="action-btn orange" onClick={handleSplitBillOpen} disabled={loading}>Split</button>
               </div>
             </div>
           </div>
 
-          <div className="pos-bottom-actions">
-            <div className="summary-box">
-              <div>Total Items: {orderItems.reduce((a, i) => a + i.quantity, 0)}</div>
-              <div>Sub Total: ₹{orderItems.reduce((a, i) => a + i.price * i.quantity, 0).toFixed(2)}</div>
-              <div className="total">Net Total: ₹{calculateTotal().toFixed(2)}</div>
+          {/* RIGHT: KOT */}
+          <div className="pos-right-panel">
+            <div className="kot-header">
+              <span>KOT (KITCHEN ORDER TICKET)</span>
+              <button className="mini-btn blue" onClick={() => setShowKOTModal(true)}>View All</button>
             </div>
-            <div className="action-buttons">
-              <button
-                className="action red"
-                onClick={handleClearOrder}
-                disabled={loading}
-              >
-                Clear
-              </button>
-              <button
-                className="action yellow"
-                onClick={handlePrintKOT}
-                disabled={loading}
-              >
-                Print KOT
-              </button>
-              <button
-                className="action green"
-                onClick={handleSaveBill}
-                disabled={loading}
-              >
-                Save Bill
-              </button>
-              <button
-                className="action blue"
-                onClick={() => {
-                  if (!calculateTotal()) return alert("Add items first");
-                  handleTransferToRoom({
-                    paymentMethod: "Room Transfer",
-                    totalAmount: calculateTotal(),
-                    table: selectedTable,
-                  });
-                }}
-                disabled={loading}
-              >
-                Transfer
-              </button>
-              <button
-                className="action purple"
-                onClick={() => {
-                  if (!calculateTotal()) return alert("Add items first");
-                  handleSplitBill({ totalAmount: calculateTotal() });
-                }}
-                disabled={loading}
-              >
-                Split
-              </button>
+            <div className="kot-scroll">
+              {tableKots.length === 0 ? (
+                <div className="empty-order">No KOT printed for this table.</div>
+              ) : (
+                tableKots.map((kot, idx) => (
+                  <div key={kot.id} className="kot-card">
+                    <div className="kot-card-head">
+                      <strong>KOT#{idx + 1}</strong>
+                      <span style={{ color: '#888', fontSize: '10px' }}>{new Date(kot.timestamp).toLocaleTimeString()}</span>
+                    </div>
+                    {kot.items.map((item, i) => (
+                      <div key={i} className="kot-card-item">
+                        <span>{item.name}</span>
+                        <span>{item.quantity}</span>
+                      </div>
+                    ))}
+                    <div style={{ padding: '4px 8px', display: 'flex', gap: '4px', borderTop: '1px solid #eee' }}>
+                      <button className="mini-btn blue">Waiter</button>
+                      <button className="mini-btn yellow">Transfer</button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
-      </div>
       )}
 
-      {/* KOT Popup Modal */}
-      <Modal isOpen={showKOTModal} onClose={() => setShowKOTModal(false)} title={`KOT Details - Table ${selectedTable?.number || "N/A"}`}>
-        <div className="kot-scroll" style={{ maxHeight: "500px", overflowY: "auto" }}>
-          {/* Current Order - Not yet printed */}
-          {orderItems.length > 0 && (
-            <div className="kot-card" style={{ marginBottom: "16px", border: "2px dashed #4f91d3", background: "#f8fbff" }}>
-              <div className="kot-row-head" style={{ background: "#e3f0ff" }}>
-                <strong style={{ color: "#1565c0" }}>📝 CURRENT ORDER (Not Printed)</strong>
-                <span style={{ fontSize: "10px", color: "#666" }}>{new Date().toLocaleTimeString()}</span>
-              </div>
-              {orderItems.map((item, idx) => (
-                <div key={`current-${item.id}-${idx}`} className="kot-item-row">
-                  <span>{item.name}</span>
-                  <span>{Number(item.quantity).toFixed(3)}</span>
-                  <span className="muted" style={{ marginLeft: 8, fontSize: "10px" }}>
-                    {item.addedAt ? new Date(item.addedAt).toLocaleTimeString() : ""}
-                  </span>
-                </div>
-              ))}
-              <div style={{ padding: "8px", textAlign: "center", background: "#fff3cd" }}>
-                <small style={{ color: "#856404" }}>⚠️ Add more items to current order, then Print KOT</small>
+      {/* === DASHBOARD === */}
+      {activeTab === "dashboard" && (
+        <div style={{ padding: '16px', overflowY: 'auto', flex: 1 }}>
+          <div className="simple-card">
+            <div className="simple-page-header">
+              <h2 className="simple-page-title">Restaurant Dashboard</h2>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <input type="date" style={{ border: '1px solid #ccc', padding: '4px 6px', fontSize: '11px', borderRadius: '3px' }} />
+                <input type="date" style={{ border: '1px solid #ccc', padding: '4px 6px', fontSize: '11px', borderRadius: '3px' }} />
+                <button style={{ background: '#3498db', color: '#fff', border: 'none', padding: '4px 10px', fontSize: '11px', borderRadius: '3px', cursor: 'pointer' }}>Search</button>
               </div>
             </div>
-          )}
-
-          {/* KOT History - Already printed */}
-          {(() => {
-            const tableKots = kotHistory.filter((k) => k.table === selectedTable?.number);
-            if (!tableKots || tableKots.length === 0) {
-              return orderItems.length === 0 && <div className="empty-order">No orders yet. Add items and Print KOT.</div>;
-            }
-
-            return tableKots.map((kot, kidx) => (
-              <div key={kot.id} className="kot-card" style={{ marginBottom: "12px" }}>
-                <div className="kot-row-head">
-                  <strong>KOT#{kidx + 1}</strong>
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                    <span style={{ fontSize: "10px", color: "#666" }}>{new Date(kot.timestamp).toLocaleTimeString()}</span>
-                    <button className="mini-btn blue" onClick={() => alert(`Waiter: ${kot.waiter || "RECEPTION"}`)}>Waiter</button>
-                    <button className="mini-btn yellow" onClick={() => alert(`Transfer KOT#${kidx + 1}`)}>Transfer</button>
+          </div>
+          <div className="pos-kpi-grid">
+            {[
+              { label: "Table Sale", value: `₹ ${calculateTotal().toLocaleString() || 0}`, sub: "Unsettled: 0" },
+              { label: "Counter Sale", value: "₹ 0", sub: "Unsettled: 0" },
+              { label: "Parcel Charges", value: "₹ 0", sub: " " },
+              { label: "Total Tax", value: `₹ ${calculateTax().toLocaleString()}`, sub: "CGST + SGST" },
+              { label: "Total Discount", value: "₹ 0", sub: " " },
+            ].map((kpi, i) => (
+              <div key={i} className="pos-kpi-card">
+                <div className="pos-kpi-label">{kpi.label}</div>
+                <div className="pos-kpi-value">{kpi.value}</div>
+                <div className="pos-kpi-sub">{kpi.sub}</div>
+              </div>
+            ))}
+          </div>
+          <div className="pos-charts-row">
+            <div className="pos-chart-card">
+              <div className="pos-chart-title">Item Wise Sale</div>
+              <div style={{ height: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'conic-gradient(#3498db 0deg 200deg, #eee 200deg 360deg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: '55px', height: '55px', background: '#fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
+                    <span style={{ fontSize: '14px', fontWeight: '700' }}>{getCurrentOrderItems().length}</span>
+                    <span style={{ fontSize: '9px', color: '#888' }}>Items</span>
                   </div>
                 </div>
-
-                {kot.items.map((item, idx) => (
-                  <div key={`${kot.id}-${item.id || idx}`} className="kot-item-row">
-                    <span>{item.name}</span>
-                    <span>{Number(item.quantity).toFixed(3)}</span>
+              </div>
+            </div>
+            <div className="pos-chart-card">
+              <div className="pos-chart-title">Category Wise Sale</div>
+              <div style={{ height: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'conic-gradient(#f1c40f 0deg 150deg, #eee 150deg 360deg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: '55px', height: '55px', background: '#fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
+                    <span style={{ fontSize: '14px', fontWeight: '700' }}>{tables.filter(t => t.status === "Occupied").length}</span>
+                    <span style={{ fontSize: '9px', color: '#888' }}>Tables</span>
                   </div>
+                </div>
+              </div>
+            </div>
+            <div className="pos-chart-card">
+              <div className="pos-chart-title">Hourly Sale</div>
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end', height: '100px', gap: '6px', paddingBottom: '10px' }}>
+                {[30, 50, 20, 70, 40, 90, 60, 80].map((h, i) => (
+                  <div key={i} style={{ width: '24px', background: 'linear-gradient(to top, #9b59b6, #8e44ad)', borderRadius: '3px 3px 0 0', height: `${h}%`, minHeight: '8px' }} />
                 ))}
               </div>
-            ));
-          })()}
+            </div>
+          </div>
+          <div className="pos-summary-row">
+            <div className="pos-table-card">
+              <div className="pos-table-title">Top Selling Items</div>
+              <table className="pos-table">
+                <thead><tr><th>#</th><th>Item Name</th><th>Qty</th><th>Amount</th></tr></thead>
+                <tbody>
+                  {getCurrentOrderItems().length > 0 ? getCurrentOrderItems().map((item, idx) => (
+                    <tr key={idx}>
+                      <td>{idx + 1}</td><td>{item.name}</td><td>{item.quantity}</td><td>₹ {(item.price * item.quantity).toLocaleString()}</td>
+                    </tr>
+                  )) : <tr><td colSpan="4" style={{ textAlign: 'center', color: '#999' }}>No items sold today</td></tr>}
+                </tbody>
+              </table>
+            </div>
+            <div className="pos-table-card">
+              <div className="pos-table-title">Table Wise Sale</div>
+              <table className="pos-table">
+                <thead><tr><th>Table</th><th>Items</th><th>Amount</th></tr></thead>
+                <tbody>
+                  {tables.filter(t => t.status === "Occupied").length > 0 ? tables.filter(t => t.status === "Occupied").map(t => (
+                    <tr key={t.id}><td>{t.number}</td><td>0</td><td>₹ 0</td></tr>
+                  )) : <tr><td colSpan="3" style={{ textAlign: 'center', color: '#999' }}>No occupied tables</td></tr>}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
-      </Modal>
+      )}
 
-      {/* Split Bill Modal */}
-      <Modal isOpen={showSplitBillModal} onClose={() => setShowSplitBillModal(false)} title="Split Bill">
-        <div>
-          <div className="simple-form-group" style={{ marginBottom: 12 }}>
-            <label className="simple-label">Number of Parts</label>
-            <input type="number" min="2" max="10" value={splitBillData.parts}
-              onChange={(e) => setSplitBillData({ ...splitBillData, parts: parseInt(e.target.value) || 2 })}
-              className="simple-input" />
+      {/* === QUICK BILL === */}
+      {activeTab === "quick" && (
+        <div className="pos-content">
+          <div className="pos-left-panel">
+            <div style={{ padding: '8px', borderBottom: '1px solid #eee', background: '#fafafa' }}>
+              <h3 style={{ margin: 0, fontSize: '12px', fontWeight: '700', color: '#333' }}>Quick Bill — No Table</h3>
+            </div>
+            <div className="pos-section-bar">
+              {categories.map(cat => (
+                <button key={cat} className={`section-btn ${selectedCategory === cat ? 'selected' : ''}`} onClick={() => setSelectedCategory(cat)}>{cat}</button>
+              ))}
+            </div>
+            <div className="pos-menu-grid" style={{ padding: '8px' }}>
+              {filteredMenuItems.map(item => (
+                <button key={item.id} className="menu-item-btn" onClick={() => handleAddToOrder(item)}>
+                  <div className="menu-item-name">{item.name}</div>
+                  <div className="menu-item-price">₹ {item.price}</div>
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="simple-summary" style={{ marginBottom: 14 }}>
-            <div className="simple-summary-row"><span>Total Amount</span><span>₹{splitBillData.totalAmount?.toFixed(2)}</span></div>
-            <div className="simple-summary-row"><span>Per Person</span><span>₹{((splitBillData.totalAmount || 0) / splitBillData.parts).toFixed(2)}</span></div>
+          <div className="pos-center-panel">
+            <div className="pos-order-header">
+              <div className="pos-order-header-left">
+                <strong>Quick Bill</strong>
+                <span className="captain">No Table Selected</span>
+              </div>
+              <div className="pos-order-header-right">Invoice -</div>
+            </div>
+            <div className="pos-order-items">
+              <div className="order-item-head"><span>Item Name</span><span>Qty</span><span>Rate</span><span>Amount</span></div>
+              {getCurrentOrderItems().length === 0 ? <div className="empty-order">No items selected.</div> : getCurrentOrderItems().map(item => (
+                <div key={item.id} className="order-item-row">
+                  <span>{item.name}</span>
+                  <span>
+                    <button className="qty-btn" onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}>−</button>
+                    <span className="qty-display">{item.quantity}</span>
+                    <button className="qty-btn" onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}>+</button>
+                  </span>
+                  <span>₹{item.price}</span>
+                  <span>₹{item.price * item.quantity} <span onClick={() => handleRemoveItem(item.id)} style={{ cursor: 'pointer', color: '#e74c3c', marginLeft: '4px', fontSize: '10px' }}>✕</span></span>
+                </div>
+              ))}
+            </div>
+            <div className="pos-bottom-bar">
+              <div className="pos-summary">
+                <div>Total Items: {getCurrentOrderItems().reduce((a, i) => a + i.quantity, 0)}</div>
+                <div>Sub Total: ₹{calculateTotal().toFixed(2)}</div>
+                <div>Tax (5% GST): ₹{calculateTax().toFixed(2)}</div>
+                <div className="total-label">Net Total: ₹{calculateGrandTotal().toFixed(2)}</div>
+              </div>
+              <div className="pos-actions">
+                <button className="action-btn red" onClick={() => setCurrentOrderItems([])}>Clear</button>
+                <button className="action-btn yellow" onClick={handlePrintKOT} disabled={loading}>KOT</button>
+                <button className="action-btn green" onClick={handleSaveBill} disabled={loading}>Bill</button>
+              </div>
+            </div>
           </div>
-          <div className="simple-btn-row" style={{ justifyContent: "flex-end" }}>
-            <button className="simple-btn simple-btn-gray" onClick={() => setShowSplitBillModal(false)}>Cancel</button>
-            <button className="simple-btn simple-btn-primary" onClick={handleSplitBillSubmit}>Confirm Split</button>
+          <div className="pos-right-panel">
+            <div className="kot-header"><span>KOT</span></div>
+            <div className="kot-scroll">
+              <div className="empty-order">No orders yet.</div>
+            </div>
           </div>
         </div>
-      </Modal>
+      )}
+
+      {/* === KDS === */}
+      {activeTab === "kds" && (
+        <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+          <div style={{ flex: 1, padding: '10px', overflowY: 'auto' }}>
+            <div className="kds-header">
+              <span>KDS (KITCHEN DISPLAY SYSTEM)</span>
+              <button className="kds-toggle">🗂 All</button>
+            </div>
+            <div className="kds-scroll">
+              {kotHistory.length === 0 ? (
+                <div className="empty-order">No orders in kitchen.</div>
+              ) : kotHistory.map((kot, idx) => (
+                <div key={kot.id} className="kds-card">
+                  <div className="kds-card-head">
+                    <strong>KOT#{idx + 1} — Table {kot.table}</strong>
+                    <div>
+                      <span style={{ marginRight: '6px', fontSize: '10px', color: '#888' }}>{new Date(kot.timestamp).toLocaleTimeString()}</span>
+                      <span className="kds-status pending">PENDING</span>
+                    </div>
+                  </div>
+                  {kot.items.map((item, i) => (
+                    <div key={i} className="kds-card-item">
+                      <span>{item.name}</span>
+                      <span style={{ fontWeight: '700' }}>{item.quantity}</span>
+                    </div>
+                  ))}
+                  <div style={{ padding: '6px 8px', display: 'flex', gap: '6px' }}>
+                    <button className="mini-btn blue">Mark Ready</button>
+                    <button className="mini-btn yellow">Served</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* === DAILY TRANSACTION === */}
+      {activeTab === "transaction" && (
+        <div style={{ padding: '16px', overflowY: 'auto', flex: 1 }}>
+          <div className="simple-card">
+            <div className="simple-page-header">
+              <h2 className="simple-page-title">Daily Transaction</h2>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <input type="date" style={{ border: '1px solid #ccc', padding: '4px 6px', fontSize: '11px', borderRadius: '3px' }} />
+                <button style={{ background: '#3498db', color: '#fff', border: 'none', padding: '4px 10px', fontSize: '11px', borderRadius: '3px', cursor: 'pointer' }}>Search</button>
+              </div>
+            </div>
+            <table className="trans-table">
+              <thead><tr><th>#</th><th>Invoice No</th><th>Table</th><th>Date</th><th>Amount</th><th>Payment</th><th>Status</th></tr></thead>
+              <tbody>
+                {invoiceGroups.length > 0 ? invoiceGroups.map((inv, idx) => (
+                  <tr key={inv.id}>
+                    <td>{idx + 1}</td><td>{inv.invoiceNo}</td><td>{inv.table || '-'}</td>
+                    <td>{inv.date ? new Date(inv.date).toLocaleDateString() : '-'}</td>
+                    <td>₹{inv.amount?.toLocaleString() || 0}</td>
+                    <td>Cash</td>
+                    <td><span className="trans-status success">PAID</span></td>
+                  </tr>
+                )) : <tr><td colSpan="7" style={{ textAlign: 'center', color: '#999', padding: '20px' }}>No transactions found</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* === ITEMS === */}
+      {activeTab === "items" && (
+        <div className="pos-management-view">
+          <div className="simple-card">
+            <div className="simple-page-header">
+              <h2 className="simple-page-title">Menu Items</h2>
+            </div>
+            <table className="simple-table">
+              <thead><tr><th>Name</th><th>Category</th><th>Price</th><th>Type</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody>
+                {menuItems.map(item => (
+                  <tr key={item.id}>
+                    <td className="font-medium">{item.name}</td>
+                    <td>{item.category || '-'}</td>
+                    <td>₹{item.price}</td>
+                    <td><span className={`simple-badge ${item.foodType === "Veg" ? "badge-green" : "badge-red"}`}>{item.foodType || "Veg"}</span></td>
+                    <td><span className={`simple-badge ${item.status === "Available" ? "badge-green" : "badge-orange"}`}>{item.status || "Available"}</span></td>
+                    <td>
+                      <button className="simple-btn simple-btn-outline simple-btn-sm" style={{ marginRight: '5px' }}>Edit</button>
+                      <button className="simple-btn simple-btn-gray simple-btn-sm" onClick={() => handleDeleteMenuItem(item.id)}>Delete</button>
+                    </td>
+                  </tr>
+                ))}
+                {menuItems.length === 0 && <tr><td colSpan="6" style={{ textAlign: 'center', color: '#999', padding: '20px' }}>No menu items found</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* === TABLES === */}
+      {activeTab === "tables" && (
+        <div className="pos-management-view">
+          <div className="simple-card">
+            <div className="simple-page-header">
+              <h2 className="simple-page-title">Tables</h2>
+              <button className="simple-btn simple-btn-primary" onClick={() => { const n = prompt("Table number:"); if (n) { setSearchTerm(n); handleCreateTable(); } }}>+ Add Table</button>
+            </div>
+            <table className="simple-table">
+              <thead><tr><th>Table No</th><th>Section</th><th>Seats</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody>
+                {tables.map(table => (
+                  <tr key={table.id}>
+                    <td className="font-medium">{table.number}</td>
+                    <td>{table.sectionName || table.section || '-'}</td>
+                    <td>{table.seatCount || 4}</td>
+                    <td><span className={`simple-badge ${table.status === "Available" ? "badge-green" : "badge-orange"}`}>{table.status || "Available"}</span></td>
+                    <td><button className="simple-btn simple-btn-gray simple-btn-sm" onClick={() => handleDeleteTable(table.id)}>Delete</button></td>
+                  </tr>
+                ))}
+                {tables.length === 0 && <tr><td colSpan="5" style={{ textAlign: 'center', color: '#999', padding: '20px' }}>No tables found</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* === INVOICES === */}
+      {activeTab === "invoices" && (
+        <div className="pos-management-view">
+          <div className="simple-card">
+            <div className="simple-page-header">
+              <h2 className="simple-page-title">Invoice History</h2>
+            </div>
+            <table className="simple-table">
+              <thead><tr><th>Invoice No</th><th>Table</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead>
+              <tbody>
+                {invoiceGroups.map(inv => (
+                  <tr key={inv.id}>
+                    <td className="font-medium">{inv.invoiceNo}</td>
+                    <td>{inv.table || '-'}</td>
+                    <td>₹{inv.amount?.toLocaleString() || 0}</td>
+                    <td><span className={`simple-badge ${inv.status === "Paid" ? "badge-green" : "badge-orange"}`}>{inv.status || "Generated"}</span></td>
+                    <td>{inv.date ? new Date(inv.date).toLocaleDateString() : '-'}</td>
+                  </tr>
+                ))}
+                {invoiceGroups.length === 0 && <tr><td colSpan="5" style={{ textAlign: 'center', color: '#999', padding: '20px' }}>No invoices found</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* === CAPTAINS === */}
+      {activeTab === "captains" && (
+        <div className="pos-management-view">
+          <div className="simple-card">
+            <div className="simple-page-header">
+              <h2 className="simple-page-title">Captains / Waiters</h2>
+              <button className="simple-btn simple-btn-primary" onClick={() => navigate("/create-user")}>+ Add Captain</button>
+            </div>
+            <table className="simple-table">
+              <thead><tr><th>Name</th><th>Email</th><th>Role</th></tr></thead>
+              <tbody>
+                {captains.map(cap => (
+                  <tr key={cap.id}>
+                    <td className="font-medium">{cap.name}</td>
+                    <td>{cap.email}</td>
+                    <td><span className="simple-badge badge-blue">{cap.role}</span></td>
+                  </tr>
+                ))}
+                {captains.length === 0 && <tr><td colSpan="3" style={{ textAlign: 'center', color: '#999', padding: '20px' }}>No captains found</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* === SPLIT BILL MODAL === */}
+      {showSplitBill && (
+        <div className="modal-overlay" onClick={() => setShowSplitBill(false)}>
+          <div className="modal-box" onClick={e => e.stopPropagation()}>
+            <div className="modal-title">Split Bill</div>
+            <div className="simple-form-group">
+              <label className="simple-label">Number of Parts</label>
+              <input type="number" min="2" max="10" value={splitBillData.parts}
+                onChange={e => setSplitBillData({ ...splitBillData, parts: parseInt(e.target.value) || 2 })}
+                className="simple-input" />
+            </div>
+            <div className="simple-summary">
+              <div className="simple-summary-row"><span>Total Amount</span><span>₹{calculateGrandTotal().toFixed(2)}</span></div>
+              <div className="simple-summary-row"><span>Per Person</span><span>₹{((calculateGrandTotal() || 0) / splitBillData.parts).toFixed(2)}</span></div>
+            </div>
+            <div className="simple-btn-row">
+              <button className="simple-btn simple-btn-gray" onClick={() => setShowSplitBill(false)}>Cancel</button>
+              <button className="simple-btn simple-btn-primary" onClick={handleSplitBillConfirm}>Confirm</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* === KOT MODAL === */}
+      {showKOTModal && (
+        <div className="modal-overlay" onClick={() => setShowKOTModal(false)}>
+          <div className="modal-box" onClick={e => e.stopPropagation()} style={{ maxWidth: '450px' }}>
+            <div className="modal-title">KOT History — Table {selectedTable?.number || 'N/A'}</div>
+            <div className="kot-scroll" style={{ maxHeight: '400px' }}>
+              {tableKots.length === 0 ? (
+                <div className="empty-order">No KOTs for this table.</div>
+              ) : tableKots.map((kot, idx) => (
+                <div key={kot.id} className="kot-card" style={{ marginBottom: '10px' }}>
+                  <div className="kot-card-head">
+                    <strong>KOT#{idx + 1}</strong>
+                    <span>{new Date(kot.timestamp).toLocaleTimeString()}</span>
+                  </div>
+                  {kot.items.map((item, i) => (
+                    <div key={i} className="kot-card-item">
+                      <span>{item.name}</span>
+                      <span style={{ fontWeight: '700' }}>{item.quantity}</span>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+            <div className="simple-btn-row" style={{ marginTop: '10px' }}>
+              <button className="simple-btn simple-btn-gray" onClick={() => setShowKOTModal(false)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

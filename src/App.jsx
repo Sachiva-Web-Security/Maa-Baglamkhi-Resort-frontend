@@ -48,6 +48,15 @@ function UserLayout({ children, setIsAuthenticated }) {
   );
 }
 
+// Layout for pages that have their own nav (like RestaurantPOS)
+function BareLayout({ children }) {
+  return (
+    <div style={{ minHeight: '100vh', background: '#f0f2f5' }}>
+      {children}
+    </div>
+  );
+}
+
 // Layout for admin users (using sidebar)
 function AdminLayoutWrapper({ setIsAuthenticated, children }) {
   return (
@@ -117,9 +126,8 @@ function App() {
         <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
-        <Route path="/dashboard" element={
-          <FlexibleRoute element={<Dashboard />} allowedRoles={["admin","manager","receptionist","staff","waiter","kitchen","housekeeping","accountant"]} />
-        } />
+        // Dashboard has its own UrbanPOS navigation - no wrapper
+        <Route path="/dashboard" element={<Dashboard />} />
 
         <Route path="/profile" element={
           <FlexibleRoute element={<Profile />} allowedRoles={["admin","manager","receptionist","staff","waiter","kitchen","housekeeping","accountant"]} />
@@ -130,11 +138,19 @@ function App() {
         } />
 
         <Route path="/hotel" element={
-          <FlexibleRoute element={<Hotel />} allowedRoles={["admin","manager","receptionist"]} />
+          <ProtectedRoute allowedRoles={["admin","manager","receptionist"]}>
+            <BareLayout>
+              <Hotel />
+            </BareLayout>
+          </ProtectedRoute>
         } />
 
         <Route path="/restaurant" element={
-          <UserRoute element={<RestaurantPOS />} allowedRoles={["admin","manager","waiter","kitchen"]} />
+          <ProtectedRoute allowedRoles={["admin","manager","waiter","kitchen"]}>
+            <BareLayout>
+              <RestaurantPOS />
+            </BareLayout>
+          </ProtectedRoute>
         } />
 
         <Route path="/accounts" element={
@@ -153,7 +169,11 @@ function App() {
         } />
 
         <Route path="/banquet" element={
-          <FlexibleRoute element={<Banquet />} allowedRoles={["admin","manager","receptionist"]} />
+          <ProtectedRoute allowedRoles={["admin","manager","receptionist"]}>
+            <BareLayout>
+              <Banquet />
+            </BareLayout>
+          </ProtectedRoute>
         } />
 
         <Route path="/reports" element={
@@ -165,11 +185,19 @@ function App() {
         } />
 
         <Route path="/kitchen" element={
-          <UserRoute element={<Kitchen />} allowedRoles={["admin","manager","kitchen"]} />
+          <ProtectedRoute allowedRoles={["admin","manager","kitchen"]}>
+            <BareLayout>
+              <Kitchen />
+            </BareLayout>
+          </ProtectedRoute>
         } />
 
         <Route path="/quick-sales" element={
-          <UserRoute element={<QuickSales />} allowedRoles={["admin","manager","waiter","receptionist"]} />
+          <ProtectedRoute allowedRoles={["admin","manager","waiter","receptionist"]}>
+            <BareLayout>
+              <QuickSales />
+            </BareLayout>
+          </ProtectedRoute>
         } />
 
         <Route path="/restaurant-settings" element={<AdminRoute element={<RestaurantSettings />} />} />

@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import API from "../api";
+import "./Dashboard.css";
 
 const Kitchen = () => {
+  const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -45,8 +48,31 @@ const Kitchen = () => {
 
   return (
     <div>
-      <div className="simple-page-header">
-        <h2 className="simple-page-title">Kitchen Orders</h2>
+      {/* Top Navigation Bar */}
+      <div className="urban-nav" style={{ marginBottom: 0 }}>
+        <div className="urban-nav-brand" onClick={() => navigate('/dashboard')} style={{ cursor: 'pointer' }}>
+          <div className="urban-logo">Q</div>
+          <span className="urban-brand-name">urbanPOS</span>
+        </div>
+        <div className="urban-nav-tabs">
+          <div className="urban-nav-tab" onClick={() => navigate('/dashboard')}>Dashboard</div>
+          <div className="urban-nav-tab" onClick={() => navigate('/restaurant')}>New Order</div>
+          <div className="urban-nav-tab green">KDS</div>
+          <div className="urban-nav-tab" onClick={() => navigate('/reports')}>Daily Transaction</div>
+        </div>
+        <div className="urban-nav-user">
+          <span>{localStorage.getItem("userName") || localStorage.getItem("name") || "User"}</span>
+          <span className="urban-nav-arrow" onClick={() => {
+            if (confirm("Logout?")) {
+              localStorage.clear();
+              navigate("/login");
+            }
+          }}>🚪</span>
+        </div>
+      </div>
+
+      <div className="simple-page-header" style={{ padding: '12px 16px', marginTop: 0 }}>
+        <h2 className="simple-page-title">Kitchen Display System (KDS)</h2>
         <p className="simple-text-muted">Manage restaurant food orders</p>
       </div>
 
