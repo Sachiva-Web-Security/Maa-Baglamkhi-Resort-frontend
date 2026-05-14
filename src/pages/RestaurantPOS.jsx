@@ -357,9 +357,20 @@ const RestaurantPOS = () => {
           <button className={`pos-tab ${activeTab === "invoices" ? "active" : ""}`} onClick={() => setActiveTab("invoices")}>Invoices</button>
           <button className={`pos-tab ${activeTab === "captains" ? "active" : ""}`} onClick={() => setActiveTab("captains")}>Captains</button>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: 'auto', paddingRight: '10px', flexShrink: 0 }}>
-          <span style={{ fontSize: '11px', color: '#aaa', marginRight: '4px' }}>{localStorage.getItem("userName") || localStorage.getItem("name") || "User"} |</span>
-          <span style={{ fontSize: '11px', color: '#aaa' }}>{today}</span>
+        <div className="pos-topbar-right">
+          <span>{localStorage.getItem("userName") || localStorage.getItem("name") || "User"} |</span>
+          <span>{today}</span>
+          <button
+            className="logout-btn"
+            onClick={() => {
+              if (confirm("Logout?")) {
+                localStorage.clear();
+                navigate("/login");
+              }
+            }}
+          >
+            Logout
+          </button>
         </div>
       </div>
 
