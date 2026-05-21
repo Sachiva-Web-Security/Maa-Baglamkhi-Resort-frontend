@@ -35,6 +35,22 @@ import InvoiceGroups from './pages/InvoiceGroups';
 import EditInvoice from './pages/EditInvoice';
 import Items from './pages/Items';
 import ManageData from './pages/ManageData';
+import AdminHome from './pages/AdminHome';
+import FinancialYear from './pages/manage/FinancialYear';
+import IDCards from './pages/manage/IDCards';
+import TaxCategory from './pages/manage/TaxCategory';
+import TaxSetting from './pages/manage/TaxSetting';
+import ManageUsers from './pages/manage/Users';
+import PaymentModes from './pages/manage/PaymentModes';
+import ManageGuests from './pages/manage/Guests';
+import Employees from './pages/manage/Employees';
+import Terminals from './pages/manage/Terminals';
+import PrinterLocations from './pages/manage/PrinterLocations';
+import Branches from './pages/manage/Branches';
+import MailConfiguration from './pages/manage/MailConfiguration';
+import AccessRules from './pages/manage/AccessRules';
+import PrepaidCards from './pages/manage/PrepaidCards';
+import DiscountCoupons from './pages/manage/DiscountCoupons';
 
 // Layout for non-admin users (using horizontal navbar)
 function UserLayout({ children, setIsAuthenticated }) {
@@ -161,6 +177,22 @@ function App() {
           <FlexibleRoute element={<InventoryDashboard />} allowedRoles={["admin","manager","kitchen"]} />
         } />
 
+        <Route path="/admin" element={<AdminRoute element={<AdminHome />} />} />
+        <Route path="/manage/financial-year" element={<AdminRoute element={<FinancialYear />} />} />
+        <Route path="/manage/id-cards" element={<AdminRoute element={<IDCards />} />} />
+        <Route path="/manage/tax-category" element={<AdminRoute element={<TaxCategory />} />} />
+        <Route path="/manage/tax-setting" element={<AdminRoute element={<TaxSetting />} />} />
+        <Route path="/manage/users" element={<AdminRoute element={<ManageUsers />} />} />
+        <Route path="/manage/payment-modes" element={<AdminRoute element={<PaymentModes />} />} />
+        <Route path="/manage/guests" element={<AdminRoute element={<ManageGuests />} />} />
+        <Route path="/manage/employees" element={<AdminRoute element={<Employees />} />} />
+        <Route path="/manage/terminals" element={<AdminRoute element={<Terminals />} />} />
+        <Route path="/manage/printer-locations" element={<AdminRoute element={<PrinterLocations />} />} />
+        <Route path="/manage/branches" element={<AdminRoute element={<Branches />} />} />
+        <Route path="/manage/mail-configuration" element={<AdminRoute element={<MailConfiguration />} />} />
+        <Route path="/manage/access-rules" element={<AdminRoute element={<AccessRules />} />} />
+        <Route path="/manage/prepaid-cards" element={<AdminRoute element={<PrepaidCards />} />} />
+        <Route path="/manage/discount-coupons" element={<AdminRoute element={<DiscountCoupons />} />} />
         <Route path="/user" element={<AdminRoute element={<User />} />} />
         <Route path="/create-user" element={<AdminRoute element={<CreateUser />} />} />
 

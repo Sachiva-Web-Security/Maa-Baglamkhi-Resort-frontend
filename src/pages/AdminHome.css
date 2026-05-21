@@ -1,0 +1,229 @@
+/* Admin Home (urbanPOS-style) */
+.admin-home {
+  padding: 16px 24px 40px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #2c3e50;
+}
+
+/* ---------- Filter bar ---------- */
+.admin-filter-bar {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(150px, 1fr)) auto;
+  gap: 14px;
+  align-items: end;
+  background: #fff;
+  padding: 14px 16px;
+  border-radius: 6px;
+  border: 1px solid #e6e8eb;
+  margin-bottom: 18px;
+}
+
+.admin-filter-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-filter-field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1f2d3d;
+  margin-bottom: 4px;
+}
+
+.admin-filter-field input,
+.admin-filter-field select {
+  height: 34px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 13px;
+  background: #fff;
+  color: #2c3e50;
+  outline: none;
+}
+
+.admin-filter-field input:focus,
+.admin-filter-field select:focus {
+  border-color: #3a8bff;
+  box-shadow: 0 0 0 2px rgba(58, 139, 255, 0.15);
+}
+
+.admin-filter-submit {
+  height: 34px;
+  background: #337ab7;
+  border: 1px solid #2e6da4;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 0 28px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.admin-filter-submit:hover {
+  background: #286090;
+}
+
+.admin-filter-submit:disabled {
+  background: #8ab1cf;
+  border-color: #8ab1cf;
+  cursor: default;
+}
+
+/* ---------- Top row (summary + payment mode + date-wise) ---------- */
+.admin-row {
+  display: grid;
+  grid-template-columns: 240px 1fr 1.4fr;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+@media (max-width: 1200px) {
+  .admin-row {
+    grid-template-columns: 240px 1fr;
+  }
+  .admin-row .admin-card-datewise {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 800px) {
+  .admin-row {
+    grid-template-columns: 1fr;
+  }
+  .admin-filter-bar {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ---------- Today's Collection Summary ---------- */
+.admin-summary {
+  background: #fff;
+  border: 1px solid #e6e8eb;
+  border-radius: 4px;
+  padding: 8px 10px;
+}
+
+.admin-summary-row {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  gap: 6px;
+  align-items: center;
+  padding: 6px 4px;
+  border-bottom: 1px dashed #f0f0f0;
+}
+
+.admin-summary-row:last-child {
+  border-bottom: none;
+}
+
+.admin-summary-star {
+  color: #f0ad4e;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.admin-summary-content {
+  text-align: right;
+}
+
+.admin-summary-label {
+  font-size: 12px;
+  color: #1f2d3d;
+  font-weight: 500;
+}
+
+.admin-summary-value {
+  font-size: 13px;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.admin-summary-value.positive { color: #2c3e50; }
+.admin-summary-value.muted    { color: #6c757d; }
+.admin-summary-value.negative { color: #d9534f; }
+.admin-summary-value.warning  { color: #e67e22; }
+
+/* ---------- Cards ---------- */
+.admin-card {
+  background: #fff;
+  border: 1px solid #e6e8eb;
+  border-radius: 4px;
+  padding: 14px 16px;
+}
+
+.admin-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #2c3e50;
+  margin: 0 0 8px;
+}
+
+.admin-card-title .icon {
+  font-size: 16px;
+  color: #5b8def;
+}
+
+/* ---------- Second row (Top 10 + Last 3 Month) ---------- */
+.admin-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 16px;
+}
+
+@media (max-width: 1000px) {
+  .admin-row-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Top 10 selling items list */
+.admin-top-items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.admin-top-items li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 4px;
+  border-bottom: 1px solid #f4f4f4;
+  font-size: 13px;
+}
+
+.admin-top-items .qty {
+  font-weight: 700;
+  color: #5b8def;
+  background: #eef3ff;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+.admin-top-items .empty {
+  color: #999;
+  text-align: center;
+  padding: 16px;
+  font-style: italic;
+}
+
+/* ---------- Recharts tweaks ---------- */
+.recharts-default-tooltip {
+  border-radius: 4px !important;
+  border: 1px solid #ddd !important;
+  font-size: 12px !important;
+}
+
+/* tiny utility loading state */
+.admin-loading {
+  text-align: center;
+  padding: 12px;
+  color: #888;
+  font-size: 13px;
+}

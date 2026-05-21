@@ -40,7 +40,7 @@ const Dashboard = () => {
   const isAdmin = role === "admin";
 
   const modules = [
-    { id: "admin", name: "Admin", icon: "📊", path: "/user", color: "#6c5ce7" },
+    { id: "admin", name: "Admin", icon: "📊", path: "/admin", color: "#6c5ce7" },
     { id: "front_office", name: "Front Office", icon: "🏨", path: "/hotel", color: "#00b894" },
     { id: "room_dining", name: "Room Dining", icon: "🛎️", path: "/room-service", color: "#e17055" },
     { id: "restaurant", name: "Restaurant", icon: "🍽️", path: "/restaurant", color: "#fdcb6e" },
