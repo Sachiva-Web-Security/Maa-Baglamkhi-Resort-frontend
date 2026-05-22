@@ -51,6 +51,15 @@ import MailConfiguration from './pages/manage/MailConfiguration';
 import AccessRules from './pages/manage/AccessRules';
 import PrepaidCards from './pages/manage/PrepaidCards';
 import DiscountCoupons from './pages/manage/DiscountCoupons';
+import RoomType from './pages/front-office/RoomType';
+import FORooms from './pages/front-office/Rooms';
+import FOServices from './pages/front-office/Services';
+import FOCompanies from './pages/front-office/Companies';
+import FrontOfficeSettings from './pages/front-office/FrontOfficeSettings';
+import FBTables from './pages/fnb/Tables';
+import FBCaptains from './pages/fnb/Captains';
+import FBInvoices from './pages/fnb/Invoices';
+import OwnerSmsSettings from './pages/fnb/OwnerSmsSettings';
 
 // Layout for non-admin users (using horizontal navbar)
 function UserLayout({ children, setIsAuthenticated }) {
@@ -193,6 +202,15 @@ function App() {
         <Route path="/manage/access-rules" element={<AdminRoute element={<AccessRules />} />} />
         <Route path="/manage/prepaid-cards" element={<AdminRoute element={<PrepaidCards />} />} />
         <Route path="/manage/discount-coupons" element={<AdminRoute element={<DiscountCoupons />} />} />
+        <Route path="/front-office/room-type" element={<AdminRoute element={<RoomType />} />} />
+        <Route path="/front-office/rooms" element={<AdminRoute element={<FORooms />} />} />
+        <Route path="/front-office/services" element={<AdminRoute element={<FOServices />} />} />
+        <Route path="/front-office/companies" element={<AdminRoute element={<FOCompanies />} />} />
+        <Route path="/front-office/settings" element={<AdminRoute element={<FrontOfficeSettings />} />} />
+        <Route path="/fnb/tables" element={<AdminRoute element={<FBTables />} />} />
+        <Route path="/fnb/captains" element={<AdminRoute element={<FBCaptains />} />} />
+        <Route path="/fnb/invoices" element={<AdminRoute element={<FBInvoices />} />} />
+        <Route path="/fnb/owner-sms-settings" element={<AdminRoute element={<OwnerSmsSettings />} />} />
         <Route path="/user" element={<AdminRoute element={<User />} />} />
         <Route path="/create-user" element={<AdminRoute element={<CreateUser />} />} />
 

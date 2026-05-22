@@ -152,6 +152,51 @@ const Icon = {
       <path d="M22 10V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v4a2 2 0 0 1 0 4v4a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-4a2 2 0 0 1 0-4zM13 17h-2v-2h2zm0-4h-2v-2h2zm0-4h-2V7h2z" />
     </svg>
   ),
+  bed: (
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+      <path d="M7 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm14-5h-9v8H4V6H2v15h2v-3h16v3h2V11a3 3 0 0 0-1-3z" />
+    </svg>
+  ),
+  wave: (
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+      <path d="M12 2a7 7 0 0 0-7 7v3H3v9h18v-9h-2V9a7 7 0 0 0-7-7zm5 7v3H7V9a5 5 0 0 1 10 0z" />
+    </svg>
+  ),
+  building: (
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+      <path d="M12 7V3H2v18h20V7zM6 19H4v-2h2zm0-4H4v-2h2zm0-4H4V9h2zm0-4H4V5h2zm4 12H8v-2h2zm0-4H8v-2h2zm0-4H8V9h2zm0-4H8V5h2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8z" />
+    </svg>
+  ),
+  rupee: (
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+      <path d="M16 5h-4.4c1.1.5 2 1.4 2.3 3H16v2h-2.1c-.4 2.9-2.7 5-5.9 5h-.2l6.3 7h-2.7l-6.6-7.3V13h2.2c2.5 0 3.9-1.2 4.3-3H5V8h6.5c-.5-1.8-2-3-4.2-3H5V3h11z" />
+    </svg>
+  ),
+  cross: (
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+      <path d="M19 6.4 17.6 5 12 10.6 6.4 5 5 6.4 10.6 12 5 17.6 6.4 19 12 13.4 17.6 19 19 17.6 13.4 12z" />
+    </svg>
+  ),
+  package: (
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+      <path d="M21 8.5 12 3 3 8.5V16l9 5 9-5zM12 5.2 18.2 9 12 12.8 5.8 9zM5 10.8l6 3.6V19l-6-3.4zm14 4.8L13 19v-4.6l6-3.6z" />
+    </svg>
+  ),
+  chartIcon: (
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+      <path d="M3 22h18v-2H3zm2-4h2V8H5zm4 0h2V4H9zm4 0h2v-7h-2zm4 0h2v-3h-2z" />
+    </svg>
+  ),
+  settingsBox: (
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+      <path d="M3 3h18v18H3zm14 9a5 5 0 1 1-5-5 5 5 0 0 1 5 5zm-5-3a3 3 0 1 0 3 3 3 3 0 0 0-3-3z" />
+    </svg>
+  ),
+  folder: (
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+      <path d="M10 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8z" />
+    </svg>
+  ),
 };
 
 const menuConfig = [
@@ -174,7 +219,7 @@ const menuConfig = [
       { label: 'Terminals', path: '/manage/terminals', icon: 'monitor' },
       { label: 'Printer Locations', path: '/manage/printer-locations', icon: 'printer' },
       { label: 'Branches', path: '/manage/branches', icon: 'branch' },
-      { label: 'Mail Configuration', path: '/manage/mail-configuration', icon: 'mail' },
+      { label: 'Email Configuration', path: '/manage/mail-configuration', icon: 'mail' },
       { label: 'Manage Access Rules', path: '/manage/access-rules', icon: 'shield' },
       { label: 'Prepaid Cards', path: '/manage/prepaid-cards', icon: 'prepaid' },
       { label: 'Discount Coupons', path: '/manage/discount-coupons', icon: 'coupon' },
@@ -186,10 +231,11 @@ const menuConfig = [
     label: 'Front Office',
     icon: 'hotel',
     children: [
-      { label: 'Hotel / Rooms', path: '/hotel' },
-      { label: 'Banquet', path: '/banquet' },
-      { label: 'Attendance', path: '/attendance' },
-      { label: 'Housekeeping', path: '/housekeeping' },
+      { label: 'Room Type', path: '/front-office/room-type', icon: 'bed' },
+      { label: 'Rooms', path: '/front-office/rooms', icon: 'bed' },
+      { label: 'Services', path: '/front-office/services', icon: 'wave' },
+      { label: 'Companies', path: '/front-office/companies', icon: 'building' },
+      { label: 'Settings', path: '/front-office/settings', icon: 'gear' },
     ],
   },
   {
@@ -198,21 +244,24 @@ const menuConfig = [
     label: 'F&B Service',
     icon: 'food',
     children: [
-      { label: 'Restaurant POS', path: '/restaurant' },
-      { label: 'Kitchen', path: '/kitchen' },
-      { label: 'Room Service', path: '/room-service' },
-      { label: 'Restaurant Settings', path: '/restaurant-settings' },
-      { label: 'Items', path: '/items' },
-      { label: 'Item Groups', path: '/item-groups' },
-      { label: 'Modifiers', path: '/modifiers' },
-      { label: 'Price Groups', path: '/price-groups' },
-      { label: 'Print Groups', path: '/print-groups' },
-      { label: 'Units', path: '/units' },
-      { label: 'Table Groups', path: '/table-groups' },
-      { label: 'Invoice Groups', path: '/invoice-groups' },
-      { label: 'Edit Invoice', path: '/edit-invoice' },
-      { label: 'Parcel Setting', path: '/parcel-setting' },
-      { label: 'Bar to Food', path: '/bar-to-food' },
+      { label: 'Invoice Groups', path: '/invoice-groups', icon: 'report' },
+      { label: 'Price Groups', path: '/price-groups', icon: 'rupee' },
+      { label: 'Print Groups', path: '/print-groups', icon: 'printer' },
+      { label: 'Item Groups', path: '/item-groups', icon: 'chartIcon' },
+      { label: 'Units', path: '/units', icon: 'cross' },
+      { label: 'Modifiers', path: '/modifiers', icon: 'cross' },
+      { label: 'Items', path: '/items', icon: 'report' },
+      { label: 'Table Groups', path: '/table-groups', icon: 'grid' },
+      { label: 'Tables', path: '/fnb/tables', icon: 'grid' },
+      { label: 'Parcel Setting', path: '/parcel-setting', icon: 'package' },
+      { label: 'Captains', path: '/fnb/captains', icon: 'folder' },
+      { label: 'Invoices', path: '/fnb/invoices', icon: 'folder' },
+      { label: 'Edit Invoice', path: '/edit-invoice', icon: 'report' },
+      { label: 'Bar to Food', path: '/bar-to-food', icon: 'chartIcon' },
+      { label: 'Room Service Settings', path: '/room-service', icon: 'settingsBox' },
+      { label: 'Manage Data', path: '/manage-data', icon: 'settingsBox' },
+      { label: 'Restaurant Settings', path: '/restaurant-settings', icon: 'settingsBox' },
+      { label: 'Owner SMS Settings', path: '/fnb/owner-sms-settings', icon: 'settingsBox' },
     ],
   },
   {

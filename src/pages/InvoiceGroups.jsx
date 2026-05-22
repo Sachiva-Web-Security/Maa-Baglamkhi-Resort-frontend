@@ -1,128 +1,415 @@
-import React, { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import API from "../api";
-import "./InvoiceGroups.css";
+
+const emptyForm = {
+  name: "",
+  tax_setting_id: "",
+  default_discount: "0",
+};
 
 const InvoiceGroups = () => {
-  const [groups, setGroups] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({ name: "", prefix: "", description: "", isActive: true });
+  const [rows, setRows] = useState([]);
+  const [taxSettings, setTaxSettings] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
 
-  useEffect(() => {
-    fetchGroups();
-  }, []);
+  const [modal, setModal] = useState(null);
+  const [saving, setSaving] = useState(false);
 
-  const fetchGroups = async () => {
+  const load = async () => {
+    setLoading(true);
+    setError("");
     try {
-      const res = await API.get("/accounts/invoice-groups");
-      if (res.data && res.data.length > 0) {
-        setGroups(res.data);
-      } else {
-        setGroups([
-          { id: 1, name: "Restaurant", prefix: "REST", description: "Restaurant billing invoices", isActive: true },
-          { id: 2, name: "Banquet", prefix: "BANQ", description: "Banquet and event invoices", isActive: true },
-          { id: 3, name: "Room Service", prefix: "ROOM", description: "In-room dining invoices", isActive: true },
-          { id: 4, name: "Parcel", prefix: "PARC", description: "Takeaway and parcel invoices", isActive: true },
-          { id: 5, name: "Quick Sales", prefix: "QS", description: "Quick counter sales", isActive: true },
-        ]);
-      }
+      const { data } = await API.get("/fb-invoice-groups");
+      setRows(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error("Error fetching invoice groups:", err);
-      setGroups([
-        { id: 1, name: "Restaurant", prefix: "REST", description: "Restaurant billing invoices", isActive: true },
-        { id: 2, name: "Banquet", prefix: "BANQ", description: "Banquet and event invoices", isActive: true },
-        { id: 3, name: "Room Service", prefix: "ROOM", description: "In-room dining invoices", isActive: true },
-        { id: 4, name: "Parcel", prefix: "PARC", description: "Takeaway and parcel invoices", isActive: true },
-        { id: 5, name: "Quick Sales", prefix: "QS", description: "Quick counter sales", isActive: true },
-      ]);
+      setError(err.response?.data?.message || "Failed to load invoice groups");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSave = async () => {
-    if (!form.name || !form.prefix) return alert("Name and prefix are required");
-    if (editing) {
-      try {
-        await API.put(`/accounts/invoice-groups/${editing.id}`, form);
-        setGroups(prev => prev.map(g => g.id === editing.id ? { ...g, ...form } : g));
-      } catch (err) {
-        setGroups(prev => prev.map(g => g.id === editing.id ? { ...g, ...form } : g));
-      }
-    } else {
-      const newGroup = { id: Date.now(), ...form };
-      try {
-        const res = await API.post("/accounts/invoice-groups", form);
-        newGroup.id = res.data?.id || Date.now();
-      } catch (err) { /* use local id */ }
-      setGroups(prev => [...prev, newGroup]);
+  const loadTaxes = async () => {
+    try {
+      const { data } = await API.get("/tax-settings");
+      setTaxSettings(Array.isArray(data) ? data : []);
+    } catch {
+      setTaxSettings([]);
     }
-    setShowModal(false);
-    setEditing(null);
-    setForm({ name: "", prefix: "", description: "", isActive: true });
   };
 
-  const handleDelete = (id) => {
-    if (!confirm("Delete this invoice group?")) return;
-    API.delete(`/accounts/invoice-groups/${id}`).catch(console.error);
-    setGroups(prev => prev.filter(g => g.id !== id));
+  useEffect(() => {
+    load();
+    loadTaxes();
+  }, []);
+
+  const openAdd = () => setModal({ mode: "add", ...emptyForm });
+  const openEdit = (row) =>
+    setModal({
+      mode: "edit",
+      id: row.id,
+      name: row.name || "",
+      tax_setting_id: row.tax_setting_id ? String(row.tax_setting_id) : "",
+      default_discount: String(row.default_discount ?? "0"),
+    });
+  const closeModal = () => setModal(null);
+
+  const setField = (key) => (e) =>
+    setModal((prev) => ({ ...prev, [key]: e.target.value }));
+
+  const onSave = async () => {
+    setError("");
+    setMessage("");
+    if (!modal.name?.trim()) {
+      setError("Invoice group name is required");
+      return;
+    }
+    const payload = {
+      name: modal.name.trim(),
+      tax_setting_id: modal.tax_setting_id ? Number(modal.tax_setting_id) : null,
+      default_discount: Number(modal.default_discount) || 0,
+    };
+    setSaving(true);
+    try {
+      if (modal.mode === "add") {
+        await API.post("/fb-invoice-groups", payload);
+        setMessage("Invoice group added.");
+      } else {
+        await API.put(`/fb-invoice-groups/${modal.id}`, payload);
+        setMessage("Invoice group updated.");
+      }
+      closeModal();
+      await load();
+    } catch (err) {
+      setError(err.response?.data?.message || "Save failed");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const onDelete = async (row) => {
+    if (!confirm(`Delete invoice group "${row.name}"?`)) return;
+    setError("");
+    try {
+      await API.delete(`/fb-invoice-groups/${row.id}`);
+      setMessage("Invoice group deleted.");
+      await load();
+    } catch (err) {
+      setError(err.response?.data?.message || "Delete failed");
+    }
   };
 
   return (
-    <div className="ig-page">
-      <div className="simple-page-header">
-        <h1 className="simple-page-title">Invoice Groups</h1>
-        <button className="simple-btn simple-btn-primary" onClick={() => { setEditing(null); setForm({ name: "", prefix: "", description: "", isActive: true }); setShowModal(true); }}>
-          + Add Invoice Group
-        </button>
+    <div style={styles.page}>
+      <div style={styles.topbar}>
+        <h2 style={styles.title}>Manage Invoice Groups</h2>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <button type="button" style={styles.refreshBtn} onClick={load}>
+            ⟳ Refresh
+          </button>
+          <button type="button" style={styles.newBtn} onClick={openAdd}>
+            + New
+          </button>
+        </div>
       </div>
 
-      <div className="ig-grid">
-        {groups.map(group => (
-          <div key={group.id} className="ig-card">
-            <div className="ig-card-top" style={{ background: group.isActive ? "#5da548" : "#999" }}>
-              <div className="ig-card-prefix">{group.prefix}</div>
-              <div className="ig-card-status">{group.isActive ? "Active" : "Inactive"}</div>
-            </div>
-            <div className="ig-card-body">
-              <div className="ig-card-name">{group.name}</div>
-              <div className="ig-card-desc">{group.description || "No description"}</div>
-            </div>
-            <div className="ig-card-actions">
-              <button className="simple-btn simple-btn-outline simple-btn-sm" onClick={() => { setEditing(group); setForm({ name: group.name, prefix: group.prefix, description: group.description || "", isActive: group.isActive }); setShowModal(true); }}>Edit</button>
-              <button className="simple-btn simple-btn-gray simple-btn-sm" onClick={() => handleDelete(group.id)}>Delete</button>
-            </div>
-          </div>
-        ))}
-        {groups.length === 0 && !loading && (
-          <div className="ig-empty">No invoice groups found.</div>
-        )}
+      <div style={styles.subtitle}>List of Invoice Groups</div>
+
+      {error && <div style={{ ...styles.alert, ...styles.alertError }}>{error}</div>}
+      {message && (
+        <div style={{ ...styles.alert, ...styles.alertSuccess }}>{message}</div>
+      )}
+
+      <div style={styles.tableWrap}>
+        <table style={styles.table}>
+          <thead>
+            <tr>
+              <th style={{ ...styles.th, width: 40 }}>#</th>
+              <th style={styles.th}>Invoice Group</th>
+              <th style={styles.th}>Tax Setting</th>
+              <th style={styles.th}>Default Discount</th>
+              <th style={{ ...styles.th, width: 110, textAlign: "right" }} />
+            </tr>
+          </thead>
+          <tbody>
+            {rows.length === 0 && !loading && (
+              <tr>
+                <td colSpan={5} style={styles.empty}>
+                  No invoice groups yet. Click <b>+ New</b> to add one.
+                </td>
+              </tr>
+            )}
+            {rows.map((row, idx) => (
+              <tr
+                key={row.id}
+                style={idx % 2 === 0 ? styles.rowEven : styles.rowOdd}
+              >
+                <td style={styles.td}>{idx + 1}</td>
+                <td style={styles.td}>{row.name}</td>
+                <td style={styles.td}>{row.tax_setting_name || "—"}</td>
+                <td style={styles.td}>
+                  {Number(row.default_discount).toFixed(2)}
+                </td>
+                <td style={{ ...styles.td, textAlign: "right" }}>
+                  <button
+                    type="button"
+                    style={styles.editBtn}
+                    onClick={() => openEdit(row)}
+                    title="Edit"
+                  >
+                    ✎
+                  </button>
+                  <button
+                    type="button"
+                    style={styles.deleteBtn}
+                    onClick={() => onDelete(row)}
+                    title="Delete"
+                  >
+                    🗑
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
-      {showModal && (
-        <div className="ig-modal-backdrop" onClick={() => setShowModal(false)}>
-          <div className="ig-modal" onClick={e => e.stopPropagation()}>
-            <h3 className="ig-modal-title">{editing ? "Edit Invoice Group" : "Add Invoice Group"}</h3>
-            <div className="simple-form-group"><label className="simple-label">Group Name *</label><input className="simple-input" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="e.g. Restaurant" /></div>
-            <div className="simple-form-group"><label className="simple-label">Prefix *</label><input className="simple-input" value={form.prefix} onChange={e => setForm(p => ({ ...p, prefix: e.target.value }))} placeholder="e.g. REST" maxLength="6" /></div>
-            <div className="simple-form-group"><label className="simple-label">Description</label><textarea className="simple-textarea" value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} placeholder="Description..." /></div>
-            <div className="ig-toggle-row">
-              <span>Active</span>
-              <label className="ig-toggle">
-                <input type="checkbox" checked={form.isActive} onChange={e => setForm(p => ({ ...p, isActive: e.target.checked }))} />
-                <span className="ig-toggle-slider"></span>
-              </label>
+      {loading && <div style={styles.loading}>Loading...</div>}
+
+      {modal && (
+        <div style={styles.modalBackdrop} onClick={closeModal}>
+          <div style={{ ...styles.modal, width: 460 }} onClick={(e) => e.stopPropagation()}>
+            <div style={styles.modalHeader}>
+              {modal.mode === "add" ? "Add Invoice Group" : "Edit Invoice Group"}
+              <button onClick={closeModal} style={styles.modalClose}>×</button>
             </div>
-            <div className="simple-btn-row" style={{ justifyContent: "flex-end", marginTop: 14 }}>
-              <button className="simple-btn simple-btn-gray" onClick={() => setShowModal(false)}>Cancel</button>
-              <button className="simple-btn simple-btn-primary" onClick={handleSave}>Save</button>
+            <div style={styles.modalBody}>
+              <div style={styles.field}>
+                <label style={styles.label}>Invoice Group Name</label>
+                <input
+                  style={styles.input}
+                  autoFocus
+                  value={modal.name}
+                  onChange={setField("name")}
+                  placeholder="e.g. Food"
+                />
+              </div>
+              <div style={styles.field}>
+                <label style={styles.label}>Tax Setting</label>
+                <select
+                  style={styles.input}
+                  value={modal.tax_setting_id}
+                  onChange={setField("tax_setting_id")}
+                >
+                  <option value="">— Select —</option>
+                  {taxSettings.map((t) => (
+                    <option key={t.id} value={t.id}>{t.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div style={styles.field}>
+                <label style={styles.label}>Default Discount</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  style={styles.input}
+                  value={modal.default_discount}
+                  onChange={setField("default_discount")}
+                />
+              </div>
+            </div>
+            <div style={styles.modalFooter}>
+              <button
+                type="button"
+                style={styles.cancelBtn}
+                onClick={closeModal}
+                disabled={saving}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                style={styles.saveBtn}
+                onClick={onSave}
+                disabled={saving}
+              >
+                {saving ? "Saving..." : "Save"}
+              </button>
             </div>
           </div>
         </div>
       )}
     </div>
   );
+};
+
+const styles = {
+  page: {
+    padding: "20px 28px 40px",
+    background: "#fff",
+    minHeight: "100%",
+    fontFamily:
+      '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    color: "#2c3e50",
+  },
+  topbar: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderBottom: "1px solid #e6e8eb",
+    paddingBottom: 8,
+    marginBottom: 12,
+  },
+  title: { margin: 0, fontSize: 18, fontWeight: 600, color: "#1f2d3d" },
+  refreshBtn: {
+    background: "#fff",
+    border: "1px solid #ccc",
+    color: "#333",
+    padding: "5px 12px",
+    borderRadius: 3,
+    fontSize: 13,
+    cursor: "pointer",
+  },
+  newBtn: {
+    background: "#5bc0de",
+    border: "1px solid #46b8da",
+    color: "#fff",
+    padding: "5px 12px",
+    borderRadius: 3,
+    fontSize: 13,
+    fontWeight: 500,
+    cursor: "pointer",
+  },
+  subtitle: { fontSize: 13, color: "#5b6b7c", marginBottom: 12 },
+  alert: { padding: "8px 12px", borderRadius: 4, fontSize: 13, marginBottom: 10 },
+  alertError: { background: "#fdecea", color: "#b94a48", border: "1px solid #f3c2bd" },
+  alertSuccess: { background: "#e6f4ea", color: "#2c7a3d", border: "1px solid #bfe2c8" },
+
+  tableWrap: {
+    border: "1px solid #e6e8eb",
+    borderRadius: 3,
+    overflow: "auto",
+    maxWidth: 800,
+  },
+  table: { width: "100%", borderCollapse: "collapse", fontSize: 13 },
+  th: {
+    background: "#f7f7f7",
+    borderBottom: "1px solid #e6e8eb",
+    padding: "10px 12px",
+    textAlign: "left",
+    fontWeight: 600,
+    color: "#1f2d3d",
+    whiteSpace: "nowrap",
+  },
+  td: {
+    padding: "10px 12px",
+    borderBottom: "1px solid #f0f0f0",
+    color: "#2c3e50",
+  },
+  rowEven: { background: "#fff" },
+  rowOdd: { background: "#fafbfc" },
+  editBtn: {
+    background: "#5bc0de",
+    border: "1px solid #46b8da",
+    color: "#fff",
+    width: 28,
+    height: 26,
+    borderRadius: 3,
+    fontSize: 13,
+    marginRight: 4,
+    cursor: "pointer",
+  },
+  deleteBtn: {
+    background: "#d9534f",
+    border: "1px solid #d43f3a",
+    color: "#fff",
+    width: 28,
+    height: 26,
+    borderRadius: 3,
+    fontSize: 13,
+    cursor: "pointer",
+  },
+  empty: { padding: 20, textAlign: "center", color: "#999", fontStyle: "italic" },
+  loading: { marginTop: 12, color: "#6c757d", fontSize: 13 },
+
+  modalBackdrop: {
+    position: "fixed",
+    inset: 0,
+    background: "rgba(0,0,0,0.4)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 2000,
+  },
+  modal: {
+    background: "#fff",
+    borderRadius: 4,
+    boxShadow: "0 5px 20px rgba(0,0,0,0.25)",
+    overflow: "hidden",
+  },
+  modalHeader: {
+    padding: "12px 16px",
+    background: "#f7f7f7",
+    borderBottom: "1px solid #e6e8eb",
+    fontSize: 15,
+    fontWeight: 600,
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  modalClose: {
+    background: "transparent",
+    border: "none",
+    fontSize: 22,
+    cursor: "pointer",
+    color: "#888",
+    lineHeight: 1,
+  },
+  modalBody: { padding: 16, display: "flex", flexDirection: "column", gap: 10 },
+  field: { display: "flex", flexDirection: "column" },
+  label: {
+    fontSize: 12,
+    fontWeight: 600,
+    color: "#1f2d3d",
+    marginBottom: 4,
+  },
+  input: {
+    height: 34,
+    border: "1px solid #ced4da",
+    borderRadius: 3,
+    padding: "4px 8px",
+    fontSize: 13,
+    background: "#fff",
+    color: "#2c3e50",
+    outline: "none",
+  },
+  modalFooter: {
+    padding: "10px 16px",
+    borderTop: "1px solid #e6e8eb",
+    display: "flex",
+    justifyContent: "flex-end",
+    gap: 8,
+  },
+  cancelBtn: {
+    background: "#fff",
+    border: "1px solid #ccc",
+    color: "#333",
+    padding: "6px 14px",
+    borderRadius: 3,
+    fontSize: 13,
+    cursor: "pointer",
+  },
+  saveBtn: {
+    background: "#5cb85c",
+    color: "#fff",
+    border: "1px solid #4cae4c",
+    padding: "6px 18px",
+    borderRadius: 3,
+    fontSize: 13,
+    fontWeight: 500,
+    cursor: "pointer",
+  },
 };
 
 export default InvoiceGroups;
