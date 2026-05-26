@@ -1889,7 +1889,7 @@ function KDSView({ kotHistory, onMarkReady, onDeliver }) {
         <div className="kds-scroll">
           {filteredKots.length === 0 ? (
             <div className="empty-order" style={{ padding: 20, textAlign: "center", color: "#888" }}>No orders in kitchen.</div>
-          ) : filteredKots.map((kot, idx) => (
+          ) : filteredKots.map((kot) => (
             <div key={kot.id} className="kds-card">
               {/* card header */}
               <div className="kds-card-head">
