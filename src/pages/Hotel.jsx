@@ -48,6 +48,8 @@ const Hotel = () => {
               category.roomDetails.forEach(room => {
                 extractedRooms.push({
                   ...room,
+                  number: room.number || room.roomNumber,
+                  roomNumber: room.roomNumber || room.number,
                   categoryName: category.name,
                   defaultPrice: category.defaultPrice,
                 });
@@ -76,9 +78,15 @@ const Hotel = () => {
     fetchData();
   }, []);
 
+  const normalizeRoomStatus = (value) => String(value || "").trim().toLowerCase();
+  const isRoomAvailable = (room) => {
+    const status = normalizeRoomStatus(room.status);
+    return status.includes("vacant") || status.includes("available") || status.includes("clean");
+  };
+
   // Calculate summary statistics
   const totalRooms = rooms.length;
-  const availableRooms = rooms.filter(r => String(r.status || "").toLowerCase().includes("vacant")).length;
+  const availableRooms = rooms.filter(isRoomAvailable).length;
   const occupiedRooms = rooms.filter(r => String(r.status || "").toLowerCase().includes("occup")).length;
   const cleaningRooms = rooms.filter(r => String(r.status || "").toLowerCase().includes("dirty")).length;
   const filteredRooms = rooms.filter((room) => {
@@ -549,13 +557,13 @@ const Hotel = () => {
       {/* Modals */}
       <Modal isOpen={modals.newBooking} onClose={() => closeModal('newBooking')} title="New Booking">
         <BookingForm onSubmit={handleNewBooking} onCancel={() => closeModal('newBooking')}
-          availableRooms={rooms.filter(r => r.status === 'Available' || r.status === 'Cleaning')} />
+          availableRooms={rooms.filter(isRoomAvailable)} />
       </Modal>
 
       <Modal isOpen={modals.expressCheckIn} onClose={() => closeModal('expressCheckIn')} title="Express Check-In">
         <BookingForm onSubmit={handleExpressCheckIn} onCancel={() => closeModal('expressCheckIn')}
           initialData={selectedRoom ? { room: selectedRoom.number } : {}}
-          availableRooms={rooms.filter(r => r.status === 'Available')} />
+          availableRooms={rooms.filter(isRoomAvailable)} />
       </Modal>
 
       <Modal isOpen={modals.checkOut} onClose={() => closeModal('checkOut')} title="Check-Out">

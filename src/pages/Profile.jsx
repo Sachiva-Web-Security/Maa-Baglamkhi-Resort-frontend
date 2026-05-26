@@ -38,7 +38,11 @@ const Profile = () => {
     setError("");
     try {
       const { data } = await API.get("/hotel-info");
-      setForm({ ...emptyForm, ...data });
+      const merged = { ...emptyForm, ...data };
+      Object.keys(emptyForm).forEach((k) => {
+        if (merged[k] === null || merged[k] === undefined) merged[k] = "";
+      });
+      setForm(merged);
       if (noteRef.current) {
         noteRef.current.innerHTML = data.invoice_note || "";
       }
@@ -75,7 +79,7 @@ const Profile = () => {
       const { data } = await API.post("/hotel-info/logo", fd, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      setForm((prev) => ({ ...prev, logo_url: data.logo_url }));
+      setForm((prev) => ({ ...prev, logo_url: data.logo_url || "" }));
       setLogoFile(null);
       setMessage("Logo uploaded.");
     } catch (err) {
@@ -96,7 +100,11 @@ const Profile = () => {
         invoice_note: noteRef.current ? noteRef.current.innerHTML : form.invoice_note,
       };
       const { data } = await API.put("/hotel-info", payload);
-      setForm({ ...emptyForm, ...data });
+        const merged = { ...emptyForm, ...data };
+        Object.keys(emptyForm).forEach((k) => {
+          if (merged[k] === null || merged[k] === undefined) merged[k] = "";
+        });
+        setForm(merged);
       setMessage("Hotel information saved.");
     } catch (err) {
       setError(err.response?.data?.message || "Save failed");

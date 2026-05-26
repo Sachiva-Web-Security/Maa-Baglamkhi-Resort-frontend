@@ -159,16 +159,16 @@ const handleGenerateInvoice = async (invoice) => {
 
       {/* Top Action Buttons */}
       <div className="accounts-actions">
-        <button className="accounts-action-btn bg-gradient-to-r from-pink-400 to-blue-600" onClick={() => openModal('addIncome')}>
+        <button className="accounts-action-btn bg-linear-to-r from-pink-400 to-blue-600" onClick={() => openModal('addIncome')}>
           + Add Income
         </button>
-        <button className="accounts-action-btn bg-gradient-to-r from-yellow-400 to-orange-500" onClick={() => openModal('addExpense')}>
+        <button className="accounts-action-btn bg-linear-to-r from-yellow-400 to-orange-500" onClick={() => openModal('addExpense')}>
           + Add Expense
         </button>
-        <button className="accounts-action-btn bg-gradient-to-r from-blue-400 to-cyan-500" onClick={() => openModal('invoice')}>
+        <button className="accounts-action-btn bg-linear-to-r from-blue-400 to-cyan-500" onClick={() => openModal('invoice')}>
           Generate Invoice
         </button>
-        <button className="accounts-action-btn bg-gradient-to-r from-purple-400 to-indigo-500" onClick={() => openModal('audit')}>
+        <button className="accounts-action-btn bg-linear-to-r from-purple-400 to-indigo-500" onClick={() => openModal('audit')}>
           Night Audit
         </button>
       </div>
@@ -263,7 +263,7 @@ const handleGenerateInvoice = async (invoice) => {
         <TransactionForm type="Expense" onSubmit={handleAddExpense} onCancel={() => closeModal('addExpense')} />
       </Modal>
 
-      <Modal isOpen={modals.invoice} onClose={() => closeModal('invoice')} title="Generate Invoice">
+      <Modal isOpen={modals.invoice} onClose={() => closeModal('invoice')} title="Generate Invoice" className="simple-modal--wide">
         <InvoiceForm onSubmit={handleGenerateInvoice} onCancel={() => closeModal('invoice')} />
       </Modal>
 

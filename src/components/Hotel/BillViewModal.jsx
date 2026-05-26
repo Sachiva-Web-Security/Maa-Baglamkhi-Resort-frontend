@@ -1,4 +1,5 @@
 import React from "react";
+import { createPortal } from "react-dom";
 
 // Safely extract YYYY-MM-DD without timezone shift
 const toDate = (val) => {
@@ -32,42 +33,31 @@ const BillViewModal = ({ invoice, onClose, onEdit }) => {
 
     const handlePrint = () => window.print();
 
-    return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-                {/* Header */}
-                <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 rounded-t-2xl flex justify-between items-start">
+    return createPortal(
+        <div style={styles.backdrop} onClick={onClose}>
+            <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
+                <div style={styles.header}>
                     <div>
-                        <h2 className="text-2xl font-bold">🏨 Hotel Invoice</h2>
-                        <p className="text-indigo-200 text-sm mt-1">{invoice.invoice_no || invoice.invoiceNo}</p>
+                        <div style={styles.title}>🏨 Hotel Invoice</div>
+                        <div style={styles.invNo}>
+                            {invoice.invoice_no || invoice.invoiceNo || "—"}
+                        </div>
                     </div>
-                    <div className="flex gap-2">
-                        <button
-                            onClick={onEdit}
-                            className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg text-sm font-medium transition"
-                            title="Edit Invoice"
-                        >
+                    <div style={styles.headerActions}>
+                        <button type="button" style={styles.headerBtn} onClick={onEdit} title="Edit Invoice">
                             ✏️ Edit
                         </button>
-                        <button
-                            onClick={handlePrint}
-                            className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg text-sm font-medium transition"
-                        >
+                        <button type="button" style={styles.headerBtn} onClick={handlePrint}>
                             🖨️ Print
                         </button>
-                        <button
-                            onClick={onClose}
-                            className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg text-sm font-medium transition"
-                        >
+                        <button type="button" style={styles.headerCloseBtn} onClick={onClose}>
                             ✕
                         </button>
                     </div>
                 </div>
 
-                {/* Bill Content */}
-                <div className="p-6 space-y-5">
-                    {/* Guest Info */}
-                    <div className="grid grid-cols-2 gap-4">
+                <div style={styles.body}>
+                    <div style={styles.infoGrid}>
                         <InfoItem label="Guest Name" value={invoice.customer_name || invoice.customerName} />
                         <InfoItem label="Phone" value={invoice.phone || "—"} />
                         <InfoItem label="Room No" value={invoice.room_no || invoice.roomNo} />
@@ -78,56 +68,190 @@ const BillViewModal = ({ invoice, onClose, onEdit }) => {
                         <InfoItem label="Status" value={invoice.status} highlight />
                     </div>
 
-                    {/* Charges Breakdown — always recalculated */}
-                    <div className="bg-gray-50 rounded-xl p-5 border">
-                        <h3 className="font-semibold text-gray-600 mb-4 text-xs uppercase tracking-widest">
-                            Charges Breakdown
-                        </h3>
-                        <div className="space-y-2 text-sm text-gray-700">
-                            <Row label={`Room Charge (${days} day${days !== 1 ? "s" : ""} × ₹${fmt(pricePerDay)})`} value={`₹${fmt(roomCharge)}`} />
+                    <div style={styles.chargesCard}>
+                        <div style={styles.sectionLabel}>Charges Breakdown</div>
+                        <div style={styles.chargesList}>
+                            <Row
+                                label={`Room Charge (${days} day${days !== 1 ? "s" : ""} × ₹${fmt(pricePerDay)})`}
+                                value={`₹${fmt(roomCharge)}`}
+                            />
                             {foodCharge > 0 && <Row label="Food Charge" value={`₹${fmt(foodCharge)}`} />}
                             {extraCharge > 0 && <Row label="Extra Charge" value={`₹${fmt(extraCharge)}`} />}
-                            <div className="border-t border-dashed pt-2 mt-1">
+                            <div style={styles.dashedDivider}>
                                 <Row label="Subtotal" value={`₹${fmt(subtotal)}`} />
                                 <Row label={`GST (${gstPct}%)`} value={`₹${fmt(gstAmount)}`} />
                                 {discount > 0 && (
-                                    <Row label="Discount" value={`− ₹${fmt(discount)}`} valueClass="text-green-600" />
+                                    <Row label="Discount" value={`− ₹${fmt(discount)}`} valueColor="#2c7a3d" />
                                 )}
                             </div>
-                            <div className="border-t pt-3 mt-1 flex justify-between items-center">
-                                <span className="font-bold text-gray-800 text-base">Final Total</span>
-                                <span className="text-xl font-bold text-indigo-700">₹{fmt(finalTotal)}</span>
+                            <div style={styles.totalRow}>
+                                <span style={styles.totalLabel}>Final Total</span>
+                                <span style={styles.totalValue}>₹{fmt(finalTotal)}</span>
                             </div>
                         </div>
                     </div>
 
-                    {/* Notes */}
                     {invoice.notes && (
                         <div>
-                            <p className="text-xs font-semibold text-gray-400 uppercase mb-1">Notes</p>
-                            <p className="text-gray-700 text-sm bg-gray-50 p-3 rounded-lg">{invoice.notes}</p>
+                            <div style={styles.sectionLabel}>Notes</div>
+                            <div style={styles.notesBox}>{invoice.notes}</div>
                         </div>
                     )}
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body,
     );
 };
 
 const InfoItem = ({ label, value, highlight }) => (
     <div>
-        <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">{label}</p>
-        <p className={`text-sm font-semibold mt-0.5 ${highlight ? "text-green-600" : "text-gray-800"}`}>
+        <div style={styles.infoLabel}>{label}</div>
+        <div
+            style={{
+                ...styles.infoValue,
+                color: highlight ? "#2c7a3d" : "#1f2937",
+            }}
+        >
             {value || "—"}
-        </p>
+        </div>
     </div>
 );
 
-const Row = ({ label, value, valueClass = "" }) => (
-    <div className="flex justify-between py-0.5">
-        <span className="text-gray-600">{label}</span>
-        <span className={`font-medium ${valueClass}`}>{value}</span>
+const Row = ({ label, value, valueColor }) => (
+    <div style={styles.row}>
+        <span style={{ color: "#5b6b7c" }}>{label}</span>
+        <span style={{ fontWeight: 500, color: valueColor || "#1f2937" }}>{value}</span>
     </div>
 );
+
+const styles = {
+    backdrop: {
+        position: "fixed",
+        inset: 0,
+        background: "rgba(15, 23, 42, 0.55)",
+        backdropFilter: "blur(2px)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 2000,
+        padding: 16,
+    },
+    modal: {
+        background: "#fff",
+        borderRadius: 12,
+        boxShadow: "0 20px 50px rgba(0, 0, 0, 0.25)",
+        width: "100%",
+        maxWidth: 640,
+        maxHeight: "90vh",
+        overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
+        fontFamily:
+            '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    },
+    header: {
+        background: "linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%)",
+        color: "#fff",
+        padding: "18px 22px",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "flex-start",
+        gap: 12,
+    },
+    title: { fontSize: 20, fontWeight: 700, lineHeight: 1.2 },
+    invNo: { fontSize: 12, color: "rgba(255,255,255,0.85)", marginTop: 4 },
+    headerActions: { display: "flex", gap: 6, flexWrap: "wrap" },
+    headerBtn: {
+        background: "rgba(255,255,255,0.18)",
+        border: "1px solid rgba(255,255,255,0.25)",
+        color: "#fff",
+        padding: "6px 12px",
+        borderRadius: 6,
+        fontSize: 12,
+        fontWeight: 500,
+        cursor: "pointer",
+        whiteSpace: "nowrap",
+    },
+    headerCloseBtn: {
+        background: "rgba(255,255,255,0.18)",
+        border: "1px solid rgba(255,255,255,0.25)",
+        color: "#fff",
+        width: 32,
+        height: 32,
+        borderRadius: 6,
+        fontSize: 14,
+        fontWeight: 600,
+        cursor: "pointer",
+        lineHeight: 1,
+    },
+    body: {
+        padding: "20px 22px",
+        overflowY: "auto",
+        display: "flex",
+        flexDirection: "column",
+        gap: 18,
+    },
+    infoGrid: {
+        display: "grid",
+        gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+        gap: "12px 18px",
+    },
+    infoLabel: {
+        fontSize: 10,
+        color: "#94a3b8",
+        textTransform: "uppercase",
+        fontWeight: 600,
+        letterSpacing: "0.04em",
+    },
+    infoValue: { fontSize: 13, fontWeight: 600, marginTop: 2 },
+    chargesCard: {
+        background: "#f8fafc",
+        border: "1px solid #e2e8f0",
+        borderRadius: 10,
+        padding: "16px 18px",
+    },
+    sectionLabel: {
+        fontSize: 11,
+        color: "#64748b",
+        textTransform: "uppercase",
+        fontWeight: 600,
+        letterSpacing: "0.06em",
+        marginBottom: 10,
+    },
+    chargesList: { display: "flex", flexDirection: "column", gap: 4, fontSize: 13 },
+    row: {
+        display: "flex",
+        justifyContent: "space-between",
+        padding: "2px 0",
+    },
+    dashedDivider: {
+        borderTop: "1px dashed #cbd5e1",
+        paddingTop: 8,
+        marginTop: 4,
+        display: "flex",
+        flexDirection: "column",
+        gap: 4,
+    },
+    totalRow: {
+        borderTop: "1px solid #e2e8f0",
+        paddingTop: 10,
+        marginTop: 8,
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+    },
+    totalLabel: { fontWeight: 700, color: "#1f2937", fontSize: 15 },
+    totalValue: { fontSize: 20, fontWeight: 700, color: "#4338ca" },
+    notesBox: {
+        background: "#f8fafc",
+        border: "1px solid #e2e8f0",
+        borderRadius: 8,
+        padding: 12,
+        color: "#475569",
+        fontSize: 13,
+        whiteSpace: "pre-wrap",
+    },
+};
 
 export default BillViewModal;

@@ -209,7 +209,8 @@ const Banquet = () => {
       alert(`Booking Confirmed for ${wizard.customerName} (${hallName})`);
     } catch (err) {
       console.error("Error creating banquet booking", err);
-      alert("Error creating booking");
+      const msg = err?.response?.data?.message || "Error creating booking";
+      alert(msg);
     }
   };
 

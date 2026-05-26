@@ -1,83 +1,192 @@
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
 import API from "../api";
-import "./BarToFood.css";
 
 const BarToFood = () => {
-  const [items, setItems] = useState([
-    { id: 1, name: "Whisky", category: "Liquor", barCode: "BAR001", price: 350, linkedTo: "Starters" },
-    { id: 2, name: "Beer", category: "Beverage", barCode: "BAR002", price: 180, linkedTo: "Snacks" },
-    { id: 3, name: "Vodka", category: "Liquor", barCode: "BAR003", price: 250, linkedTo: null },
-  ]);
-  const [showModal, setShowModal] = useState(false);
-  const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({ name: "", category: "", barCode: "", price: 0, linkedTo: "" });
+  const [form, setForm] = useState(null);
+  const [invoiceGroups, setInvoiceGroups] = useState([]);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
 
-  const categories = [...new Set(items.map(i => i.category))];
-  const foodGroups = ["Starters", "Main Course", "Snacks", "Beverages", "Desserts"];
-
-  const handleSave = () => {
-    if (!form.name) return alert("Item name required");
-    if (editing) {
-      setItems(prev => prev.map(i => i.id === editing.id ? { ...i, ...form } : i));
-    } else {
-      setItems(prev => [...prev, { id: Date.now(), ...form }]);
+  const load = async () => {
+    try {
+      const [{ data }, groupsRes] = await Promise.all([
+        API.get("/fb-bar-to-food"),
+        API.get("/fb-invoice-groups").catch(() => ({ data: [] })),
+      ]);
+      setForm(data || {});
+      setInvoiceGroups(Array.isArray(groupsRes.data) ? groupsRes.data : []);
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to load settings");
     }
-    setShowModal(false);
-    setEditing(null);
-    setForm({ name: "", category: "", barCode: "", price: 0, linkedTo: "" });
   };
 
-  const handleDelete = (id) => {
-    if (!confirm("Delete this item?")) return;
-    setItems(prev => prev.filter(i => i.id !== id));
+  useEffect(() => {
+    load();
+  }, []);
+
+  const onSave = async () => {
+    setError("");
+    setMessage("");
+    setSaving(true);
+    try {
+      await API.put("/fb-bar-to-food", form);
+      setMessage("Saved.");
+    } catch (err) {
+      setError(err.response?.data?.message || "Save failed");
+    } finally {
+      setSaving(false);
+    }
   };
+
+  if (!form) {
+    return (
+      <div style={styles.page}>
+        <div style={styles.title}>Bar To Food</div>
+        <div style={{ color: "#6c757d", fontSize: 13 }}>Loading…</div>
+      </div>
+    );
+  }
 
   return (
-    <div className="bf-page">
-      <div className="simple-page-header">
-        <h1 className="simple-page-title">Bar to Food Mapping</h1>
-        <button className="simple-btn simple-btn-primary" onClick={() => { setEditing(null); setForm({ name: "", category: "", barCode: "", price: 0, linkedTo: "" }); setShowModal(true); }}>+ Add Bar Item</button>
+    <div style={styles.page}>
+      <div style={styles.title}>Bar To Food</div>
+      <div style={styles.subtitle}>
+        Map the bar invoice group to the food invoice group so bar tabs can be
+        merged with food bills.
       </div>
-      <div className="simple-card">
-        <div className="simple-table-wrapper">
-          <table className="simple-table">
-            <thead><tr><th>Item</th><th>Category</th><th>Bar Code</th><th>Price</th><th>Linked to Food Group</th><th>Actions</th></tr></thead>
-            <tbody>
-              {items.map(item => (
-                <tr key={item.id}>
-                  <td className="font-medium">{item.name}</td>
-                  <td><span className="simple-badge badge-purple">{item.category}</span></td>
-                  <td>{item.barCode}</td>
-                  <td>₹{item.price}</td>
-                  <td>{item.linkedTo ? <span className="simple-badge badge-green">{item.linkedTo}</span> : <span className="simple-text-muted">—</span>}</td>
-                  <td>
-                    <button className="simple-btn simple-btn-outline simple-btn-sm" onClick={() => { setEditing(item); setForm({ name: item.name, category: item.category, barCode: item.barCode, price: item.price, linkedTo: item.linkedTo || "" }); setShowModal(true); }}>Edit</button>
-                    <button className="simple-btn simple-btn-gray simple-btn-sm" onClick={() => handleDelete(item.id)} style={{marginLeft: "6px"}}>Delete</button>
-                  </td>
-                </tr>
-              ))}
-              {items.length === 0 && <tr><td colSpan="6" className="empty-order">No bar items mapped</td></tr>}
-            </tbody>
-          </table>
-        </div>
-      </div>
-      {showModal && (
-        <div className="bf-modal-backdrop" onClick={() => setShowModal(false)}>
-          <div className="bf-modal" onClick={e => e.stopPropagation()}>
-            <h3 className="bf-modal-title">{editing ? "Edit Bar Item" : "Add Bar Item"}</h3>
-            <div className="simple-form-group"><label className="simple-label">Item Name *</label><input className="simple-input" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} /></div>
-            <div className="simple-form-group"><label className="simple-label">Category</label><input className="simple-input" value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value }))} list="bf-cats" /><datalist id="bf-cats">{categories.map(c => <option key={c} value={c} />)}</datalist></div>
-            <div className="simple-form-group"><label className="simple-label">Bar Code</label><input className="simple-input" value={form.barCode} onChange={e => setForm(p => ({ ...p, barCode: e.target.value }))} /></div>
-            <div className="simple-form-group"><label className="simple-label">Price (₹)</label><input type="number" className="simple-input" value={form.price} onChange={e => setForm(p => ({ ...p, price: Number(e.target.value) }))} min="0" /></div>
-            <div className="simple-form-group"><label className="simple-label">Link to Food Group</label><select className="simple-select" value={form.linkedTo} onChange={e => setForm(p => ({ ...p, linkedTo: e.target.value }))}><option value="">-- None --</option>{foodGroups.map(g => <option key={g} value={g}>{g}</option>)}</select></div>
-            <div className="simple-btn-row" style={{ justifyContent: "flex-end", marginTop: 14 }}>
-              <button className="simple-btn simple-btn-gray" onClick={() => setShowModal(false)}>Cancel</button>
-              <button className="simple-btn simple-btn-primary" onClick={handleSave}>Save</button>
-            </div>
-          </div>
-        </div>
+
+      {error && <div style={{ ...styles.alert, ...styles.alertError }}>{error}</div>}
+      {message && (
+        <div style={{ ...styles.alert, ...styles.alertSuccess }}>{message}</div>
       )}
+
+      <div style={{ maxWidth: 560, display: "flex", flexDirection: "column", gap: 14 }}>
+        <Row label="Bar Invoice Group">
+          <select
+            style={styles.input}
+            value={form.bar_invoice_group_id || ""}
+            onChange={(e) =>
+              setForm((p) => ({
+                ...p,
+                bar_invoice_group_id: e.target.value ? Number(e.target.value) : null,
+              }))
+            }
+          >
+            <option value="">— Select —</option>
+            {invoiceGroups.map((g) => (
+              <option key={g.id} value={g.id}>{g.name}</option>
+            ))}
+          </select>
+        </Row>
+        <Row label="Food Invoice Group">
+          <select
+            style={styles.input}
+            value={form.food_invoice_group_id || ""}
+            onChange={(e) =>
+              setForm((p) => ({
+                ...p,
+                food_invoice_group_id: e.target.value ? Number(e.target.value) : null,
+              }))
+            }
+          >
+            <option value="">— Select —</option>
+            {invoiceGroups.map((g) => (
+              <option key={g.id} value={g.id}>{g.name}</option>
+            ))}
+          </select>
+        </Row>
+        <label style={styles.checkRow}>
+          <input
+            type="checkbox"
+            checked={!!form.auto_transfer_on_settle}
+            onChange={(e) =>
+              setForm((p) => ({ ...p, auto_transfer_on_settle: e.target.checked }))
+            }
+          />
+          Auto-transfer bar items to food invoice on settle
+        </label>
+        <label style={styles.checkRow}>
+          <input
+            type="checkbox"
+            checked={!!form.merge_into_single_invoice}
+            onChange={(e) =>
+              setForm((p) => ({ ...p, merge_into_single_invoice: e.target.checked }))
+            }
+          />
+          Merge into single combined invoice
+        </label>
+        <div style={{ marginTop: 8 }}>
+          <button
+            type="button"
+            style={styles.saveBtn}
+            onClick={onSave}
+            disabled={saving}
+          >
+            {saving ? "Saving..." : "Save"}
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
+
+const Row = ({ label, children }) => (
+  <div style={{ display: "grid", gridTemplateColumns: "180px 1fr", alignItems: "center", gap: 12 }}>
+    <label style={{ fontSize: 13, color: "#1f2d3d", fontWeight: 500 }}>{label}</label>
+    {children}
+  </div>
+);
+
+const styles = {
+  page: {
+    padding: "20px 28px 40px",
+    background: "#fff",
+    minHeight: "100%",
+    fontFamily:
+      '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    color: "#2c3e50",
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: 600,
+    color: "#1f2d3d",
+    borderBottom: "1px solid #e6e8eb",
+    paddingBottom: 8,
+    marginBottom: 8,
+  },
+  subtitle: { fontSize: 13, color: "#5b6b7c", marginBottom: 16 },
+  alert: { padding: "8px 12px", borderRadius: 4, fontSize: 13, marginBottom: 10 },
+  alertError: { background: "#fdecea", color: "#b94a48", border: "1px solid #f3c2bd" },
+  alertSuccess: { background: "#e6f4ea", color: "#2c7a3d", border: "1px solid #bfe2c8" },
+  checkRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: 6,
+    fontSize: 13,
+    color: "#1f2d3d",
+    cursor: "pointer",
+  },
+  input: {
+    height: 34,
+    border: "1px solid #ced4da",
+    borderRadius: 3,
+    padding: "4px 8px",
+    fontSize: 13,
+    background: "#fff",
+    color: "#2c3e50",
+    outline: "none",
+  },
+  saveBtn: {
+    background: "#5cb85c",
+    color: "#fff",
+    border: "1px solid #4cae4c",
+    padding: "8px 26px",
+    borderRadius: 3,
+    fontSize: 13,
+    fontWeight: 500,
+    cursor: "pointer",
+  },
+};
+
 export default BarToFood;

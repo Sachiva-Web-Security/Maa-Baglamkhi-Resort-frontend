@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard';
 import Attendance from './pages/Attendance';
 import Hotel from './pages/Hotel';
 import RestaurantPOS from './pages/RestaurantPOS';
+import FrontOfficePOS from './pages/FrontOfficePOS';
 import Accounts from './pages/Accounts';
 import Housekeeping from './pages/Housekeeping';
 import Banquet from './pages/Banquet';
@@ -22,6 +23,15 @@ import Assignment from './pages/Assignments';
 import Kitchen from './pages/Kitchen';
 import QuickSales from './pages/QuickSales';
 import RestaurantSettings from './pages/RestaurantSettings';
+import QuickSalesSettings from './pages/QuickSalesSettings';
+import InvVendors from './pages/inventory/Vendors';
+import InvRawMaterialGroups from './pages/inventory/RawMaterialGroups';
+import InvIngredients from './pages/inventory/Ingredients';
+import InvOpeningStockEntry from './pages/inventory/OpeningStockEntry';
+import InvStockTransfer from './pages/inventory/StockTransfer';
+import InvPurchaseEntry from './pages/inventory/PurchaseEntry';
+import InvPurchaseRequisition from './pages/inventory/PurchaseRequisition';
+import InvStockAdjustment from './pages/inventory/StockAdjustment';
 import RoomService from './pages/RoomService';
 import TableGroups from './pages/TableGroups';
 import Modifiers from './pages/Modifiers';
@@ -178,6 +188,14 @@ function App() {
           </ProtectedRoute>
         } />
 
+        <Route path="/front-office" element={
+          <ProtectedRoute allowedRoles={["admin","manager","receptionist"]}>
+            <BareLayout>
+              <FrontOfficePOS />
+            </BareLayout>
+          </ProtectedRoute>
+        } />
+
         <Route path="/accounts" element={
           <FlexibleRoute element={<Accounts />} allowedRoles={["admin","manager","accountant"]} />
         } />
@@ -251,6 +269,15 @@ function App() {
         } />
 
         <Route path="/restaurant-settings" element={<AdminRoute element={<RestaurantSettings />} />} />
+        <Route path="/quick-sales-settings" element={<AdminRoute element={<QuickSalesSettings />} />} />
+        <Route path="/inventory/vendors" element={<AdminRoute element={<InvVendors />} />} />
+        <Route path="/inventory/raw-material-groups" element={<AdminRoute element={<InvRawMaterialGroups />} />} />
+        <Route path="/inventory/ingredients" element={<AdminRoute element={<InvIngredients />} />} />
+        <Route path="/inventory/opening-stock" element={<AdminRoute element={<InvOpeningStockEntry />} />} />
+        <Route path="/inventory/stock-transfer" element={<AdminRoute element={<InvStockTransfer />} />} />
+        <Route path="/inventory/purchase-entry" element={<AdminRoute element={<InvPurchaseEntry />} />} />
+        <Route path="/inventory/purchase-requisition" element={<AdminRoute element={<InvPurchaseRequisition />} />} />
+        <Route path="/inventory/stock-adjustment" element={<AdminRoute element={<InvStockAdjustment />} />} />
         <Route path="/room-service" element={<AdminRoute element={<RoomService />} />} />
         <Route path="/table-groups" element={<AdminRoute element={<TableGroups />} />} />
         <Route path="/modifiers" element={<AdminRoute element={<Modifiers />} />} />

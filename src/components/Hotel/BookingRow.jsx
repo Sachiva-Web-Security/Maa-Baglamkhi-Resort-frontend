@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import InvoiceForm from '../Accounts/forms/InvoiceForm';
 import BillViewModal from './BillViewModal';
 import API from '../../api';
@@ -109,25 +110,22 @@ const BookingRow = ({ booking, onExtend, onShiftRoom, onCheckOut, onBillGenerate
         </td>
       </tr>
 
-      {showInvoice && (
-        <tr>
-          <td colSpan={6} style={{ padding: 0 }}>
-            <div className="simple-modal-overlay">
-              <div className="simple-modal" style={{ maxWidth: 720 }}>
-                <InvoiceForm
-                  initialData={invoiceMode === "edit" && savedInvoice
-                    ? { invoiceNo: savedInvoice.invoice_no, customerName: savedInvoice.customer_name, phone: savedInvoice.phone, roomNo: savedInvoice.room_no, checkIn: toDateInput(savedInvoice.check_in), checkOut: toDateInput(savedInvoice.check_out), pricePerDay: savedInvoice.price_per_day, foodCharge: savedInvoice.food_charge, extraCharge: savedInvoice.extra_charge, gst: savedInvoice.gst, discount: savedInvoice.discount, paymentMode: savedInvoice.payment_mode, status: savedInvoice.status, notes: savedInvoice.notes }
-                    : getInvoiceInitialData()
-                  }
-                  bookingId={booking.id}
-                  invoiceId={invoiceMode === "edit" ? savedInvoice?.id : null}
-                  onCancel={handleCloseInvoice}
-                  onSuccess={handleInvoiceSuccess}
-                />
-              </div>
-            </div>
-          </td>
-        </tr>
+      {showInvoice && createPortal(
+        <div className="hotel-invoice-modal__backdrop" onClick={handleCloseInvoice}>
+          <div className="hotel-invoice-modal__card" onClick={(e) => e.stopPropagation()}>
+            <InvoiceForm
+              initialData={invoiceMode === "edit" && savedInvoice
+                ? { invoiceNo: savedInvoice.invoice_no, customerName: savedInvoice.customer_name, phone: savedInvoice.phone, roomNo: savedInvoice.room_no, checkIn: toDateInput(savedInvoice.check_in), checkOut: toDateInput(savedInvoice.check_out), pricePerDay: savedInvoice.price_per_day, foodCharge: savedInvoice.food_charge, extraCharge: savedInvoice.extra_charge, gst: savedInvoice.gst, discount: savedInvoice.discount, paymentMode: savedInvoice.payment_mode, status: savedInvoice.status, notes: savedInvoice.notes }
+                : getInvoiceInitialData()
+              }
+              bookingId={booking.id}
+              invoiceId={invoiceMode === "edit" ? savedInvoice?.id : null}
+              onCancel={handleCloseInvoice}
+              onSuccess={handleInvoiceSuccess}
+            />
+          </div>
+        </div>,
+        document.body,
       )}
 
       {showBillView && (

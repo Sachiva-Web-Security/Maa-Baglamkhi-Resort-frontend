@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import API from "../../../api";
+import "./InvoiceForm.css";
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
@@ -110,12 +111,12 @@ const InvoiceForm = ({ onCancel, initialData = {}, bookingId, invoiceId, onSucce
 
 
   return (
-    <div className="bg-white py-8 px-6">
-      <form onSubmit={handleSubmit}>
-        <h2 className="text-2xl font-bold mb-6 text-gray-800">
+    <div className="accounts-invoice-form">
+      <form className="accounts-invoice-form__body" onSubmit={handleSubmit}>
+        <h2 className="accounts-invoice-form__title">
           {invoiceId ? "✏️ Edit Invoice" : "🧾 Generate Invoice"}
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="accounts-invoice-form__grid">
           <Input label="Invoice No" name="invoiceNo" value={form.invoiceNo} onChange={handleChange} />
           <Input label="Date" type="date" name="date" value={form.date} onChange={handleChange} />
           <Input label="Customer Name" name="customerName" value={form.customerName} onChange={handleChange} required />
@@ -134,10 +135,10 @@ const InvoiceForm = ({ onCancel, initialData = {}, bookingId, invoiceId, onSucce
             options={["Paid", "Pending", "Partially Paid"]} />
         </div>
 
-        <div className="mt-5">
-          <label className="block mb-1 font-semibold text-gray-700">Notes</label>
+        <div className="accounts-invoice-form__notes">
+          <label className="accounts-invoice-form__label">Notes</label>
           <textarea
-            className="w-full border text-gray-800 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-400"
+            className="accounts-invoice-form__textarea"
             name="notes"
             value={form.notes}
             onChange={handleChange}
@@ -146,40 +147,40 @@ const InvoiceForm = ({ onCancel, initialData = {}, bookingId, invoiceId, onSucce
         </div>
 
         {/* Calculated Summary */}
-        <div className="mt-6 bg-indigo-50 border border-indigo-100 rounded-xl p-5 text-gray-800">
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            <span className="text-gray-600">Total Days:</span>
-            <span className="font-semibold">{calculated.days}</span>
-            <span className="text-gray-600">Room Charge:</span>
-            <span>₹{calculated.roomCharge.toFixed(2)}</span>
-            <span className="text-gray-600">Subtotal:</span>
-            <span>₹{calculated.subtotal.toFixed(2)}</span>
-            <span className="text-gray-600">GST ({form.gst}%):</span>
-            <span>₹{calculated.gstAmount.toFixed(2)}</span>
+        <div className="accounts-invoice-form__summary">
+          <div className="accounts-invoice-form__summary-grid">
+            <span className="accounts-invoice-form__summary-label">Total Days:</span>
+            <span className="accounts-invoice-form__summary-value">{calculated.days}</span>
+            <span className="accounts-invoice-form__summary-label">Room Charge:</span>
+            <span className="accounts-invoice-form__summary-value">₹{calculated.roomCharge.toFixed(2)}</span>
+            <span className="accounts-invoice-form__summary-label">Subtotal:</span>
+            <span className="accounts-invoice-form__summary-value">₹{calculated.subtotal.toFixed(2)}</span>
+            <span className="accounts-invoice-form__summary-label">GST ({form.gst}%):</span>
+            <span className="accounts-invoice-form__summary-value">₹{calculated.gstAmount.toFixed(2)}</span>
             {Number(form.discount) > 0 && (
               <>
-                <span className="text-gray-600">Discount:</span>
-                <span className="text-green-600">- ₹{Number(form.discount).toFixed(2)}</span>
+                <span className="accounts-invoice-form__summary-label">Discount:</span>
+                <span className="accounts-invoice-form__summary-value accounts-invoice-form__summary-value--positive">- ₹{Number(form.discount).toFixed(2)}</span>
               </>
             )}
           </div>
-          <div className="mt-3 pt-3 border-t flex justify-between items-center">
-            <span className="font-bold text-gray-700">Final Total</span>
-            <span className="text-xl font-bold text-indigo-700">₹{calculated.finalTotal.toFixed(2)}</span>
+          <div className="accounts-invoice-form__final">
+            <span className="accounts-invoice-form__final-label">Final Total</span>
+            <span className="accounts-invoice-form__final-value">₹{calculated.finalTotal.toFixed(2)}</span>
           </div>
         </div>
 
-        <div className="flex justify-end gap-4 mt-6">
+        <div className="accounts-invoice-form__actions">
           <button
             type="button"
-            className="px-5 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition"
+            className="accounts-invoice-form__btn accounts-invoice-form__btn--secondary"
             onClick={onCancel}
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold transition"
+            className="accounts-invoice-form__btn accounts-invoice-form__btn--primary"
             disabled={loading}
           >
             {loading ? "Saving..." : (invoiceId ? "Update Invoice" : "Generate Invoice")}
@@ -191,10 +192,10 @@ const InvoiceForm = ({ onCancel, initialData = {}, bookingId, invoiceId, onSucce
 };
 
 const Input = ({ label, required, ...props }) => (
-  <div>
-    <label className="block mb-1 font-semibold text-gray-700 text-sm">{label}</label>
+  <div className="accounts-invoice-form__field">
+    <label className="accounts-invoice-form__label">{label}</label>
     <input
-      className="w-full border text-gray-800 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-400 text-sm"
+      className="accounts-invoice-form__input"
       required={required}
       {...props}
     />
@@ -202,10 +203,10 @@ const Input = ({ label, required, ...props }) => (
 );
 
 const Select = ({ label, options, ...props }) => (
-  <div>
-    <label className="block mb-1 font-semibold text-gray-700 text-sm">{label}</label>
+  <div className="accounts-invoice-form__field">
+    <label className="accounts-invoice-form__label">{label}</label>
     <select
-      className="w-full border text-gray-800 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-400 text-sm"
+      className="accounts-invoice-form__input"
       {...props}
     >
       {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}

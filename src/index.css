@@ -619,6 +619,10 @@ body {
   overflow-y: auto;
 }
 
+.simple-modal--wide {
+  max-width: 1040px;
+}
+
 .simple-modal-header {
   padding: 14px 18px;
   background: #1565c0;

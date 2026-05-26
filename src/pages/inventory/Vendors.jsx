@@ -1,15 +1,21 @@
 import { useEffect, useState } from "react";
-import API from "../api";
+import API from "../../api";
 
 const emptyForm = {
   id: null,
   name: "",
-  modifier_group: "",
-  price_add: "0",
+  address: "",
+  city: "",
+  contact_person: "",
+  mobile_number: "",
+  landline_number: "",
+  gstin: "",
+  email: "",
+  opening_balance: "0",
   is_active: true,
 };
 
-const Modifiers = () => {
+const Vendors = () => {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -22,10 +28,10 @@ const Modifiers = () => {
     setLoading(true);
     setError("");
     try {
-      const { data } = await API.get("/fb-modifiers");
+      const { data } = await API.get("/inventory-vendors");
       setRows(Array.isArray(data) ? data : []);
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to load modifiers");
+      setError(err.response?.data?.message || "Failed to load vendors");
     } finally {
       setLoading(false);
     }
@@ -40,33 +46,48 @@ const Modifiers = () => {
     setPanel({
       id: row.id,
       name: row.name || "",
-      modifier_group: row.modifier_group || "",
-      price_add: String(row.price_add ?? "0"),
+      address: row.address || "",
+      city: row.city || "",
+      contact_person: row.contact_person || "",
+      mobile_number: row.mobile_number || "",
+      landline_number: row.landline_number || "",
+      gstin: row.gstin || "",
+      email: row.email || "",
+      opening_balance: String(row.opening_balance ?? "0"),
       is_active: row.is_active !== false,
     });
   const closePanel = () => setPanel(null);
+
+  const setF = (key) => (e) =>
+    setPanel((prev) => ({ ...prev, [key]: e.target.value }));
 
   const onSave = async () => {
     setError("");
     setMessage("");
     if (!panel.name?.trim()) {
-      setError("Modifier name is required");
+      setError("Vendor name is required");
       return;
     }
     const payload = {
       name: panel.name.trim(),
-      modifier_group: panel.modifier_group.trim(),
-      price_add: Number(panel.price_add) || 0,
+      address: panel.address.trim(),
+      city: panel.city.trim(),
+      contact_person: panel.contact_person.trim(),
+      mobile_number: panel.mobile_number.trim(),
+      landline_number: panel.landline_number.trim(),
+      gstin: panel.gstin.trim(),
+      email: panel.email.trim(),
+      opening_balance: Number(panel.opening_balance) || 0,
       is_active: panel.is_active ? 1 : 0,
     };
     setSaving(true);
     try {
       if (panel.id) {
-        await API.put(`/fb-modifiers/${panel.id}`, payload);
-        setMessage("Modifier updated.");
+        await API.put(`/inventory-vendors/${panel.id}`, payload);
+        setMessage("Vendor updated.");
       } else {
-        await API.post("/fb-modifiers", payload);
-        setMessage("Modifier added.");
+        await API.post("/inventory-vendors", payload);
+        setMessage("Vendor added.");
       }
       closePanel();
       await load();
@@ -78,11 +99,11 @@ const Modifiers = () => {
   };
 
   const onDelete = async (row) => {
-    if (!confirm(`Delete modifier "${row.name}"?`)) return;
+    if (!confirm(`Delete vendor "${row.name}"?`)) return;
     setError("");
     try {
-      await API.delete(`/fb-modifiers/${row.id}`);
-      setMessage("Modifier deleted.");
+      await API.delete(`/inventory-vendors/${row.id}`);
+      setMessage("Vendor deleted.");
       await load();
     } catch (err) {
       setError(err.response?.data?.message || "Delete failed");
@@ -92,7 +113,7 @@ const Modifiers = () => {
   return (
     <div style={styles.page}>
       <div style={styles.topbar}>
-        <h2 style={styles.title}>Manage Modifiers</h2>
+        <h2 style={styles.title}>Manage Vendors</h2>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <button type="button" style={styles.refreshBtn} onClick={load}>
             ⟳ Refresh
@@ -103,7 +124,7 @@ const Modifiers = () => {
         </div>
       </div>
 
-      <div style={styles.subtitle}>List of Modifiers</div>
+      <div style={styles.subtitle}>List of Vendor</div>
 
       {error && <div style={{ ...styles.alert, ...styles.alertError }}>{error}</div>}
       {message && (
@@ -114,7 +135,7 @@ const Modifiers = () => {
         style={{
           display: "grid",
           gridTemplateColumns: panel
-            ? "minmax(0, 1fr) minmax(380px, 1fr)"
+            ? "minmax(0, 1fr) minmax(420px, 1fr)"
             : "minmax(0, 1fr)",
           gap: 16,
           alignItems: "flex-start",
@@ -124,19 +145,21 @@ const Modifiers = () => {
           <table style={styles.table}>
             <thead>
               <tr>
-                <th style={{ ...styles.th, width: 40 }}>#</th>
-                <th style={styles.th}>Modifier</th>
-                <th style={styles.th}>Group</th>
-                <th style={{ ...styles.th, width: 100, textAlign: "right" }}>Price Add</th>
-                <th style={{ ...styles.th, width: 80 }}>Active</th>
-                <th style={{ ...styles.th, width: 110, textAlign: "right" }} />
+                <th style={{ ...styles.thDark, width: 40 }}>#</th>
+                <th style={styles.thDark}>Name</th>
+                <th style={styles.thDark}>Address</th>
+                <th style={styles.thDark}>City</th>
+                <th style={styles.thDark}>Contact Person</th>
+                <th style={styles.thDark}>Mobile Number</th>
+                <th style={styles.thDark}>Landline Number</th>
+                <th style={{ ...styles.thDark, width: 110, textAlign: "right" }} />
               </tr>
             </thead>
             <tbody>
               {rows.length === 0 && !loading && (
                 <tr>
-                  <td colSpan={6} style={styles.empty}>
-                    No modifiers yet. Click <b>+ New</b> to add one.
+                  <td colSpan={8} style={styles.empty}>
+                    No vendors yet. Click <b>+ New</b> to add one.
                   </td>
                 </tr>
               )}
@@ -147,19 +170,11 @@ const Modifiers = () => {
                 >
                   <td style={styles.td}>{idx + 1}</td>
                   <td style={styles.td}>{row.name}</td>
-                  <td style={styles.td}>{row.modifier_group || "—"}</td>
-                  <td style={{ ...styles.td, textAlign: "right" }}>
-                    {Number(row.price_add).toFixed(2)}
-                  </td>
-                  <td style={styles.td}>
-                    <span
-                      style={
-                        row.is_active ? styles.badgeActive : styles.badgeInactive
-                      }
-                    >
-                      {row.is_active ? "Yes" : "No"}
-                    </span>
-                  </td>
+                  <td style={styles.td}>{row.address || ""}</td>
+                  <td style={styles.td}>{row.city || ""}</td>
+                  <td style={styles.td}>{row.contact_person || ""}</td>
+                  <td style={styles.td}>{row.mobile_number || ""}</td>
+                  <td style={styles.td}>{row.landline_number || ""}</td>
                   <td style={{ ...styles.td, textAlign: "right" }}>
                     <button
                       type="button"
@@ -188,7 +203,7 @@ const Modifiers = () => {
         {panel && (
           <div style={styles.panel}>
             <div style={styles.panelHeader}>
-              <span>{panel.id ? "Edit Modifier" : "Add Modifier"}</span>
+              <span>{panel.id ? "Edit Vendor" : "Add Vendor"}</span>
               <button
                 type="button"
                 onClick={closePanel}
@@ -199,46 +214,39 @@ const Modifiers = () => {
               </button>
             </div>
             <div style={styles.panelBody}>
-              <div style={styles.field}>
-                <label style={styles.label}>
-                  Modifier Name <span style={{ color: "#d9534f" }}>*</span>
-                </label>
-                <input
-                  style={styles.input}
-                  autoFocus
-                  value={panel.name}
-                  onChange={(e) =>
-                    setPanel((prev) => ({ ...prev, name: e.target.value }))
-                  }
-                  placeholder="e.g. Extra Cheese"
-                />
+              <Field label="Vendor Name" required>
+                <input style={styles.input} autoFocus value={panel.name} onChange={setF("name")} placeholder="e.g. NAKODA SWEETS" />
+              </Field>
+              <div style={styles.grid2}>
+                <Field label="Address">
+                  <input style={styles.input} value={panel.address} onChange={setF("address")} />
+                </Field>
+                <Field label="City">
+                  <input style={styles.input} value={panel.city} onChange={setF("city")} />
+                </Field>
               </div>
-              <div style={styles.field}>
-                <label style={styles.label}>Group</label>
-                <input
-                  style={styles.input}
-                  value={panel.modifier_group}
-                  onChange={(e) =>
-                    setPanel((prev) => ({
-                      ...prev,
-                      modifier_group: e.target.value,
-                    }))
-                  }
-                  placeholder="e.g. Add-on / Spice / Preference"
-                />
+              <Field label="Contact Person">
+                <input style={styles.input} value={panel.contact_person} onChange={setF("contact_person")} />
+              </Field>
+              <div style={styles.grid2}>
+                <Field label="Mobile Number">
+                  <input style={styles.input} value={panel.mobile_number} onChange={setF("mobile_number")} />
+                </Field>
+                <Field label="Landline Number">
+                  <input style={styles.input} value={panel.landline_number} onChange={setF("landline_number")} />
+                </Field>
               </div>
-              <div style={styles.field}>
-                <label style={styles.label}>Price Add</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  style={styles.input}
-                  value={panel.price_add}
-                  onChange={(e) =>
-                    setPanel((prev) => ({ ...prev, price_add: e.target.value }))
-                  }
-                />
+              <div style={styles.grid2}>
+                <Field label="GSTIN">
+                  <input style={styles.input} value={panel.gstin} onChange={setF("gstin")} />
+                </Field>
+                <Field label="Email">
+                  <input type="email" style={styles.input} value={panel.email} onChange={setF("email")} />
+                </Field>
               </div>
+              <Field label="Opening Balance">
+                <input type="number" step="0.01" style={styles.input} value={panel.opening_balance} onChange={setF("opening_balance")} />
+              </Field>
               <label style={styles.activeRow}>
                 <input
                   type="checkbox"
@@ -250,12 +258,7 @@ const Modifiers = () => {
                 Active
               </label>
               <div style={{ marginTop: 6 }}>
-                <button
-                  type="button"
-                  style={styles.saveBtn}
-                  onClick={onSave}
-                  disabled={saving}
-                >
+                <button type="button" style={styles.saveBtn} onClick={onSave} disabled={saving}>
                   {saving ? "Saving..." : "Save"}
                 </button>
               </div>
@@ -266,6 +269,16 @@ const Modifiers = () => {
     </div>
   );
 };
+
+const Field = ({ label, required, children }) => (
+  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+    <label style={{ fontSize: 12, fontWeight: 600, color: "#1f2d3d" }}>
+      {label}
+      {required && <span style={{ color: "#d9534f" }}> *</span>}
+    </label>
+    {children}
+  </div>
+);
 
 const styles = {
   page: {
@@ -308,15 +321,15 @@ const styles = {
   alert: { padding: "8px 12px", borderRadius: 4, fontSize: 13, marginBottom: 10 },
   alertError: { background: "#fdecea", color: "#b94a48", border: "1px solid #f3c2bd" },
   alertSuccess: { background: "#e6f4ea", color: "#2c7a3d", border: "1px solid #bfe2c8" },
+
   tableWrap: { border: "1px solid #e6e8eb", borderRadius: 3, overflow: "auto" },
   table: { width: "100%", borderCollapse: "collapse", fontSize: 13 },
-  th: {
-    background: "#f7f7f7",
-    borderBottom: "1px solid #e6e8eb",
+  thDark: {
+    background: "#5a6877",
+    color: "#fff",
     padding: "10px 12px",
     textAlign: "left",
     fontWeight: 600,
-    color: "#1f2d3d",
     whiteSpace: "nowrap",
   },
   td: {
@@ -326,24 +339,6 @@ const styles = {
   },
   rowEven: { background: "#fff" },
   rowOdd: { background: "#fafbfc" },
-  badgeActive: {
-    background: "#e6f4ea",
-    color: "#2c7a3d",
-    border: "1px solid #bfe2c8",
-    padding: "2px 8px",
-    borderRadius: 10,
-    fontSize: 11,
-    fontWeight: 600,
-  },
-  badgeInactive: {
-    background: "#f3f3f3",
-    color: "#777",
-    border: "1px solid #ddd",
-    padding: "2px 8px",
-    borderRadius: 10,
-    fontSize: 11,
-    fontWeight: 600,
-  },
   editBtn: {
     background: "#5bc0de",
     border: "1px solid #46b8da",
@@ -394,8 +389,7 @@ const styles = {
     lineHeight: 1,
   },
   panelBody: { padding: 16, display: "flex", flexDirection: "column", gap: 10 },
-  field: { display: "flex", flexDirection: "column" },
-  label: { fontSize: 12, fontWeight: 600, color: "#1f2d3d", marginBottom: 4 },
+  grid2: { display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: 10 },
   input: {
     height: 34,
     border: "1px solid #ced4da",
@@ -405,6 +399,8 @@ const styles = {
     background: "#fff",
     color: "#2c3e50",
     outline: "none",
+    width: "100%",
+    boxSizing: "border-box",
   },
   activeRow: {
     display: "flex",
@@ -426,4 +422,4 @@ const styles = {
   },
 };
 
-export default Modifiers;
+export default Vendors;

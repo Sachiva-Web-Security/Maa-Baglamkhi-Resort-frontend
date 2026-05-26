@@ -3,8 +3,9 @@ import API from "../api";
 
 const BOOL_FIELDS = [
   { key: "inclusive_tax", label: "Inclusive Tax" },
+  { key: "reverse_tax_calculation", label: "Reverse Tax Calculation" },
   { key: "enable_discount", label: "Enable Discount?" },
-  { key: "print_user_name", label: "Print User Name In Invoice?" },
+  { key: "print_user_name_in_invoice", label: "Print User Name In Invoice?" },
   { key: "price_override_allowed", label: "Price Override Allowed?" },
   { key: "apply_service_charge_in_parcel", label: "Apply Service Charges In Parcel?" },
   { key: "allow_refund", label: "Allow Refund?" },
@@ -27,31 +28,45 @@ const BOOL_FIELDS = [
   { key: "print_date_in_invoice", label: "Print Date In Invoice?" },
   { key: "split_invoice_as_per_group", label: "Split Invoice As Per Group?" },
   { key: "customer_required_in_refund", label: "Customer required in Refund?" },
-  { key: "bill_post_to_room_directly", label: "Bill Post To Room Directly?" },
+  { key: "ask_mobile_before_billing", label: "Ask Mobile Number Before Billing?" },
+  { key: "open_subgroup_in_popup", label: "Open SubGroup In Popup?" },
+  { key: "send_bill_via_sms", label: "Send Bill Via SMS?" },
+  { key: "disable_save", label: "Disable SAVE?" },
+  { key: "ask_guest_for_nc", label: "Ask Guest For NC?" },
+  { key: "display_items_in_local_language", label: "Display Items In Local Language?" },
+  { key: "print_invoice_for_online_orders", label: "Print Invoice For Online Orders" },
+  { key: "ask_order_number_for_online_orders", label: "Ask Order Number For Online Orders" },
+  { key: "print_token_copy_at_terminal_printer", label: "Print Token Copy At Terminal Printer" },
+  { key: "print_invoice_copy_at_terminal_printer", label: "Print Invoice Copy At Terminal Printer" },
+  { key: "ask_sales_person_on_each_item", label: "Ask for Sales Person on each Item" },
+  { key: "ask_sales_person_on_bill", label: "Ask for Sales Person on Bill" },
 ];
 
-const RoomService = () => {
+const TOKEN_OPTS = ["Daily", "After 300", "After 500", "After 1000", "None"];
+const INVOICE_OPTS = ["Daily", "Monthly", "Yearly", "None"];
+
+const QuickSalesSettings = () => {
   const [form, setForm] = useState(null);
+  const [printers, setPrinters] = useState([]);
   const [paymentModes, setPaymentModes] = useState([]);
-  const [printerLocations, setPrinterLocations] = useState([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
   const load = async () => {
     try {
-      const [{ data }, modesRes, printersRes] = await Promise.all([
-        API.get("/fb-room-service-settings"),
-        API.get("/payment-modes").catch(() => ({ data: [] })),
+      const [{ data }, prtRes, modesRes] = await Promise.all([
+        API.get("/fb-quick-sales-settings"),
         API.get("/printer-locations").catch(() => ({ data: [] })),
+        API.get("/payment-modes").catch(() => ({ data: [] })),
       ]);
       setForm(data);
+      setPrinters(Array.isArray(prtRes.data) ? prtRes.data : []);
       setPaymentModes(
         Array.isArray(modesRes.data)
           ? modesRes.data.filter((m) => m.name).map((m) => m.name)
           : [],
       );
-      setPrinterLocations(Array.isArray(printersRes.data) ? printersRes.data : []);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to load settings");
     }
@@ -63,8 +78,7 @@ const RoomService = () => {
 
   const setBool = (key) => (e) =>
     setForm((p) => ({ ...p, [key]: e.target.checked }));
-  const setVal = (key) => (e) =>
-    setForm((p) => ({ ...p, [key]: e.target.value }));
+  const setVal = (key) => (e) => setForm((p) => ({ ...p, [key]: e.target.value }));
   const setNum = (key) => (e) =>
     setForm((p) => ({ ...p, [key]: Number(e.target.value) }));
 
@@ -73,7 +87,7 @@ const RoomService = () => {
     setMessage("");
     setSaving(true);
     try {
-      await API.put("/fb-room-service-settings", form);
+      await API.put("/fb-quick-sales-settings", form);
       setMessage("Settings saved.");
     } catch (err) {
       setError(err.response?.data?.message || "Save failed");
@@ -116,36 +130,26 @@ const RoomService = () => {
               {f.label}
             </label>
           ))}
-          <div style={{ marginTop: 18 }}>
-            <button
-              type="button"
-              style={styles.saveBtn}
-              onClick={onSave}
-              disabled={saving}
-            >
-              {saving ? "Saving..." : "Save"}
-            </button>
-          </div>
         </div>
 
         <div style={styles.rightCol}>
-          <FormRow label="No Of Invoice Copy">
+          <Row label="No Of Invoice Copy">
             <input
               type="number"
               min={1}
-              style={styles.input}
+              style={{ ...styles.input, width: 100 }}
               value={form.no_of_invoice_copy}
               onChange={setNum("no_of_invoice_copy")}
             />
-          </FormRow>
-          <FormRow label="Invoice Heading">
+          </Row>
+          <Row label="Invoice Heading">
             <input
               style={styles.input}
               value={form.invoice_heading || ""}
               onChange={setVal("invoice_heading")}
             />
-          </FormRow>
-          <FormRow label="Default Payment Mode">
+          </Row>
+          <Row label="Default Payment Mode">
             <select
               style={styles.input}
               value={form.default_payment_mode || ""}
@@ -155,24 +159,24 @@ const RoomService = () => {
                 <option key={m} value={m}>{m}</option>
               ))}
             </select>
-          </FormRow>
-          <FormRow label="Token No Initialize">
-            <RadioRow
+          </Row>
+          <Row label="Token No Initialize">
+            <Radios
               name="tokenInit"
-              value={form.token_no_initialize || "None"}
-              options={["Daily", "After 500", "After 1000", "None"]}
+              opts={TOKEN_OPTS}
+              value={form.token_no_initialize}
               onChange={(v) => setForm((p) => ({ ...p, token_no_initialize: v }))}
             />
-          </FormRow>
-          <FormRow label="Invoice No Initialize">
-            <RadioRow
+          </Row>
+          <Row label="Invoice No Initialize">
+            <Radios
               name="invInit"
-              value={form.invoice_no_initialize || "None"}
-              options={["Daily", "After 500", "After 1000", "None"]}
+              opts={INVOICE_OPTS}
+              value={form.invoice_no_initialize}
               onChange={(v) => setForm((p) => ({ ...p, invoice_no_initialize: v }))}
             />
-          </FormRow>
-          <FormRow label="Invoice No">
+          </Row>
+          <Row label="Invoice No">
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
               <span style={styles.subLabel}>Prefix</span>
               <input
@@ -187,8 +191,8 @@ const RoomService = () => {
                 onChange={setVal("invoice_no_suffix")}
               />
             </div>
-          </FormRow>
-          <FormRow label="Invoice Printer Location">
+          </Row>
+          <Row label="Invoice Printer Location">
             <select
               style={styles.input}
               value={form.invoice_printer_location_id || ""}
@@ -202,12 +206,31 @@ const RoomService = () => {
               }
             >
               <option value="">— Select —</option>
-              {printerLocations.map((pl) => (
+              {printers.map((pl) => (
                 <option key={pl.id} value={pl.id}>{pl.name}</option>
               ))}
             </select>
-          </FormRow>
-          <FormRow label="Day Closing Time">
+          </Row>
+          <Row label="Extra Copy Printer Location">
+            <select
+              style={styles.input}
+              value={form.extra_copy_printer_location_id || ""}
+              onChange={(e) =>
+                setForm((p) => ({
+                  ...p,
+                  extra_copy_printer_location_id: e.target.value
+                    ? Number(e.target.value)
+                    : null,
+                }))
+              }
+            >
+              <option value="">None</option>
+              {printers.map((pl) => (
+                <option key={pl.id} value={pl.id}>{pl.name}</option>
+              ))}
+            </select>
+          </Row>
+          <Row label="Day Closing Time">
             <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
               <select
                 style={{ ...styles.input, width: 70 }}
@@ -237,22 +260,36 @@ const RoomService = () => {
                 <option value="PM">PM</option>
               </select>
             </div>
-          </FormRow>
-          <FormRow label="Invoice Note">
+          </Row>
+          <Row label="Invoice Note">
             <textarea
               style={{ ...styles.input, height: 60, padding: 8 }}
               value={form.invoice_note || ""}
               onChange={setVal("invoice_note")}
             />
-          </FormRow>
+          </Row>
         </div>
+      </div>
+
+      <div style={{ marginTop: 20 }}>
+        <button type="button" style={styles.saveBtn} onClick={onSave} disabled={saving}>
+          {saving ? "Saving..." : "Save"}
+        </button>
       </div>
     </div>
   );
 };
 
-const FormRow = ({ label, children }) => (
-  <div style={{ display: "grid", gridTemplateColumns: "180px 1fr", alignItems: "center", gap: 12, marginBottom: 10 }}>
+const Row = ({ label, children }) => (
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "200px 1fr",
+      alignItems: "center",
+      gap: 12,
+      marginBottom: 10,
+    }}
+  >
     <label style={{ fontSize: 13, color: "#1f2d3d", fontWeight: 500 }}>
       {label}
     </label>
@@ -260,10 +297,13 @@ const FormRow = ({ label, children }) => (
   </div>
 );
 
-const RadioRow = ({ name, value, options, onChange }) => (
+const Radios = ({ name, opts, value, onChange }) => (
   <div style={{ display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap" }}>
-    {options.map((opt) => (
-      <label key={opt} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 13 }}>
+    {opts.map((opt) => (
+      <label
+        key={opt}
+        style={{ display: "flex", gap: 4, alignItems: "center", fontSize: 13, cursor: "pointer" }}
+      >
         <input
           type="radio"
           name={name}
@@ -322,17 +362,19 @@ const styles = {
     background: "#fff",
     color: "#2c3e50",
     outline: "none",
+    width: "100%",
+    boxSizing: "border-box",
   },
   saveBtn: {
     background: "#5cb85c",
     color: "#fff",
     border: "1px solid #4cae4c",
-    padding: "8px 26px",
+    padding: "8px 28px",
     borderRadius: 3,
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: 500,
     cursor: "pointer",
   },
 };
 
-export default RoomService;
+export default QuickSalesSettings;
