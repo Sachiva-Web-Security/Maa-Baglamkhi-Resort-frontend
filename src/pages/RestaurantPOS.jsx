@@ -101,13 +101,13 @@ const RestaurantPOS = () => {
           }
         }
 
-        // Build occupiedTableData from paid bills
+        // Build occupiedTableData — always keyed by normalized number so KOT and bill data align
         const occData = {};
         (billRes.data || []).forEach(b => {
           const rawNum = String(b.tableNumber || b.table || "");
           const normNum = rawNum.replace(/^[TGRP]/, "");
           const key = normNum || rawNum;
-          if (!occData[key] && !occData[rawNum] && key) {
+          if (key && !occData[key]) {
             occData[key] = {
               amount: Number(b.total) || 0,
               captain: b.waiter_name || b.waiter || b.captain || "RECEPTION",
@@ -960,8 +960,10 @@ const RestaurantPOS = () => {
             <div className="pos-table-grid">
               {filteredTables.map(table => {
                 const sel = selectedTable?.id === table.id;
-                const occ = table.status === "Occupied";
-                const occData = occupiedTableData[String(table.number || table.tableNumber || "")];
+                const rawNum = String(table.number || table.tableNumber || "");
+                const normNum = rawNum.replace(/^[TGRP]/, "");
+                const tableData = occupiedTableData[normNum] || occupiedTableData[rawNum];
+                const occ = table.status === "Occupied" || !!tableData;
                 const tableLabel = String(table.number || table.tableNumber || "").toUpperCase();
                 const stop = (e) => e.stopPropagation();
                 return (
@@ -972,13 +974,13 @@ const RestaurantPOS = () => {
                   >
                     <div className="table-card-top">
                       <span className="table-num">{tableLabel}</span>
-                      {occ && occData ? (
+                      {occ && tableData ? (
                         <>
                           <div className="table-card-runinfo">
-                            <span className="reception">{occ.captain || 'RECEPTION'}</span>
-                            <span className="amount">{formatAmount(occ.amount)}</span>
+                            <span className="reception">{tableData.captain || 'RECEPTION'}</span>
+                            <span className="amount">{formatAmount(tableData.amount)}</span>
                           </div>
-                          <span className="table-guest-pill">{occ.guests || 1}</span>
+                          <span className="table-guest-pill">{tableData.guests || 1}</span>
                         </>
                       ) : null}
                     </div>
@@ -1387,39 +1389,22 @@ const RestaurantPOS = () => {
 
       {/* === KDS === */}
       {activeTab === "kds" && (
-        <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-          <div style={{ flex: 1, padding: '10px', overflowY: 'auto' }}>
-            <div className="kds-header">
-              <span>KDS (KITCHEN DISPLAY SYSTEM)</span>
-              <button className="kds-toggle">🗂 All</button>
-            </div>
-            <div className="kds-scroll">
-              {kotHistory.length === 0 ? (
-                <div className="empty-order">No orders in kitchen.</div>
-              ) : kotHistory.map((kot, idx) => (
-                <div key={kot.id} className="kds-card">
-                  <div className="kds-card-head">
-                    <strong>KOT#{idx + 1} — Table {kot.table}</strong>
-                    <div>
-                      <span style={{ marginRight: '6px', fontSize: '10px', color: '#888' }}>{new Date(kot.timestamp).toLocaleTimeString()}</span>
-                      <span className="kds-status pending">PENDING</span>
-                    </div>
-                  </div>
-                  {kot.items.map((item, i) => (
-                    <div key={i} className="kds-card-item">
-                      <span>{item.name}</span>
-                      <span style={{ fontWeight: '700' }}>{item.quantity}</span>
-                    </div>
-                  ))}
-                  <div style={{ padding: '6px 8px', display: 'flex', gap: '6px' }}>
-                    <button className="mini-btn blue">Mark Ready</button>
-                    <button className="mini-btn yellow">Served</button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+        <KDSView
+          kotHistory={kotHistory}
+          onMarkReady={(kotId, itemIdx) => {
+            const kot = kotHistory.find(k => k.id === kotId);
+            if (!kot) return;
+            const items = [...(kot.items || [])];
+            items[itemIdx] = { ...items[itemIdx], status: items[itemIdx].status === "Ready" ? "Pending" : "Ready" };
+            setKotHistory(prev => prev.map(k => k.id === kotId ? { ...k, items } : k));
+            API.put(`/kitchen/orders/${kotId}`).catch(() => {});
+          }}
+          onDeliver={(kotId) => {
+            API.put(`/kitchen/orders/${kotId}`, { status: "Served" }).then(() => {
+              setKotHistory(prev => prev.filter(k => k.id !== kotId));
+            }).catch(() => {});
+          }}
+        />
       )}
 
       {/* === DAILY TRANSACTION === */}
@@ -1483,20 +1468,29 @@ const RestaurantPOS = () => {
       )}
 
       {kotDetailsTable && (() => {
-        const tableNo = String(kotDetailsTable.number || kotDetailsTable.tableNumber || "");
-        const kotsForTable = kotHistory.filter((k) => String(k.table || "") === tableNo);
+        const rawTableNo = String(kotDetailsTable.number || kotDetailsTable.tableNumber || "");
+        const normTableNo = rawTableNo.replace(/^[TGRP]/, "");
+        const kotsForTable = kotHistory.filter((k) => {
+          const kRaw = String(k.table || "");
+          const kNorm = kRaw.replace(/^[TGRP]/, "");
+          return kRaw === rawTableNo || kNorm === normTableNo;
+        });
         const fmtTs = (ts) => {
           const d = ts ? new Date(ts) : new Date();
           return d.toLocaleString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric", hour: "numeric", minute: "2-digit", hour12: true }).replace(",", "");
         };
         const closeModal = () => setKotDetailsTable(null);
         const handleGenerateBillFromModal = () => {
+          setActiveTab("pos");
+          setOrderType("DINE_IN");
           setSelectedTable(kotDetailsTable);
+          setCurrentOrderItems([]);
+          setTableOrderData({});
           closeModal();
-          // give state a tick to update before triggering bill flow
-          setTimeout(() => handleSaveBill(), 100);
         };
         const handleNewKotFromModal = () => {
+          setActiveTab("pos");
+          setOrderType("DINE_IN");
           setSelectedTable(kotDetailsTable);
           closeModal();
         };
@@ -1504,7 +1498,7 @@ const RestaurantPOS = () => {
           <div className="kot-modal-overlay" onClick={closeModal}>
             <div className="kot-modal" onClick={(e) => e.stopPropagation()}>
               <div className="kot-modal-head">
-                <span>KOT Details - Table No. {tableNo.toUpperCase()}</span>
+                <span>KOT Details - Table No. {rawTableNo.toUpperCase()}</span>
                 <button className="kot-modal-close" onClick={closeModal}>✕</button>
               </div>
 
@@ -1528,22 +1522,28 @@ const RestaurantPOS = () => {
                         <table className="kot-modal-items-table">
                           <thead>
                             <tr>
-                              <th style={{ width: 60 }}>SL No</th>
+                              <th style={{ width: 40 }}>#</th>
                               <th>Item Name</th>
-                              <th style={{ width: 110, textAlign: "right" }}>Quantity</th>
+                              <th style={{ width: 70, textAlign: "right" }}>Qty</th>
+                              <th style={{ width: 80, textAlign: "right" }}>Rate</th>
+                              <th style={{ width: 80, textAlign: "right" }}>Amount</th>
                             </tr>
                           </thead>
                           <tbody>
                             {(kot.items || []).map((it, i) => (
                               <tr key={i}>
                                 <td>{i + 1}</td>
-                                <td>{it.name}</td>
-                                <td style={{ textAlign: "right" }}>{Number(it.quantity || 0).toFixed(3)}</td>
+                                <td><span className="kot-item-name">{it.name}</span></td>
+                                <td style={{ textAlign: "right" }}>{Number(it.quantity || 0).toFixed(2)}</td>
+                                <td style={{ textAlign: "right" }}>₹{Number(it.price || 0).toFixed(2)}</td>
+                                <td style={{ textAlign: "right" }}>₹{((Number(it.quantity || 0)) * (Number(it.price || 0))).toFixed(2)}</td>
                               </tr>
                             ))}
                           </tbody>
                         </table>
-                        <div className="kot-modal-card-foot">Total Items: {totalItems}</div>
+                        <div className="kot-modal-card-foot">
+                          KOT Total: ₹{(kot.items || []).reduce((s, it) => s + (Number(it.quantity || 0)) * (Number(it.price || 0)), 0).toFixed(2)} &nbsp;|&nbsp; Items: {totalItems}
+                        </div>
                       </div>
                     );
                   })
@@ -1826,3 +1826,129 @@ const RestaurantPOS = () => {
 };
 
 export default RestaurantPOS;
+
+// ── KDS Component ──────────────────────────────────────────────────────────────
+function KDSView({ kotHistory, onMarkReady, onDeliver }) {
+  const [filter, setFilter] = useState("all"); // all | veg | nonveg
+  const fmtTime = (ts) => {
+    if (!ts) return "0:00";
+    const diff = Math.floor((tick - new Date(ts).getTime()) / 1000);
+    const h = Math.floor(diff / 3600);
+    const m = Math.floor((diff % 3600) / 60);
+    const s = diff % 60;
+    if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+    return `${m}:${String(s).padStart(2, "0")}`;
+  };
+  const [tick, setTick] = useState(() => Date.now());
+
+  useEffect(() => {
+    const id = setInterval(() => setTick(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const getDestination = (kot) => {
+    if (!kot) return "Table --";
+    const num = String(kot.table || "");
+    if (num.startsWith("R")) return `ROOM ${num.replace(/^R/, "")}`;
+    if (num.startsWith("T")) return `TABLE ${num.replace(/^T/, "")}`;
+    if (/^\d+$/.test(num)) return `TABLE ${num}`;
+    return num.toUpperCase() || "Table --";
+  };
+
+  const foodTypeOf = (itemName) => {
+    // Check if item has food type indicator in items (KOT doesn't have it, use Veg default for safety)
+    if (!itemName) return "veg";
+    const n = itemName.toLowerCase();
+    if (["chicken", "mutton", "egg", "fish", "prawn", "meat", "pork", "beef"].some(w => n.includes(w))) return "nonveg";
+    return "veg";
+  };
+
+  const filteredKots = kotHistory.filter(kot => {
+    if (filter === "all") return true;
+    return kot.items?.some(it => foodTypeOf(it.name) === filter);
+  });
+
+  return (
+    <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
+      <div style={{ flex: 1, padding: 0, display: "flex", flexDirection: "column" }}>
+        {/* filter bar */}
+        <div className="kds-header">
+          <span>KDS (KITCHEN DISPLAY SYSTEM)</span>
+          <div style={{ display: "flex", gap: 4 }}>
+            {[["all", "All"], ["veg", "Veg"], ["nonveg", "Non-Veg"]].map(([val, lbl]) => (
+              <button
+                key={val}
+                className="kds-toggle"
+                style={filter === val ? { background: "#fff", color: "#222", borderColor: "#fff" } : {}}
+                onClick={() => setFilter(val)}
+              >{lbl}</button>
+            ))}
+          </div>
+        </div>
+
+        <div className="kds-scroll">
+          {filteredKots.length === 0 ? (
+            <div className="empty-order" style={{ padding: 20, textAlign: "center", color: "#888" }}>No orders in kitchen.</div>
+          ) : filteredKots.map((kot, idx) => (
+            <div key={kot.id} className="kds-card">
+              {/* card header */}
+              <div className="kds-card-head">
+                <div>
+                  <span style={{ fontWeight: 800, fontSize: 13 }}>KOT# {kot.kotNo ? String(kot.kotNo).replace(/^KOT-?/i, "") : kot.id}</span>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span className="kdstab-destination">{getDestination(kot)}</span>
+                  <span className="kds-status pending">PENDING</span>
+                </div>
+              </div>
+
+              {/* items table */}
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                <thead>
+                  <tr style={{ background: "#f0f0f0" }}>
+                    <th style={{ padding: "7px 10px", textAlign: "left", fontWeight: 700, color: "#333", fontSize: 11 }}>#</th>
+                    <th style={{ padding: "7px 10px", textAlign: "left", fontWeight: 700, color: "#333", fontSize: 11 }}>Item Name</th>
+                    <th style={{ padding: "7px 10px", textAlign: "center", fontWeight: 700, color: "#333", fontSize: 11 }}>Qty</th>
+                    <th style={{ padding: "7px 10px", textAlign: "left", fontWeight: 700, color: "#333", fontSize: 11 }}>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(kot.items || []).map((item, i) => {
+                    const isReady = item.status === "Ready";
+                    return (
+                      <tr key={i} style={{ borderBottom: "1px solid #eee", background: isReady ? "#f0fff0" : "transparent" }}>
+                        <td style={{ padding: "9px 10px", color: "#555" }}>{i + 1}</td>
+                        <td style={{ padding: "9px 10px", fontWeight: isReady ? 400 : 600, color: "#111" }}>{item.name}</td>
+                        <td style={{ padding: "9px 10px", textAlign: "center", fontWeight: 700 }}>{Number(item.quantity || 0).toFixed(isReady ? 0 : 2)}</td>
+                        <td style={{ padding: "7px 10px" }}>
+                          <button
+                            className="kds-item-status-btn"
+                            style={isReady ? kdsStatusStyle.ready : kdsStatusStyle.preparing}
+                            onClick={() => onMarkReady(kot.id, i)}
+                          >
+                            {isReady ? "✓ Ready" : "Preparing..."}
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+
+              {/* card footer */}
+              <div className="kds-card-foot">
+                <span className="kdstab-time-elapsed">🕐 {fmtTime(kot.timestamp)}</span>
+                <button className="kds-card-foot-btn" onClick={() => onDeliver(kot.id)}>✓ DELIVERED</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const kdsStatusStyle = {
+  preparing: { background: "#cce5ff", color: "#004085", border: "1px solid #b8daff", padding: "3px 10px", borderRadius: 4, cursor: "pointer", fontSize: 11, fontWeight: 600 },
+  ready: { background: "#d4edda", color: "#155724", border: "1px solid #c3e6cb", padding: "3px 10px", borderRadius: 4, cursor: "pointer", fontSize: 11, fontWeight: 600 },
+};

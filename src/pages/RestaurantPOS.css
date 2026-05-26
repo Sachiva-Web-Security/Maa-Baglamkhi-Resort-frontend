@@ -1487,6 +1487,8 @@
   color: #1f2937;
 }
 .kot-modal-items-table tbody tr:last-child td { border-bottom: none; }
+.kot-modal-items-table tbody tr:hover td { background: #f0f7ff; }
+.kot-item-name { font-weight: 600; color: #111827; }
 
 .kot-modal-card-foot {
   padding: 8px 14px;
