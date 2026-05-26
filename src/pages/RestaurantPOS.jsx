@@ -1830,6 +1830,13 @@ export default RestaurantPOS;
 // ── KDS Component ──────────────────────────────────────────────────────────────
 function KDSView({ kotHistory, onMarkReady, onDeliver }) {
   const [filter, setFilter] = useState("all"); // all | veg | nonveg
+  const [tick, setTick] = useState(() => Date.now());
+
+  useEffect(() => {
+    const id = setInterval(() => setTick(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
   const fmtTime = (ts) => {
     if (!ts) return "0:00";
     const diff = Math.floor((tick - new Date(ts).getTime()) / 1000);
@@ -1839,12 +1846,6 @@ function KDSView({ kotHistory, onMarkReady, onDeliver }) {
     if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
     return `${m}:${String(s).padStart(2, "0")}`;
   };
-  const [tick, setTick] = useState(() => Date.now());
-
-  useEffect(() => {
-    const id = setInterval(() => setTick(Date.now()), 1000);
-    return () => clearInterval(id);
-  }, []);
 
   const getDestination = (kot) => {
     if (!kot) return "Table --";
@@ -1869,86 +1870,78 @@ function KDSView({ kotHistory, onMarkReady, onDeliver }) {
   });
 
   return (
-    <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
-      <div style={{ flex: 1, padding: 0, display: "flex", flexDirection: "column" }}>
-        {/* filter bar */}
-        <div className="kds-header">
-          <span>KDS (KITCHEN DISPLAY SYSTEM)</span>
-          <div style={{ display: "flex", gap: 4 }}>
-            {[["all", "All"], ["veg", "Veg"], ["nonveg", "Non-Veg"]].map(([val, lbl]) => (
-              <button
-                key={val}
-                className="kds-toggle"
-                style={filter === val ? { background: "#fff", color: "#222", borderColor: "#fff" } : {}}
-                onClick={() => setFilter(val)}
-              >{lbl}</button>
-            ))}
-          </div>
-        </div>
-
-        <div className="kds-scroll">
-          {filteredKots.length === 0 ? (
-            <div className="empty-order" style={{ padding: 20, textAlign: "center", color: "#888" }}>No orders in kitchen.</div>
-          ) : filteredKots.map((kot) => (
-            <div key={kot.id} className="kds-card">
-              {/* card header */}
-              <div className="kds-card-head">
-                <div>
-                  <span style={{ fontWeight: 800, fontSize: 13 }}>KOT# {kot.kotNo ? String(kot.kotNo).replace(/^KOT-?/i, "") : kot.id}</span>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span className="kdstab-destination">{getDestination(kot)}</span>
-                  <span className="kds-status pending">PENDING</span>
-                </div>
-              </div>
-
-              {/* items table */}
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
-                <thead>
-                  <tr style={{ background: "#f0f0f0" }}>
-                    <th style={{ padding: "7px 10px", textAlign: "left", fontWeight: 700, color: "#333", fontSize: 11 }}>#</th>
-                    <th style={{ padding: "7px 10px", textAlign: "left", fontWeight: 700, color: "#333", fontSize: 11 }}>Item Name</th>
-                    <th style={{ padding: "7px 10px", textAlign: "center", fontWeight: 700, color: "#333", fontSize: 11 }}>Qty</th>
-                    <th style={{ padding: "7px 10px", textAlign: "left", fontWeight: 700, color: "#333", fontSize: 11 }}>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(kot.items || []).map((item, i) => {
-                    const isReady = item.status === "Ready";
-                    return (
-                      <tr key={i} style={{ borderBottom: "1px solid #eee", background: isReady ? "#f0fff0" : "transparent" }}>
-                        <td style={{ padding: "9px 10px", color: "#555" }}>{i + 1}</td>
-                        <td style={{ padding: "9px 10px", fontWeight: isReady ? 400 : 600, color: "#111" }}>{item.name}</td>
-                        <td style={{ padding: "9px 10px", textAlign: "center", fontWeight: 700 }}>{Number(item.quantity || 0).toFixed(isReady ? 0 : 2)}</td>
-                        <td style={{ padding: "7px 10px" }}>
-                          <button
-                            className="kds-item-status-btn"
-                            style={isReady ? kdsStatusStyle.ready : kdsStatusStyle.preparing}
-                            onClick={() => onMarkReady(kot.id, i)}
-                          >
-                            {isReady ? "✓ Ready" : "Preparing..."}
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-
-              {/* card footer */}
-              <div className="kds-card-foot">
-                <span className="kdstab-time-elapsed">🕐 {fmtTime(kot.timestamp)}</span>
-                <button className="kds-card-foot-btn" onClick={() => onDeliver(kot.id)}>✓ DELIVERED</button>
-              </div>
-            </div>
+    <div className="kds-page">
+      {/* header bar */}
+      <div className="kds-header">
+        <span>KDS (KITCHEN DISPLAY SYSTEM)</span>
+        <div style={{ display: "flex", gap: 4 }}>
+          {[["all", "All"], ["veg", "Veg"], ["nonveg", "Non-Veg"]].map(([val, lbl]) => (
+            <button
+              key={val}
+              className="kds-toggle"
+              style={filter === val ? { background: "#fff", color: "#222" } : {}}
+              onClick={() => setFilter(val)}
+            >{lbl}</button>
           ))}
         </div>
+      </div>
+
+      <div className="kds-scroll">
+        {filteredKots.length === 0 ? (
+          <div className="empty-order">No orders in kitchen.</div>
+        ) : filteredKots.map((kot) => (
+          <div key={kot.id} className="kds-card">
+            {/* two-tone header: dark left = KOT#, yellow right = destination */}
+            <div className="kds-card-header">
+              <div className="kds-card-header-kot">
+                <span>KOT# -- {kot.kotNo ? String(kot.kotNo).replace(/^KOT-?/i, "") : kot.id}</span>
+              </div>
+              <div className="kds-card-header-dest">
+                <span>Table# -- {getDestination(kot)}</span>
+              </div>
+            </div>
+
+            {/* items table */}
+            <table className="kds-items-table">
+              <thead>
+                <tr>
+                  <th style={{ width: 36 }}>#</th>
+                  <th>Item Name</th>
+                  <th style={{ width: 70, textAlign: "center" }}>Qty</th>
+                  <th style={{ width: 120 }}>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(kot.items || []).map((item, i) => {
+                  const isReady = item.status === "Ready";
+                  return (
+                    <tr key={i} className={isReady ? "kds-item-ready" : ""}>
+                      <td>{i + 1}</td>
+                      <td><span className="kds-item-name">{item.name}</span></td>
+                      <td style={{ textAlign: "center" }}>{Number(item.quantity || 0).toFixed(2)}</td>
+                      <td>
+                        <button
+                          className="kds-status-btn"
+                          data-ready={isReady ? "true" : "false"}
+                          onClick={() => onMarkReady(kot.id, i)}
+                        >
+                          {isReady ? "✓ Ready" : "Preparing..."}
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+
+            {/* footer: elapsed + delivered */}
+            <div className="kds-card-footer">
+              <span className="kds-time-elapsed">Time Elapsed: {fmtTime(kot.timestamp)}</span>
+              <button className="kds-delivered-btn" onClick={() => onDeliver(kot.id)}>✓ DELIVERED</button>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
 }
-
-const kdsStatusStyle = {
-  preparing: { background: "#cce5ff", color: "#004085", border: "1px solid #b8daff", padding: "3px 10px", borderRadius: 4, cursor: "pointer", fontSize: 11, fontWeight: 600 },
-  ready: { background: "#d4edda", color: "#155724", border: "1px solid #c3e6cb", padding: "3px 10px", borderRadius: 4, cursor: "pointer", fontSize: 11, fontWeight: 600 },
-};

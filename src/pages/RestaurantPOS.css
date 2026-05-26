@@ -951,6 +951,52 @@
 .kds-status.ready { background: #d4edda; color: #155724; }
 .kds-status.served { background: #e2e3e5; color: #383d41; }
 
+/* KDS page layout */
+.kds-page { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+
+/* two-tone card header */
+.kds-card-header { display: flex; min-height: 40px; }
+.kds-card-header-kot {
+  background: #1a1a1a; color: #fff; padding: 10px 14px;
+  font-weight: 800; font-size: 13px; display: flex; align-items: center;
+  flex: 1; border-right: 3px solid #ffc107;
+}
+.kds-card-header-dest {
+  background: #ffc107; color: #111; padding: 10px 14px;
+  font-weight: 700; font-size: 12px; display: flex; align-items: center;
+  min-width: 180px;
+}
+
+/* items table */
+.kds-items-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.kds-items-table thead tr { background: #e8e8e8; }
+.kds-items-table thead th { padding: 8px 12px; text-align: left; font-weight: 700; color: #333; font-size: 11px; }
+.kds-items-table tbody tr { border-bottom: 1px solid #f0f0f0; transition: background 0.15s; }
+.kds-items-table tbody tr:hover { background: #f5f9ff; }
+.kds-items-table tbody td { padding: 9px 12px; color: #333; font-size: 12px; }
+.kds-item-name { font-weight: 600; color: #111; }
+.kds-item-ready { background: #f0fff4 !important; }
+.kds-item-ready td { color: #155724; }
+
+/* status button */
+.kds-status-btn {
+  padding: 4px 10px; border-radius: 4px; border: none; cursor: pointer;
+  font-size: 11px; font-weight: 600; transition: opacity 0.15s;
+}
+.kds-status-btn[data-ready="false"] { background: #cce5ff; color: #004085; border: 1px solid #b8daff; }
+.kds-status-btn[data-ready="true"] { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+.kds-status-btn:hover { opacity: 0.8; }
+
+/* card footer */
+.kds-card-footer { padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #eee; background: #fafafa; }
+.kds-time-elapsed { font-size: 12px; color: #2196f3; font-weight: 600; }
+.kds-delivered-btn {
+  background: #27ae60; color: #fff; border: none; padding: 6px 16px;
+  border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 700;
+  transition: background 0.15s;
+}
+.kds-delivered-btn:hover { background: #219a52; }
+
 /* Transaction table */
 .trans-table {
   width: 100%;
