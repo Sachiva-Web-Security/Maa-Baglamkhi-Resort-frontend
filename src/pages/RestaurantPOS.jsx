@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api";
+import RestaurantBillModal from "../components/Restaurant/RestaurantBillModal";
 import "./RestaurantPOS.css";
 
 const RestaurantPOS = () => {
@@ -42,6 +43,7 @@ const RestaurantPOS = () => {
   const [tableFilter, setTableFilter] = useState("ALL");
   const [editingMenuItem, setEditingMenuItem] = useState(null); // null | {id?, name, category, price, foodType, status}
   const [kotDetailsTable, setKotDetailsTable] = useState(null); // table object for which KOT details modal is open
+  const [generatedBill, setGeneratedBill] = useState(null); // bill data for bill modal
   const [occupiedTableData, setOccupiedTableData] = useState({});
   const [tableOrderData, setTableOrderData] = useState({});
 
@@ -389,13 +391,6 @@ const RestaurantPOS = () => {
 
   const calculateGrandTotal = () => calculateTotal() + calculateTax();
 
-  const clearCurrentTableKots = () => {
-    if (!selectedTable) return;
-    const tableNumber = String(selectedTable.number || selectedTable.tableNumber || "");
-    if (!tableNumber) return;
-    setKotHistory(prev => prev.filter(k => String(k.table || "") !== tableNumber));
-  };
-
   const handlePrintKOT = async () => {
     const currentItems = getCurrentOrderItems();
     if (!currentItems.length) return alert("Add items first");
@@ -464,21 +459,44 @@ const RestaurantPOS = () => {
     setLoading(true);
     try {
       const res = await API.post("/restaurant/bill", billData);
-      const didSendWhatsApp = !!res.data?.whatsapp && res.data.whatsapp.status !== "skipped" && res.data.whatsapp.status !== "error";
-      alert(`Bill Generated${didSendWhatsApp ? ' and sent to WhatsApp' : ''}!\n\nType: ${orderType.replace('_', '+')}\nTotal: ₹${total.toFixed(2)}\nInvoice# ${res.data?.id || "N/A"}`);
+      const savedBill = res.data?.bill || {
+        id: res.data?.id,
+        billNo: res.data?.id,
+        tableNumber: billData.table,
+        customerName,
+        phone,
+        subtotal,
+        gst: tax,
+        total,
+        items: billData.items,
+        entityType: orderType,
+        paymentMethod: "Cash",
+        waiter_name: "",
+        created_at: new Date().toISOString(),
+      };
+      setGeneratedBill(savedBill);
       setCurrentOrderItems([]);
       if (orderType === "DINE_IN") {
-        clearCurrentTableKots();
-        const tableKey = getCurrentTableKey();
-        if (tableKey) {
-          setTableOrderData(prev => {
+        const prevTable = selectedTable;
+        if (prevTable) {
+          const rawNum = String(prevTable.number || prevTable.tableNumber || "").toUpperCase();
+          const normNum = rawNum.replace(/^[TGRP]/, "");
+          setKotHistory(prev => prev.filter(k => {
+            const kRaw = String(k.table || "").toUpperCase();
+            const kNorm = kRaw.replace(/^[TGRP]/, "");
+            return kRaw !== rawNum && kNorm !== normNum;
+          }));
+          setOccupiedTableData(prev => {
             const next = { ...prev };
-            delete next[tableKey];
+            delete next[normNum];
+            delete next[rawNum];
             return next;
           });
+          const tKey = getTableKey(prevTable);
+          setTableOrderData(prev => { const n = {...prev}; delete n[tKey]; return n; });
+          setTables(prev => prev.map(t => t.id === prevTable?.id ? { ...t, status: "Available" } : t));
         }
         setSelectedTable(null);
-        setTables(prev => prev.map(t => t.id === selectedTable?.id ? { ...t, status: "Available" } : t));
       }
       fetchBills();
     } catch (err) {
@@ -531,8 +549,23 @@ const RestaurantPOS = () => {
       });
       alert(`Order transferred to Room ${roomNum}`);
       setCurrentOrderItems([]);
-      if (orderType === "DINE_IN") {
-        clearCurrentTableKots();
+      if (orderType === "DINE_IN" && selectedTable) {
+        const rawNum = String(selectedTable.number || selectedTable.tableNumber || "").toUpperCase();
+        const normNum = rawNum.replace(/^[TGRP]/, "");
+        setKotHistory(prev => prev.filter(k => {
+          const kRaw = String(k.table || "").toUpperCase();
+          const kNorm = kRaw.replace(/^[TGRP]/, "");
+          return kRaw !== rawNum && kNorm !== normNum;
+        }));
+        setOccupiedTableData(prev => {
+          const next = { ...prev };
+          delete next[normNum];
+          delete next[rawNum];
+          return next;
+        });
+        const tKey = getTableKey(selectedTable);
+        setTableOrderData(prev => { const n = {...prev}; delete n[tKey]; return n; });
+        setTables(prev => prev.map(t => t.id === selectedTable.id ? { ...t, status: "Available" } : t));
         setSelectedTable(null);
       }
     } catch (err) {
@@ -1481,11 +1514,38 @@ const RestaurantPOS = () => {
         };
         const closeModal = () => setKotDetailsTable(null);
         const handleGenerateBillFromModal = () => {
-          setActiveTab("pos");
-          setOrderType("DINE_IN");
-          setSelectedTable(kotDetailsTable);
-          setCurrentOrderItems([]);
-          setTableOrderData({});
+          // Build a preview bill from the KOT items and open the modal
+          const rawTableNo = String(kotDetailsTable.number || kotDetailsTable.tableNumber || "");
+          const kotsForTable = kotHistory.filter(k => {
+            const kRaw = String(k.table || "");
+            const kNorm = kRaw.replace(/^[TGRP]/, "");
+            return kRaw === rawTableNo || kNorm === rawTableNo.replace(/^[TGRP]/, "");
+          });
+          const allItems = kotsForTable.flatMap(k => k.items || []);
+          if (!allItems.length) { alert("No KOT items to bill."); return; }
+          const menuPrices = {};
+          menuItems.forEach(m => { menuPrices[m.name.toLowerCase()] = Number(m.price); });
+          const items = allItems.map(it => ({
+            name: it.name,
+            quantity: Number(it.quantity || 0),
+            price: Number(it.price || menuPrices[it.name.toLowerCase()] || 0),
+            amount: Number(it.quantity || 0) * Number(it.price || menuPrices[it.name.toLowerCase()] || 0),
+          }));
+          const subtotal = items.reduce((s, it) => s + it.amount, 0);
+          const gst = subtotal * 0.05;
+          const total = subtotal + gst;
+          setGeneratedBill({
+            id: null, billNo: null,
+            tableNumber: rawTableNo,
+            customerName: "",
+            phone: "",
+            subtotal, gst, total,
+            items,
+            entityType: "DINE_IN",
+            paymentMethod: "Cash",
+            waiter_name: "",
+            created_at: new Date().toISOString(),
+          });
           closeModal();
         };
         const handleNewKotFromModal = () => {
@@ -1558,6 +1618,13 @@ const RestaurantPOS = () => {
           </div>
         );
       })()}
+
+      {generatedBill && (
+        <RestaurantBillModal
+          bill={generatedBill}
+          onClose={() => setGeneratedBill(null)}
+        />
+      )}
 
       {editingMenuItem && (
         <div className="modal-overlay" onClick={() => setEditingMenuItem(null)}>
