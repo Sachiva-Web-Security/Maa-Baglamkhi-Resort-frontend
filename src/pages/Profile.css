@@ -214,60 +214,6 @@
   background: #fff;
 }
 
-/* Rich-text editor (Invoice Note) */
-.rt-toolbar {
-  border: 1px solid #d0d3d6;
-  border-bottom: none;
-  background: #f7f7f7;
-  padding: 4px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px;
-  align-items: center;
-  border-radius: 3px 3px 0 0;
-}
-
-.rt-toolbar button {
-  background: transparent;
-  border: 1px solid transparent;
-  padding: 4px 7px;
-  cursor: pointer;
-  font-size: 13px;
-  color: #2c3e50;
-  border-radius: 2px;
-  min-width: 24px;
-}
-
-.rt-toolbar button:hover {
-  background: #e6e6e6;
-  border-color: #ccc;
-}
-
-.rt-sep {
-  display: inline-block;
-  width: 1px;
-  height: 16px;
-  background: #d0d3d6;
-  margin: 0 4px;
-}
-
-.rt-editor {
-  border: 1px solid #d0d3d6;
-  border-radius: 0 0 3px 3px;
-  min-height: 140px;
-  padding: 10px 12px;
-  font-size: 13px;
-  color: #2c3e50;
-  background: #fff;
-  outline: none;
-  line-height: 1.5;
-}
-
-.rt-editor:focus {
-  border-color: #66afe9;
-  box-shadow: 0 0 0 2px rgba(102, 175, 233, 0.18) inset;
-}
-
 .hotel-info-loading {
   text-align: center;
   padding: 12px;

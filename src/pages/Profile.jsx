@@ -1,5 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import API from "../api";
+import RichTextEditor from "../components/RichTextEditor/RichTextEditor";
+import "../components/RichTextEditor/RichTextEditor.css";
 import "./Profile.css";
 
 const SERVER_BASE = (API.defaults.baseURL || "").replace(/\/api\/?$/, "");
@@ -31,7 +33,7 @@ const Profile = () => {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [logoFile, setLogoFile] = useState(null);
-  const noteRef = useRef(null);
+  const [invoiceNote, setInvoiceNote] = useState("");
 
   const loadInfo = async () => {
     setLoading(true);
@@ -43,9 +45,7 @@ const Profile = () => {
         if (merged[k] === null || merged[k] === undefined) merged[k] = "";
       });
       setForm(merged);
-      if (noteRef.current) {
-        noteRef.current.innerHTML = data.invoice_note || "";
-      }
+      setInvoiceNote(data.invoice_note || "");
     } catch (err) {
       setError(err.response?.data?.message || "Failed to load hotel info");
     } finally {
@@ -97,7 +97,7 @@ const Profile = () => {
     try {
       const payload = {
         ...form,
-        invoice_note: noteRef.current ? noteRef.current.innerHTML : form.invoice_note,
+        invoice_note: invoiceNote,
       };
       const { data } = await API.put("/hotel-info", payload);
         const merged = { ...emptyForm, ...data };
@@ -111,11 +111,6 @@ const Profile = () => {
     } finally {
       setSaving(false);
     }
-  };
-
-  const fmtCmd = (cmd, value = null) => {
-    document.execCommand(cmd, false, value);
-    if (noteRef.current) noteRef.current.focus();
   };
 
   const logoSrc = form.logo_url
@@ -274,70 +269,10 @@ const Profile = () => {
           </div>
 
           <Field label="Invoice Note">
-            <div className="rt-toolbar">
-              <button type="button" onClick={() => fmtCmd("bold")} title="Bold">
-                <b>B</b>
-              </button>
-              <button type="button" onClick={() => fmtCmd("italic")} title="Italic">
-                <i>I</i>
-              </button>
-              <button type="button" onClick={() => fmtCmd("strikeThrough")} title="Strikethrough">
-                <s>S</s>
-              </button>
-              <button type="button" onClick={() => fmtCmd("underline")} title="Underline">
-                <u>U</u>
-              </button>
-              <span className="rt-sep" />
-              <button type="button" onClick={() => fmtCmd("insertOrderedList")} title="Numbered list">
-                1.
-              </button>
-              <button type="button" onClick={() => fmtCmd("insertUnorderedList")} title="Bullet list">
-                •
-              </button>
-              <span className="rt-sep" />
-              <button type="button" onClick={() => fmtCmd("justifyLeft")} title="Align left">
-                ⯇
-              </button>
-              <button type="button" onClick={() => fmtCmd("justifyCenter")} title="Align center">
-                ≡
-              </button>
-              <button type="button" onClick={() => fmtCmd("justifyRight")} title="Align right">
-                ⯈
-              </button>
-              <span className="rt-sep" />
-              <button
-                type="button"
-                onClick={() => {
-                  const url = prompt("Link URL");
-                  if (url) fmtCmd("createLink", url);
-                }}
-                title="Insert link"
-              >
-                🔗
-              </button>
-              <button type="button" onClick={() => fmtCmd("unlink")} title="Remove link">
-                ⊘
-              </button>
-              <span className="rt-sep" />
-              <button type="button" onClick={() => fmtCmd("undo")} title="Undo">
-                ↶
-              </button>
-              <button type="button" onClick={() => fmtCmd("redo")} title="Redo">
-                ↷
-              </button>
-              <button
-                type="button"
-                onClick={() => fmtCmd("removeFormat")}
-                title="Clear formatting"
-              >
-                Tx
-              </button>
-            </div>
-            <div
-              ref={noteRef}
-              className="rt-editor"
-              contentEditable
-              suppressContentEditableWarning
+            <RichTextEditor
+              value={invoiceNote}
+              onChange={setInvoiceNote}
+              ariaLabel="Hotel invoice note"
             />
           </Field>
         </div>

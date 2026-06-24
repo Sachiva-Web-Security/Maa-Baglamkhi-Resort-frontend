@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 /* ────────────────────────────────────────────────────────────────────
    urbanPOS-style sidebar definition
@@ -308,13 +309,14 @@ const menuConfig = [
   { type: 'item', key: 'reports', label: 'Reports', icon: 'report', path: '/reports' },
 ];
 
-const AdminLayout = ({ children, setIsAuthenticated }) => {
+const AdminLayout = ({ children }) => {
   const [collapsed, setCollapsed] = useState(false);
   const [openGroups, setOpenGroups] = useState({});
   const navigate = useNavigate();
   const location = useLocation();
+  const { userName: authName, logout } = useAuth();
 
-  const userName = localStorage.getItem('userName') || 'Admin';
+  const userName = authName || 'Admin';
 
   const isActive = (path) => location.pathname === path;
   const groupHasActive = (group) =>
@@ -330,12 +332,7 @@ const AdminLayout = ({ children, setIsAuthenticated }) => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('isAuthenticated');
-    localStorage.removeItem('token');
-    localStorage.removeItem('role');
-    localStorage.removeItem('userName');
-    localStorage.removeItem('permissions');
-    setIsAuthenticated && setIsAuthenticated(false);
+    logout();
     navigate('/login');
   };
 

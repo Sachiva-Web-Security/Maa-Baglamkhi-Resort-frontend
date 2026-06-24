@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import API from "../api";
+import RichTextEditor from "../components/RichTextEditor/RichTextEditor";
+import "../components/RichTextEditor/RichTextEditor.css";
 
 const BOOL_FIELDS = [
   { key: "inclusive_tax", label: "Inclusive Tax" },
@@ -262,10 +264,13 @@ const QuickSalesSettings = () => {
             </div>
           </Row>
           <Row label="Invoice Note">
-            <textarea
-              style={{ ...styles.input, height: 60, padding: 8 }}
+            <RichTextEditor
               value={form.invoice_note || ""}
-              onChange={setVal("invoice_note")}
+              onChange={(html) =>
+                setForm((p) => ({ ...p, invoice_note: html }))
+              }
+              minHeight={100}
+              ariaLabel="Quick sales invoice note"
             />
           </Row>
         </div>

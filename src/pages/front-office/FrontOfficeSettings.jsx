@@ -1,5 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import API from "../../api";
+import RichTextEditor from "../../components/RichTextEditor/RichTextEditor";
+import "../../components/RichTextEditor/RichTextEditor.css";
 
 const ROOM_STATUSES = ["Available", "Cleaning", "Maintenance", "Blocked"];
 const INVOICE_INITS = ["Daily", "Monthly", "Yearly", "None"];
@@ -35,7 +37,7 @@ const FrontOfficeSettings = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
-  const noteRef = useRef(null);
+  const [invoiceNote, setInvoiceNote] = useState("");
 
   const load = async () => {
     setLoading(true);
@@ -44,9 +46,7 @@ const FrontOfficeSettings = () => {
       const { data } = await API.get("/fo-settings");
       const merged = { ...emptyForm, ...data };
       setForm(merged);
-      if (noteRef.current) {
-        noteRef.current.innerHTML = merged.invoice_note || "";
-      }
+      setInvoiceNote(merged.invoice_note || "");
     } catch (err) {
       setError(err.response?.data?.message || "Failed to load settings");
     } finally {
@@ -63,11 +63,6 @@ const FrontOfficeSettings = () => {
     setForm((prev) => ({ ...prev, [key]: v }));
   };
 
-  const fmtCmd = (cmd, value = null) => {
-    document.execCommand(cmd, false, value);
-    if (noteRef.current) noteRef.current.focus();
-  };
-
   const onSave = async (e) => {
     e?.preventDefault();
     setError("");
@@ -77,14 +72,12 @@ const FrontOfficeSettings = () => {
       const payload = {
         ...form,
         grace_period_hours: Number(form.grace_period_hours) || 0,
-        invoice_note: noteRef.current ? noteRef.current.innerHTML : form.invoice_note,
+        invoice_note: invoiceNote,
       };
       const { data } = await API.put("/fo-settings", payload);
       const merged = { ...emptyForm, ...data };
       setForm(merged);
-      if (noteRef.current) {
-        noteRef.current.innerHTML = merged.invoice_note || "";
-      }
+      setInvoiceNote(merged.invoice_note || "");
       setMessage("Settings saved.");
     } catch (err) {
       setError(err.response?.data?.message || "Save failed");
@@ -263,42 +256,10 @@ const FrontOfficeSettings = () => {
 
         <div style={styles.col}>
           <label style={styles.labelStrong}>Invoice Note</label>
-          <div style={styles.rtToolbar}>
-            <button type="button" style={styles.rtBtn} onClick={() => fmtCmd("bold")} title="Bold"><b>B</b></button>
-            <button type="button" style={styles.rtBtn} onClick={() => fmtCmd("italic")} title="Italic"><i>I</i></button>
-            <button type="button" style={styles.rtBtn} onClick={() => fmtCmd("strikeThrough")} title="Strikethrough"><s>S</s></button>
-            <button type="button" style={styles.rtBtn} onClick={() => fmtCmd("underline")} title="Underline"><u>U</u></button>
-            <span style={styles.rtSep} />
-            <button type="button" style={styles.rtBtn} onClick={() => fmtCmd("insertOrderedList")} title="Numbered list">1.</button>
-            <button type="button" style={styles.rtBtn} onClick={() => fmtCmd("insertUnorderedList")} title="Bullet list">•</button>
-            <span style={styles.rtSep} />
-            <button type="button" style={styles.rtBtn} onClick={() => fmtCmd("justifyLeft")} title="Align left">⯇</button>
-            <button type="button" style={styles.rtBtn} onClick={() => fmtCmd("justifyCenter")} title="Align center">≡</button>
-            <button type="button" style={styles.rtBtn} onClick={() => fmtCmd("justifyRight")} title="Align right">⯈</button>
-            <span style={styles.rtSep} />
-            <button
-              type="button"
-              style={styles.rtBtn}
-              onClick={() => {
-                const url = prompt("Link URL");
-                if (url) fmtCmd("createLink", url);
-              }}
-              title="Insert link"
-            >
-              🔗
-            </button>
-            <button type="button" style={styles.rtBtn} onClick={() => fmtCmd("unlink")} title="Remove link">⊘</button>
-            <span style={styles.rtSep} />
-            <button type="button" style={styles.rtBtn} onClick={() => fmtCmd("undo")} title="Undo">↶</button>
-            <button type="button" style={styles.rtBtn} onClick={() => fmtCmd("redo")} title="Redo">↷</button>
-            <button type="button" style={styles.rtBtn} onClick={() => fmtCmd("removeFormat")} title="Clear formatting">Tx</button>
-          </div>
-          <div
-            ref={noteRef}
-            className="rt-editor"
-            style={styles.rtEditor}
-            contentEditable
-            suppressContentEditableWarning
+          <RichTextEditor
+            value={invoiceNote}
+            onChange={setInvoiceNote}
+            ariaLabel="Front-office invoice note"
           />
         </div>
       </form>
@@ -373,46 +334,6 @@ const styles = {
     cursor: "pointer",
   },
   loading: { marginTop: 12, color: "#6c757d", fontSize: 13 },
-
-  rtToolbar: {
-    border: "1px solid #d0d3d6",
-    borderBottom: "none",
-    background: "#f7f7f7",
-    padding: 4,
-    display: "flex",
-    flexWrap: "wrap",
-    gap: 2,
-    alignItems: "center",
-    borderRadius: "3px 3px 0 0",
-  },
-  rtSep: {
-    display: "inline-block",
-    width: 1,
-    height: 16,
-    background: "#d0d3d6",
-    margin: "0 4px",
-  },
-  rtBtn: {
-    background: "transparent",
-    border: "1px solid transparent",
-    padding: "4px 7px",
-    cursor: "pointer",
-    fontSize: 13,
-    color: "#2c3e50",
-    borderRadius: 2,
-    minWidth: 24,
-  },
-  rtEditor: {
-    border: "1px solid #d0d3d6",
-    borderRadius: "0 0 3px 3px",
-    minHeight: 280,
-    padding: "10px 12px",
-    fontSize: 13,
-    color: "#2c3e50",
-    background: "#fff",
-    outline: "none",
-    lineHeight: 1.5,
-  },
 };
 
 export default FrontOfficeSettings;

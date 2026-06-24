@@ -1,20 +1,14 @@
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
-const UserNavbar = ({ setIsAuthenticated }) => {
+const UserNavbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
-
-  const role = (localStorage.getItem("role") || "").toLowerCase();
-  const userName = localStorage.getItem("userName") || localStorage.getItem("name") || "User";
+  const { role, userName, logout } = useAuth();
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("role");
-    localStorage.removeItem("name");
-    localStorage.removeItem("userName");
-    localStorage.removeItem("isAuthenticated");
-    if (setIsAuthenticated) setIsAuthenticated(false);
-    navigate("/login");
+    logout();
+    navigate('/login');
   };
 
   const isActive = (path) => location.pathname === path;
@@ -113,7 +107,7 @@ const UserNavbar = ({ setIsAuthenticated }) => {
           fontWeight: 'bold',
           fontSize: '16px',
         }}>
-          {userName.charAt(0).toUpperCase()}
+          {(userName || 'U').charAt(0).toUpperCase()}
         </div>
         <div>
           <div style={{ fontWeight: 'bold', fontSize: '14px' }}>Maa Baglamukhi</div>
@@ -159,7 +153,7 @@ const UserNavbar = ({ setIsAuthenticated }) => {
       {/* User & Logout */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
         <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: '13px', fontWeight: '600' }}>{userName}</div>
+          <div style={{ fontSize: '13px', fontWeight: '600' }}>{userName || 'User'}</div>
           <div style={{ fontSize: '10px', color: '#aaa' }}>{role ? role.charAt(0).toUpperCase() + role.slice(1) : 'User'}</div>
         </div>
         <button

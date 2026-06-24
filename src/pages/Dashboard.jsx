@@ -1,29 +1,13 @@
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
 import "./Dashboard.css";
+import { useAuth } from "../context/AuthContext";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const auth = localStorage.getItem('isAuthenticated');
-    if (auth !== 'true') {
-      navigate('/login');
-    }
-  }, [navigate]);
-
-  const role = (localStorage.getItem("role") || "").toLowerCase();
-  const userName = localStorage.getItem("userName") || localStorage.getItem("name") || "User";
+  const { userName, role, isAuthenticated, permissions, logout } = useAuth();
 
   const userPermissions = (() => {
-    const storedPerms = localStorage.getItem("permissions");
-    if (storedPerms) {
-      try {
-        return JSON.parse(storedPerms);
-      } catch {
-        return null;
-      }
-    }
+    if (permissions && Array.isArray(permissions)) return permissions;
     const rolePermissions = {
       admin: ["admin", "front_office", "room_dining", "restaurant", "quick_sales", "inventory", "banquet", "gaming_zone"],
       manager: ["front_office", "restaurant", "room_dining", "banquet", "inventory"],
@@ -52,7 +36,7 @@ const Dashboard = () => {
 
   const handleLogout = () => {
     if (confirm("Logout?")) {
-      localStorage.clear();
+      logout();
       navigate("/login");
     }
   };
@@ -67,6 +51,9 @@ const Dashboard = () => {
       window.location.reload();
     }
   };
+
+  // isAuthenticated is read so the component re-renders on logout/login.
+  void isAuthenticated;
 
   return (
     <div className="urban-dashboard">

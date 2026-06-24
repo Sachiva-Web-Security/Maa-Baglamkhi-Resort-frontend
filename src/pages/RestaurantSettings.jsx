@@ -1,5 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import API from "../api";
+import RichTextEditor from "../components/RichTextEditor/RichTextEditor";
+import "../components/RichTextEditor/RichTextEditor.css";
 
 const TOKEN_OPTS = ["Daily", "After 300", "After 500", "After 1000", "None"];
 const INVOICE_OPTS = ["Daily", "Monthly", "Yearly", "None"];
@@ -11,7 +13,7 @@ const RestaurantSettings = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
-  const editorRef = useRef(null);
+  const [invoiceNote, setInvoiceNote] = useState("");
 
   const load = async () => {
     try {
@@ -21,6 +23,7 @@ const RestaurantSettings = () => {
         API.get("/payment-modes").catch(() => ({ data: [] })),
       ]);
       setForm(data);
+      setInvoiceNote(data?.invoice_note || "");
       setPrinters(Array.isArray(prtRes.data) ? prtRes.data : []);
       setPaymentModes(
         Array.isArray(modesRes.data)
@@ -36,14 +39,6 @@ const RestaurantSettings = () => {
     load();
   }, []);
 
-  useEffect(() => {
-    if (editorRef.current && form?.invoice_note != null) {
-      if (editorRef.current.innerHTML !== form.invoice_note) {
-        editorRef.current.innerHTML = form.invoice_note;
-      }
-    }
-  }, [form?.id]);
-
   const setBool = (key) => (e) =>
     setForm((p) => ({ ...p, [key]: e.target.checked }));
   const setVal = (key) => (e) => setForm((p) => ({ ...p, [key]: e.target.value }));
@@ -55,8 +50,10 @@ const RestaurantSettings = () => {
     setMessage("");
     setSaving(true);
     try {
-      const note = editorRef.current?.innerHTML || form.invoice_note || "";
-      await API.put("/fb-restaurant-settings", { ...form, invoice_note: note });
+      await API.put("/fb-restaurant-settings", {
+        ...form,
+        invoice_note: invoiceNote,
+      });
       setMessage("Settings saved.");
     } catch (err) {
       setError(err.response?.data?.message || "Save failed");
@@ -204,7 +201,11 @@ const RestaurantSettings = () => {
           </Row>
 
           <Row label="Invoice Note">
-            <RichEditor editorRef={editorRef} />
+            <RichTextEditor
+              value={invoiceNote}
+              onChange={setInvoiceNote}
+              ariaLabel="Restaurant invoice note"
+            />
           </Row>
         </div>
       </div>
@@ -250,56 +251,6 @@ const Radios = ({ name, opts, value, onChange }) => (
       </label>
     ))}
   </div>
-);
-
-const RichEditor = ({ editorRef }) => {
-  const exec = (cmd, arg) => {
-    editorRef.current?.focus();
-    document.execCommand(cmd, false, arg);
-  };
-  return (
-    <div style={styles.editor}>
-      <div style={styles.editorToolbar}>
-        <ToolBtn onClick={() => exec("bold")} title="Bold"><b>B</b></ToolBtn>
-        <ToolBtn onClick={() => exec("italic")} title="Italic"><i>I</i></ToolBtn>
-        <ToolBtn onClick={() => exec("underline")} title="Underline"><u>U</u></ToolBtn>
-        <ToolBtn onClick={() => exec("strikeThrough")} title="Strike"><s>S</s></ToolBtn>
-        <span style={styles.toolSep} />
-        <ToolBtn onClick={() => exec("insertUnorderedList")} title="UL">• ≡</ToolBtn>
-        <ToolBtn onClick={() => exec("insertOrderedList")} title="OL">1. ≡</ToolBtn>
-        <ToolBtn onClick={() => exec("formatBlock", "blockquote")} title="Quote">❝</ToolBtn>
-        <span style={styles.toolSep} />
-        <ToolBtn onClick={() => exec("justifyLeft")} title="Left">⫷</ToolBtn>
-        <ToolBtn onClick={() => exec("justifyCenter")} title="Center">≡</ToolBtn>
-        <ToolBtn onClick={() => exec("justifyRight")} title="Right">⫸</ToolBtn>
-        <span style={styles.toolSep} />
-        <ToolBtn onClick={() => exec("undo")} title="Undo">↶</ToolBtn>
-        <ToolBtn onClick={() => exec("redo")} title="Redo">↷</ToolBtn>
-        <ToolBtn
-          onClick={() => {
-            const url = prompt("Link URL");
-            if (url) exec("createLink", url);
-          }}
-          title="Link"
-        >
-          🔗
-        </ToolBtn>
-        <ToolBtn onClick={() => exec("removeFormat")} title="Clear formatting">⌫</ToolBtn>
-      </div>
-      <div
-        ref={editorRef}
-        contentEditable
-        suppressContentEditableWarning
-        style={styles.editorBody}
-      />
-    </div>
-  );
-};
-
-const ToolBtn = ({ children, onClick, title }) => (
-  <button type="button" style={styles.toolBtn} onClick={onClick} title={title}>
-    {children}
-  </button>
 );
 
 const styles = {
@@ -358,40 +309,6 @@ const styles = {
     fontSize: 14,
     fontWeight: 500,
     cursor: "pointer",
-  },
-
-  editor: { border: "1px solid #ced4da", borderRadius: 3, background: "#fff" },
-  editorToolbar: {
-    display: "flex",
-    flexWrap: "wrap",
-    gap: 2,
-    padding: "4px 6px",
-    background: "#f7f7f7",
-    borderBottom: "1px solid #e6e8eb",
-    alignItems: "center",
-  },
-  toolSep: {
-    width: 1,
-    height: 18,
-    background: "#ddd",
-    margin: "0 4px",
-  },
-  toolBtn: {
-    background: "transparent",
-    border: "1px solid transparent",
-    color: "#2c3e50",
-    padding: "2px 7px",
-    borderRadius: 3,
-    fontSize: 12,
-    cursor: "pointer",
-    minWidth: 26,
-  },
-  editorBody: {
-    minHeight: 120,
-    padding: 10,
-    fontSize: 13,
-    outline: "none",
-    whiteSpace: "pre-wrap",
   },
 };
 

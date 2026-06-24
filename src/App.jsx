@@ -1,8 +1,8 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
 
 import Navbar from './components/Layout/UserNavbar';
 import AdminLayout from './components/Layout/AdminLayout';
+import { AuthProvider, useAuth } from './context/AuthContext';
 
 import Dashboard from './pages/Dashboard';
 import Attendance from './pages/Attendance';
@@ -72,10 +72,10 @@ import FBInvoices from './pages/fnb/Invoices';
 import OwnerSmsSettings from './pages/fnb/OwnerSmsSettings';
 
 // Layout for non-admin users (using horizontal navbar)
-function UserLayout({ children, setIsAuthenticated }) {
+function UserLayout({ children }) {
   return (
     <div className="simple-layout">
-      <Navbar setIsAuthenticated={setIsAuthenticated} />
+      <Navbar />
       <main className="simple-main">
         {children}
       </main>
@@ -93,30 +93,19 @@ function BareLayout({ children }) {
 }
 
 // Layout for admin users (using sidebar)
-function AdminLayoutWrapper({ setIsAuthenticated, children }) {
+function AdminLayoutWrapper({ children }) {
   return (
-    <AdminLayout setIsAuthenticated={setIsAuthenticated}>
+    <AdminLayout>
       {children}
     </AdminLayout>
   );
 }
 
-function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const authStatus = localStorage.getItem('isAuthenticated') === 'true';
-    setIsAuthenticated(authStatus);
-    setLoading(false);
-  }, []);
-
-  if (loading) return <div className="simple-loading">Loading...</div>;
-
+function AppRoutes() {
   // Helper to create route with admin layout
   const AdminRoute = ({ element }) => (
     <ProtectedRoute allowedRoles={["admin"]}>
-      <AdminLayoutWrapper setIsAuthenticated={setIsAuthenticated}>
+      <AdminLayoutWrapper>
         {element}
       </AdminLayoutWrapper>
     </ProtectedRoute>
@@ -125,7 +114,7 @@ function App() {
   // Helper to create route with user layout (navbar)
   const UserRoute = ({ element, allowedRoles }) => (
     <ProtectedRoute allowedRoles={allowedRoles}>
-      <UserLayout setIsAuthenticated={setIsAuthenticated}>
+      <UserLayout>
         {element}
       </UserLayout>
     </ProtectedRoute>
@@ -133,13 +122,13 @@ function App() {
 
   // Helper for routes that can be both admin and user
   const FlexibleRoute = ({ element, allowedRoles }) => {
-    const role = (localStorage.getItem("role") || "").toLowerCase();
+    const { role } = useAuth();
     const isAdmin = role === "admin";
 
     if (isAdmin) {
       return (
         <ProtectedRoute allowedRoles={["admin"]}>
-          <AdminLayoutWrapper setIsAuthenticated={setIsAuthenticated}>
+          <AdminLayoutWrapper>
             {element}
           </AdminLayoutWrapper>
         </ProtectedRoute>
@@ -148,7 +137,7 @@ function App() {
 
     return (
       <ProtectedRoute allowedRoles={allowedRoles}>
-        <UserLayout setIsAuthenticated={setIsAuthenticated}>
+        <UserLayout>
           {element}
         </UserLayout>
       </ProtectedRoute>
@@ -158,7 +147,7 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
+        <Route path="/login" element={<LoginRoute />} />
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
         // Dashboard has its own UrbanPOS navigation - no wrapper
@@ -295,6 +284,24 @@ function App() {
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </Router>
+  );
+}
+
+// If the user is already authenticated, /login should bounce straight to
+// the dashboard. Otherwise render the Login form. The form itself calls
+// useAuth().login() on success.
+function LoginRoute() {
+  const { isAuthenticated, ready } = useAuth();
+  if (!ready) return null;
+  if (isAuthenticated) return <Navigate to="/dashboard" replace />;
+  return <Login />;
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppRoutes />
+    </AuthProvider>
   );
 }
 

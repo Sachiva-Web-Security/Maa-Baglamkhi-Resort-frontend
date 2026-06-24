@@ -2,13 +2,14 @@ import React, { useState, useEffect } from "react";
 import { FaUserPlus, FaSearch } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import API from "../api";
+import { useAuth } from "../context/AuthContext";
 
 const User = () => {
   const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
   const [error, setError] = useState("");
-  const loggedInEmail = localStorage.getItem("email") || "";
+  const { email: loggedInEmail } = useAuth();
   const loggedInAvatar = localStorage.getItem("avatarUrl") || "";
 
   // Load users from backend + localStorage every time page opens
