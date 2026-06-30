@@ -28,6 +28,11 @@ const RestaurantPOS = () => {
   const [kotHistory, setKotHistory] = useState([]);
   const [tables, setTables] = useState([]);
   const [editingTable, setEditingTable] = useState(null);
+  const [showSaveCustomerModal, setShowSaveCustomerModal] = useState(false);
+  const [saveCustomerInfo, setSaveCustomerInfo] = useState({
+    customerName: "",
+    phone: "",
+  });
   const [activeTab, setActiveTab] = useState("pos");
   const [orderType, setOrderType] = useState("DINE_IN");
   const [orderTypeData, setOrderTypeData] = useState({
@@ -441,9 +446,29 @@ const RestaurantPOS = () => {
     const phone = orderType === "DINE_IN" ? (currentTableData.phone || "") : (orderTypeData[orderType]?.phone || "");
 
     if (!customerName.trim() || !phone.trim()) {
-      alert("Customer name and phone number are required before generating the bill.");
+      setSaveCustomerInfo({ customerName: customerName.trim(), phone: phone.trim() });
+      setShowSaveCustomerModal(true);
       return;
     }
+
+    proceedSaveBill();
+  };
+
+  const proceedSaveBill = async () => {
+    const customerName = orderType === "DINE_IN" ? (getCurrentTableData().customerName || saveCustomerInfo.customerName) : (orderTypeData[orderType]?.customerName || saveCustomerInfo.customerName);
+    const phone = orderType === "DINE_IN" ? (getCurrentTableData().phone || saveCustomerInfo.phone) : (orderTypeData[orderType]?.phone || saveCustomerInfo.phone);
+
+    if (!customerName.trim() || !phone.trim()) {
+      alert("Customer name and phone are required.");
+      return;
+    }
+
+    const currentItems = getCurrentOrderItems();
+    if (!currentItems.length) return alert("Add items first");
+    if (orderType === "DINE_IN" && !selectedTable) { alert("Select a table first"); return; }
+    const subtotal = calculateTotal();
+    const tax = calculateTax();
+    const total = calculateGrandTotal();
 
     const billData = {
       table: orderType === "DINE_IN" ? selectedTable.number : orderType,
