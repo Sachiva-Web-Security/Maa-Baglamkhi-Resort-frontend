@@ -29,12 +29,23 @@ const RestaurantBillModal = ({ bill, onClose }) => {
 
   const billNo = bill.billNo || bill.invoiceNo || bill.id || bill.invoice_no || "";
   const tableLabel = bill.tableNumber || bill.table || bill.table_no || "";
-  const customer = bill.customerName || bill.customer_name || "";
-  const phone = bill.phone || bill.customer_phone || "";
   const waiter = bill.waiter_name || bill.waiterName || "";
   const paymentMethod = bill.paymentMethod || bill.payment_mode || "";
   const orderType = bill.entityType || bill.orderType || bill.type || "DINE_IN";
   const date = bill.created_at || bill.date || bill.invoice_date || "";
+
+  // Local state for editable customer info (WhatsApp needs these)
+  const [customerName, setCustomerName] = React.useState(bill.customerName || bill.customer_name || "");
+  const [phone, setPhone] = React.useState(bill.phone || bill.customer_phone || "");
+  const [phoneError, setPhoneError] = React.useState("");
+  const [sending, setSending] = React.useState(false);
+
+  const validatePhone = (val) => {
+    const cleaned = String(val || "").replace(/[^0-9]/g, "");
+    if (!cleaned) return "Phone number is required";
+    if (cleaned.length < 10) return "Phone must be at least 10 digits";
+    return "";
+  };
 
   const handlePrint = () => window.print();
 
@@ -46,20 +57,34 @@ const RestaurantBillModal = ({ bill, onClose }) => {
   };
 
   const handleSendWhatsApp = async () => {
-    if (!phone) { alert("No phone number available."); return; }
+    const err = validatePhone(phone);
+    if (err) { setPhoneError(err); return; }
+    if (!customerName.trim()) { alert("Please enter the customer name."); return; }
+
+    setSending(true);
+    setPhoneError("");
     try {
       const res = await API.post("/restaurant/bill/send-whatsapp", {
-        billNo: billNo,
-        customerName: customer,
-        phone,
+        billNo,
+        customerName: customerName.trim(),
+        phone: phone.replace(/[^0-9]/g, ""),
+        items,
       });
-      if (res.data?.whatsapp?.status === "success") {
-        alert("Bill sent to WhatsApp successfully!");
+      if (res.data?.wasend?.status === "success" || res.data?.whatsapp?.status === "success") {
+        alert("✅ Bill sent to WhatsApp successfully!");
       } else {
-        alert("WhatsApp: " + (res.data?.whatsapp?.status || "Message sent"));
+        const reason = res.data?.wasend?.reason || res.data?.message || "sent";
+        alert("WhatsApp: " + reason);
       }
     } catch (err) {
-      alert("Failed to send WhatsApp: " + (err.response?.data?.message || err.message));
+      const msg = err.response?.data?.message || err.message;
+      if (msg.includes("credentials")) {
+        alert("⚠️ WhatsApp not configured. Ask admin to set WASEND_USERNAME and WASEND_TOKEN in backend .env");
+      } else {
+        alert("Failed to send WhatsApp: " + msg);
+      }
+    } finally {
+      setSending(false);
     }
   };
 
@@ -102,9 +127,40 @@ const RestaurantBillModal = ({ bill, onClose }) => {
             <MetaItem label="Type" value={orderType.replace("_", " ")} />
             {tableLabel && <MetaItem label="Table" value={tableLabel} />}
             {waiter && <MetaItem label="Captain" value={waiter} />}
-            <MetaItem label="Customer" value={customer} />
-            {phone && <MetaItem label="Phone" value={phone} />}
             {paymentMethod && <MetaItem label="Payment" value={paymentMethod} />}
+          </div>
+
+          {/* Customer Info - Required for WhatsApp */}
+          <div style={{ margin: '12px 0', padding: '10px', background: '#f8f9fa', borderRadius: '6px', border: '1px solid #e9ecef' }}>
+            <div style={{ fontSize: '11px', fontWeight: 700, color: '#495057', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              📋 Customer Details {phone && <span style={{ color: '#28a745', fontWeight: 400 }}>✓ Ready for WhatsApp</span>}
+            </div>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+              <div style={{ flex: 1 }}>
+                <input
+                  type="text"
+                  placeholder="Customer Name *"
+                  value={customerName}
+                  onChange={e => setCustomerName(e.target.value)}
+                  style={{ width: '100%', padding: '6px 8px', fontSize: '12px', border: '1px solid #ced4da', borderRadius: '4px' }}
+                />
+              </div>
+              <div style={{ flex: 1 }}>
+                <input
+                  type="tel"
+                  placeholder="Phone Number * (for WhatsApp)"
+                  value={phone}
+                  onChange={e => { setPhone(e.target.value); setPhoneError(""); }}
+                  style={{ width: '100%', padding: '6px 8px', fontSize: '12px', border: phoneError ? '1px solid #dc3545' : '1px solid #ced4da', borderRadius: '4px' }}
+                />
+                {phoneError && <div style={{ color: '#dc3545', fontSize: '10px', marginTop: '2px' }}>{phoneError}</div>}
+              </div>
+            </div>
+            {!phone && (
+              <div style={{ fontSize: '10px', color: '#856404', background: '#fff3cd', padding: '4px 8px', borderRadius: '3px', marginTop: '6px' }}>
+                ⚠️ Enter phone number to enable WhatsApp bill sharing
+              </div>
+            )}
           </div>
 
           <table className="rbm-items-table">
@@ -161,8 +217,13 @@ const RestaurantBillModal = ({ bill, onClose }) => {
           <button className="rbm-btn rbm-btn-print" onClick={handlePrint}>
             🖨️ Print Bill
           </button>
-          <button className="rbm-btn rbm-btn-whatsapp" onClick={handleSendWhatsApp}>
-            📱 Send on WhatsApp
+          <button
+            className="rbm-btn rbm-btn-whatsapp"
+            onClick={handleSendWhatsApp}
+            disabled={sending || !phone.trim()}
+            title={!phone.trim() ? "Enter phone number above to enable WhatsApp" : ""}
+          >
+            {sending ? "⏳ Sending..." : "📱 Send on WhatsApp"}
           </button>
           <button className="rbm-btn rbm-btn-close" onClick={onClose}>
             Close

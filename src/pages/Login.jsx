@@ -70,13 +70,13 @@ const Login = () => {
           <div className="urban-login-field">
             <div className="urban-input-icon">👤</div>
             <input
-              type="text"
+              type="email"
               name="username"
               value={formData.username}
               onChange={handleChange}
-              placeholder="Username"
+              placeholder="Email address"
               autoComplete="username"
-              aria-label="Username"
+              aria-label="Email address"
               className="urban-input"
             />
           </div>
