@@ -56,41 +56,41 @@ const Dashboard = () => {
   void isAuthenticated;
 
   return (
-    <div className="urban-dashboard">
+    <div className="maab-dashboard">
       {/* Top Navigation Bar */}
-      <div className="urban-nav">
-        <div className="urban-nav-brand" onClick={() => navigate('/dashboard')} style={{ cursor: 'pointer' }}>
-          <div className="urban-logo">Q</div>
-          <span className="urban-brand-name">urbanPOS</span>
+      <div className="maab-nav">
+        <div className="maab-nav-brand" onClick={() => navigate('/dashboard')} style={{ cursor: 'pointer' }}>
+          <div className="maab-logo">Q</div>
+          <span className="maab-brand-name">Maa Baglamukhi</span>
         </div>
-        <div className="urban-nav-tabs">
-          <div className="urban-nav-tab active">Application</div>
+        <div className="maab-nav-tabs">
+          <div className="maab-nav-tab active">Application</div>
         </div>
-        <div className="urban-nav-user">
+        <div className="maab-nav-user">
           <span>{userName}</span>
-          <span className="urban-nav-arrow" onClick={handleLogout}>🚪</span>
+          <span className="maab-nav-arrow" onClick={handleLogout}>🚪</span>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="urban-main">
+      <div className="maab-main">
         {/* Module Access Grid - The Main Screen */}
-        <div className="urban-modules-section">
-          <div className="urban-modules-header">
-            <span className="urban-modules-title">Select Application</span>
+        <div className="maab-modules-section">
+          <div className="maab-modules-header">
+            <span className="maab-modules-title">Select Application</span>
             {isAdmin && (
-              <button className="urban-settings-btn" onClick={setPermissions}>
+              <button className="maab-settings-btn" onClick={setPermissions}>
                 ⚙️ Set Permissions
               </button>
             )}
           </div>
-          <div className="urban-modules-grid">
+          <div className="maab-modules-grid">
             {modules.map((mod) => {
               const hasAccess = isAdmin || userPermissions.includes(mod.id);
               return (
                 <div
                   key={mod.id}
-                  className={`urban-module-tile ${!hasAccess ? 'no-access' : ''}`}
+                  className={`maab-module-tile ${!hasAccess ? 'no-access' : ''}`}
                   onClick={() => {
                     if (!hasAccess) {
                       alert("You don't have permission to access this module.");
@@ -100,8 +100,8 @@ const Dashboard = () => {
                   }}
                   style={hasAccess ? { '--module-color': mod.color } : { filter: 'grayscale(100%)', opacity: 0.5 }}
                 >
-                  <div className="urban-module-icon">{mod.icon}</div>
-                  <div className="urban-module-label">{mod.name}</div>
+                  <div className="maab-module-icon">{mod.icon}</div>
+                  <div className="maab-module-label">{mod.name}</div>
                 </div>
               );
             })}

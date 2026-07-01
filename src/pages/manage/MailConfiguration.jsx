@@ -81,7 +81,7 @@ const MailConfiguration = () => {
             style={styles.input}
             value={form.host}
             onChange={setField("host")}
-            placeholder="e.g. mail.urbanpos.com"
+            placeholder="e.g. mail.maabaglamukhi.com"
           />
         </div>
 

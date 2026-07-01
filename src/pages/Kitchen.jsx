@@ -49,20 +49,20 @@ const Kitchen = () => {
   return (
     <div>
       {/* Top Navigation Bar */}
-      <div className="urban-nav" style={{ marginBottom: 0 }}>
-        <div className="urban-nav-brand" onClick={() => navigate('/dashboard')} style={{ cursor: 'pointer' }}>
-          <div className="urban-logo">Q</div>
-          <span className="urban-brand-name">urbanPOS</span>
+      <div className="maab-nav" style={{ marginBottom: 0 }}>
+        <div className="maab-nav-brand" onClick={() => navigate('/dashboard')} style={{ cursor: 'pointer' }}>
+          <div className="maab-logo">Q</div>
+          <span className="maab-brand-name">Maa Baglamukhi</span>
         </div>
-        <div className="urban-nav-tabs">
-          <div className="urban-nav-tab" onClick={() => navigate('/dashboard')}>Dashboard</div>
-          <div className="urban-nav-tab" onClick={() => navigate('/restaurant')}>New Order</div>
-          <div className="urban-nav-tab green">KDS</div>
-          <div className="urban-nav-tab" onClick={() => navigate('/reports')}>Daily Transaction</div>
+        <div className="maab-nav-tabs">
+          <div className="maab-nav-tab" onClick={() => navigate('/dashboard')}>Dashboard</div>
+          <div className="maab-nav-tab" onClick={() => navigate('/restaurant')}>New Order</div>
+          <div className="maab-nav-tab green">KDS</div>
+          <div className="maab-nav-tab" onClick={() => navigate('/reports')}>Daily Transaction</div>
         </div>
-        <div className="urban-nav-user">
+        <div className="maab-nav-user">
           <span>{localStorage.getItem("userName") || localStorage.getItem("name") || "User"}</span>
-          <span className="urban-nav-arrow" onClick={() => {
+          <span className="maab-nav-arrow" onClick={() => {
             if (confirm("Logout?")) {
               localStorage.clear();
               navigate("/login");

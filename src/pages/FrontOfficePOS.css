@@ -1,4 +1,4 @@
-/* === FRONT OFFICE POS (urbanPOS style) === */
+/* === FRONT OFFICE POS (Maa Baglamukhi style) === */
 .fo-screen {
   display: flex;
   flex-direction: column;
@@ -209,7 +209,7 @@
   color: #1f2937;
 }
 
-/* Color variants for stat badges — match urbanPOS screenshots */
+/* Color variants for stat badges — match Maa Baglamukhi screenshots */
 .fo-stat--slate .fo-stat-badge  { background: #5b6f80; color: #ffffff; }
 .fo-stat--green .fo-stat-badge  { background: #2ecc71; color: #ffffff; }
 .fo-stat--orange .fo-stat-badge { background: #f5b40d; color: #ffffff; }

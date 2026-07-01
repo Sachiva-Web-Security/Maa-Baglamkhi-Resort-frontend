@@ -95,7 +95,7 @@ const RestaurantBillModal = ({ bill, onClose }) => {
         {/* header */}
         <div className="rbm-header">
           <div>
-            <div className="rbm-brand">urbanPOS</div>
+            <div className="rbm-brand">Maa Baglamukhi</div>
             <div className="rbm-title">Restaurant Bill</div>
           </div>
           <div className="rbm-header-actions">

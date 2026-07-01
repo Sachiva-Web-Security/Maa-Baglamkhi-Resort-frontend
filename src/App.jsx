@@ -150,7 +150,7 @@ function AppRoutes() {
         <Route path="/login" element={<LoginRoute />} />
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
-        // Dashboard has its own UrbanPOS navigation - no wrapper
+        // Dashboard has its own Maa Baglamukhi navigation - no wrapper
         <Route path="/dashboard" element={<Dashboard />} />
 
         <Route path="/profile" element={

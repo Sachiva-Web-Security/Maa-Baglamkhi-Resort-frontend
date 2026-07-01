@@ -1,5 +1,5 @@
-/* UrbanPOS Login Page */
-.urban-login-bg {
+/* Maa Baglamukhi Resort Login Page */
+.maab-login-bg {
   min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display: flex;
@@ -9,7 +9,7 @@
   padding: 20px;
 }
 
-.urban-login-card {
+.maab-login-card {
   background: #fff;
   border-radius: 12px;
   padding: 40px;
@@ -18,7 +18,7 @@
   box-shadow: 0 20px 60px rgba(0,0,0,0.3);
 }
 
-.urban-login-logo {
+.maab-login-logo {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -26,7 +26,7 @@
   margin-bottom: 24px;
 }
 
-.urban-logo-circle {
+.maab-logo-circle {
   width: 50px;
   height: 50px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -39,13 +39,13 @@
   font-weight: bold;
 }
 
-.urban-brand-text {
+.maab-brand-text {
   font-size: 28px;
   font-weight: 700;
   color: #333;
 }
 
-.urban-login-title {
+.maab-login-title {
   text-align: center;
   font-size: 24px;
   font-weight: 600;
@@ -53,20 +53,20 @@
   margin: 0 0 8px 0;
 }
 
-.urban-login-subtitle {
+.maab-login-subtitle {
   text-align: center;
   font-size: 14px;
   color: #888;
   margin: 0 0 32px 0;
 }
 
-.urban-login-form {
+.maab-login-form {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-.urban-login-field {
+.maab-login-field {
   display: flex;
   align-items: center;
   border: 1px solid #ddd;
@@ -74,7 +74,7 @@
   overflow: hidden;
 }
 
-.urban-input-icon {
+.maab-input-icon {
   width: 44px;
   height: 44px;
   background: #f5f5f5;
@@ -85,7 +85,7 @@
   border-right: 1px solid #ddd;
 }
 
-.urban-input {
+.maab-input {
   flex: 1;
   border: none;
   padding: 12px 16px;
@@ -93,7 +93,7 @@
   outline: none;
 }
 
-.urban-login-btn {
+.maab-login-btn {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: #fff;
   border: none;
@@ -105,65 +105,65 @@
   margin-top: 8px;
 }
 
-.urban-login-btn:hover {
+.maab-login-btn:hover {
   opacity: 0.9;
 }
 
-.urban-login-btn:disabled {
+.maab-login-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-.urban-login-support {
+.maab-login-support {
   margin-top: 32px;
   padding-top: 24px;
   border-top: 1px solid #eee;
   text-align: center;
 }
 
-.urban-login-support strong {
+.maab-login-support strong {
   font-size: 12px;
   color: #666;
 }
 
-.urban-contact-info {
+.maab-contact-info {
   font-size: 13px;
   color: #333;
   margin-top: 6px;
 }
 
-.urban-login-footer {
+.maab-login-footer {
   text-align: center;
   margin-top: 16px;
   font-size: 11px;
   color: #999;
 }
 
-.urban-login-bottom {
+.maab-login-bottom {
   margin-top: 40px;
   text-align: center;
   color: #fff;
 }
 
-.urban-login-bottom a {
+.maab-login-bottom a {
   color: #fff;
   text-decoration: underline;
   font-size: 13px;
 }
 
-.urban-copyright {
+.maab-copyright {
   margin-top: 12px;
   font-size: 12px;
   opacity: 0.8;
 }
 
-.urban-legal {
+.maab-legal {
   margin-top: 8px;
   font-size: 11px;
   opacity: 0.7;
 }
 
-.urban-legal a {
+.maab-legal a {
   color: #fff;
   text-decoration: none;
 }

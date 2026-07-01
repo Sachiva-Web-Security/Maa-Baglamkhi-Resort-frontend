@@ -158,7 +158,7 @@ const Terminals = () => {
                   autoFocus
                   value={modal.name}
                   onChange={setField("name")}
-                  placeholder="e.g. UrbanPOS"
+                  placeholder="e.g. MaaBaglamukhi"
                 />
               </div>
 

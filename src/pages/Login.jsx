@@ -53,22 +53,22 @@ const Login = () => {
   };
 
   return (
-    <div className="urban-login-bg">
-      <div className="urban-login-card">
+    <div className="maab-login-bg">
+      <div className="maab-login-card">
         {/* Logo */}
-        <div className="urban-login-logo">
-          <div className="urban-logo-circle">Q</div>
-          <span className="urban-brand-text">urbanPOS</span>
+        <div className="maab-login-logo">
+          <div className="maab-logo-circle">Q</div>
+          <span className="maab-brand-text">Maa Baglamukhi</span>
         </div>
 
         {/* Welcome */}
-        <h1 className="urban-login-title">Welcome to urbanPOS.</h1>
-        <p className="urban-login-subtitle">Please sign in to continue.</p>
+        <h1 className="maab-login-title">Welcome to Maa Baglamukhi Resort.</h1>
+        <p className="maab-login-subtitle">Please sign in to continue.</p>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="urban-login-form">
-          <div className="urban-login-field">
-            <div className="urban-input-icon">👤</div>
+        <form onSubmit={handleSubmit} className="maab-login-form">
+          <div className="maab-login-field">
+            <div className="maab-input-icon">👤</div>
             <input
               type="email"
               name="username"
@@ -77,12 +77,12 @@ const Login = () => {
               placeholder="Email address"
               autoComplete="username"
               aria-label="Email address"
-              className="urban-input"
+              className="maab-input"
             />
           </div>
 
-          <div className="urban-login-field">
-            <div className="urban-input-icon">🔒</div>
+          <div className="maab-login-field">
+            <div className="maab-input-icon">🔒</div>
             <input
               type="password"
               name="password"
@@ -91,38 +91,38 @@ const Login = () => {
               placeholder="Password"
               autoComplete="current-password"
               aria-label="Password"
-              className="urban-input"
+              className="maab-input"
             />
           </div>
 
-          <button type="submit" className="urban-login-btn" disabled={loading}>
+          <button type="submit" className="maab-login-btn" disabled={loading}>
             {loading ? "Signing in..." : "Login"}
           </button>
         </form>
 
         {/* Support */}
-        <div className="urban-login-support">
+        <div className="maab-login-support">
           <strong>For Sales & Support</strong>
-          <div className="urban-contact-info">
+          <div className="maab-contact-info">
             Call us: 9826054590 / 9826254590 / 9324779107
           </div>
-          <div className="urban-contact-info">
-            Email us: sales@urbanpos.com
+          <div className="maab-contact-info">
+            Email us: sales@maabaglamukhi.com
           </div>
         </div>
 
         {/* Footer */}
-        <div className="urban-login-footer">
+        <div className="maab-login-footer">
           License Valid Upto: 10 Jun 2026
         </div>
       </div>
 
-      <div className="urban-login-bottom">
+      <div className="maab-login-bottom">
         <a href="#">For restaurant demo Click Here</a>
-        <div className="urban-copyright">
-          © 2020 urbanpos.com, made with ❤ by PulpyOrange™
+        <div className="maab-copyright">
+          © 2020 maabaglamukhi.com, made with ❤ by PulpyOrange™
         </div>
-        <div className="urban-legal">
+        <div className="maab-legal">
           <a href="#">Terms of Service</a> | <a href="#">Privacy</a>
         </div>
       </div>

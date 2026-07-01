@@ -1,18 +1,18 @@
-/* UrbanPOS Dashboard Styles */
+/* Maa Baglamukhi Resort Dashboard Styles */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-.urban-dashboard {
+.maab-dashboard {
   min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 /* Top Navigation */
-.urban-nav {
+.maab-nav {
   background: linear-gradient(90deg, #1a1a2e 0%, #16213e 100%);
   height: 52px;
   display: flex;
@@ -25,13 +25,13 @@
   box-shadow: 0 2px 10px rgba(0,0,0,0.3);
 }
 
-.urban-nav-brand {
+.maab-nav-brand {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.urban-logo {
+.maab-logo {
   width: 36px;
   height: 36px;
   background: #fff;
@@ -44,19 +44,19 @@
   font-size: 20px;
 }
 
-.urban-brand-name {
+.maab-brand-name {
   color: #fff;
   font-weight: 700;
   font-size: 18px;
   letter-spacing: 1px;
 }
 
-.urban-nav-tabs {
+.maab-nav-tabs {
   display: flex;
   gap: 4px;
 }
 
-.urban-nav-tab {
+.maab-nav-tab {
   padding: 10px 16px;
   color: #ccc;
   font-size: 13px;
@@ -65,18 +65,18 @@
   transition: all 0.2s;
 }
 
-.urban-nav-tab:hover {
+.maab-nav-tab:hover {
   background: rgba(255,255,255,0.1);
   color: #fff;
 }
 
-.urban-nav-tab.active {
+.maab-nav-tab.active {
   background: #fff;
   color: #333;
   font-weight: 600;
 }
 
-.urban-nav-user {
+.maab-nav-user {
   margin-left: auto;
   display: flex;
   align-items: center;
@@ -85,24 +85,24 @@
   font-size: 14px;
 }
 
-.urban-nav-arrow {
+.maab-nav-arrow {
   cursor: pointer;
   padding: 6px;
   border-radius: 4px;
   transition: all 0.2s;
 }
 
-.urban-nav-arrow:hover {
+.maab-nav-arrow:hover {
   background: rgba(255,255,255,0.2);
 }
 
 /* Main Content */
-.urban-main {
+.maab-main {
   padding: 30px 20px;
 }
 
 /* Module Access Section */
-.urban-modules-section {
+.maab-modules-section {
   background: #fff;
   padding: 30px;
   border-radius: 12px;
@@ -111,7 +111,7 @@
   margin: 0 auto;
 }
 
-.urban-modules-header {
+.maab-modules-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -120,13 +120,13 @@
   border-bottom: 2px solid #eee;
 }
 
-.urban-modules-title {
+.maab-modules-title {
   font-size: 22px;
   font-weight: 700;
   color: #333;
 }
 
-.urban-settings-btn {
+.maab-settings-btn {
   background: #f5f5f5;
   border: 1px solid #ddd;
   padding: 10px 20px;
@@ -137,18 +137,18 @@
   transition: all 0.2s;
 }
 
-.urban-settings-btn:hover {
+.maab-settings-btn:hover {
   background: #e8e8e8;
   border-color: #ccc;
 }
 
-.urban-modules-grid {
+.maab-modules-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 20px;
 }
 
-.urban-module-tile {
+.maab-module-tile {
   background: #f8f9fa;
   border-radius: 10px;
   padding: 30px 20px;
@@ -163,35 +163,35 @@
   justify-content: center;
 }
 
-.urban-module-tile:hover {
+.maab-module-tile:hover {
   border-color: var(--module-color);
   transform: translateY(-5px);
   box-shadow: 0 8px 25px rgba(0,0,0,0.15);
 }
 
-.urban-module-tile:hover .urban-module-icon,
-.urban-module-tile:hover .urban-module-label {
+.maab-module-tile:hover .maab-module-icon,
+.maab-module-tile:hover .maab-module-label {
   color: var(--module-color);
 }
 
-.urban-module-tile.no-access {
+.maab-module-tile.no-access {
   filter: grayscale(100%);
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.urban-module-tile.no-access:hover {
+.maab-module-tile.no-access:hover {
   transform: none;
   border-color: transparent;
   box-shadow: none;
 }
 
-.urban-module-icon {
+.maab-module-icon {
   font-size: 52px;
   margin-bottom: 15px;
 }
 
-.urban-module-label {
+.maab-module-label {
   font-size: 14px;
   font-weight: 700;
   color: #333;
@@ -201,11 +201,11 @@
 
 /* Responsive */
 @media (max-width: 900px) {
-  .urban-modules-grid { grid-template-columns: repeat(2, 1fr); }
+  .maab-modules-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 600px) {
-  .urban-modules-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-  .urban-module-tile { padding: 20px 15px; min-height: 120px; }
-  .urban-module-icon { font-size: 40px; }
+  .maab-modules-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .maab-module-tile { padding: 20px 15px; min-height: 120px; }
+  .maab-module-icon { font-size: 40px; }
 }

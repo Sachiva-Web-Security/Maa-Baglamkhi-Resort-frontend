@@ -143,7 +143,7 @@ const FrontOfficePOS = () => {
         <div className="fo-topbar-left">
           <button className="fo-logo-btn" onClick={() => navigate("/dashboard")}>
             <span className="fo-logo-icon">Q</span>
-            <span>urbanPOS</span>
+            <span>Maa Baglamukhi</span>
           </button>
           <button
             className={`fo-tab ${activeView === "dashboard" ? "fo-tab--active" : ""}`}

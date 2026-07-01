@@ -702,7 +702,7 @@ const RestaurantPOS = () => {
         <div className="pos-topbar-left">
           <button className="pos-logo-btn" onClick={() => navigate('/dashboard')}>
             <span className="pos-logo-icon">Q</span>
-            <span>urbanPOS</span>
+            <span>Maa Baglamukhi</span>
           </button>
           <button className={`pos-tab ${activeTab === "dashboard" ? "active" : ""}`} onClick={() => setActiveTab("dashboard")}>Dashboard</button>
           <button className={`pos-tab ${activeTab === "pos" ? "active-green" : ""}`} onClick={() => setActiveTab("pos")}>New Order</button>

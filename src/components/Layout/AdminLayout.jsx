@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 /* ────────────────────────────────────────────────────────────────────
-   urbanPOS-style sidebar definition
+   Maa Baglamukhi-style sidebar definition
    - Top "Admin" header item (highlighted, with power + globe icons)
    - Flat items: Dashboard, Profile, Reports
    - Expandable items: Manage, Front Office, F&B Service, Quick Sales,
@@ -390,7 +390,7 @@ const AdminLayout = ({ children }) => {
           </div>
           {!collapsed && (
             <span style={{ fontWeight: 700, color: '#fff', fontSize: 15 }}>
-              urbanPOS
+              Maa Baglamukhi
             </span>
           )}
         </div>
