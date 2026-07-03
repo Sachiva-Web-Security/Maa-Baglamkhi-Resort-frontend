@@ -11,6 +11,8 @@ import Rooms from "./front-office/Rooms";
 import Services from "./front-office/Services";
 import Guests from "./manage/Guests";
 import HousekeepingMasterView from "./front-office/views/HousekeepingMasterView";
+import PmsDashboardView from "./front-office/views/PmsDashboardView";
+import NewReservationView from "./front-office/views/NewReservationView";
 
 const normalizeStatus = (room) => {
   const raw = String(room.status || room.operational_status || "").toLowerCase();
@@ -242,7 +244,7 @@ const FrontOfficePOS = () => {
             onClick={() => setActiveView("dashboard")}
           >Dashboard</button>
           <button
-            className={`fo-tab ${activeView === "reservation" ? "fo-tab--active" : ""}`}
+            className={`fo-tab ${activeView === "reservation" || activeView === "new-reservation" ? "fo-tab--active" : ""}`}
             onClick={() => setActiveView("reservation")}
           >Reservation</button>
           {renderTopMenu("ota", "OTA")}
@@ -284,9 +286,10 @@ const FrontOfficePOS = () => {
       </div>
 
       {/* BODY: sidebar + main */}
-      {activeView === "reservation" && <ReservationView filters={reservationFilters} setFilters={setReservationFilters} rows={reservationRows} formatDate={formatReservationDate} getStatus={reservationStatus} onRefresh={refreshReservations} refreshing={refreshing} onOpenBooking={() => navigate("/hotel")} />}
-      {activeView === "ota-bookings" && <OtaBookingsView refreshing={refreshing} onRefresh={refreshReservations} onNewReservation={() => navigate("/hotel")} />}
+      {activeView === "reservation" && <ReservationView filters={reservationFilters} setFilters={setReservationFilters} rows={reservationRows} formatDate={formatReservationDate} getStatus={reservationStatus} onRefresh={refreshReservations} refreshing={refreshing} onOpenBooking={() => setActiveView("new-reservation")} />}
+      {activeView === "ota-bookings" && <OtaBookingsView refreshing={refreshing} onRefresh={refreshReservations} onNewReservation={() => setActiveView("new-reservation")} />}
       {activeView === "ota-stop-open" && <CreditSettlementView activeTab={creditTab} onTabChange={setCreditTab} />}
+      {activeView === "new-reservation" && <NewReservationView rooms={rooms} onSaved={refreshReservations} onList={() => setActiveView("reservation")} />}
 
       {false && activeView === "reservation" && (
       <div className="fo-reservation-page">
@@ -394,7 +397,8 @@ const FrontOfficePOS = () => {
       </div>
       )}
 
-      {(activeView === "dashboard" || activeView === "checkin-checkout") && (
+      {activeView === "dashboard" && <PmsDashboardView bookings={bookings} rooms={rooms} invoices={invoices} />}
+      {activeView === "checkin-checkout" && (
       <div className="fo-body">
         {/* LEFT SIDEBAR: Room Summary */}
         <aside className="fo-sidebar">
