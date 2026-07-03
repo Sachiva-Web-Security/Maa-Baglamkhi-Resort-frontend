@@ -25,7 +25,7 @@ const Dashboard = () => {
 
   const modules = [
     { id: "admin", name: "Admin", icon: "📊", path: "/admin", color: "#6c5ce7" },
-    { id: "front_office", name: "Front Office", icon: "🏨", path: "/hotel", color: "#00b894" },
+    { id: "front_office", name: "Front Office", icon: "🏨", path: "/front-office", color: "#00b894" },
     { id: "room_dining", name: "Room Dining", icon: "🛎️", path: "/room-service", color: "#e17055" },
     { id: "restaurant", name: "Restaurant", icon: "🍽️", path: "/restaurant", color: "#fdcb6e" },
     { id: "quick_sales", name: "Quick Sales", icon: "⚡", path: "/quick-sales", color: "#74b9ff" },

@@ -2,6 +2,15 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api";
 import "./FrontOfficePOS.css";
+import ReservationView from "./front-office/views/ReservationView";
+import OtaBookingsView from "./front-office/views/OtaBookingsView";
+import CreditSettlementView from "./front-office/views/CreditSettlementView";
+import InvoiceEditorView from "./front-office/views/InvoiceEditorView";
+import RoomType from "./front-office/RoomType";
+import Rooms from "./front-office/Rooms";
+import Services from "./front-office/Services";
+import Guests from "./manage/Guests";
+import HousekeepingMasterView from "./front-office/views/HousekeepingMasterView";
 
 const normalizeStatus = (room) => {
   const raw = String(room.status || room.operational_status || "").toLowerCase();
@@ -16,10 +25,15 @@ const normalizeStatus = (room) => {
 
 const FrontOfficePOS = () => {
   const navigate = useNavigate();
-  const [activeView, setActiveView] = useState("reservation"); // "reservation" | "dashboard"
+  const [activeView, setActiveView] = useState("dashboard"); // "reservation" | "dashboard"
   const [rooms, setRooms] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [invoices, setInvoices] = useState([]);
+  const [reservationFilters, setReservationFilters] = useState({ bookingNo: "", date: "", guestName: "" });
+  const [refreshing, setRefreshing] = useState(false);
+  const [openMenu, setOpenMenu] = useState(null);
+  const [creditTab, setCreditTab] = useState("guest");
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [activeFilter, setActiveFilter] = useState("Available");
   const [roomTypeFilter, setRoomTypeFilter] = useState("");
   const [roomNumberFilter, setRoomNumberFilter] = useState("");
@@ -134,6 +148,84 @@ const FrontOfficePOS = () => {
     }
   };
 
+  const reservationRows = useMemo(() => bookings.filter((booking) => {
+    const number = String(booking.bookingId || booking.booking_id || booking.id || "");
+    const guest = String(booking.guest_name || booking.guestName || booking.customer_name || "");
+    const arrival = String(booking.check_in || booking.checkIn || "").slice(0, 10);
+    return (!reservationFilters.bookingNo || number.toLowerCase().includes(reservationFilters.bookingNo.toLowerCase()))
+      && (!reservationFilters.guestName || guest.toLowerCase().includes(reservationFilters.guestName.toLowerCase()))
+      && (!reservationFilters.date || arrival === reservationFilters.date);
+  }), [bookings, reservationFilters]);
+
+  const refreshReservations = async () => {
+    setRefreshing(true);
+    try {
+      const response = await API.get("/hotel/all-bookings");
+      setBookings(Array.isArray(response.data) ? response.data : []);
+    } catch (err) {
+      console.error("Error refreshing reservations:", err);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const formatReservationDate = (value) => {
+    if (!value) return "—";
+    const date = new Date(String(value).length === 10 ? `${value}T12:00:00` : value);
+    return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleDateString("en-GB");
+  };
+
+  const reservationStatus = (booking) => {
+    const raw = String(booking.status || booking.booking_status || "Reserved").toLowerCase();
+    if (raw.includes("cancel")) return { label: "Cancelled", tone: "cancelled" };
+    if (raw.includes("out")) return { label: "Checked Out", tone: "out" };
+    if (raw.includes("occup") || (raw.includes("check") && raw.includes("in"))) return { label: "Checked In", tone: "checked-in" };
+    return { label: "Reserved", tone: "reserved" };
+  };
+
+  const topMenus = {
+    ota: [
+      { label: "Bookings", action: () => setActiveView("ota-bookings") },
+      { label: "OTA Rates" }, { label: "OTA Inventory" }, { label: "Stop/Open Rooms", action: () => setActiveView("ota-stop-open") },
+    ],
+    manage: [
+      { label: "Invoices", action: () => setActiveView("invoice") },
+      { label: "Company Ledger", path: "/accounts" }, { label: "Cash Book", path: "/accounts" }, { label: "Due List", path: "/accounts" },
+    ],
+    master: [
+      { label: "Room Type Master", action: () => setActiveView("master-room-types") }, { label: "Room Master", action: () => setActiveView("master-rooms") },
+      { label: "Service Master", action: () => setActiveView("master-services") }, { label: "Guest Master", action: () => setActiveView("master-guests") },
+      { label: "OTA Master" }, { label: "Laundry Master" }, { label: "HK Item Group" }, { label: "HK Items" },
+    ],
+    housekeeping: [
+      { label: "Manage House Keeping", action: () => setActiveView("housekeeping-manage") }, { label: "Adjust HK Stock", path: "/housekeeping" },
+      { label: "Item Issue/Receive", path: "/housekeeping" }, { label: "Inhouse Laundry", path: "/housekeeping" },
+    ],
+    reports: [
+      "Periodical Collection", "Daily Sales", "MIS Report", "Invoice Register", "Service Wise Report", "Daily Service Report",
+      "Breakfast Report", "Room Occupancy Report", "Occupied Room Summary", "All Room Summary", "Checkout Room Summary",
+      "Company Ledger", "Room History", "Room Performance Report", "Guest List for Police", "House Keeping History",
+      "Maintenance History", "General Ledger", "Cashbook Summary", "Night Audit", "Cash Summary", "Refund Collection", "Current Stock Summary",
+    ].map((label) => ({ label, path: "/reports" })),
+  };
+
+  const runMenuItem = (item) => {
+    setOpenMenu(null);
+    if (item.action) item.action();
+    else if (item.path) navigate(item.path);
+  };
+
+  const renderTopMenu = (key, label) => (
+    <div className="fo-menu-wrap" onMouseEnter={() => setOpenMenu(key)} onMouseLeave={() => setOpenMenu(null)}>
+      <button className={`fo-tab ${openMenu === key ? "fo-tab--menu-open" : ""} ${key === "ota" && activeView.startsWith("ota-") ? "fo-tab--active" : ""} ${key === "manage" && activeView.startsWith("invoice") ? "fo-tab--active" : ""} ${key === "master" && activeView.startsWith("master-") ? "fo-tab--active" : ""} ${key === "housekeeping" && activeView.startsWith("housekeeping-") ? "fo-tab--active" : ""}`} onClick={() => setOpenMenu((current) => current === key ? null : key)}>
+        {label} <span className="fo-caret">▾</span>
+      </button>
+      {openMenu === key && <div className={`fo-dropdown fo-dropdown--${key}`}>
+        {topMenus[key].map((item) => <button key={item.label} onClick={() => runMenuItem(item)}>{item.label}</button>)}
+      </div>}
+    </div>
+  );
+
   const userName = localStorage.getItem("userName") || localStorage.getItem("name") || "User";
 
   return (
@@ -153,13 +245,21 @@ const FrontOfficePOS = () => {
             className={`fo-tab ${activeView === "reservation" ? "fo-tab--active" : ""}`}
             onClick={() => setActiveView("reservation")}
           >Reservation</button>
+          {renderTopMenu("ota", "OTA")}
           <button className="fo-tab">OTA <span className="fo-caret">▾</span></button>
-          <button className="fo-tab" onClick={() => navigate("/hotel")}>Checkin/Chechout</button>
+          <button
+            className={`fo-tab ${activeView === "checkin-checkout" ? "fo-tab--active" : ""}`}
+            onClick={() => setActiveView("checkin-checkout")}
+          >Checkin/Checkout</button>
+          {renderTopMenu("manage", "Manage")}
           <button className="fo-tab">Manage <span className="fo-caret">▾</span></button>
           <button className="fo-tab">Post Service</button>
+          {renderTopMenu("master", "Master")}
+          {renderTopMenu("housekeeping", "House Keeping")}
           <button className="fo-tab">Master <span className="fo-caret">▾</span></button>
           <button className="fo-tab">House Keeping <span className="fo-caret">▾</span></button>
           <button className="fo-tab">GRC</button>
+          {renderTopMenu("reports", "Reports")}
           <button className="fo-tab">Reports <span className="fo-caret">▾</span></button>
           <button className="fo-tab">Data Backup</button>
         </div>
@@ -184,7 +284,117 @@ const FrontOfficePOS = () => {
       </div>
 
       {/* BODY: sidebar + main */}
-      {activeView === "reservation" && (
+      {activeView === "reservation" && <ReservationView filters={reservationFilters} setFilters={setReservationFilters} rows={reservationRows} formatDate={formatReservationDate} getStatus={reservationStatus} onRefresh={refreshReservations} refreshing={refreshing} onOpenBooking={() => navigate("/hotel")} />}
+      {activeView === "ota-bookings" && <OtaBookingsView refreshing={refreshing} onRefresh={refreshReservations} onNewReservation={() => navigate("/hotel")} />}
+      {activeView === "ota-stop-open" && <CreditSettlementView activeTab={creditTab} onTabChange={setCreditTab} />}
+
+      {false && activeView === "reservation" && (
+      <div className="fo-reservation-page">
+        <div className="fo-reservation-heading">
+          <span>Reservation</span>
+          <div className="fo-reservation-actions">
+            <button className="fo-reference-btn fo-reference-btn--refresh" onClick={refreshReservations} disabled={refreshing}>↻ {refreshing ? "Refreshing" : "Refresh"}</button>
+            <button className="fo-reference-btn fo-reference-btn--new" onClick={() => navigate("/hotel")}>⊕ New Reservation</button>
+          </div>
+        </div>
+        <section className="fo-reservation-panel">
+          <div className="fo-reservation-panel-title">Search Invoice</div>
+          <div className="fo-reservation-search">
+            <input placeholder="Enter Booking No" value={reservationFilters.bookingNo} onChange={(e) => setReservationFilters((p) => ({ ...p, bookingNo: e.target.value }))} />
+            <input type="date" aria-label="Reservation date" value={reservationFilters.date} onChange={(e) => setReservationFilters((p) => ({ ...p, date: e.target.value }))} />
+            <input placeholder="Enter guest name" value={reservationFilters.guestName} onChange={(e) => setReservationFilters((p) => ({ ...p, guestName: e.target.value }))} />
+            <button className="fo-reference-btn fo-reference-btn--search">⌕ Search</button>
+            <button className="fo-reference-btn fo-reference-btn--clear" onClick={() => setReservationFilters({ bookingNo: "", date: "", guestName: "" })}>↶ Clear Filter</button>
+          </div>
+          <div className="fo-reservation-table-wrap">
+            <table className="fo-reservation-table">
+              <thead><tr><th>Action</th><th>Booking#</th><th>Date</th><th>Guest Name</th><th>Arrival</th><th>Departure Date</th><th>Adults</th><th>Children</th><th>No Of Rooms</th><th>Coming From</th><th>Pickup Point</th><th>Booking Status</th></tr></thead>
+              <tbody>
+                {reservationRows.map((booking) => {
+                  const roomList = Array.isArray(booking.rooms) ? booking.rooms : booking.rooms ? [booking.rooms] : booking.room ? [booking.room] : [];
+                  const status = reservationStatus(booking);
+                  return <tr key={booking.bookingId || booking.booking_id || booking.id}>
+                    <td><button className="fo-row-action" title="Open booking" onClick={() => navigate("/hotel")}>⋮</button></td>
+                    <td>{booking.bookingId || booking.booking_id || booking.id || "—"}</td>
+                    <td>{formatReservationDate(booking.created_at || booking.booking_date || booking.check_in || booking.checkIn)}</td>
+                    <td>{booking.guest_name || booking.guestName || booking.customer_name || "—"}</td>
+                    <td>{formatReservationDate(booking.check_in || booking.checkIn)}</td>
+                    <td>{formatReservationDate(booking.check_out || booking.checkOut)}</td>
+                    <td>{booking.adults ?? booking.no_of_adults ?? 1}</td>
+                    <td>{booking.children ?? booking.no_of_children ?? 0}</td>
+                    <td>{booking.no_of_rooms ?? (roomList.length || 1)}</td>
+                    <td>{booking.coming_from || booking.comingFrom || ""}</td>
+                    <td>{booking.pickup_point || booking.pickupPoint || ""}</td>
+                    <td><span className={`fo-booking-status fo-booking-status--${status.tone}`}>{status.label}</span></td>
+                  </tr>;
+                })}
+                {reservationRows.length === 0 && <tr><td colSpan="12" className="fo-reservation-empty">No reservations found</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        </section>
+        <button className="fo-edge-toggle" type="button" aria-label="Collapse side panel">‹</button>
+      </div>
+      )}
+
+      {false && activeView === "ota-bookings" && (
+      <div className="fo-ota-page">
+        <div className="fo-ota-heading">
+          <span>OTA Bookings</span>
+          <div className="fo-reservation-actions">
+            <button className="fo-reference-btn fo-reference-btn--refresh" onClick={refreshReservations} disabled={refreshing}>↻ {refreshing ? "Refreshing" : "Refresh"}</button>
+            <button className="fo-reference-btn fo-reference-btn--new" onClick={() => navigate("/hotel")}>⊕ New Reservation</button>
+          </div>
+        </div>
+        <section className="fo-ota-panel">
+          <div className="fo-ota-panel-head">
+            <strong>New Bookings</strong>
+            <button className="fo-acknowledge-btn">Booking Acknowledgement</button>
+          </div>
+          <div className="fo-ota-panel-body" />
+        </section>
+        <button className="fo-edge-toggle" type="button" aria-label="Collapse side panel">‹</button>
+      </div>
+      )}
+
+      {false && activeView === "ota-stop-open" && (
+      <div className="fo-credit-page">
+        <div className="fo-credit-title">CREDIT BILL SETTLEMENT</div>
+        <section className="fo-credit-panel">
+          <div className="fo-credit-tabs">
+            <button className={creditTab === "guest" ? "is-active" : ""} onClick={() => setCreditTab("guest")}>Guest</button>
+            <button className={creditTab === "vendor" ? "is-active" : ""} onClick={() => setCreditTab("vendor")}>Vendor</button>
+          </div>
+          {creditTab === "guest" ? <>
+          <div className="fo-credit-filters">
+            <label>Mobile Number<input placeholder="Mobile No" /></label>
+            <label>Guest Name<input placeholder="Guest name" /></label>
+            <div className="fo-credit-filter-actions">
+              <button className="fo-credit-search">⌕ Search</button>
+              <button className="fo-credit-reset">↶</button>
+            </div>
+          </div>
+          <div className="fo-credit-table-wrap">
+            <table className="fo-credit-table">
+              <thead><tr><th>Action</th><th>Guest Name</th><th>Mobile Number</th><th>Module</th><th>Total Credit</th><th>Total Paid</th><th>Total Received</th><th>Balance</th></tr></thead>
+              <tbody><tr><td colSpan="8">No Receipts Found</td></tr></tbody>
+            </table>
+          </div>
+          </> : <div className="fo-vendor-credit">
+            <label>Search</label>
+            <div className="fo-vendor-search-row">
+              <select defaultValue=""><option value="" disabled>Select Vendor</option></select>
+              <button className="fo-credit-search">⌕ Search</button>
+              <button className="fo-credit-reset">↶</button>
+            </div>
+            <div className="fo-vendor-empty">No Receipts Found</div>
+          </div>}
+        </section>
+        <button className="fo-edge-toggle" type="button" aria-label="Collapse side panel">‹</button>
+      </div>
+      )}
+
+      {(activeView === "dashboard" || activeView === "checkin-checkout") && (
       <div className="fo-body">
         {/* LEFT SIDEBAR: Room Summary */}
         <aside className="fo-sidebar">
@@ -253,6 +463,10 @@ const FrontOfficePOS = () => {
                     <button className="fo-card-menu" title="Actions">▾</button>
                   </div>
                   <div className="fo-card-body">{status}</div>
+                  <div className="fo-card-footer">
+                    <button className="fo-release-btn">Release</button>
+                    <span className="fo-room-home" aria-hidden="true">🏠</span>
+                  </div>
                 </div>
               );
             })}
@@ -264,8 +478,15 @@ const FrontOfficePOS = () => {
       </div>
       )}
 
+      {activeView === "invoice-edit" && <InvoiceEditorView invoice={selectedInvoice} onBack={() => setActiveView("invoice")} />}
+      {activeView === "master-room-types" && <div className="fo-master-view"><RoomType /></div>}
+      {activeView === "master-rooms" && <div className="fo-master-view"><Rooms /></div>}
+      {activeView === "master-services" && <div className="fo-master-view"><Services /></div>}
+      {activeView === "master-guests" && <div className="fo-master-view"><Guests /></div>}
+      {activeView === "housekeeping-manage" && <HousekeepingMasterView />}
+
       {/* DASHBOARD / INVOICE VIEW */}
-      {activeView === "dashboard" && (
+      {activeView === "invoice" && (
       <div className="fo-invoice-wrap">
         <div className="fo-invoice-head">
           <h2 className="fo-invoice-title">INVOICE</h2>
@@ -381,7 +602,7 @@ const FrontOfficePOS = () => {
                   return (
                     <tr key={inv.id}>
                       <td>
-                        <button className="fo-inv-action-btn" title="Edit">✎</button>
+                        <button className="fo-inv-action-btn" title="Edit" onClick={() => { setSelectedInvoice(inv); setActiveView("invoice-edit"); }}>✎</button>
                         <button className="fo-inv-action-btn fo-inv-action-btn--del" title="Delete">🗑</button>
                       </td>
                       <td>{inv.invoice_no || inv.id}</td>

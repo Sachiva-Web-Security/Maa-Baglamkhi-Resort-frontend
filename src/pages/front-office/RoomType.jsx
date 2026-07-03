@@ -23,6 +23,9 @@ const emptyRates = () =>
 const emptyForm = () => ({
   mode: "add",
   name: "",
+  description: "",
+  max_adults: 10,
+  max_child: 10,
   is_active: true,
   rates: emptyRates(),
 });
@@ -59,6 +62,9 @@ const RoomType = () => {
       mode: "edit",
       id: row.id,
       name: row.name || "",
+      description: row.description || "",
+      max_adults: row.max_adults ?? 10,
+      max_child: row.max_child ?? 10,
       is_active: !!row.is_active,
       rates: RATE_TYPES.map((rt) => {
         const existing = (row.rates || []).find((r) => r.rate_type === rt);
@@ -93,6 +99,9 @@ const RoomType = () => {
     }
     const payload = {
       name: modal.name.trim(),
+      description: modal.description || "",
+      max_adults: Number(modal.max_adults) || 0,
+      max_child: Number(modal.max_child) || 0,
       is_active: modal.is_active,
       rates: modal.rates.map((r) => ({
         rate_type: r.rate_type,
@@ -233,9 +242,9 @@ const RoomType = () => {
 
       {modal && (
         <div style={styles.modalBackdrop} onClick={closeModal}>
-          <div style={{ ...styles.modal, width: 720 }} onClick={(e) => e.stopPropagation()}>
+          <div style={{ ...styles.modal, width: 590 }} onClick={(e) => e.stopPropagation()}>
             <div style={styles.modalHeader}>
-              {modal.mode === "add" ? "Add Room Type" : "Edit Room Type"}
+              Add/Edit Room Type
               <button onClick={closeModal} style={styles.modalClose}>×</button>
             </div>
             <div style={styles.modalBody}>
@@ -278,6 +287,17 @@ const RoomType = () => {
                   </label>
                 </div>
               </div>
+
+              <div style={styles.field}>
+                <label style={styles.label}>Description</label>
+                <input style={styles.input} value={modal.description} placeholder="Room type description (facilities if any)"
+                  onChange={(e) => setModal((prev) => ({ ...prev, description: e.target.value }))} />
+              </div>
+              <div style={{ ...styles.row2, gridTemplateColumns: "80px 80px" }}>
+                <div style={styles.field}><label style={styles.label}>Max Adults</label><input type="number" style={styles.input} value={modal.max_adults} onChange={(e) => setModal((prev) => ({ ...prev, max_adults: e.target.value }))} /></div>
+                <div style={styles.field}><label style={styles.label}>Max Child</label><input type="number" style={styles.input} value={modal.max_child} onChange={(e) => setModal((prev) => ({ ...prev, max_child: e.target.value }))} /></div>
+              </div>
+              <div style={{ fontSize: 8, color: "#2196d3" }}>Enter Rate with/without meal plan according to your need.</div>
 
               <div style={{ ...styles.label, marginTop: 6 }}>Rate Matrix</div>
               <table style={styles.matrix}>
@@ -336,55 +356,59 @@ const RoomType = () => {
 
 const styles = {
   page: {
-    padding: "20px 28px 40px",
-    background: "#fff",
+    padding: "0 10px 30px",
+    background: "#f1f1f1",
     minHeight: "100%",
     fontFamily:
       '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-    color: "#2c3e50",
+    color: "#222",
+    fontSize: 9,
   },
   topbar: {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
     borderBottom: "1px solid #e6e8eb",
-    paddingBottom: 8,
-    marginBottom: 12,
+    height: 36,
+    paddingBottom: 0,
+    marginBottom: 8,
+    background: "#fff",
   },
-  title: { margin: 0, fontSize: 18, fontWeight: 600, color: "#1f2d3d" },
+  title: { margin: 0, fontSize: 12, fontWeight: 600, color: "#222" },
   refreshBtn: {
     background: "#fff",
     border: "1px solid #ccc",
     color: "#333",
-    padding: "5px 12px",
-    borderRadius: 3,
-    fontSize: 13,
+    padding: "4px 7px",
+    borderRadius: 0,
+    fontSize: 9,
     cursor: "pointer",
   },
   newBtn: {
     background: "#5bc0de",
     border: "1px solid #46b8da",
     color: "#fff",
-    padding: "5px 12px",
-    borderRadius: 3,
-    fontSize: 13,
+    padding: "4px 7px",
+    borderRadius: 0,
+    fontSize: 9,
     fontWeight: 500,
     cursor: "pointer",
   },
-  subtitle: { fontSize: 13, color: "#5b6b7c", marginBottom: 12 },
+  subtitle: { display: "none" },
   alert: { padding: "8px 12px", borderRadius: 4, fontSize: 13, marginBottom: 10 },
   alertError: { background: "#fdecea", color: "#b94a48", border: "1px solid #f3c2bd" },
   alertSuccess: { background: "#e6f4ea", color: "#2c7a3d", border: "1px solid #bfe2c8" },
 
   outerHeader: {
     display: "flex",
-    background: "#2f3640",
-    color: "#fff",
-    borderRadius: "3px 3px 0 0",
+    background: "#f5f5f5",
+    color: "#111",
+    border: "1px solid #d6d9dc",
+    borderRadius: 0,
     fontWeight: 600,
-    fontSize: 13,
+    fontSize: 9,
   },
-  headerCell: { padding: "10px 12px", whiteSpace: "nowrap" },
+  headerCell: { padding: "7px 10px", whiteSpace: "nowrap" },
   outerRow: {
     display: "flex",
     borderBottom: "1px solid #e6e8eb",
@@ -392,26 +416,26 @@ const styles = {
     borderRight: "1px solid #e6e8eb",
     background: "#fff",
   },
-  outerCell: { padding: "10px 12px", display: "flex", alignItems: "center" },
-  rtName: { fontSize: 13, fontWeight: 500, marginBottom: 8, color: "#2c3e50" },
+  outerCell: { padding: "5px 7px", display: "flex", alignItems: "center" },
+  rtName: { fontSize: 9, fontWeight: 500, marginBottom: 4, color: "#222" },
 
   nested: {
     width: "100%",
     borderCollapse: "collapse",
-    fontSize: 12,
+    fontSize: 9,
     background: "#fff",
     border: "1px solid #e6e8eb",
   },
   nestedTh: {
     background: "#f7f7f7",
     borderBottom: "1px solid #e6e8eb",
-    padding: "8px 10px",
+    padding: "6px 7px",
     textAlign: "left",
     fontWeight: 600,
     color: "#1f2d3d",
   },
   nestedTd: {
-    padding: "7px 10px",
+    padding: "6px 7px",
     borderBottom: "1px solid #f0f0f0",
     color: "#2c3e50",
   },
@@ -449,26 +473,30 @@ const styles = {
 
   modalBackdrop: {
     position: "fixed",
-    inset: 0,
-    background: "rgba(0,0,0,0.4)",
+    top: 70,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    background: "#f1f1f1",
     display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 2000,
+    alignItems: "flex-start",
+    justifyContent: "flex-start",
+    zIndex: 20,
   },
   modal: {
     background: "#fff",
-    borderRadius: 4,
-    boxShadow: "0 5px 20px rgba(0,0,0,0.25)",
+    borderRadius: 0,
+    boxShadow: "none",
+    border: "1px solid #d4d8db",
     overflow: "hidden",
     maxHeight: "90vh",
     overflowY: "auto",
   },
   modalHeader: {
-    padding: "12px 16px",
+    padding: "7px 9px",
     background: "#f7f7f7",
     borderBottom: "1px solid #e6e8eb",
-    fontSize: 15,
+    fontSize: 9,
     fontWeight: 600,
     display: "flex",
     justifyContent: "space-between",
@@ -482,7 +510,7 @@ const styles = {
     color: "#888",
     lineHeight: 1,
   },
-  modalBody: { padding: 16, display: "flex", flexDirection: "column", gap: 10 },
+  modalBody: { padding: 8, display: "flex", flexDirection: "column", gap: 8 },
   field: { display: "flex", flexDirection: "column" },
   row2: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 },
   label: {
@@ -492,11 +520,11 @@ const styles = {
     marginBottom: 4,
   },
   input: {
-    height: 34,
+    height: 23,
     border: "1px solid #ced4da",
     borderRadius: 3,
     padding: "4px 8px",
-    fontSize: 13,
+    fontSize: 9,
     background: "#fff",
     color: "#2c3e50",
     outline: "none",
@@ -505,26 +533,26 @@ const styles = {
   matrix: {
     width: "100%",
     borderCollapse: "collapse",
-    fontSize: 13,
+    fontSize: 9,
     border: "1px solid #e6e8eb",
   },
   matrixTh: {
     background: "#f7f7f7",
     borderBottom: "1px solid #e6e8eb",
-    padding: "8px 10px",
+    padding: "6px 5px",
     textAlign: "left",
     fontWeight: 600,
     color: "#1f2d3d",
     whiteSpace: "nowrap",
   },
   matrixTd: {
-    padding: "6px 8px",
+    padding: "4px 5px",
     borderBottom: "1px solid #f0f0f0",
     color: "#2c3e50",
   },
   cellInput: {
-    width: 100,
-    height: 28,
+    width: "100%",
+    height: 23,
     border: "1px solid #ced4da",
     borderRadius: 3,
     padding: "2px 6px",
@@ -533,16 +561,17 @@ const styles = {
   },
 
   modalFooter: {
-    padding: "10px 16px",
+    padding: "7px 8px",
     borderTop: "1px solid #e6e8eb",
     display: "flex",
-    justifyContent: "flex-end",
+    justifyContent: "flex-start",
     gap: 8,
     position: "sticky",
     bottom: 0,
     background: "#fff",
   },
   cancelBtn: {
+    display: "none",
     background: "#fff",
     border: "1px solid #ccc",
     color: "#333",

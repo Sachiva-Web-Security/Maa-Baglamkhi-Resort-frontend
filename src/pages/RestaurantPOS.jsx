@@ -48,9 +48,11 @@ const RestaurantPOS = () => {
   const [tableFilter, setTableFilter] = useState("ALL");
   const [editingMenuItem, setEditingMenuItem] = useState(null); // null | {id?, name, category, price, foodType, status}
   const [kotDetailsTable, setKotDetailsTable] = useState(null); // table object for which KOT details modal is open
+  const [waiterPerformance, setWaiterPerformance] = useState([]); // waiter performance data
   const [generatedBill, setGeneratedBill] = useState(null); // bill data for bill modal
   const [occupiedTableData, setOccupiedTableData] = useState({});
   const [tableOrderData, setTableOrderData] = useState({});
+  const [orderIdByTable, setOrderIdByTable] = useState({}); // tracks backend order IDs per table
 
   const defaultSections = ["RESTAURANT", "GARDEN", "PARSAL", "ROOM DINING"];
   const inferTableSection = (table) => {
@@ -83,13 +85,18 @@ const RestaurantPOS = () => {
   useEffect(() => {
     (async () => {
       try {
-        const [tablesRes, menuRes, billRes, kotRes, usersRes] = await Promise.all([
+        const [tablesRes, menuRes, billRes, kotRes, usersRes, perfRes] = await Promise.all([
           API.get("/restaurant/tables"),
           API.get("/restaurant/menu"),
           API.get("/restaurant/bills"),
           API.get("/kitchen/orders").catch(() => ({ data: [] })),
           API.get("/users"),
+          API.get("/restaurant/waiter-performance").catch(() => ({ data: [] })),
         ]);
+
+        if (perfRes.data) {
+          setWaiterPerformance(Array.isArray(perfRes.data) ? perfRes.data : []);
+        }
 
         if (tablesRes.data) {
           // Normalize table numbers: strip T/G/R/P prefixes to match DB ids
@@ -260,7 +267,13 @@ const RestaurantPOS = () => {
 
   const getTableKey = (table) => `${table.id || ''}-${normalizeTableNumber(table.number || table.tableNumber || table.table_no || String(table.id || ''))}`;
 
-  const handleTableClick = (table) => setSelectedTable(table);
+  const handleTableClick = async (table) => {
+    setSelectedTable(table);
+    // Sync order from backend when a table is selected
+    if (orderType === "DINE_IN") {
+      fetchBackendOrder(table.number);
+    }
+  };
 
   const handleCreateTable = async () => {
     const newTableNumber = normalizeTableNumber(searchTerm);
@@ -374,16 +387,34 @@ const RestaurantPOS = () => {
     setCurrentOrderItems(newItems);
     if (orderType === "DINE_IN" && selectedTable) {
       setTables(prev => prev.map(t => t.id === selectedTable.id ? { ...t, status: "Occupied" } : t));
+      handleBackendAddOrder(selectedTable.number, item);
     }
   };
 
-  const handleUpdateQuantity = (itemId, quantity) => {
+  const handleUpdateQuantity = (itemId, quantity, fromKotItem = null) => {
     const currentItems = getCurrentOrderItems();
     if (quantity < 1) {
       setCurrentOrderItems(currentItems.filter(i => i.id !== itemId));
+      // Remove from backend if it exists
+      if (fromKotItem) {
+        const orderId = selectedTable ? orderIdByTable[selectedTable.number] : null;
+        if (orderId) deleteBackendOrderItem(orderId, itemId);
+      }
       return;
     }
-    setCurrentOrderItems(currentItems.map(i => i.id === itemId ? { ...i, quantity } : i));
+    const updatedItems = currentItems.map(i => i.id === itemId ? { ...i, quantity } : i);
+    setCurrentOrderItems(updatedItems);
+    // Update backend if table selected
+    if (orderType === "DINE_IN" && selectedTable) {
+      const orderId = selectedTable ? orderIdByTable[selectedTable.number] : null;
+      if (orderId) {
+        // Find the backend order item ID
+        const backendItem = currentItems.find(i => i.id === itemId);
+        if (backendItem && backendItem._orderItemId) {
+          updateBackendOrderItem(orderId, backendItem._orderItemId, quantity);
+        }
+      }
+    }
   };
 
   const handleRemoveItem = (itemId) => setCurrentOrderItems(getCurrentOrderItems().filter(i => i.id !== itemId));
@@ -438,9 +469,6 @@ const RestaurantPOS = () => {
     const currentItems = getCurrentOrderItems();
     if (!currentItems.length) return alert("Add items first");
     if (orderType === "DINE_IN" && !selectedTable) { alert("Select a table first"); return; }
-    const subtotal = calculateTotal();
-    const tax = calculateTax();
-    const total = calculateGrandTotal();
     const currentTableData = getCurrentTableData();
     const customerName = orderType === "DINE_IN" ? (currentTableData.customerName || "") : (orderTypeData[orderType]?.customerName || "");
     const phone = orderType === "DINE_IN" ? (currentTableData.phone || "") : (orderTypeData[orderType]?.phone || "");
@@ -610,13 +638,6 @@ const RestaurantPOS = () => {
     setOrderType(type);
   };
 
-  const handleSplitBillConfirm = () => {
-    const perPerson = (calculateGrandTotal() / splitBillData.parts).toFixed(2);
-    alert(`Bill split into ${splitBillData.parts} parts\nAmount per person: ₹${perPerson}`);
-    setShowSplitBill(false);
-    setSplitBillData({ parts: 2 });
-  };
-
   const openAddMenuItem = () => setEditingMenuItem({
     id: null,
     name: "",
@@ -680,6 +701,239 @@ const RestaurantPOS = () => {
     }
   };
 
+  // ============== ORDER MANAGEMENT ==============
+
+  /** Add a single item to a backend order for this table */
+  const handleBackendAddOrder = async (tableNum, item) => {
+    try {
+      const res = await API.post("/restaurant/order/add", {
+        tableNumber: tableNum,
+        item: { name: item.name, price: item.price, quantity: item.quantity || 1 },
+      });
+      if (res.data?.orderId) {
+        setOrderIdByTable(prev => ({ ...prev, [tableNum]: res.data.orderId }));
+      }
+    } catch (err) {
+      console.error("Backend add order item failed:", err);
+    }
+  };
+
+  /** Fetch and sync order data from backend for a given table number */
+  const fetchBackendOrder = async (tableNum) => {
+    try {
+      const [orderRes, itemsRes] = await Promise.all([
+        API.get("/restaurant/order", { params: { tableNumber: tableNum } }).catch(() => ({ data: null })),
+        API.get(`/restaurant/order/${tableNum}`).catch(() => ({ data: null })),
+      ]);
+
+      if (itemsRes.data) {
+        const items = (Array.isArray(itemsRes.data) ? itemsRes.data : [itemsRes.data]).map(oi => ({
+          id: oi.id,
+          name: oi.name,
+          price: Number(oi.price || 0),
+          quantity: Number(oi.quantity || 1),
+          _orderItemId: oi.id,
+          _orderId: oi.order_id,
+        }));
+        if (items.length > 0) {
+          setCurrentOrderItems(items);
+        }
+      }
+
+      if (orderRes.data) {
+        // orderRes.data is an array; grab the first pending order
+        const pending = Array.isArray(orderRes.data)
+          ? orderRes.data.find(o => o.status === "pending")
+          : null;
+        if (pending) {
+          setOrderIdByTable(prev => ({ ...prev, [tableNum]: pending.id }));
+          // Also fetch order items using the dedicated /order-items endpoint
+          API.get(`/restaurant/order-items/${pending.id}`).then(itemsRes2 => {
+            if (itemsRes2.data) {
+              const orderedItems = (Array.isArray(itemsRes2.data) ? itemsRes2.data : [itemsRes2.data]).map(oi => ({
+                id: oi.id,
+                name: oi.name,
+                price: Number(oi.price || 0),
+                quantity: Number(oi.quantity || 1),
+                _orderItemId: oi.id,
+                _orderId: oi.order_id,
+              }));
+              if (orderedItems.length > 0) {
+                setCurrentOrderItems(orderedItems);
+              }
+            }
+          }).catch(() => {/* silently ignore */});
+        }
+      }
+    } catch (err) {
+      // silently ignore — order may not exist yet
+    }
+  };
+
+  /** Update quantity on backend order item */
+  const updateBackendOrderItem = async (orderId, itemId, qty) => {
+    if (!orderId || !itemId) return;
+    try {
+      await API.put(`/restaurant/order/${orderId}`, {
+        items: [{ orderItemId: itemId, quantity: qty }],
+      });
+    } catch (err) {
+      console.error("Backend order update failed:", err);
+    }
+  };
+
+  /** Remove an item from backend order */
+  const deleteBackendOrderItem = async (orderId, itemId) => {
+    if (!orderId) return;
+    try {
+      await API.delete(`/restaurant/order/${orderId}`, { data: { itemId } });
+    } catch (err) {
+      // Try POST fallback for some implementations
+      try {
+        await API.post(`/restaurant/order/${orderId}/remove`, { itemId });
+      } catch { /* silently ignore */ }
+    }
+  };
+
+  /** Pay the order / bill from POS */
+  const handlePayBill = async (payMethod = "Cash") => {
+    const tableNum = orderType === "DINE_IN" && selectedTable ? selectedTable.number : null;
+    if (!tableNum) return alert("Select a table first");
+    const currentItems = getCurrentOrderItems();
+    if (!currentItems.length) return alert("Add items first");
+    const total = calculateGrandTotal();
+    setLoading(true);
+    try {
+      await API.post(`/restaurant/bill/${tableNum}/pay`, {
+        paymentMethod: payMethod,
+        amount: total,
+      });
+      // Clear local order state
+      const tKey = getCurrentTableKey();
+      setTableOrderData(prev => { const n = {...prev}; delete n[tKey]; return n; });
+      const rawNum = String(selectedTable?.number || "");
+      const normNum = rawNum.replace(/^[TGRP]/, "");
+      setOccupiedTableData(prev => { const n = {...prev}; delete n[normNum]; delete n[rawNum]; return n; });
+      setKotHistory(prev => prev.filter(k => {
+        const kRaw = String(k.table || "");
+        const kNorm = kRaw.replace(/^[TGRP]/, "");
+        return kRaw !== rawNum && kNorm !== normNum;
+      }));
+      setTables(prev => prev.map(t => t.id === selectedTable?.id ? { ...t, status: "Available" } : t));
+      setOrderIdByTable(prev => { const n = {...prev}; delete n[tableNum]; return n; });
+      setSelectedTable(null);
+      fetchBills();
+      alert("Payment successful!");
+    } catch (err) {
+      console.error("Pay bill error:", err);
+      alert(err.response?.data?.message || "Payment failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /** Charge the bill to a room */
+  const handleChargeToRoom = async (roomNum) => {
+    if (!roomNum) return;
+    const tableNum = orderType === "DINE_IN" && selectedTable ? selectedTable.number : null;
+    if (!tableNum) return alert("Select a table first");
+    const total = calculateGrandTotal();
+    setLoading(true);
+    try {
+      await API.post(`/restaurant/bill/charge-to-room`, {
+        roomNumber: roomNum,
+        tableNumber: tableNum,
+        amount: total,
+      });
+      alert(`Bill charged to Room ${roomNum}`);
+    } catch (err) {
+      console.error("Charge to room error:", err);
+      alert(err.response?.data?.message || "Failed to charge to room");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ============== SPLIT BILL (REAL API) ==============
+
+  const handleSplitBillConfirm = async () => {
+    const tableNum = orderType === "DINE_IN" && selectedTable ? selectedTable.number : null;
+    const currentItems = getCurrentOrderItems();
+    if (!currentItems.length) return alert("Add items first");
+    const subtotal = calculateTotal();
+    const tax = calculateTax();
+    const total = calculateGrandTotal();
+    setLoading(true);
+    try {
+      // Create all split parts
+      const perPart = total / splitBillData.parts;
+      const promises = Array.from({ length: splitBillData.parts }, (_, i) =>
+        API.post("/restaurant/split-bills", {
+          tableNumber: tableNum,
+          entityType: orderType,
+          splitLabel: `Part ${i + 1}`,
+          splitNo: i + 1,
+          splitCount: splitBillData.parts,
+          subtotal,
+          gst: tax,
+          total: perPart,
+          paymentMethod: "Cash",
+          items: currentItems.map(it => ({ name: it.name, price: it.price, quantity: it.quantity })),
+        })
+      );
+      await Promise.allSettled(promises);
+      alert(`Bill split into ${splitBillData.parts} parts`);
+      setShowSplitBill(false);
+      setSplitBillData({ parts: 2 });
+    } catch (err) {
+      console.error("Split bill error:", err);
+      // Fall back to modal calculation
+      const perPerson = (calculateGrandTotal() / splitBillData.parts).toFixed(2);
+      alert(`Bill split into ${splitBillData.parts} parts\nAmount per person: ₹${perPerson}`);
+      setShowSplitBill(false);
+      setSplitBillData({ parts: 2 });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ============== ITEM ACTION REQUESTS (VOID / TRANSFER) ==============
+
+  const handleVoidItem = async (kotId, item) => {
+    if (!confirm(`Void item "${item.name}" qty ${item.quantity}?`)) return;
+    try {
+      await API.post("/restaurant/item-action-requests", {
+        tokenItemId: item.id || item._orderItemId || Date.now(),
+        tableNumber: kotHistory.find(k => k.id === kotId)?.table || "",
+        actionType: "void",
+        reason: "Voided from KOT modal",
+        requestedBy: localStorage.getItem("name") || "admin",
+      });
+      alert("Void request submitted.");
+    } catch (err) {
+      console.error("Void failed:", err);
+      alert(err.response?.data?.message || "Failed to void item");
+    }
+  };
+
+  const handleTransferKot = async (kot) => {
+    const newTable = prompt("Enter target table number:");
+    if (!newTable) return;
+    try {
+      await API.post("/restaurant/item-action-requests", {
+        tokenItemId: kot.id,
+        tableNumber: kot.table,
+        actionType: "transfer",
+        reason: `Transferred to table ${newTable}`,
+        requestedBy: localStorage.getItem("name") || "admin",
+      });
+      alert(`Transfer request for KOT ${kot.kotNo} to Table ${newTable} submitted.`);
+    } catch (err) {
+      console.error("Transfer failed:", err);
+      alert(err.response?.data?.message || "Failed to transfer KOT");
+    }
+  };
+
   const handleDeleteTable = async (id) => {
     if (!confirm("Delete this table?")) return;
     try {
@@ -712,6 +966,7 @@ const RestaurantPOS = () => {
           <button className={`pos-tab ${activeTab === "items" ? "active" : ""}`} onClick={() => setActiveTab("items")}>Items</button>
           <button className={`pos-tab ${activeTab === "tables" ? "active" : ""}`} onClick={() => setActiveTab("tables")}>Tables</button>
           <button className={`pos-tab ${activeTab === "invoices" ? "active" : ""}`} onClick={() => setActiveTab("invoices")}>Invoices</button>
+          <button className={`pos-tab ${activeTab === "waiters" ? "active" : ""}`} onClick={() => setActiveTab("waiters")}>Waiters</button>
           <button className={`pos-tab ${activeTab === "captains" ? "active" : ""}`} onClick={() => setActiveTab("captains")}>Captains</button>
         </div>
         <div className="pos-topbar-right">
@@ -1223,6 +1478,15 @@ const RestaurantPOS = () => {
                 <button className="action-btn blue" onClick={handleSaveBillAndSendWhatsApp} disabled={loading}>Bill + WhatsApp</button>
                 {orderType === "DINE_IN" && <button className="action-btn blue" onClick={handleTransferToRoom} disabled={loading}>Transfer</button>}
                 <button className="action-btn orange" onClick={handleSplitBillOpen} disabled={loading}>Split</button>
+                {selectedTable && (
+                  <>
+                    <button className="action-btn pink" onClick={() => handlePayBill("Cash")} disabled={loading}>Pay</button>
+                    <button className="action-btn indigo" onClick={() => {
+                      const roomNum = prompt("Enter room number:");
+                      if (roomNum) handleChargeToRoom(roomNum);
+                    }} disabled={loading}>Charge Room</button>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -1600,8 +1864,8 @@ const RestaurantPOS = () => {
                             KOT/{kot.kotNo ? String(kot.kotNo).replace(/^KOT-?/i, "") : (idx + 65)} - {fmtTs(kot.timestamp)}
                           </span>
                           <div className="kot-modal-card-actions">
-                            <button className="kot-modal-btn kot-modal-btn--void">⊘ Void Items</button>
-                            <button className="kot-modal-btn kot-modal-btn--transfer">↔ Transfer KOT</button>
+                            <button className="kot-modal-btn kot-modal-btn--void" onClick={() => handleVoidItem(kot.id, kot.items[0] || {})}>⊘ Void Items</button>
+                            <button className="kot-modal-btn kot-modal-btn--transfer" onClick={() => handleTransferKot(kot)}>↔ Transfer KOT</button>
                           </div>
                         </div>
                         <table className="kot-modal-items-table">
@@ -1649,6 +1913,40 @@ const RestaurantPOS = () => {
           bill={generatedBill}
           onClose={() => setGeneratedBill(null)}
         />
+      )}
+
+      {/* Save Customer Modal */}
+      {showSaveCustomerModal && (
+        <div className="modal-overlay" onClick={() => setShowSaveCustomerModal(false)}>
+          <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 440 }}>
+            <div className="modal-title">Customer Details</div>
+            <div className="simple-form-group">
+              <label className="simple-label">Customer Name *</label>
+              <input
+                className="simple-input"
+                value={saveCustomerInfo.customerName}
+                onChange={(e) => setSaveCustomerInfo(prev => ({ ...prev, customerName: e.target.value }))}
+                placeholder="Enter customer name"
+              />
+            </div>
+            <div className="simple-form-group">
+              <label className="simple-label">Phone Number *</label>
+              <input
+                className="simple-input"
+                value={saveCustomerInfo.phone}
+                onChange={(e) => setSaveCustomerInfo(prev => ({ ...prev, phone: e.target.value }))}
+                placeholder="Enter phone number"
+              />
+            </div>
+            <div className="modal-actions">
+              <button className="simple-btn simple-btn-secondary" onClick={() => setShowSaveCustomerModal(false)}>Cancel</button>
+              <button className="simple-btn simple-btn-primary" onClick={() => {
+                setShowSaveCustomerModal(false);
+                proceedSaveBill();
+              }}>Save &amp; Proceed</button>
+            </div>
+          </div>
+        </div>
       )}
 
       {editingMenuItem && (
@@ -1794,6 +2092,19 @@ const RestaurantPOS = () => {
               </select>
             </div>
             <div className="simple-form-group">
+              <label className="simple-label">Assigned Waiter</label>
+              <select
+                className="simple-input"
+                value={editingTable.waiter_name || ""}
+                onChange={(e) => setEditingTable((prev) => ({ ...prev, waiter_name: e.target.value }))}
+              >
+                <option value="">— Unassigned —</option>
+                {(usersRes?.data || []).filter(u => u.role === 'waiter').map(u => (
+                  <option key={u.id || u._id} value={u.name || u.userName}>{u.name || u.userName}</option>
+                ))}
+              </select>
+            </div>
+            <div className="simple-form-group">
               <label className="simple-label">Floor Name</label>
               <input
                 className="simple-input"
@@ -1857,6 +2168,46 @@ const RestaurantPOS = () => {
                 {captains.length === 0 && <tr><td colSpan="3" style={{ textAlign: 'center', color: '#999', padding: '20px' }}>No captains found</td></tr>}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* === WAITER PERFORMANCE === */}
+      {activeTab === "waiters" && (
+        <div className="pos-management-view">
+          <div className="simple-card">
+            <div className="simple-page-header">
+              <h2 className="simple-page-title">Waiter Performance</h2>
+            </div>
+            {waiterPerformance.length === 0 ? (
+              <div className="empty-order">No performance data available yet.</div>
+            ) : (
+              <table className="simple-table">
+                <thead>
+                  <tr>
+                    <th>Waiter Name</th>
+                    <th>Total Orders</th>
+                    <th>Total Amount (₹)</th>
+                    <th>Avg Order Value (₹)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {waiterPerformance.map((wp, idx) => {
+                    const totalAmt = Number(wp.totalAmount || wp.total_amount || 0);
+                    const totalOrders = Number(wp.orderCount || wp.total_orders || 0);
+                    const avg = totalOrders > 0 ? totalAmt / totalOrders : 0;
+                    return (
+                      <tr key={idx}>
+                        <td className="font-medium">{wp.waiterName || wp.waiter_name || "—"}</td>
+                        <td>{totalOrders}</td>
+                        <td>₹{totalAmt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td>₹{avg.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
           </div>
         </div>
       )}
