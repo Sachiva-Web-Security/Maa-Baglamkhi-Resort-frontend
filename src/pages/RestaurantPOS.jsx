@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { io } from "socket.io-client";
 import API from "../api";
 import RestaurantBillModal from "../components/Restaurant/RestaurantBillModal";
 import "./RestaurantPOS.css";
@@ -54,9 +55,27 @@ const RestaurantPOS = () => {
   const [selectedManageKot, setSelectedManageKot] = useState(null);
   const [selectedSettlement, setSelectedSettlement] = useState(null);
   const [editingItemGroup, setEditingItemGroup] = useState(false);
+  const [tableSetupTarget, setTableSetupTarget] = useState(null);
+  const [tableSetupPax, setTableSetupPax] = useState(null);
+  const [invoiceTable, setInvoiceTable] = useState(null);
   const [occupiedTableData, setOccupiedTableData] = useState({});
   const [tableOrderData, setTableOrderData] = useState({});
   const [orderIdByTable, setOrderIdByTable] = useState({}); // tracks backend order IDs per table
+  // Dashboard summary from backend
+  const [dashboardSummary, setDashboardSummary] = useState(null);
+  // Date filters for reports
+  const [dashboardDateFrom, setDashboardDateFrom] = useState(() => new Date().toISOString().slice(0, 10));
+  const [dashboardDateTo, setDashboardDateTo] = useState(() => new Date().toISOString().slice(0, 10));
+  const [transactionDateFrom, setTransactionDateFrom] = useState(() => new Date().toISOString().slice(0, 10));
+  const [transactionDateTo, setTransactionDateTo] = useState(() => new Date().toISOString().slice(0, 10));
+  const [settlementDateFrom, setSettlementDateFrom] = useState(() => new Date().toISOString().slice(0, 10));
+  const [settlementDateTo, setSettlementDateTo] = useState(() => new Date().toISOString().slice(0, 10));
+  const [kotDateFrom, setKotDateFrom] = useState(() => new Date().toISOString().slice(0, 10));
+  const [kotDateTo, setKotDateTo] = useState(() => new Date().toISOString().slice(0, 10));
+  // Filtered data from backend
+  const [filteredBills, setFilteredBills] = useState([]);
+  const [filteredKots, setFilteredKots] = useState([]);
+  const [topSellingItems, setTopSellingItems] = useState([]);
 
   const defaultSections = ["RESTAURANT", "GARDEN", "PARSAL", "ROOM DINING"];
   const inferTableSection = (table) => {
@@ -86,17 +105,110 @@ const RestaurantPOS = () => {
     return Array.from(set);
   }, [menuItems]);
 
+  // Tab change effect: refresh data when switching to dashboard, transaction, settlement, or manageKot
+  useEffect(() => {
+    if (activeTab === "dashboard") {
+      fetchDashboardSummary(dashboardDateFrom, dashboardDateTo);
+      fetchTopSellingItems(dashboardDateFrom, dashboardDateTo);
+    } else if (activeTab === "transaction") {
+      fetchFilteredBills(transactionDateFrom, transactionDateTo);
+    } else if (activeTab === "manageSettlement") {
+      fetchFilteredBills(settlementDateFrom, settlementDateTo);
+    } else if (activeTab === "manageKot") {
+      fetchFilteredKots(kotDateFrom, kotDateTo);
+    }
+  }, [activeTab]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Socket.io for real-time kitchen order updates
+  useEffect(() => {
+    // Initialize socket connection if not already present
+    if (!window.socket) {
+      // Get the base URL without /api suffix for socket.io connection
+      const apiBase = API.defaults.baseURL || '';
+      const socketUrl = apiBase.replace(/\/api\/?$/, '') || 'http://localhost:5002';
+      window.socket = io(socketUrl, {
+        withCredentials: true,
+        transports: ['websocket', 'polling'],
+      });
+    }
+
+    const socket = window.socket;
+
+    const handleKitchenOrderCreated = (data) => {
+      // New order from kitchen — add to kotHistory
+      setKotHistory(prev => [...prev, {
+        id: data.id,
+        kotNo: data.kotNo || `KOT-${data.id}`,
+        table: data.table || "",
+        normNumber: String(data.table || "").replace(/^[TGRP]/, ""),
+        timestamp: new Date().toISOString(),
+        items: data.items || [],
+        status: "Pending",
+        waiter_name: data.waiter || "RECEPTION",
+      }]);
+
+      // Also update occupiedTableData for this table if it's DINE_IN
+      if (data.table && (!data.entityType || data.entityType === "Table")) {
+        const normNum = String(data.table || "").replace(/^[TGRP]/, "");
+        const total = (data.items || []).reduce((s, it) => s + (Number(it.price || 0) * Number(it.quantity || 0)), 0);
+        setOccupiedTableData(prev => ({
+          ...prev,
+          [normNum]: {
+            amount: total,
+            captain: data.waiter || "RECEPTION",
+            guests: 1,
+            orderId: null,
+            timestamp: new Date().toISOString(),
+            billing: false,
+            normNumber: normNum,
+          },
+        }));
+      }
+    };
+
+    const handleKitchenOrderUpdated = (data) => {
+      // Order status changed — update kotHistory
+      setKotHistory(prev => prev.map(k => {
+        if (k.id === data.id) {
+          return { ...k, status: data.status, items: data.items || k.items };
+        }
+        return k;
+      }));
+    };
+
+    const handleKitchenOrderReady = (data) => {
+      // Order is ready — optionally show notification
+      console.log("Kitchen order ready:", data);
+    };
+
+    socket.on("kitchen-order-created", handleKitchenOrderCreated);
+    socket.on("kitchen-order-updated", handleKitchenOrderUpdated);
+    socket.on("kitchen-order-ready", handleKitchenOrderReady);
+
+    return () => {
+      socket.off("kitchen-order-created", handleKitchenOrderCreated);
+      socket.off("kitchen-order-updated", handleKitchenOrderUpdated);
+      socket.off("kitchen-order-ready", handleKitchenOrderReady);
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     (async () => {
       try {
-        const [tablesRes, menuRes, billRes, kotRes, usersRes, perfRes] = await Promise.all([
+        const [tablesRes, menuRes, billRes, kotRes, usersRes, perfRes, dashboardRes] = await Promise.all([
           API.get("/restaurant/tables"),
           API.get("/restaurant/menu"),
           API.get("/restaurant/bills"),
           API.get("/kitchen/orders").catch(() => ({ data: [] })),
           API.get("/users"),
           API.get("/restaurant/waiter-performance").catch(() => ({ data: [] })),
+          API.get("/restaurant/dashboard-summary").catch(() => ({ data: null })),
         ]);
+
+        // Dashboard summary from backend
+        if (dashboardRes.data) {
+          setDashboardSummary(dashboardRes.data);
+        }
 
         if (perfRes.data) {
           setWaiterPerformance(Array.isArray(perfRes.data) ? perfRes.data : []);
@@ -119,38 +231,21 @@ const RestaurantPOS = () => {
           }
         }
 
-        // Build occupiedTableData — always keyed by normalized number so KOT and bill data align
+        // Build occupiedTableData — keyed by normalized number
+        // Source of truth: KOT orders first (tables are occupied once they have KOTs),
+        // then bills (tables with completed bills)
         const occData = {};
-        (billRes.data || []).forEach(b => {
-          const rawNum = String(b.tableNumber || b.table || "");
-          const normNum = rawNum.replace(/^[TGRP]/, "");
-          const key = normNum || rawNum;
-          if (key && !occData[key]) {
-            occData[key] = {
-              amount: Number(b.total) || 0,
-              captain: b.waiter_name || b.waiter || b.captain || "RECEPTION",
-              guests: b.guestCount || b.pax || 0,
-              orderId: b.id,
-              timestamp: b.created_at || b.date || null,
-              billing: true,
-              bill: b,
-              rawNumber: rawNum,
-              normNumber: normNum,
-            };
-          }
-        });
-
-        // Also flag tables as occupied if they have active kitchen orders
-        const kotByTable = {};
-        const kotHistoryFromApi = [];
         const menuPrices = {};
         (menuRes.data || []).forEach(m => {
           menuPrices[String(m.name || "").toLowerCase()] = Number(m.price || m.effectivePrice || 0);
         });
 
+        // --- PHASE 1: Collect all KOT orders per table ---
+        const kotByTable = {};  // rawNum -> []
+        const kotHistoryFromApi = [];
+
         (kotRes.data || []).forEach(k => {
           const rawNum = String(k.table_number || "");
-          // Normalize key so T1, G1, R1, P1 all match table "1"
           const normNum = rawNum.replace(/^[TGRP]/, "");
           kotByTable[normNum] = kotByTable[normNum] || [];
           kotByTable[rawNum] = kotByTable[rawNum] || [];
@@ -160,7 +255,7 @@ const RestaurantPOS = () => {
               const arr = JSON.parse(k.items || "[]");
               return arr.map(it => ({
                 ...it,
-                price: menuPrices[String(it.name || "").toLowerCase()] || 0,
+                price: menuPrices[String(it.name || "").toLowerCase()] || Number(it.price || 0),
               }));
             } catch { return []; }
           })();
@@ -172,42 +267,63 @@ const RestaurantPOS = () => {
             normNumber: normNum,
             timestamp: k.created_at,
             items: parsedItems,
+            status: k.status,
+            waiter_name: k.waiter_name,
           };
           kotByTable[normNum].push(kotEntry);
           kotHistoryFromApi.push(kotEntry);
         });
 
-        // Merge KOT totals into occData for display
-        Object.keys(kotByTable).forEach(rawNum => {
-          const normNum = rawNum.replace(/^[TGRP]/, "");
-          const key = occData[rawNum] ? rawNum : normNum;
-          if (!occData[key] && kotByTable[rawNum]) {
-            const allItems = kotByTable[rawNum].flatMap(k => k.items);
-            const total = allItems.reduce((s, it) => s + (Number(it.price || 0) * Number(it.quantity || 0)), 0);
-            occData[key] = {
-              amount: total,
-              captain: "RECEPTION",
-              guests: 1,
-              orderId: null,
-              timestamp: kotByTable[rawNum]?.[0]?.timestamp || null,
-              billing: false,
-              rawNumber: rawNum,
-              normNumber: normNum,
-            };
-          }
+        // Mark tables with active KOTs as occupied FIRST (source of truth)
+        Object.keys(kotByTable).forEach(normNum => {
+          const allItems = kotByTable[normNum].flatMap(k => k.items || []);
+          const total = allItems.reduce((s, it) => s + (Number(it.price || 0) * Number(it.quantity || 0)), 0);
+          // Use the first (most recent) KOT's waiter name
+          const waiter = kotByTable[normNum][0]?.waiter_name || "RECEPTION";
+          const ts = kotByTable[normNum][0]?.timestamp || null;
+
+          occData[normNum] = {
+            amount: total,
+            captain: waiter,
+            guests: 1,
+            orderId: null,
+            timestamp: ts,
+            billing: false,
+            rawNumber: null,
+            normNumber: normNum,
+          };
         });
 
-        // Update kotHistory so KOT modal shows real data
-        if (kotHistoryFromApi.length > 0) {
-          setKotHistory(kotHistoryFromApi);
-        }
+        // --- PHASE 2: Merge bills on top ---
+        // If a table has BOTH KOTs and a bill, the bill takes over (table is in billing state)
+        (billRes.data || []).forEach(b => {
+          const rawNum = String(b.tableNumber || b.table || "");
+          const normNum = rawNum.replace(/^[TGRP]/, "");
+          const key = normNum || rawNum;
+          if (!key) return;
 
-        // Update occData amounts to be the running KOT total (all items × price) for tables with KOTs
+          occData[key] = {
+            amount: Number(b.total) || 0,
+            captain: b.waiter_name || b.waiter || b.captain || "RECEPTION",
+            guests: b.guestCount || b.pax || 0,
+            orderId: b.id,
+            timestamp: b.created_at || b.date || null,
+            billing: true,
+            bill: b,
+            rawNumber: rawNum,
+            normNumber: normNum,
+          };
+        });
+
+        // Update KOT totals for tables that also have bills
         Object.keys(kotByTable).forEach(normNum => {
           if (!occData[normNum]) return;
           const allItems = kotByTable[normNum].flatMap(k => k.items || []);
           const kotTotal = allItems.reduce((s, it) => s + (it.price || 0) * (it.quantity || 0), 0);
-          occData[normNum].amount = kotTotal;
+          // Only update amount if table is NOT in billing state
+          if (!occData[normNum].billing) {
+            occData[normNum].amount = kotTotal;
+          }
         });
 
         setOccupiedTableData(occData);
@@ -223,6 +339,10 @@ const RestaurantPOS = () => {
           status: b.invoiceStatus,
           date: b.created_at,
         })));
+
+        if (kotHistoryFromApi.length > 0) {
+          setKotHistory(kotHistoryFromApi);
+        }
 
         if (usersRes.data) {
           setCaptains(usersRes.data.filter(u => u.role === "Waiter" || u.role === "waiter"));
@@ -257,6 +377,72 @@ const RestaurantPOS = () => {
       }
     } catch (err) {
       console.error("Error fetching bills:", err);
+    }
+  };
+
+  const fetchDashboardSummary = async (fromDate, toDate) => {
+    try {
+      const params = {};
+      if (fromDate) params.from = fromDate;
+      if (toDate) params.to = toDate;
+      const res = await API.get("/restaurant/dashboard-summary", { params });
+      if (res.data) setDashboardSummary(res.data);
+    } catch (err) {
+      console.error("Error fetching dashboard summary:", err);
+    }
+  };
+
+  const fetchFilteredBills = async (fromDate, toDate) => {
+    try {
+      const params = {};
+      if (fromDate) params.from = fromDate;
+      if (toDate) params.to = toDate;
+      const res = await API.get("/restaurant/bills/filtered", { params });
+      if (res.data) {
+        setFilteredBills(res.data);
+        setInvoiceGroups(res.data.map(b => ({
+          id: b.id,
+          invoiceNo: b.id,
+          table: b.tableNumber || b.table,
+          amount: b.total,
+          gst: b.gst,
+          discountAmount: b.discountAmount || b.discount || 0,
+          entityType: b.entityType || 'Table',
+          status: b.invoiceStatus,
+          date: b.created_at,
+          customerName: b.customerName,
+          phone: b.phone,
+          paymentMethod: b.paymentMethod,
+          waiter_name: b.waiter_name,
+        })));
+      }
+    } catch (err) {
+      console.error("Error fetching filtered bills:", err);
+    }
+  };
+
+  const fetchFilteredKots = async (fromDate, toDate, tableNumber) => {
+    try {
+      const params = {};
+      if (fromDate) params.from = fromDate;
+      if (toDate) params.to = toDate;
+      if (tableNumber) params.tableNumber = tableNumber;
+      const res = await API.get("/restaurant/kot-history", { params });
+      if (res.data) setFilteredKots(res.data);
+    } catch (err) {
+      console.error("Error fetching KOT history:", err);
+    }
+  };
+
+  const fetchTopSellingItems = async (fromDate, toDate) => {
+    try {
+      const params = {};
+      if (fromDate) params.from = fromDate;
+      if (toDate) params.to = toDate;
+      const res = await API.get("/restaurant/top-selling", { params });
+      if (res.data) setTopSellingItems(res.data);
+    } catch (err) {
+      console.error("Error fetching top selling items:", err);
     }
   };
 
@@ -651,6 +837,61 @@ const RestaurantPOS = () => {
     if (type === "DELIVERY") setDeliveryNewOrder(false);
   };
 
+  const handleSaveKOT = async () => {
+    const currentItems = getCurrentOrderItems();
+    if (!currentItems.length) return alert("Add items first");
+    if (!selectedTable) return alert("Select a table first");
+    setLoading(true);
+    try {
+      const kitchenItems = currentItems.map(i => ({ name: i.name, quantity: i.quantity, price: Number(i.price || 0) }));
+      let responseData = null;
+      try {
+        const response = await API.post("/kitchen/order", {
+          table: selectedTable.number,
+          waiter: getCurrentTableData().captain || "RECEPTION",
+          items: kitchenItems,
+          entityType: "DINE_IN",
+          prepTimeMinutes: 20,
+        });
+        responseData = response?.data || null;
+      } catch (error) {
+        console.error("KOT save API failed; retaining local KOT state:", error);
+      }
+      const savedAt = new Date();
+      const newKOT = { id: responseData?.id || Date.now(), kotNo: responseData?.kotNo || `KOT-${Date.now()}`, table: selectedTable.number, captain: getCurrentTableData().captain || "RECEPTION", timestamp: savedAt, items: kitchenItems };
+      setKotHistory(prev => [...prev, newKOT]);
+      const rawNumber = String(selectedTable.number || selectedTable.tableNumber || "");
+      const normalizedNumber = rawNumber.replace(/^[TGRP]/, "");
+      setOccupiedTableData(prev => ({ ...prev, [normalizedNumber]: {
+        amount: calculateTotal(),
+        captain: getCurrentTableData().captain || "RECEPTION",
+        guests: getCurrentTableData().pax || 1,
+        orderId: responseData?.id || orderIdByTable[selectedTable.number],
+        timestamp: savedAt,
+        billing: false,
+      }}));
+      setTables(prev => prev.map(table => table.id === selectedTable.id ? { ...table, status: "Occupied" } : table));
+      setSelectedTable(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const openTableSetup = (table) => {
+    setTableSetupTarget(table);
+    setTableSetupPax(null);
+  };
+
+  const finishTableSetup = (captain) => {
+    if (!tableSetupTarget || !tableSetupPax) return;
+    const tableKey = getTableKey(tableSetupTarget);
+    setTableOrderData(prev => ({ ...prev, [tableKey]: { ...(prev[tableKey] || {}), pax: tableSetupPax, captain } }));
+    const target = tableSetupTarget;
+    setTableSetupTarget(null);
+    setTableSetupPax(null);
+    handleTableClick(target);
+  };
+
   const openAddMenuItem = () => setEditingMenuItem({
     id: null,
     name: "",
@@ -658,6 +899,12 @@ const RestaurantPOS = () => {
     price: "",
     foodType: "Veg",
     status: "Available",
+    itemCode: "",
+    shortcutKey: "",
+    barcode: "",
+    displayName: "",
+    unit: "",
+    favourite: false,
   });
 
   const openEditMenuItem = (item) => setEditingMenuItem({
@@ -1124,17 +1371,16 @@ const RestaurantPOS = () => {
                       getCurrentOrderItems().map((item, idx) => (
                         <tr key={item.id}>
                           <td>{idx + 1}</td>
-                          <td>{item.name}</td>
-                          <td>—</td>
-                          <td>
+                          <td className="kot-item-name-cell"><button className="kot-row-delete" onClick={() => handleRemoveItem(item.id)} title="Remove item">▣</button><span>{item.name}</span></td>
+                          <td><button className="kot-modifier-btn" title="Add modifier">＋</button></td>
+                          <td className="kot-row-qty">
                             <button className="qty-btn" onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}>−</button>
-                            <span className="qty-display">{item.quantity}</span>
+                            <input value={item.quantity} onChange={(e) => handleUpdateQuantity(item.id, Math.max(1, Number(e.target.value) || 1))} />
                             <button className="qty-btn" onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}>+</button>
                           </td>
                           <td>₹{item.price.toFixed(2)}</td>
                           <td>
                             ₹{(item.price * item.quantity).toFixed(2)}
-                            <span onClick={() => handleRemoveItem(item.id)} style={{ cursor: "pointer", color: "#e74c3c", marginLeft: 6, fontSize: 11 }}>✕</span>
                           </td>
                         </tr>
                       ))
@@ -1154,7 +1400,7 @@ const RestaurantPOS = () => {
                 <button className="np-num">9</button>
                 <button className="np-blank" />
                 <button className="np-gray">Qty</button>
-                <button className="np-red" onClick={handleSaveBill} disabled={loading}>Save KOT</button>
+                <button className="np-red" onClick={handleSaveKOT} disabled={loading}>Save KOT</button>
 
                 <button className="np-num">4</button>
                 <button className="np-num">5</button>
@@ -1217,7 +1463,7 @@ const RestaurantPOS = () => {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
-                <button className="pos-inside-menu-add" title="Add new item">+</button>
+                <button className="pos-inside-menu-add" title="Add new item" onClick={openAddMenuItem}>+</button>
               </div>
               <div className="pos-inside-menu-grid">
                 {filteredMenuItems.map((item) => (
@@ -1335,7 +1581,7 @@ const RestaurantPOS = () => {
                   <div
                     key={getTableKey(table)}
                     className={`table-card ${occ ? 'occupied' : ''} ${attention ? 'attention' : ''} ${sel ? 'selected' : ''}`}
-                    onClick={() => handleTableClick(table)}
+                    onClick={undefined}
                   >
                     <div className="table-card-top">
                       <span className={`table-num ${selectedSection === "PARSAL" ? "table-num--parcel" : ""}`}>{displayTableLabel}</span>
@@ -1353,8 +1599,8 @@ const RestaurantPOS = () => {
                     <div className="table-card-bottom">
                       <button
                         className="table-card-icon-btn"
-                        title="Add order"
-                        onClick={(e) => { stop(e); handleTableClick(table); }}
+                        title="KOT"
+                        onClick={(e) => { stop(e); openTableSetup(table); }}
                       >
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="square">
                           <rect x="4" y="4" width="16" height="16" />
@@ -1367,7 +1613,7 @@ const RestaurantPOS = () => {
                           <button
                             className="table-card-icon-btn"
                             title="Invoice"
-                            onClick={(e) => { stop(e); setKotDetailsTable(table); }}
+                            onClick={(e) => { stop(e); setSelectedTable(table); setInvoiceTable(table); setActiveTab("tableInvoice"); }}
                           >
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <path d="M6 2h12v20l-3-2-3 2-3-2-3 2z" />
@@ -1378,7 +1624,7 @@ const RestaurantPOS = () => {
                           </button>
                           <button
                             className="table-card-icon-btn"
-                            title="KOT list"
+                            title="KOT Details"
                             onClick={(e) => { stop(e); setKotDetailsTable(table); }}
                           >
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
@@ -1587,22 +1833,25 @@ const RestaurantPOS = () => {
             <div className="simple-page-header">
               <h2 className="simple-page-title">Restaurant Dashboard</h2>
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <input type="date" style={{ border: '1px solid #ccc', padding: '4px 6px', fontSize: '11px', borderRadius: '3px' }} />
-                <input type="date" style={{ border: '1px solid #ccc', padding: '4px 6px', fontSize: '11px', borderRadius: '3px' }} />
-                <button style={{ background: '#3498db', color: '#fff', border: 'none', padding: '4px 10px', fontSize: '11px', borderRadius: '3px', cursor: 'pointer' }}>Search</button>
+                <input type="date" value={dashboardDateFrom} onChange={e => setDashboardDateFrom(e.target.value)} style={{ border: '1px solid #ccc', padding: '4px 6px', fontSize: '11px', borderRadius: '3px' }} />
+                <input type="date" value={dashboardDateTo} onChange={e => setDashboardDateTo(e.target.value)} style={{ border: '1px solid #ccc', padding: '4px 6px', fontSize: '11px', borderRadius: '3px' }} />
+                <button onClick={() => { fetchDashboardSummary(dashboardDateFrom, dashboardDateTo); fetchTopSellingItems(dashboardDateFrom, dashboardDateTo); }} style={{ background: '#3498db', color: '#fff', border: 'none', padding: '4px 10px', fontSize: '11px', borderRadius: '3px', cursor: 'pointer' }}>Search</button>
               </div>
             </div>
           </div>
           <div className="pos-kpi-grid">
             {(() => {
-              const totalSales = invoiceGroups.reduce((s, inv) => s + Number(inv.amount || 0), 0);
-              const totalTax = invoiceGroups.reduce((s, inv) => s + Number(inv.gst || 0), 0);
-              const totalDiscount = invoiceGroups.reduce((s, inv) => s + Number(inv.discountAmount || 0), 0);
-              const counterSale = invoiceGroups.filter(inv => inv.entityType === 'Quick' || inv.entityType === 'Counter').reduce((s, inv) => s + Number(inv.amount || 0), 0);
-              const parcelCharges = invoiceGroups.filter(inv => inv.entityType === 'Parcel' || inv.entityType === 'PARCEL').reduce((s, inv) => s + Number(inv.amount || 0), 0);
+              const totalSales = dashboardSummary ? (dashboardSummary.totalTableSale || 0) : invoiceGroups.reduce((s, inv) => s + Number(inv.amount || 0), 0);
+              const totalTax = dashboardSummary ? (dashboardSummary.totalGST || 0) : invoiceGroups.reduce((s, inv) => s + Number(inv.gst || 0), 0);
+              const totalDiscount = dashboardSummary ? (dashboardSummary.totalDiscount || 0) : invoiceGroups.reduce((s, inv) => s + Number(inv.discountAmount || 0), 0);
+              const counterSale = dashboardSummary ? (dashboardSummary.totalCounterSale || 0) : invoiceGroups.filter(inv => inv.entityType === 'Quick' || inv.entityType === 'Counter').reduce((s, inv) => s + Number(inv.amount || 0), 0);
+              const parcelCharges = dashboardSummary ? (dashboardSummary.totalParcelSale || 0) : invoiceGroups.filter(inv => inv.entityType === 'Parcel' || inv.entityType === 'PARCEL').reduce((s, inv) => s + Number(inv.amount || 0), 0);
+              const totalBillCount = dashboardSummary ? (dashboardSummary.totalBillCount || 0) : invoiceGroups.length;
+              const kitchenOrdersCount = dashboardSummary ? (dashboardSummary.kitchenOrdersCount || 0) : 0;
+              const avgOrder = dashboardSummary ? (dashboardSummary.averageOrderValue || 0) : (totalBillCount > 0 ? totalSales / totalBillCount : 0);
 
               const kpis = [
-                { label: 'Table Sale', value: `₹ ${totalSales.toFixed(2)}`, sub: `Invoices: ${invoiceGroups.length}` },
+                { label: 'Table Sale', value: `₹ ${totalSales.toFixed(2)}`, sub: `Invoices: ${totalBillCount}` },
                 { label: 'Counter Sale', value: `₹ ${counterSale.toFixed(2)}`, sub: 'Unsettled: 0' },
                 { label: 'Parcel Charges', value: `₹ ${parcelCharges.toFixed(2)}`, sub: ' ' },
                 { label: 'Total Tax', value: `₹ ${totalTax.toFixed(2)}`, sub: 'CGST + SGST' },
@@ -1656,11 +1905,11 @@ const RestaurantPOS = () => {
               <table className="pos-table">
                 <thead><tr><th>#</th><th>Item Name</th><th>Qty</th><th>Amount</th></tr></thead>
                 <tbody>
-                  {getCurrentOrderItems().length > 0 ? getCurrentOrderItems().map((item, idx) => (
+                  {topSellingItems.length > 0 ? topSellingItems.map((item, idx) => (
                     <tr key={idx}>
-                      <td>{idx + 1}</td><td>{item.name}</td><td>{item.quantity}</td><td>₹ {(item.price * item.quantity).toLocaleString()}</td>
+                      <td>{idx + 1}</td><td>{item.itemName || item.name || '—'}</td><td>{item.quantity || 0}</td><td>₹ {(item.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                     </tr>
-                  )) : <tr><td colSpan="4" style={{ textAlign: 'center', color: '#999' }}>No items sold today</td></tr>}
+                  )) : <tr><td colSpan="4" style={{ textAlign: 'center', color: '#999' }}>No data for selected date range</td></tr>}
                 </tbody>
               </table>
             </div>
@@ -1765,6 +2014,32 @@ const RestaurantPOS = () => {
       )}
 
       {/* === KDS === */}
+      {activeTab === "tableInvoice" && invoiceTable && (() => {
+        const tableKey = getTableKey(invoiceTable);
+        const localItems = tableOrderData[tableKey]?.items || [];
+        const relatedKots = kotHistory.filter(kot => String(kot.table) === String(invoiceTable.number));
+        const items = localItems.length ? localItems : relatedKots.flatMap(kot => kot.items || []);
+        const itemTotal = items.reduce((sum, item) => sum + Number(item.price || 0) * Number(item.quantity || 0), 0);
+        const serviceCharge = itemTotal * .05;
+        const subTotal = itemTotal + serviceCharge;
+        const netTotal = Math.round(subTotal);
+        return <div className="table-invoice-page">
+          <div className="table-invoice-head"><span>Table No {invoiceTable.number}</span><span>Invoice # (New)</span><span>Date {new Date().toLocaleDateString("en-GB")}</span><button onClick={() => { setInvoiceTable(null); setSelectedTable(null); setActiveTab("pos"); }}>Back To Table List</button></div>
+          <div className="table-invoice-main">
+            <div className="table-invoice-left">
+              <div className="table-invoice-meta"><span>Captain <strong>{tableOrderData[tableKey]?.captain || "RECEPTION"}</strong></span><span>No Of Person <strong>{tableOrderData[tableKey]?.pax || 1}</strong></span></div>
+              <table><thead><tr><th>Item Name</th><th>Quantity</th><th>Rate</th><th>Disc</th><th>Amount</th></tr></thead><tbody>{items.map((item, i) => <tr key={`${item.id || item.name}-${i}`}><td>{item.name}</td><td>{Number(item.quantity || 0).toFixed(3)}</td><td>{Number(item.price || 0).toFixed(2)}</td><td>0.00</td><td>{(Number(item.price || 0) * Number(item.quantity || 0)).toFixed(2)}</td></tr>)}</tbody></table>
+              <div className="table-invoice-count">Total Items: {items.reduce((sum, item) => sum + Number(item.quantity || 0), 0)}</div>
+              <div className="table-invoice-bottom">
+                <div className="invoice-keypad">{["7","8","9","","4","5","6","Clear","1","2","3","−","0",".","Discount","Rate"].map((key, i) => <button key={`${key}-${i}`}>{key}</button>)}</div>
+                <div className="invoice-totals"><div><span>Food</span><strong>{itemTotal.toFixed(2)}</strong></div><div><span>Ser.Charges on Food @5.00%</span><strong>{serviceCharge.toFixed(2)}</strong></div><div><span>Sub Total</span><strong>{subTotal.toFixed(2)}</strong></div><div className="invoice-charge-row"><span>Del. Ch.</span><input defaultValue="0" /><span>Cont. Ch.</span><input defaultValue="0" /></div><div className="invoice-net"><span>Round Off.</span><strong>{(netTotal - subTotal).toFixed(2)}</strong><span>Net Total</span><strong>{netTotal.toFixed(2)}</strong></div></div>
+              </div>
+            </div>
+          </div>
+          <div className="table-invoice-actions"><div><button>◆ Parcel</button><button>◆ NC</button><button>▣</button><label><input type="checkbox" /> No Ser. Charge?</label><label><input type="checkbox" /> Tax Exemption?</label></div><div><button onClick={handleSaveBill}>▣ Save</button><button onClick={handleSaveBillAndSendWhatsApp}>▣ Save &amp; Print</button><button>▣ Guest</button><button>◆ Discount</button></div></div>
+        </div>;
+      })()}
+
       {activeTab === "itemGroupMaster" && (
         <div className="item-group-page">
           <div className="item-group-title">Manage Item Groups <div><button>⟳ Refresh</button><button onClick={() => setEditingItemGroup({ name: "", invoiceGroup: "Food", printGroup1: "Kitchen KOT", printGroup2: "None", category: "BEVERAGES", active: true })}>＋ New</button></div></div>
@@ -1813,9 +2088,9 @@ const RestaurantPOS = () => {
             </div>;
           })() : <div className="settlement-list">
             <h3>Search Invoice</h3>
-            <div className="settlement-filters"><input placeholder="Enter Invoice No" /><input type="date" /><input type="date" /><input placeholder="Enter table no or customer name" /><button>⌕ Search</button><button>↻ Clear Filter</button></div>
+            <div className="settlement-filters"><input placeholder="Enter Invoice No" /><input type="date" value={settlementDateFrom} onChange={e => setSettlementDateFrom(e.target.value)} /><input type="date" value={settlementDateTo} onChange={e => setSettlementDateTo(e.target.value)} /><input placeholder="Enter table no or customer name" /><button onClick={() => fetchFilteredBills(settlementDateFrom, settlementDateTo)}>⌕ Search</button><button onClick={() => { setSettlementDateFrom(new Date().toISOString().slice(0,10)); setSettlementDateTo(new Date().toISOString().slice(0,10)); fetchFilteredBills(settlementDateFrom, settlementDateTo); }}>↻ Clear</button></div>
             <table><thead><tr><th>Action</th><th>Invoice#</th><th>Date</th><th>Table/Parcel No</th><th>Customer Name</th><th>Captain</th><th>Invoice Type</th><th>Bill Amount</th><th>Payment Mode</th><th>Settled?</th></tr></thead><tbody>
-              {invoiceGroups.map((inv) => { const total = Number(inv.total || inv.amount || inv.grandTotal || 0); const paid = Number(inv.amountReceived || inv.paidAmount || 0); return <tr key={inv.id || inv.invoiceNo || inv.billNo}><td><button onClick={() => setSelectedSettlement(inv)}>↗</button><button onClick={() => window.print()}>▣</button></td><td>{inv.invoiceNo || inv.billNo || inv.id}</td><td>{new Date(inv.created_at || inv.createdAt || Date.now()).toLocaleString("en-IN")}</td><td>{inv.tableNumber || inv.table || "-"}</td><td>{inv.customerName || ""}</td><td>{inv.captain || "RECEPTION"}</td><td>{inv.invoiceType || "Table"}</td><td>{total.toFixed(2)}</td><td>{inv.paymentMethod || inv.paymentMode || ""}</td><td><input type="checkbox" checked={paid >= total && total > 0} readOnly /></td></tr>; })}
+              {filteredBills.map((inv) => { const total = Number(inv.total || inv.grandTotal || inv.amount || 0); const paid = Number(inv.amountReceived || inv.paidAmount || 0); return <tr key={inv.id || inv.invoiceNo || inv.billNo}><td><button onClick={() => setSelectedSettlement(inv)}>↗</button><button onClick={() => window.print()}>▣</button></td><td>{inv.invoiceNo || inv.billNo || inv.id}</td><td>{new Date(inv.created_at || inv.createdAt || Date.now()).toLocaleString("en-IN")}</td><td>{inv.tableNumber || inv.table || "-"}</td><td>{inv.customerName || ""}</td><td>{inv.captain || "RECEPTION"}</td><td>{inv.invoiceType || "Table"}</td><td>{total.toFixed(2)}</td><td>{inv.paymentMethod || inv.paymentMode || ""}</td><td><input type="checkbox" checked={paid >= total && total > 0} readOnly /></td></tr>; })}
             </tbody></table>
           </div>}
         </div>
@@ -1823,7 +2098,7 @@ const RestaurantPOS = () => {
 
       {activeTab === "manageKot" && (
         <div className="manage-kot-page">
-          <div className="manage-kot-title">MKOT List <button onClick={() => setActiveTab("manageKot")}>⟳ Refresh</button></div>
+          <div className="manage-kot-title">MKOT List <button onClick={() => { fetchFilteredKots(kotDateFrom, kotDateTo); setActiveTab("manageKot"); }}>⟳ Refresh</button></div>
           {selectedManageKot ? (
             <div className="manage-kot-detail">
               <h3>Edit KOT</h3>
@@ -1843,9 +2118,9 @@ const RestaurantPOS = () => {
           ) : (
             <div className="manage-kot-list">
               <h3>Search KOT</h3>
-              <div className="manage-kot-filters"><label>KOT No<input placeholder="Enter KOT No" /></label><label>KOT Date From<input type="date" /></label><label>KOT Date To<input type="date" /></label><label>Table No<input placeholder="Enter Table No" /></label><label>KOT Type<select><option>Table / Take Away</option></select></label><button>⌕ Search</button><button>↻ Clear</button></div>
+              <div className="manage-kot-filters"><label>KOT No<input placeholder="Enter KOT No" /></label><label>KOT Date From<input type="date" value={kotDateFrom} onChange={e => setKotDateFrom(e.target.value)} /></label><label>KOT Date To<input type="date" value={kotDateTo} onChange={e => setKotDateTo(e.target.value)} /></label><label>Table No<input placeholder="Enter Table No" /></label><label>KOT Type<select><option>Table / Take Away</option></select></label><button onClick={() => fetchFilteredKots(kotDateFrom, kotDateTo)}>⌕ Search</button><button onClick={() => { setKotDateFrom(new Date().toISOString().slice(0,10)); setKotDateTo(new Date().toISOString().slice(0,10)); fetchFilteredKots(kotDateFrom, kotDateTo); }}>↻ Clear</button></div>
               <table><thead><tr><th>KOT#</th><th>Date</th><th>Table/Parcel No</th><th>Captain</th><th>Total Items</th><th>Grand Total</th><th>Action</th></tr></thead><tbody>
-                {kotHistory.map((kot) => <tr key={kot.id}><td>{kot.kotNo || kot.id}</td><td>{new Date(kot.timestamp || kot.createdAt || Date.now()).toLocaleString("en-IN")}</td><td>{kot.table || kot.tableNumber || kot.roomNumber || "-"}</td><td>{kot.captain || "RECEPTION"}</td><td>{(kot.items || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0)}</td><td>{(kot.items || []).reduce((sum, item) => sum + Number(item.quantity || 0) * Number(item.price || item.rate || 0), 0).toFixed(2)}</td><td><button className="manage-kot-edit" onClick={() => setSelectedManageKot(kot)}>↗</button></td></tr>)}
+                {filteredKots.length > 0 ? filteredKots.map((kot) => <tr key={kot.id}><td>{kot.kotNo || kot.id}</td><td>{new Date(kot.timestamp || kot.created_at || Date.now()).toLocaleString("en-IN")}</td><td>{kot.tableNumber || kot.table || kot.roomNumber || "-"}</td><td>{kot.waiter_name || kot.captain || "RECEPTION"}</td><td>{(kot.items || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0)}</td><td>{(kot.items || []).reduce((sum, item) => sum + Number(item.quantity || 0) * Number(item.price || item.rate || 0), 0).toFixed(2)}</td><td><button className="manage-kot-edit" onClick={() => setSelectedManageKot(kot)}>↗</button></td></tr>) : <tr><td colSpan="7" style={{ textAlign: 'center', color: '#999', padding: '20px' }}>No KOTs found for selected date range</td></tr>}
               </tbody></table>
             </div>
           )}
@@ -1878,20 +2153,21 @@ const RestaurantPOS = () => {
             <div className="simple-page-header">
               <h2 className="simple-page-title">Daily Transaction</h2>
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <input type="date" style={{ border: '1px solid #ccc', padding: '4px 6px', fontSize: '11px', borderRadius: '3px' }} />
-                <button style={{ background: '#3498db', color: '#fff', border: 'none', padding: '4px 10px', fontSize: '11px', borderRadius: '3px', cursor: 'pointer' }}>Search</button>
+                <input type="date" value={transactionDateFrom} onChange={e => setTransactionDateFrom(e.target.value)} style={{ border: '1px solid #ccc', padding: '4px 6px', fontSize: '11px', borderRadius: '3px' }} />
+                <input type="date" value={transactionDateTo} onChange={e => setTransactionDateTo(e.target.value)} style={{ border: '1px solid #ccc', padding: '4px 6px', fontSize: '11px', borderRadius: '3px' }} />
+                <button onClick={() => fetchFilteredBills(transactionDateFrom, transactionDateTo)} style={{ background: '#3498db', color: '#fff', border: 'none', padding: '4px 10px', fontSize: '11px', borderRadius: '3px', cursor: 'pointer' }}>Search</button>
               </div>
             </div>
             <table className="trans-table">
               <thead><tr><th>#</th><th>Invoice No</th><th>Table</th><th>Date</th><th>Amount</th><th>Payment</th><th>Status</th></tr></thead>
               <tbody>
-                {invoiceGroups.length > 0 ? invoiceGroups.map((inv, idx) => (
-                  <tr key={inv.id}>
-                    <td>{idx + 1}</td><td>{inv.invoiceNo}</td><td>{inv.table || '-'}</td>
-                    <td>{inv.date ? new Date(inv.date).toLocaleDateString() : '-'}</td>
-                    <td>₹{inv.amount?.toLocaleString() || 0}</td>
-                    <td>Cash</td>
-                    <td><span className="trans-status success">PAID</span></td>
+                {filteredBills.length > 0 ? filteredBills.map((inv, idx) => (
+                  <tr key={inv.id || idx}>
+                    <td>{idx + 1}</td><td>{inv.invoiceNo || inv.id}</td><td>{inv.tableNumber || inv.table || '-'}</td>
+                    <td>{inv.created_at ? new Date(inv.created_at).toLocaleDateString() : '-'}</td>
+                    <td>₹{Number(inv.total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                    <td>{inv.paymentMethod || '-'}</td>
+                    <td><span className="trans-status success">{inv.invoiceStatus || inv.status || 'PAID'}</span></td>
                   </tr>
                 )) : <tr><td colSpan="7" style={{ textAlign: 'center', color: '#999', padding: '20px' }}>No transactions found</td></tr>}
               </tbody>
@@ -2057,6 +2333,23 @@ const RestaurantPOS = () => {
         />
       )}
 
+      {tableSetupTarget && (
+        <div className="table-setup-overlay">
+          <div className="table-setup-modal">
+            <div className="table-setup-head">Select PAX and CAPTAIN <button onClick={() => setTableSetupTarget(null)}>×</button></div>
+            <div className="table-setup-body">
+              <h4>SELECT PAX</h4>
+              <div className="pax-options">{Array.from({ length: 20 }, (_, i) => i + 1).map((pax) => <button key={pax} className={tableSetupPax === pax ? "selected" : ""} onClick={() => setTableSetupPax(pax)}>{pax}</button>)}</div>
+              <h4>SELECT CAPTAIN</h4>
+              <div className="captain-options">
+                <button disabled={!tableSetupPax} onClick={() => finishTableSetup("RECEPTION")}>RECEPTION</button>
+                {captains.map((captain) => <button key={captain.id} disabled={!tableSetupPax} onClick={() => finishTableSetup(captain.name)}>{captain.name}</button>)}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Save Customer Modal */}
       {showSaveCustomerModal && (
         <div className="modal-overlay" onClick={() => setShowSaveCustomerModal(false)}>
@@ -2093,8 +2386,20 @@ const RestaurantPOS = () => {
 
       {editingMenuItem && (
         <div className="modal-overlay" onClick={() => setEditingMenuItem(null)}>
-          <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 460 }}>
-            <div className="modal-title">{editingMenuItem.id ? "Edit Menu Item" : "Add Menu Item"}</div>
+          <div className="modal-box add-item-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-title">{editingMenuItem.id ? "Edit Item" : "Add Item"}<button onClick={() => setEditingMenuItem(null)}>×</button></div>
+            <div className="simple-form-group add-item-group-row">
+              <label className="simple-label">Item Group</label>
+              <select className="simple-input" value={editingMenuItem.category} onChange={(e) => setEditingMenuItem((p) => ({ ...p, category: e.target.value }))}>
+                <option value="">Select Parent</option>
+                {categories.filter((c) => c !== "All").map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+            <div className="add-item-three-grid">
+              <div className="simple-form-group"><label className="simple-label">Item Code</label><input className="simple-input" value={editingMenuItem.itemCode || ""} onChange={(e) => setEditingMenuItem((p) => ({ ...p, itemCode: e.target.value }))} placeholder="835" /></div>
+              <div className="simple-form-group"><label className="simple-label">Shortcut Key</label><input className="simple-input" value={editingMenuItem.shortcutKey || ""} onChange={(e) => setEditingMenuItem((p) => ({ ...p, shortcutKey: e.target.value }))} placeholder="Enter shortcut key" /></div>
+              <div className="simple-form-group"><label className="simple-label">Bar Code</label><input className="simple-input" value={editingMenuItem.barcode || ""} onChange={(e) => setEditingMenuItem((p) => ({ ...p, barcode: e.target.value }))} placeholder="Enter bar code" /></div>
+            </div>
             <div className="simple-form-group">
               <label className="simple-label">Item Name *</label>
               <input
@@ -2104,6 +2409,10 @@ const RestaurantPOS = () => {
                 placeholder="e.g. Cold Coffee"
                 autoFocus
               />
+            </div>
+            <div className="simple-form-group">
+              <label className="simple-label">Item Display Name</label>
+              <input className="simple-input" value={editingMenuItem.displayName || ""} onChange={(e) => setEditingMenuItem((p) => ({ ...p, displayName: e.target.value }))} placeholder="Enter item display name" />
             </div>
             <div className="simple-form-group">
               <label className="simple-label">Category *</label>
@@ -2154,9 +2463,15 @@ const RestaurantPOS = () => {
                 <option value="Out of Stock">Out of Stock</option>
               </select>
             </div>
+            <div className="add-item-options">
+              <label>Unit<select value={editingMenuItem.unit || ""} onChange={(e) => setEditingMenuItem((p) => ({ ...p, unit: e.target.value }))}><option value="">Select Unit</option><option>PCS</option><option>PLATE</option><option>GLASS</option></select></label>
+              <label><input type="checkbox" checked={editingMenuItem.status === "Available"} onChange={(e) => setEditingMenuItem((p) => ({ ...p, status: e.target.checked ? "Available" : "Out of Stock" }))} /> Active</label>
+              <label><input type="checkbox" checked={!!editingMenuItem.favourite} onChange={(e) => setEditingMenuItem((p) => ({ ...p, favourite: e.target.checked }))} /> Add To Favourite</label>
+              <label><input type="checkbox" checked={editingMenuItem.foodType === "Non Veg"} onChange={(e) => setEditingMenuItem((p) => ({ ...p, foodType: e.target.checked ? "Non Veg" : "Veg" }))} /> Is Non-Veg?</label>
+            </div>
             <div className="modal-actions" style={{ justifyContent: "flex-end" }}>
-              <button className="simple-btn simple-btn-gray" onClick={() => setEditingMenuItem(null)}>Cancel</button>
-              <button className="simple-btn simple-btn-primary" onClick={handleSaveMenuItem}>{editingMenuItem.id ? "Save" : "Add"}</button>
+              <button className="simple-btn simple-btn-primary" onClick={handleSaveMenuItem}>Save</button>
+              <button className="simple-btn simple-btn-gray" onClick={() => setEditingMenuItem(null)}>Close</button>
             </div>
           </div>
         </div>

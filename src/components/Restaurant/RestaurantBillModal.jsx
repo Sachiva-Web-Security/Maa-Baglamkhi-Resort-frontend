@@ -70,10 +70,22 @@ const RestaurantBillModal = ({ bill, onClose }) => {
         phone: phone.replace(/[^0-9]/g, ""),
         items,
       });
-      if (res.data?.wasend?.status === "success" || res.data?.whatsapp?.status === "success") {
+      // Check if the WhatsApp was actually sent successfully
+      const wasendResponse = res.data?.wasend || res.data?.whatsapp || {};
+      const wasSuccess = wasendResponse?.status === "success" ||
+                         wasendResponse?.status === "sent" ||
+                         wasendResponse?.message === "success" ||
+                         wasendResponse?.ok === true;
+
+      if (wasSuccess) {
         alert("✅ Bill sent to WhatsApp successfully!");
       } else {
-        const reason = res.data?.wasend?.reason || res.data?.message || "sent";
+        const reason = wasendResponse?.reason ||
+                     wasendResponse?.error ||
+                     res.data?.message ||
+                     wasendResponse?.message ||
+                     "Failed to send - Check server logs";
+        console.error('WhatsApp send failed:', wasendResponse);
         alert("WhatsApp: " + reason);
       }
     } catch (err) {
