@@ -649,7 +649,7 @@
 .fo-reservation-search input:nth-child(3) { margin-left: 68px; }
 .fo-reservation-search input:focus { outline: 1px solid #5b9bd5; }
 
-.fo-reservation-table-wrap { width: 100%; overflow-x: auto; }
+.fo-reservation-table-wrap { width: 100%; overflow: visible; }
 .fo-reservation-table {
   width: 100%;
   min-width: 1060px;
@@ -671,7 +671,7 @@
 .fo-reservation-table th { background: #f4f5f6; color: #16191c; font-weight: 700; }
 .fo-reservation-table td { color: #536170; }
 .fo-reservation-table tbody tr:nth-child(even) td { background: #f7f7f7; }
-.fo-reservation-table th:nth-child(1) { width: 60px; }
+.fo-reservation-table th:nth-child(1) { width: 82px; }
 .fo-reservation-table th:nth-child(2) { width: 110px; }
 .fo-reservation-table th:nth-child(3) { width: 90px; }
 .fo-reservation-table th:nth-child(4) { width: 150px; }
@@ -683,7 +683,8 @@
 .fo-reservation-table th:nth-child(11) { width: 103px; }
 .fo-reservation-table th:nth-child(12) { width: 118px; }
 .fo-row-action { border: 0; background: transparent; color: #64727e; cursor: pointer; font-size: 15px; }
-.fo-booking-status { display: block; padding: 4px 3px; color: #fff; line-height: 12px; }
+.fo-booking-status { display: flex; align-items: center; justify-content: space-between; padding: 0 0 0 3px; color: #fff; line-height: 20px; }
+.fo-booking-status > button { width: 22px; height: 20px; padding: 0; border: 0; border-left: 1px solid rgba(255,255,255,.35); background: transparent; color: #fff; cursor: pointer; font-size: 9px; }
 .fo-booking-status--checked-in { background: #238b45; }
 .fo-booking-status--cancelled { background: #d9263d; }
 .fo-booking-status--reserved { background: #2675c8; }
@@ -755,6 +756,10 @@
 }
 .fo-acknowledge-btn:hover { background: #a91c21; }
 .fo-ota-panel-body { height: 26px; }
+
+/* OTA bookings table */
+.fo-ota-table-wrap { width: 100%; overflow-x: auto; }
+.fo-ota-panel { height: auto; }
 
 /* OTA Stop/Open Rooms reference screen */
 .fo-credit-page {
@@ -861,6 +866,80 @@
   font: 9px Arial, sans-serif;
 }
 
+/* Credit settlement payment form overlay */
+.fo-credit-pay-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+.fo-credit-pay-box {
+  background: #fff;
+  border: 1px solid #d5d9dc;
+  padding: 16px;
+  min-width: 240px;
+  font: 9px Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.fo-credit-pay-box h4 {
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.fo-credit-pay-box label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 9px;
+  color: #20252a;
+}
+.fo-credit-pay-box input,
+.fo-credit-pay-box select {
+  height: 22px;
+  border: 1px solid #cfd3d6;
+  padding: 0 6px;
+  font: 9px Arial, sans-serif;
+}
+.fo-credit-pay-btn {
+  background: #2d9154;
+  color: #fff;
+  border: none;
+  height: 18px;
+  width: 38px;
+  font: 8px Arial, sans-serif;
+  cursor: pointer;
+  border-radius: 2px;
+}
+.fo-credit-pay-btn:hover {
+  background: #247845;
+}
+.fo-credit-pay,
+.fo-credit-cancel {
+  border: none;
+  cursor: pointer;
+  height: 18px;
+  width: 20px;
+  font: 9px Arial, sans-serif;
+  border-radius: 2px;
+  margin-right: 3px;
+}
+.fo-credit-pay {
+  background: #2d9154;
+  color: #fff;
+}
+.fo-credit-cancel {
+  background: #da2d40;
+  color: #fff;
+}
+
 /* Manage > Invoices — legacy compact invoice register */
 .fo-invoice-wrap {
   padding: 0 10px 18px;
@@ -918,6 +997,99 @@
   .fo-invoice-search-grid { grid-template-columns: repeat(4, minmax(145px, 1fr)); }
 }
 .fo-master-view { flex: 1; min-height: 0; overflow: auto; background: #f1f1f1; }
+
+.fo-card { overflow: visible; }
+.fo-card-head { position: relative; }
+.fo-room-action-menu {
+  position: absolute;
+  z-index: 20;
+  top: 28px;
+  right: 0;
+  min-width: 108px;
+  padding: 5px 0;
+  background: #fff;
+  border: 1px solid #d2d5d8;
+  box-shadow: 0 2px 5px rgba(0,0,0,.2);
+}
+.fo-room-action-menu button {
+  width: 100%;
+  height: 24px;
+  padding: 0 10px;
+  border: 0;
+  background: #fff;
+  color: #222;
+  text-align: left;
+  white-space: nowrap;
+  font: 9px Arial, sans-serif;
+  cursor: pointer;
+}
+.fo-room-action-menu button:hover { background: #f0f2f3; }
+
+.fo-hk-modal-backdrop {
+  position: fixed;
+  z-index: 2000;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 72px;
+  background: rgba(0,0,0,.55);
+}
+.fo-hk-modal {
+  width: 600px;
+  background: #fff;
+  border: 1px solid #333;
+  box-shadow: 0 3px 8px rgba(0,0,0,.45);
+  font: 9px Arial, sans-serif;
+}
+.fo-hk-modal-head {
+  height: 27px;
+  padding: 0 10px 0 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #d9534f;
+  color: #fff;
+}
+.fo-hk-modal-head button { border: 0; background: transparent; color: #555; cursor: pointer; }
+.fo-hk-modal-body { padding: 13px 9px 18px; }
+.fo-hk-modal-body > b { display: block; margin-bottom: 15px; }
+.fo-hk-modal-body > label { display: block; margin-bottom: 5px; }
+.fo-hk-modal-body > select { width: 100%; height: 22px; margin-bottom: 8px; border: 1px solid #c8cdd1; font: 9px Arial; }
+.fo-hk-tasks { display: flex; flex-wrap: wrap; gap: 4px 13px; margin-bottom: 5px; }
+.fo-hk-tasks label { white-space: nowrap; }
+.fo-hk-tasks input { width: 10px; height: 10px; margin: 0 2px 0 0; vertical-align: middle; }
+.fo-hk-modal textarea { box-sizing: border-box; width: 100%; height: 64px; resize: none; border: 1px solid #aeb5ba; }
+.fo-hk-update-btn { display: block; height: 20px; margin-top: 29px; border: 0; background: #2caf4b; color: #fff; font: 9px Arial; cursor: pointer; }
+.fo-hk-update-btn:disabled { opacity: .65; }
+
+.fo-row-action-cell { position: relative; overflow: visible !important; }
+.fo-booking-actions {
+  position: absolute;
+  z-index: 40;
+  bottom: 24px;
+  left: 5px;
+  min-width: 84px;
+  padding: 4px 0;
+  background: #fff;
+  border: 1px solid #cfd3d6;
+  box-shadow: 0 2px 5px rgba(0,0,0,.22);
+}
+.fo-booking-actions button {
+  display: block;
+  width: 100%;
+  height: 23px;
+  padding: 0 8px;
+  border: 0;
+  background: #fff;
+  color: #222;
+  text-align: left;
+  font: 9px Arial, sans-serif;
+  cursor: pointer;
+}
+.fo-booking-actions button:hover { background: #edf2f5; }
+.fo-status-action-cell { position: relative; overflow: visible !important; }
+.fo-booking-actions--status { right: 4px; left: auto; min-width: 94px; }
 
 @media (max-width: 760px) {
   .fo-reservation-search { grid-template-columns: 1fr 1fr; gap: 8px; padding: 8px 0; }

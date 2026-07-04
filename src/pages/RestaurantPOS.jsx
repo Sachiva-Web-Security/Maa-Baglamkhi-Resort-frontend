@@ -35,6 +35,7 @@ const RestaurantPOS = () => {
   });
   const [activeTab, setActiveTab] = useState("pos");
   const [orderType, setOrderType] = useState("DINE_IN");
+  const [deliveryNewOrder, setDeliveryNewOrder] = useState(false);
   const [orderTypeData, setOrderTypeData] = useState({
     DINE_IN: { items: [], table: null },
     TAKEAWAY: { items: [], customerName: "", phone: "" },
@@ -50,6 +51,9 @@ const RestaurantPOS = () => {
   const [kotDetailsTable, setKotDetailsTable] = useState(null); // table object for which KOT details modal is open
   const [waiterPerformance, setWaiterPerformance] = useState([]); // waiter performance data
   const [generatedBill, setGeneratedBill] = useState(null); // bill data for bill modal
+  const [selectedManageKot, setSelectedManageKot] = useState(null);
+  const [selectedSettlement, setSelectedSettlement] = useState(null);
+  const [editingItemGroup, setEditingItemGroup] = useState(false);
   const [occupiedTableData, setOccupiedTableData] = useState({});
   const [tableOrderData, setTableOrderData] = useState({});
   const [orderIdByTable, setOrderIdByTable] = useState({}); // tracks backend order IDs per table
@@ -127,6 +131,9 @@ const RestaurantPOS = () => {
               captain: b.waiter_name || b.waiter || b.captain || "RECEPTION",
               guests: b.guestCount || b.pax || 0,
               orderId: b.id,
+              timestamp: b.created_at || b.date || null,
+              billing: true,
+              bill: b,
               rawNumber: rawNum,
               normNumber: normNum,
             };
@@ -182,6 +189,8 @@ const RestaurantPOS = () => {
               captain: "RECEPTION",
               guests: 1,
               orderId: null,
+              timestamp: kotByTable[rawNum]?.[0]?.timestamp || null,
+              billing: false,
               rawNumber: rawNum,
               normNumber: normNum,
             };
@@ -539,15 +548,18 @@ const RestaurantPOS = () => {
             const kNorm = kRaw.replace(/^[TGRP]/, "");
             return kRaw !== rawNum && kNorm !== normNum;
           }));
-          setOccupiedTableData(prev => {
-            const next = { ...prev };
-            delete next[normNum];
-            delete next[rawNum];
-            return next;
-          });
+          setOccupiedTableData(prev => ({ ...prev, [normNum]: {
+            amount: Number(savedBill.total || total),
+            captain: getCurrentTableData().captain || "RECEPTION",
+            guests: getCurrentTableData().pax || 1,
+            orderId: savedBill.id,
+            timestamp: savedBill.created_at || new Date().toISOString(),
+            billing: true,
+            bill: savedBill,
+          }}));
           const tKey = getTableKey(prevTable);
           setTableOrderData(prev => { const n = {...prev}; delete n[tKey]; return n; });
-          setTables(prev => prev.map(t => t.id === prevTable?.id ? { ...t, status: "Available" } : t));
+          setTables(prev => prev.map(t => t.id === prevTable?.id ? { ...t, status: "Occupied" } : t));
         }
         setSelectedTable(null);
       }
@@ -636,6 +648,7 @@ const RestaurantPOS = () => {
 
   const handleOrderTypeChange = (type) => {
     setOrderType(type);
+    if (type === "DELIVERY") setDeliveryNewOrder(false);
   };
 
   const openAddMenuItem = () => setEditingMenuItem({
@@ -955,56 +968,58 @@ const RestaurantPOS = () => {
       <div className="pos-topbar">
         <div className="pos-topbar-left">
           <button className="pos-logo-btn" onClick={() => navigate('/dashboard')}>
-            <span className="pos-logo-icon">Q</span>
+            <span className="pos-logo-icon">M</span>
             <span>Maa Baglamukhi</span>
           </button>
           <button className={`pos-tab ${activeTab === "dashboard" ? "active" : ""}`} onClick={() => setActiveTab("dashboard")}>Dashboard</button>
           <button className={`pos-tab ${activeTab === "pos" ? "active-green" : ""}`} onClick={() => setActiveTab("pos")}>New Order</button>
           <button className={`pos-tab ${activeTab === "quick" ? "active" : ""}`} onClick={() => setActiveTab("quick")}>Quick Bill</button>
-          <button className={`pos-tab ${activeTab === "kds" ? "active" : ""}`} onClick={() => setActiveTab("kds")}>KDS (KOT)</button>
+          <button className={`pos-tab ${activeTab === "kds" ? "active" : ""}`} onClick={() => setActiveTab("kds")}>KDS</button>
           <button className={`pos-tab ${activeTab === "transaction" ? "active" : ""}`} onClick={() => setActiveTab("transaction")}>Daily Transaction</button>
-          <button className={`pos-tab ${activeTab === "items" ? "active" : ""}`} onClick={() => setActiveTab("items")}>Items</button>
-          <button className={`pos-tab ${activeTab === "tables" ? "active" : ""}`} onClick={() => setActiveTab("tables")}>Tables</button>
-          <button className={`pos-tab ${activeTab === "invoices" ? "active" : ""}`} onClick={() => setActiveTab("invoices")}>Invoices</button>
-          <button className={`pos-tab ${activeTab === "waiters" ? "active" : ""}`} onClick={() => setActiveTab("waiters")}>Waiters</button>
-          <button className={`pos-tab ${activeTab === "captains" ? "active" : ""}`} onClick={() => setActiveTab("captains")}>Captains</button>
+          <div className="pos-nav-dropdown">
+            <button className="pos-tab">Manage⌄</button>
+            <div className="pos-nav-menu">
+              {["Manage KOT", "Manage Invoice", "Edit Invoice", "Manage Settlement"].map((item) => (
+                <button key={item} onClick={() => {
+                  if (item === "Manage KOT") { setSelectedManageKot(null); setActiveTab("manageKot"); }
+                  else if (item === "Manage Settlement") { setSelectedSettlement(null); setActiveTab("manageSettlement"); }
+                  else setActiveTab("transaction");
+                }}>{item}</button>
+              ))}
+            </div>
+          </div>
+          <div className="pos-nav-dropdown">
+            <button className="pos-tab">Master⌄</button>
+            <div className="pos-nav-menu">
+              {["Item Group Master", "Item Master", "Guest Master", "Modifiers Master", "Print Group Master", "Table Group Master", "Table Master", "Captain Master", "Print Settings"].map((item) => <button key={item} onClick={() => { if (item === "Item Group Master") { setEditingItemGroup(false); setActiveTab("itemGroupMaster"); } }}>{item}</button>)}
+            </div>
+          </div>
+          <div className="pos-nav-dropdown">
+            <button className="pos-tab">Reports⌄</button>
+            <div className="pos-nav-menu pos-nav-menu--reports">
+              {["Collection Report", "Item Group Wise Report", "Invoice Group Wise Summary", "Sales Summary Report", "Sales Summary By Guest", "Sales Summary By Order Type", "Due List", "Top Selling Items", "Table Wise Sale Summary", "NC Sale Summary", "Parcel Sale Summary", "Void KOT History", "Refund Item Summary", "PAX Summary", "General Ledger", "Cashbook Summary", "Day End Summary", "Feedback Analysis", "Full Screen"].map((item) => <button key={item}>{item}</button>)}
+            </div>
+          </div>
+          <button className="pos-tab">Data Backup</button>
         </div>
         <div className="pos-topbar-right">
-          <span>{localStorage.getItem("userName") || localStorage.getItem("name") || "User"} |</span>
-          <span>{today}</span>
-          <button
-            className="logout-btn"
-            onClick={() => {
-              if (confirm("Logout?")) {
-                localStorage.clear();
-                navigate("/login");
-              }
-            }}
-          >
-            Logout
-          </button>
+          <span>{localStorage.getItem("userName") || localStorage.getItem("name") || "User"}⌄</span>
         </div>
       </div>
 
       {/* ORDER TYPE BAR — hidden while an inside-table order is open */}
-      {!(activeTab === "pos" && orderType === "DINE_IN" && selectedTable) && (
+      {activeTab === "pos" && !(orderType === "DINE_IN" && selectedTable) && orderType !== "DELIVERY" && (
       <div className="pos-ordertype-bar">
-        {['DINE_IN', 'TAKEAWAY', 'DELIVERY', 'PARCEL'].map(type => (
+        {['DINE_IN', 'TAKEAWAY', 'DELIVERY'].map(type => (
           <button
             key={type}
             className={`ordertype-btn ${orderType === type ? 'active' : ''}`}
             onClick={() => handleOrderTypeChange(type)}
           >
-            {type.replace('_', '+')}
+            {type === 'DINE_IN' ? 'Dine In' : type === 'TAKEAWAY' ? 'Take Away' : 'Delivery'}
           </button>
         ))}
-        <div className="ordertype-divider" />
-        <button className="ordertype-icon-btn" title="User">👤</button>
-        <button className="ordertype-icon-btn" title="Area">🔲</button>
-        <button className="ordertype-icon-btn" title="Currency">₹</button>
-        <button className="ordertype-icon-btn" title="Table Transfer">🔄</button>
-        <button className="ordertype-icon-btn" style={{ background: '#e3f2fd', color: '#1976d2', border: '1px solid #90caf9' }}>R</button>
-        <button className="ordertype-icon-btn" style={{ background: '#ffebee', color: '#c62828', border: '1px solid #ef9a9a' }}>↻</button>
+        <div className="ordertype-right-controls">
         <select
           value={tableFilter}
           onChange={e => setTableFilter(e.target.value)}
@@ -1015,6 +1030,13 @@ const RestaurantPOS = () => {
           <option>Occupied</option>
         </select>
         <button className="ordertype-btn" style={{ height: '22px', fontSize: '10px', padding: '0 8px', background: '#e3f2fd', color: '#1976d2', border: '1px solid #90caf9', fontWeight: 600 }}>All</button>
+        <button className="ordertype-icon-btn" title="User">♟</button>
+        <button className="ordertype-icon-btn" title="Area">▣</button>
+        <button className="ordertype-icon-btn" title="Currency">₹</button>
+        <button className="ordertype-icon-btn" title="Table Transfer">↔</button>
+        <button className="ordertype-icon-btn" style={{ background: '#e3f2fd', color: '#1976d2', border: '1px solid #90caf9' }}>R</button>
+        <button className="ordertype-icon-btn" style={{ background: '#ffebee', color: '#c62828', border: '1px solid #ef9a9a' }}>↻</button>
+        </div>
         <div className="ordertype-right">
           <input
             placeholder="Table#"
@@ -1225,9 +1247,23 @@ const RestaurantPOS = () => {
         </div>
       )}
 
+      {activeTab === "pos" && orderType === "DELIVERY" && !deliveryNewOrder && (
+        <div className="delivery-running-page">
+          <div className="delivery-running-head">
+            <strong>Running Orders</strong>
+            <div>
+              <button className="delivery-new-btn" onClick={() => setDeliveryNewOrder(true)}>New Order</button>
+              <button className="delivery-kot-btn" onClick={() => setShowKOTModal(true)}>Table KOT</button>
+              <button className="delivery-return-btn" onClick={() => handleOrderTypeChange("DINE_IN")}>Return</button>
+            </div>
+          </div>
+          <div className="delivery-running-empty">No Orders Found</div>
+        </div>
+      )}
+
       {/* === NEW ORDER === fallback layout when no inside-table view is open */}
-      {activeTab === "pos" && !(orderType === "DINE_IN" && selectedTable) && (
-        <div className={`pos-content ${orderType === "DINE_IN" && !selectedTable ? "pos-content--tables-only" : ""}`}>
+      {activeTab === "pos" && !(orderType === "DINE_IN" && selectedTable) && !(orderType === "DELIVERY" && !deliveryNewOrder) && (
+        <div className={`pos-content ${orderType === "DINE_IN" && !selectedTable ? "pos-content--tables-only" : ""} ${orderType === "TAKEAWAY" ? "pos-content--takeaway" : ""}`}>
           {/* LEFT: Table Map - only for DINE_IN */}
           {orderType === "DINE_IN" ? (
           <div className="pos-left-panel">
@@ -1277,16 +1313,32 @@ const RestaurantPOS = () => {
                 const normNum = rawNum.replace(/^[TGRP]/, "");
                 const tableData = occupiedTableData[normNum] || occupiedTableData[rawNum];
                 const occ = table.status === "Occupied" || !!tableData;
-                const tableLabel = String(table.number || table.tableNumber || "").toUpperCase();
+                const baseTableLabel = String(table.number || table.tableNumber || "").toUpperCase();
+                const tableLabel = selectedSection === "GARDEN" && !baseTableLabel.startsWith("GARDEN")
+                  ? `GARDEN ${baseTableLabel.replace(/^G\s*/, "")}`
+                  : baseTableLabel;
+                const parcelNumber = Number(baseTableLabel.replace(/^P\s*/, ""));
+                const displayTableLabel = selectedSection === "PARSAL" && Number.isFinite(parcelNumber)
+                  ? parcelNumber <= 3
+                    ? `PARSAL\nDELIVERY\n${parcelNumber}`
+                    : parcelNumber <= 6
+                      ? `PARSAL\nPICK UP ${parcelNumber - 3}`
+                      : baseTableLabel
+                  : selectedSection === "ROOM DINING" && !baseTableLabel.startsWith("ROOM")
+                    ? `ROOM ${baseTableLabel.replace(/^R\s*/, "")}`
+                    : tableLabel;
+                const elapsedMinutes = tableData?.timestamp ? Math.max(0, Math.floor((Date.now() - new Date(tableData.timestamp).getTime()) / 60000)) : 0;
+                const attention = occ && !!tableData?.billing;
+                const tableTime = `${Math.floor(elapsedMinutes / 60)}:${String(elapsedMinutes % 60).padStart(2, "0")}`;
                 const stop = (e) => e.stopPropagation();
                 return (
                   <div
                     key={getTableKey(table)}
-                    className={`table-card ${occ ? 'occupied' : ''} ${sel ? 'selected' : ''}`}
+                    className={`table-card ${occ ? 'occupied' : ''} ${attention ? 'attention' : ''} ${sel ? 'selected' : ''}`}
                     onClick={() => handleTableClick(table)}
                   >
                     <div className="table-card-top">
-                      <span className="table-num">{tableLabel}</span>
+                      <span className={`table-num ${selectedSection === "PARSAL" ? "table-num--parcel" : ""}`}>{displayTableLabel}</span>
                       {occ && tableData ? (
                         <>
                           <div className="table-card-runinfo">
@@ -1294,6 +1346,7 @@ const RestaurantPOS = () => {
                             <span className="amount">{formatAmount(tableData.amount)}</span>
                           </div>
                           <span className="table-guest-pill">{tableData.guests || 1}</span>
+                          {attention && <span className="table-alert-time">{tableTime}</span>}
                         </>
                       ) : null}
                     </div>
@@ -1334,6 +1387,8 @@ const RestaurantPOS = () => {
                               <line x1="4" y1="17" x2="20" y2="17" />
                             </svg>
                           </button>
+                          {attention && <button className="table-card-icon-btn" title="Settlement" onClick={(e) => { stop(e); setGeneratedBill(tableData.bill || { id: tableData.orderId, billNo: tableData.orderId, tableNumber: tableLabel, total: tableData.amount, created_at: tableData.timestamp, paymentMethod: "Cash" }); }}>₹</button>}
+                          {attention && <button className="table-card-icon-btn" title="View Invoice" onClick={(e) => { stop(e); setKotDetailsTable(table); }}>▤</button>}
                         </>
                       )}
                     </div>
@@ -1626,7 +1681,7 @@ const RestaurantPOS = () => {
 
       {/* === QUICK BILL === */}
       {activeTab === "quick" && (
-        <div className="pos-content">
+        <div className="pos-content quick-bill-workspace">
           <div className="pos-left-panel">
             <div style={{ padding: '8px', borderBottom: '1px solid #eee', background: '#fafafa' }}>
               <h3 style={{ margin: 0, fontSize: '12px', fontWeight: '700', color: '#333' }}>Quick Bill — No Table</h3>
@@ -1710,6 +1765,93 @@ const RestaurantPOS = () => {
       )}
 
       {/* === KDS === */}
+      {activeTab === "itemGroupMaster" && (
+        <div className="item-group-page">
+          <div className="item-group-title">Manage Item Groups <div><button>⟳ Refresh</button><button onClick={() => setEditingItemGroup({ name: "", invoiceGroup: "Food", printGroup1: "Kitchen KOT", printGroup2: "None", category: "BEVERAGES", active: true })}>＋ New</button></div></div>
+          {editingItemGroup ? (
+            <div className="item-group-form">
+              <h3>Add/Edit Item Group <button onClick={() => setEditingItemGroup(false)}>×</button></h3>
+              <div className="item-group-form-grid">
+                <div className="item-group-main-fields">
+                  <div className="group-radio-row"><label><input type="radio" checked readOnly /> Main Group</label><label><input type="radio" /> Sub Group</label></div>
+                  <label>Group Name<input value={editingItemGroup.name} onChange={(e) => setEditingItemGroup({ ...editingItemGroup, name: e.target.value })} /></label>
+                  <div className="group-select-row"><label>Invoice Group<select value={editingItemGroup.invoiceGroup} onChange={(e) => setEditingItemGroup({ ...editingItemGroup, invoiceGroup: e.target.value })}><option>Food</option><option>Beverage</option></select></label><label>Print Group 1<select value={editingItemGroup.printGroup1} onChange={(e) => setEditingItemGroup({ ...editingItemGroup, printGroup1: e.target.value })}><option>Kitchen KOT</option><option>None</option></select></label><label>Print Group 2<select value={editingItemGroup.printGroup2} onChange={(e) => setEditingItemGroup({ ...editingItemGroup, printGroup2: e.target.value })}><option>None</option><option>Kitchen KOT</option></select></label></div>
+                  <label>Category<select value={editingItemGroup.category} onChange={(e) => setEditingItemGroup({ ...editingItemGroup, category: e.target.value })}>{categories.filter(c => c !== "All").map(c => <option key={c}>{c}</option>)}</select></label>
+                  <label className="group-active"><input type="checkbox" checked={editingItemGroup.active} onChange={(e) => setEditingItemGroup({ ...editingItemGroup, active: e.target.checked })} /> Active</label>
+                  <div><button className="group-save" onClick={() => setEditingItemGroup(false)}>Save</button><button className="group-back" onClick={() => setEditingItemGroup(false)}>Back To List</button></div>
+                </div>
+                <div className="group-show-box"><span>Show This Group In</span><label><input type="checkbox" /> All</label><label><input type="checkbox" defaultChecked /> QSR</label></div>
+              </div>
+            </div>
+          ) : (
+            <div className="item-group-list"><h3>List of Item Groups</h3><div className="item-group-search"><label>Group Name</label><input placeholder="Enter item group name" /><button>Search</button></div><table><thead><tr><th>#</th><th>Item Group Name</th><th>Invoice Group</th><th>Print Group</th><th>Active</th><th></th></tr></thead><tbody>
+              {categories.filter(c => c !== "All").map((group, i) => <tr key={group}><td>{i + 1}</td><td>{String(group).toUpperCase()}</td><td>Food</td><td>Kitchen KOT</td><td><input type="checkbox" checked readOnly /></td><td><button className="group-edit" onClick={() => setEditingItemGroup({ name: String(group).toUpperCase(), invoiceGroup: "Food", printGroup1: "Kitchen KOT", printGroup2: "None", category: group, active: true })}>↗</button><button className="group-delete">▣</button></td></tr>)}
+            </tbody></table></div>
+          )}
+        </div>
+      )}
+
+      {activeTab === "manageSettlement" && (
+        <div className="settlement-page">
+          <div className="settlement-title">Manage Settlements {selectedSettlement && <button onClick={() => setSelectedSettlement(null)}>Return To List</button>}</div>
+          {selectedSettlement ? (() => {
+            const total = Number(selectedSettlement.total || selectedSettlement.amount || selectedSettlement.grandTotal || 0);
+            const received = Number(selectedSettlement.amountReceived || selectedSettlement.paidAmount || 0);
+            return <div className="settlement-detail">
+              <h3>Invoice Detail <strong>Grand Total : {total.toFixed(2)}</strong></h3>
+              <div className="settlement-detail-grid">
+                <table><tbody>
+                  <tr><th>Invoice No.</th><td>{selectedSettlement.invoiceNo || selectedSettlement.billNo || selectedSettlement.id}</td></tr>
+                  <tr><th>Invoice Date.</th><td>{new Date(selectedSettlement.created_at || selectedSettlement.createdAt || Date.now()).toLocaleString("en-IN")}</td></tr>
+                  <tr><th>Table No/Customer</th><td>{selectedSettlement.tableNumber || selectedSettlement.table || selectedSettlement.customerName || "-"}</td></tr>
+                  <tr><th>Captain</th><td>{selectedSettlement.captain || "RECEPTION"}</td></tr>
+                </tbody></table>
+                <table><tbody><tr><th>NET AMOUNT</th><td>Rs. {total.toFixed(2)}</td></tr><tr><th>Amount Received</th><td>{received.toFixed(2)}</td></tr><tr className="balance"><th>Balance</th><td>Rs. {(total - received).toFixed(2)}</td></tr></tbody></table>
+              </div>
+              <div className="settlement-payment-note">{received ? `Payment received: ${received.toFixed(2)}` : "Payment not received yet."}</div>
+              <button className="settlement-add-payment" onClick={() => setGeneratedBill(selectedSettlement)}>＋ Add Payment</button>
+            </div>;
+          })() : <div className="settlement-list">
+            <h3>Search Invoice</h3>
+            <div className="settlement-filters"><input placeholder="Enter Invoice No" /><input type="date" /><input type="date" /><input placeholder="Enter table no or customer name" /><button>⌕ Search</button><button>↻ Clear Filter</button></div>
+            <table><thead><tr><th>Action</th><th>Invoice#</th><th>Date</th><th>Table/Parcel No</th><th>Customer Name</th><th>Captain</th><th>Invoice Type</th><th>Bill Amount</th><th>Payment Mode</th><th>Settled?</th></tr></thead><tbody>
+              {invoiceGroups.map((inv) => { const total = Number(inv.total || inv.amount || inv.grandTotal || 0); const paid = Number(inv.amountReceived || inv.paidAmount || 0); return <tr key={inv.id || inv.invoiceNo || inv.billNo}><td><button onClick={() => setSelectedSettlement(inv)}>↗</button><button onClick={() => window.print()}>▣</button></td><td>{inv.invoiceNo || inv.billNo || inv.id}</td><td>{new Date(inv.created_at || inv.createdAt || Date.now()).toLocaleString("en-IN")}</td><td>{inv.tableNumber || inv.table || "-"}</td><td>{inv.customerName || ""}</td><td>{inv.captain || "RECEPTION"}</td><td>{inv.invoiceType || "Table"}</td><td>{total.toFixed(2)}</td><td>{inv.paymentMethod || inv.paymentMode || ""}</td><td><input type="checkbox" checked={paid >= total && total > 0} readOnly /></td></tr>; })}
+            </tbody></table>
+          </div>}
+        </div>
+      )}
+
+      {activeTab === "manageKot" && (
+        <div className="manage-kot-page">
+          <div className="manage-kot-title">MKOT List <button onClick={() => setActiveTab("manageKot")}>⟳ Refresh</button></div>
+          {selectedManageKot ? (
+            <div className="manage-kot-detail">
+              <h3>Edit KOT</h3>
+              <table><tbody>
+                <tr><th>Table No/Customer</th><td>{selectedManageKot.table || selectedManageKot.tableNumber || selectedManageKot.roomNumber || "-"}</td><th>KOT #</th><td>{selectedManageKot.kotNo || selectedManageKot.id}</td></tr>
+                <tr><th>Date</th><td>{new Date(selectedManageKot.timestamp || selectedManageKot.createdAt || Date.now()).toLocaleString("en-IN")}</td><th>Captain</th><td>{selectedManageKot.captain || "RECEPTION"}</td></tr>
+                <tr><th>No of Person</th><td colSpan="3">{selectedManageKot.guests || selectedManageKot.pax || 1}</td></tr>
+              </tbody></table>
+              <table className="manage-kot-items"><thead><tr><th>Item Name</th><th>Description</th><th>Quantity</th><th>Rate</th><th>Amount</th></tr></thead><tbody>
+                {(selectedManageKot.items || []).map((item, i) => <tr key={i}><td>{item.name}</td><td>{item.description || ""}</td><td>{Number(item.quantity || 0).toFixed(3)}</td><td>{Number(item.price || item.rate || 0).toFixed(2)}</td><td>{(Number(item.quantity || 0) * Number(item.price || item.rate || 0)).toFixed(2)}</td></tr>)}
+              </tbody></table>
+              <div className="manage-kot-detail-footer">
+                <strong>Total Items: {(selectedManageKot.items || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0)} &nbsp; Sub Total: {(selectedManageKot.items || []).reduce((sum, item) => sum + Number(item.quantity || 0) * Number(item.price || item.rate || 0), 0).toFixed(2)}</strong>
+                <div><button className="reprint" onClick={() => window.print()}>Re-Print</button><button onClick={() => setSelectedManageKot(null)}>List</button></div>
+              </div>
+            </div>
+          ) : (
+            <div className="manage-kot-list">
+              <h3>Search KOT</h3>
+              <div className="manage-kot-filters"><label>KOT No<input placeholder="Enter KOT No" /></label><label>KOT Date From<input type="date" /></label><label>KOT Date To<input type="date" /></label><label>Table No<input placeholder="Enter Table No" /></label><label>KOT Type<select><option>Table / Take Away</option></select></label><button>⌕ Search</button><button>↻ Clear</button></div>
+              <table><thead><tr><th>KOT#</th><th>Date</th><th>Table/Parcel No</th><th>Captain</th><th>Total Items</th><th>Grand Total</th><th>Action</th></tr></thead><tbody>
+                {kotHistory.map((kot) => <tr key={kot.id}><td>{kot.kotNo || kot.id}</td><td>{new Date(kot.timestamp || kot.createdAt || Date.now()).toLocaleString("en-IN")}</td><td>{kot.table || kot.tableNumber || kot.roomNumber || "-"}</td><td>{kot.captain || "RECEPTION"}</td><td>{(kot.items || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0)}</td><td>{(kot.items || []).reduce((sum, item) => sum + Number(item.quantity || 0) * Number(item.price || item.rate || 0), 0).toFixed(2)}</td><td><button className="manage-kot-edit" onClick={() => setSelectedManageKot(kot)}>↗</button></td></tr>)}
+              </tbody></table>
+            </div>
+          )}
+        </div>
+      )}
+
       {activeTab === "kds" && (
         <KDSView
           kotHistory={kotHistory}

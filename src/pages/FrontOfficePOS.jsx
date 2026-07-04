@@ -36,6 +36,11 @@ const FrontOfficePOS = () => {
   const [openMenu, setOpenMenu] = useState(null);
   const [creditTab, setCreditTab] = useState("guest");
   const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [openRoomMenu, setOpenRoomMenu] = useState(null);
+  const [releaseRoom, setReleaseRoom] = useState(null);
+  const [housekeepingUsers, setHousekeepingUsers] = useState([]);
+  const [housekeepingUpdate, setHousekeepingUpdate] = useState({ user: "", notes: "", tasks: {} });
+  const [releasingRoom, setReleasingRoom] = useState(false);
   const [activeFilter, setActiveFilter] = useState("Available");
   const [roomTypeFilter, setRoomTypeFilter] = useState("");
   const [roomNumberFilter, setRoomNumberFilter] = useState("");
@@ -62,11 +67,14 @@ const FrontOfficePOS = () => {
             const list = category.roomDetails || category.rooms || [];
             list.forEach((room) => {
               extracted.push({
-                id: room.id || `${cat}-${room.number}`,
-                number: String(room.number || room.roomNumber || ""),
+                id: room.id || `${cat}-${room.roomNumber}`,
+                number: String(room.roomNumber || room.number || ""),
                 categoryName: cat,
                 status: room.status || "Available",
                 defaultPrice: category.defaultPrice || room.price || 0,
+                guest: room.guest || null,
+                checkIn: room.checkIn || null,
+                checkOut: room.checkOut || null,
               });
             });
           });
@@ -168,6 +176,72 @@ const FrontOfficePOS = () => {
       console.error("Error refreshing reservations:", err);
     } finally {
       setRefreshing(false);
+    }
+  };
+
+  const updateRoomStatus = async (room, status) => {
+    setOpenRoomMenu(null);
+    try {
+      await API.put(`/hotel/room/${encodeURIComponent(room.number)}/status`, { status });
+      setRooms((current) => current.map((item) => item.id === room.id ? { ...item, status } : item));
+    } catch (err) {
+      console.error("Error updating room status:", err);
+      alert(err.response?.data?.message || "Unable to update room status");
+    }
+  };
+
+  const openReleaseModal = async (room) => {
+    setReleaseRoom(room);
+    setHousekeepingUpdate({ user: "", notes: "", tasks: {} });
+    try {
+      const { data } = await API.get("/users");
+      setHousekeepingUsers(Array.isArray(data) ? data : []);
+    } catch {
+      setHousekeepingUsers([]);
+    }
+  };
+
+  const submitHousekeepingRelease = async () => {
+    if (!releaseRoom) return;
+    setReleasingRoom(true);
+    try {
+      await API.put(`/housekeeping/status/${encodeURIComponent(releaseRoom.number)}`, { status: "Vacant Clean" }).catch(() => null);
+      if (housekeepingUpdate.user) {
+        await API.put(`/housekeeping/assignee/${encodeURIComponent(releaseRoom.number)}`, { assignee: housekeepingUpdate.user }).catch(() => null);
+      }
+      await API.post("/housekeeping/completed-cleaning", {
+        roomId: releaseRoom.id,
+        roomNo: releaseRoom.number,
+        assignee: housekeepingUpdate.user || null,
+        guestStatus: Object.keys(housekeepingUpdate.tasks).filter((task) => housekeepingUpdate.tasks[task]).join(", "),
+        finalStatus: "Vacant Clean",
+      }).catch(() => null);
+      await API.put(`/hotel/room/${encodeURIComponent(releaseRoom.number)}/status`, { status: "Available" });
+      setRooms((current) => current.map((item) => item.id === releaseRoom.id ? { ...item, status: "Available" } : item));
+      setReleaseRoom(null);
+    } catch (err) {
+      alert(err.response?.data?.message || "Unable to release room");
+    } finally {
+      setReleasingRoom(false);
+    }
+  };
+
+  const updateBookingStayStatus = async (booking, action) => {
+    const bookingId = booking.bookingId || booking.booking_id || booking.id;
+    if (!bookingId) return alert("Booking id is missing");
+    const label = action === "check-in" ? "Check in" : "Check out";
+    if (!confirm(`${label} ${booking.guest_name || booking.guestName || "this guest"}?`)) return;
+    try {
+      await API.put(`/hotel/${action}/${bookingId}`);
+      await refreshReservations();
+      const roomsResponse = await API.get("/hotel/rooms/setup").catch(() => null);
+      if (Array.isArray(roomsResponse?.data)) {
+        const refreshedRooms = [];
+        roomsResponse.data.forEach((category) => (category.roomDetails || category.rooms || []).forEach((room) => refreshedRooms.push({ id: room.id || `${category.name}-${room.number}`, number: String(room.number || room.roomNumber || ""), categoryName: category.name || category.categoryName || "Standard", status: room.status || "Available", defaultPrice: category.defaultPrice || room.price || 0 })));
+        setRooms(refreshedRooms);
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || `${label} failed`);
     }
   };
 
@@ -286,7 +360,7 @@ const FrontOfficePOS = () => {
       </div>
 
       {/* BODY: sidebar + main */}
-      {activeView === "reservation" && <ReservationView filters={reservationFilters} setFilters={setReservationFilters} rows={reservationRows} formatDate={formatReservationDate} getStatus={reservationStatus} onRefresh={refreshReservations} refreshing={refreshing} onOpenBooking={() => setActiveView("new-reservation")} />}
+      {activeView === "reservation" && <ReservationView filters={reservationFilters} setFilters={setReservationFilters} rows={reservationRows} formatDate={formatReservationDate} getStatus={reservationStatus} onRefresh={refreshReservations} refreshing={refreshing} onOpenBooking={() => setActiveView("new-reservation")} onCheckIn={(booking) => updateBookingStayStatus(booking, "check-in")} onCheckOut={(booking) => updateBookingStayStatus(booking, "check-out")} />}
       {activeView === "ota-bookings" && <OtaBookingsView refreshing={refreshing} onRefresh={refreshReservations} onNewReservation={() => setActiveView("new-reservation")} />}
       {activeView === "ota-stop-open" && <CreditSettlementView activeTab={creditTab} onTabChange={setCreditTab} />}
       {activeView === "new-reservation" && <NewReservationView rooms={rooms} onSaved={refreshReservations} onList={() => setActiveView("reservation")} />}
@@ -464,11 +538,14 @@ const FrontOfficePOS = () => {
                       <strong>{r.number}</strong>
                       <span className="fo-card-cat">({r.categoryName})</span>
                     </div>
-                    <button className="fo-card-menu" title="Actions">▾</button>
+                    <button className="fo-card-menu" title="Actions" onClick={(e) => { e.stopPropagation(); setOpenRoomMenu((current) => current === r.id ? null : r.id); }}>▾</button>
+                    {openRoomMenu === r.id && <div className="fo-room-action-menu">
+                      <button onClick={() => updateRoomStatus(r, "Maintenance")}>Add To Maintenance</button>
+                    </div>}
                   </div>
                   <div className="fo-card-body">{status}</div>
                   <div className="fo-card-footer">
-                    <button className="fo-release-btn">Release</button>
+                    <button className="fo-release-btn" onClick={() => openReleaseModal(r)}>Release</button>
                     <span className="fo-room-home" aria-hidden="true">🏠</span>
                   </div>
                 </div>
@@ -488,6 +565,27 @@ const FrontOfficePOS = () => {
       {activeView === "master-services" && <div className="fo-master-view"><Services /></div>}
       {activeView === "master-guests" && <div className="fo-master-view"><Guests /></div>}
       {activeView === "housekeeping-manage" && <HousekeepingMasterView />}
+
+      {releaseRoom && <div className="fo-hk-modal-backdrop" onClick={() => setReleaseRoom(null)}>
+        <div className="fo-hk-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="fo-hk-modal-head"><strong>House Keeping Updates</strong><button onClick={() => setReleaseRoom(null)}>×</button></div>
+          <div className="fo-hk-modal-body">
+            <b>Room No {releaseRoom.number}</b>
+            <label>User</label>
+            <select value={housekeepingUpdate.user} onChange={(e) => setHousekeepingUpdate((p) => ({ ...p, user: e.target.value }))}>
+              <option value="">Select User</option>
+              {housekeepingUsers.map((user) => <option key={user.id} value={user.name || user.username}>{user.name || user.username}</option>)}
+            </select>
+            <div className="fo-hk-tasks">
+              {['Dusting', 'Bathroom Cleaning', 'Empty Garbage', 'Room Cleaning', 'Wash Dishes', 'Making Beds', 'Pest Control'].map((task) => <label key={task}>
+                <input type="checkbox" checked={!!housekeepingUpdate.tasks[task]} onChange={(e) => setHousekeepingUpdate((p) => ({ ...p, tasks: { ...p.tasks, [task]: e.target.checked } }))} /> {task}
+              </label>)}
+            </div>
+            <textarea value={housekeepingUpdate.notes} onChange={(e) => setHousekeepingUpdate((p) => ({ ...p, notes: e.target.value }))} />
+            <button className="fo-hk-update-btn" onClick={submitHousekeepingRelease} disabled={releasingRoom}>▣ {releasingRoom ? 'Updating...' : 'Update'}</button>
+          </div>
+        </div>
+      </div>}
 
       {/* DASHBOARD / INVOICE VIEW */}
       {activeView === "invoice" && (

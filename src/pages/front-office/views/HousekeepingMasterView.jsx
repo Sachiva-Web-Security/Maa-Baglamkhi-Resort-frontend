@@ -6,6 +6,7 @@ const HousekeepingMasterView = () => {
   const [rooms, setRooms] = useState([]);
   const [editing, setEditing] = useState(null);
   const [draft, setDraft] = useState({ remarks: "", assignee: "", status: "" });
+  const [employees, setEmployees] = useState([]);
   const [saving, setSaving] = useState(false);
 
   const load = async () => {
@@ -15,7 +16,11 @@ const HousekeepingMasterView = () => {
       setRooms(Array.isArray(list) ? list : []);
     } catch (error) { console.error("Failed to load housekeeping rooms", error); }
   };
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    // Load employees for housekeeper dropdown
+    API.get("/employees").then(r => setEmployees(Array.isArray(r.data) ? r.data : [])).catch(() => {});
+  }, []);
 
   const edit = (room) => {
     setEditing(room.id || room._id);
@@ -43,7 +48,11 @@ const HousekeepingMasterView = () => {
         <tbody>{rooms.map((room, index) => { const id = room.id || room._id; const isEdit = editing === id; return <tr key={id}>
           <td>{index + 1}</td><td>{room.roomNumber || room.roomNo || room.name}</td><td>{new Date(room.updated_at || room.created_at || Date.now()).toLocaleString("en-GB")}</td>
           <td>{isEdit ? <input value={draft.remarks} onChange={(e) => setDraft((p) => ({ ...p, remarks: e.target.value }))}/> : room.notes || ""}</td>
-          <td>{isEdit ? <select value={draft.assignee} onChange={(e) => setDraft((p) => ({ ...p, assignee: e.target.value }))}><option value="">Select House Keeper</option><option>No Housekeeper</option><option>House Keeper 1</option></select> : room.assignee === "No Housekeeper" ? "" : room.assignee}</td>
+          <td>{isEdit ? <select value={draft.assignee} onChange={(e) => setDraft((p) => ({ ...p, assignee: e.target.value }))}>
+          <option value="">Select House Keeper</option>
+          <option>No Housekeeper</option>
+          {employees.map(emp => <option key={emp.id} value={emp.name || emp.id}>{emp.name || `Employee ${emp.id}`}</option>)}
+        </select> : room.assignee === "No Housekeeper" ? "" : room.assignee}</td>
           <td>{isEdit ? <select value={draft.status} onChange={(e) => setDraft((p) => ({ ...p, status: e.target.value }))}><option value="">Select Status</option><option>Vacant Dirty</option><option>Cleaning In Progress</option><option>Vacant Clean</option><option>Out of Service</option></select> : <b className={shownStatus(room.status) === "Dirty" ? "dirty" : "clean"}>{shownStatus(room.status)}</b>}</td>
           <td>{isEdit ? <button className="update" disabled={saving} onClick={() => update(room)}>↻ {saving ? "Updating" : "Update"}</button> : <button className="edit" onClick={() => edit(room)}>✎ Edit</button>}</td>
         </tr>; })}</tbody>
