@@ -243,69 +243,71 @@ const Profile = () => {
       : "Role";
 
   return (
-    <div className="min-h-screen bg-[#f4f7fb] p-5 sm:p-7 lg:p-10">
-      <div className="mx-auto w-full max-w-[1500px] space-y-6">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#f4f7fb] px-4 py-6 sm:px-6 sm:py-8 md:px-8 lg:px-10 lg:py-10 xl:px-14 2xl:px-20 2xl:py-12">
+      <div className="mx-auto w-full max-w-[2200px] space-y-6 lg:space-y-8 2xl:space-y-10">
 
         {/* ── Gradient header ──────────────────────────────────── */}
-        <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-r from-sky-600 via-sky-500 to-cyan-400 px-7 py-8 shadow-[0_18px_45px_rgba(14,165,233,0.28)] sm:px-10 sm:py-10">
-          <div className="pointer-events-none absolute -right-10 -top-16 h-56 w-56 rounded-full bg-white/10" />
-          <div className="pointer-events-none absolute -bottom-20 left-1/3 h-56 w-56 rounded-full bg-white/10" />
-          <div className="relative flex items-center gap-2 text-xs font-bold uppercase tracking-[0.3em] text-white/80">
+        <div className="relative overflow-hidden rounded-[24px] bg-gradient-to-r from-sky-600 via-sky-500 to-cyan-400 px-6 py-8 shadow-[0_18px_45px_rgba(14,165,233,0.28)] sm:rounded-[28px] sm:px-10 sm:py-10 lg:px-14 lg:py-12 2xl:px-20 2xl:py-16">
+          <div className="pointer-events-none absolute -right-10 -top-16 h-56 w-56 rounded-full bg-white/10 lg:h-72 lg:w-72 2xl:h-96 2xl:w-96" />
+          <div className="pointer-events-none absolute -bottom-20 left-1/3 h-56 w-56 rounded-full bg-white/10 lg:h-72 lg:w-72 2xl:h-96 2xl:w-96" />
+          <div className="relative flex items-center gap-2 text-xs font-bold uppercase tracking-[0.3em] text-white/80 sm:text-sm lg:text-base 2xl:text-lg">
             <FaShieldAlt />
             <span>My Account</span>
           </div>
-          <h1 className="relative mt-3 text-3xl font-black text-white sm:text-4xl">
+          <h1 className="relative mt-3 text-3xl font-black text-white sm:text-4xl lg:mt-4 lg:text-5xl 2xl:text-6xl">
             Personal Information
           </h1>
-          <p className="relative mt-2 max-w-xl text-sm font-medium text-white/90 sm:text-base">
+          <p className="relative mt-2 max-w-xl text-sm font-medium text-white/90 sm:text-base lg:mt-3 lg:max-w-2xl lg:text-lg 2xl:max-w-3xl 2xl:text-xl">
             Profile picture, contact details aur password ek jagah se manage karein.
           </p>
         </div>
 
         {/* ── Alerts ───────────────────────────────────────────── */}
         {error ? (
-          <div className="flex items-center gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-semibold text-rose-700">
-            <FaExclamationCircle className="shrink-0 text-base" />
+          <div className="flex items-center gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-semibold text-rose-700 lg:px-6 lg:py-5 lg:text-base 2xl:text-lg">
+            <FaExclamationCircle className="shrink-0 text-base lg:text-lg" />
             <span>{error}</span>
           </div>
         ) : null}
 
         {message ? (
-          <div className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-semibold text-emerald-700">
-            <FaCheckCircle className="shrink-0 text-base" />
+          <div className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-semibold text-emerald-700 lg:px-6 lg:py-5 lg:text-base 2xl:text-lg">
+            <FaCheckCircle className="shrink-0 text-base lg:text-lg" />
             <span>{message}</span>
           </div>
         ) : null}
 
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] lg:gap-8 2xl:gap-10">
 
           {/* ── Avatar card ──────────────────────────────────── */}
-          <div className="rounded-[28px] border border-slate-200 bg-white p-7 shadow-[0_10px_40px_rgba(15,23,42,0.06)] sm:p-8">
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-sky-500">
+          <div className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-[0_10px_40px_rgba(15,23,42,0.06)] sm:rounded-[28px] sm:p-8 lg:p-10 2xl:p-12">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-sky-500 sm:text-sm lg:text-base 2xl:text-lg">
               Profile Photo
             </p>
 
-            <div className="mt-5 flex flex-col items-center text-center">
+            <div className="mt-5 flex flex-col items-center text-center lg:mt-7">
               <div className="relative">
-                <div className="flex h-32 w-32 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-sky-400 to-cyan-500 text-4xl font-black text-white shadow-[0_14px_32px_rgba(14,165,233,0.32)]">
+                <div className="flex h-32 w-32 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-sky-400 to-cyan-500 text-4xl font-black text-white shadow-[0_14px_32px_rgba(14,165,233,0.32)] sm:h-40 sm:w-40 sm:text-5xl lg:h-48 lg:w-48 lg:text-6xl 2xl:h-56 2xl:w-56 2xl:text-7xl">
                   {avatarUrl ? (
                     <img src={avatarUrl} alt="Profile" className="h-full w-full object-cover" />
                   ) : (
                     (name || "U").charAt(0).toUpperCase()
                   )}
                 </div>
-                <span className="absolute bottom-1 right-1 flex h-8 w-8 items-center justify-center rounded-full border-4 border-white bg-emerald-500">
-                  <FaCheckCircle className="text-xs text-white" />
+                <span className="absolute bottom-1 right-1 flex h-8 w-8 items-center justify-center rounded-full border-4 border-white bg-emerald-500 sm:h-9 sm:w-9 lg:h-11 lg:w-11">
+                  <FaCheckCircle className="text-xs text-white sm:text-sm lg:text-base" />
                 </span>
               </div>
 
-              <h2 className="mt-4 text-lg font-black text-slate-900">{name || "User"}</h2>
-              <span className="mt-1 inline-flex items-center gap-1.5 rounded-full bg-sky-50 px-3 py-1 text-xs font-bold text-sky-600">
-                <FaUserCircle className="text-[10px]" />
+              <h2 className="mt-4 text-lg font-black text-slate-900 sm:text-xl lg:mt-6 lg:text-2xl 2xl:text-3xl">
+                {name || "User"}
+              </h2>
+              <span className="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-sky-50 px-3 py-1 text-xs font-bold text-sky-600 sm:px-4 sm:py-1.5 sm:text-sm lg:mt-2 lg:px-5 lg:py-2 lg:text-base">
+                <FaUserCircle className="text-[10px] sm:text-xs lg:text-sm" />
                 {prettyRole}
               </span>
 
-              <div className="mt-6 flex w-full flex-col gap-3">
+              <div className="mt-6 flex w-full flex-col gap-3 lg:mt-8 lg:gap-4">
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -317,30 +319,30 @@ const Profile = () => {
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={loadingAvatar}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-sky-500 px-5 py-3 text-sm font-bold text-white shadow-[0_10px_24px_rgba(14,165,233,0.28)] transition hover:-translate-y-0.5 hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-sky-500 px-5 py-3 text-sm font-bold text-white shadow-[0_10px_24px_rgba(14,165,233,0.28)] transition hover:-translate-y-0.5 hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-60 sm:py-3.5 sm:text-base lg:py-4 lg:text-lg 2xl:py-5 2xl:text-xl"
                 >
-                  <FaUpload className="text-xs" />
+                  <FaUpload className="text-xs sm:text-sm lg:text-base" />
                   {loadingAvatar ? "Uploading..." : "Upload New Picture"}
                 </button>
                 <button
                   type="button"
                   onClick={handleStartCamera}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 transition hover:-translate-y-0.5 hover:border-sky-300 hover:text-sky-600"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 transition hover:-translate-y-0.5 hover:border-sky-300 hover:text-sky-600 sm:py-3.5 sm:text-base lg:py-4 lg:text-lg 2xl:py-5 2xl:text-xl"
                 >
-                  <FaCamera className="text-xs" />
+                  <FaCamera className="text-xs sm:text-sm lg:text-base" />
                   Use Camera
                 </button>
               </div>
             </div>
 
             {showCamera ? (
-              <div className="mt-6 space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <div className="mt-6 space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 lg:mt-8 lg:space-y-4 lg:p-6">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-bold text-slate-700">Camera Preview</p>
+                  <p className="text-sm font-bold text-slate-700 sm:text-base lg:text-lg">Camera Preview</p>
                   <button
                     type="button"
                     onClick={handleCloseCamera}
-                    className="rounded-full p-1.5 text-slate-400 transition hover:bg-slate-200 hover:text-slate-700"
+                    className="rounded-full p-1.5 text-slate-400 transition hover:bg-slate-200 hover:text-slate-700 lg:p-2 lg:text-lg"
                     aria-label="Close camera"
                   >
                     <FaTimes />
@@ -348,7 +350,7 @@ const Profile = () => {
                 </div>
 
                 {cameraError ? (
-                  <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+                  <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700 sm:text-base lg:px-5 lg:py-4 lg:text-lg">
                     {cameraError}
                   </div>
                 ) : (
@@ -362,7 +364,7 @@ const Profile = () => {
                     <button
                       type="button"
                       onClick={handleCaptureFromCamera}
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-sky-500 px-4 py-3 text-sm font-bold text-white shadow-[0_10px_24px_rgba(14,165,233,0.28)] transition hover:bg-sky-600"
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-sky-500 px-4 py-3 text-sm font-bold text-white shadow-[0_10px_24px_rgba(14,165,233,0.28)] transition hover:bg-sky-600 sm:py-3.5 sm:text-base lg:py-4 lg:text-lg"
                     >
                       <FaCamera />
                       Capture Photo
@@ -372,29 +374,29 @@ const Profile = () => {
               </div>
             ) : null}
 
-            <div className="mt-7 space-y-3 border-t border-slate-100 pt-6">
-              <div className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-5 py-4">
-                <div className="flex min-w-0 items-center gap-3">
-                  <FaUserCircle className="shrink-0 text-slate-400" />
-                  <span className="truncate text-sm font-semibold text-slate-800">
+            <div className="mt-7 space-y-3 border-t border-slate-100 pt-6 lg:mt-9 lg:space-y-4 lg:pt-8">
+              <div className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-5 py-4 lg:px-6 lg:py-5">
+                <div className="flex min-w-0 items-center gap-3 lg:gap-4">
+                  <FaUserCircle className="shrink-0 text-slate-400 lg:text-lg" />
+                  <span className="truncate text-sm font-semibold text-slate-800 sm:text-base lg:text-lg">
                     {name || "Name not set"}
                   </span>
                 </div>
-                <FaPen className="shrink-0 text-xs text-slate-300" />
+                <FaPen className="shrink-0 text-xs text-slate-300 lg:text-sm" />
               </div>
 
-              <div className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-5 py-4">
-                <div className="flex min-w-0 items-center gap-3">
-                  <FaEnvelope className="shrink-0 text-slate-400" />
-                  <span className="truncate text-sm font-semibold text-slate-800">
+              <div className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-5 py-4 lg:px-6 lg:py-5">
+                <div className="flex min-w-0 items-center gap-3 lg:gap-4">
+                  <FaEnvelope className="shrink-0 text-slate-400 lg:text-lg" />
+                  <span className="truncate text-sm font-semibold text-slate-800 sm:text-base lg:text-lg">
                     {email || "Email not set"}
                   </span>
                 </div>
-                <FaPen className="shrink-0 text-xs text-slate-300" />
+                <FaPen className="shrink-0 text-xs text-slate-300 lg:text-sm" />
               </div>
 
               {loadingProfile ? (
-                <p className="text-sm font-semibold text-slate-400">
+                <p className="text-sm font-semibold text-slate-400 sm:text-base lg:text-lg">
                   Profile details load ho rahe hain...
                 </p>
               ) : null}
@@ -404,30 +406,32 @@ const Profile = () => {
           {/* ── Password card ────────────────────────────────── */}
           <div
             ref={securitySectionRef}
-            className="rounded-[28px] border border-slate-200 bg-white p-7 shadow-[0_10px_40px_rgba(15,23,42,0.06)] sm:p-10"
+            className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-[0_10px_40px_rgba(15,23,42,0.06)] sm:rounded-[28px] sm:p-8 lg:p-10 2xl:p-12"
           >
-            <div className="flex items-center gap-3">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-sky-50 text-sky-500">
+            <div className="flex items-center gap-3 lg:gap-4">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-sky-50 text-sky-500 sm:h-12 sm:w-12 lg:h-14 lg:w-14 lg:text-xl 2xl:h-16 2xl:w-16 2xl:text-2xl">
                 <FaLock />
               </span>
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-sky-500">
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-sky-500 sm:text-sm lg:text-base">
                   Security
                 </p>
-                <h2 className="text-lg font-black text-slate-900">Change Password</h2>
+                <h2 className="text-lg font-black text-slate-900 sm:text-xl lg:text-2xl 2xl:text-3xl">
+                  Change Password
+                </h2>
               </div>
             </div>
 
-            <p className="mt-4 text-sm font-medium leading-relaxed text-slate-500">
+            <p className="mt-4 text-sm font-medium leading-relaxed text-slate-500 sm:text-base lg:mt-5 lg:text-lg 2xl:text-xl">
               Apna password yahan se safely update karein. Current credentials
               kabhi bhi screen par expose nahi hote.
             </p>
 
-            <form onSubmit={handlePasswordChange} className="mt-6 space-y-5">
+            <form onSubmit={handlePasswordChange} className="mt-6 space-y-5 lg:mt-8 lg:space-y-7">
               <div>
                 <label
                   htmlFor="current-password"
-                  className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500"
+                  className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500 sm:text-sm lg:mb-2.5 lg:text-base"
                 >
                   Current Password
                 </label>
@@ -436,44 +440,44 @@ const Profile = () => {
                   type="password"
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-semibold text-slate-900 outline-none transition placeholder:font-normal placeholder:text-slate-400 focus:border-sky-400 focus:bg-white focus:ring-4 focus:ring-sky-100"
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-semibold text-slate-900 outline-none transition placeholder:font-normal placeholder:text-slate-400 focus:border-sky-400 focus:bg-white focus:ring-4 focus:ring-sky-100 sm:px-5 sm:py-4 sm:text-base lg:px-6 lg:py-4.5 lg:text-lg 2xl:py-5 2xl:text-xl"
                   placeholder="Enter current password"
                 />
               </div>
 
-              <div className="grid gap-5 sm:grid-cols-2">
+              <div className="grid gap-5 sm:grid-cols-2 lg:gap-6">
                 <div>
-                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">
+                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500 sm:text-sm lg:mb-2.5 lg:text-base">
                     New Password
                   </label>
                   <input
                     type="password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-semibold text-slate-900 outline-none transition placeholder:font-normal placeholder:text-slate-400 focus:border-sky-400 focus:bg-white focus:ring-4 focus:ring-sky-100"
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-semibold text-slate-900 outline-none transition placeholder:font-normal placeholder:text-slate-400 focus:border-sky-400 focus:bg-white focus:ring-4 focus:ring-sky-100 sm:px-5 sm:py-4 sm:text-base lg:px-6 lg:py-4.5 lg:text-lg 2xl:py-5 2xl:text-xl"
                     placeholder="Enter new password"
                   />
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">
+                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500 sm:text-sm lg:mb-2.5 lg:text-base">
                     Confirm Password
                   </label>
                   <input
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-semibold text-slate-900 outline-none transition placeholder:font-normal placeholder:text-slate-400 focus:border-sky-400 focus:bg-white focus:ring-4 focus:ring-sky-100"
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-semibold text-slate-900 outline-none transition placeholder:font-normal placeholder:text-slate-400 focus:border-sky-400 focus:bg-white focus:ring-4 focus:ring-sky-100 sm:px-5 sm:py-4 sm:text-base lg:px-6 lg:py-4.5 lg:text-lg 2xl:py-5 2xl:text-xl"
                     placeholder="Re-enter new password"
                   />
                 </div>
               </div>
 
-              <div className="flex justify-end pt-1">
+              <div className="flex justify-end pt-1 lg:pt-2">
                 <button
                   type="submit"
                   disabled={loadingPassword}
-                  className="inline-flex items-center justify-center gap-2 rounded-full bg-sky-500 px-8 py-3 text-sm font-bold text-white shadow-[0_10px_24px_rgba(14,165,233,0.28)] transition hover:-translate-y-0.5 hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-sky-500 px-8 py-3 text-sm font-bold text-white shadow-[0_10px_24px_rgba(14,165,233,0.28)] transition hover:-translate-y-0.5 hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-60 sm:px-10 sm:py-3.5 sm:text-base lg:px-12 lg:py-4 lg:text-lg 2xl:px-14 2xl:py-5 2xl:text-xl"
                 >
                   {loadingPassword ? "Updating..." : "Update Password"}
                 </button>
@@ -481,20 +485,20 @@ const Profile = () => {
             </form>
 
             {/* Account overview strip */}
-            <div className="mt-8 grid gap-3 border-t border-slate-100 pt-6 sm:grid-cols-2">
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+            <div className="mt-8 grid gap-3 border-t border-slate-100 pt-6 sm:grid-cols-2 lg:mt-10 lg:gap-4 lg:pt-8">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 lg:p-6">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 sm:text-xs lg:text-sm">
                   Role
                 </div>
-                <div className="mt-1.5 text-base font-black text-slate-900">
+                <div className="mt-1.5 text-base font-black text-slate-900 sm:text-lg lg:mt-2 lg:text-xl 2xl:text-2xl">
                   {prettyRole}
                 </div>
               </div>
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 lg:p-6">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 sm:text-xs lg:text-sm">
                   Email
                 </div>
-                <div className="mt-1.5 truncate text-base font-black text-slate-900">
+                <div className="mt-1.5 truncate text-base font-black text-slate-900 sm:text-lg lg:mt-2 lg:text-xl 2xl:text-2xl">
                   {email || "Not set"}
                 </div>
               </div>
