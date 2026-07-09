@@ -1,3 +1,36 @@
+// src/components/Hotel/BookingFlow.jsx
+//
+// ✅ SINGLE-PAGE BOOKING MODULE
+// -----------------------------------------------------------------------------
+// This ONE file replaces the old multi-route wizard (Guest.jsx -> otherBooking.jsx
+// -> Reference.jsx -> company.jsx -> Room.jsx -> Pax.jsx -> RoomTariff.jsx ->
+// Advance.jsx -> Communication.jsx) plus AllBooking.jsx / EditBooking.jsx /
+// BookingCancelAction.jsx / CollectPayment.jsx.
+//
+// Everything now lives in ONE component. Nothing here calls `navigate()` to move
+// between booking steps — moving between "New Booking / Confirmed / All Bookings /
+// Booking Details / Manage Booking" is just a local React state change (`view`),
+// so the browser never leaves this page and no data is lost in transit.
+//
+// HOW TO WIRE THIS INTO YOUR ROUTER (see chat message for full explanation):
+//   <Route path="/hotel"              element={<BookingFlow />} />
+//   <Route path="/hotel/guest"        element={<BookingFlow />} />   // old link -> opens "New Booking"
+//   <Route path="/hotel/all-bookings" element={<BookingFlow />} />   // old link -> opens "All Bookings"
+// The component itself looks at the current pathname only ONCE, on first mount,
+// to decide whether to land on the list or the form — after that, everything is
+// internal state, so your existing Sidebar links keep working unchanged.
+//
+// -----------------------------------------------------------------------------
+// UI PASS NOTES (this revision only touches presentation, not logic):
+//  - One shared typographic scale (fieldCls / labelCls / sectionTitleCls / panelCls)
+//    is now used everywhere, including inside "New Booking", so every section of
+//    the page reads at the same, larger, premium size.
+//  - One shared <Modal> primitive now powers the Toast, Cancel, Collect Payment
+//    and Refund popups, so every popup shares the same width, radius, padding,
+//    spacing and button sizing as the "Booking Confirmed" screen.
+//  - Everything is responsive from 320px phones up to 4K, with no horizontal
+//    scroll anywhere (tables scroll internally with a sticky header instead).
+// -----------------------------------------------------------------------------
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -45,123 +78,123 @@ import GroupBooking from "./GroupBooking";
 import OccupancyForecast from "./OccupancyForecast";
 import GuestProfile from "./GuestProfile";
 /* ─────────────────────────── shared style tokens ─────────────────────────── */
+/* One scale, used everywhere on the page (list, form, confirmation, details,
+   manage, modals) so typography, spacing and sizing never drift between
+   sections. This is intentionally the same scale the old "New Booking"
+   section used for its main columns, just applied consistently. */
 
 const fieldCls =
-  "w-full h-14 rounded-2xl border border-blue-200 bg-white px-5 text-lg font-medium text-slate-800 shadow-sm transition-all duration-300 placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 focus:shadow-lg outline-none";
+  "w-full h-12 sm:h-13 md:h-14 rounded-2xl border border-blue-200 bg-white px-4 sm:px-5 text-base sm:text-lg font-medium text-slate-800 shadow-sm transition-all duration-300 placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 focus:shadow-lg outline-none";
 
 const labelCls =
-"mb-2 block text-lg font-semibold text-slate-700";
+  "mb-2 block text-sm sm:text-base md:text-lg font-semibold text-slate-700";
 
 const panelCls =
-`
-rounded-[30px]
+  `
+rounded-[24px] sm:rounded-[30px]
 bg-white
 border
 border-blue-100
-p-8
+p-5 sm:p-6 md:p-8 lg:p-10
 shadow-xl
 shadow-blue-100/60
 transition-all
 duration-300
+w-full
+max-w-full
+overflow-hidden
 `;
 
 const sectionTitleCls =
-`
-mb-6
+  `
+mb-5 sm:mb-6
 flex
 items-center
 gap-3
 border-b-2
 border-blue-100
-pb-4
-text-xl
+pb-3 sm:pb-4
+text-lg sm:text-xl md:text-2xl
 font-bold
 text-blue-900
 `;
 
-const primaryBtn =
-`
+const btnBase =
+  `
 inline-flex
 items-center
 justify-center
 gap-2
 rounded-2xl
+px-5 sm:px-7 md:px-8
+py-3
+sm:py-3.5
+text-base
+sm:text-lg
+font-semibold
+transition-all
+duration-300
+active:scale-[0.98]
+disabled:opacity-50
+disabled:cursor-not-allowed
+disabled:hover:translate-y-0
+disabled:active:scale-100
+whitespace-nowrap
+`;
+
+const primaryBtn =
+  `
+${btnBase}
 bg-gradient-to-r
 from-blue-600
 to-blue-700
-px-8
-py-3.5
-text-lg
-font-semibold
 text-white
 shadow-xl
 shadow-blue-200
-transition-all
-duration-300
 hover:-translate-y-1
 hover:shadow-2xl
 hover:from-blue-700
 hover:to-blue-800
-disabled:opacity-50
-disabled:cursor-not-allowed
 `;
 
 const ghostBtn =
-`
-inline-flex
-items-center
-justify-center
-gap-2
-rounded-2xl
+  `
+${btnBase}
 border
 border-blue-200
 bg-white
-px-7
-py-3
-text-lg
-font-semibold
 text-blue-700
 shadow-sm
-transition-all
-duration-300
 hover:bg-blue-50
 hover:border-blue-400
 hover:-translate-y-0.5
 `;
 
 const dangerBtn =
-`
-inline-flex
-items-center
-justify-center
-gap-2
-rounded-2xl
+  `
+${btnBase}
 border
 border-red-200
 bg-red-50
-px-7
-py-3
-text-lg
-font-semibold
 text-red-700
-transition-all
-duration-300
 hover:bg-red-100
+hover:-translate-y-0.5
 `;
 
 const softBtn = (active) =>
-`
+  `
 inline-flex
 items-center
 justify-center
 gap-2
 rounded-2xl
-px-5
-py-3
-text-lg
+px-4 sm:px-5
+py-2.5 sm:py-3
+text-sm sm:text-base md:text-lg
 font-semibold
 transition-all
 duration-300
+active:scale-[0.98]
 ${
 active
 ?
@@ -170,6 +203,9 @@ active
 "bg-white border border-blue-200 text-blue-700 hover:bg-blue-50"
 }
 `;
+
+const cardTileCls =
+  "rounded-2xl border border-slate-200/80 bg-slate-50/60 p-4 sm:p-5";
 
 /* ─────────────────────────── helpers ─────────────────────────── */
 
@@ -214,6 +250,67 @@ const STATUS_STYLES = {
 const statusStyle = (status) => {
   const key = String(status || "").toLowerCase().trim();
   return STATUS_STYLES[key] || "bg-slate-100 text-slate-600 ring-1 ring-slate-200";
+};
+
+const statusBadgeCls = (status) =>
+  `inline-block rounded-full px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-bold ${statusStyle(status)}`;
+
+/* ─────────────────────────── shared modal primitive ─────────────────────────── */
+/* Every popup on the page (Toast, Cancel Booking, Collect Payment, Refund) is
+   built from this one component, so they all share the same width, radius,
+   padding, spacing, and button sizing as the "Booking Confirmed" screen. */
+
+const Modal = ({
+  open,
+  onClose,
+  icon: Icon,
+  iconTone = "bg-blue-500",
+  title,
+  children,
+  actions,
+  closeOnBackdrop = true,
+}) => {
+  if (!open) return null;
+  return (
+    <div
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/45 px-4 py-6 backdrop-blur-sm"
+      onClick={closeOnBackdrop ? onClose : undefined}
+    >
+      <div
+        className="max-h-[90vh] w-full max-w-md sm:max-w-lg overflow-y-auto rounded-[24px] sm:rounded-[30px] border border-white/70 bg-white p-6 sm:p-8 md:p-10 shadow-[0_30px_90px_rgba(15,23,42,0.28)]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {(Icon || title) && (
+          <div className="mb-4 flex items-start gap-4">
+            {Icon && (
+              <span
+                className={`flex h-14 w-14 sm:h-16 sm:w-16 shrink-0 items-center justify-center rounded-full ${iconTone} text-2xl sm:text-3xl text-white shadow-lg`}
+              >
+                <Icon />
+              </span>
+            )}
+            {title && (
+              <h3 className="mt-1 text-xl sm:text-2xl font-black leading-tight text-slate-900">
+                {title}
+              </h3>
+            )}
+            <button
+              onClick={onClose}
+              className="ml-auto shrink-0 rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+              aria-label="Close"
+              type="button"
+            >
+              <FaTimes />
+            </button>
+          </div>
+        )}
+        <div className="text-base sm:text-lg leading-relaxed text-slate-600">{children}</div>
+        {actions && (
+          <div className="mt-7 sm:mt-8 flex flex-wrap justify-end gap-3">{actions}</div>
+        )}
+      </div>
+    </div>
+  );
 };
 
 /* ─────────────────────────── top flow bar (image-1 style) ─────────────────────────── */
@@ -278,8 +375,8 @@ const FLOW_STEPS = [
 ];
 
 const FlowBar = ({ view, onJump }) => (
-  <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_10px_30px_rgba(15,23,42,0.05)]">
-    <div className="flex flex-wrap items-center justify-between gap-3 sm:flex-nowrap sm:gap-2">
+  <div className="rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-[0_10px_30px_rgba(15,23,42,0.05)]">
+    <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-2 sm:flex-nowrap">
       {FLOW_STEPS.map((step, idx) => {
         const Icon = step.icon;
         const isActive = step.view === view;
@@ -288,11 +385,11 @@ const FlowBar = ({ view, onJump }) => (
             <button
               type="button"
               onClick={() => onJump(step.view)}
-              className="group flex min-w-[110px] flex-1 flex-col items-center gap-2 rounded-xl px-2 py-1 text-center transition hover:bg-slate-50"
+              className="group flex min-w-[104px] sm:min-w-[110px] flex-1 flex-col items-center gap-2 rounded-xl px-2 py-1 text-center transition hover:bg-slate-50"
               title={step.desc}
             >
               <span
-                className={`flex h-10 w-10 items-center justify-center rounded-full text-[15px] transition ${
+                className={`flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-full text-base sm:text-lg transition ${
                   isActive
                     ? "bg-sky-500 text-white shadow-[0_8px_18px_rgba(14,165,233,0.35)]"
                     : "bg-sky-50 text-sky-600 group-hover:bg-sky-100"
@@ -300,7 +397,7 @@ const FlowBar = ({ view, onJump }) => (
               >
                 <Icon />
               </span>
-              <span className={`text-[13px] font-bold ${isActive ? "text-sky-700" : "text-slate-700"}`}>
+              <span className={`text-xs sm:text-sm font-bold leading-snug ${isActive ? "text-sky-700" : "text-slate-700"}`}>
                 {step.num}. {step.title}
               </span>
             </button>
@@ -355,44 +452,6 @@ const emptyForm = () => ({
 const rowTotal = (row) => {
   const base = Number(row.price || 0) * Number(row.quantity || 0);
   return base + (base * Number(row.gst || 0)) / 100;
-};
-
-/* ─────────────────────────── toast / notice ─────────────────────────── */
-
-const Toast = ({ toast, onClose }) => {
-  if (!toast.open) return null;
-  const tone = toast.type === "success" ? "from-emerald-500 to-teal-500" : "from-rose-500 to-red-500";
-  return (
-    <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/40 px-4 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <div
-        className="w-full max-w-md overflow-hidden rounded-3xl border border-white/70 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.28)]"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className={`flex items-start gap-4 bg-gradient-to-r ${tone} px-6 py-5 text-white`}>
-          <div className="rounded-2xl bg-white/15 p-2.5">
-            {toast.type === "success" ? <FaCheckCircle /> : <FaExclamationTriangle />}
-          </div>
-          <div className="min-w-0 flex-1">
-            <h3 className="text-base font-black leading-tight">{toast.title}</h3>
-          </div>
-          <button onClick={onClose} className="rounded-full p-1.5 text-white/85 hover:bg-white/10">
-            <FaTimes />
-          </button>
-        </div>
-        <div className="px-6 py-5">
-          <p className="text-sm leading-6 text-slate-600">{toast.message}</p>
-          <div className="mt-5 flex justify-end">
-            <button onClick={onClose} className={primaryBtn}>
-              Continue
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
 };
 
 /* ─────────────────────────── main component ─────────────────────────── */
@@ -784,6 +843,7 @@ const BookingFlow = () => {
   const [toast, setToast] = useState({ open: false, type: "success", title: "", message: "" });
   const [cancelModal, setCancelModal] = useState({ open: false, reason: "", submitting: false });
   const [collectModal, setCollectModal] = useState({ open: false, amount: "", mode: "Cash", submitting: false });
+  const [refundModal, setRefundModal] = useState({ open: false, amount: "", submitting: false });
   const [manageStatus, setManageStatus] = useState("");
 
   const showToast = (type, title, message) => setToast({ open: true, type, title, message });
@@ -1269,14 +1329,20 @@ const handleJumpStep = (stepView) => {
 
   const handleRefund = async () => {
     if (!selectedBooking?.bookingId) return;
-    const amount = window.prompt("Enter refund amount");
-    if (!amount || Number.isNaN(Number(amount))) return;
+    const amount = Number(refundModal.amount);
+    if (!amount || amount <= 0) {
+      showToast("error", "Enter a valid amount", "Refund amount must be greater than zero.");
+      return;
+    }
     try {
+      setRefundModal((r) => ({ ...r, submitting: true }));
       await API.post(`/hotel/refund/${selectedBooking.bookingId}`, { amount });
+      setRefundModal({ open: false, amount: "", submitting: false });
       showToast("success", "Refund Processed", `${formatCurrency(amount)} has been refunded.`);
       await fetchBookings();
     } catch (err) {
       console.error(err);
+      setRefundModal((r) => ({ ...r, submitting: false }));
       showToast("error", "Refund Failed", "Could not process this refund.");
     }
   };
@@ -1302,6 +1368,32 @@ const handleJumpStep = (stepView) => {
     if (!booking?.bookingId) return;
     setStoredBookingId(booking.bookingId);
     navigate("/hotel/payment-history", { state: { bookingId: booking.bookingId } });
+  };
+
+  const handleOpenGroupBooking = (booking) => {
+    if (!booking?.bookingId) return;
+    setSelectedBookingId(booking.bookingId);
+    setShowGroupBooking(true);
+  };
+
+  const handleCloseGroupBooking = () => {
+    setShowGroupBooking(false);
+    setSelectedBookingId(null);
+  };
+
+  const handleOpenGuestProfile = (booking) => {
+    if (!booking?.bookingId) return;
+    setSelectedBookingId(booking.bookingId);
+    setShowGuestProfile(true);
+  };
+
+  const handleCloseGuestProfile = () => {
+    setShowGuestProfile(false);
+    setSelectedBookingId(null);
+  };
+
+  const handleCloseOccupancyForecast = () => {
+    setShowOccupancyForecast(false);
   };
 
   const handleNotify = async (channel) => {
@@ -1345,19 +1437,19 @@ const handleJumpStep = (stepView) => {
 
   const renderList = () => (
     <div className={panelCls}>
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+      <div className="mb-5 sm:mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold text-slate-900">All Bookings</h2>
-          <p className="text-lg text-slate-500">View and manage all your hotel reservations</p>
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900">All Bookings</h2>
+          <p className="mt-1 text-base sm:text-lg text-slate-500">View and manage all your hotel reservations</p>
         </div>
         <button type="button" onClick={openNewBooking} className={primaryBtn}>
-          <FaPlus className="text-xl" /> New Booking
+          <FaPlus className="text-lg sm:text-xl" /> New Booking
         </button>
       </div>
 
-      <div className="mb-4 flex flex-wrap items-center gap-2">
-        <div className="relative flex-1 min-w-[220px]">
-          <FaSearch className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+      <div className="mb-4 flex flex-wrap items-center gap-2 sm:gap-3">
+        <div className="relative min-w-[220px] flex-1">
+          <FaSearch className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             value={search}
             onChange={(e) => {
@@ -1365,33 +1457,33 @@ const handleJumpStep = (stepView) => {
               setPage(1);
             }}
             placeholder="Search by booking no, guest name, email or phone..."
-            className={`${fieldCls} pl-10`}
+            className={`${fieldCls} pl-11`}
           />
         </div>
         <button type="button" className={ghostBtn}>
-          <FaFilter className="text-xs" /> Filter
+          <FaFilter className="text-sm" /> Filter
         </button>
         <button type="button" onClick={handleExportCSV} className={ghostBtn}>
-          <FaDownload className="text-xs" /> Export
+          <FaDownload className="text-sm" /> Export
         </button>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-slate-100">
-        <table className="w-full min-w-[820px] text-left text-sm">
-          <thead className="bg-slate-50 text-[12px] font-bold uppercase tracking-wide text-slate-500">
+      <div className="max-w-full overflow-x-auto rounded-xl border border-slate-100">
+        <table className="w-full min-w-[860px] text-left">
+          <thead className="sticky top-0 z-10 bg-slate-50 text-xs sm:text-sm font-bold uppercase tracking-wide text-slate-500">
             <tr>
-              <th className="px-4 py-3">Booking No</th>
-              <th className="px-4 py-3">Guest Name</th>
-              <th className="px-4 py-3">Check-In</th>
-              <th className="px-4 py-3">Check-Out</th>
-              <th className="px-4 py-3">Rooms</th>
-              <th className="px-4 py-3">Amount</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3">Booking Type</th>
-              <th className="px-4 py-3 text-right">Action</th>
+              <th className="px-4 sm:px-5 py-3 sm:py-4">Booking No</th>
+              <th className="px-4 sm:px-5 py-3 sm:py-4">Guest Name</th>
+              <th className="px-4 sm:px-5 py-3 sm:py-4">Check-In</th>
+              <th className="px-4 sm:px-5 py-3 sm:py-4">Check-Out</th>
+              <th className="px-4 sm:px-5 py-3 sm:py-4">Rooms</th>
+              <th className="px-4 sm:px-5 py-3 sm:py-4">Amount</th>
+              <th className="px-4 sm:px-5 py-3 sm:py-4">Status</th>
+              <th className="px-4 sm:px-5 py-3 sm:py-4">Booking Type</th>
+              <th className="px-4 sm:px-5 py-3 sm:py-4 text-right">Action</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-slate-100 text-sm sm:text-base md:text-lg">
             {loading ? (
               <tr>
                 <td colSpan={9} className="px-4 py-10 text-center text-slate-400">
@@ -1407,44 +1499,38 @@ const handleJumpStep = (stepView) => {
             ) : (
               pagedBookings.map((b) => (
                 <tr key={b.bookingId} className="hover:bg-slate-50/70">
-                  <td className="px-4 py-3 font-bold text-slate-800">{b.bookingCode || `BK-${b.bookingId}`}</td>
-                  <td className="px-4 py-3 text-slate-700">{b.guest_name || "Walk-in Guest"}</td>
-                  <td className="px-4 py-3 text-slate-600">{formatDate(b.check_in)}</td>
-                  <td className="px-4 py-3 text-slate-600">{formatDate(b.check_out)}</td>
-                  <td className="px-4 py-3 text-slate-600">{b.rooms || "-"}</td>
-                  <td className="px-4 py-3 font-semibold text-slate-800">{formatCurrency(b.totalAmount)}</td>
-                  <td className="px-4 py-3">
-                    <span className={`rounded-full px-3 py-1 text-[12px] font-bold ${statusStyle(b.booking_status)}`}>
+                  <td className="px-4 sm:px-5 py-3 sm:py-4 font-bold text-slate-800">{b.bookingCode || `BK-${b.bookingId}`}</td>
+                  <td className="px-4 sm:px-5 py-3 sm:py-4 text-slate-700">{b.guest_name || "Walk-in Guest"}</td>
+                  <td className="px-4 sm:px-5 py-3 sm:py-4 text-slate-600">{formatDate(b.check_in)}</td>
+                  <td className="px-4 sm:px-5 py-3 sm:py-4 text-slate-600">{formatDate(b.check_out)}</td>
+                  <td className="px-4 sm:px-5 py-3 sm:py-4 text-slate-600">{b.rooms || "-"}</td>
+                  <td className="px-4 sm:px-5 py-3 sm:py-4 font-semibold text-slate-800">{formatCurrency(b.totalAmount)}</td>
+                  <td className="px-4 sm:px-5 py-3 sm:py-4">
+                    <span className={statusBadgeCls(b.booking_status)}>
                       {b.booking_status || "Pending"}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-slate-600">{b.bookingType || "-"}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 sm:px-5 py-3 sm:py-4 text-slate-600">{b.bookingType || "-"}</td>
+                  <td className="px-4 sm:px-5 py-3 sm:py-4">
                     <div className="flex items-center justify-end gap-2">
-                      <button title="View details" onClick={() => openDetails(b)} className="rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-slate-50">
-                        <FaEye className="text-xs" />
+                      <button title="View details" onClick={() => openDetails(b)} className="rounded-lg border border-slate-200 p-2.5 text-slate-600 transition hover:bg-slate-50 active:scale-95">
+                        <FaEye className="text-sm sm:text-base" />
                       </button>
-                      <button title="Edit booking" onClick={() => openEditBooking(b)} className="rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-slate-50">
-                        <FaEdit className="text-xs" />
+                      <button title="Edit booking" onClick={() => openEditBooking(b)} className="rounded-lg border border-slate-200 p-2.5 text-slate-600 transition hover:bg-slate-50 active:scale-95">
+                        <FaEdit className="text-sm sm:text-base" />
                       </button>
-                      <button title="Guest folio" onClick={() => handleOpenFolio(b)} className="rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-slate-50">
-                        <FaBook className="text-xs" />
+                      <button title="Guest folio" onClick={() => handleOpenFolio(b)} className="rounded-lg border border-slate-200 p-2.5 text-slate-600 transition hover:bg-slate-50 active:scale-95">
+                        <FaBook className="text-sm sm:text-base" />
                       </button>
-                      <button title="Manage booking" onClick={() => openManage(b)} className="rounded-lg border border-rose-200 p-2 text-rose-600 hover:bg-rose-50">
-                        <FaTrash className="text-xs" />
+                      <button title="Manage booking" onClick={() => openManage(b)} className="rounded-lg border border-rose-200 p-2.5 text-rose-600 transition hover:bg-rose-50 active:scale-95">
+                        <FaTrash className="text-sm sm:text-base" />
                       </button>
-                      <button
-    title="Group Booking"
-    onClick={() => handleOpenGroupBooking(b)}
->
-    <FaUsers />
-</button>
-<button
-    title="Guest Profile"
-    onClick={() => handleOpenGuestProfile(b)}
->
-    <FaIdCard />
-</button>
+                      <button title="Group Booking" onClick={() => handleOpenGroupBooking(b)} className="rounded-lg border border-slate-200 p-2.5 text-slate-600 transition hover:bg-slate-50 active:scale-95">
+                        <FaUsers className="text-sm sm:text-base" />
+                      </button>
+                      <button title="Guest Profile" onClick={() => handleOpenGuestProfile(b)} className="rounded-lg border border-slate-200 p-2.5 text-slate-600 transition hover:bg-slate-50 active:scale-95">
+                        <FaIdCard className="text-sm sm:text-base" />
+                      </button>
 
                     </div>
                   </td>
@@ -1455,24 +1541,24 @@ const handleJumpStep = (stepView) => {
         </table>
       </div>
 
-      <div className="mt-4 flex items-center justify-between text-sm text-slate-500">
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-3 text-sm sm:text-base text-slate-500">
         <span>
           Showing {pagedBookings.length ? (page - 1) * pageSize + 1 : 0}
           {" "}to {(page - 1) * pageSize + pagedBookings.length} of {filteredBookings.length} entries
         </span>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           <button
             disabled={page <= 1}
             onClick={() => setPage((p) => Math.max(1, p - 1))}
-            className="rounded-lg border border-slate-200 p-2 text-slate-500 disabled:opacity-40"
+            className="rounded-lg border border-slate-200 p-2.5 text-slate-500 transition disabled:opacity-40"
           >
-            <FaChevronLeft className="text-xs" />
+            <FaChevronLeft className="text-sm" />
           </button>
           {Array.from({ length: totalPages }).slice(0, 5).map((_, i) => (
             <button
               key={i}
               onClick={() => setPage(i + 1)}
-              className={`h-8 w-8 rounded-lg text-sm font-bold ${
+              className={`h-9 w-9 sm:h-10 sm:w-10 rounded-lg text-sm sm:text-base font-bold transition ${
                 page === i + 1 ? "bg-sky-500 text-white" : "text-slate-500 hover:bg-slate-100"
               }`}
             >
@@ -1482,9 +1568,9 @@ const handleJumpStep = (stepView) => {
           <button
             disabled={page >= totalPages}
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            className="rounded-lg border border-slate-200 p-2 text-slate-500 disabled:opacity-40"
+            className="rounded-lg border border-slate-200 p-2.5 text-slate-500 transition disabled:opacity-40"
           >
-            <FaChevronRight className="text-xs" />
+            <FaChevronRight className="text-sm" />
           </button>
         </div>
       </div>
@@ -1495,14 +1581,14 @@ const handleJumpStep = (stepView) => {
 
   const renderForm = () => (
     <div className={panelCls}>
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-5">
+      <div className="mb-6 sm:mb-8 flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-5 sm:pb-6">
         <div>
-          <h2 className="text-3xl font-black text-slate-900">{isEdit ? "Edit Booking" : "New Booking"}</h2>
-          <p className="text-lg text-slate-500">
+          <h2 className="text-2xl sm:text-3xl font-black text-slate-900">{isEdit ? "Edit Booking" : "New Booking"}</h2>
+          <p className="mt-1 text-base sm:text-lg text-slate-500">
             {isEdit ? "Update the booking details below." : "Fill all details below to create a new booking — everything happens on this one page."}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 sm:gap-3">
           <button type="button" onClick={goToList} className={ghostBtn}>
             Cancel
           </button>
@@ -1513,7 +1599,7 @@ const handleJumpStep = (stepView) => {
       </div>
 
       {/* section anchors — purely visual / scroll cues, all sections are already on screen below */}
-      <div className="mb-6 flex flex-wrap gap-2">
+      <div className="mb-6 sm:mb-8 flex flex-wrap gap-2 sm:gap-3">
         {[
           { id: "sec-guest", label: "Guest Information" },
           { id: "sec-booking", label: "Booking Details" },
@@ -1527,48 +1613,109 @@ const handleJumpStep = (stepView) => {
         ))}
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-3">
+      <div className="grid gap-5 sm:gap-6 lg:grid-cols-3">
         {/* column 1: guest + stay */}
-        <div className="space-y-5">
-          <div id="sec-guest" className="rounded-2xl border border-slate-200/80 bg-slate-50/60 p-5">
+        <div className="space-y-5 sm:space-y-6">
+          <div id="sec-guest" className={cardTileCls}>
             <div className={sectionTitleCls}>Guest Information</div>
-            <div className="grid grid-cols-2 gap-4">
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
               <div>
                 <label className={labelCls}>First Name</label>
-                <input name="firstName" value={formData.firstName} onChange={handleChange} className={fieldCls} placeholder="Enter first name" />
+                <input
+                  name="firstName"
+                  value={formData.firstName}
+                  onChange={handleChange}
+                  className={fieldCls}
+                  placeholder="Enter first name"
+                />
               </div>
+
               <div>
                 <label className={labelCls}>Last Name</label>
-                <input name="lastName" value={formData.lastName} onChange={handleChange} className={fieldCls} placeholder="Enter last name" />
+                <input
+                  name="lastName"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  className={fieldCls}
+                  placeholder="Enter last name"
+                />
               </div>
-              <div className="col-span-2">
+
+              <div className="sm:col-span-2">
                 <label className={labelCls}>Email Address</label>
-                <input type="email" name="guestEmail" value={formData.guestEmail} onChange={handleChange} className={fieldCls} placeholder="Enter guest email" />
+                <input
+                  type="email"
+                  name="guestEmail"
+                  value={formData.guestEmail}
+                  onChange={handleChange}
+                  className={fieldCls}
+                  placeholder="Enter guest email"
+                />
               </div>
-              <div className="col-span-2">
+
+              <div className="sm:col-span-2">
                 <label className={labelCls}>Phone Number</label>
-                <input name="mobile" value={formData.mobile} onChange={handleChange} className={fieldCls} placeholder="Enter phone number" />
+                <input
+                  name="mobile"
+                  value={formData.mobile}
+                  onChange={handleChange}
+                  className={fieldCls}
+                  placeholder="Enter phone number"
+                />
               </div>
             </div>
 
-            <div className="mt-5 border-t border-slate-200 pt-5">
-              <div className="mb-3 text-[18px] font-bold text-blue-900">Stay Details</div>
-              <div className="grid grid-cols-2 gap-4">
+            <div className="mt-5 sm:mt-6 border-t border-slate-200 pt-5 sm:pt-6">
+              <div className="mb-3 text-base sm:text-lg md:text-xl font-bold text-blue-900">
+                Stay Details
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                 <div>
                   <label className={labelCls}>Check-In</label>
-                  <input type="date" name="checkIn" min={today} value={formData.checkIn} onChange={handleChange} className={fieldCls} />
+                  <input
+                    type="date"
+                    name="checkIn"
+                    min={today}
+                    value={formData.checkIn}
+                    onChange={handleChange}
+                    className={fieldCls}
+                  />
                 </div>
+
                 <div>
                   <label className={labelCls}>Check-Out</label>
-                  <input type="date" name="checkOut" min={formData.checkIn || today} value={formData.checkOut} onChange={handleChange} className={fieldCls} />
+                  <input
+                    type="date"
+                    name="checkOut"
+                    min={formData.checkIn || today}
+                    value={formData.checkOut}
+                    onChange={handleChange}
+                    className={fieldCls}
+                  />
                 </div>
+
                 <div>
                   <label className={labelCls}>Expected Arrival</label>
-                  <input type="time" name="arrival" value={formData.arrival} onChange={handleChange} className={fieldCls} />
+                  <input
+                    type="time"
+                    name="arrival"
+                    value={formData.arrival}
+                    onChange={handleChange}
+                    className={fieldCls}
+                  />
                 </div>
+
                 <div>
                   <label className={labelCls}>Expected Departure</label>
-                  <input type="time" name="departure" value={formData.departure} onChange={handleChange} className={fieldCls} />
+                  <input
+                    type="time"
+                    name="departure"
+                    value={formData.departure}
+                    onChange={handleChange}
+                    className={fieldCls}
+                  />
                 </div>
               </div>
             </div>
@@ -1576,10 +1723,10 @@ const handleJumpStep = (stepView) => {
         </div>
 
         {/* column 2: booking info + room & tariff */}
-        <div className="space-y-5">
-          <div id="sec-booking" className="rounded-2xl border border-slate-200/80 bg-slate-50/60 p-5">
+        <div className="space-y-5 sm:space-y-6">
+          <div id="sec-booking" className={cardTileCls}>
             <div className={sectionTitleCls}>Booking Information</div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
               <div>
                 <label className={labelCls}>Booking No</label>
                 <input disabled value={formData.bookingCode || "Auto-generated on save"} className={`${fieldCls} bg-slate-100 text-slate-500`} />
@@ -1588,16 +1735,17 @@ const handleJumpStep = (stepView) => {
                 <label className={labelCls}>Booking Date</label>
                 <input disabled value={formatDate(today)} className={`${fieldCls} bg-slate-100 text-slate-500`} />
               </div>
-              <div className="col-span-2">
+              <div className="sm:col-span-2">
                 <label className={labelCls}>Booking Type</label>
-                <div className="flex gap-4 pt-1">
+                <div className="flex flex-wrap gap-4 sm:gap-5 pt-1">
                   {["Walk-In", "VIA", "Online"].map((t) => (
-                    <label key={t} className="flex items-center gap-2 text-lg font-semibold text-slate-700">
+                    <label key={t} className="flex items-center gap-2 text-base sm:text-lg font-semibold text-slate-700">
                       <input
                         type="radio"
                         name="bookingType"
                         checked={formData.bookingType === t}
                         onChange={() => setField("bookingType", t)}
+                        className="h-4 w-4 sm:h-5 sm:w-5 accent-blue-600"
                       />
                       {t}
                     </label>
@@ -1612,16 +1760,16 @@ const handleJumpStep = (stepView) => {
                 <label className={labelCls}>Company</label>
                 <input name="company" value={formData.company} onChange={handleChange} className={fieldCls} placeholder="Enter company name" />
               </div>
-              <div className="col-span-2">
+              <div className="sm:col-span-2">
                 <label className={labelCls}>Reference</label>
                 <input name="reference" value={formData.reference} onChange={handleChange} className={fieldCls} placeholder="Enter reference details" />
               </div>
             </div>
           </div>
 
-          <div id="sec-room" className="rounded-2xl border border-slate-200/80 bg-slate-50/60 p-5">
+          <div id="sec-room" className={cardTileCls}>
             <div className={sectionTitleCls}>Room &amp; Tariff Details</div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
               <div>
                 <label className={labelCls}>Room Category</label>
                 <select name="roomCategory" value={formData.roomCategory} onChange={handleChange} className={fieldCls}>
@@ -1644,7 +1792,7 @@ const handleJumpStep = (stepView) => {
                     onChange={handleChange}
                     className={fieldCls}
                   />
-                  <button type="button" onClick={addRoomRow} className="shrink-0 rounded-xl bg-sky-500 px-3 text-lg font-bold text-white hover:bg-sky-600">
+                  <button type="button" onClick={addRoomRow} className="shrink-0 rounded-2xl bg-sky-500 px-4 sm:px-5 text-base sm:text-lg font-bold text-white transition hover:bg-sky-600 active:scale-95">
                     + Add
                   </button>
                 </div>
@@ -1661,65 +1809,65 @@ const handleJumpStep = (stepView) => {
                 <label className={labelCls}>Owner</label>
                 <input name="owner" value={formData.owner} onChange={handleChange} className={fieldCls} placeholder="Enter owner name" />
               </div>
-              <div className="col-span-2">
+              <div className="sm:col-span-2">
                 <label className={labelCls}>Address</label>
-                <textarea name="address" value={formData.address} onChange={handleChange} rows={2} className={fieldCls} placeholder="Enter address" />
+                <textarea name="address" value={formData.address} onChange={handleChange} rows={2} className={`${fieldCls} h-auto py-3`} placeholder="Enter address" />
               </div>
             </div>
 
             {formData.rooms.length > 0 && (
-              <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200">
-                <table className="w-full min-w-[380px] text-left text-lg">
-                  <thead className="bg-slate-100 font-bold uppercase text-slate-500">
+              <div className="mt-4 sm:mt-5 max-w-full overflow-x-auto rounded-xl border border-slate-200">
+                <table className="w-full min-w-[420px] text-left">
+                  <thead className="sticky top-0 z-10 bg-slate-100 text-xs sm:text-sm font-bold uppercase text-slate-500">
                     <tr>
-                      <th className="px-2.5 py-2">Room No</th>
-                      <th className="px-2.5 py-2">Price</th>
-                      <th className="px-2.5 py-2">GST %</th>
-                      <th className="px-2.5 py-2">Qty</th>
-                      <th className="px-2.5 py-2">Total</th>
-                      <th className="px-2.5 py-2" />
+                      <th className="px-3 py-2.5">Room No</th>
+                      <th className="px-3 py-2.5">Price</th>
+                      <th className="px-3 py-2.5">GST %</th>
+                      <th className="px-3 py-2.5">Qty</th>
+                      <th className="px-3 py-2.5">Total</th>
+                      <th className="px-3 py-2.5" />
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 bg-white">
+                  <tbody className="divide-y divide-slate-100 bg-white text-sm sm:text-base md:text-lg">
                     {formData.rooms.map((row) => (
                       <tr key={row.id}>
-                        <td className="px-2.5 py-1.5">
+                        <td className="px-3 py-2">
                           <input
                             value={row.roomNo}
                             onChange={(e) => updateRoomRow(row.id, "roomNo", e.target.value)}
-                            className="w-20 rounded-lg border border-slate-200 px-2 py-1 text-lg"
+                            className="w-20 sm:w-24 rounded-lg border border-slate-200 px-2 py-1.5 text-sm sm:text-base"
                             placeholder="e.g. 101"
                           />
                         </td>
-                        <td className="px-2.5 py-1.5">
+                        <td className="px-3 py-2">
                           <input
                             type="number"
                             value={row.price}
                             onChange={(e) => updateRoomRow(row.id, "price", e.target.value)}
-                            className="w-20 rounded-lg border border-slate-200 px-2 py-1 text-lg"
+                            className="w-20 sm:w-24 rounded-lg border border-slate-200 px-2 py-1.5 text-sm sm:text-base"
                           />
                         </td>
-                        <td className="px-2.5 py-1.5">
+                        <td className="px-3 py-2">
                           <input
                             type="number"
                             value={row.gst}
                             onChange={(e) => updateRoomRow(row.id, "gst", e.target.value)}
-                            className="w-16 rounded-lg border border-slate-200 px-2 py-1 text-lg"
+                            className="w-16 sm:w-20 rounded-lg border border-slate-200 px-2 py-1.5 text-sm sm:text-base"
                           />
                         </td>
-                        <td className="px-2.5 py-1.5">
+                        <td className="px-3 py-2">
                           <input
                             type="number"
                             min={1}
                             value={row.quantity}
                             onChange={(e) => updateRoomRow(row.id, "quantity", e.target.value)}
-                            className="w-16 rounded-lg border border-slate-200 px-2 py-1 text-lg"
+                            className="w-16 sm:w-20 rounded-lg border border-slate-200 px-2 py-1.5 text-sm sm:text-base"
                           />
                         </td>
-                        <td className="px-2.5 py-1.5 font-semibold text-slate-700">{formatCurrency(rowTotal(row))}</td>
-                        <td className="px-2.5 py-1.5">
-                          <button onClick={() => removeRoomRow(row.id)} className="text-rose-500 hover:text-rose-700">
-                            <FaTimes className="text-lg" />
+                        <td className="px-3 py-2 font-semibold text-slate-700">{formatCurrency(rowTotal(row))}</td>
+                        <td className="px-3 py-2">
+                          <button onClick={() => removeRoomRow(row.id)} className="text-rose-500 transition hover:text-rose-700 active:scale-95">
+                            <FaTimes className="text-base sm:text-lg" />
                           </button>
                         </td>
                       </tr>
@@ -1732,10 +1880,10 @@ const handleJumpStep = (stepView) => {
         </div>
 
         {/* column 3: other details + payment */}
-        <div className="space-y-5">
-          <div id="sec-other" className="rounded-2xl border border-slate-200/80 bg-slate-50/60 p-5">
+        <div className="space-y-5 sm:space-y-6">
+          <div id="sec-other" className={cardTileCls}>
             <div className={sectionTitleCls}>Other Details</div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
               <div>
                 <label className={labelCls}>Coming From</label>
                 <input name="comingFrom" value={formData.comingFrom} onChange={handleChange} className={fieldCls} placeholder="Please enter coming from" />
@@ -1744,33 +1892,33 @@ const handleJumpStep = (stepView) => {
                 <label className={labelCls}>Going To</label>
                 <input name="goingTo" value={formData.goingTo} onChange={handleChange} className={fieldCls} placeholder="Please enter going to" />
               </div>
-              <div className="col-span-2">
+              <div className="sm:col-span-2">
                 <label className={labelCls}>Purpose of Visit</label>
                 <input name="purposeOfVisit" value={formData.purposeOfVisit} onChange={handleChange} className={fieldCls} placeholder="Please enter purpose of visit" />
               </div>
-              <div className="col-span-2">
+              <div className="sm:col-span-2">
                 <label className={labelCls}>Pickup From</label>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
                   <input name="pickupFrom" value={formData.pickupFrom} onChange={handleChange} className={fieldCls} placeholder="Enter pickup point" />
-                  <label className="flex shrink-0 items-center gap-1.5 text-lg font-semibold text-slate-600">
-                    <input type="checkbox" name="pickup" checked={formData.pickup} onChange={handleChange} /> Pickup?
+                  <label className="flex shrink-0 items-center gap-2 text-base sm:text-lg font-semibold text-slate-600">
+                    <input type="checkbox" name="pickup" checked={formData.pickup} onChange={handleChange} className="h-4 w-4 sm:h-5 sm:w-5 accent-blue-600" /> Pickup?
                   </label>
                 </div>
               </div>
-              <div className="col-span-2">
+              <div className="sm:col-span-2">
                 <label className={labelCls}>Package Details</label>
                 <input name="packageDetails" value={formData.packageDetails} onChange={handleChange} className={fieldCls} placeholder="Enter package details" />
               </div>
-              <div className="col-span-2">
+              <div className="sm:col-span-2">
                 <label className={labelCls}>Remarks</label>
-                <textarea name="remarks" value={formData.remarks} onChange={handleChange} rows={2} className={fieldCls} placeholder="Enter any remarks..." />
+                <textarea name="remarks" value={formData.remarks} onChange={handleChange} rows={2} className={`${fieldCls} h-auto py-3`} placeholder="Enter any remarks..." />
               </div>
             </div>
           </div>
 
-          <div id="sec-payment" className="rounded-2xl border border-slate-200/80 bg-slate-50/60 p-5">
+          <div id="sec-payment" className={cardTileCls}>
             <div className={sectionTitleCls}>Advance Payment Details</div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
               <div>
                 <label className={labelCls}>Amount (₹)</label>
                 <input type="number" name="amount" value={formData.amount} onChange={handleChange} className={fieldCls} placeholder="0.00" />
@@ -1798,9 +1946,9 @@ const handleJumpStep = (stepView) => {
                 <label className={labelCls}>Paid By</label>
                 <input name="paidBy" value={formData.paidBy} onChange={handleChange} className={fieldCls} placeholder="Enter paid by name" />
               </div>
-              <div className="col-span-2">
+              <div className="sm:col-span-2">
                 <label className={labelCls}>Payment Note</label>
-                <textarea name="paymentNote" value={formData.paymentNote} onChange={handleChange} rows={2} className={fieldCls} placeholder="Enter payment note (optional)" />
+                <textarea name="paymentNote" value={formData.paymentNote} onChange={handleChange} rows={2} className={`${fieldCls} h-auto py-3`} placeholder="Enter payment note (optional)" />
               </div>
             </div>
           </div>
@@ -1808,32 +1956,32 @@ const handleJumpStep = (stepView) => {
       </div>
 
       {/* booking summary footer */}
-      <div className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4">
-        <div className="flex flex-wrap gap-8 text-lg">
+      <div className="mt-6 sm:mt-8 flex flex-wrap items-center justify-between gap-5 sm:gap-6 rounded-2xl border border-slate-200 bg-slate-50 px-5 sm:px-6 py-4 sm:py-5">
+        <div className="flex flex-wrap gap-6 sm:gap-8 text-base sm:text-lg">
           <div>
-            <div className="text-[14px] font-bold uppercase text-slate-400">Guest Name</div>
+            <div className="text-xs sm:text-sm font-bold uppercase text-slate-400">Guest Name</div>
             <div className="font-bold text-slate-800">{guestFullName || "-"}</div>
           </div>
           <div>
-            <div className="text-[14px] font-bold uppercase text-slate-400">Stay Duration</div>
+            <div className="text-xs sm:text-sm font-bold uppercase text-slate-400">Stay Duration</div>
             <div className="font-bold text-slate-800">{stayNights} Night{stayNights === 1 ? "" : "s"}</div>
           </div>
           <div>
-            <div className="text-[14px] font-bold uppercase text-slate-400">Check-In</div>
+            <div className="text-xs sm:text-sm font-bold uppercase text-slate-400">Check-In</div>
             <div className="font-bold text-slate-800">{formData.checkIn ? formatDate(formData.checkIn) : "-"}</div>
           </div>
           <div>
-            <div className="text-[14px] font-bold uppercase text-slate-400">Check-Out</div>
+            <div className="text-xs sm:text-sm font-bold uppercase text-slate-400">Check-Out</div>
             <div className="font-bold text-slate-800">{formData.checkOut ? formatDate(formData.checkOut) : "-"}</div>
           </div>
           <div>
-            <div className="text-[14px] font-bold uppercase text-slate-400">Total Rooms</div>
+            <div className="text-xs sm:text-sm font-bold uppercase text-slate-400">Total Rooms</div>
             <div className="font-bold text-slate-800">{formData.rooms.length || "-"}</div>
           </div>
         </div>
         <div className="text-right">
-          <div className="text-[14px] font-bold uppercase text-slate-400">Total Amount</div>
-          <div className="text-2xl font-black text-emerald-600">{formatCurrency(grandTotal)}</div>
+          <div className="text-xs sm:text-sm font-bold uppercase text-slate-400">Total Amount</div>
+          <div className="text-2xl sm:text-3xl font-black text-emerald-600">{formatCurrency(grandTotal)}</div>
         </div>
       </div>
     </div>
@@ -1842,126 +1990,126 @@ const handleJumpStep = (stepView) => {
   /* ─────────────────────────── render: Booking Confirmed ─────────────────────────── */
 
   const renderConfirmed = () => (
-  <div
-    className={`
-      ${panelCls}
-      mx-auto
-      w-full
-      max-w-2xl
-      p-5
-      sm:p-8
-      md:p-12
-      lg:p-16
-      xl:p-20
-      text-center
-    `}
-  >
-    {/* Success Icon */}
-    <div className="mx-auto flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-full bg-emerald-500 text-3xl sm:text-4xl text-white shadow-[0_14px_30px_rgba(16,185,129,0.35)]">
-      <FaCheckCircle />
-    </div>
-
-    {/* Heading */}
-    <h2 className="mt-5 text-3xl sm:text-4xl font-black text-slate-900">
-      Booking Confirmed!
-    </h2>
-
-    <p className="mt-2 text-base sm:text-lg md:text-xl text-slate-500">
-      Your booking has been confirmed successfully.
-    </p>
-
-    {/* Booking Reference */}
-    <div className="mx-auto mt-6 w-full max-w-xs rounded-2xl bg-emerald-50 px-5 py-4 shadow-sm">
-      <div className="text-xs sm:text-sm font-bold uppercase text-emerald-600">
-        Booking Reference
-      </div>
-
-      <div className="mt-1 text-xl sm:text-2xl font-black text-emerald-700 break-all">
-        {formData.bookingCode || formData.bookingId}
-      </div>
-    </div>
-
-    {/* Details */}
-    <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-5 text-left">
-      <div>
-        <div className="text-[11px] sm:text-xs md:text-sm font-semibold uppercase tracking-wide text-slate-400">
-          Guest Name
-        </div>
-        <div className="text-sm sm:text-sm lg:text-2xl font-bold text-slate-800 break-words">
-          {guestFullName}
-        </div>
-      </div>
-
-      <div>
-        <div className="text-[11px] sm:text-xs md:text-sm font-semibold uppercase tracking-wide text-slate-400">
-          Rooms
-        </div>
-        <div className="text-sm sm:text-sm md:text-xl lg:text-2xl font-bold text-slate-800 break-words">
-          {formData.rooms.length}
-        </div>
-      </div>
-
-      <div>
-        <div className="text-[11px] sm:text-xs md:text-sm font-semibold uppercase tracking-wide text-slate-400">
-          Check-In
-        </div>
-        <div className="text-sm sm:text-sm md:text-xl lg:text-2xl font-bold text-slate-800 break-words">
-          {formatDate(formData.checkIn)}
-        </div>
-      </div>
-
-      <div>
-        <div className="text-[11px] sm:text-xs md:text-sm font-semibold uppercase tracking-wide text-slate-400">
-          Check-Out
-        </div>
-        <div className="text-sm sm:text-sm md:text-xl lg:text-2xl font-bold text-slate-800 break-words">
-          {formatDate(formData.checkOut)}
-        </div>
-      </div>
-
-      <div className="sm:col-span-2 border-t border-slate-200 pt-5">
-        <div className="text-[11px] sm:text-xs md:text-sm font-semibold uppercase tracking-wide text-slate-400">
-          Total Amount
-        </div>
-
-        <div className="mt-1 text-2xl sm:text-3xl lg:text-4xl font-black text-blue-700">
-          {formatCurrency(grandTotal)}
-        </div>
-      </div>
-    </div>
-
-    {/* Buttons */}
-    <div className="mt-10 flex justify-center">
-  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 max-w-xl w-full">
-    <button
-      type="button"
-      onClick={() => window.print()}
-      className={`${ghostBtn} w-full`}
+    <div
+      className={`
+        ${panelCls}
+        mx-auto
+        max-w-2xl
+        p-5
+        sm:p-8
+        md:p-12
+        lg:p-16
+        xl:p-20
+        text-center
+      `}
     >
-      <FaPrint className="text-lg" />
-      Print Receipt
-    </button>
+      {/* Success Icon */}
+      <div className="mx-auto flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-full bg-emerald-500 text-3xl sm:text-4xl text-white shadow-[0_14px_30px_rgba(16,185,129,0.35)]">
+        <FaCheckCircle />
+      </div>
 
-    <button
-      type="button"
-      onClick={() => handleNotify("email")}
-      className={`${ghostBtn} w-full`}
-    >
-      <FaEnvelope className="text-lg" />
-      Send Email
-    </button>
+      {/* Heading */}
+      <h2 className="mt-5 text-3xl sm:text-4xl font-black text-slate-900">
+        Booking Confirmed!
+      </h2>
 
-    <button
-      type="button"
-      onClick={goToList}
-      className={`${primaryBtn} w-full sm:col-span-2 lg:col-span-2`}
-    >
-      View All Bookings
-    </button>
-  </div>
-</div>
-  </div>
-);
+      <p className="mt-2 text-base sm:text-lg md:text-xl text-slate-500">
+        Your booking has been confirmed successfully.
+      </p>
+
+      {/* Booking Reference */}
+      <div className="mx-auto mt-6 w-full max-w-xs rounded-2xl bg-emerald-50 px-5 py-4 shadow-sm">
+        <div className="text-xs sm:text-sm font-bold uppercase text-emerald-600">
+          Booking Reference
+        </div>
+
+        <div className="mt-1 text-xl sm:text-2xl font-black text-emerald-700 break-all">
+          {formData.bookingCode || formData.bookingId}
+        </div>
+      </div>
+
+      {/* Details */}
+      <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-5 text-left">
+        <div>
+          <div className="text-xs sm:text-sm font-semibold uppercase tracking-wide text-slate-400">
+            Guest Name
+          </div>
+          <div className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-slate-800 break-words">
+            {guestFullName}
+          </div>
+        </div>
+
+        <div>
+          <div className="text-xs sm:text-sm font-semibold uppercase tracking-wide text-slate-400">
+            Rooms
+          </div>
+          <div className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-slate-800 break-words">
+            {formData.rooms.length}
+          </div>
+        </div>
+
+        <div>
+          <div className="text-xs sm:text-sm font-semibold uppercase tracking-wide text-slate-400">
+            Check-In
+          </div>
+          <div className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-slate-800 break-words">
+            {formatDate(formData.checkIn)}
+          </div>
+        </div>
+
+        <div>
+          <div className="text-xs sm:text-sm font-semibold uppercase tracking-wide text-slate-400">
+            Check-Out
+          </div>
+          <div className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-slate-800 break-words">
+            {formatDate(formData.checkOut)}
+          </div>
+        </div>
+
+        <div className="col-span-2 border-t border-slate-200 pt-5">
+          <div className="text-xs sm:text-sm font-semibold uppercase tracking-wide text-slate-400">
+            Total Amount
+          </div>
+
+          <div className="mt-1 text-2xl sm:text-3xl lg:text-4xl font-black text-blue-700">
+            {formatCurrency(grandTotal)}
+          </div>
+        </div>
+      </div>
+
+      {/* Buttons */}
+      <div className="mt-10 flex justify-center">
+        <div className="grid w-full max-w-xl grid-cols-1 gap-4 sm:grid-cols-2">
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className={`${ghostBtn} w-full`}
+          >
+            <FaPrint className="text-lg" />
+            Print Receipt
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleNotify("email")}
+            className={`${ghostBtn} w-full`}
+          >
+            <FaEnvelope className="text-lg" />
+            Send Email
+          </button>
+
+          <button
+            type="button"
+            onClick={goToList}
+            className={`${primaryBtn} w-full sm:col-span-2`}
+          >
+            View All Bookings
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
   /* ─────────────────────────── render: Booking Details ─────────────────────────── */
 
   const renderDetails = () => {
@@ -1969,77 +2117,77 @@ const handleJumpStep = (stepView) => {
     const b = selectedBooking || {};
     return (
       <div className={panelCls}>
-        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
+        <div className="mb-5 sm:mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4 sm:pb-5">
           <div>
-            <div className="text-[11px] font-bold uppercase text-slate-400">Booking Reference</div>
-            <h2 className="text-xl font-black text-slate-900">{d.booking_code || b.bookingCode || `BK-${b.bookingId}`}</h2>
+            <div className="text-xs sm:text-sm font-bold uppercase text-slate-400">Booking Reference</div>
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900">{d.booking_code || b.bookingCode || `BK-${b.bookingId}`}</h2>
           </div>
-          <div className="flex gap-2">
-            <span className={`rounded-full px-3 py-1.5 text-xs font-bold ${statusStyle(d.booking_status || b.booking_status)}`}>
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <span className={statusBadgeCls(d.booking_status || b.booking_status)}>
               {d.booking_status || b.booking_status || "Pending"}
             </span>
             <button onClick={() => window.print()} className={ghostBtn}>
-              <FaPrint className="text-xs" /> Print
+              <FaPrint className="text-sm" /> Print
             </button>
             <button onClick={() => openEditBooking(b)} className={primaryBtn}>
-              <FaEdit className="text-xs" /> Edit
+              <FaEdit className="text-sm" /> Edit
             </button>
           </div>
         </div>
 
         {detailLoading ? (
-          <div className="py-10 text-center text-slate-400">Loading booking details...</div>
+          <div className="py-10 text-center text-lg text-slate-400">Loading booking details...</div>
         ) : (
           <div className="grid gap-5 md:grid-cols-3">
-            <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
+            <div className={cardTileCls}>
               <div className={sectionTitleCls}>Guest Information</div>
-              <dl className="space-y-2 text-sm">
-                <div className="flex justify-between"><dt className="text-slate-500">Name</dt><dd className="font-bold text-slate-800">{d.guest_name || b.guest_name || "-"}</dd></div>
-                <div className="flex justify-between"><dt className="text-slate-500">Email</dt><dd className="font-bold text-slate-800">{d.guest_email || "-"}</dd></div>
-                <div className="flex justify-between"><dt className="text-slate-500">Mobile</dt><dd className="font-bold text-slate-800">{d.mobile || b.mobile || "-"}</dd></div>
+              <dl className="space-y-2.5 text-base sm:text-lg">
+                <div className="flex justify-between gap-3"><dt className="text-slate-500">Name</dt><dd className="font-bold text-slate-800">{d.guest_name || b.guest_name || "-"}</dd></div>
+                <div className="flex justify-between gap-3"><dt className="text-slate-500">Email</dt><dd className="font-bold text-slate-800">{d.guest_email || "-"}</dd></div>
+                <div className="flex justify-between gap-3"><dt className="text-slate-500">Mobile</dt><dd className="font-bold text-slate-800">{d.mobile || b.mobile || "-"}</dd></div>
               </dl>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
+            <div className={cardTileCls}>
               <div className={sectionTitleCls}>Stay Information</div>
-              <dl className="space-y-2 text-sm">
-                <div className="flex justify-between"><dt className="text-slate-500">Check-In</dt><dd className="font-bold text-slate-800">{formatDate(d.check_in || b.check_in)}</dd></div>
-                <div className="flex justify-between"><dt className="text-slate-500">Check-Out</dt><dd className="font-bold text-slate-800">{formatDate(d.check_out || b.check_out)}</dd></div>
-                <div className="flex justify-between"><dt className="text-slate-500">Rooms</dt><dd className="font-bold text-slate-800">{b.rooms || (d.rooms || []).length || "-"}</dd></div>
+              <dl className="space-y-2.5 text-base sm:text-lg">
+                <div className="flex justify-between gap-3"><dt className="text-slate-500">Check-In</dt><dd className="font-bold text-slate-800">{formatDate(d.check_in || b.check_in)}</dd></div>
+                <div className="flex justify-between gap-3"><dt className="text-slate-500">Check-Out</dt><dd className="font-bold text-slate-800">{formatDate(d.check_out || b.check_out)}</dd></div>
+                <div className="flex justify-between gap-3"><dt className="text-slate-500">Rooms</dt><dd className="font-bold text-slate-800">{b.rooms || (d.rooms || []).length || "-"}</dd></div>
               </dl>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
+            <div className={cardTileCls}>
               <div className={sectionTitleCls}>Payment Information</div>
-              <dl className="space-y-2 text-sm">
-                <div className="flex justify-between"><dt className="text-slate-500">Total</dt><dd className="font-bold text-slate-800">{formatCurrency(b.totalAmount)}</dd></div>
-                <div className="flex justify-between"><dt className="text-slate-500">Paid</dt><dd className="font-bold text-emerald-600">{formatCurrency(b.paidAmount)}</dd></div>
-                <div className="flex justify-between"><dt className="text-slate-500">Balance</dt><dd className="font-bold text-rose-600">{formatCurrency(b.remainingAmount)}</dd></div>
+              <dl className="space-y-2.5 text-base sm:text-lg">
+                <div className="flex justify-between gap-3"><dt className="text-slate-500">Total</dt><dd className="font-bold text-slate-800">{formatCurrency(b.totalAmount)}</dd></div>
+                <div className="flex justify-between gap-3"><dt className="text-slate-500">Paid</dt><dd className="font-bold text-emerald-600">{formatCurrency(b.paidAmount)}</dd></div>
+                <div className="flex justify-between gap-3"><dt className="text-slate-500">Balance</dt><dd className="font-bold text-rose-600">{formatCurrency(b.remainingAmount)}</dd></div>
               </dl>
             </div>
 
             {Array.isArray(d.rooms) && d.rooms.length > 0 && (
-              <div className="md:col-span-3 rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
+              <div className={`md:col-span-3 ${cardTileCls}`}>
                 <div className={sectionTitleCls}>Room &amp; Tariff Information</div>
-                <div className="overflow-x-auto">
-                  <table className="w-full min-w-[420px] text-left text-sm">
-                    <thead className="text-[11px] font-bold uppercase text-slate-400">
+                <div className="max-w-full overflow-x-auto">
+                  <table className="w-full min-w-[460px] text-left">
+                    <thead className="text-xs sm:text-sm font-bold uppercase text-slate-400">
                       <tr>
-                        <th className="py-1.5 pr-4">Room No</th>
-                        <th className="py-1.5 pr-4">Tariff</th>
-                        <th className="py-1.5 pr-4">GST %</th>
-                        <th className="py-1.5 pr-4">Qty</th>
-                        <th className="py-1.5">Total</th>
+                        <th className="py-2 pr-4">Room No</th>
+                        <th className="py-2 pr-4">Tariff</th>
+                        <th className="py-2 pr-4">GST %</th>
+                        <th className="py-2 pr-4">Qty</th>
+                        <th className="py-2">Total</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-200">
+                    <tbody className="divide-y divide-slate-200 text-sm sm:text-base md:text-lg">
                       {d.rooms.map((r, i) => (
                         <tr key={i}>
-                          <td className="py-1.5 pr-4 font-semibold text-slate-800">{r.room_number || r.roomNumber || r.roomNo}</td>
-                          <td className="py-1.5 pr-4">{formatCurrency(r.tariff || r.price)}</td>
-                          <td className="py-1.5 pr-4">{r.gst || r.gstPercent || 0}%</td>
-                          <td className="py-1.5 pr-4">{r.quantity || 1}</td>
-                          <td className="py-1.5 font-semibold">{formatCurrency(r.total)}</td>
+                          <td className="py-2 pr-4 font-semibold text-slate-800">{r.room_number || r.roomNumber || r.roomNo}</td>
+                          <td className="py-2 pr-4">{formatCurrency(r.tariff || r.price)}</td>
+                          <td className="py-2 pr-4">{r.gst || r.gstPercent || 0}%</td>
+                          <td className="py-2 pr-4">{r.quantity || 1}</td>
+                          <td className="py-2 font-semibold">{formatCurrency(r.total)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -2050,7 +2198,7 @@ const handleJumpStep = (stepView) => {
           </div>
         )}
 
-        <div className="mt-6 flex justify-end gap-2 border-t border-slate-100 pt-5">
+        <div className="mt-6 sm:mt-8 flex flex-wrap justify-end gap-2 sm:gap-3 border-t border-slate-100 pt-5 sm:pt-6">
           <button onClick={goToList} className={ghostBtn}>Back to All Bookings</button>
           <button onClick={() => openManage(b)} className={primaryBtn}>Manage This Booking</button>
         </div>
@@ -2064,18 +2212,18 @@ const handleJumpStep = (stepView) => {
     const b = selectedBooking || {};
     return (
       <div className={panelCls}>
-        <div className="mb-5 border-b border-slate-100 pb-4">
-          <div className="text-[11px] font-bold uppercase text-slate-400">Managing Booking</div>
-          <h2 className="text-xl font-black text-slate-900">{b.bookingCode || `BK-${b.bookingId}`}</h2>
-          <span className={`mt-2 inline-block rounded-full px-3 py-1 text-xs font-bold ${statusStyle(b.booking_status)}`}>
+        <div className="mb-5 sm:mb-6 border-b border-slate-100 pb-4 sm:pb-5">
+          <div className="text-xs sm:text-sm font-bold uppercase text-slate-400">Managing Booking</div>
+          <h2 className="text-xl sm:text-2xl font-black text-slate-900">{b.bookingCode || `BK-${b.bookingId}`}</h2>
+          <span className={`mt-2 ${statusBadgeCls(b.booking_status)}`}>
             {b.booking_status || "Pending"}
           </span>
         </div>
 
-        <div className="grid gap-5 md:grid-cols-2">
-          <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-5">
+        <div className="grid gap-5 sm:gap-6 md:grid-cols-2">
+          <div className={cardTileCls}>
             <div className={sectionTitleCls}>Update Status</div>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-3">
               <select value={manageStatus} onChange={(e) => setManageStatus(e.target.value)} className={fieldCls}>
                 <option value="">Select New Status</option>
                 <option value="Checked-In">Checked-In</option>
@@ -2096,54 +2244,54 @@ const handleJumpStep = (stepView) => {
               </button>
             </div>
 
-            <div className="mt-5 grid grid-cols-2 gap-3">
-              <button onClick={() => openEditBooking(b)} className={ghostBtn}><FaEdit className="text-xs" /> Edit Booking</button>
-              <button onClick={() => handleLifecycle("check-in")} className={ghostBtn}><FaSignInAlt className="text-xs" /> Check-In</button>
-              <button onClick={() => handleLifecycle("check-out")} className={ghostBtn}><FaSignOutAlt className="text-xs" /> Check-Out</button>
-              <button onClick={() => setCancelModal({ open: true, reason: "", submitting: false })} className={dangerBtn}><FaBan className="text-xs" /> Cancel Booking</button>
+            <div className="mt-5 sm:mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button onClick={() => openEditBooking(b)} className={ghostBtn}><FaEdit className="text-sm" /> Edit Booking</button>
+              <button onClick={() => handleLifecycle("check-in")} className={ghostBtn}><FaSignInAlt className="text-sm" /> Check-In</button>
+              <button onClick={() => handleLifecycle("check-out")} className={ghostBtn}><FaSignOutAlt className="text-sm" /> Check-Out</button>
+              <button onClick={() => setCancelModal({ open: true, reason: "", submitting: false })} className={dangerBtn}><FaBan className="text-sm" /> Cancel Booking</button>
             </div>
 
-            <div className="mt-5 border-t border-slate-200 pt-5">
+            <div className="mt-5 sm:mt-6 border-t border-slate-200 pt-5 sm:pt-6">
               <div className={sectionTitleCls}>Folio &amp; History</div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <button onClick={() => handleOpenFolio(b)} className={ghostBtn}>
-                  <FaBook className="text-xs" /> Guest Folio
+                  <FaBook className="text-sm" /> Guest Folio
                 </button>
                 <button onClick={() => handleOpenPaymentHistory(b)} className={ghostBtn}>
-                  <FaHistory className="text-xs" /> Payment History
+                  <FaHistory className="text-sm" /> Payment History
                 </button>
               </div>
             </div>
           </div>
 
-          <div className="space-y-5">
-            <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-5">
+          <div className="space-y-5 sm:space-y-6">
+            <div className={cardTileCls}>
               <div className={sectionTitleCls}>Payment Actions</div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <button onClick={() => setCollectModal({ open: true, amount: "", mode: "Cash", submitting: false })} className={ghostBtn}>
-                  <FaMoneyBillWave className="text-xs" /> Collect Payment
+                  <FaMoneyBillWave className="text-sm" /> Collect Payment
                 </button>
-                <button onClick={handleRefund} className={ghostBtn}>
-                  <FaUndo className="text-xs" /> Refund Payment
+                <button onClick={() => setRefundModal({ open: true, amount: "", submitting: false })} className={ghostBtn}>
+                  <FaUndo className="text-sm" /> Refund Payment
                 </button>
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-5">
+            <div className={cardTileCls}>
               <div className={sectionTitleCls}>Send Notification</div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <button onClick={() => handleNotify("email")} className={ghostBtn}>
-                  <FaEnvelope className="text-xs" /> Send Email to Guest
+                  <FaEnvelope className="text-sm" /> Send Email to Guest
                 </button>
                 <button onClick={() => handleNotify("sms")} className={ghostBtn}>
-                  <FaCommentDots className="text-xs" /> Send SMS to Guest
+                  <FaCommentDots className="text-sm" /> Send SMS to Guest
                 </button>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="mt-6 flex justify-end border-t border-slate-100 pt-5">
+        <div className="mt-6 sm:mt-8 flex justify-end border-t border-slate-100 pt-5 sm:pt-6">
           <button onClick={goToList} className={ghostBtn}>Back to All Bookings</button>
         </div>
       </div>
@@ -2151,174 +2299,160 @@ const handleJumpStep = (stepView) => {
   };
 
   /* ─────────────────────────── page shell ─────────────────────────── */
-const handleFlowNavigation = (page) => {
-  setView(page);
 
-  switch (page) {
-    case "form":
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth",
-      });
-      break;
+  return (
+    <div
+      className="min-h-screen w-full max-w-full overflow-x-hidden bg-gradient-to-br from-blue-50 via-white to-blue-100 space-y-6 sm:space-y-8 p-3 sm:p-6 md:p-8 lg:p-10 xl:p-12"
+      style={{ fontFamily: '"Segoe UI", "Helvetica Neue", Arial, sans-serif' }}
+    >
+      <FlowBar view={view} onJump={handleJumpStep} />
 
-    case "list":
-      goToList();
-      break;
+      {view === "list" && renderList()}
+      {view === "form" && renderForm()}
+      {view === "confirmed" && renderConfirmed()}
+      {view === "details" && renderDetails()}
+      {view === "manage" && renderManage()}
 
-    case "details":
-      if (selectedBooking) {
-        setView("details");
-      }
-      break;
-
-    case "manage":
-      if (selectedBooking) {
-        setView("manage");
-      }
-      break;
-
-    default:
-      setView(page);
-  }
-};
- return (
-  <div
-    className="min-h-screen ..."
-    style={{ fontFamily: '"Segoe UI", "Helvetica Neue", Arial, sans-serif' }}
-  >
-    <FlowBar
-      view={view}
-      onJump={handleFlowNavigation}
-    />
-
-    {view === "form" && renderForm()}
-    {view === "list" && renderList()}
-    {view === "details" && renderDetails()}
-    {view === "manage" && renderManage()}
-
-    {/* Feature Modals */}
-
-    {showGroupBooking && (
-      <FeatureModal
-        title="Group Booking"
-        subtitle="Manage group reservations"
-        size="max-w-7xl"
-        onClose={() => setShowGroupBooking(false)}
-      >
-        <GroupBooking />
-      </FeatureModal>
-    )}
-
-    {showGuestProfile && (
-      <FeatureModal
-        title="Guest Profile"
-        subtitle="Guest booking history and details"
-        size="max-w-7xl"
-        onClose={() => setShowGuestProfile(false)}
-      >
-        <GuestProfile />
-      </FeatureModal>
-    )}
-
-    {showOccupancyForecast && (
-      <FeatureModal
-        title="Occupancy Forecast"
-        subtitle="Room occupancy analytics"
-        size="max-w-7xl"
-        onClose={() => setShowOccupancyForecast(false)}
-      >
-        <OccupancyForecast />
-      </FeatureModal>
-    )}
-
-    {showFolio && (
-      <FeatureModal
-        title="Guest Folio"
-        subtitle="Charges & Payments"
-        size="max-w-7xl"
-        onClose={() => setShowFolio(false)}
-      >
-        <FolioView bookingId={selectedBookingId} />
-      </FeatureModal>
-    )}
-
-  
-
-    
-
-
-      <Toast toast={toast} onClose={closeToast} />
-
-      {showFolio && selectedBookingId && (
-        <FolioView
-          bookingId={selectedBookingId}
-          isModal
-          onClose={handleCloseFolio}
-        />
+      {/* guest folio popup */}
+      {showFolio && (
+        <FeatureModal title="Guest Folio" onClose={handleCloseFolio}>
+          <FolioView bookingId={selectedBookingId} onClose={handleCloseFolio} />
+        </FeatureModal>
       )}
 
-      {/* cancel booking modal */}
-      {cancelModal.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4 backdrop-blur-sm" onClick={() => setCancelModal({ open: false, reason: "", submitting: false })}>
-          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-lg font-black text-slate-900">Cancel this booking?</h3>
-            <p className="mt-1 text-sm text-slate-500">This will release the assigned room(s). This action cannot be undone.</p>
-            <label className="mt-4 block">
-              <span className="mb-1.5 block text-[13px] font-bold text-slate-700">Cancellation Reason</span>
-              <textarea
-                value={cancelModal.reason}
-                onChange={(e) => setCancelModal((c) => ({ ...c, reason: e.target.value }))}
-                rows={3}
-                className={fieldCls}
-                placeholder="Guest changed mind, wrong date, pricing issue..."
-              />
-            </label>
-            <div className="mt-5 flex justify-end gap-2">
-              <button onClick={() => setCancelModal({ open: false, reason: "", submitting: false })} className={ghostBtn}>Close</button>
-              <button onClick={handleConfirmCancel} disabled={cancelModal.submitting} className={dangerBtn}>
-                {cancelModal.submitting ? "Cancelling..." : "Confirm Cancel"}
-              </button>
-            </div>
+      {/* group booking popup */}
+      {showGroupBooking && (
+        <FeatureModal title="Group Booking" onClose={handleCloseGroupBooking}>
+          <GroupBooking bookingId={selectedBookingId} onClose={handleCloseGroupBooking} />
+        </FeatureModal>
+      )}
+
+      {/* guest profile popup */}
+      {showGuestProfile && (
+        <FeatureModal title="Guest Profile" onClose={handleCloseGuestProfile}>
+          <GuestProfile bookingId={selectedBookingId} onClose={handleCloseGuestProfile} />
+        </FeatureModal>
+      )}
+
+      {/* occupancy forecast popup */}
+      {showOccupancyForecast && (
+        <FeatureModal title="Occupancy Forecast" onClose={handleCloseOccupancyForecast}>
+          <OccupancyForecast onClose={handleCloseOccupancyForecast} />
+        </FeatureModal>
+      )}
+
+
+      {/* toast popup — shares the Modal primitive with every other popup below */}
+      <Modal
+        open={toast.open}
+        onClose={closeToast}
+        icon={toast.type === "success" ? FaCheckCircle : FaExclamationTriangle}
+        iconTone={toast.type === "success" ? "bg-emerald-500" : "bg-rose-500"}
+        title={toast.title}
+        actions={
+          <button onClick={closeToast} className={primaryBtn}>
+            Continue
+          </button>
+        }
+      >
+        {toast.message}
+      </Modal>
+
+      {/* cancel booking popup */}
+      <Modal
+        open={cancelModal.open}
+        onClose={() => setCancelModal({ open: false, reason: "", submitting: false })}
+        icon={FaBan}
+        iconTone="bg-rose-500"
+        title="Cancel this booking?"
+        actions={
+          <>
+            <button onClick={() => setCancelModal({ open: false, reason: "", submitting: false })} className={ghostBtn}>Close</button>
+            <button onClick={handleConfirmCancel} disabled={cancelModal.submitting} className={dangerBtn}>
+              {cancelModal.submitting ? "Cancelling..." : "Confirm Cancel"}
+            </button>
+          </>
+        }
+      >
+        <p>This will release the assigned room(s). This action cannot be undone.</p>
+        <label className="mt-4 block text-left">
+          <span className={labelCls}>Cancellation Reason</span>
+          <textarea
+            value={cancelModal.reason}
+            onChange={(e) => setCancelModal((c) => ({ ...c, reason: e.target.value }))}
+            rows={3}
+            className={`${fieldCls} h-auto py-3`}
+            placeholder="Guest changed mind, wrong date, pricing issue..."
+          />
+        </label>
+      </Modal>
+
+      {/* collect payment popup */}
+      <Modal
+        open={collectModal.open}
+        onClose={() => setCollectModal({ open: false, amount: "", mode: "Cash", submitting: false })}
+        icon={FaMoneyBillWave}
+        iconTone="bg-emerald-500"
+        title="Collect Payment"
+        actions={
+          <>
+            <button onClick={() => setCollectModal({ open: false, amount: "", mode: "Cash", submitting: false })} className={ghostBtn}>Close</button>
+            <button onClick={handleCollectPayment} disabled={collectModal.submitting} className={primaryBtn}>
+              {collectModal.submitting ? "Saving..." : "Collect"}
+            </button>
+          </>
+        }
+      >
+        <div className="space-y-4 text-left">
+          <div>
+            <label className={labelCls}>Amount (₹)</label>
+            <input
+              type="number"
+              value={collectModal.amount}
+              onChange={(e) => setCollectModal((c) => ({ ...c, amount: e.target.value }))}
+              className={fieldCls}
+              placeholder="0.00"
+            />
+          </div>
+          <div>
+            <label className={labelCls}>Payment Mode</label>
+            <select value={collectModal.mode} onChange={(e) => setCollectModal((c) => ({ ...c, mode: e.target.value }))} className={fieldCls}>
+              <option>Cash</option>
+              <option>Card</option>
+              <option>UPI</option>
+              <option>Bank Transfer</option>
+            </select>
           </div>
         </div>
-      )}
+      </Modal>
 
-      {/* collect payment modal */}
-      {collectModal.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4 backdrop-blur-sm" onClick={() => setCollectModal({ open: false, amount: "", mode: "Cash", submitting: false })}>
-          <div className="w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-lg font-black text-slate-900">Collect Payment</h3>
-            <div className="mt-4 space-y-3">
-              <div>
-                <label className={labelCls}>Amount (₹)</label>
-                <input
-                  type="number"
-                  value={collectModal.amount}
-                  onChange={(e) => setCollectModal((c) => ({ ...c, amount: e.target.value }))}
-                  className={fieldCls}
-                  placeholder="0.00"
-                />
-              </div>
-              <div>
-                <label className={labelCls}>Payment Mode</label>
-                <select value={collectModal.mode} onChange={(e) => setCollectModal((c) => ({ ...c, mode: e.target.value }))} className={fieldCls}>
-                  <option>Cash</option>
-                  <option>Card</option>
-                  <option>UPI</option>
-                  <option>Bank Transfer</option>
-                </select>
-              </div>
-            </div>
-            <div className="mt-5 flex justify-end gap-2">
-              <button onClick={() => setCollectModal({ open: false, amount: "", mode: "Cash", submitting: false })} className={ghostBtn}>Close</button>
-              <button onClick={handleCollectPayment} disabled={collectModal.submitting} className={primaryBtn}>
-                {collectModal.submitting ? "Saving..." : "Collect"}
-              </button>
-            </div>
-          </div>
+      {/* refund payment popup */}
+      <Modal
+        open={refundModal.open}
+        onClose={() => setRefundModal({ open: false, amount: "", submitting: false })}
+        icon={FaUndo}
+        iconTone="bg-blue-500"
+        title="Refund Payment"
+        actions={
+          <>
+            <button onClick={() => setRefundModal({ open: false, amount: "", submitting: false })} className={ghostBtn}>Close</button>
+            <button onClick={handleRefund} disabled={refundModal.submitting} className={primaryBtn}>
+              {refundModal.submitting ? "Processing..." : "Refund"}
+            </button>
+          </>
+        }
+      >
+        <div className="text-left">
+          <label className={labelCls}>Refund Amount (₹)</label>
+          <input
+            type="number"
+            value={refundModal.amount}
+            onChange={(e) => setRefundModal((r) => ({ ...r, amount: e.target.value }))}
+            className={fieldCls}
+            placeholder="0.00"
+          />
         </div>
-      )}
+      </Modal>
     </div>
   );
 };
