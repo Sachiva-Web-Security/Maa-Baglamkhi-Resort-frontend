@@ -344,8 +344,14 @@ html, body {
     zoom: 1 !important;
   }
 
+  /* FIX: the sidebar sits at top:0 with no separate top-header pushing it
+     down (the brand box lives inside the sidebar itself), so it needs the
+     FULL viewport height. The previous "- 70px" subtraction assumed a
+     70px header offset that doesn't apply here — after the 0.67 zoom
+     compensation that shortfall rendered as a real ~70px gap of exposed
+     black page background under the Logout button. Removed. */
   .desktop-scale-sidebar {
-    height: calc((100vh - 70px) / var(--desktop-ui-scale)) !important;
+    height: calc(100vh / var(--desktop-ui-scale)) !important;
   }
 }
 
@@ -611,4 +617,23 @@ textarea:focus-visible {
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
   border-radius: 0.5rem;
+}
+
+/* ─── Toast: centered, larger (custom override) ──────────────────── */
+.Toastify__toast-container {
+  position: fixed !important;
+  top: 50% !important;
+  left: 65% !important;
+  transform: translate(-50%, -50%) !important;
+  width: 900px !important;
+  max-width: 900px !important;
+  padding: 0 !important;
+}
+.Toastify__toast {
+  width: 50% !important;
+  min-height: 180px !important;
+  font-size: 28px !important;
+  padding: 50px !important;
+  border-radius: 25px !important;
+  text-align: center !important;
 }
