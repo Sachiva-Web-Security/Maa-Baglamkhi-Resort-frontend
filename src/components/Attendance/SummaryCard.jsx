@@ -1,30 +1,107 @@
 const SummaryCard = ({ label, value, color, icon: Icon }) => {
   const colors = {
-    green: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    red: "bg-rose-50 text-rose-700 border-rose-200",
-    yellow: "bg-amber-50 text-amber-700 border-amber-200",
-    blue: "bg-sky-50 text-sky-700 border-sky-200",
+    green: "from-emerald-500 to-green-600",
+    red: "from-rose-500 to-red-600",
+    yellow: "from-amber-500 to-orange-500",
+    blue: "from-blue-600 to-sky-500",
   };
 
   return (
-    <div className="rounded-[24px] border border-white/60 bg-white/82 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-      <div className="flex items-start justify-between gap-3">
+    <div
+      className="
+      group
+      relative
+      overflow-hidden
+
+      rounded-[32px]
+
+      border
+      border-blue-50
+
+      bg-white
+
+      p-6
+
+      shadow-[0_20px_60px_rgba(37,99,235,0.08)]
+
+      transition-all
+      duration-500
+
+      hover:-translate-y-2
+      hover:shadow-[0_30px_60px_rgba(37,99,235,0.14)]
+      hover:border-blue-100
+      "
+    >
+      {/* Background Glow */}
+
+      <div className="absolute -right-12 -top-12 h-40 w-40 rounded-full bg-blue-100/60 blur-3xl"></div>
+
+      <div className="absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-sky-100 blur-3xl"></div>
+
+      <div className="relative flex items-center justify-between">
+
+        {/* Left */}
+
         <div>
-          <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-            {label}
+
+          <div className="inline-flex items-center gap-2 rounded-full bg-blue-100 px-4 py-2">
+
+            <span className="h-2.5 w-2.5 rounded-full bg-blue-600"></span>
+
+            <span className="text-[13px] font-bold uppercase tracking-[0.18em] text-blue-700">
+
+              {label}
+
+            </span>
+
           </div>
-          <div className="mt-3 text-3xl font-black text-slate-900">{value}</div>
+
+          <h2 className="mt-5 text-[48px] font-extrabold leading-none text-slate-900">
+
+            {value}
+
+          </h2>
+
+          <div className="mt-4 h-1 w-16 rounded-full bg-gradient-to-r from-blue-600 to-sky-400 transition-all duration-500 group-hover:w-28"></div>
+
         </div>
-        {Icon ? (
-          <span
-            className={`inline-flex rounded-2xl border p-3 ${
-              colors[color] || "border-slate-200 bg-slate-50 text-slate-700"
-            }`}
+
+        {/* Icon */}
+
+        {Icon && (
+
+          <div
+            className={`
+            flex
+            h-16
+            w-16
+            items-center
+            justify-center
+
+            rounded-full
+
+            bg-gradient-to-br
+
+            ${colors[color] || "from-blue-600 to-sky-500"}
+
+            text-white
+
+            shadow-[0_18px_35px_rgba(37,99,235,0.25)]
+
+            transition-all
+            duration-500
+
+            group-hover:scale-110
+            group-hover:rotate-12
+            `}
           >
-            <Icon />
-          </span>
-        ) : null}
+            <Icon className="text-[28px]" />
+          </div>
+
+        )}
+
       </div>
+
     </div>
   );
 };

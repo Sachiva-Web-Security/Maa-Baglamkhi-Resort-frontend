@@ -1,60 +1,170 @@
 const AttendanceRow = ({ employee }) => {
   const statusColors = {
-    Present: "border-emerald-200 bg-emerald-50 text-emerald-700",
-    Absent: "border-rose-200 bg-rose-50 text-rose-700",
-    Late: "border-amber-200 bg-amber-50 text-amber-700",
-    "On Leave": "border-sky-200 bg-sky-50 text-sky-700",
+    Present:
+      "bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-green-200",
+    Absent:
+      "bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-red-200",
+    Late:
+      "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-amber-200",
+    "On Leave":
+      "bg-gradient-to-r from-blue-500 to-sky-600 text-white shadow-blue-200",
   };
 
   const methodColors = {
-    Biometric: "border-violet-200 bg-violet-50 text-violet-700",
-    Manual: "border-slate-200 bg-slate-100 text-slate-700",
+    Biometric:
+      "bg-gradient-to-r from-violet-500 to-purple-600 text-white shadow-violet-200",
+    Manual:
+      "bg-gradient-to-r from-slate-500 to-slate-700 text-white shadow-slate-200",
   };
 
   return (
-    <tr className="border-t border-slate-200/80 transition hover:bg-slate-50/80">
-      <td className="px-5 py-4 text-sm font-semibold text-slate-900">
-        {employee.name}
+    <tr className={`group border-b border-blue-50 transition-all duration-300 hover:shadow-md ${
+      idx % 2 === 0 ? "bg-white" : "bg-blue-50/50"
+    }`}>
+
+      {/* Employee */}
+
+      <td className="px-6 py-5">
+
+        <div className="flex items-center gap-4">
+
+          <div className="flex h-16 w-16 items-center justify-center rounded-[12px] bg-gradient-to-br from-blue-600 via-sky-500 to-cyan-400 text-xl font-extrabold text-white shadow-2xl ring-4 ring-blue-50">
+
+            {employee.name?.charAt(0).toUpperCase()}
+
+          </div>
+
+          <div>
+
+            <h3 className="text-[18px] font-extrabold text-slate-900">
+
+              {employee.name}
+
+            </h3>
+
+            <p className="text-sm font-semibold text-slate-500">
+
+              {employee.role || "--"}
+
+            </p>
+
+          </div>
+
+        </div>
+
       </td>
-      <td className="px-5 py-4 text-sm text-slate-600">{employee.role || "--"}</td>
-      <td className="px-5 py-4 text-sm text-slate-600">{employee.checkIn || "--"}</td>
-      <td className="px-5 py-4 text-sm text-slate-600">
-        {employee.checkOut || "--"}
+
+      {/* Check In */}
+
+      <td className="px-6 py-5">
+
+        <div className="inline-flex items-center rounded-full border border-blue-100 bg-blue-50 px-4 py-2 font-semibold text-blue-700 shadow-sm">
+
+          {employee.checkIn || "--"}
+
+        </div>
+
       </td>
-      <td className="px-5 py-4">
+
+      {/* Check Out */}
+
+      <td className="px-6 py-5">
+
+        <div className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-4 py-2 font-semibold text-slate-700 shadow-sm">
+
+          {employee.checkOut || "--"}
+
+        </div>
+
+      </td>
+
+      {/* Status */}
+
+      <td className="px-6 py-5">
+
         <span
-          className={`inline-flex rounded-full border px-3 py-1 text-xs font-bold ${
-            statusColors[employee.status] || "border-slate-200 bg-slate-100 text-slate-600"
+          className={`inline-flex items-center rounded-full px-4 py-2 text-sm font-bold shadow-md ${
+            statusColors[employee.status] ||
+            "bg-slate-200 text-slate-700"
           }`}
         >
-          {employee.status || "--"}
+          {employee.status}
         </span>
+
       </td>
-      <td className="px-5 py-4">
+
+      {/* Method */}
+
+      <td className="px-6 py-5">
+
         <span
-          className={`inline-flex rounded-full border px-3 py-1 text-xs font-bold ${
-            methodColors[employee.method] || "border-slate-200 bg-slate-100 text-slate-600"
+          className={`inline-flex items-center rounded-full px-4 py-2 text-sm font-bold shadow-lg ${
+            methodColors[employee.method] ||
+            "bg-slate-200 text-slate-700"
           }`}
         >
-          {employee.method || "--"}
+          {employee.method}
         </span>
+
       </td>
-      <td className="px-5 py-4">
-        <div className="flex flex-wrap gap-2">
+
+      {/* Action Buttons */}
+
+      <td className="px-6 py-5">
+
+        <div className="flex gap-3">
+
           <button
             type="button"
-            className="rounded-full bg-emerald-600 px-3 py-2 text-xs font-bold text-white transition hover:bg-emerald-700"
+            className="
+            rounded-xl
+            bg-gradient-to-r
+            from-blue-600
+            via-blue-500
+            to-sky-500
+            px-5
+            py-2.5
+            text-sm
+            font-bold
+            text-white
+            shadow-[0_10px_25px_rgba(37,99,235,0.30)]
+            transition-all
+            duration-300
+            hover:-translate-y-1
+            hover:scale-105
+          "
           >
             Check In
           </button>
+
           <button
             type="button"
-            className="rounded-full bg-rose-600 px-3 py-2 text-xs font-bold text-white transition hover:bg-rose-700"
+            className="
+            rounded-xl
+            border
+            border-red-200
+            bg-white
+            px-5
+            py-2.5
+            text-sm
+            font-bold
+            text-red-600
+            shadow-md
+            transition-all
+            duration-300
+            hover:bg-red-500
+            hover:text-white
+            hover:-translate-y-1
+            hover:scale-105
+          "
           >
             Check Out
           </button>
+
         </div>
+
       </td>
+
     </tr>
   );
 };
