@@ -114,7 +114,7 @@ const StepBar = ({ current }) => (
 );
 
 // ─── Main Component ─────────────────────────────────────────────────────────
-const GroupBooking = () => {
+const GroupBooking = ({ isModal = false, onClose }) => {
   const navigate = useNavigate();
   const feedbackDialogRef = useRef(null);
   const feedbackCloseButtonRef = useRef(null);
@@ -384,7 +384,8 @@ const GroupBooking = () => {
     }
 
     resetGroupBookingForm();
-    navigate("/hotel/all-bookings");
+    if (isModal) onClose?.();
+    else navigate("/hotel/all-bookings");
   };
 
   // ─── Submit ───────────────────────────────────────────────────────────────
@@ -909,9 +910,11 @@ const GroupBooking = () => {
               <button
                 type="button"
                 onClick={() =>
-                  navigate("/hotel/communication", {
-                    state: { bookingId: resultBooking.bookingId },
-                  })
+                  isModal
+                    ? onClose?.()
+                    : navigate("/hotel/communication", {
+                        state: { bookingId: resultBooking.bookingId },
+                      })
                 }
                 className="rounded-full bg-emerald-600 px-6 py-3 text-base font-bold text-white xl:text-lg"
               >
@@ -921,7 +924,8 @@ const GroupBooking = () => {
                 type="button"
                 onClick={() => {
                   clearBookingSession();
-                  navigate("/hotel/all-bookings");
+                  if (isModal) onClose?.();
+                  else navigate("/hotel/all-bookings");
                 }}
                 className="rounded-full border border-slate-200 bg-white px-6 py-3 text-base font-bold text-slate-700 xl:text-lg"
               >
@@ -946,7 +950,7 @@ const GroupBooking = () => {
             <button
               type="button"
               onClick={() =>
-                step === 0 ? navigate(-1) : setStep((s) => s - 1)
+                step === 0 ? (isModal ? onClose?.() : navigate(-1)) : setStep((s) => s - 1)
               }
               className="rounded-full border border-slate-200 bg-white px-6 py-3 text-base font-bold text-slate-700 transition hover:bg-slate-50 xl:text-lg"
             >

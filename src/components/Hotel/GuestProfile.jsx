@@ -41,7 +41,7 @@ const buildUploadUrl = (value) => {
   return `${getBackendBaseURL()}${raw.startsWith("/") ? raw : `/${raw}`}`;
 };
 
-const GuestProfile = () => {
+const GuestProfile = ({ isModal = false, onClose }) => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [searching, setSearching] = useState(false);
@@ -281,7 +281,7 @@ const GuestProfile = () => {
                 </h3>
                   <button
                     type="button"
-                    onClick={() => navigate("/hotel/guest")}
+                    onClick={() => (isModal ? onClose?.() : navigate("/hotel/guest"))}
                   className="rounded-full bg-emerald-600 px-5 py-2.5 text-base font-bold text-white transition hover:bg-emerald-700"
                   >
                     + New Booking
@@ -340,9 +340,12 @@ const GuestProfile = () => {
                                 type="button"
                                 onClick={() => {
                                   setStoredBookingId(b.bookingId);
-                                  navigate("/hotel/communication", {
-                                    state: { bookingId: b.bookingId },
-                                  });
+                                  if (isModal) onClose?.();
+                                  else {
+                                    navigate("/hotel/communication", {
+                                      state: { bookingId: b.bookingId },
+                                    });
+                                  }
                                 }}
                                 className="rounded-full bg-slate-900 px-5 py-2.5 text-base font-bold text-white transition hover:bg-emerald-700"
                               >
@@ -373,7 +376,7 @@ const GuestProfile = () => {
         <div className="flex gap-3 pt-2">
           <button
             type="button"
-            onClick={() => navigate("/hotel/all-bookings")}
+          onClick={() => (isModal ? onClose?.() : navigate("/hotel/all-bookings"))}
             className="rounded-full border border-slate-200 bg-white px-5 py-2.5 text-base font-bold text-slate-700 transition hover:bg-slate-50"
           >
             Back to All Bookings

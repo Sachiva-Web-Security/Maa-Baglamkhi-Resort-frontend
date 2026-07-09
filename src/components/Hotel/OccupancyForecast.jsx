@@ -18,7 +18,7 @@ const formatDate = (y, m, d) => {
 const daysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
 const firstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
 
-const OccupancyForecast = () => {
+const OccupancyForecast = ({ isModal = false, onClose }) => {
   const navigate = useNavigate();
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
@@ -380,9 +380,11 @@ const OccupancyForecast = () => {
                           <button
                             type="button"
                             onClick={() =>
-                              navigate("/hotel/communication", {
-                                state: { bookingId: b.bookingId },
-                              })
+                              isModal
+                                ? onClose?.()
+                                : navigate("/hotel/communication", {
+                                    state: { bookingId: b.bookingId },
+                                  })
                             }
                             className="shrink-0 rounded-full bg-sky-600 px-3 py-1 text-sm font-bold text-white"
                           >
@@ -533,7 +535,7 @@ const OccupancyForecast = () => {
 
             <button
               type="button"
-              onClick={() => navigate("/hotel/room-maintenance")}
+            onClick={() => (isModal ? onClose?.() : navigate("/hotel/room-maintenance"))}
               className="w-full rounded-[22px] border border-violet-200 bg-violet-50 px-5 py-3.5 text-base font-bold text-violet-700 transition hover:bg-violet-100"
             >
               🔧 Manage Maintenance Blocks
@@ -544,7 +546,7 @@ const OccupancyForecast = () => {
         <div className="flex gap-3">
           <button
             type="button"
-            onClick={() => navigate("/hotel/all-bookings")}
+            onClick={() => (isModal ? onClose?.() : navigate("/hotel/all-bookings"))}
             className="rounded-full border border-slate-200 bg-white px-5 py-2.5 text-base font-bold text-slate-700 transition hover:bg-slate-50"
           >
             ← All Bookings

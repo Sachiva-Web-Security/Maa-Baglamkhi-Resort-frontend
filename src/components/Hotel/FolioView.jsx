@@ -207,11 +207,16 @@ const AddEntryModal = ({ bookingId, onClose, onSaved }) => {
 };
 
 // ─── Main FolioView ─────────────────────────────────────────────────────────
-const FolioView = () => {
+const FolioView = ({
+  bookingId: bookingIdProp,
+  bookingCode: bookingCodeProp,
+  isModal = false,
+  onClose,
+}) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const bookingId = location.state?.bookingId || getStoredBookingId();
-  const bookingCode = location.state?.bookingCode || getStoredBookingCode();
+  const bookingId = bookingIdProp || location.state?.bookingId || getStoredBookingId();
+  const bookingCode = bookingCodeProp || location.state?.bookingCode || getStoredBookingCode();
 
   const [booking, setBooking] = useState(null);
   const [entries, setEntries] = useState([]);
@@ -239,6 +244,17 @@ const FolioView = () => {
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    if (!isModal) return undefined;
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") onClose?.();
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isModal, onClose]);
 
   const filteredEntries = useMemo(
     () =>
@@ -288,9 +304,43 @@ Booking ID is missing. Please open it from All Bookings.
   }
 
   const bookingRef = booking?.bookingCode || bookingCode || bookingId;
+  const handleBackToBookings = () => {
+    if (isModal) {
+      onClose?.();
+      return;
+    }
+    navigate("/hotel/all-bookings");
+  };
 
   return (
-    <>
+    <div
+      className={
+        isModal
+          ? "fixed inset-0 z-[1000] flex items-center justify-center bg-slate-950/70 px-3 py-4 backdrop-blur-sm sm:px-6"
+          : ""
+      }
+      onClick={isModal ? onClose : undefined}
+    >
+      <div
+        className={
+          isModal
+            ? "relative max-h-[92vh] w-full max-w-[96rem] overflow-y-auto rounded-[28px] bg-white shadow-[0_30px_90px_rgba(15,23,42,0.35)]"
+            : ""
+        }
+        role={isModal ? "dialog" : undefined}
+        aria-modal={isModal ? "true" : undefined}
+        onClick={isModal ? (event) => event.stopPropagation() : undefined}
+      >
+        {isModal && (
+          <button
+            type="button"
+            aria-label="Close folio"
+            onClick={onClose}
+            className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/95 text-sm font-black text-slate-700 shadow-lg ring-1 ring-slate-200 transition hover:bg-slate-100"
+          >
+            X
+          </button>
+        )}
       {showAdd && (
         <AddEntryModal
           bookingId={bookingId}
@@ -299,7 +349,7 @@ Booking ID is missing. Please open it from All Bookings.
         />
       )}
 
-      <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(14,165,233,0.12),_transparent_30%),linear-gradient(135deg,#f8fbff_0%,#f7fffb_55%,#fff8ef_100%)] p-4 sm:p-6">
+      <div className={`${isModal ? "" : "min-h-screen"} bg-[radial-gradient(circle_at_top,_rgba(14,165,233,0.12),_transparent_30%),linear-gradient(135deg,#f8fbff_0%,#f7fffb_55%,#fff8ef_100%)] p-4 sm:p-6`}>
         <div className="mx-auto max-w-[88rem] space-y-5">
           {/* Header */}
           <section className="overflow-hidden rounded-[32px] border border-white/70 bg-[linear-gradient(135deg,#020617_0%,#1e3a8a_45%,#0f766e_100%)] px-6 py-7 text-white shadow-[0_22px_70px_rgba(15,23,42,0.22)]">
@@ -386,7 +436,7 @@ Booking ID is missing. Please open it from All Bookings.
               </button>
               <button
                 type="button"
-                onClick={() => navigate("/hotel/all-bookings")}
+                onClick={handleBackToBookings}
                 className="rounded-full border border-slate-200 bg-white px-5 py-2.5 text-base font-bold text-slate-700 transition hover:bg-slate-50"
               >
                 All Bookings
@@ -562,7 +612,8 @@ Booking ID is missing. Please open it from All Bookings.
           </div>
         </div>
       </div>
-    </>
+      </div>
+    </div>
   );
 };
 

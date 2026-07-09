@@ -1,28 +1,7 @@
-// src/components/Hotel/BookingFlow.jsx
-//
-// ✅ SINGLE-PAGE BOOKING MODULE
-// -----------------------------------------------------------------------------
-// This ONE file replaces the old multi-route wizard (Guest.jsx -> otherBooking.jsx
-// -> Reference.jsx -> company.jsx -> Room.jsx -> Pax.jsx -> RoomTariff.jsx ->
-// Advance.jsx -> Communication.jsx) plus AllBooking.jsx / EditBooking.jsx /
-// BookingCancelAction.jsx / CollectPayment.jsx.
-//
-// Everything now lives in ONE component. Nothing here calls `navigate()` to move
-// between booking steps — moving between "New Booking / Confirmed / All Bookings /
-// Booking Details / Manage Booking" is just a local React state change (`view`),
-// so the browser never leaves this page and no data is lost in transit.
-//
-// HOW TO WIRE THIS INTO YOUR ROUTER (see chat message for full explanation):
-//   <Route path="/hotel"              element={<BookingFlow />} />
-//   <Route path="/hotel/guest"        element={<BookingFlow />} />   // old link -> opens "New Booking"
-//   <Route path="/hotel/all-bookings" element={<BookingFlow />} />   // old link -> opens "All Bookings"
-// The component itself looks at the current pathname only ONCE, on first mount,
-// to decide whether to land on the list or the form — after that, everything is
-// internal state, so your existing Sidebar links keep working unchanged.
-// -----------------------------------------------------------------------------
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { jsPDF } from "jspdf";
 import {
   FaPlus,
   FaEye,
@@ -51,12 +30,20 @@ import {
   FaHistory,
   FaFileUpload,
   FaFileAlt,
+  FaUsers,
+  FaUserFriends,
+  FaChartBar,
+  FaChartLine,
+  FaIdCard,
 } from "react-icons/fa";
 
 import API, { getBackendBaseURL } from "../../api";
 import { todayISO } from "../Dashboard/stayoverUtils";
 import { setStoredBookingId, setStoredBookingCode } from "./bookingSession";
-
+import FolioView from "./FolioView";
+import GroupBooking from "./GroupBooking";
+import OccupancyForecast from "./OccupancyForecast";
+import GuestProfile from "./GuestProfile";
 /* ─────────────────────────── shared style tokens ─────────────────────────── */
 
 const fieldCls =
@@ -134,11 +121,62 @@ const statusStyle = (status) => {
 /* ─────────────────────────── top flow bar (image-1 style) ─────────────────────────── */
 
 const FLOW_STEPS = [
-  { view: "form", num: 1, icon: FaUserPlus, title: "New Booking", desc: "Fill all booking details and create a new reservation" },
-  { view: "confirmed", num: 2, icon: FaCheckCircle, title: "Booking Confirmed", desc: "Booking is confirmed and reference number generated" },
-  { view: "list", num: 3, icon: FaListUl, title: "All Bookings", desc: "View all bookings in a list with status and details" },
-  { view: "details", num: 4, icon: FaEye, title: "Booking Details", desc: "View full details of any specific booking" },
-  { view: "manage", num: 5, icon: FaCogs, title: "Manage Booking", desc: "Edit, Cancel, Check-in / Check-out or Update payment" },
+  {
+    view: "form",
+    num: 1,
+    icon: FaUserPlus,
+    title: "New Booking",
+    desc: "Fill all booking details and create a new reservation",
+  },
+  {
+    view: "confirmed",
+    num: 2,
+    icon: FaCheckCircle,
+    title: "Booking Confirmed",
+    desc: "Booking is confirmed and reference number generated",
+  },
+  {
+    view: "list",
+    num: 3,
+    icon: FaListUl,
+    title: "All Bookings",
+    desc: "View all bookings in a list with status and details",
+  },
+  {
+    view: "details",
+    num: 4,
+    icon: FaEye,
+    title: "Booking Details",
+    desc: "View full details of any specific booking",
+  },
+  {
+    view: "manage",
+    num: 5,
+    icon: FaCogs,
+    title: "Manage Booking",
+    desc: "Edit, Cancel, Check-in / Check-out or Update payment",
+  },
+  {
+    view: "group-booking",
+    num: 6,
+    icon: FaUsers,
+    title: "Group Booking",
+    desc: "Create and manage bookings for groups, events, or corporate guests",
+  },
+  {
+    view: "guest-booking",
+    num: 7,
+    icon: FaUserFriends,
+    title: "Guest Booking",
+    desc: "Manage guest profiles, reservations, arrivals, departures, and stay history",
+  },
+  {
+    view: "occupancy-forecast",
+    num: 8,
+    icon: FaChartLine,
+    title: "Occupancy Forecast",
+    desc: "Analyze occupancy trends, room availability, and future booking forecasts",
+  },
 ];
 
 const FlowBar = ({ view, onJump }) => (
@@ -261,6 +299,364 @@ const Toast = ({ toast, onClose }) => {
 
 /* ─────────────────────────── main component ─────────────────────────── */
 
+const FeatureModal = ({ title, subtitle, size = "max-w-6xl", onClose, children }) => {
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-[950] flex items-center justify-center bg-slate-950/70 px-3 py-4 backdrop-blur-sm sm:px-6"
+      onClick={onClose}
+    >
+      <div
+        className={`relative max-h-[92vh] w-full ${size} overflow-y-auto rounded-[28px] bg-white shadow-[0_30px_90px_rgba(15,23,42,0.35)]`}
+        onClick={(event) => event.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+      >
+        <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-slate-100 bg-white/95 px-5 py-4 backdrop-blur">
+          <div>
+            <h3 className="text-lg font-black text-slate-900">{title}</h3>
+            {subtitle && <p className="mt-1 text-sm text-slate-500">{subtitle}</p>}
+          </div>
+          <button
+            type="button"
+            aria-label="Close modal"
+            onClick={onClose}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50"
+          >
+            <FaTimes />
+          </button>
+        </div>
+        <div className="p-4 sm:p-5">{children}</div>
+      </div>
+    </div>
+  );
+};
+
+const documentTypeOptions = [
+  { value: "checkin_form", label: "Check-in Form" },
+  { value: "guest_photo", label: "Guest Photo" },
+  { value: "signature", label: "Signature" },
+  { value: "id_proof", label: "ID Proof" },
+];
+
+const DocumentUploadModal = ({ booking, onClose }) => {
+  const bookingId = booking?.bookingId;
+  const [documents, setDocuments] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [form, setForm] = useState({ documentType: "id_proof", notes: "", termsAccepted: true });
+  const [file, setFile] = useState(null);
+
+  const loadDocuments = async () => {
+    if (!bookingId) return;
+    setLoading(true);
+    try {
+      const res = await API.get(`/hotel/guest-documents/${bookingId}`);
+      setDocuments(Array.isArray(res.data) ? res.data : []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadDocuments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bookingId]);
+
+  const handleUpload = async () => {
+    if (!file || !bookingId) return;
+    const data = new FormData();
+    data.append("document", file);
+    data.append("documentType", form.documentType);
+    data.append("notes", form.notes);
+    data.append("termsAccepted", form.termsAccepted ? "true" : "false");
+    data.append("uploadedBy", localStorage.getItem("name") || "Front Desk");
+
+    setUploading(true);
+    try {
+      await API.post(`/hotel/guest-documents/${bookingId}`, data, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      setFile(null);
+      setForm((prev) => ({ ...prev, notes: "" }));
+      await loadDocuments();
+    } catch (err) {
+      alert(err.response?.data?.message || "Document upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDelete = async (documentId) => {
+    if (!window.confirm("Delete this document?")) return;
+    await API.delete(`/hotel/guest-documents/${bookingId}/${documentId}`);
+    await loadDocuments();
+  };
+
+  return (
+    <FeatureModal
+      title="Document Upload"
+      subtitle={`${booking?.guest_name || "Guest"} - ${booking?.bookingCode || `BK-${bookingId}`}`}
+      size="max-w-5xl"
+      onClose={onClose}
+    >
+      <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
+        <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-5">
+          <div className={sectionTitleCls}>Upload Guest Document</div>
+          <div className="space-y-4">
+            <div>
+              <label className={labelCls}>Document Type</label>
+              <select
+                className={fieldCls}
+                value={form.documentType}
+                onChange={(event) => setForm((prev) => ({ ...prev, documentType: event.target.value }))}
+              >
+                {documentTypeOptions.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className={labelCls}>Image / PDF</label>
+              <input
+                type="file"
+                accept="image/*,.pdf,application/pdf"
+                className={fieldCls}
+                onChange={(event) => setFile(event.target.files?.[0] || null)}
+              />
+            </div>
+            <div>
+              <label className={labelCls}>Notes</label>
+              <textarea
+                rows={3}
+                className={fieldCls}
+                value={form.notes}
+                onChange={(event) => setForm((prev) => ({ ...prev, notes: event.target.value }))}
+                placeholder="Aadhaar, passport, signed check-in form..."
+              />
+            </div>
+            <label className="flex items-center gap-2 text-sm font-bold text-slate-700">
+              <input
+                type="checkbox"
+                checked={form.termsAccepted}
+                onChange={(event) => setForm((prev) => ({ ...prev, termsAccepted: event.target.checked }))}
+              />
+              Guest consent / terms accepted
+            </label>
+            <button type="button" onClick={handleUpload} disabled={!file || uploading} className={primaryBtn}>
+              <FaFileUpload className="text-xs" /> {uploading ? "Uploading..." : "Upload Document"}
+            </button>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-slate-200 bg-white p-5">
+          <div className={sectionTitleCls}>Uploaded Documents</div>
+          {loading ? (
+            <div className="py-10 text-center text-slate-400">Loading documents...</div>
+          ) : documents.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-slate-200 py-10 text-center text-slate-400">
+              No documents uploaded yet.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {documents.map((doc) => {
+                const url = buildUploadUrl(doc.file_url);
+                const label = documentTypeOptions.find((item) => item.value === doc.document_type)?.label || doc.document_type;
+                return (
+                  <div key={doc.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50/70 p-4">
+                    <div>
+                      <div className="font-black text-slate-900">{label}</div>
+                      <div className="mt-1 text-sm text-slate-500">{doc.notes || "No notes"} - {formatDate(doc.uploaded_at)}</div>
+                    </div>
+                    <div className="flex gap-2">
+                      <a href={url} target="_blank" rel="noreferrer" className={ghostBtn}>
+                        <FaEye className="text-xs" /> View
+                      </a>
+                      <button type="button" onClick={() => handleDelete(doc.id)} className={dangerBtn}>
+                        <FaTrash className="text-xs" /> Delete
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    </FeatureModal>
+  );
+};
+
+const InvoiceModal = ({ booking, onClose }) => {
+  const bookingId = booking?.bookingId;
+  const [invoice, setInvoice] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const loadInvoice = async () => {
+    if (!bookingId) return;
+    setLoading(true);
+    try {
+      const existing = await API.get(`/invoice/by-booking/${bookingId}`);
+      if (existing.data?.id) {
+        setInvoice(existing.data);
+      } else {
+        const generated = await API.get(`/invoice/${bookingId}`);
+        setInvoice(generated.data || null);
+      }
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.error || "Invoice load failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadInvoice();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bookingId]);
+
+  const items = Array.isArray(invoice?.items) ? invoice.items : [];
+  const invoiceNo = invoice?.invoiceNo || invoice?.invoice_no || `INV-${bookingId}`;
+  const guestName = invoice?.customerName || invoice?.customer_name || booking?.guest_name || "Guest";
+  const invoiceTotal = invoice?.totalAmount || invoice?.final_total || booking?.totalAmount;
+
+  const buildLines = () => [
+    ["Invoice No", invoiceNo],
+    ["Guest", guestName],
+    ["Phone", invoice?.phone || booking?.mobile || "-"],
+    ["Rooms", invoice?.roomNumber || invoice?.room_no || booking?.rooms || "-"],
+    ["Stay", `${formatDate(invoice?.checkIn || invoice?.check_in || booking?.check_in)} to ${formatDate(invoice?.checkOut || invoice?.check_out || booking?.check_out)}`],
+    ["Subtotal", formatCurrency(invoice?.subtotal)],
+    ["GST", formatCurrency(invoice?.tax || invoice?.gst)],
+    ["Discount", formatCurrency(invoice?.discount)],
+    ["Total", formatCurrency(invoiceTotal)],
+    ["Payment Status", invoice?.paymentStatus || invoice?.payment_status || "Pending"],
+  ];
+
+  const handlePrint = () => {
+    const win = window.open("", "_blank", "width=900,height=700");
+    if (!win) return;
+    const rows = items.map((item) => `
+      <tr>
+        <td>${item.name || item.description || "Item"}</td>
+        <td>${item.quantity || 1}</td>
+        <td>${formatCurrency(item.price)}</td>
+        <td>${formatCurrency(item.total)}</td>
+      </tr>
+    `).join("");
+    win.document.write(`
+      <html><head><title>${invoiceNo}</title>
+      <style>body{font-family:Arial;padding:28px;color:#0f172a}h1{margin:0 0 8px}table{width:100%;border-collapse:collapse;margin-top:18px}td,th{border:1px solid #e2e8f0;padding:10px;text-align:left}.total{font-size:22px;font-weight:800;text-align:right}</style>
+      </head><body>
+      <h1>Maa Baglamukhi Resort</h1><div>${invoiceNo}</div>
+      ${buildLines().map(([k, v]) => `<p><b>${k}:</b> ${v}</p>`).join("")}
+      <table><thead><tr><th>Item</th><th>Qty</th><th>Rate</th><th>Total</th></tr></thead><tbody>${rows}</tbody></table>
+      <p class="total">Total: ${formatCurrency(invoiceTotal)}</p>
+      </body></html>
+    `);
+    win.document.close();
+    win.focus();
+    win.print();
+  };
+
+  const handleDownloadPdf = () => {
+    const doc = new jsPDF();
+    let y = 18;
+    doc.setFontSize(16);
+    doc.text("Maa Baglamukhi Resort", 14, y);
+    y += 8;
+    doc.setFontSize(11);
+    buildLines().forEach(([key, value]) => {
+      doc.text(`${key}: ${value}`, 14, y);
+      y += 7;
+    });
+    y += 4;
+    doc.setFontSize(12);
+    doc.text("Items", 14, y);
+    y += 7;
+    doc.setFontSize(10);
+    (items.length ? items : [{ name: "Booking charges", quantity: 1, price: booking?.totalAmount, total: booking?.totalAmount }]).forEach((item) => {
+      doc.text(String(item.name || item.description || "Item").slice(0, 52), 14, y);
+      doc.text(String(item.quantity || 1), 130, y);
+      doc.text(String(formatCurrency(item.total)), 150, y);
+      y += 7;
+      if (y > 280) {
+        doc.addPage();
+        y = 18;
+      }
+    });
+    doc.save(`${invoiceNo}.pdf`);
+  };
+
+  return (
+    <FeatureModal
+      title="Invoice"
+      subtitle={`${guestName} - ${booking?.bookingCode || `BK-${bookingId}`}`}
+      size="max-w-5xl"
+      onClose={onClose}
+    >
+      {loading ? (
+        <div className="py-16 text-center text-slate-400">Preparing invoice...</div>
+      ) : (
+        <div className="space-y-5">
+          <div className="flex flex-wrap justify-end gap-2">
+            <button type="button" onClick={loadInvoice} className={ghostBtn}>Regenerate</button>
+            <button type="button" onClick={handlePrint} className={ghostBtn}><FaPrint className="text-xs" /> Print</button>
+            <button type="button" onClick={handleDownloadPdf} className={primaryBtn}><FaDownload className="text-xs" /> PDF</button>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="flex flex-wrap justify-between gap-4 border-b border-slate-100 pb-5">
+              <div>
+                <div className="text-[11px] font-bold uppercase text-slate-400">Invoice No</div>
+                <div className="text-2xl font-black text-slate-900">{invoiceNo}</div>
+              </div>
+              <div className="text-right">
+                <div className="text-[11px] font-bold uppercase text-slate-400">Total</div>
+                <div className="text-3xl font-black text-emerald-600">{formatCurrency(invoiceTotal)}</div>
+              </div>
+            </div>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              {buildLines().slice(1, 6).map(([key, value]) => (
+                <div key={key} className="rounded-xl bg-slate-50 p-3">
+                  <div className="text-[11px] font-bold uppercase text-slate-400">{key}</div>
+                  <div className="font-bold text-slate-800">{value}</div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-5 overflow-x-auto rounded-xl border border-slate-100">
+              <table className="w-full min-w-[560px] text-left text-sm">
+                <thead className="bg-slate-50 text-[11px] font-bold uppercase text-slate-400">
+                  <tr><th className="px-4 py-3">Item</th><th className="px-4 py-3">Qty</th><th className="px-4 py-3">Rate</th><th className="px-4 py-3 text-right">Total</th></tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {(items.length ? items : [{ name: "Booking charges", quantity: 1, price: booking?.totalAmount, total: booking?.totalAmount }]).map((item, idx) => (
+                    <tr key={idx}>
+                      <td className="px-4 py-3 font-semibold text-slate-800">{item.name || item.description || "Item"}</td>
+                      <td className="px-4 py-3">{item.quantity || 1}</td>
+                      <td className="px-4 py-3">{formatCurrency(item.price)}</td>
+                      <td className="px-4 py-3 text-right font-black">{formatCurrency(item.total)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+    </FeatureModal>
+  );
+};
+
 const BookingFlow = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -337,6 +733,37 @@ const BookingFlow = () => {
     () => formData.rooms.reduce((sum, row) => sum + rowTotal(row), 0),
     [formData.rooms],
   );
+
+
+// this is a folio page 
+const [showFolio, setShowFolio] = useState(false);
+const [showGroupBooking, setShowGroupBooking] = useState(false);
+const [showOccupancyForecast, setShowOccupancyForecast] = useState(false);
+const [showGuestProfile, setShowGuestProfile] = useState(false);
+
+const [selectedBookingId, setSelectedBookingId] = useState(null);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   const guestFullName = `${formData.firstName} ${formData.lastName}`.trim();
 
@@ -416,27 +843,89 @@ const BookingFlow = () => {
     setManageStatus(booking.booking_status || "");
     setView("manage");
   };
+const handleJumpStep = (stepView) => {
 
-  const handleJumpStep = (stepView) => {
-    if (stepView === "list") return goToList();
-    if (stepView === "form") return openNewBooking();
-    if (stepView === "confirmed") {
-      if (!formData.bookingId) {
-        showToast("error", "No booking yet", "Create or open a booking first — this screen shows the confirmation of a booking you just saved.");
-        return;
-      }
-      setView("confirmed");
+  if (stepView === "form") {
+    openNewBooking();
+    return;
+  }
+
+  if (stepView === "list") {
+    goToList();
+    return;
+  }
+
+  if (stepView === "confirmed") {
+    if (!formData.bookingId) {
+      showToast(
+        "error",
+        "No booking found",
+        "Please create a booking first."
+      );
       return;
     }
-    if (stepView === "details" || stepView === "manage") {
-      if (!selectedBooking) {
-        showToast("error", "Select a booking first", "Open a booking from “All Bookings” to view its details or manage it.");
-        return;
-      }
-      if (stepView === "details") openDetails(selectedBooking);
-      else openManage(selectedBooking);
+
+    setView("confirmed");
+    return;
+  }
+
+  //----------------------------
+  // POPUP SCREENS
+  //----------------------------
+
+  if (stepView === "group-booking") {
+    setShowGroupBooking(true);
+    return;
+  }
+
+  if (stepView === "guest-booking") {
+    setShowGuestProfile(true);
+    return;
+  }
+
+  if (stepView === "occupancy-forecast") {
+    setShowOccupancyForecast(true);
+    return;
+  }
+
+  //----------------------------
+  // Booking Detail
+  //----------------------------
+
+  if (stepView === "details") {
+
+    if (!selectedBooking) {
+      showToast(
+        "error",
+        "Select a booking first",
+        "Please select any booking."
+      );
+      return;
     }
-  };
+
+    openDetails(selectedBooking);
+    return;
+  }
+
+  //----------------------------
+  // Manage
+  //----------------------------
+
+  if (stepView === "manage") {
+
+    if (!selectedBooking) {
+      showToast(
+        "error",
+        "Select a booking first",
+        "Please select any booking."
+      );
+      return;
+    }
+
+    openManage(selectedBooking);
+  }
+
+};
 
   /* ---------- form field handlers ---------- */
 
@@ -697,10 +1186,18 @@ const BookingFlow = () => {
   // Folio / Night-Audit and Payment History are still separate, standalone
   // pages in your app (not part of this consolidated flow), so opening them
   // is a normal route navigation — same as your old AllBooking.jsx did.
-  const handleOpenFolio = (booking) => {
+ const handleOpenFolio = (booking) => {
     if (!booking?.bookingId) return;
+
     setStoredBookingId(booking.bookingId);
-    navigate("/hotel/folio", { state: { bookingId: booking.bookingId } });
+    setStoredBookingCode(booking.bookingCode || "");
+    setSelectedBookingId(booking.bookingId);
+    setShowFolio(true);
+  };
+
+  const handleCloseFolio = () => {
+    setShowFolio(false);
+    setSelectedBookingId(null);
   };
 
   const handleOpenPaymentHistory = (booking) => {
@@ -838,6 +1335,19 @@ const BookingFlow = () => {
                       <button title="Manage booking" onClick={() => openManage(b)} className="rounded-lg border border-rose-200 p-2 text-rose-600 hover:bg-rose-50">
                         <FaTrash className="text-xs" />
                       </button>
+                      <button
+    title="Group Booking"
+    onClick={() => handleOpenGroupBooking(b)}
+>
+    <FaUsers />
+</button>
+<button
+    title="Guest Profile"
+    onClick={() => handleOpenGuestProfile(b)}
+>
+    <FaIdCard />
+</button>
+
                     </div>
                   </td>
                 </tr>
@@ -1472,21 +1982,112 @@ const BookingFlow = () => {
   };
 
   /* ─────────────────────────── page shell ─────────────────────────── */
+const handleFlowNavigation = (page) => {
+  setView(page);
 
-  return (
-    <div
-      className="min-h-screen space-y-5 rounded-[32px] bg-[radial-gradient(circle_at_top,_rgba(219,234,254,0.5),_rgba(255,255,255,0.97)_38%,_rgba(248,250,252,1)_100%)] p-4 sm:p-6"
-      style={{ fontFamily: '"Segoe UI", "Helvetica Neue", Arial, sans-serif' }}
-    >
-      <FlowBar view={view} onJump={handleJumpStep} />
+  switch (page) {
+    case "form":
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+      break;
 
-      {view === "list" && renderList()}
-      {view === "form" && renderForm()}
-      {view === "confirmed" && renderConfirmed()}
-      {view === "details" && renderDetails()}
-      {view === "manage" && renderManage()}
+    case "list":
+      goToList();
+      break;
+
+    case "details":
+      if (selectedBooking) {
+        setView("details");
+      }
+      break;
+
+    case "manage":
+      if (selectedBooking) {
+        setView("manage");
+      }
+      break;
+
+    default:
+      setView(page);
+  }
+};
+ return (
+  <div
+    className="min-h-screen ..."
+    style={{ fontFamily: '"Segoe UI", "Helvetica Neue", Arial, sans-serif' }}
+  >
+    <FlowBar
+      view={view}
+      onJump={handleFlowNavigation}
+    />
+
+    {view === "form" && renderForm()}
+    {view === "list" && renderList()}
+    {view === "details" && renderDetails()}
+    {view === "manage" && renderManage()}
+
+    {/* Feature Modals */}
+
+    {showGroupBooking && (
+      <FeatureModal
+        title="Group Booking"
+        subtitle="Manage group reservations"
+        size="max-w-7xl"
+        onClose={() => setShowGroupBooking(false)}
+      >
+        <GroupBooking />
+      </FeatureModal>
+    )}
+
+    {showGuestProfile && (
+      <FeatureModal
+        title="Guest Profile"
+        subtitle="Guest booking history and details"
+        size="max-w-7xl"
+        onClose={() => setShowGuestProfile(false)}
+      >
+        <GuestProfile />
+      </FeatureModal>
+    )}
+
+    {showOccupancyForecast && (
+      <FeatureModal
+        title="Occupancy Forecast"
+        subtitle="Room occupancy analytics"
+        size="max-w-7xl"
+        onClose={() => setShowOccupancyForecast(false)}
+      >
+        <OccupancyForecast />
+      </FeatureModal>
+    )}
+
+    {showFolio && (
+      <FeatureModal
+        title="Guest Folio"
+        subtitle="Charges & Payments"
+        size="max-w-7xl"
+        onClose={() => setShowFolio(false)}
+      >
+        <FolioView bookingId={selectedBookingId} />
+      </FeatureModal>
+    )}
+
+  
+
+    
+
 
       <Toast toast={toast} onClose={closeToast} />
+
+      {showFolio && selectedBookingId && (
+        <FolioView
+          bookingId={selectedBookingId}
+          isModal
+          onClose={handleCloseFolio}
+        />
+      )}
 
       {/* cancel booking modal */}
       {cancelModal.open && (
