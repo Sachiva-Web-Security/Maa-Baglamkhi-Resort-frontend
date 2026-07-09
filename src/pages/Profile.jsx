@@ -2,9 +2,13 @@ import React, { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import {
   FaCamera,
+  FaCheckCircle,
   FaEnvelope,
+  FaExclamationCircle,
   FaLock,
+  FaPen,
   FaShieldAlt,
+  FaTimes,
   FaUpload,
   FaUserCircle,
 } from "react-icons/fa";
@@ -14,6 +18,8 @@ import { withAudit } from "../utils/auditAction";
 const Profile = () => {
   const location = useLocation();
   const securitySectionRef = useRef(null);
+  const fileInputRef = useRef(null);
+
   const [name, setName] = useState(localStorage.getItem("name") || "");
   const [role, setRole] = useState(localStorage.getItem("role") || "");
   const [email, setEmail] = useState(localStorage.getItem("email") || "");
@@ -23,6 +29,7 @@ const Profile = () => {
   const [avatarFile, setAvatarFile] = useState(null);
   const [cameraStream, setCameraStream] = useState(null);
   const [cameraError, setCameraError] = useState("");
+  const [showCamera, setShowCamera] = useState(false);
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -34,7 +41,6 @@ const Profile = () => {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  // Load profile from backend on mount and sync to state + localStorage
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
@@ -70,11 +76,7 @@ const Profile = () => {
 
   useEffect(() => {
     if (location.state?.focusSection !== "security") return;
-
-    securitySectionRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
+    securitySectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [location.state]);
 
   const handleAvatarChange = (e) => {
@@ -84,22 +86,19 @@ const Profile = () => {
     setAvatarFile(file);
     const previewUrl = URL.createObjectURL(file);
     setAvatarUrl(previewUrl);
+    handleAvatarUpload(null, file);
   };
 
-  // Camera: start video stream
   const handleStartCamera = async () => {
     try {
       setCameraError("");
+      setShowCamera(true);
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        setCameraError(
-          "Camera support available nahi hai (browser permission).",
-        );
+        setCameraError("Camera support available nahi hai (browser permission).");
         return;
       }
 
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-      });
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       setCameraStream(stream);
 
       const video = document.getElementById("profile-camera-video");
@@ -112,7 +111,15 @@ const Profile = () => {
     }
   };
 
-  // Camera: capture current frame as image file
+  const handleCloseCamera = () => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach((t) => t.stop());
+    }
+    setCameraStream(null);
+    setShowCamera(false);
+    setCameraError("");
+  };
+
   const handleCaptureFromCamera = () => {
     const video = document.getElementById("profile-camera-video");
     if (!video) return;
@@ -128,15 +135,13 @@ const Profile = () => {
 
     canvas.toBlob((blob) => {
       if (!blob) return;
-      const file = new File([blob], "avatar-camera.jpg", {
-        type: "image/jpeg",
-      });
+      const file = new File([blob], "avatar-camera.jpg", { type: "image/jpeg" });
       setAvatarFile(file);
       const previewUrl = URL.createObjectURL(blob);
       setAvatarUrl(previewUrl);
+      handleAvatarUpload(null, file);
     }, "image/jpeg");
 
-    // Capture ke turant baad camera band kar do
     if (cameraStream) {
       cameraStream.getTracks().forEach((t) => t.stop());
     }
@@ -145,11 +150,13 @@ const Profile = () => {
       videoEl.srcObject = null;
     }
     setCameraStream(null);
+    setShowCamera(false);
   };
 
-  const handleAvatarUpload = async (e) => {
-    e.preventDefault();
-    if (!avatarFile) return;
+  const handleAvatarUpload = async (e, fileOverride) => {
+    if (e) e.preventDefault();
+    const file = fileOverride || avatarFile;
+    if (!file) return;
 
     try {
       setLoadingAvatar(true);
@@ -157,12 +164,11 @@ const Profile = () => {
       setError("");
 
       const formData = new FormData();
-      formData.append("avatar", avatarFile);
+      formData.append("avatar", file);
       if (email) {
         formData.append("email", email);
       }
 
-      // Backend: update profile picture for current user
       const res = await API.put(
         "/users/me/avatar",
         formData,
@@ -172,8 +178,6 @@ const Profile = () => {
       );
 
       let urlFromServer = res.data?.avatarUrl || res.data?.url || avatarUrl;
-
-      // Ensure full URL for img src (e.g. http://localhost:5002/uploads/...)
       if (urlFromServer && !urlFromServer.startsWith("http")) {
         urlFromServer = `${getBackendBaseURL()}${urlFromServer.startsWith("/") ? "" : "/"}${urlFromServer}`;
       }
@@ -212,15 +216,9 @@ const Profile = () => {
 
     try {
       setLoadingPassword(true);
-
-      // Backend: change password for current user
       await API.post(
         "/users/change-password",
-        {
-          email,
-          currentPassword,
-          newPassword,
-        },
+        { email, currentPassword, newPassword },
         withAudit("change_password"),
       );
 
@@ -245,265 +243,264 @@ const Profile = () => {
       : "Role";
 
   return (
-    <div className="profile-page relative min-h-screen overflow-x-hidden bg-[linear-gradient(135deg,#f5fbff_0%,#f3f8f4_28%,#fff8f1_58%,#f8fafc_100%)] p-5 sm:p-7 lg:p-10">
-      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute left-[-8%] top-[-6%] h-72 w-72 rounded-full bg-cyan-200/45 blur-3xl sm:h-96 sm:w-96" />
-        <div className="absolute right-[-10%] top-[8%] h-72 w-72 rounded-full bg-amber-200/45 blur-3xl sm:h-[28rem] sm:w-[28rem]" />
-        <div className="absolute bottom-[18%] left-[18%] h-56 w-56 rounded-full bg-emerald-200/30 blur-3xl sm:h-80 sm:w-80" />
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.55)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.45)_1px,transparent_1px)] bg-[size:72px_72px] opacity-25" />
-      </div>
+    <div className="min-h-screen bg-[#f4f7fb] p-5 sm:p-7 lg:p-10">
+      <div className="mx-auto w-full max-w-[1500px] space-y-6">
 
-      <div className="w-full space-y-7">
-        <section className="profile-hero overflow-hidden rounded-[28px] border border-slate-900/10 bg-[linear-gradient(120deg,#071b34_0%,#0d4a53_52%,#162d45_100%)] px-6 py-7 shadow-[0_22px_55px_rgba(15,23,42,0.12)] sm:px-8 sm:py-10">
-          <div className="space-y-5">
-            <div className="space-y-5">
-              <p className="profile-hero-text text-xl font-semibold uppercase tracking-[0.3em]">
-                Personal Workspace
-              </p>
-              <div className="space-y-3">
-                <h1 className="profile-hero-title profile-hero-text max-w-3xl font-black">
-                  Profile and security settings
-                </h1>
-                <p className="profile-body-lg profile-hero-text max-w-3xl">
-                  Dashboard style personal profile jahan se aap profile picture,
-                  email overview aur password update ko ek cleaner screen par manage kar sakein.
-                </p>
-              </div>
-            </div>
+        {/* ── Gradient header ──────────────────────────────────── */}
+        <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-r from-sky-600 via-sky-500 to-cyan-400 px-7 py-8 shadow-[0_18px_45px_rgba(14,165,233,0.28)] sm:px-10 sm:py-10">
+          <div className="pointer-events-none absolute -right-10 -top-16 h-56 w-56 rounded-full bg-white/10" />
+          <div className="pointer-events-none absolute -bottom-20 left-1/3 h-56 w-56 rounded-full bg-white/10" />
+          <div className="relative flex items-center gap-2 text-xs font-bold uppercase tracking-[0.3em] text-white/80">
+            <FaShieldAlt />
+            <span>My Account</span>
           </div>
-        </section>
+          <h1 className="relative mt-3 text-3xl font-black text-white sm:text-4xl">
+            Personal Information
+          </h1>
+          <p className="relative mt-2 max-w-xl text-sm font-medium text-white/90 sm:text-base">
+            Profile picture, contact details aur password ek jagah se manage karein.
+          </p>
+        </div>
 
-        <section className="grid gap-4 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,1.2fr)]">
-          <div className="space-y-4">
-            <div
-  ref={securitySectionRef}
-  className="profile-card rounded-[26px] border border-white/60 bg-white/82 p-6 backdrop-blur-xl"
->
-              <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
-                <div className="relative mx-auto sm:mx-0">
-                  <div className="flex h-36 w-36 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-sky-500 to-cyan-500 text-5xl font-black text-white shadow-[0_16px_35px_rgba(14,165,233,0.25)]">
-                    {avatarUrl ? (
-                      <img
-                        src={avatarUrl}
-                        alt="Profile"
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      (name || "U").charAt(0).toUpperCase()
-                    )}
-                  </div>
+        {/* ── Alerts ───────────────────────────────────────────── */}
+        {error ? (
+          <div className="flex items-center gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-semibold text-rose-700">
+            <FaExclamationCircle className="shrink-0 text-base" />
+            <span>{error}</span>
+          </div>
+        ) : null}
+
+        {message ? (
+          <div className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-semibold text-emerald-700">
+            <FaCheckCircle className="shrink-0 text-base" />
+            <span>{message}</span>
+          </div>
+        ) : null}
+
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
+
+          {/* ── Avatar card ──────────────────────────────────── */}
+          <div className="rounded-[28px] border border-slate-200 bg-white p-7 shadow-[0_10px_40px_rgba(15,23,42,0.06)] sm:p-8">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-sky-500">
+              Profile Photo
+            </p>
+
+            <div className="mt-5 flex flex-col items-center text-center">
+              <div className="relative">
+                <div className="flex h-32 w-32 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-sky-400 to-cyan-500 text-4xl font-black text-white shadow-[0_14px_32px_rgba(14,165,233,0.32)]">
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt="Profile" className="h-full w-full object-cover" />
+                  ) : (
+                    (name || "U").charAt(0).toUpperCase()
+                  )}
                 </div>
-
-                <div className="min-w-0 flex-1 text-center sm:text-left">
-                  <div className="profile-section-title text-black">
-                    {name || "User"}
-                  </div>
-                  <div className="profile-chip mt-3 inline-flex items-center gap-2 rounded-full bg-cyan-50 px-4 py-2 font-bold text-slate-900">
-                    <FaUserCircle />
-                    {prettyRole}
-                  </div>
-                  <div className="mt-4 flex flex-col gap-2 text-base font-semibold text-slate-800">
-                    <span className="inline-flex items-center justify-center gap-2 sm:justify-start">
-                      <FaEnvelope className="text-slate-600" />
-                      {email || "Email not set"}
-                    </span>
-                    <span className="inline-flex items-center justify-center gap-2 sm:justify-start">
-                      <FaShieldAlt className="text-slate-600" />
-                      Secure profile controls available
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="profile-card rounded-[26px] border border-white/60 bg-white/82 p-6 backdrop-blur-xl">
-              <div className="mb-5">
-                <p className="profile-label text-slate-700">
-                  Profile Picture
-                </p>
-                <h2 className="profile-section-title mt-2 text-black">
-                  Update avatar
-                </h2>
+                <span className="absolute bottom-1 right-1 flex h-8 w-8 items-center justify-center rounded-full border-4 border-white bg-emerald-500">
+                  <FaCheckCircle className="text-xs text-white" />
+                </span>
               </div>
 
-              <form onSubmit={handleAvatarUpload} className="space-y-4">
+              <h2 className="mt-4 text-lg font-black text-slate-900">{name || "User"}</h2>
+              <span className="mt-1 inline-flex items-center gap-1.5 rounded-full bg-sky-50 px-3 py-1 text-xs font-bold text-sky-600">
+                <FaUserCircle className="text-[10px]" />
+                {prettyRole}
+              </span>
+
+              <div className="mt-6 flex w-full flex-col gap-3">
                 <input
+                  ref={fileInputRef}
                   type="file"
                   accept="image/png,image/jpeg,image/webp"
                   onChange={handleAvatarChange}
-                  className="profile-input w-full rounded-[20px] border border-slate-200/80 bg-white px-4 py-4 text-base font-semibold text-black file:mr-3 file:rounded-full file:border-0 file:bg-sky-600 file:px-4 file:py-3 file:text-sm file:font-semibold file:text-white hover:file:bg-sky-700"
+                  className="hidden"
                 />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={loadingAvatar}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-sky-500 px-5 py-3 text-sm font-bold text-white shadow-[0_10px_24px_rgba(14,165,233,0.28)] transition hover:-translate-y-0.5 hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <FaUpload className="text-xs" />
+                  {loadingAvatar ? "Uploading..." : "Upload New Picture"}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleStartCamera}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 transition hover:-translate-y-0.5 hover:border-sky-300 hover:text-sky-600"
+                >
+                  <FaCamera className="text-xs" />
+                  Use Camera
+                </button>
+              </div>
+            </div>
 
-                <div className="space-y-3">
+            {showCamera ? (
+              <div className="mt-6 space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-bold text-slate-700">Camera Preview</p>
                   <button
                     type="button"
-                    onClick={handleStartCamera}
-                      className="profile-action inline-flex w-full items-center justify-center gap-2 rounded-[20px] border border-slate-200 bg-slate-50 px-5 py-4 font-bold text-black transition hover:border-cyan-200 hover:text-black"
-                    >
-                    <FaCamera />
-                    Open Camera
+                    onClick={handleCloseCamera}
+                    className="rounded-full p-1.5 text-slate-400 transition hover:bg-slate-200 hover:text-slate-700"
+                    aria-label="Close camera"
+                  >
+                    <FaTimes />
                   </button>
-
-                  {cameraError ? (
-                    <div className="rounded-[18px] border border-rose-200 bg-rose-50 px-4 py-3 text-base font-semibold text-rose-700">
-                      {cameraError}
-                    </div>
-                  ) : null}
-
-                  {cameraStream && (
-                    <div className="space-y-3">
-                      <video
-                        id="profile-camera-video"
-                        className="w-full rounded-[22px] border border-slate-200 bg-slate-950/90"
-                        autoPlay
-                        muted
-                      />
-                      <button
-                        type="button"
-                        onClick={handleCaptureFromCamera}
-                        className="inline-flex w-full items-center justify-center gap-2 rounded-[20px] bg-gradient-to-r from-sky-600 to-cyan-500 px-4 py-3 text-sm font-bold text-white shadow-[0_14px_30px_rgba(14,165,233,0.22)] transition hover:-translate-y-0.5"
-                      >
-                        <FaCamera />
-                        Capture Photo
-                      </button>
-                    </div>
-                  )}
                 </div>
 
-                <button
-                  type="submit"
-                  disabled={loadingAvatar || !avatarFile}
-                  className="profile-primary inline-flex w-full items-center justify-center gap-2 rounded-[22px] bg-gradient-to-r from-sky-600 to-cyan-500 px-5 py-4 font-bold text-white shadow-[0_16px_35px_rgba(14,165,233,0.24)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  <FaUpload />
-                  {loadingAvatar ? "Uploading..." : "Update Profile Picture"}
-                </button>
-              </form>
+                {cameraError ? (
+                  <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+                    {cameraError}
+                  </div>
+                ) : (
+                  <>
+                    <video
+                      id="profile-camera-video"
+                      className="w-full rounded-xl border border-slate-200 bg-slate-950/90"
+                      autoPlay
+                      muted
+                    />
+                    <button
+                      type="button"
+                      onClick={handleCaptureFromCamera}
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-sky-500 px-4 py-3 text-sm font-bold text-white shadow-[0_10px_24px_rgba(14,165,233,0.28)] transition hover:bg-sky-600"
+                    >
+                      <FaCamera />
+                      Capture Photo
+                    </button>
+                  </>
+                )}
+              </div>
+            ) : null}
+
+            <div className="mt-7 space-y-3 border-t border-slate-100 pt-6">
+              <div className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-5 py-4">
+                <div className="flex min-w-0 items-center gap-3">
+                  <FaUserCircle className="shrink-0 text-slate-400" />
+                  <span className="truncate text-sm font-semibold text-slate-800">
+                    {name || "Name not set"}
+                  </span>
+                </div>
+                <FaPen className="shrink-0 text-xs text-slate-300" />
+              </div>
+
+              <div className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-5 py-4">
+                <div className="flex min-w-0 items-center gap-3">
+                  <FaEnvelope className="shrink-0 text-slate-400" />
+                  <span className="truncate text-sm font-semibold text-slate-800">
+                    {email || "Email not set"}
+                  </span>
+                </div>
+                <FaPen className="shrink-0 text-xs text-slate-300" />
+              </div>
+
+              {loadingProfile ? (
+                <p className="text-sm font-semibold text-slate-400">
+                  Profile details load ho rahe hain...
+                </p>
+              ) : null}
             </div>
           </div>
 
-          <div className="space-y-4">
-            <div className="profile-card rounded-[26px] border border-white/60 bg-white/82 p-6 backdrop-blur-xl">
-              <div className="mb-4 flex items-start gap-3">
-                <span className="rounded-2xl bg-amber-50 p-3 text-amber-600">
-                  <FaLock />
-                </span>
-                <div>
-                  <p className="profile-label text-[16px] font-bold tracking-[0.22em] text-slate-700">
-                    Security Center
-                  </p>
-                  <h2 className="profile-section-title mt-2 text-[2.3rem] font-black leading-tight text-black sm:text-[2.8rem]">
-                    Change password
-                  </h2>
-                </div>
+          {/* ── Password card ────────────────────────────────── */}
+          <div
+            ref={securitySectionRef}
+            className="rounded-[28px] border border-slate-200 bg-white p-7 shadow-[0_10px_40px_rgba(15,23,42,0.06)] sm:p-10"
+          >
+            <div className="flex items-center gap-3">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-sky-50 text-sky-500">
+                <FaLock />
+              </span>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-sky-500">
+                  Security
+                </p>
+                <h2 className="text-lg font-black text-slate-900">Change Password</h2>
+              </div>
+            </div>
+
+            <p className="mt-4 text-sm font-medium leading-relaxed text-slate-500">
+              Apna password yahan se safely update karein. Current credentials
+              kabhi bhi screen par expose nahi hote.
+            </p>
+
+            <form onSubmit={handlePasswordChange} className="mt-6 space-y-5">
+              <div>
+                <label
+                  htmlFor="current-password"
+                  className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500"
+                >
+                  Current Password
+                </label>
+                <input
+                  id="current-password"
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-semibold text-slate-900 outline-none transition placeholder:font-normal placeholder:text-slate-400 focus:border-sky-400 focus:bg-white focus:ring-4 focus:ring-sky-100"
+                  placeholder="Enter current password"
+                />
               </div>
 
-              <p className="profile-body-lg mb-5 text-[1.2rem] font-semibold leading-8 text-black">
-                Yahan se aap apna password safely update kar sakte hain. Current
-                credentials screen par expose nahi honge aur update directly account security ke liye use hoga.
-              </p>
-
-              {error ? (
-                <div className="mb-4 rounded-[18px] border border-rose-200 bg-rose-50 px-4 py-3 text-base font-semibold text-rose-700">
-                  {error}
-                </div>
-              ) : null}
-
-              {message ? (
-                <div className="mb-4 rounded-[18px] border border-emerald-200 bg-emerald-50 px-4 py-3 text-base font-semibold text-emerald-700">
-                  {message}
-                </div>
-              ) : null}
-
-              <form onSubmit={handlePasswordChange} className="space-y-4">
+              <div className="grid gap-5 sm:grid-cols-2">
                 <div>
-                     <label htmlFor="current-password" className="profile-label mb-2 block text-[16px] font-bold uppercase tracking-[0.2em] text-slate-700">
-                    Current Password
-                  </label>
-                  <input
-                   id="current-password"
-                    type="password"
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    className="profile-input w-full rounded-[20px] border border-slate-200/80 bg-white px-4 py-4 text-[18px] font-semibold text-black outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100"
-                    placeholder="Enter current password"
-                    
-                  />
-                </div>
-
-                <div>
-                  <label className="profile-label mb-2 block text-[16px] font-bold uppercase tracking-[0.2em] text-slate-700">
+                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">
                     New Password
                   </label>
                   <input
                     type="password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="profile-input w-full rounded-[20px] border border-slate-200/80 bg-white px-4 py-4 text-[18px] font-semibold text-black outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100"
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-semibold text-slate-900 outline-none transition placeholder:font-normal placeholder:text-slate-400 focus:border-sky-400 focus:bg-white focus:ring-4 focus:ring-sky-100"
                     placeholder="Enter new password"
                   />
                 </div>
 
                 <div>
-                  <label className="profile-label mb-2 block text-[16px] font-bold uppercase tracking-[0.2em] text-slate-700">
+                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">
                     Confirm Password
                   </label>
                   <input
-
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="profile-input w-full rounded-[20px] border border-slate-200/80 bg-white px-4 py-4 text-[18px] font-semibold text-black outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100"
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-semibold text-slate-900 outline-none transition placeholder:font-normal placeholder:text-slate-400 focus:border-sky-400 focus:bg-white focus:ring-4 focus:ring-sky-100"
                     placeholder="Re-enter new password"
                   />
                 </div>
+              </div>
 
+              <div className="flex justify-end pt-1">
                 <button
                   type="submit"
                   disabled={loadingPassword}
-                  className="profile-primary inline-flex w-full items-center justify-center gap-2 rounded-[22px] bg-gradient-to-r from-sky-600 to-cyan-500 px-5 py-4 text-[18px] font-bold text-white shadow-[0_16px_35px_rgba(14,165,233,0.24)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-sky-500 px-8 py-3 text-sm font-bold text-white shadow-[0_10px_24px_rgba(14,165,233,0.28)] transition hover:-translate-y-0.5 hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  <FaLock />
                   {loadingPassword ? "Updating..." : "Update Password"}
                 </button>
-              </form>
-            </div>
+              </div>
+            </form>
 
-            <div className="profile-card rounded-[26px] border border-white/60 bg-white/82 p-6 backdrop-blur-xl">
-              <p className="profile-label font-semibold uppercase text-emerald-400">
-                Profile Status
-              </p>
-              <h2 className="profile-section-title mt-2 text-slate-900">
-                Account overview
-              </h2>
-
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                <div className="rounded-[20px] border border-slate-200/80 bg-slate-50 p-4">
-                  <div className="profile-label font-semibold uppercase text-slate-500">
-                    Role
-                  </div>
-                  <div className="profile-value mt-2">
-                    {prettyRole}
-                  </div>
+            {/* Account overview strip */}
+            <div className="mt-8 grid gap-3 border-t border-slate-100 pt-6 sm:grid-cols-2">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                  Role
                 </div>
-                <div className="rounded-[20px] border border-slate-200/80 bg-slate-50 p-4">
-                  <div className="profile-label font-semibold uppercase text-slate-500">
-                    Email
-                  </div>
-                  <div className="mt-2 break-all text-base font-bold text-slate-900">
-                    {email || "Not set"}
-                  </div>
+                <div className="mt-1.5 text-base font-black text-slate-900">
+                  {prettyRole}
                 </div>
               </div>
-
-              {loadingProfile ? (
-                <p className="profile-body-lg mt-4 font-semibold text-slate-500">
-                  Profile details load ho rahe hain...
-                </p>
-              ) : null}
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                  Email
+                </div>
+                <div className="mt-1.5 truncate text-base font-black text-slate-900">
+                  {email || "Not set"}
+                </div>
+              </div>
             </div>
           </div>
-        </section>
+        </div>
       </div>
     </div>
   );
