@@ -47,31 +47,129 @@ import GuestProfile from "./GuestProfile";
 /* ─────────────────────────── shared style tokens ─────────────────────────── */
 
 const fieldCls =
-  "w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:ring-4 focus:ring-sky-100";
+  "w-full h-14 rounded-2xl border border-blue-200 bg-white px-5 text-lg font-medium text-slate-800 shadow-sm transition-all duration-300 placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 focus:shadow-lg outline-none";
 
-const labelCls = "mb-1.5 block text-[13px] font-bold text-slate-700";
+const labelCls =
+"mb-2 block text-lg font-semibold text-slate-700";
 
 const panelCls =
-  "rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_10px_30px_rgba(15,23,42,0.05)]";
+`
+rounded-[30px]
+bg-white
+border
+border-blue-100
+p-8
+shadow-xl
+shadow-blue-100/60
+transition-all
+duration-300
+`;
 
 const sectionTitleCls =
-  "mb-4 flex items-center gap-2 border-b border-slate-100 pb-3 text-[15px] font-extrabold text-slate-900";
+`
+mb-6
+flex
+items-center
+gap-3
+border-b-2
+border-blue-100
+pb-4
+text-xl
+font-bold
+text-blue-900
+`;
 
 const primaryBtn =
-  "inline-flex items-center justify-center gap-2 rounded-xl bg-[linear-gradient(180deg,#39a6eb_0%,#2a8fd4_100%)] px-5 py-2.5 text-sm font-bold text-white shadow-[0_10px_24px_rgba(14,165,233,0.28)] transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60";
+`
+inline-flex
+items-center
+justify-center
+gap-2
+rounded-2xl
+bg-gradient-to-r
+from-blue-600
+to-blue-700
+px-8
+py-3.5
+text-lg
+font-semibold
+text-white
+shadow-xl
+shadow-blue-200
+transition-all
+duration-300
+hover:-translate-y-1
+hover:shadow-2xl
+hover:from-blue-700
+hover:to-blue-800
+disabled:opacity-50
+disabled:cursor-not-allowed
+`;
 
 const ghostBtn =
-  "inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-700 transition hover:bg-slate-50";
+`
+inline-flex
+items-center
+justify-center
+gap-2
+rounded-2xl
+border
+border-blue-200
+bg-white
+px-7
+py-3
+text-lg
+font-semibold
+text-blue-700
+shadow-sm
+transition-all
+duration-300
+hover:bg-blue-50
+hover:border-blue-400
+hover:-translate-y-0.5
+`;
 
 const dangerBtn =
-  "inline-flex items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-5 py-2.5 text-sm font-bold text-rose-700 transition hover:bg-rose-100";
+`
+inline-flex
+items-center
+justify-center
+gap-2
+rounded-2xl
+border
+border-red-200
+bg-red-50
+px-7
+py-3
+text-lg
+font-semibold
+text-red-700
+transition-all
+duration-300
+hover:bg-red-100
+`;
 
 const softBtn = (active) =>
-  `inline-flex items-center justify-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition ${
-    active
-      ? "border-sky-300 bg-sky-50 text-sky-700"
-      : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-  }`;
+`
+inline-flex
+items-center
+justify-center
+gap-2
+rounded-2xl
+px-5
+py-3
+text-lg
+font-semibold
+transition-all
+duration-300
+${
+active
+?
+"bg-blue-600 text-white border-blue-600 shadow-lg"
+:
+"bg-white border border-blue-200 text-blue-700 hover:bg-blue-50"
+}
+`;
 
 /* ─────────────────────────── helpers ─────────────────────────── */
 
@@ -1249,11 +1347,11 @@ const handleJumpStep = (stepView) => {
     <div className={panelCls}>
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-black text-slate-900">All Bookings</h2>
-          <p className="text-sm text-slate-500">View and manage all your hotel reservations</p>
+          <h2 className="text-3xl font-bold text-slate-900">All Bookings</h2>
+          <p className="text-lg text-slate-500">View and manage all your hotel reservations</p>
         </div>
         <button type="button" onClick={openNewBooking} className={primaryBtn}>
-          <FaPlus className="text-xs" /> New Booking
+          <FaPlus className="text-xl" /> New Booking
         </button>
       </div>
 
@@ -1399,8 +1497,8 @@ const handleJumpStep = (stepView) => {
     <div className={panelCls}>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-5">
         <div>
-          <h2 className="text-xl font-black text-slate-900">{isEdit ? "Edit Booking" : "New Booking"}</h2>
-          <p className="text-sm text-slate-500">
+          <h2 className="text-3xl font-black text-slate-900">{isEdit ? "Edit Booking" : "New Booking"}</h2>
+          <p className="text-lg text-slate-500">
             {isEdit ? "Update the booking details below." : "Fill all details below to create a new booking — everything happens on this one page."}
           </p>
         </div>
@@ -1454,7 +1552,7 @@ const handleJumpStep = (stepView) => {
             </div>
 
             <div className="mt-5 border-t border-slate-200 pt-5">
-              <div className="mb-3 text-[13px] font-bold text-slate-900">Stay Details</div>
+              <div className="mb-3 text-[18px] font-bold text-blue-900">Stay Details</div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className={labelCls}>Check-In</label>
@@ -1494,7 +1592,7 @@ const handleJumpStep = (stepView) => {
                 <label className={labelCls}>Booking Type</label>
                 <div className="flex gap-4 pt-1">
                   {["Walk-In", "VIA", "Online"].map((t) => (
-                    <label key={t} className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                    <label key={t} className="flex items-center gap-2 text-lg font-semibold text-slate-700">
                       <input
                         type="radio"
                         name="bookingType"
@@ -1546,7 +1644,7 @@ const handleJumpStep = (stepView) => {
                     onChange={handleChange}
                     className={fieldCls}
                   />
-                  <button type="button" onClick={addRoomRow} className="shrink-0 rounded-xl bg-sky-500 px-3 text-sm font-bold text-white hover:bg-sky-600">
+                  <button type="button" onClick={addRoomRow} className="shrink-0 rounded-xl bg-sky-500 px-3 text-lg font-bold text-white hover:bg-sky-600">
                     + Add
                   </button>
                 </div>
@@ -1571,7 +1669,7 @@ const handleJumpStep = (stepView) => {
 
             {formData.rooms.length > 0 && (
               <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200">
-                <table className="w-full min-w-[380px] text-left text-xs">
+                <table className="w-full min-w-[380px] text-left text-lg">
                   <thead className="bg-slate-100 font-bold uppercase text-slate-500">
                     <tr>
                       <th className="px-2.5 py-2">Room No</th>
@@ -1589,7 +1687,7 @@ const handleJumpStep = (stepView) => {
                           <input
                             value={row.roomNo}
                             onChange={(e) => updateRoomRow(row.id, "roomNo", e.target.value)}
-                            className="w-20 rounded-lg border border-slate-200 px-2 py-1 text-xs"
+                            className="w-20 rounded-lg border border-slate-200 px-2 py-1 text-lg"
                             placeholder="e.g. 101"
                           />
                         </td>
@@ -1598,7 +1696,7 @@ const handleJumpStep = (stepView) => {
                             type="number"
                             value={row.price}
                             onChange={(e) => updateRoomRow(row.id, "price", e.target.value)}
-                            className="w-20 rounded-lg border border-slate-200 px-2 py-1 text-xs"
+                            className="w-20 rounded-lg border border-slate-200 px-2 py-1 text-lg"
                           />
                         </td>
                         <td className="px-2.5 py-1.5">
@@ -1606,7 +1704,7 @@ const handleJumpStep = (stepView) => {
                             type="number"
                             value={row.gst}
                             onChange={(e) => updateRoomRow(row.id, "gst", e.target.value)}
-                            className="w-16 rounded-lg border border-slate-200 px-2 py-1 text-xs"
+                            className="w-16 rounded-lg border border-slate-200 px-2 py-1 text-lg"
                           />
                         </td>
                         <td className="px-2.5 py-1.5">
@@ -1615,13 +1713,13 @@ const handleJumpStep = (stepView) => {
                             min={1}
                             value={row.quantity}
                             onChange={(e) => updateRoomRow(row.id, "quantity", e.target.value)}
-                            className="w-16 rounded-lg border border-slate-200 px-2 py-1 text-xs"
+                            className="w-16 rounded-lg border border-slate-200 px-2 py-1 text-lg"
                           />
                         </td>
                         <td className="px-2.5 py-1.5 font-semibold text-slate-700">{formatCurrency(rowTotal(row))}</td>
                         <td className="px-2.5 py-1.5">
                           <button onClick={() => removeRoomRow(row.id)} className="text-rose-500 hover:text-rose-700">
-                            <FaTimes className="text-xs" />
+                            <FaTimes className="text-lg" />
                           </button>
                         </td>
                       </tr>
@@ -1654,7 +1752,7 @@ const handleJumpStep = (stepView) => {
                 <label className={labelCls}>Pickup From</label>
                 <div className="flex items-center gap-2">
                   <input name="pickupFrom" value={formData.pickupFrom} onChange={handleChange} className={fieldCls} placeholder="Enter pickup point" />
-                  <label className="flex shrink-0 items-center gap-1.5 text-xs font-semibold text-slate-600">
+                  <label className="flex shrink-0 items-center gap-1.5 text-lg font-semibold text-slate-600">
                     <input type="checkbox" name="pickup" checked={formData.pickup} onChange={handleChange} /> Pickup?
                   </label>
                 </div>
@@ -1711,30 +1809,30 @@ const handleJumpStep = (stepView) => {
 
       {/* booking summary footer */}
       <div className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4">
-        <div className="flex flex-wrap gap-8 text-sm">
+        <div className="flex flex-wrap gap-8 text-lg">
           <div>
-            <div className="text-[11px] font-bold uppercase text-slate-400">Guest Name</div>
+            <div className="text-[14px] font-bold uppercase text-slate-400">Guest Name</div>
             <div className="font-bold text-slate-800">{guestFullName || "-"}</div>
           </div>
           <div>
-            <div className="text-[11px] font-bold uppercase text-slate-400">Stay Duration</div>
+            <div className="text-[14px] font-bold uppercase text-slate-400">Stay Duration</div>
             <div className="font-bold text-slate-800">{stayNights} Night{stayNights === 1 ? "" : "s"}</div>
           </div>
           <div>
-            <div className="text-[11px] font-bold uppercase text-slate-400">Check-In</div>
+            <div className="text-[14px] font-bold uppercase text-slate-400">Check-In</div>
             <div className="font-bold text-slate-800">{formData.checkIn ? formatDate(formData.checkIn) : "-"}</div>
           </div>
           <div>
-            <div className="text-[11px] font-bold uppercase text-slate-400">Check-Out</div>
+            <div className="text-[14px] font-bold uppercase text-slate-400">Check-Out</div>
             <div className="font-bold text-slate-800">{formData.checkOut ? formatDate(formData.checkOut) : "-"}</div>
           </div>
           <div>
-            <div className="text-[11px] font-bold uppercase text-slate-400">Total Rooms</div>
+            <div className="text-[14px] font-bold uppercase text-slate-400">Total Rooms</div>
             <div className="font-bold text-slate-800">{formData.rooms.length || "-"}</div>
           </div>
         </div>
         <div className="text-right">
-          <div className="text-[11px] font-bold uppercase text-slate-400">Total Amount</div>
+          <div className="text-[14px] font-bold uppercase text-slate-400">Total Amount</div>
           <div className="text-2xl font-black text-emerald-600">{formatCurrency(grandTotal)}</div>
         </div>
       </div>
@@ -1744,55 +1842,126 @@ const handleJumpStep = (stepView) => {
   /* ─────────────────────────── render: Booking Confirmed ─────────────────────────── */
 
   const renderConfirmed = () => (
-    <div className={`${panelCls} mx-auto max-w-xl text-center`}>
-      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500 text-3xl text-white shadow-[0_14px_30px_rgba(16,185,129,0.35)]">
-        <FaCheckCircle />
-      </div>
-      <h2 className="mt-4 text-2xl font-black text-slate-900">Booking Confirmed!</h2>
-      <p className="mt-1 text-sm text-slate-500">Your booking has been confirmed successfully.</p>
+  <div
+    className={`
+      ${panelCls}
+      mx-auto
+      w-full
+      max-w-2xl
+      p-5
+      sm:p-8
+      md:p-12
+      lg:p-16
+      xl:p-20
+      text-center
+    `}
+  >
+    {/* Success Icon */}
+    <div className="mx-auto flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-full bg-emerald-500 text-3xl sm:text-4xl text-white shadow-[0_14px_30px_rgba(16,185,129,0.35)]">
+      <FaCheckCircle />
+    </div>
 
-      <div className="mx-auto mt-5 max-w-xs rounded-2xl bg-emerald-50 px-4 py-3">
-        <div className="text-[11px] font-bold uppercase text-emerald-600">Booking Reference</div>
-        <div className="text-xl font-black text-emerald-700">{formData.bookingCode || formData.bookingId}</div>
+    {/* Heading */}
+    <h2 className="mt-5 text-3xl sm:text-4xl font-black text-slate-900">
+      Booking Confirmed!
+    </h2>
+
+    <p className="mt-2 text-base sm:text-lg md:text-xl text-slate-500">
+      Your booking has been confirmed successfully.
+    </p>
+
+    {/* Booking Reference */}
+    <div className="mx-auto mt-6 w-full max-w-xs rounded-2xl bg-emerald-50 px-5 py-4 shadow-sm">
+      <div className="text-xs sm:text-sm font-bold uppercase text-emerald-600">
+        Booking Reference
       </div>
 
-      <div className="mt-6 grid grid-cols-2 gap-4 text-left text-sm">
-        <div>
-          <div className="text-[11px] font-bold uppercase text-slate-400">Guest Name</div>
-          <div className="font-bold text-slate-800">{guestFullName}</div>
-        </div>
-        <div>
-          <div className="text-[11px] font-bold uppercase text-slate-400">Rooms</div>
-          <div className="font-bold text-slate-800">{formData.rooms.length}</div>
-        </div>
-        <div>
-          <div className="text-[11px] font-bold uppercase text-slate-400">Check-In</div>
-          <div className="font-bold text-slate-800">{formatDate(formData.checkIn)}</div>
-        </div>
-        <div>
-          <div className="text-[11px] font-bold uppercase text-slate-400">Check-Out</div>
-          <div className="font-bold text-slate-800">{formatDate(formData.checkOut)}</div>
-        </div>
-        <div className="col-span-2">
-          <div className="text-[11px] font-bold uppercase text-slate-400">Total Amount</div>
-          <div className="text-lg font-black text-slate-900">{formatCurrency(grandTotal)}</div>
-        </div>
-      </div>
-
-      <div className="mt-7 flex flex-wrap justify-center gap-2">
-        <button type="button" onClick={() => window.print()} className={ghostBtn}>
-          <FaPrint className="text-xs" /> Print Receipt
-        </button>
-        <button type="button" onClick={() => handleNotify("email")} className={ghostBtn}>
-          <FaEnvelope className="text-xs" /> Send Email
-        </button>
-        <button type="button" onClick={goToList} className={primaryBtn}>
-          View All Bookings
-        </button>
+      <div className="mt-1 text-xl sm:text-2xl font-black text-emerald-700 break-all">
+        {formData.bookingCode || formData.bookingId}
       </div>
     </div>
-  );
 
+    {/* Details */}
+    <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-5 text-left">
+      <div>
+        <div className="text-[11px] sm:text-xs md:text-sm font-semibold uppercase tracking-wide text-slate-400">
+          Guest Name
+        </div>
+        <div className="text-sm sm:text-sm lg:text-2xl font-bold text-slate-800 break-words">
+          {guestFullName}
+        </div>
+      </div>
+
+      <div>
+        <div className="text-[11px] sm:text-xs md:text-sm font-semibold uppercase tracking-wide text-slate-400">
+          Rooms
+        </div>
+        <div className="text-sm sm:text-sm md:text-xl lg:text-2xl font-bold text-slate-800 break-words">
+          {formData.rooms.length}
+        </div>
+      </div>
+
+      <div>
+        <div className="text-[11px] sm:text-xs md:text-sm font-semibold uppercase tracking-wide text-slate-400">
+          Check-In
+        </div>
+        <div className="text-sm sm:text-sm md:text-xl lg:text-2xl font-bold text-slate-800 break-words">
+          {formatDate(formData.checkIn)}
+        </div>
+      </div>
+
+      <div>
+        <div className="text-[11px] sm:text-xs md:text-sm font-semibold uppercase tracking-wide text-slate-400">
+          Check-Out
+        </div>
+        <div className="text-sm sm:text-sm md:text-xl lg:text-2xl font-bold text-slate-800 break-words">
+          {formatDate(formData.checkOut)}
+        </div>
+      </div>
+
+      <div className="sm:col-span-2 border-t border-slate-200 pt-5">
+        <div className="text-[11px] sm:text-xs md:text-sm font-semibold uppercase tracking-wide text-slate-400">
+          Total Amount
+        </div>
+
+        <div className="mt-1 text-2xl sm:text-3xl lg:text-4xl font-black text-blue-700">
+          {formatCurrency(grandTotal)}
+        </div>
+      </div>
+    </div>
+
+    {/* Buttons */}
+    <div className="mt-10 flex justify-center">
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 max-w-xl w-full">
+    <button
+      type="button"
+      onClick={() => window.print()}
+      className={`${ghostBtn} w-full`}
+    >
+      <FaPrint className="text-lg" />
+      Print Receipt
+    </button>
+
+    <button
+      type="button"
+      onClick={() => handleNotify("email")}
+      className={`${ghostBtn} w-full`}
+    >
+      <FaEnvelope className="text-lg" />
+      Send Email
+    </button>
+
+    <button
+      type="button"
+      onClick={goToList}
+      className={`${primaryBtn} w-full sm:col-span-2 lg:col-span-2`}
+    >
+      View All Bookings
+    </button>
+  </div>
+</div>
+  </div>
+);
   /* ─────────────────────────── render: Booking Details ─────────────────────────── */
 
   const renderDetails = () => {
