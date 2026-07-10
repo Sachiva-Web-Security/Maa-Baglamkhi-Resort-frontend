@@ -44,6 +44,9 @@ const SECTION_LABELS = {
 };
 
 const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) => {
+  // NOTE: unchanged from the previous responsive pass — the mobile overlay,
+  // slide-in transform, outside-click-to-close (overlay onClick), and
+  // close-on-menu-select (handleNavClick below) already live in this file.
   const navigate = useNavigate();
   const location = useLocation();
   const [hoveredItem, setHoveredItem] = useState(null);
@@ -228,8 +231,12 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
         onTouchCancel={clearHoveredStates}
         title={!showLabels ? item.name : undefined}
         className={`
-          sidebar-nav-button group relative isolate flex w-full cursor-pointer items-center overflow-hidden rounded-2xl border transition-all duration-300
-          ${showLabels ? "justify-start gap-3 px-4 py-3" : "justify-center px-3 py-3"}
+          sidebar-nav-button group relative isolate flex min-h-[44px] w-full cursor-pointer items-center overflow-hidden rounded-2xl border transition-all duration-300
+          ${
+            showLabels
+              ? "justify-start gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3"
+              : "justify-center px-2.5 py-2.5 sm:px-3 sm:py-3"
+          }
           ${
             highlighted
               ? "is-highlighted border-blue-400/60 bg-white/[0.03] text-white shadow-[0_14px_28px_rgba(37,99,235,0.3)]"
@@ -245,7 +252,7 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
           }`}
         />
         <span
-          className={`relative z-10 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-all duration-300 ${
+          className={`relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all duration-300 sm:h-10 sm:w-10 lg:h-11 lg:w-11 ${
             highlighted
               ? "bg-white/18 text-white"
               : "bg-slate-800/80 text-slate-100 group-hover:bg-white/18 group-hover:text-white"
@@ -254,7 +261,7 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
           <Icon className="text-xl" />
         </span>
         {showLabels ? (
-          <span className="relative z-10 text-left text-base font-semibold leading-tight text-white">
+          <span className="relative z-10 min-w-0 flex-1 truncate text-left text-sm font-semibold leading-tight text-white sm:text-[15px] lg:text-base">
             {item.name}
           </span>
         ) : null}
@@ -264,7 +271,7 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
 
   const renderSectionLabel = (label) =>
     showLabels ? (
-      <p className="px-3 pb-1 pt-3 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">
+      <p className="truncate px-2 pb-1 pt-3 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500 sm:px-3 sm:text-xs">
         {label}
       </p>
     ) : (
@@ -275,7 +282,7 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
     <>
       {isMobile && sidebarOpen && (
         <div
-          className="fixed inset-0 z-30 bg-black/50"
+          className="fixed inset-0 z-30 bg-black/50 transition-opacity duration-300"
           style={{ top: `${HEADER_HEIGHT}px` }}
           onClick={() => setSidebarOpen(false)}
         />
@@ -289,14 +296,14 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
           border-r border-slate-800/80 bg-[linear-gradient(180deg,#07111f_0%,#0b1728_52%,#09101b_100%)]
           text-slate-200 shadow-[0_18px_40px_rgba(2,8,23,0.45)]
           transition-all duration-300 ease-in-out
-          overflow-hidden
-          ${isMobile ? "w-[min(82vw,280px)]" : sidebarOpen ? "w-[250px]" : "w-[88px]"}
+          overflow-hidden overflow-x-hidden
+          ${isMobile ? "w-[82vw] max-w-[300px]" : sidebarOpen ? "w-[240px] lg:w-[250px]" : "w-[76px] lg:w-[88px]"}
         `}
-        style={{
-          top: isMobile ? `${HEADER_HEIGHT}px` : undefined,
-          height: isMobile ? `calc(100dvh - ${HEADER_HEIGHT}px)` : undefined,
-          transform: isMobile && !sidebarOpen ? "translateX(-100%)" : "translateX(0)",
-        }}
+      style={{
+  top: isMobile ? "120px" : undefined,
+  height: isMobile ? "calc(100dvh - 120px)" : undefined,
+  transform: isMobile && !sidebarOpen ? "translateX(-100%)" : "translateX(0)",
+}}
       >
         <style>{`
           .sidebar-scroll::-webkit-scrollbar { width: 6px; }
@@ -317,9 +324,9 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
         `}</style>
 
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.22),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(14,165,233,0.14),transparent_30%)]" />
-        <div className="relative flex h-full min-h-0 flex-col px-3 pb-0 pt-3">
+        <div className="relative flex h-full min-h-0 flex-col overflow-x-hidden px-2.5 pb-0 pt-2.5 sm:px-3 sm:pt-3">
           {/* Brand header — click toggles the sidebar, same as the old Menu control */}
-          <div className="-mx-3 shrink-0 border-b border-white/10 px-3 pb-3">
+          <div className="-mx-2.5 shrink-0 border-b border-white/10 px-2.5 pb-2.5 sm:-mx-3 sm:px-3 sm:pb-3">
             <button
               type="button"
               aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
@@ -335,16 +342,18 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
               onTouchStart={() => setHoveredControl("brand")}
               onTouchEnd={clearHoveredStates}
               onTouchCancel={clearHoveredStates}
-              className={`flex w-full items-center rounded-2xl border border-white/10 bg-white/[0.06] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-sm transition-all duration-300 hover:border-blue-400/50 hover:bg-white/[0.09] ${
-                showLabels ? "justify-start gap-3 px-3 py-3" : "justify-center px-2 py-3"
+              className={`flex min-h-[44px] w-full items-center rounded-2xl border border-white/10 bg-white/[0.06] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-sm transition-all duration-300 hover:border-blue-400/50 hover:bg-white/[0.09] ${
+                showLabels
+                  ? "justify-start gap-2 px-2.5 py-2.5 sm:gap-3 sm:px-3 sm:py-3"
+                  : "justify-center px-2 py-2.5 sm:py-3"
               } ${isControlHighlighted("brand") ? "border-blue-400/50 bg-white/[0.09]" : ""}`}
             >
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[linear-gradient(160deg,#f2b73f_0%,#c9861a_100%)] text-lg font-black text-[#241503] shadow-[0_6px_14px_rgba(201,134,26,0.35)]">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[linear-gradient(160deg,#f2b73f_0%,#c9861a_100%)] text-base font-black text-[#241503] shadow-[0_6px_14px_rgba(201,134,26,0.35)] sm:h-10 sm:w-10 sm:text-lg lg:h-11 lg:w-11">
                 {brandInitial}
               </span>
               {showLabels ? (
                 <span className="min-w-0 flex-1 text-left">
-                  <span className="block truncate text-[15px] font-bold leading-tight text-white">
+                  <span className="block truncate text-base font-bold leading-tight text-white sm:text-lg lg:text-[15px]">
                     {BRAND_NAME}
                   </span>
                   <span className="block truncate text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">
@@ -357,8 +366,8 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
 
           <div className="relative flex min-h-0 flex-1 flex-col">
             <nav
-              className={`sidebar-scroll mt-2 flex min-h-0 flex-1 flex-col overflow-y-auto font-bold ${
-                showLabels ? "px-1 py-0 pr-3" : "items-center px-0 py-0 pr-2"
+              className={`sidebar-scroll mt-2 flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden font-bold ${
+                showLabels ? "px-1 py-0 pr-2.5 sm:pr-3" : "items-center px-0 py-0 pr-2"
               }`}
               style={{ scrollbarGutter: "stable" }}
             >
@@ -384,8 +393,8 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
                 keeps the panel's background filling the strip below the button on
                 phones with a home-indicator inset instead of exposing raw black. */}
             <div
-              className={`relative z-10 mt-2 shrink-0 border-t border-white/10 bg-[#09101b] pt-3 ${
-                showLabels ? "px-3" : "flex justify-center px-2"
+              className={`relative z-10 mt-2 shrink-0 border-t border-white/10 bg-[#09101b] pt-2.5 sm:pt-3 ${
+                showLabels ? "px-2.5 sm:px-3" : "flex justify-center px-2"
               }`}
               style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom, 0px))" }}
             >
@@ -404,23 +413,23 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
                 onTouchEnd={clearHoveredStates}
                 onTouchCancel={clearHoveredStates}
                 title="Logout"
-                className={`flex w-full items-center rounded-2xl border transition-all duration-300 ${
+                className={`flex min-h-[44px] w-full items-center rounded-2xl border transition-all duration-300 ${
                   showLabels
-                    ? "cursor-pointer gap-2 bg-rose-500/14 px-3 py-3 text-left hover:border-rose-400/80 hover:bg-rose-500/18"
-                    : "cursor-pointer justify-center bg-rose-500/14 p-3 hover:border-rose-400/80 hover:bg-rose-500/18"
+                    ? "cursor-pointer gap-2 bg-rose-500/14 px-2.5 py-2.5 text-left hover:border-rose-400/80 hover:bg-rose-500/18 sm:px-3 sm:py-3"
+                    : "cursor-pointer justify-center bg-rose-500/14 p-2.5 hover:border-rose-400/80 hover:bg-rose-500/18 sm:p-3"
                 } ${
                   isControlHighlighted("logout")
                     ? "border-rose-400/90 bg-rose-500/20 shadow-[0_14px_28px_rgba(244,63,94,0.25)]"
                     : "border-rose-400/40"
                 }`}
               >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-500/20 text-rose-100">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-rose-500/20 text-rose-100 sm:h-10 sm:w-10">
                   <FaSignOutAlt className="text-xl" />
                 </div>
                 {showLabels ? (
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold leading-tight text-white">Logout</p>
-                    <p className="text-[11px] font-medium leading-tight text-rose-100/80">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold leading-tight text-white">Logout</p>
+                    <p className="truncate text-[11px] font-medium leading-tight text-rose-100/80">
                       End your current session
                     </p>
                   </div>

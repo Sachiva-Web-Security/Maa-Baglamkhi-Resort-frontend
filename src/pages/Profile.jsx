@@ -247,7 +247,7 @@ const Profile = () => {
       <div className="mx-auto w-full max-w-[2200px] space-y-6 lg:space-y-8 2xl:space-y-10">
 
         {/* ── Gradient header ──────────────────────────────────── */}
-        <div className="relative overflow-hidden rounded-[24px] bg-gradient-to-r from-sky-600 via-sky-500 to-cyan-400 px-6 py-8 shadow-[0_18px_45px_rgba(14,165,233,0.28)] sm:rounded-[28px] sm:px-10 sm:py-10 lg:px-14 lg:py-12 2xl:px-20 2xl:py-16">
+        <div className="relative overflow-hidden rounded-[24px] bg-gradient-to-r from-blue-900 via-blue-500 to-cyan-400 px-6 py-8 shadow-[0_18px_45px_rgba(14,165,233,0.28)] sm:rounded-[28px] sm:px-10 sm:py-10 lg:px-14 lg:py-12 2xl:px-20 2xl:py-16">
           <div className="pointer-events-none absolute -right-10 -top-16 h-56 w-56 rounded-full bg-white/10 lg:h-72 lg:w-72 2xl:h-96 2xl:w-96" />
           <div className="pointer-events-none absolute -bottom-20 left-1/3 h-56 w-56 rounded-full bg-white/10 lg:h-72 lg:w-72 2xl:h-96 2xl:w-96" />
           <div className="relative flex items-center gap-2 text-xs font-bold uppercase tracking-[0.3em] text-white/80 sm:text-sm lg:text-base 2xl:text-lg">
@@ -281,13 +281,13 @@ const Profile = () => {
 
           {/* ── Avatar card ──────────────────────────────────── */}
           <div className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-[0_10px_40px_rgba(15,23,42,0.06)] sm:rounded-[28px] sm:p-8 lg:p-10 2xl:p-12">
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-sky-500 sm:text-sm lg:text-base 2xl:text-lg">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-600 sm:text-sm lg:text-base 2xl:text-lg">
               Profile Photo
             </p>
 
             <div className="mt-5 flex flex-col items-center text-center lg:mt-7">
               <div className="relative">
-                <div className="flex h-32 w-32 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-sky-400 to-cyan-500 text-4xl font-black text-white shadow-[0_14px_32px_rgba(14,165,233,0.32)] sm:h-40 sm:w-40 sm:text-5xl lg:h-48 lg:w-48 lg:text-6xl 2xl:h-56 2xl:w-56 2xl:text-7xl">
+                <div className="flex h-32 w-32 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-blue-700 to-sky-400 text-4xl font-black text-white shadow-[0_14px_32px_rgba(14,165,233,0.32)] sm:h-40 sm:w-40 sm:text-5xl lg:h-48 lg:w-48 lg:text-6xl 2xl:h-56 2xl:w-56 2xl:text-7xl">
                   {avatarUrl ? (
                     <img src={avatarUrl} alt="Profile" className="h-full w-full object-cover" />
                   ) : (
@@ -302,7 +302,7 @@ const Profile = () => {
               <h2 className="mt-4 text-lg font-black text-slate-900 sm:text-xl lg:mt-6 lg:text-2xl 2xl:text-3xl">
                 {name || "User"}
               </h2>
-              <span className="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-sky-50 px-3 py-1 text-xs font-bold text-sky-600 sm:px-4 sm:py-1.5 sm:text-sm lg:mt-2 lg:px-5 lg:py-2 lg:text-base">
+              <span className="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-sky-50 px-3 py-1 text-xs font-bold text-blue-600 sm:px-4 sm:py-1.5 sm:text-sm lg:mt-2 lg:px-5 lg:py-2 lg:text-base">
                 <FaUserCircle className="text-[10px] sm:text-xs lg:text-sm" />
                 {prettyRole}
               </span>
@@ -319,7 +319,7 @@ const Profile = () => {
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={loadingAvatar}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-sky-500 px-5 py-3 text-sm font-bold text-white shadow-[0_10px_24px_rgba(14,165,233,0.28)] transition hover:-translate-y-0.5 hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-60 sm:py-3.5 sm:text-base lg:py-4 lg:text-lg 2xl:py-5 2xl:text-xl"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-blue-500 px-5 py-3 text-sm font-bold text-white shadow-[0_10px_24px_rgba(14,165,233,0.28)] transition hover:-translate-y-0.5 hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-60 sm:py-3.5 sm:text-base lg:py-4 lg:text-lg 2xl:py-5 2xl:text-xl"
                 >
                   <FaUpload className="text-xs sm:text-sm lg:text-base" />
                   {loadingAvatar ? "Uploading..." : "Upload New Picture"}
@@ -364,7 +364,7 @@ const Profile = () => {
                     <button
                       type="button"
                       onClick={handleCaptureFromCamera}
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-sky-500 px-4 py-3 text-sm font-bold text-white shadow-[0_10px_24px_rgba(14,165,233,0.28)] transition hover:bg-sky-600 sm:py-3.5 sm:text-base lg:py-4 lg:text-lg"
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-blue-600 px-4 py-3 text-sm font-bold text-white shadow-[0_10px_24px_rgba(14,165,233,0.28)] transition hover:bg-sky-600 sm:py-3.5 sm:text-base lg:py-4 lg:text-lg"
                     >
                       <FaCamera />
                       Capture Photo
@@ -409,11 +409,11 @@ const Profile = () => {
             className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-[0_10px_40px_rgba(15,23,42,0.06)] sm:rounded-[28px] sm:p-8 lg:p-10 2xl:p-12"
           >
             <div className="flex items-center gap-3 lg:gap-4">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-sky-50 text-sky-500 sm:h-12 sm:w-12 lg:h-14 lg:w-14 lg:text-xl 2xl:h-16 2xl:w-16 2xl:text-2xl">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 sm:h-12 sm:w-12 lg:h-14 lg:w-14 lg:text-xl 2xl:h-16 2xl:w-16 2xl:text-2xl">
                 <FaLock />
               </span>
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-sky-500 sm:text-sm lg:text-base">
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-600 sm:text-sm lg:text-base">
                   Security
                 </p>
                 <h2 className="text-lg font-black text-slate-900 sm:text-xl lg:text-2xl 2xl:text-3xl">
@@ -440,7 +440,7 @@ const Profile = () => {
                   type="password"
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-semibold text-slate-900 outline-none transition placeholder:font-normal placeholder:text-slate-400 focus:border-sky-400 focus:bg-white focus:ring-4 focus:ring-sky-100 sm:px-5 sm:py-4 sm:text-base lg:px-6 lg:py-4.5 lg:text-lg 2xl:py-5 2xl:text-xl"
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-semibold text-slate-900 outline-none transition placeholder:font-normal placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-sky-100 sm:px-5 sm:py-4 sm:text-base lg:px-6 lg:py-4.5 lg:text-lg 2xl:py-5 2xl:text-xl"
                   placeholder="Enter current password"
                 />
               </div>
@@ -454,7 +454,7 @@ const Profile = () => {
                     type="password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-semibold text-slate-900 outline-none transition placeholder:font-normal placeholder:text-slate-400 focus:border-sky-400 focus:bg-white focus:ring-4 focus:ring-sky-100 sm:px-5 sm:py-4 sm:text-base lg:px-6 lg:py-4.5 lg:text-lg 2xl:py-5 2xl:text-xl"
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-semibold text-slate-900 outline-none transition placeholder:font-normal placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-sky-100 sm:px-5 sm:py-4 sm:text-base lg:px-6 lg:py-4.5 lg:text-lg 2xl:py-5 2xl:text-xl"
                     placeholder="Enter new password"
                   />
                 </div>
@@ -467,7 +467,7 @@ const Profile = () => {
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-semibold text-slate-900 outline-none transition placeholder:font-normal placeholder:text-slate-400 focus:border-sky-400 focus:bg-white focus:ring-4 focus:ring-sky-100 sm:px-5 sm:py-4 sm:text-base lg:px-6 lg:py-4.5 lg:text-lg 2xl:py-5 2xl:text-xl"
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-semibold text-slate-900 outline-none transition placeholder:font-normal placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-sky-100 sm:px-5 sm:py-4 sm:text-base lg:px-6 lg:py-4.5 lg:text-lg 2xl:py-5 2xl:text-xl"
                     placeholder="Re-enter new password"
                   />
                 </div>
@@ -477,7 +477,7 @@ const Profile = () => {
                 <button
                   type="submit"
                   disabled={loadingPassword}
-                  className="inline-flex items-center justify-center gap-2 rounded-full bg-sky-500 px-8 py-3 text-sm font-bold text-white shadow-[0_10px_24px_rgba(14,165,233,0.28)] transition hover:-translate-y-0.5 hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-60 sm:px-10 sm:py-3.5 sm:text-base lg:px-12 lg:py-4 lg:text-lg 2xl:px-14 2xl:py-5 2xl:text-xl"
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-blue-500 px-8 py-3 text-sm font-bold text-white shadow-[0_10px_24px_rgba(14,165,233,0.28)] transition hover:-translate-y-0.5 hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-60 sm:px-10 sm:py-3.5 sm:text-base lg:px-12 lg:py-4 lg:text-lg 2xl:px-14 2xl:py-5 2xl:text-xl"
                 >
                   {loadingPassword ? "Updating..." : "Update Password"}
                 </button>
