@@ -68,6 +68,7 @@ import {
   FaChartBar,
   FaChartLine,
   FaIdCard,
+  FaDoorOpen,
 } from "react-icons/fa";
 
 import API, { getBackendBaseURL } from "../../api";
@@ -77,6 +78,7 @@ import FolioView from "./FolioView";
 import GroupBooking from "./GroupBooking";
 import OccupancyForecast from "./OccupancyForecast";
 import GuestProfile from "./GuestProfile";
+import Room from "./Room";
 /* ─────────────────────────── shared style tokens ─────────────────────────── */
 /* One scale, used everywhere on the page (list, form, confirmation, details,
    manage, modals) so typography, spacing and sizing never drift between
@@ -371,6 +373,13 @@ const FLOW_STEPS = [
     icon: FaChartLine,
     title: "Occupancy Forecast",
     desc: "Analyze occupancy trends, room availability, and future booking forecasts",
+  },
+  {
+    view: "add-room",
+    num: 9,
+    icon: FaDoorOpen,
+    title: "Add Room",
+    desc: "Open the Room screen to add or manage individual room numbers",
   },
 ];
 
@@ -898,6 +907,7 @@ const [showFolio, setShowFolio] = useState(false);
 const [showGroupBooking, setShowGroupBooking] = useState(false);
 const [showOccupancyForecast, setShowOccupancyForecast] = useState(false);
 const [showGuestProfile, setShowGuestProfile] = useState(false);
+const [showAddRoom, setShowAddRoom] = useState(false);
 
 const [selectedBookingId, setSelectedBookingId] = useState(null);
 
@@ -1046,6 +1056,11 @@ const handleJumpStep = (stepView) => {
     return;
   }
 
+  if (stepView === "add-room") {
+    setShowAddRoom(true);
+    return;
+  }
+
   //----------------------------
   // Booking Detail
   //----------------------------
@@ -1116,6 +1131,36 @@ const handleJumpStep = (stepView) => {
       ...prev,
       rooms: prev.rooms.map((r) => (r.id === id ? { ...r, [field]: value } : r)),
     }));
+  };
+
+  // Room numbers for the currently selected Room Category, sourced from the
+  // same "/hotel/rooms/setup" categorySetup data that powers Room.jsx — no
+  // separate/duplicate room list is fetched or maintained here.
+  const getRoomNumbersForCategory = (categoryId, currentRoomNo = "") => {
+    const cat = categorySetup.find((c) => String(c.id) === String(categoryId));
+    if (!cat) return [];
+
+    const statusByRoom = new Map();
+    (Array.isArray(cat.roomDetails) ? cat.roomDetails : []).forEach((rd) => {
+      if (rd.roomNumber) {
+        statusByRoom.set(String(rd.roomNumber).trim(), rd.status || "Available");
+      }
+    });
+
+    const roomsAlreadyPicked = new Set(
+      formData.rooms
+        .map((r) => String(r.roomNo || "").trim())
+        .filter((rn) => rn && rn !== String(currentRoomNo || "").trim()),
+    );
+
+    return (Array.isArray(cat.rooms) ? cat.rooms : [])
+      .map((rn) => String(rn).trim())
+      .filter(Boolean)
+      .map((rn) => ({
+        roomNo: rn,
+        status: statusByRoom.get(rn) || "Available",
+        alreadyPicked: roomsAlreadyPicked.has(rn),
+      }));
   };
 
   const removeRoomRow = (id) => {
@@ -1394,6 +1439,15 @@ const handleJumpStep = (stepView) => {
 
   const handleCloseOccupancyForecast = () => {
     setShowOccupancyForecast(false);
+  };
+
+  const handleCloseAddRoom = () => {
+    setShowAddRoom(false);
+    // room categories/rooms may have changed while the popup was open — refresh
+    // the same categorySetup data source the Room No dropdown below reads from
+    API.get("/hotel/rooms/setup")
+      .then((res) => setCategorySetup(Array.isArray(res.data) ? res.data : []))
+      .catch((err) => console.error("Failed to refresh room categories:", err));
   };
 
   const handleNotify = async (channel) => {
@@ -1832,12 +1886,25 @@ const handleJumpStep = (stepView) => {
                     {formData.rooms.map((row) => (
                       <tr key={row.id}>
                         <td className="px-3 py-2">
-                          <input
+                          <select
                             value={row.roomNo}
                             onChange={(e) => updateRoomRow(row.id, "roomNo", e.target.value)}
-                            className="w-20 sm:w-24 rounded-lg border border-slate-200 px-2 py-1.5 text-sm sm:text-base"
-                            placeholder="e.g. 101"
-                          />
+                            disabled={!formData.roomCategory}
+                            className="w-24 sm:w-28 rounded-lg border border-slate-200 px-2 py-1.5 text-sm sm:text-base disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
+                          >
+                            <option value="">
+                              {formData.roomCategory ? "Select room" : "Pick category first"}
+                            </option>
+                            {getRoomNumbersForCategory(formData.roomCategory, row.roomNo).map((r) => (
+                              <option key={r.roomNo} value={r.roomNo} disabled={r.alreadyPicked}>
+                                {r.roomNo}
+                                {r.status && r.status.toLowerCase() !== "available"
+                                  ? ` (${r.status})`
+                                  : ""}
+                                {r.alreadyPicked ? " — already added" : ""}
+                              </option>
+                            ))}
+                          </select>
                         </td>
                         <td className="px-3 py-2">
                           <input
@@ -2338,6 +2405,13 @@ const handleJumpStep = (stepView) => {
       {showOccupancyForecast && (
         <FeatureModal title="Occupancy Forecast" onClose={handleCloseOccupancyForecast}>
           <OccupancyForecast onClose={handleCloseOccupancyForecast} />
+        </FeatureModal>
+      )}
+
+      {/* add room popup — opens the existing Room.jsx page as a modal instead of navigating */}
+      {showAddRoom && (
+        <FeatureModal title="Add Room" onClose={handleCloseAddRoom}>
+          <Room />
         </FeatureModal>
       )}
 
