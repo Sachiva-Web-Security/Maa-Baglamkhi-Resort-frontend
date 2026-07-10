@@ -4,8 +4,8 @@ import { FaTimes, FaUserPlus } from "react-icons/fa";
 import API from "../../api";
 
 const fieldCls =
- "w-full rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100";
-  
+  "w-full h-[58px] sm:h-[60px] rounded-2xl border border-blue-200 bg-white px-4 sm:px-5 text-[16px] sm:text-[17px] text-slate-900 outline-none transition-all duration-300 placeholder:text-slate-400 placeholder:text-[15px] sm:placeholder:text-[16px] focus:border-blue-500 focus:ring-4 focus:ring-blue-100 hover:border-blue-300";
+
 const CreateUser = ({ onClose, onUserCreated }) => {
   const [form, setForm] = useState({
     name: "",
@@ -53,11 +53,11 @@ const CreateUser = ({ onClose, onUserCreated }) => {
       console.log(error);
       const status = error.response?.status;
       if (status === 401) {
-        setError("Session expire ho gayi hai ya token missing hai. Login page par bina bheje create action roka gaya hai.");
+        setError("Your session has expired or the authentication token is missing. The create action has been blocked without redirecting you to the login page.");
       } else if (status === 403) {
-        setError("Sirf admin user naya account create kar sakta hai.");
+        setError("Only administrators are authorized to create new user accounts.");
       } else {
-        setError(error.response?.data?.message || "Error creating user");
+        setError(error.response?.data?.message || "Failed to create the user. Please try again.");
       }
     } finally {
       setIsSubmitting(false);
@@ -65,30 +65,43 @@ const CreateUser = ({ onClose, onUserCreated }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 px-4 backdrop-blur-sm">
-      <div className="w-full max-w-xl rounded-[30px] border border-white/50 bg-[linear-gradient(180deg,#fafdff_0%,#f8fbff_100%)] p-6 shadow-[0_24px_80px_rgba(15,23,42,0.25)] sm:p-7">
-        <div className="mb-6 flex items-start justify-between gap-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-3 sm:px-4 backdrop-blur-sm">
+      <div
+        className="animate-[fadeScaleIn_300ms_ease-out] w-full max-w-[92%] sm:max-w-xl md:max-w-2xl lg:max-w-2xl rounded-2xl sm:rounded-[30px] border border-blue-100 bg-white p-5 sm:p-8 md:p-10 shadow-2xl transition-all duration-300 max-h-[92vh] overflow-y-auto"
+        style={{
+          boxShadow:
+            "0 30px 90px rgba(30,58,138,0.22), 0 10px 30px rgba(59,130,246,0.12)",
+        }}
+      >
+        <style>{`
+          @keyframes fadeScaleIn {
+            from { opacity: 0; transform: scale(0.94) translateY(8px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+          }
+        `}</style>
+
+        <div className="mb-6 sm:mb-8 flex items-start justify-between gap-4">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
+            <p className="text-[13px] sm:text-[16px] font-semibold uppercase tracking-[0.24em] text-blue-500">
               User Onboarding
             </p>
-            <h2 className="mt-1 text-2xl font-black text-slate-900">
+            <h2 className="mt-2 text-[26px] sm:text-[32px] md:text-[36px] leading-tight font-black text-blue-900">
               Create new user
             </h2>
-            <p className="mt-2 text-sm text-slate-500">
-              Team member details add karke unka role assign karein.
+            <p className="mt-2 sm:mt-3 text-[15px] sm:text-[17px] md:text-[18px] text-slate-500">
+            Enter the team member's details and assign a role.
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full border border-slate-200 bg-white p-3 text-slate-700 transition hover:border-cyan-200 hover:text-cyan-700"
+            className="flex h-11 w-11 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-full border border-blue-100 bg-white text-slate-600 shadow-sm transition-all duration-300 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 hover:rotate-90"
           >
-            <FaTimes />
+            <FaTimes size={16} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
           <input
             type="text"
             name="name"
@@ -123,7 +136,7 @@ const CreateUser = ({ onClose, onUserCreated }) => {
             name="role"
             value={form.role}
             onChange={handleChange}
-            className={fieldCls}
+            className={`${fieldCls} text-[16px] sm:text-[17px]`}
           >
             <option value="admin">Admin</option>
             <option value="manager">Manager</option>
@@ -136,7 +149,7 @@ const CreateUser = ({ onClose, onUserCreated }) => {
           </select>
 
           {error ? (
-            <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+            <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 sm:px-5 py-3 sm:py-4 text-[14px] sm:text-[15px] font-semibold text-rose-700 transition-all duration-300">
               {error}
             </div>
           ) : null}
@@ -144,9 +157,9 @@ const CreateUser = ({ onClose, onUserCreated }) => {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-[22px] bg-gradient-to-r from-sky-600 to-cyan-500 px-5 py-4 text-sm font-bold text-white shadow-[0_16px_35px_rgba(14,165,233,0.24)] transition hover:-translate-y-0.5"
+            className="inline-flex w-full h-[56px] sm:h-[60px] items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-blue-900 to-blue-500 px-5 text-[16px] sm:text-[18px] font-bold text-white shadow-[0_18px_40px_rgba(30,58,138,0.35)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_22px_50px_rgba(59,130,246,0.45)] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:translate-y-0"
           >
-            <FaUserPlus />
+            <FaUserPlus size={18} />
             {isSubmitting ? "Creating..." : "Create User"}
           </button>
         </form>

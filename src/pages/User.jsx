@@ -5,6 +5,12 @@ import {
   FaTrash,
   FaTimes,
   FaUserPlus,
+  FaUsers,
+  FaEye,
+  FaShieldAlt,
+  FaFolderOpen,
+  FaExclamationCircle,
+  FaCheckCircle,
 } from "react-icons/fa";
 
 import CreateUser from "../components/Createuser/CreateUser";
@@ -63,7 +69,7 @@ const User = () => {
         setUsers(mergedUsers);
       } catch (err) {
         console.error("Failed to load users", err);
-        setError("Users load nahi ho pa rahe. Backend check karein.");
+        setError("Unable to load users. Please check the backend connection.");
         setUsers(JSON.parse(localStorage.getItem("users")) || []);
       }
     };
@@ -377,55 +383,88 @@ const User = () => {
   };
 
   return (
-    <div className="relative min-h-screen w-full overflow-x-hidden bg-[linear-gradient(135deg,#f5fbff_0%,#f3f8f4_28%,#fff8f1_58%,#f8fafc_100%)] p-4 sm:p-6 lg:p-8">
-      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute left-[-8%] top-[-6%] h-72 w-72 rounded-full bg-cyan-200/45 blur-3xl sm:h-96 sm:w-96" />
-        <div className="absolute right-[-10%] top-[8%] h-72 w-72 rounded-full bg-amber-200/45 blur-3xl sm:h-[28rem] sm:w-[28rem]" />
-        <div className="absolute bottom-[18%] left-[18%] h-56 w-56 rounded-full bg-emerald-200/30 blur-3xl sm:h-80 sm:w-80" />
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.55)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.45)_1px,transparent_1px)] bg-[size:72px_72px] opacity-25" />
-      </div>
+    <div className="relative min-h-screen w-full max-w-full overflow-x-hidden bg-white p-3 sm:p-6 lg:p-8">
+      <div className="w-full max-w-full space-y-4 sm:space-y-5 md:space-y-6 lg:space-y-7">
+        {/* HERO */}
+        <section className="relative overflow-hidden rounded-2xl sm:rounded-[28px] bg-gradient-to-br from-blue-900 via-blue-800 to-blue-500 px-4 py-6 shadow-[0_25px_60px_rgba(30,58,138,0.35)] sm:px-8 sm:py-10">
+          {/* dot pattern */}
+          <div
+            className="pointer-events-none absolute inset-0 opacity-[0.15]"
+            style={{
+              backgroundImage:
+                "radial-gradient(rgba(255,255,255,0.6) 1px, transparent 1px)",
+              backgroundSize: "22px 22px",
+            }}
+          />
+          {/* wave shapes */}
+          <svg
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-32 w-full text-blue-500/30"
+            viewBox="0 0 1440 200"
+            preserveAspectRatio="none"
+            fill="currentColor"
+          >
+            <path d="M0,120 C240,180 480,60 720,90 C960,120 1200,200 1440,140 L1440,200 L0,200 Z" />
+          </svg>
+          <svg
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-24 w-full text-white/10"
+            viewBox="0 0 1440 200"
+            preserveAspectRatio="none"
+            fill="currentColor"
+          >
+            <path d="M0,160 C300,100 600,180 900,130 C1150,90 1300,150 1440,110 L1440,200 L0,200 Z" />
+          </svg>
+          <div className="pointer-events-none absolute -right-16 -top-16 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
+          <div className="pointer-events-none absolute -left-10 top-1/2 h-56 w-56 -translate-y-1/2 rounded-full bg-blue-400/20 blur-3xl" />
 
-      <div className="w-full space-y-7">
-        <section className="overflow-hidden rounded-[28px] border border-slate-900/10 bg-[linear-gradient(120deg,#071b34_0%,#0d4a53_52%,#162d45_100%)] px-5 py-6 shadow-[0_22px_55px_rgba(15,23,42,0.12)] sm:px-7 sm:py-8">
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.9fr)] lg:items-center">
-            <div className="space-y-7">
-              <p className="text-xl  font-semibold uppercase tracking-[0.29em] text-cyan-200">
-                Team Directory
-              </p>
-              <div className="space-y-2">
-                <h1 className="text-3xl font-black leading-tight text-white sm:text-4xl">
-                  User management made cleaner and faster
-                </h1>
-                <p className="max-w-3xl text-2xl leading-6 text-slate-100/85 sm:text-base">
-                 Dashboard-style user directory where you can search, review, and onboard team members with better clarity.
+          <div className="relative grid gap-5 sm:gap-6 lg:gap-8 lg:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.9fr)] lg:items-center">
+            <div className="min-w-0 space-y-4 sm:space-y-5">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                <div className="flex h-9 w-9 sm:h-11 sm:w-11 md:h-12 md:w-12 shrink-0 items-center justify-center rounded-xl sm:rounded-2xl bg-white/15 shadow-inner backdrop-blur-md">
+                  <FaUsers className="text-base sm:text-lg md:text-xl text-white" />
+                </div>
+                <p className="text-xs sm:text-sm md:text-[16px] font-bold uppercase tracking-[0.15em] sm:tracking-[0.22em] md:tracking-[0.28em] text-white/80">
+                  Team Directory
                 </p>
               </div>
-              <div className="flex flex-wrap gap-3">
+              <div className="space-y-2 sm:space-y-3">
+                <h1 className="break-words text-[26px] leading-tight text-white sm:text-[36px] md:text-[42px] lg:text-[48px] sm:leading-[1.15] font-black">
+                  User management made cleaner and faster
+                </h1>
+                
+              </div>
+              <div className="flex flex-wrap gap-3 pt-1">
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(true)}
                   disabled={!isAdmin}
-                  className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-xl font-bold text-slate-900 shadow-[0_16px_35px_rgba(255,255,255,0.15)] transition hover:-translate-y-0.5"
+                  className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl sm:rounded-2xl bg-white px-5 py-3 sm:px-6 sm:py-3.5 text-sm sm:text-[16px] font-bold text-blue-900 shadow-[0_16px_35px_rgba(0,0,0,0.18)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_45px_rgba(0,0,0,0.22)] disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  <FaUserPlus className="text-cyan-600" />
+                  <FaUserPlus className="text-blue-600" />
                   Add New User
                 </button>
               </div>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-1 xl:grid-cols-3">
               {[
-                { label: "Total Users", value: users.length },
-                { label: "Visible Users", value: filteredUsers.length },
-                { label: "Active Roles", value: roleCount },
+                { label: "Total Users", value: users.length, icon: FaUsers },
+                { label: "Visible Users", value: filteredUsers.length, icon: FaEye },
+                { label: "Active Roles", value: roleCount, icon: FaShieldAlt },
               ].map((item) => (
                 <div
                   key={item.label}
-                  className="rounded-[22px] border border-white/12 bg-white/10 px-4 py-4 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md"
+                  className="group flex min-w-0 items-center gap-3 sm:gap-4 rounded-2xl border border-white/15 bg-white/10 px-4 py-3 sm:px-5 sm:py-4 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/[0.14]"
                 >
-                  <span className="text-[18px] text-slate-100/75">{item.label}</span>
-                  <div className="mt-3 text-3xl font-bold leading-none">
-                    {item.value}
+                  <div className="flex h-9 w-9 sm:h-10 sm:w-10 md:h-11 md:w-11 shrink-0 items-center justify-center rounded-full bg-white/15 text-white transition-transform duration-300 group-hover:scale-105">
+                    <item.icon className="text-sm sm:text-base md:text-lg" />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="block truncate text-xs sm:text-sm md:text-[16px] font-medium text-blue-50/80">
+                      {item.label}
+                    </span>
+                    <div className="mt-1 text-[26px] sm:text-[30px] md:text-[34px] lg:text-[42px] font-bold leading-none tracking-tight">
+                      {item.value}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -433,25 +472,24 @@ const User = () => {
           </div>
         </section>
 
-        <section className="rounded-[26px] border border-white/60 bg-white/82 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
+        {/* MAIN CARD */}
+        <section className="rounded-2xl sm:rounded-3xl border border-blue-100 bg-white p-4 shadow-[0_18px_45px_rgba(30,58,138,0.08)] transition-shadow duration-300 hover:shadow-[0_22px_55px_rgba(30,58,138,0.1)] sm:p-6 lg:p-7">
           <div>
-            <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <p className="text-[16px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
+            <div className="mb-5 sm:mb-6 flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="min-w-0">
+                <p className="text-xs sm:text-sm md:text-[16px] font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] md:tracking-[0.24em] text-blue-500">
                   User Directory
                 </p>
-                <h2 className="mt-1 text-2xl font-bold text-slate-900">
-                  Search and manage staff
+                <h2 className="mt-2 break-words text-xl sm:text-2xl md:text-[28px] lg:text-[34px] font-black leading-tight text-blue-900">
+                  Search and Manage staff
                 </h2>
-                <p className="mt-2 text-xl text-slate-500">
-                  Name, email ya role se quickly search karein aur onboarding ko easy banayein.
-                </p>
+                
               </div>
               <button
                 type="button"
                 onClick={() => setShowCreateModal(true)}
                 disabled={!isAdmin}
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-sky-600 to-cyan-500 px-4 py-2.5 text-xl font-bold text-white shadow-[0_12px_30px_rgba(14,165,233,0.24)] transition hover:-translate-y-0.5"
+                className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl sm:rounded-2xl bg-gradient-to-r from-blue-900 to-blue-500 px-4 py-3 sm:px-5 sm:py-3.5 text-sm sm:text-[16px] font-bold text-white shadow-[0_14px_32px_rgba(59,130,246,0.3)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(59,130,246,0.4)] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <FaUserPlus />
                 Add User
@@ -459,39 +497,42 @@ const User = () => {
             </div>
 
             <div className="relative w-full">
-              <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+              <FaSearch className="pointer-events-none absolute left-4 sm:left-5 top-1/2 -translate-y-1/2 text-blue-400 text-sm sm:text-base" />
               <input
                 type="text"
                 placeholder="Search users by name, email or role..."
-                className="w-full rounded-[20px] border border-slate-200/80 bg-white py-3 pl-11 pr-4 text-[19px] text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100"
+                className="h-11 sm:h-13 md:h-14 w-full rounded-xl sm:rounded-2xl border-2 border-blue-100 bg-white pl-10 sm:pl-12 pr-4 text-sm sm:text-[16px] text-blue-900 placeholder:text-slate-400 outline-none transition-all duration-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
 
             {error ? (
-              <div className="mt-4 rounded-[18px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+              <div className="mt-4 flex items-start sm:items-center gap-2 sm:gap-3 rounded-xl sm:rounded-2xl border border-blue-200 bg-blue-50 px-3 py-3 sm:px-4 sm:py-3.5 text-sm sm:text-[16px] font-semibold text-blue-900 transition-all duration-300 break-words">
+                <FaExclamationCircle className="mt-0.5 sm:mt-0 shrink-0 text-blue-500" />
                 {error}
               </div>
             ) : null}
 
             {!isAdmin ? (
-              <div className="mt-4 rounded-[18px] border border-amber-200 bg-amber-50 px-4 py-3 text-xl font-semibold text-amber-700">
-         Edit, create, and delete actions are allowed only for the admin account.
+              <div className="mt-4 flex items-start sm:items-center gap-2 sm:gap-3 rounded-xl sm:rounded-2xl border border-blue-200 bg-blue-50 px-3 py-3 sm:px-4 sm:py-3.5 text-sm sm:text-[16px] font-semibold text-blue-900 break-words">
+                <FaShieldAlt className="mt-0.5 sm:mt-0 shrink-0 text-blue-500" />
+                Edit, create, and delete actions are allowed only for the admin account.
               </div>
             ) : null}
           </div>
 
-          <div className="mt-5 hidden overflow-x-auto rounded-[22px] border border-slate-200/80 bg-white lg:block">
+          {/* DESKTOP TABLE */}
+          <div className="mt-6 hidden overflow-x-auto rounded-2xl border border-blue-100 lg:block">
             <table className="min-w-full text-left">
-              <thead className="bg-slate-50 text-xl uppercase tracking-[0.18em] text-slate-500">
+              <thead className="sticky top-0 z-10 bg-blue-50 text-[15px] uppercase tracking-[0.16em] text-blue-900">
                 <tr>
-                  <th className="px-5 py-4 font-semibold">#</th>
-                  <th className="px-5 py-4 font-semibold">Profile</th>
-                  <th className="px-5 py-4 font-semibold">Name</th>
-                  <th className="px-5 py-4 font-semibold">Email</th>
-                  <th className="px-5 py-4 font-semibold">Role</th>
-                  <th className="px-5 py-4 font-semibold">Actions</th>
+                  <th className="px-5 py-4 font-bold">#</th>
+                  <th className="px-5 py-4 font-bold">Profile</th>
+                  <th className="px-5 py-4 font-bold">Name</th>
+                  <th className="px-5 py-4 font-bold">Email</th>
+                  <th className="px-5 py-4 font-bold">Role</th>
+                  <th className="px-5 py-4 font-bold">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -505,13 +546,15 @@ const User = () => {
                     return (
                       <tr
                         key={user.id || user._id || index}
-                        className="border-t border-slate-200/80 transition hover:bg-slate-50/80"
+                        className={`border-t border-blue-50 transition-colors duration-300 hover:bg-blue-50/70 ${
+                          index % 2 === 1 ? "bg-blue-50/30" : "bg-white"
+                        }`}
                       >
-                        <td className="px-5 py-4 text-xl font-semibold text-slate-700">
+                        <td className="px-5 py-4 text-[16px] font-semibold text-blue-900/70">
                           {meta.index}
                         </td>
                         <td className="px-5 py-4">
-                          <div className="h-11 w-11 overflow-hidden rounded-full bg-gradient-to-br from-sky-500 to-cyan-500 text-white shadow-md">
+                          <div className="h-11 w-11 overflow-hidden rounded-full bg-gradient-to-br from-blue-900 to-blue-500 text-white shadow-md ring-2 ring-white">
                             {meta.avatarSrc ? (
                               <img
                                 src={meta.avatarSrc}
@@ -525,24 +568,24 @@ const User = () => {
                             )}
                           </div>
                         </td>
-                        <td className="px-5 py-4 text-xl font-semibold text-slate-900">
+                        <td className="px-5 py-4 text-[16px] font-semibold text-blue-900 max-w-[220px] truncate">
                           {meta.displayName}
                         </td>
-                        <td className="px-5 py-4 text-xl text-slate-600">
+                        <td className="px-5 py-4 text-[16px] text-slate-600 max-w-[260px] truncate">
                           {meta.email}
                         </td>
                         <td className="px-5 py-4">
-                          <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xl font-bold text-emerald-700">
+                          <span className="inline-flex rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[15px] font-bold text-blue-700">
                             {meta.role}
                           </span>
                         </td>
                         <td className="px-5 py-4">
-                          <div className="flex items-center gap-2">
+                          <div className="flex flex-wrap items-center gap-2">
                             <button
                               type="button"
                               onClick={() => openEditUser(user)}
                               disabled={!isAdmin}
-                              className="inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-2 text-xl font-bold text-cyan-700 transition hover:bg-cyan-100"
+                              className="inline-flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-[15px] font-bold text-blue-700 transition-all duration-300 hover:-translate-y-0.5 hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
                             >
                               <FaEdit />
                               Edit
@@ -551,7 +594,7 @@ const User = () => {
                               type="button"
                               onClick={() => handleDeleteUser(user)}
                               disabled={!isAdmin}
-                              className="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-3 py-2 text-xl font-bold text-rose-700 transition hover:bg-rose-100"
+                              className="inline-flex items-center gap-2 rounded-xl border border-blue-900/20 bg-blue-900/5 px-3 py-2 text-[15px] font-bold text-blue-900 transition-all duration-300 hover:-translate-y-0.5 hover:bg-blue-900/10 disabled:cursor-not-allowed disabled:opacity-50"
                             >
                               <FaTrash />
                               Delete
@@ -563,11 +606,18 @@ const User = () => {
                   })
                 ) : (
                   <tr>
-                    <td
-                      colSpan="6"
-                      className="px-5 py-12 text-center text-xl font-semibold text-slate-500"
-                    >
-                      No users found
+                    <td colSpan="6" className="px-5 py-16">
+                      <div className="flex flex-col items-center justify-center gap-3 text-center">
+                        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-50 text-blue-500">
+                          <FaFolderOpen className="text-2xl" />
+                        </div>
+                        <p className="text-[18px] font-bold text-blue-900">
+                          No users found
+                        </p>
+                        <p className="text-[15px] text-slate-500">
+                          Try adjusting your search or add a new user.
+                        </p>
+                      </div>
                     </td>
                   </tr>
                 )}
@@ -575,7 +625,8 @@ const User = () => {
             </table>
           </div>
 
-          <div className="mt-5 grid gap-4 lg:hidden">
+          {/* MOBILE / TABLET CARDS */}
+          <div className="mt-4 sm:mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:hidden">
           {visibleUsers.length > 0 ? (
             visibleUsers.map((user, index) => {
               const meta = getUserMeta(
@@ -586,10 +637,10 @@ const User = () => {
               return (
                 <div
                   key={user.id || user._id || index}
-                  className="rounded-[24px] border border-white/60 bg-white/82 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl"
+                  className="flex h-full min-w-0 flex-col rounded-2xl border border-blue-100 bg-white p-3 sm:p-4 shadow-[0_12px_30px_rgba(30,58,138,0.06)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_38px_rgba(30,58,138,0.1)]"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="h-14 w-14 overflow-hidden rounded-full bg-gradient-to-br from-sky-500 to-cyan-500 text-white shadow-md">
+                    <div className="h-11 w-11 sm:h-14 sm:w-14 shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-blue-900 to-blue-500 text-white shadow-md ring-2 ring-white">
                       {meta.avatarSrc ? (
                         <img
                           src={meta.avatarSrc}
@@ -597,93 +648,101 @@ const User = () => {
                           className="h-full w-full object-cover"
                         />
                       ) : (
-                        <div className="flex h-full w-full items-center justify-center font-bold">
+                        <div className="flex h-full w-full items-center justify-center text-sm sm:text-base font-bold">
                           {meta.initial || "?"}
                         </div>
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="truncate text-xl font-bold text-slate-900">
+                      <div className="truncate text-sm sm:text-[16px] font-bold text-blue-900">
                         {meta.displayName}
                       </div>
-                      <div className="truncate text-xl text-slate-500">
+                      <div className="truncate text-xs sm:text-[16px] text-slate-500">
                         {meta.email}
                       </div>
                     </div>
                   </div>
-                  <div className="mt-4 flex items-center justify-between">
-                    <span className="text-xl font-semibold text-slate-500">
+                  <div className="mt-3 sm:mt-4 flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-xs sm:text-[15px] font-semibold text-slate-500">
                       User #{meta.index}
                     </span>
-                    <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xl font-bold text-emerald-700">
+                    <span className="inline-flex rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 sm:px-3 text-xs sm:text-[15px] font-bold text-blue-700">
                       {meta.role}
                     </span>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => openEditUser(user)}
-                    disabled={!isAdmin}
-                    className="mt-4 inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-2 text-xl font-bold text-cyan-700 transition hover:bg-cyan-100"
-                  >
-                    <FaEdit />
-                    Edit User
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteUser(user)}
-                    disabled={!isAdmin}
-                    className="mt-4 inline-flex items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-3 py-2 text-xl font-bold text-rose-700 transition hover:bg-rose-100"
-                  >
-                    <FaTrash />
-                    Delete User
-                  </button>
+                  <div className="mt-3 sm:mt-4 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => openEditUser(user)}
+                      disabled={!isAdmin}
+                      className="inline-flex flex-1 items-center justify-center gap-1.5 sm:gap-2 rounded-xl border border-blue-200 bg-blue-50 px-2 py-2 sm:px-3 sm:py-2.5 text-xs sm:text-[15px] font-bold text-blue-700 transition-all duration-300 hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <FaEdit />
+                      Edit User
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteUser(user)}
+                      disabled={!isAdmin}
+                      className="inline-flex flex-1 items-center justify-center gap-1.5 sm:gap-2 rounded-xl border border-blue-900/20 bg-blue-900/5 px-2 py-2 sm:px-3 sm:py-2.5 text-xs sm:text-[15px] font-bold text-blue-900 transition-all duration-300 hover:bg-blue-900/10 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <FaTrash />
+                      Delete User
+                    </button>
+                  </div>
                 </div>
               );
             })
           ) : (
-            <div className="rounded-[24px] border border-white/60 bg-white/82 px-4 py-10 text-center text-xl font-semibold text-slate-500 shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
-              No users found
+            <div className="col-span-full flex flex-col items-center justify-center gap-3 rounded-2xl border border-blue-100 bg-white px-4 py-10 sm:py-14 text-center shadow-[0_12px_30px_rgba(30,58,138,0.06)]">
+              <div className="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-blue-50 text-blue-500">
+                <FaFolderOpen className="text-xl sm:text-2xl" />
+              </div>
+              <p className="text-base sm:text-[18px] font-bold text-blue-900">No users found</p>
+              <p className="text-xs sm:text-[15px] text-slate-500">
+                Try adjusting your search or add a new user.
+              </p>
             </div>
           )}
           </div>
 
           {filteredUsers.length > 0 ? (
-            <div className="mt-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-              <div className="text-xl text-slate-500">
+            <div className="mt-5 sm:mt-6 flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="text-xs sm:text-sm md:text-[16px] text-slate-500">
                 Showing{" "}
-                <span className="font-semibold text-slate-900">
+                <span className="font-bold text-blue-900">
                   {filteredUsers.length ? (page - 1) * usersPerPage + 1 : 0}
                 </span>{" "}
                 to{" "}
-                <span className="font-semibold text-slate-900">
+                <span className="font-bold text-blue-900">
                   {Math.min(page * usersPerPage, filteredUsers.length)}
                 </span>{" "}
                 of{" "}
-                <span className="font-semibold text-slate-900">
+                <span className="font-bold text-blue-900">
                   {filteredUsers.length}
                 </span>{" "}
                 users
               </div>
 
-              <div className="flex flex-wrap items-center justify-end gap-3">
+              <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 lg:justify-end">
               <button
                 type="button"
                 onClick={handlePrevPage}
                 disabled={page === 1}
-                className="inline-flex items-center justify-center rounded-full border border-slate-600 bg-white px-5 py-3 text-xl font-bold text-slate-700 transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center justify-center rounded-xl border border-blue-200 bg-white px-3 py-2 sm:px-5 sm:py-2.5 text-xs sm:text-sm md:text-[16px] font-bold text-blue-700 transition-all duration-300 hover:-translate-y-0.5 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0"
               >
                 Prev
               </button>
-              <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-2 py-2">
+              <div className="flex flex-wrap items-center gap-1 rounded-full border border-blue-100 bg-blue-50/50 px-1.5 py-1.5">
                 {[5, 10, 25, 50].map((size) => (
                   <button
                     key={size}
                     type="button"
                     onClick={() => handleUsersPerPageChange(size)}
-                    className={`rounded-full px-3 py-1.5 text-xl font-bold transition ${
+                    className={`rounded-full px-2 py-1 sm:px-3 sm:py-1.5 text-xs sm:text-[15px] font-bold transition-all duration-300 ${
                       usersPerPage === size
-                        ? "bg-cyan-500 text-white shadow-[0_10px_24px_rgba(14,165,233,0.18)]"
-                        : "text-slate-600 hover:bg-slate-100"
+                        ? "bg-gradient-to-r from-blue-900 to-blue-500 text-white shadow-[0_10px_22px_rgba(59,130,246,0.3)]"
+                        : "text-blue-700 hover:bg-blue-100"
                     }`}
                   >
                     {size}
@@ -691,7 +750,7 @@ const User = () => {
                 ))}
               </div>
 
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                 {paginationItems.map((item) =>
                   typeof item === "number" ? (
                     <button
@@ -701,10 +760,10 @@ const User = () => {
                         setPaginationMessage("");
                         setPage(item);
                       }}
-                      className={`h-10 min-w-10 rounded-full px-3 text-xl font-semibold transition ${
+                      className={`h-8 min-w-8 sm:h-10 sm:min-w-10 rounded-full px-2 sm:px-3 text-xs sm:text-[15px] font-bold transition-all duration-300 ${
                         page === item
-                          ? "bg-cyan-500 text-white shadow-[0_10px_24px_rgba(14,165,233,0.18)]"
-                          : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-100"
+                          ? "bg-gradient-to-r from-blue-900 to-blue-500 text-white shadow-[0_10px_22px_rgba(59,130,246,0.3)]"
+                          : "border border-blue-100 bg-white text-blue-700 hover:bg-blue-50"
                       }`}
                     >
                       {item}
@@ -712,7 +771,7 @@ const User = () => {
                   ) : (
                     <span
                       key={item}
-                      className="px-1 text-xl font-semibold tracking-[0.2em] text-slate-400"
+                      className="px-1 text-xs sm:text-[15px] font-bold tracking-[0.2em] text-blue-300"
                     >
                       ...
                     </span>
@@ -724,7 +783,7 @@ const User = () => {
                 type="button"
                 onClick={handleNextPage}
                 disabled={page === totalPages}
-                className="inline-flex items-center justify-center rounded-full border border-cyan-200 bg-white px-5 py-3 text-xl font-bold text-cyan-700 shadow-[0_12px_30px_rgba(14,165,233,0.12)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center justify-center rounded-xl border border-blue-200 bg-white px-3 py-2 sm:px-5 sm:py-2.5 text-xs sm:text-sm md:text-[16px] font-bold text-blue-700 shadow-[0_10px_22px_rgba(59,130,246,0.12)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0"
               >
                 Next
               </button>
@@ -733,8 +792,9 @@ const User = () => {
           ) : null}
 
           {paginationMessage ? (
-            <div className="mt-3 flex justify-end">
-              <div className="rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-xl font-semibold text-amber-700">
+            <div className="mt-4 flex justify-center sm:justify-end">
+              <div className="flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-2 sm:px-4 text-xs sm:text-[15px] font-semibold text-blue-900 text-center">
+                <FaExclamationCircle className="shrink-0 text-blue-500" />
                 {paginationMessage}
               </div>
             </div>
@@ -749,18 +809,18 @@ const User = () => {
         )}
 
         {editingUser ? (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 px-4 backdrop-blur-sm">
-            <div className="w-full max-w-xl rounded-[30px] border border-white/50 bg-[linear-gradient(180deg,#fafdff_0%,#f8fbff_100%)] p-6 shadow-[0_24px_80px_rgba(15,23,42,0.25)] sm:p-7">
-              <div className="mb-6 flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-[19px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-blue-950/50 px-3 sm:px-4 backdrop-blur-sm">
+            <div className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl sm:rounded-3xl border border-blue-100 bg-white p-4 shadow-[0_30px_90px_rgba(30,58,138,0.3)] sm:p-6 md:p-8">
+              <div className="mb-5 sm:mb-6 flex items-start justify-between gap-3 sm:gap-4">
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm md:text-[16px] font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] md:tracking-[0.24em] text-blue-500">
                     User Update
                   </p>
-                  <h2 className="mt-1 text-2xl font-black text-slate-900">
+                  <h2 className="mt-1 text-xl sm:text-2xl md:text-[28px] lg:text-[32px] font-black text-blue-900 break-words">
                     Edit user
                   </h2>
-                  <p className="mt-2 text-xl text-slate-500">
-                    Name, email, role aur optional password update karein.
+                  <p className="mt-2 text-sm sm:text-[16px] leading-6 sm:leading-7 text-slate-500">
+                   Update the user's name, email, role, and optional password.
                   </p>
                 </div>
                 <button
@@ -769,13 +829,13 @@ const User = () => {
                     setEditingUser(null);
                     setEditError("");
                   }}
-                  className="rounded-full border border-slate-200 bg-white p-3 text-slate-700 transition hover:border-cyan-200 hover:text-cyan-700"
+                  className="shrink-0 rounded-full border border-blue-100 bg-white p-2.5 sm:p-3 text-blue-700 transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-300 hover:bg-blue-50"
                 >
                   <FaTimes />
                 </button>
               </div>
 
-              <form onSubmit={handleUpdateUser} className="space-y-4">
+              <form onSubmit={handleUpdateUser} className="space-y-3 sm:space-y-4">
                 <input
                   type="text"
                   name="name"
@@ -783,7 +843,7 @@ const User = () => {
                   required
                   value={editForm.name}
                   onChange={handleEditChange}
-                  className="w-full rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100"
+                  className="w-full rounded-xl sm:rounded-2xl border-2 border-blue-100 bg-white px-3 py-3 sm:px-4 sm:py-3.5 text-sm sm:text-[16px] text-blue-900 outline-none transition-all duration-300 placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                 />
 
                 <input
@@ -793,7 +853,7 @@ const User = () => {
                   required
                   value={editForm.email}
                   onChange={handleEditChange}
-                  className="w-full rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100"
+                  className="w-full rounded-xl sm:rounded-2xl border-2 border-blue-100 bg-white px-3 py-3 sm:px-4 sm:py-3.5 text-sm sm:text-[16px] text-blue-900 outline-none transition-all duration-300 placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                 />
 
                 <input
@@ -802,14 +862,14 @@ const User = () => {
                   placeholder="New Password (optional)"
                   value={editForm.password}
                   onChange={handleEditChange}
-                  className="w-full rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100"
+                  className="w-full rounded-xl sm:rounded-2xl border-2 border-blue-100 bg-white px-3 py-3 sm:px-4 sm:py-3.5 text-sm sm:text-[16px] text-blue-900 outline-none transition-all duration-300 placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                 />
 
                 <select
                   name="role"
                   value={editForm.role}
                   onChange={handleEditChange}
-                  className="w-full rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100"
+                  className="w-full rounded-xl sm:rounded-2xl border-2 border-blue-100 bg-white px-3 py-3 sm:px-4 sm:py-3.5 text-sm sm:text-[16px] text-blue-900 outline-none transition-all duration-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                 >
                   <option value="admin">Admin</option>
                   <option value="manager">Manager</option>
@@ -822,7 +882,8 @@ const User = () => {
                 </select>
 
                 {editError ? (
-                  <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+                  <div className="flex items-start sm:items-center gap-2 sm:gap-3 rounded-xl sm:rounded-2xl border border-blue-200 bg-blue-50 px-3 py-3 sm:px-4 sm:py-3.5 text-sm sm:text-[16px] font-semibold text-blue-900 break-words">
+                    <FaExclamationCircle className="mt-0.5 sm:mt-0 shrink-0 text-blue-500" />
                     {editError}
                   </div>
                 ) : null}
@@ -830,7 +891,7 @@ const User = () => {
                 <button
                   type="submit"
                   disabled={isUpdatingUser}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-[22px] bg-gradient-to-r from-sky-600 to-cyan-500 px-5 py-4 text-sm font-bold text-white shadow-[0_16px_35px_rgba(14,165,233,0.24)] transition hover:-translate-y-0.5"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl sm:rounded-2xl bg-gradient-to-r from-blue-900 to-blue-500 px-4 py-3 sm:px-5 sm:py-4 text-sm sm:text-[16px] font-bold text-white shadow-[0_18px_40px_rgba(59,130,246,0.3)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_22px_48px_rgba(59,130,246,0.4)] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <FaEdit />
                   {isUpdatingUser ? "Updating..." : "Update User"}
@@ -841,26 +902,26 @@ const User = () => {
         ) : null}
 
         {successMessage ? (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 px-4 backdrop-blur-sm">
-            <div className="w-full max-w-md rounded-[28px] border border-white/50 bg-[linear-gradient(180deg,#fafdff_0%,#f8fbff_100%)] p-6 text-center shadow-[0_24px_80px_rgba(15,23,42,0.25)] sm:p-7">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.24),_rgba(6,182,212,0.12)_60%,_rgba(255,255,255,0.96)_100%)] shadow-[0_18px_45px_rgba(16,185,129,0.18)]">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-cyan-500 text-sm font-black text-white">
-                  OK
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-blue-950/50 px-3 sm:px-4 backdrop-blur-sm">
+            <div className="w-full max-w-md rounded-2xl sm:rounded-3xl border border-blue-100 bg-white p-5 text-center shadow-[0_30px_90px_rgba(30,58,138,0.3)] sm:p-8">
+              <div className="mx-auto flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-blue-50 shadow-[0_18px_40px_rgba(59,130,246,0.18)]">
+                <div className="flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-full bg-gradient-to-br from-blue-900 to-blue-500 text-white shadow-md">
+                  <FaCheckCircle className="text-base sm:text-lg" />
                 </div>
               </div>
-              <p className="mt-5 text-[18px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
+              <p className="mt-4 sm:mt-5 text-xs sm:text-sm md:text-[16px] font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] md:tracking-[0.24em] text-blue-500">
                 User Created
               </p>
-              <h3 className="mt-2 text-2xl font-black text-slate-900">
+              <h3 className="mt-2 break-words text-xl sm:text-2xl md:text-[26px] lg:text-[32px] font-black leading-tight text-blue-900">
                 {successMessage}
               </h3>
-              <p className="mt-3 text-xl leading-6 text-slate-500">
-                New team member ko directory mein successfully add kar diya gaya hai.
+              <p className="mt-3 text-sm sm:text-[16px] leading-6 sm:leading-7 text-slate-500">
+                The new team member has been successfully added to the user directory.
               </p>
               <button
                 type="button"
                 onClick={() => setSuccessMessage("")}
-                className="mt-6 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-teal-600 to-emerald-500 px-6 py-3 text-sm font-bold text-white shadow-[0_16px_35px_rgba(16,185,129,0.24)] transition hover:-translate-y-0.5"
+                className="mt-5 sm:mt-6 inline-flex w-full sm:w-auto items-center justify-center rounded-xl sm:rounded-2xl bg-gradient-to-r from-blue-900 to-blue-500 px-5 py-3 sm:px-6 sm:py-3.5 text-sm sm:text-[16px] font-bold text-white shadow-[0_16px_35px_rgba(59,130,246,0.3)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_44px_rgba(59,130,246,0.4)]"
               >
                 Continue
               </button>
@@ -869,26 +930,26 @@ const User = () => {
         ) : null}
 
         {deleteMessage ? (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 px-4 backdrop-blur-sm">
-            <div className="w-full max-w-md rounded-[28px] border border-white/50 bg-[linear-gradient(180deg,#fff8f8_0%,#ffffff_100%)] p-6 text-center shadow-[0_24px_80px_rgba(15,23,42,0.25)] sm:p-7">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[radial-gradient(circle_at_top,_rgba(244,63,94,0.18),_rgba(251,146,60,0.12)_60%,_rgba(255,255,255,0.96)_100%)] shadow-[0_18px_45px_rgba(244,63,94,0.14)]">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-rose-500 to-orange-400 text-sm font-black text-white">
-                  OK
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-blue-950/50 px-3 sm:px-4 backdrop-blur-sm">
+            <div className="w-full max-w-md rounded-2xl sm:rounded-3xl border border-blue-100 bg-white p-5 text-center shadow-[0_30px_90px_rgba(30,58,138,0.3)] sm:p-8">
+              <div className="mx-auto flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-blue-50 shadow-[0_18px_40px_rgba(30,58,138,0.16)]">
+                <div className="flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-full bg-gradient-to-br from-blue-900 to-blue-500 text-white shadow-md">
+                  <FaTrash className="text-sm sm:text-base" />
                 </div>
               </div>
-              <p className="mt-5 text-[10px] font-semibold uppercase tracking-[0.24em] text-rose-400">
+              <p className="mt-4 sm:mt-5 text-xs sm:text-sm md:text-[16px] font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] md:tracking-[0.24em] text-blue-500">
                 User Deleted
               </p>
-              <h3 className="mt-2 text-2xl font-black text-slate-900">
+              <h3 className="mt-2 break-words text-xl sm:text-2xl md:text-[26px] lg:text-[32px] font-black leading-tight text-blue-900">
                 {deleteMessage}
               </h3>
-              <p className="mt-3 text-sm leading-6 text-slate-500">
-              The selected user has been successfully removed from the directory.
+              <p className="mt-3 text-sm sm:text-[16px] leading-6 sm:leading-7 text-slate-500">
+                The selected user has been successfully removed from the directory.
               </p>
               <button
                 type="button"
                 onClick={() => setDeleteMessage("")}
-                className="mt-6 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-rose-600 to-orange-500 px-6 py-3 text-sm font-bold text-white shadow-[0_16px_35px_rgba(244,63,94,0.22)] transition hover:-translate-y-0.5"
+                className="mt-5 sm:mt-6 inline-flex w-full sm:w-auto items-center justify-center rounded-xl sm:rounded-2xl bg-gradient-to-r from-blue-900 to-blue-500 px-5 py-3 sm:px-6 sm:py-3.5 text-sm sm:text-[16px] font-bold text-white shadow-[0_16px_35px_rgba(30,58,138,0.28)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_44px_rgba(30,58,138,0.36)]"
               >
                 Continue
               </button>

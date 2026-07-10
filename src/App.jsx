@@ -149,6 +149,8 @@ function Layout({ children, setIsAuthenticated }) {
           setIsAuthenticated={setIsAuthenticated}
           sidebarOffset={isMobile ? 0 : sidebarWidth}
           isMobile={isMobile}
+          sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
         />
         <div
           ref={scrollContainerRef}
