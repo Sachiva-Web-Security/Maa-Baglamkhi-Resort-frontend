@@ -1480,113 +1480,114 @@ const Payment = ({
         ) : null}
 
         {/* ---------- Invoice detail / payment form ---------- */}
-        <div className={asModal ? "" : "flex justify-center"}>
-          <div className={`w-full ${asModal ? "max-w-[460px]" : "max-w-2xl"}`}>
+        <div className={asModal ? "" : "w-full"}>
+          <div className={`w-full ${asModal ? "max-w-[460px]" : "max-w-7xl mx-auto"}`}>
             {!invoice ? (
               <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-500 shadow-sm">
                 Select a payment card. The full payment form for the selected invoice will open here.
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-5">
 
-                {/* Bill summary card */}
-                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                  <div className="flex flex-wrap items-start justify-between gap-4">
-                    <div>
-                      <p className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-slate-400">
-                        Active {String(entityType || "Table").toLowerCase()}
-                      </p>
-                      <div className="mt-1 flex items-center gap-2">
-                        <div className="text-xl font-bold text-slate-900">
-                          {String(entityType || "Table").toLowerCase() === "room" ? "Room" : "Table"} {invoice.table}
+                {/* Active table + Selected row card + Customer — shown together in one row */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                  {/* Bill summary card */}
+                  <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <div className="flex flex-wrap items-start justify-between gap-4">
+                      <div>
+                        <p className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-slate-400">
+                          Active {String(entityType || "Table").toLowerCase()}
+                        </p>
+                        <div className="mt-1 flex items-center gap-2">
+                          <div className="text-xl font-bold text-slate-900">
+                            {String(entityType || "Table").toLowerCase() === "room" ? "Room" : "Table"} {invoice.table}
+                          </div>
+                          <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-blue-600">
+                            {activeStationLabel}
+                          </span>
                         </div>
-                        <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-blue-600">
-                          {activeStationLabel}
-                        </span>
+                        <div className="mt-4 grid grid-cols-3 gap-3">
+                          <div>
+                            <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">Subtotal</div>
+                            <div className="mt-1 text-[14px] font-bold text-slate-900">{formatCurrency(invoice.subtotal)}</div>
+                          </div>
+                          <div>
+                            <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">Tax (5%)</div>
+                            <div className="mt-1 text-[14px] font-bold text-slate-900">{formatCurrency(invoice.gst)}</div>
+                          </div>
+                          <div>
+                            <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">Service</div>
+                            <div className="mt-1 text-[14px] font-bold text-slate-900">{formatCurrency(0)}</div>
+                          </div>
+                        </div>
                       </div>
-                      <div className="mt-4 grid grid-cols-3 gap-3">
-                        <div>
-                          <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">Subtotal</div>
-                          <div className="mt-1 text-[14px] font-bold text-slate-900">{formatCurrency(invoice.subtotal)}</div>
-                        </div>
-                        <div>
-                          <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">Tax (5%)</div>
-                          <div className="mt-1 text-[14px] font-bold text-slate-900">{formatCurrency(invoice.gst)}</div>
-                        </div>
-                        <div>
-                          <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">Service</div>
-                          <div className="mt-1 text-[14px] font-bold text-slate-900">{formatCurrency(0)}</div>
+
+                      <div className="text-right">
+                        <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">Grand Total</div>
+                        <div className="mt-1 text-[26px] font-bold leading-none text-blue-600">{formatCurrency(computedTotal)}</div>
+                        <div className="mt-3 rounded-xl bg-slate-50 px-3 py-2.5 text-[12px] text-slate-600">
+                          <div>{personCount} Person{personCount > 1 ? "s" : ""}</div>
+                          <div className="mt-0.5 font-semibold text-slate-800">Per Person {formatCurrency(perPersonAmount)}</div>
+                          {invoice.tokenId ? (
+                            <div className="mt-0.5 text-[11px] text-slate-500">Visit ID: {formatVisitId(invoice.tokenCode, invoice.tokenId)}</div>
+                          ) : null}
                         </div>
                       </div>
                     </div>
+                  </div>
 
-                    <div className="text-right">
-                      <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">Grand Total</div>
-                      <div className="mt-1 text-[26px] font-bold leading-none text-blue-600">{formatCurrency(computedTotal)}</div>
-                      <div className="mt-3 rounded-xl bg-slate-50 px-3 py-2.5 text-[12px] text-slate-600">
-                        <div>{personCount} Person{personCount > 1 ? "s" : ""}</div>
-                        <div className="mt-0.5 font-semibold text-slate-800">Per Person {formatCurrency(perPersonAmount)}</div>
-                        {invoice.tokenId ? (
-                          <div className="mt-0.5 text-[11px] text-slate-500">Visit ID: {formatVisitId(invoice.tokenCode, invoice.tokenId)}</div>
-                        ) : null}
-                      </div>
+                  {/* Selected row card */}
+                  <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <div className="flex items-center gap-2.5">
+                      <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+                        <FiShoppingBag size={15} />
+                      </span>
+                      <h3 className="text-[13.5px] font-bold text-slate-900">Selected row card</h3>
                     </div>
-                  </div>
-                </div>
 
-                {/* Selected row card */}
-                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                  <div className="flex items-center gap-2.5">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
-                      <FiShoppingBag size={15} />
-                    </span>
-                    <h3 className="text-[13.5px] font-bold text-slate-900">Selected row card</h3>
-                  </div>
-
-                  {selectedItem ? (
-                    <div className="mt-4 space-y-3">
-                      <div className="rounded-xl bg-slate-50 px-4 py-3.5">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="text-[14px] font-semibold text-slate-900">{selectedItem.name}</div>
-                          <div className="text-right">
-                            <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">Amount</div>
-                            <div className="mt-0.5 text-[14px] font-bold text-slate-900">
-                              {formatCurrency(Number(selectedItem.qty || 0) * Number(selectedItem.rate || 0))}
+                    {selectedItem ? (
+                      <div className="mt-4 space-y-3">
+                        <div className="rounded-xl bg-slate-50 px-4 py-3.5">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="text-[14px] font-semibold text-slate-900">{selectedItem.name}</div>
+                            <div className="text-right">
+                              <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">Amount</div>
+                              <div className="mt-0.5 text-[14px] font-bold text-slate-900">
+                                {formatCurrency(Number(selectedItem.qty || 0) * Number(selectedItem.rate || 0))}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                            <div className="rounded-lg bg-white px-3 py-2.5">
+                              <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">Qty</div>
+                              <div className="mt-0.5 text-[13px] font-bold text-slate-900">{selectedItem.qty}</div>
+                            </div>
+                            <div className="rounded-lg bg-white px-3 py-2.5">
+                              <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">Rate</div>
+                              <div className="mt-0.5 text-[13px] font-bold text-slate-900">{formatCurrency(selectedItem.rate)}</div>
                             </div>
                           </div>
                         </div>
-                        <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                          <div className="rounded-lg bg-white px-3 py-2.5">
-                            <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">Qty</div>
-                            <div className="mt-0.5 text-[13px] font-bold text-slate-900">{selectedItem.qty}</div>
-                          </div>
-                          <div className="rounded-lg bg-white px-3 py-2.5">
-                            <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">Rate</div>
-                            <div className="mt-0.5 text-[13px] font-bold text-slate-900">{formatCurrency(selectedItem.rate)}</div>
+
+                        <div className="rounded-xl border border-slate-100 bg-white px-4 py-3.5 text-[13px] font-medium text-slate-900">
+                          <div className="flex justify-between py-1"><span>Subtotal</span><span>{formatCurrency(invoice.subtotal)}</span></div>
+                          <div className="flex justify-between py-1"><span>Tax</span><span>{formatCurrency(invoice.gst)}</span></div>
+                          <div className="flex justify-between py-1"><span>Discount</span><span>{formatCurrency(discountAmount)}</span></div>
+                          <div className="flex justify-between py-1"><span>Per Person</span><span>{formatCurrency(perPersonAmount)}</span></div>
+                          <div className="mt-1 flex justify-between border-t border-slate-100 pt-2 text-[14px] font-bold">
+                            <span>Total</span><span>{formatCurrency(computedTotal)}</span>
                           </div>
                         </div>
                       </div>
-
-                      <div className="rounded-xl border border-slate-100 bg-white px-4 py-3.5 text-[13px] font-medium text-slate-900">
-                        <div className="flex justify-between py-1"><span>Subtotal</span><span>{formatCurrency(invoice.subtotal)}</span></div>
-                        <div className="flex justify-between py-1"><span>Tax</span><span>{formatCurrency(invoice.gst)}</span></div>
-                        <div className="flex justify-between py-1"><span>Discount</span><span>{formatCurrency(discountAmount)}</span></div>
-                        <div className="flex justify-between py-1"><span>Per Person</span><span>{formatCurrency(perPersonAmount)}</span></div>
-                        <div className="mt-1 flex justify-between border-t border-slate-100 pt-2 text-[14px] font-bold">
-                          <span>Total</span><span>{formatCurrency(computedTotal)}</span>
-                        </div>
+                    ) : (
+                      <div className="mt-4 rounded-xl bg-slate-50 px-4 py-5 text-[13px] text-slate-500">
+                        Koi row select nahi hai
                       </div>
-                    </div>
-                  ) : (
-                    <div className="mt-4 rounded-xl bg-slate-50 px-4 py-5 text-[13px] text-slate-500">
-                      there was no row select in this row 
-                      
-                    </div>
-                  )}
-                </div>
+                    )}
+                  </div>
 
-                {/* Customer + Payment method */}
-                <div className="grid gap-4 sm:grid-cols-2">
+                  {/* Customer card */}
                   <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                     <div className="flex items-center gap-2.5">
                       <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-50 text-violet-600">
@@ -1625,7 +1626,10 @@ const Payment = ({
                       <div className="mt-1.5 text-[11.5px] font-semibold text-rose-600">{fieldErrors.phone}</div>
                     ) : null}
                   </div>
+                </div>
 
+                {/* Payment method + Discount + Split bill — one row, 3 columns */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                   <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                     <div className="flex items-center gap-2.5">
                       <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
@@ -1848,69 +1852,3 @@ const Payment = ({
 };
 
 export default Payment;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
