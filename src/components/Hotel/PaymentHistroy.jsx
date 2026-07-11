@@ -73,8 +73,7 @@ const PaymentHistory = () => {
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-200">Payment History</p>
           <h1 className="mt-3 text-3xl font-black sm:text-4xl">Booking #{bookingRef} payment timeline</h1>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-100/85 sm:text-base">
-            Payment entries ke saath booking ka summary bhi yahin show hoga, taaki blank table na aaye.
-          </p>
+The booking summary will also be displayed along with the payment entries, so the table does not appear empty.          </p>
         </section>
 
         <section className="rounded-[28px] border border-white/70 bg-white/88 p-5 shadow-[0_18px_55px_rgba(15,23,42,0.08)] backdrop-blur">

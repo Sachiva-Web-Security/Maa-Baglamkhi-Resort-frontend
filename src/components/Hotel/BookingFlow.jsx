@@ -69,6 +69,7 @@ import {
   FaChartLine,
   FaIdCard,
   FaDoorOpen,
+  FaSync,
 } from "react-icons/fa";
 
 import API, { getBackendBaseURL } from "../../api";
@@ -332,51 +333,46 @@ const FLOW_STEPS = [
     title: "Booking Confirmed",
     desc: "Booking is confirmed and reference number generated",
   },
-  {
-    view: "list",
-    num: 3,
-    icon: FaListUl,
-    title: "All Bookings",
-    desc: "View all bookings in a list with status and details",
-  },
+ 
   {
     view: "details",
-    num: 4,
+    num: 3,
     icon: FaEye,
     title: "Booking Details",
     desc: "View full details of any specific booking",
   },
   {
     view: "manage",
-    num: 5,
+    num: 4,
     icon: FaCogs,
     title: "Manage Booking",
     desc: "Edit, Cancel, Check-in / Check-out or Update payment",
   },
-  {
-    view: "group-booking",
-    num: 6,
-    icon: FaUsers,
-    title: "Group Booking",
-    desc: "Create and manage bookings for groups, events, or corporate guests",
+    {
+    view: "list",
+    num: 5,
+    icon: FaListUl,
+    title: "All Bookings",
+    desc: "View all bookings in a list with status and details",
   },
+ 
   {
     view: "guest-booking",
-    num: 7,
+    num: 6,
     icon: FaUserFriends,
     title: "Guest Booking",
     desc: "Manage guest profiles, reservations, arrivals, departures, and stay history",
   },
   {
     view: "occupancy-forecast",
-    num: 8,
+    num: 7,
     icon: FaChartLine,
     title: "Occupancy Forecast",
     desc: "Analyze occupancy trends, room availability, and future booking forecasts",
   },
   {
     view: "add-room",
-    num: 9,
+    num: 8,
     icon: FaDoorOpen,
     title: "Add Room",
     desc: "Open the Room screen to add or manage individual room numbers",
@@ -458,8 +454,8 @@ const emptyForm = () => ({
   paymentNote: "",
 });
 
-const rowTotal = (row) => {
-  const base = Number(row.price || 0) * Number(row.quantity || 0);
+const rowTotal = (row, nights = 0) => {
+  const base = Number(row.price || 0) * Number(nights || 0) * Number(row.quantity || 0);
   return base + (base * Number(row.gst || 0)) / 100;
 };
 
@@ -511,6 +507,130 @@ const documentTypeOptions = [
   { value: "signature", label: "Signature" },
   { value: "id_proof", label: "ID Proof" },
 ];
+
+const PaymentHistoryModal = ({ booking, onClose }) => {
+  const [history, setHistory] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const loadPaymentHistory = async () => {
+    if (!booking?.bookingId) return;
+    setLoading(true);
+    try {
+      const res = await API.get(`/hotel/payment-history/${booking.bookingId}`);
+      setHistory(Array.isArray(res.data) ? res.data : []);
+    } catch (err) {
+      console.error("Failed to load payment history:", err);
+      alert("Could not load payment history. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadPaymentHistory();
+  }, [booking?.bookingId]);
+
+  const formatDate = (value) => {
+    if (!value) return "-";
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return String(value).slice(0, 10);
+    return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  };
+
+  const formatCurrency = (value) =>
+    new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      maximumFractionDigits: 2,
+    }).format(Number(value) || 0);
+
+  return (
+    <FeatureModal
+      title="Payment History"
+      subtitle={`${booking?.guest_name || "Guest"} - ${booking?.bookingCode || `BK-${booking?.bookingId}`}`}
+      size="max-w-4xl"
+      onClose={onClose}
+    >
+      <div className="space-y-4">
+        <div className="flex flex-wrap justify-between items-center gap-4">
+          <h3 className="text-lg font-bold text-slate-900">All Payment Transactions</h3>
+          <button onClick={loadPaymentHistory} disabled={loading} className={ghostBtn}>
+            <FaSync className={loading ? "animate-spin" : ""} /> Refresh
+          </button>
+        </div>
+
+        {loading ? (
+          <div className="py-12 text-center text-slate-400">Loading payment history...</div>
+        ) : history.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-slate-200 py-12 text-center text-slate-400">
+            No payment history found for this booking.
+          </div>
+        ) : (
+          <div className="overflow-x-auto rounded-xl border border-slate-200">
+            <table className="w-full min-w-[600px] text-left">
+              <thead className="bg-slate-50 text-xs sm:text-sm font-bold uppercase text-slate-400">
+                <tr>
+                  <th className="px-4 sm:px-5 py-3">Date & Time</th>
+                  <th className="px-4 sm:px-5 py-3">Type</th>
+                  <th className="px-4 sm:px-5 py-3">Amount</th>
+                  <th className="px-4 sm:px-5 py-3">Mode</th>
+                  <th className="px-4 sm:px-5 py-3">Status</th>
+                  <th className="px-4 sm:px-5 py-3">Reference</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-sm sm:text-base">
+                {history.map((payment) => (
+                  <tr key={payment.id}>
+                    <td className="px-4 sm:px-5 py-3 text-slate-700">{formatDate(payment.created_at)}</td>
+                    <td className="px-4 sm:px-5 py-3">
+                      <span className={`inline-block rounded-full px-3 py-1 text-xs font-bold ${
+                        payment.payment_type === "Advance" ? "bg-blue-50 text-blue-700" :
+                        payment.payment_type === "Refund" ? "bg-amber-50 text-amber-700" :
+                        "bg-emerald-50 text-emerald-700"
+                      }`}>
+                        {payment.payment_type || "Payment"}
+                      </span>
+                    </td>
+                    <td className={`px-4 sm:px-5 py-3 font-bold ${
+                      payment.payment_type === "Refund" ? "text-rose-600" : "text-emerald-600"
+                    }`}>
+                      {payment.payment_type === "Refund" ? "-" : "+"}{formatCurrency(payment.amount)}
+                    </td>
+                    <td className="px-4 sm:px-5 py-3 text-slate-700">{payment.payment_mode || "-"}</td>
+                    <td className="px-4 sm:px-5 py-3">
+                      <span className={statusBadgeCls(payment.payment_status)}>
+                        {payment.payment_status || "Pending"}
+                      </span>
+                    </td>
+                    <td className="px-4 sm:px-5 py-3 text-slate-600 font-mono text-sm">
+                      {payment.transaction_id || payment.reference_id || "-"}
+                    </td>
+                  </tr>
+                ))}
+                <tr className="border-t-2 border-slate-200 bg-slate-50/50">
+                  <td className="px-4 sm:px-5 py-3 font-bold text-slate-800" colSpan={2}>Total</td>
+                  <td className="px-4 sm:px-5 py-3 font-black text-xl text-slate-900">
+                    {formatCurrency(history.reduce((sum, p) => sum + (Number(p.amount) || 0), 0))}
+                  </td>
+                  <td className="px-4 sm:px-5 py-3" colSpan={3}></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        <div className="mt-6 flex flex-wrap justify-between items-center gap-4 pt-4 border-t border-slate-200">
+          <div className="text-sm text-slate-500">
+            Showing {history.length} transaction{history.length !== 1 ? "s" : ""}
+          </div>
+          <div className="flex gap-2">
+            <button onClick={onClose} className={primaryBtn}>Close</button>
+          </div>
+        </div>
+      </div>
+    </FeatureModal>
+  );
+};
 
 const DocumentUploadModal = ({ booking, onClose }) => {
   const bookingId = booking?.bookingId;
@@ -662,7 +782,7 @@ const DocumentUploadModal = ({ booking, onClose }) => {
   );
 };
 
-const InvoiceModal = ({ booking, onClose }) => {
+const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAmount = 0, onClose }) => {
   const bookingId = booking?.bookingId;
   const [invoice, setInvoice] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -691,10 +811,39 @@ const InvoiceModal = ({ booking, onClose }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookingId]);
 
-  const items = Array.isArray(invoice?.items) ? invoice.items : [];
+  const folioChargesTotal = folioCharges.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+  // Fallback total = Room Charges + Folio Charges, used only if the backend invoice
+  // response doesn't already carry a computed total.
+  const fallbackTotal = roomChargesTotal + folioChargesTotal;
+
+  // Prefer real, itemized data from the backend invoice. If the backend hasn't
+  // itemized folio charges yet, fall back to the live room + folio breakdown we
+  // already fetched from /hotel/full-booking and /hotel/folio, so the invoice
+  // always shows full detail instead of a single lump-sum line.
+  const items = Array.isArray(invoice?.items) && invoice.items.length > 0
+    ? invoice.items
+    : [
+        { name: "Room Charges", description: "Total room / tariff charges", quantity: 1, price: roomChargesTotal, total: roomChargesTotal },
+        ...folioCharges.map((e) => ({
+          name: e.category || "Extra Charge",
+          description: e.description || "-",
+          quantity: 1,
+          price: e.amount,
+          total: e.amount,
+        })),
+      ];
+
   const invoiceNo = invoice?.invoiceNo || invoice?.invoice_no || `INV-${bookingId}`;
   const guestName = invoice?.customerName || invoice?.customer_name || booking?.guest_name || "Guest";
-  const invoiceTotal = invoice?.totalAmount || invoice?.final_total || booking?.totalAmount;
+  // IMPORTANT: prioritize the live Room + Folio total (fallbackTotal) over the backend's
+  // stored invoice.totalAmount, because the stored value can be stale if folio charges
+  // were added AFTER the invoice was last generated. Only fall back to the backend value
+  // when we have no live breakdown to compute from at all.
+  const invoiceTotal = fallbackTotal > 0 ? fallbackTotal : (invoice?.totalAmount || invoice?.final_total || booking?.totalAmount || 0);
+  const paid = Number(paidAmount || invoice?.paidAmount || invoice?.paid_amount) || 0;
+  // Remaining logic: if an advance has been paid, show Total - Paid (folio included);
+  // if nothing has been paid yet, show the full actual Total (folio included).
+  const remainingAmount = paid > 0 ? Math.max(invoiceTotal - paid, 0) : invoiceTotal;
 
   const buildLines = () => [
     ["Invoice No", invoiceNo],
@@ -706,7 +855,9 @@ const InvoiceModal = ({ booking, onClose }) => {
     ["GST", formatCurrency(invoice?.tax || invoice?.gst)],
     ["Discount", formatCurrency(invoice?.discount)],
     ["Total", formatCurrency(invoiceTotal)],
-    ["Payment Status", invoice?.paymentStatus || invoice?.payment_status || "Pending"],
+    ["Advance Paid", formatCurrency(paid)],
+    ["Remaining / Balance Due", formatCurrency(remainingAmount)],
+    ["Payment Status", invoice?.paymentStatus || invoice?.payment_status || (remainingAmount > 0 ? "Pending" : "Paid")],
   ];
 
   const handlePrint = () => {
@@ -751,7 +902,7 @@ const InvoiceModal = ({ booking, onClose }) => {
     doc.text("Items", 14, y);
     y += 7;
     doc.setFontSize(10);
-    (items.length ? items : [{ name: "Booking charges", quantity: 1, price: booking?.totalAmount, total: booking?.totalAmount }]).forEach((item) => {
+    items.forEach((item) => {
       doc.text(String(item.name || item.description || "Item").slice(0, 52), 14, y);
       doc.text(String(item.quantity || 1), 130, y);
       doc.text(String(formatCurrency(item.total)), 150, y);
@@ -805,7 +956,7 @@ const InvoiceModal = ({ booking, onClose }) => {
                   <tr><th className="px-4 py-3">Item</th><th className="px-4 py-3">Qty</th><th className="px-4 py-3">Rate</th><th className="px-4 py-3 text-right">Total</th></tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {(items.length ? items : [{ name: "Booking charges", quantity: 1, price: booking?.totalAmount, total: booking?.totalAmount }]).map((item, idx) => (
+                  {items.map((item, idx) => (
                     <tr key={idx}>
                       <td className="px-4 py-3 font-semibold text-slate-800">{item.name || item.description || "Item"}</td>
                       <td className="px-4 py-3">{item.quantity || 1}</td>
@@ -848,12 +999,18 @@ const BookingFlow = () => {
   const [selectedBooking, setSelectedBooking] = useState(null); // row from list
   const [bookingDetail, setBookingDetail] = useState(null); // full detail payload
   const [detailLoading, setDetailLoading] = useState(false);
+  const [folioCharges, setFolioCharges] = useState([]); // admin-added folio (extra) charges for the details page
+  const [folioLoading, setFolioLoading] = useState(false);
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
 
   const [toast, setToast] = useState({ open: false, type: "success", title: "", message: "" });
   const [cancelModal, setCancelModal] = useState({ open: false, reason: "", submitting: false });
   const [collectModal, setCollectModal] = useState({ open: false, amount: "", mode: "Cash", submitting: false });
   const [refundModal, setRefundModal] = useState({ open: false, amount: "", submitting: false });
   const [manageStatus, setManageStatus] = useState("");
+  const [showPaymentHistory, setShowPaymentHistory] = useState(false);
+  const [paymentHistory, setPaymentHistory] = useState([]);
+  const [paymentHistoryLoading, setPaymentHistoryLoading] = useState(false);
 
   const showToast = (type, title, message) => setToast({ open: true, type, title, message });
   const closeToast = () => setToast((t) => ({ ...t, open: false }));
@@ -881,6 +1038,23 @@ const BookingFlow = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Auto-fill room price when room category is selected
+  useEffect(() => {
+    if (formData.roomCategory && formData.rooms.length > 0) {
+      const category = categorySetup.find(c => String(c.id) === String(formData.roomCategory));
+      if (category) {
+        setFormData(prev => ({
+          ...prev,
+          rooms: prev.rooms.map(room => ({
+            ...room,
+            price: room.price || Number(category.defaultPrice || 0),
+          })),
+        }));
+      }
+    }
+  }, [formData.roomCategory, categorySetup, formData.rooms.length]);
+
+
   /* ---------- derived ---------- */
 
   const filteredBookings = useMemo(() => {
@@ -896,9 +1070,19 @@ const BookingFlow = () => {
   const totalPages = Math.max(1, Math.ceil(filteredBookings.length / pageSize));
   const pagedBookings = filteredBookings.slice((page - 1) * pageSize, page * pageSize);
 
+  const guestFullName = `${formData.firstName} ${formData.lastName}`.trim();
+
+  const stayNights = useMemo(() => {
+    if (!formData.checkIn || !formData.checkOut) return 0;
+    const inD = new Date(formData.checkIn);
+    const outD = new Date(formData.checkOut);
+    const diff = Math.round((outD - inD) / (1000 * 60 * 60 * 24));
+    return diff > 0 ? diff : 0;
+  }, [formData.checkIn, formData.checkOut]);
+
   const grandTotal = useMemo(
-    () => formData.rooms.reduce((sum, row) => sum + rowTotal(row), 0),
-    [formData.rooms],
+    () => formData.rooms.reduce((sum, row) => sum + rowTotal(row, stayNights), 0),
+    [formData.rooms, stayNights],
   );
 
 
@@ -910,38 +1094,6 @@ const [showGuestProfile, setShowGuestProfile] = useState(false);
 const [showAddRoom, setShowAddRoom] = useState(false);
 
 const [selectedBookingId, setSelectedBookingId] = useState(null);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  const guestFullName = `${formData.firstName} ${formData.lastName}`.trim();
-
-  const stayNights = useMemo(() => {
-    if (!formData.checkIn || !formData.checkOut) return 0;
-    const inD = new Date(formData.checkIn);
-    const outD = new Date(formData.checkOut);
-    const diff = Math.round((outD - inD) / (1000 * 60 * 60 * 24));
-    return diff > 0 ? diff : 0;
-  }, [formData.checkIn, formData.checkOut]);
 
   /* ---------- navigation between the 5 "screens" (all local state) ---------- */
 
@@ -995,6 +1147,7 @@ const [selectedBookingId, setSelectedBookingId] = useState(null);
     setSelectedBooking(booking);
     setView("details");
     setDetailLoading(true);
+    setFolioLoading(true);
     try {
       const res = await API.get(`/hotel/full-booking/${booking.bookingId}`);
       setBookingDetail(res.data || null);
@@ -1003,6 +1156,17 @@ const [selectedBookingId, setSelectedBookingId] = useState(null);
       setBookingDetail(null);
     } finally {
       setDetailLoading(false);
+    }
+    try {
+      // Dynamically fetch folio entries added by the admin (Extra Charges) for this booking
+      const folioRes = await API.get(`/hotel/folio/${booking.bookingId}`);
+      const allEntries = Array.isArray(folioRes.data) ? folioRes.data : [];
+      setFolioCharges(allEntries.filter((e) => e.entry_type === "Extra Charge"));
+    } catch (err) {
+      console.error("Failed to load folio charges:", err);
+      setFolioCharges([]);
+    } finally {
+      setFolioLoading(false);
     }
   };
 
@@ -1249,7 +1413,7 @@ const handleJumpStep = (stepView) => {
             quantity: row.quantity,
             tariff: row.price,
             gstPercent: row.gst,
-            total: rowTotal(row),
+            total: rowTotal(row, stayNights),
           });
         }
 
@@ -1282,7 +1446,7 @@ const handleJumpStep = (stepView) => {
             tariff: r.price,
             gst: r.gst,
             quantity: r.quantity,
-            total: rowTotal(r),
+            total: rowTotal(r, stayNights),
           })),
         });
       }
@@ -1392,9 +1556,7 @@ const handleJumpStep = (stepView) => {
     }
   };
 
-  // Folio / Night-Audit and Payment History are still separate, standalone
-  // pages in your app (not part of this consolidated flow), so opening them
-  // is a normal route navigation — same as your old AllBooking.jsx did.
+  // Folio / Night-Audit and Payment History are now available as modals
  const handleOpenFolio = (booking) => {
     if (!booking?.bookingId) return;
 
@@ -1411,8 +1573,12 @@ const handleJumpStep = (stepView) => {
 
   const handleOpenPaymentHistory = (booking) => {
     if (!booking?.bookingId) return;
-    setStoredBookingId(booking.bookingId);
-    navigate("/hotel/payment-history", { state: { bookingId: booking.bookingId } });
+    setShowPaymentHistory(true);
+  };
+
+  const handleClosePaymentHistory = () => {
+    setShowPaymentHistory(false);
+    setPaymentHistory([]);
   };
 
   const handleOpenGroupBooking = (booking) => {
@@ -1931,7 +2097,7 @@ const handleJumpStep = (stepView) => {
                             className="w-16 sm:w-20 rounded-lg border border-slate-200 px-2 py-1.5 text-sm sm:text-base"
                           />
                         </td>
-                        <td className="px-3 py-2 font-semibold text-slate-700">{formatCurrency(rowTotal(row))}</td>
+                        <td className="px-3 py-2 font-semibold text-slate-700">{formatCurrency(rowTotal(row, stayNights))}</td>
                         <td className="px-3 py-2">
                           <button onClick={() => removeRoomRow(row.id)} className="text-rose-500 transition hover:text-rose-700 active:scale-95">
                             <FaTimes className="text-base sm:text-lg" />
@@ -1949,37 +2115,8 @@ const handleJumpStep = (stepView) => {
         {/* column 3: other details + payment */}
         <div className="space-y-5 sm:space-y-6">
           <div id="sec-other" className={cardTileCls}>
-            <div className={sectionTitleCls}>Other Details</div>
+           
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-              <div>
-                <label className={labelCls}>Coming From</label>
-                <input name="comingFrom" value={formData.comingFrom} onChange={handleChange} className={fieldCls} placeholder="Please enter coming from" />
-              </div>
-              <div>
-                <label className={labelCls}>Going To</label>
-                <input name="goingTo" value={formData.goingTo} onChange={handleChange} className={fieldCls} placeholder="Please enter going to" />
-              </div>
-              <div className="sm:col-span-2">
-                <label className={labelCls}>Purpose of Visit</label>
-                <input name="purposeOfVisit" value={formData.purposeOfVisit} onChange={handleChange} className={fieldCls} placeholder="Please enter purpose of visit" />
-              </div>
-              <div className="sm:col-span-2">
-                <label className={labelCls}>Pickup From</label>
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
-                  <input name="pickupFrom" value={formData.pickupFrom} onChange={handleChange} className={fieldCls} placeholder="Enter pickup point" />
-                  <label className="flex shrink-0 items-center gap-2 text-base sm:text-lg font-semibold text-slate-600">
-                    <input type="checkbox" name="pickup" checked={formData.pickup} onChange={handleChange} className="h-4 w-4 sm:h-5 sm:w-5 accent-blue-600" /> Pickup?
-                  </label>
-                </div>
-              </div>
-              <div className="sm:col-span-2">
-                <label className={labelCls}>Package Details</label>
-                <input name="packageDetails" value={formData.packageDetails} onChange={handleChange} className={fieldCls} placeholder="Enter package details" />
-              </div>
-              <div className="sm:col-span-2">
-                <label className={labelCls}>Remarks</label>
-                <textarea name="remarks" value={formData.remarks} onChange={handleChange} rows={2} className={`${fieldCls} h-auto py-3`} placeholder="Enter any remarks..." />
-              </div>
             </div>
           </div>
 
@@ -2140,6 +2277,9 @@ const handleJumpStep = (stepView) => {
 
           <div className="mt-1 text-2xl sm:text-3xl lg:text-4xl font-black text-blue-700">
             {formatCurrency(grandTotal)}
+            <div className="text-base text-emerald-600">
+              ({formData.rooms.length} room{formData.rooms.length > 1 ? 's' : ''} × {stayNights} night{stayNights > 1 ? 's' : ''})
+            </div>
           </div>
         </div>
       </div>
@@ -2182,6 +2322,26 @@ const handleJumpStep = (stepView) => {
   const renderDetails = () => {
     const d = bookingDetail || {};
     const b = selectedBooking || {};
+
+    // Room charges total (from live room/tariff data, falling back to the booking's stored total)
+    const roomChargesTotal = Array.isArray(d.rooms) && d.rooms.length > 0
+      ? d.rooms.reduce((sum, r) => sum + (Number(r.total) || 0), 0)
+      : Number(b.totalAmount) || 0;
+
+    // Folio (extra) charges added by the admin, fetched dynamically for this booking
+    const folioChargesTotal = folioCharges.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+
+    // Updated total = Room Charges + Folio Charges (always folio-inclusive)
+    const updatedTotalAmount = roomChargesTotal + folioChargesTotal;
+
+    // Remaining/Balance logic:
+    //  - If an advance has been paid -> Remaining = Updated Total (Room+Folio) - Advance Paid
+    //  - If nothing has been paid yet -> Remaining = the full actual Updated Total (Room+Folio)
+    const advancePaid = Number(b.paidAmount) || 0;
+    const remainingAmount = advancePaid > 0
+      ? Math.max(updatedTotalAmount - advancePaid, 0)
+      : updatedTotalAmount;
+
     return (
       <div className={panelCls}>
         <div className="mb-5 sm:mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4 sm:pb-5">
@@ -2196,8 +2356,11 @@ const handleJumpStep = (stepView) => {
             <button onClick={() => window.print()} className={ghostBtn}>
               <FaPrint className="text-sm" /> Print
             </button>
-            <button onClick={() => openEditBooking(b)} className={primaryBtn}>
+            <button onClick={() => openEditBooking(b)} className={ghostBtn}>
               <FaEdit className="text-sm" /> Edit
+            </button>
+            <button onClick={() => setShowInvoiceModal(true)} className={primaryBtn}>
+              <FaFileAlt className="text-sm" /> Generate Invoice
             </button>
           </div>
         </div>
@@ -2227,9 +2390,11 @@ const handleJumpStep = (stepView) => {
             <div className={cardTileCls}>
               <div className={sectionTitleCls}>Payment Information</div>
               <dl className="space-y-2.5 text-base sm:text-lg">
-                <div className="flex justify-between gap-3"><dt className="text-slate-500">Total</dt><dd className="font-bold text-slate-800">{formatCurrency(b.totalAmount)}</dd></div>
-                <div className="flex justify-between gap-3"><dt className="text-slate-500">Paid</dt><dd className="font-bold text-emerald-600">{formatCurrency(b.paidAmount)}</dd></div>
-                <div className="flex justify-between gap-3"><dt className="text-slate-500">Balance</dt><dd className="font-bold text-rose-600">{formatCurrency(b.remainingAmount)}</dd></div>
+                <div className="flex justify-between gap-3"><dt className="text-slate-500">Room Charges</dt><dd className="font-bold text-slate-800">{formatCurrency(roomChargesTotal)}</dd></div>
+                <div className="flex justify-between gap-3"><dt className="text-slate-500">Folio Charges</dt><dd className="font-bold text-slate-800">{formatCurrency(folioChargesTotal)}</dd></div>
+                <div className="flex justify-between gap-3"><dt className="text-slate-500">Total (Room + Folio)</dt><dd className="font-bold text-slate-800">{formatCurrency(updatedTotalAmount)}</dd></div>
+                <div className="flex justify-between gap-3"><dt className="text-slate-500">Advance Paid</dt><dd className="font-bold text-emerald-600">{formatCurrency(advancePaid)}</dd></div>
+                <div className="flex justify-between gap-3"><dt className="text-slate-500">Remaining (incl. Folio)</dt><dd className="font-bold text-rose-600">{formatCurrency(remainingAmount)}</dd></div>
               </dl>
             </div>
 
@@ -2262,7 +2427,66 @@ const handleJumpStep = (stepView) => {
                 </div>
               </div>
             )}
+
+            {/* Folio (extra) charges added by the admin — fetched dynamically for this booking */}
+            <div className={`md:col-span-3 ${cardTileCls}`}>
+              <div className={sectionTitleCls}>Folio (Extra) Charges</div>
+              {folioLoading ? (
+                <div className="py-6 text-center text-slate-400">Loading folio charges...</div>
+              ) : folioCharges.length === 0 ? (
+                <div className="py-6 text-center text-slate-400">No extra folio charges added for this booking.</div>
+              ) : (
+                <div className="max-w-full overflow-x-auto">
+                  <table className="w-full min-w-[460px] text-left">
+                    <thead className="text-xs sm:text-sm font-bold uppercase text-slate-400">
+                      <tr>
+                        <th className="py-2 pr-4">Charge Name</th>
+                        <th className="py-2 pr-4">Description</th>
+                        <th className="py-2">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200 text-sm sm:text-base md:text-lg">
+                      {folioCharges.map((entry) => (
+                        <tr key={entry.id}>
+                          <td className="py-2 pr-4 font-semibold text-slate-800">{entry.category || "Extra Charge"}</td>
+                          <td className="py-2 pr-4 text-slate-600">{entry.description || "-"}</td>
+                          <td className="py-2 font-semibold">{formatCurrency(entry.amount)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr className="border-t-2 border-slate-200">
+                        <td className="py-2 pr-4 font-bold text-slate-800" colSpan={2}>Folio Charges Total</td>
+                        <td className="py-2 font-bold text-slate-900">{formatCurrency(folioChargesTotal)}</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {/* Updated grand total: Room Charges + Folio Charges, plus Remaining charge */}
+            <div className={`md:col-span-3 ${cardTileCls} flex flex-wrap items-center justify-between gap-4`}>
+              <div>
+                <div className={sectionTitleCls + " !mb-0 !border-none !pb-0"}>Updated Total Amount</div>
+                <div className="text-2xl sm:text-3xl font-black text-emerald-600">{formatCurrency(updatedTotalAmount)}</div>
+              </div>
+              <div className="text-right">
+                <div className="text-xs sm:text-sm font-bold uppercase text-slate-400">Remaining Charge</div>
+                <div className="text-2xl sm:text-3xl font-black text-rose-600">{formatCurrency(remainingAmount)}</div>
+              </div>
+            </div>
           </div>
+        )}
+
+        {showInvoiceModal && (
+          <InvoiceModal
+            booking={{ ...b, totalAmount: updatedTotalAmount }}
+            roomChargesTotal={roomChargesTotal}
+            folioCharges={folioCharges}
+            paidAmount={advancePaid}
+            onClose={() => setShowInvoiceModal(false)}
+          />
         )}
 
         <div className="mt-6 sm:mt-8 flex flex-wrap justify-end gap-2 sm:gap-3 border-t border-slate-100 pt-5 sm:pt-6">
@@ -2406,6 +2630,14 @@ const handleJumpStep = (stepView) => {
         <FeatureModal title="Occupancy Forecast" onClose={handleCloseOccupancyForecast}>
           <OccupancyForecast onClose={handleCloseOccupancyForecast} />
         </FeatureModal>
+      )}
+
+      {/* payment history popup */}
+      {showPaymentHistory && (
+        <PaymentHistoryModal
+          booking={selectedBooking}
+          onClose={handleClosePaymentHistory}
+        />
       )}
 
       {/* add room popup — opens the existing Room.jsx page as a modal instead of navigating */}
