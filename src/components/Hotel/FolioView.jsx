@@ -243,6 +243,9 @@ const FolioView = ({
 
   useEffect(() => {
     load();
+    // Auto-reload when a Room Service add-on is posted from Roomitem.jsx
+    window.addEventListener("folioUpdated", load);
+    return () => window.removeEventListener("folioUpdated", load);
   }, [load]);
 
   useEffect(() => {

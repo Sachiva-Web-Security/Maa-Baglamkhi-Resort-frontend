@@ -722,6 +722,31 @@ const HotelDashboardHome = () => {
             </div>
           </div>
         )}
+
+        {/* Guest Profile Modal */}
+        {showGuestProfile && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/45 px-4 py-6 backdrop-blur-sm">
+            <div className="relative max-h-[90vh] w-full max-w-6xl overflow-y-auto rounded-[28px] bg-white shadow-[0_30px_90px_rgba(15,23,42,0.35)]">
+              <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-slate-100 bg-white/95 px-5 py-4 backdrop-blur">
+                <div>
+                  <h3 className="text-lg font-black text-slate-900">Guest Profile</h3>
+                  <p className="mt-1 text-sm text-slate-500">Manage guest profiles and reservations</p>
+                </div>
+                <button
+                  type="button"
+                  aria-label="Close modal"
+                  onClick={() => setShowGuestProfile(false)}
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50"
+                >
+                  <FaTimes />
+                </button>
+              </div>
+              <div className="p-4 sm:p-5">
+                <GuestProfile onClose={() => setShowGuestProfile(false)} />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

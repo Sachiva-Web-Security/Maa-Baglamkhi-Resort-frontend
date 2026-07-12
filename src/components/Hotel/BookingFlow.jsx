@@ -355,28 +355,6 @@ const FLOW_STEPS = [
     title: "All Bookings",
     desc: "View all bookings in a list with status and details",
   },
- 
-  {
-    view: "guest-booking",
-    num: 6,
-    icon: FaUserFriends,
-    title: "Guest Booking",
-    desc: "Manage guest profiles, reservations, arrivals, departures, and stay history",
-  },
-  {
-    view: "occupancy-forecast",
-    num: 7,
-    icon: FaChartLine,
-    title: "Occupancy Forecast",
-    desc: "Analyze occupancy trends, room availability, and future booking forecasts",
-  },
-  {
-    view: "add-room",
-    num: 8,
-    icon: FaDoorOpen,
-    title: "Add Room",
-    desc: "Open the Room screen to add or manage individual room numbers",
-  },
 ];
 
 const FlowBar = ({ view, onJump }) => (
@@ -1008,6 +986,7 @@ const BookingFlow = () => {
   const [collectModal, setCollectModal] = useState({ open: false, amount: "", mode: "Cash", submitting: false });
   const [refundModal, setRefundModal] = useState({ open: false, amount: "", submitting: false });
   const [manageStatus, setManageStatus] = useState("");
+  const [showDocumentUpload, setShowDocumentUpload] = useState(false);
   const [showPaymentHistory, setShowPaymentHistory] = useState(false);
   const [paymentHistory, setPaymentHistory] = useState([]);
   const [paymentHistoryLoading, setPaymentHistoryLoading] = useState(false);
@@ -1038,21 +1017,13 @@ const BookingFlow = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Auto-fill room price when room category is selected
-  useEffect(() => {
-    if (formData.roomCategory && formData.rooms.length > 0) {
-      const category = categorySetup.find(c => String(c.id) === String(formData.roomCategory));
-      if (category) {
-        setFormData(prev => ({
-          ...prev,
-          rooms: prev.rooms.map(room => ({
-            ...room,
-            price: room.price || Number(category.defaultPrice || 0),
-          })),
-        }));
-      }
-    }
-  }, [formData.roomCategory, categorySetup, formData.rooms.length]);
+  // NOTE: There used to be a useEffect here that rewrote every row's price
+  // whenever `formData.roomCategory` changed. That was the root cause of the
+  // "AC room gets overwritten by Non-AC room" bug: `roomCategory` is a single
+  // shared field, so switching it re-ran that effect against the WHOLE
+  // `rooms` array. It's been removed — each row now snapshots its own
+  // `categoryId` at the moment it's added/edited (see addRoomRow / updateRoomRow
+  // below), so rows are fully isolated from each other and from this field.
 
 
   /* ---------- derived ---------- */
@@ -1127,13 +1098,23 @@ const [selectedBookingId, setSelectedBookingId] = useState(null);
         checkIn: (data.check_in || data.checkIn || "").slice(0, 10),
         checkOut: (data.check_out || data.checkOut || "").slice(0, 10),
         company: data.company_name || data.companyName || "",
-        rooms: (Array.isArray(data.rooms) ? data.rooms : []).map((r) => ({
-          id: uid(),
-          roomNo: r.room_number || r.roomNumber || r.roomNo || "",
-          price: r.tariff || r.price || 0,
-          gst: r.gst || r.gstPercent || 0,
-          quantity: r.quantity || 1,
-        })),
+        rooms: (Array.isArray(data.rooms) ? data.rooms : []).map((r) => {
+          const roomNo = r.room_number || r.roomNumber || r.roomNo || "";
+          // Best-effort: find which category this room number actually
+          // belongs to in the real backend room-setup data, so each edited
+          // row starts with its own correct category instead of a blank one.
+          const ownerCategory = categorySetup.find((c) =>
+            (Array.isArray(c.rooms) ? c.rooms : []).some((rn) => String(rn).trim() === String(roomNo).trim()),
+          );
+          return {
+            id: uid(),
+            categoryId: ownerCategory ? String(ownerCategory.id) : "",
+            roomNo,
+            price: r.tariff || r.price || 0,
+            gst: r.gst || r.gstPercent || 0,
+            quantity: r.quantity || 1,
+          };
+        }),
       });
       setIsEdit(true);
       setView("form");
@@ -1275,31 +1256,56 @@ const handleJumpStep = (stepView) => {
 
   const addRoomRow = () => {
     const cat = categorySetup.find((c) => String(c.id) === String(formData.roomCategory));
+    // A brand-new, fully independent object — no shared references with any
+    // other row. Its category is a SNAPSHOT of whatever is currently selected
+    // above; changing that selector afterwards will never touch this row again.
+    const newRow = {
+      id: uid(),
+      categoryId: formData.roomCategory || "",
+      roomNo: "",
+      price: cat ? Number(cat.defaultPrice || 0) : 0,
+      gst: 0,
+      quantity: Number(formData.noOfRooms) || 1,
+    };
     setFormData((prev) => ({
       ...prev,
-      rooms: [
-        ...prev.rooms,
-        {
-          id: uid(),
-          roomNo: "",
-          price: cat ? Number(cat.defaultPrice || 0) : 0,
-          gst: 0,
-          quantity: Number(prev.noOfRooms) || 1,
-        },
-      ],
+      rooms: [...prev.rooms, newRow],
     }));
   };
 
+  // Updates exactly one row, by id, and only that row. Every other row object
+  // in the array keeps its original reference/values untouched — this is what
+  // guarantees editing/selecting in one row can never leak into another.
   const updateRoomRow = (id, field, value) => {
     setFormData((prev) => ({
       ...prev,
-      rooms: prev.rooms.map((r) => (r.id === id ? { ...r, [field]: value } : r)),
+      rooms: prev.rooms.map((r) => {
+        if (r.id !== id) return r; // leave every other row exactly as-is
+
+        if (field === "categoryId") {
+          // Category changed for THIS row only: fetch that category's own
+          // default tariff from the already-loaded backend data and reset
+          // just this row's room number (its old room belonged to a
+          // different category's inventory, so it's no longer valid here).
+          const cat = categorySetup.find((c) => String(c.id) === String(value));
+          return {
+            ...r,
+            categoryId: value,
+            roomNo: "",
+            price: cat ? Number(cat.defaultPrice || 0) : r.price,
+          };
+        }
+
+        return { ...r, [field]: value }; // new object, this row only
+      }),
     }));
   };
 
-  // Room numbers for the currently selected Room Category, sourced from the
-  // same "/hotel/rooms/setup" categorySetup data that powers Room.jsx — no
-  // separate/duplicate room list is fetched or maintained here.
+  // Room numbers for a SPECIFIC row's category, sourced from the same
+  // "/hotel/rooms/setup" categorySetup data that powers Room.jsx (real
+  // backend availability/tariff — nothing hardcoded). Each row calls this
+  // with its OWN categoryId, so AC rows and Non-AC rows each see only their
+  // own category's real room list, independently of one another.
   const getRoomNumbersForCategory = (categoryId, currentRoomNo = "") => {
     const cat = categorySetup.find((c) => String(c.id) === String(categoryId));
     if (!cat) return [];
@@ -1311,8 +1317,12 @@ const handleJumpStep = (stepView) => {
       }
     });
 
+    // Only exclude room numbers already picked by OTHER rows within this
+    // SAME category — a room number picked in an AC row should never block
+    // a same-numbered-but-different room in another category's dropdown.
     const roomsAlreadyPicked = new Set(
       formData.rooms
+        .filter((r) => String(r.categoryId || "") === String(categoryId))
         .map((r) => String(r.roomNo || "").trim())
         .filter((rn) => rn && rn !== String(currentRoomNo || "").trim()),
     );
@@ -2037,9 +2047,10 @@ const handleJumpStep = (stepView) => {
 
             {formData.rooms.length > 0 && (
               <div className="mt-4 sm:mt-5 max-w-full overflow-x-auto rounded-xl border border-slate-200">
-                <table className="w-full min-w-[420px] text-left">
+                <table className="w-full min-w-[560px] text-left">
                   <thead className="sticky top-0 z-10 bg-slate-100 text-xs sm:text-sm font-bold uppercase text-slate-500">
                     <tr>
+                      <th className="px-3 py-2.5">Category</th>
                       <th className="px-3 py-2.5">Room No</th>
                       <th className="px-3 py-2.5">Price</th>
                       <th className="px-3 py-2.5">GST %</th>
@@ -2053,15 +2064,27 @@ const handleJumpStep = (stepView) => {
                       <tr key={row.id}>
                         <td className="px-3 py-2">
                           <select
+                            value={row.categoryId || ""}
+                            onChange={(e) => updateRoomRow(row.id, "categoryId", e.target.value)}
+                            className="w-28 sm:w-32 rounded-lg border border-slate-200 px-2 py-1.5 text-sm sm:text-base"
+                          >
+                            <option value="">Select category</option>
+                            {categorySetup.map((c) => (
+                              <option key={c.id} value={c.id}>{c.name}</option>
+                            ))}
+                          </select>
+                        </td>
+                        <td className="px-3 py-2">
+                          <select
                             value={row.roomNo}
                             onChange={(e) => updateRoomRow(row.id, "roomNo", e.target.value)}
-                            disabled={!formData.roomCategory}
+                            disabled={!row.categoryId}
                             className="w-24 sm:w-28 rounded-lg border border-slate-200 px-2 py-1.5 text-sm sm:text-base disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
                           >
                             <option value="">
-                              {formData.roomCategory ? "Select room" : "Pick category first"}
+                              {row.categoryId ? "Select room" : "Pick category first"}
                             </option>
-                            {getRoomNumbersForCategory(formData.roomCategory, row.roomNo).map((r) => (
+                            {getRoomNumbersForCategory(row.categoryId, row.roomNo).map((r) => (
                               <option key={r.roomNo} value={r.roomNo} disabled={r.alreadyPicked}>
                                 {r.roomNo}
                                 {r.status && r.status.toLowerCase() !== "available"
@@ -2547,6 +2570,9 @@ const handleJumpStep = (stepView) => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <button onClick={() => handleOpenFolio(b)} className={ghostBtn}>
                   <FaBook className="text-sm" /> Guest Folio
+                </button>
+                <button onClick={() => setShowDocumentUpload(true)} className={ghostBtn}>
+                  <FaFileUpload className="text-sm" /> Upload Document
                 </button>
                 <button onClick={() => handleOpenPaymentHistory(b)} className={ghostBtn}>
                   <FaHistory className="text-sm" /> Payment History

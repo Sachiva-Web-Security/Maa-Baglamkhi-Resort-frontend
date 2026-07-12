@@ -53,7 +53,6 @@ const Roomitem = () => {
   const [roomPage, setRoomPage] = useState(1);
 
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
   const [menuItems, setMenuItems] = useState([]);
   const [addonForms, setAddonForms] = useState({});
 
@@ -108,28 +107,36 @@ const Roomitem = () => {
     return () => window.removeEventListener("tokenUpdated", loadBills);
   }, []);
 
+  const mergedBookings = useMemo(() => mergeBookingsWithRooms(bookings, rooms), [bookings, rooms]);
+  const today = todayISO();
+
+  const getBookingForRoom = (room) =>
+    getRoomBookingForDate(room.roomNo, today, mergedBookings, false) ||
+    getRoomBookingReference(room.roomNo, today, mergedBookings);
+
+  const occupiedRooms = useMemo(() => rooms.filter(isOccupiedRoomStatus), [rooms]);
+
   // Menu items for the inline "Add-on" quick-add dropdown on each occupied
-  // room card. Tries restaurantService.getMenuItems() first (if your service
-  // already exposes one), otherwise falls back to a /menu-items GET.
-  // NOTE: adjust the fallback route below if your backend uses a different path.
+  // room card. Uses the same restaurantService.getMenu() endpoint that
+  // MenuPage.jsx uses (GET /restaurant/menu?tableNumber=...), so the data
+  // structure is identical.  Placed after occupiedRooms so the closure can
+  // safely reference it.
   useEffect(() => {
     let active = true;
     const loadMenu = async () => {
       try {
-        let list = [];
-        if (typeof restaurantService.getMenuItems === "function") {
-          const res = await restaurantService.getMenuItems();
-          list = Array.isArray(res) ? res : res?.data || [];
-        } else {
-          const res = await API.get("/menu-items");
-          list = Array.isArray(res.data) ? res.data : [];
-        }
+        // Pass the first occupied room's number as tableNumber so the
+        // backend returns the full shared menu. Fall back to "1" if no
+        // rooms are loaded yet.
+        const tableNumber = occupiedRooms.length ? String(occupiedRooms[0].roomNo) : "1";
+        const data = await restaurantService.getMenu(tableNumber);
         if (!active) return;
+        const list = Array.isArray(data) ? data : data?.data || [];
         setMenuItems(
           list.map((item) => ({
             id: item.id,
-            name: item.item_name || item.name || "Menu Item",
-            price: Number(item.rate || item.price || 0),
+            name: item.name || item.item_name || "Menu Item",
+            price: Number(item.price ?? item.rate ?? 0),
           })),
         );
       } catch (error) {
@@ -141,37 +148,28 @@ const Roomitem = () => {
     return () => {
       active = false;
     };
-  }, []);
-
-  const mergedBookings = useMemo(() => mergeBookingsWithRooms(bookings, rooms), [bookings, rooms]);
-  const today = todayISO();
-
-  const getBookingForRoom = (room) =>
-    getRoomBookingForDate(room.roomNo, today, mergedBookings, false) ||
-    getRoomBookingReference(room.roomNo, today, mergedBookings);
-
-  const occupiedRooms = useMemo(() => rooms.filter(isOccupiedRoomStatus), [rooms]);
+  }, [occupiedRooms]);
 
   const roomCards = useMemo(
     () =>
-      rooms.map((room) => {
-        const occupied = isOccupiedRoomStatus(room);
-        const booking = occupied ? getBookingForRoom(room) : null;
-        return { room, booking, occupied };
-      }),
+      rooms
+        .map((room) => {
+          const occupied = isOccupiedRoomStatus(room);
+          const booking = occupied ? getBookingForRoom(room) : null;
+          return { room, booking, occupied };
+        })
+        .filter(({ occupied }) => occupied), // show only occupied rooms
     [rooms, mergedBookings, today],
   );
 
   const filteredRoomCards = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return roomCards.filter(({ room, booking, occupied }) => {
-      if (statusFilter === "occupied" && !occupied) return false;
-      if (statusFilter === "vacant" && occupied) return false;
+    return roomCards.filter(({ room, booking }) => {
       if (!q) return true;
       const guestName = String(room.guest || booking?.guestName || "").toLowerCase();
       return String(room.roomNo).toLowerCase().includes(q) || guestName.includes(q);
     });
-  }, [roomCards, search, statusFilter]);
+  }, [roomCards, search]);
 
   const totalRoomPages = Math.max(1, Math.ceil(filteredRoomCards.length / ROOM_PAGE_SIZE));
   const paginatedCards = useMemo(
@@ -183,7 +181,7 @@ const Roomitem = () => {
 
   useEffect(() => {
     setRoomPage(1);
-  }, [search, statusFilter]);
+  }, [search]);
 
   useEffect(() => {
     if (roomPage > totalRoomPages) {
@@ -328,6 +326,11 @@ const Roomitem = () => {
       return;
     }
     const qty = Math.max(1, Number(form?.qty || 1));
+    const lineTotal = menuItem.price * qty;
+
+    // Get the active booking so we can post to the folio
+    const booking = getBookingForRoom(room);
+    const bookingId = booking?.bookingId || null;
 
     updateAddonForm(roomRef, { submitting: true });
     try {
@@ -336,12 +339,11 @@ const Roomitem = () => {
 
       if (!tokenId) {
         // NOTE: adjust this endpoint/payload if your backend's token-create route differs.
-        const createdToken = await API.post("/token", {
-          table: roomRef,
-          entityType: "Room",
-          waiterName: "Room Service",
+        const createdToken = await API.post("/token/create", {
+          tableNumber: roomRef,
+          waiter: "Room Service",
         });
-        tokenId = createdToken.data?.id || createdToken.data?.token?.id || null;
+        tokenId = createdToken.data?.tokenId || null;
       }
 
       if (!tokenId) {
@@ -349,8 +351,9 @@ const Roomitem = () => {
       }
 
       // NOTE: adjust this endpoint/payload if your backend's add-item route differs.
-      await API.post(`/token/items/${tokenId}`, {
-        item_name: menuItem.name,
+      await API.post("/token/item", {
+        tokenId,
+        name: menuItem.name,
         qty,
         rate: menuItem.price,
       });
@@ -368,6 +371,26 @@ const Roomitem = () => {
           items: itemsRes.data || [],
         },
       }));
+
+      // Also post to the hotel folio so it appears in FolioView.jsx for this guest
+      if (bookingId) {
+        try {
+          const today = new Date().toISOString().slice(0, 10);
+          await API.post(`/hotel/folio/${bookingId}`, {
+            entry_date: today,
+            entry_type: "Extra Charge",
+            category: "Room Service",
+            description: `${menuItem.name} x${qty}`,
+            amount: lineTotal,
+            created_by: "Room Service",
+          });
+          // Notify FolioView to reload if it's open
+          window.dispatchEvent(new Event("folioUpdated"));
+        } catch (folioErr) {
+          // Non-fatal — token item already saved, just log the folio error
+          console.warn("Folio post failed (non-fatal):", folioErr);
+        }
+      }
 
       updateAddonForm(roomRef, { open: false, menuItemId: "", qty: 1, submitting: false });
       window.dispatchEvent(new Event("tokenUpdated"));
@@ -563,7 +586,7 @@ const Roomitem = () => {
         </div>
       </div>
 
-      {/* ---------- search + filter + add room ---------- */}
+      {/* ---------- search + add room ---------- */}
       <div className="mb-6 flex flex-col items-stretch gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center">
         <div className="relative flex-1">
           <FiSearch className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -575,16 +598,6 @@ const Roomitem = () => {
             className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
         </div>
-
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
-        >
-          <option value="all">All statuses</option>
-          <option value="occupied">Occupied</option>
-          <option value="vacant">Vacant</option>
-        </select>
 
         <button
           type="button"

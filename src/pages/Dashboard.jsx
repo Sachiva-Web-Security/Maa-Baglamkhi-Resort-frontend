@@ -74,10 +74,11 @@ const normalizeAvailableRoomType = (value) => {
   if (lower.includes("super deluxe")) return "SUPER DELUXE ROOM";
   if (lower.includes("deluxe dormitory")) return "DELUXE DORMITORY";
   if (lower.includes("suite")) return "SUITE ROOM";
-  if (lower.includes("non ac") || lower.includes("non-ac") || lower.includes("hotel room") || lower.includes("standard")) {
+  if (lower.includes("non ac") || lower.includes("non-ac") || lower.includes("standard")) {
     return "NON-AC ROOM";
   }
   if (lower.includes("ac") && !lower.includes("non")) return "AC ROOM";
+  if (lower.includes("hotel room")) return "AC ROOM";
   if (lower.includes("deluxe")) return "DELUXE ROOM";
   return raw ? raw.toUpperCase() : "ROOM TYPE";
 };
@@ -170,15 +171,17 @@ const Dashboard = () => {
     todayCheckinDetails: [],
   });
   const [rooms, setRooms] = useState([]);
+  const [roomsSetup, setRoomsSetup] = useState([]);
   const [bookings, setBookings] = useState([]);
 
   const loadDashboardData = useCallback(async (silent = false) => {
     try {
       if (silent) setRefreshingDashboard(true);
 
-      const [metricsRes, roomsRes, bookingsRes, usersRes] = await Promise.all([
+      const [metricsRes, roomsRes, roomsSetupRes, bookingsRes, usersRes] = await Promise.all([
         API.get("/dashboard/metrics"),
         API.get("/housekeeping"),
+        API.get("/hotel/rooms/setup"),
         API.get("/hotel/all-bookings"),
         API.get("/users"),
       ]);
@@ -196,6 +199,7 @@ const Dashboard = () => {
         todayCheckinDetails: metricsRes.data.todayCheckinDetails || [],
       });
       setRooms(normalizeRooms(roomsRes.data));
+      setRoomsSetup(Array.isArray(roomsSetupRes.data) ? roomsSetupRes.data : []);
       setBookings(expandBookings(bookingsRes.data));
       setHousekeepers(getHousekeepingUsers(usersRes.data));
     } finally {
@@ -768,7 +772,47 @@ const Dashboard = () => {
 
   const renderBoardColumnContent = (day, key) => {
     const items = day?.board?.[key] || [];
-    const groups = groupRoomsByType(items);
+
+    // For "available" and "cleaning", derive room lists from /hotel/rooms/setup
+    // inventory so category-wise counts always reflect actual room data and update dynamically.
+    // After checkout, room status becomes "Vacant Dirty" → disappears from Available,
+    // appears in Cleaning — both columns use the same source of truth.
+    const availableInventory = key === "available"
+      ? roomsSetup.flatMap((category) =>
+          (category.roomDetails || [])
+            .filter((detail) => String(detail.status || "").toLowerCase() === "available")
+            .map((detail) => ({
+              id: `available-${category.id}-${detail.roomNumber}`,
+              roomId: detail.roomNumber,
+              roomNumber: detail.roomNumber,
+              roomType: normalizeAvailableRoomType(category.name),
+              title: category.name,
+              subtitle: "Ready to sell",
+            })),
+        )
+      : items;
+
+    const cleaningInventory = key === "cleaning"
+      ? roomsSetup.flatMap((category) =>
+          (category.roomDetails || [])
+            .filter((detail) => {
+              const s = String(detail.status || "").toLowerCase();
+              return s.includes("dirty") || s.includes("cleaning") || s.includes("vacant");
+            })
+            .map((detail) => ({
+              id: `cleaning-${category.id}-${detail.roomNumber}`,
+              roomId: detail.roomNumber,
+              roomNumber: detail.roomNumber,
+              roomType: normalizeAvailableRoomType(category.name),
+              title: category.name,
+              subtitle: detail.status || "Cleaning",
+            })),
+        )
+      : items;
+
+    const groups = groupRoomsByType(
+      key === "cleaning" ? cleaningInventory : availableInventory,
+    );
 
     if (["available", "confirmed", "cleaning", "pencil", "blocked", "checked_in"].includes(key)) {
       const toneMap = {
