@@ -508,224 +508,122 @@ const MenuPage = () => {
         </div>
 
         <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
-          <div className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm">
-            <div className="hidden bg-slate-100 px-4 py-3 text-xs font-bold uppercase tracking-[0.16em] text-slate-600 xl:grid xl:grid-cols-[88px_minmax(260px,1.35fr)_120px_110px_150px_130px] xl:items-center">
-              <div className="text-center">Image</div>
-              <div>Item</div>
-              <div className="text-center">Rate</div>
-              <div className="text-center">Tax</div>
-              <div className="text-center">Qty</div>
-              <div className="text-center">Amount</div>
+          <div className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm lg:p-5">
+            <div className="mb-4 flex items-center justify-between">
+              <div className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">Menu Items</div>
+              <div className="text-xs font-semibold text-slate-400">
+                {filteredItems.length} item{filteredItems.length === 1 ? "" : "s"}
+              </div>
             </div>
-            <div className="max-h-[640px] overflow-y-auto">
-              <div>
-                {isLoadingMenu ? <div className="p-6 text-center text-slate-500">Loading menu...</div> : null}
-                {menuError ? <div className="p-6 text-center text-rose-600">{menuError}</div> : null}
-                {!isLoadingMenu && !menuError && !filteredItems.length ? <div className="p-6 text-center text-slate-500">No items in this category.</div> : null}
-                {!isLoadingMenu && !menuError && paginatedMenuItems.map((item, index) => {
-                  const quantity = Number(qty[item.id] || 0);
+
+            {isLoadingMenu ? <div className="p-6 text-center text-slate-500">Loading menu...</div> : null}
+            {menuError ? <div className="p-6 text-center text-rose-600">{menuError}</div> : null}
+            {!isLoadingMenu && !menuError && !filteredItems.length ? (
+              <div className="p-6 text-center text-slate-500">No items in this category.</div>
+            ) : null}
+
+            {!isLoadingMenu && !menuError && filteredItems.length ? (
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                {paginatedMenuItems.map((item) => {
                   const effectivePrice = Number(
                     item.effectivePrice ?? item.effective_price ?? item.price ?? 0,
                   );
-                  const amount = effectivePrice * quantity;
                   const itemImageSrc = buildMenuImageSrc(item.image_url || item.imageUrl);
                   const placeholder = buildMenuPlaceholder(item);
                   return (
                     <div
                       key={item.id}
-                      className={`border-t border-slate-100 ${index % 2 ? "bg-slate-50/70" : "bg-white"}`}
+                      className="flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md"
                     >
-                      <div className="grid gap-3 px-4 py-4 xl:hidden">
-                        <div className="flex items-start gap-3">
-                          <div className="flex shrink-0 justify-center">
-                            {itemImageSrc ? (
-                              <img
-                                src={itemImageSrc}
-                                alt={item.name}
-                                className="h-14 w-14 rounded-2xl border border-slate-200 object-cover shadow-sm"
-                                loading="lazy"
-                              />
-                            ) : (
-                              <div className="flex h-14 w-14 flex-col items-center justify-center rounded-2xl border border-dashed border-cyan-200 bg-[linear-gradient(135deg,#ecfeff_0%,#eff6ff_55%,#f8fafc_100%)] px-1 text-center shadow-sm">
-                                <span className="text-xs font-black leading-none text-cyan-700">
-                                  {placeholder.initials}
-                                </span>
-                                <span className="mt-1 line-clamp-2 text-[8px] font-semibold uppercase tracking-[0.12em] text-slate-500">
-                                  {placeholder.category}
-                                </span>
-                              </div>
-                            )}
+                      <div className="h-24 w-full overflow-hidden bg-slate-50 sm:h-28">
+                        {itemImageSrc ? (
+                          <img
+                            src={itemImageSrc}
+                            alt={item.name}
+                            className="h-full w-full object-cover"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full flex-col items-center justify-center bg-[linear-gradient(135deg,#ecfeff_0%,#eff6ff_55%,#f8fafc_100%)] px-2 text-center">
+                            <span className="text-sm font-black leading-none text-cyan-700 sm:text-base">
+                              {placeholder.initials}
+                            </span>
+                            <span className="mt-0.5 line-clamp-1 text-[8px] font-semibold uppercase tracking-[0.12em] text-slate-500 sm:text-[9px]">
+                              {placeholder.category}
+                            </span>
                           </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="text-[15px] font-bold leading-5 text-slate-900">{item.name}</div>
-                            <div className="mt-1 text-xs text-slate-500">
-                              {item.category || "Other"}
-                              {item.happyHourActive
-                                ? ` | Happy hour ${item.happy_hour_start?.slice(0, 5)}-${item.happy_hour_end?.slice(0, 5)}`
-                                : ""}
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3 text-sm">
-                          <div className="rounded-xl bg-slate-50 px-3 py-2">
-                            <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">Rate</div>
-                            <div className="mt-1 font-semibold text-slate-700">
-                              {item.happyHourActive ? (
-                                <div>
-                                  <div className="text-emerald-600">Rs. {effectivePrice}</div>
-                                  <div className="text-[11px] line-through text-slate-400">Rs. {item.price}</div>
-                                </div>
-                              ) : (
-                                `Rs. ${item.price}`
-                              )}
-                            </div>
-                          </div>
-                          <div className="rounded-xl bg-slate-50 px-3 py-2">
-                            <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">Amount</div>
-                            <div className="mt-1 font-bold text-slate-800">Rs. {(amount || 0).toFixed(2)}</div>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-3">
-                          <label className="space-y-1">
-                            <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">Tax %</span>
-                            <input
-                              type="number"
-                              min="0"
-                              step="0.1"
-                              value={taxByItem[item.id] ?? item.tax ?? 5}
-                              onChange={(e) => handleTaxChange(item.id, e.target.value)}
-                              className="h-10 w-full rounded-xl border border-slate-200 px-3 text-center text-sm"
-                            />
-                          </label>
-                          <label className="space-y-1">
-                            <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">Qty</span>
-                            <input
-                              type="number"
-                              min="1"
-                              value={qty[item.id] || ""}
-                              onChange={(e) => handleQtyChange(item.id, e.target.value)}
-                              className="h-10 w-full rounded-xl border border-slate-200 px-3 text-center text-sm"
-                            />
-                          </label>
-                        </div>
-
-                        <button
-                          onClick={() => handleAdd(item)}
-                          className="h-11 rounded-xl bg-emerald-500 px-4 text-sm font-bold text-white shadow-sm"
-                        >
-                          Add Item
-                        </button>
+                        )}
                       </div>
 
-                      <div className="hidden xl:grid xl:grid-cols-[88px_minmax(260px,1.35fr)_120px_110px_150px_130px] xl:items-center xl:gap-3 xl:px-4 xl:py-3">
-                        <div className="flex justify-center">
-                          {itemImageSrc ? (
-                            <img
-                              src={itemImageSrc}
-                              alt={item.name}
-                              className="h-14 w-14 rounded-2xl border border-slate-200 object-cover shadow-sm"
-                              loading="lazy"
-                            />
-                          ) : (
-                            <div className="flex h-14 w-14 flex-col items-center justify-center rounded-2xl border border-dashed border-cyan-200 bg-[linear-gradient(135deg,#ecfeff_0%,#eff6ff_55%,#f8fafc_100%)] px-1 text-center shadow-sm">
-                              <span className="text-xs font-black leading-none text-cyan-700">
-                                {placeholder.initials}
-                              </span>
-                              <span className="mt-1 line-clamp-2 text-[8px] font-semibold uppercase tracking-[0.12em] text-slate-500">
-                                {placeholder.category}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                        <div className="min-w-0 pr-2">
-                          <div className="truncate text-[16px] font-bold leading-5 text-slate-900">{item.name}</div>
-                          <div className="mt-1 truncate text-[12px] text-slate-500">
+                      <div className="flex flex-1 flex-col gap-1 p-2 sm:gap-2 sm:p-2.5">
+                        <div>
+                          <div className="truncate text-[12px] font-bold leading-4 text-slate-900 sm:text-[13px]" title={item.name}>
+                            {item.name}
+                          </div>
+                          <div className="mt-0.5 truncate text-[10px] text-slate-500 sm:text-[11px]">
                             {item.category || "Other"}
-                            {item.happyHourActive ? ` | Happy hour ${item.happy_hour_start?.slice(0, 5)}-${item.happy_hour_end?.slice(0, 5)}` : ""}
                           </div>
                         </div>
-                        <div className="text-center font-semibold text-slate-700">
-                          {item.happyHourActive ? (
-                            <div>
-                              <div className="text-emerald-600">Rs. {effectivePrice}</div>
-                              <div className="text-[11px] line-through text-slate-400">Rs. {item.price}</div>
-                            </div>
-                          ) : (
-                            `Rs. ${item.price}`
-                          )}
+
+                        <div className="text-[13px] font-bold text-slate-900 sm:text-[14px]">
+                          Rs. {item.price}
                         </div>
-                        <div className="flex items-center justify-center gap-1">
+
+                        <div className="mt-auto grid grid-cols-2 gap-1 sm:gap-1.5">
                           <input
                             type="number"
                             min="0"
                             step="0.1"
                             value={taxByItem[item.id] ?? item.tax ?? 5}
                             onChange={(e) => handleTaxChange(item.id, e.target.value)}
-                            className="w-16 rounded-xl border border-slate-200 px-2 py-2 text-center text-sm"
+                            className="h-7 w-full rounded-md border border-slate-200 px-1 text-center text-[10px] font-semibold text-slate-700 sm:h-8 sm:text-xs"
+                            placeholder="Tax%"
                           />
-                          <span className="text-sm text-slate-600">%</span>
+                          <input
+                            type="number"
+                            min="1"
+                            value={qty[item.id] || ""}
+                            onChange={(e) => handleQtyChange(item.id, e.target.value)}
+                            placeholder="Qty"
+                            className="h-7 w-full rounded-md border border-slate-200 px-1 text-center text-[10px] font-semibold text-slate-700 sm:h-8 sm:text-xs"
+                          />
                         </div>
-                        <div className="flex items-center justify-center gap-2">
-                          <input type="number" min="1" value={qty[item.id] || ""} onChange={(e) => handleQtyChange(item.id, e.target.value)} className="w-16 rounded-xl border border-slate-200 px-2 py-2 text-center text-sm" />
-                          <button onClick={() => handleAdd(item)} className="rounded-xl bg-emerald-500 px-4 py-2 text-sm font-bold text-white shadow-sm">Add</button>
-                        </div>
-                        <div className="text-center text-[15px] font-bold text-slate-800">Rs. {(amount || 0).toFixed(2)}</div>
+
+                        <button
+                          onClick={() => handleAdd(item)}
+                          className="h-7 w-full rounded-md bg-emerald-500 text-[10px] font-bold text-white shadow-sm transition hover:bg-emerald-600 sm:h-8 sm:text-xs"
+                        >
+                          Add
+                        </button>
                       </div>
                     </div>
                   );
                 })}
               </div>
-            </div>
+            ) : null}
+
             {!isLoadingMenu && !menuError && filteredItems.length > MENU_ITEMS_PAGE_SIZE ? (
-              <div className="flex flex-col gap-3 border-t border-slate-200 bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="mt-5 flex items-center justify-center gap-4 border-t border-slate-100 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setMenuPage((current) => Math.max(1, current - 1))}
+                  disabled={menuPage === 1}
+                  className="flex items-center gap-1 text-sm font-semibold text-slate-500 transition hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <span aria-hidden="true">‹</span> Previous
+                </button>
                 <div className="text-sm text-slate-500">
-                  Showing{" "}
-                  <span className="font-semibold text-slate-900">
-                    {(menuPage - 1) * MENU_ITEMS_PAGE_SIZE + 1}
-                  </span>{" "}
-                  to{" "}
-                  <span className="font-semibold text-slate-900">
-                    {Math.min(menuPage * MENU_ITEMS_PAGE_SIZE, filteredItems.length)}
-                  </span>{" "}
-                  of <span className="font-semibold text-slate-900">{filteredItems.length}</span> items
+                  Page <span className="font-semibold text-slate-900">{menuPage}</span> of{" "}
+                  <span className="font-semibold text-slate-900">{totalMenuPages}</span>
                 </div>
-
-                <div className="flex flex-wrap items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setMenuPage((current) => Math.max(1, current - 1))}
-                    disabled={menuPage === 1}
-                    className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    Previous
-                  </button>
-
-                  {Array.from({ length: totalMenuPages }, (_, index) => index + 1).map((pageNumber) => (
-                    <button
-                      key={pageNumber}
-                      type="button"
-                      onClick={() => setMenuPage(pageNumber)}
-                      className={`rounded-full px-3 py-2 text-xs font-semibold transition ${
-                        pageNumber === menuPage
-                          ? "bg-slate-900 text-white"
-                          : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-                      }`}
-                    >
-                      {pageNumber}
-                    </button>
-                  ))}
-
-                  <button
-                    type="button"
-                    onClick={() => setMenuPage((current) => Math.min(totalMenuPages, current + 1))}
-                    disabled={menuPage === totalMenuPages}
-                    className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    Next
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setMenuPage((current) => Math.min(totalMenuPages, current + 1))}
+                  disabled={menuPage === totalMenuPages}
+                  className="flex items-center gap-1 text-sm font-semibold text-blue-600 transition hover:text-blue-800 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Next <span aria-hidden="true">›</span>
+                </button>
               </div>
             ) : null}
           </div>

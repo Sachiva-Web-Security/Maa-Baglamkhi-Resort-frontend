@@ -47,6 +47,7 @@ import Reports from "./pages/Reports";
 import RestaurantDashboard from "./pages/RestaurantDashboard";
 import RestaurantPOS from "./pages/RestaurantPOS";
 import WaiterNotifications from "./pages/WaiterNotifications";
+import LiveBoard from "./pages/LiveBoard";
 import StaffDashboard from "./pages/StaffDashboard";
 import User from "./pages/User";
 import AuditReport from "./pages/reports/AuditReport";
@@ -280,6 +281,7 @@ function AppRoutes({ isAuthenticated, setIsAuthenticated, protect }) {
             <Route path="room-items" element={<Roomitem />} />
             <Route path="add-menu-item" element={<AddMenuItemPage />} />
             <Route path="notifications" element={<WaiterNotifications />} />
+            <Route path="live-board" element={<LiveBoard />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/dashboard" replace />} />

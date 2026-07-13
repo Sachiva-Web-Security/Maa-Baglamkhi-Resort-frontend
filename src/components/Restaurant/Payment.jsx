@@ -1205,6 +1205,13 @@ const Payment = ({
         });
 
         window.dispatchEvent(new Event("tokenUpdated"));
+
+        // Release the lock when bill is posted to room
+        API.post(`/waiter/release-lock`, {
+          tableNumber: invoice.table,
+          tokenId: invoice.tokenId || null,
+        }).catch(console.warn);
+
         if (typeof onSuccess === "function") {
           onSuccess({
             type: "posted_to_room",
@@ -1263,6 +1270,10 @@ const Payment = ({
       const cleanupResults = await Promise.allSettled([
         API.put(`/restaurant/order/${invoice.table}/pay`),
         API.put(`/token/close/${invoice.table}`),
+        API.post(`/waiter/release-lock`, {
+          tableNumber: invoice.table,
+          tokenId: invoice.tokenId || null,
+        }),
       ]);
 
       cleanupResults.forEach((result) => {
