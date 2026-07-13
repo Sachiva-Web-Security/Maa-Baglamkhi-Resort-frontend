@@ -13,32 +13,38 @@ import {
   YAxis,
 } from "recharts";
 
-const palette = ["#14b8a6", "#3b82f6", "#f59e0b", "#ef4444", "#0f766e", "#8b5cf6"];
+/* Blue-forward premium palette — kept multi-hue for pie/legend contrast,
+   anchored to the brand blues (#1D4ED8 / #2563EB / #38BDF8). */
+const palette = ["#1D4ED8", "#38BDF8", "#F59E0B", "#F43F5E", "#0F766E", "#8B5CF6"];
 
 const formatCompactNumber = (value) => Number(value || 0).toLocaleString("en-IN");
 
 const Card = ({ title, subtitle, children }) => (
-  <div className="min-w-0 rounded-[26px] border border-white/60 bg-white/82 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
+  <div className="min-w-0 rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-[0_10px_30px_rgba(15,23,42,0.06)] backdrop-blur-xl sm:rounded-[24px] sm:p-5 md:p-6">
     <div className="mb-4">
-      <p className="text-[13px] font-semibold uppercase tracking-[0.24em] text-emerald-500">
+      <p className="text-xs font-bold uppercase tracking-wide text-[#1D4ED8] sm:text-sm md:text-[16px]">
         Visual Summary
       </p>
-      <h2 className="mt-1 text-2xl font-bold text-black">{title}</h2>
-      {subtitle ? <div className="mt-1 text-[13px] font-semibold text-black">{subtitle}</div> : null}
+      <h2 className="mt-1 text-xl font-black text-slate-900 sm:text-2xl md:text-[28px] lg:text-[34px]">
+        {title}
+      </h2>
+      {subtitle ? (
+        <div className="mt-1 text-sm leading-6 text-slate-500 sm:text-[16px]">{subtitle}</div>
+      ) : null}
     </div>
-    <div className="mx-auto h-[320px] w-full max-w-[1120px] min-w-0">{children}</div>
+    <div className="mx-auto h-[260px] w-full min-w-0 sm:h-[300px] md:h-[320px]">{children}</div>
   </div>
 );
 
 const EmptyChartState = ({ title, subtitle }) => (
   <Card title={title} subtitle={subtitle}>
-    <div className="flex h-full items-center justify-center rounded-[22px] border border-dashed border-slate-200 bg-slate-50 px-6 text-center">
+    <div className="flex h-full items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-6 text-center sm:rounded-[22px]">
       <div>
-        <div className="text-base font-bold text-slate-900">
+        <div className="text-base font-bold text-slate-900 sm:text-lg">
           No data available
         </div>
-        <p className="mt-2 text-[13px] font-semibold leading-6 text-black">
-              Try adjusting your filters to see chart data.
+        <p className="mt-2 text-sm font-medium leading-6 text-slate-500 sm:text-[16px]">
+          Try adjusting your filters to see chart data.
         </p>
       </div>
     </div>
@@ -83,7 +89,7 @@ const groupByDateSum = (rows, valueKey) => {
 const tooltipStyle = {
   borderRadius: 16,
   border: "1px solid rgba(226,232,240,0.9)",
-  boxShadow: "0 18px 40px rgba(15,23,42,0.12)",
+  boxShadow: "0 18px 40px rgba(29,78,216,0.14)",
 };
 
 const CustomPieTooltip = ({ active, payload }) => {
@@ -94,19 +100,19 @@ const CustomPieTooltip = ({ active, payload }) => {
 
   return (
     <div
-      className="rounded-[18px] border border-slate-200/90 bg-white/95 px-4 py-3 shadow-[0_18px_40px_rgba(15,23,42,0.12)] backdrop-blur"
+      className="rounded-2xl border border-slate-200/90 bg-white/95 px-4 py-3 shadow-[0_18px_40px_rgba(29,78,216,0.14)] backdrop-blur"
       style={{ minWidth: 170 }}
     >
       <div className="flex items-center gap-2">
         <span
           className="h-3 w-3 rounded-full"
-          style={{ backgroundColor: item.fill || payload[0]?.color || "#3b82f6" }}
+          style={{ backgroundColor: item.fill || payload[0]?.color || "#1D4ED8" }}
         />
-        <span className="text-[13px] font-bold text-black">{item.name}</span>
+        <span className="text-sm font-bold text-slate-900">{item.name}</span>
       </div>
-      <div className="mt-2 text-[13px] font-semibold uppercase tracking-[0.18em] text-slate-700">Rooms</div>
-      <div className="mt-1 text-lg font-black text-black">{formatCompactNumber(item.value)}</div>
-      <div className="mt-1 text-[13px] font-semibold text-black">{item.percentLabel || "--"} of visible mix</div>
+      <div className="mt-2 text-xs font-bold uppercase tracking-wide text-slate-500">Rooms</div>
+      <div className="mt-1 text-lg font-black text-slate-900">{formatCompactNumber(item.value)}</div>
+      <div className="mt-1 text-sm font-medium text-slate-500">{item.percentLabel || "--"} of visible mix</div>
     </div>
   );
 };
@@ -126,13 +132,13 @@ const ReportCharts = ({ reportType, rows }) => {
 
     return (
       <Card title="All Bills by Source" subtitle="Combined amount grouped by billing module">
-        <ResponsiveContainer width="100%" height={320}>
-          <BarChart data={data} margin={{ top: 12, right: 30, left: 18, bottom: 12 }} barCategoryGap="32%">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data} margin={{ top: 12, right: 16, left: 4, bottom: 12 }} barCategoryGap="32%">
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             <XAxis dataKey="name" stroke="#64748b" tick={{ fontSize: 12 }} />
             <YAxis stroke="#64748b" tick={{ fontSize: 12 }} />
             <Tooltip contentStyle={tooltipStyle} />
-            <Bar dataKey="value" fill="#14b8a6" radius={[12, 12, 0, 0]} maxBarSize={140} />
+            <Bar dataKey="value" fill="#1D4ED8" radius={[12, 12, 0, 0]} maxBarSize={140} />
           </BarChart>
         </ResponsiveContainer>
       </Card>
@@ -144,13 +150,13 @@ const ReportCharts = ({ reportType, rows }) => {
 
     return (
       <Card title="Banquet Revenue by Hall" subtitle="See which hall is generating the highest revenue">
-        <ResponsiveContainer width="100%" height={320}>
-          <BarChart data={data} margin={{ top: 12, right: 30, left: 18, bottom: 12 }} barCategoryGap="30%">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data} margin={{ top: 12, right: 16, left: 4, bottom: 12 }} barCategoryGap="30%">
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             <XAxis dataKey="name" stroke="#64748b" tick={{ fontSize: 12 }} />
             <YAxis stroke="#64748b" tick={{ fontSize: 12 }} />
             <Tooltip contentStyle={tooltipStyle} />
-            <Bar dataKey="value" fill="#0ea5e9" radius={[12, 12, 0, 0]} maxBarSize={128} />
+            <Bar dataKey="value" fill="#38BDF8" radius={[12, 12, 0, 0]} maxBarSize={128} />
           </BarChart>
         </ResponsiveContainer>
       </Card>
@@ -162,25 +168,25 @@ const ReportCharts = ({ reportType, rows }) => {
 
     return (
       <Card title="Restaurant Sales Trend" subtitle="Track selected date range food billing movement">
-        <ResponsiveContainer width="100%" height={320}>
+        <ResponsiveContainer width="100%" height="100%">
           {data.length <= 1 ? (
-            <BarChart data={data} margin={{ top: 12, right: 24, left: 12, bottom: 12 }} barCategoryGap="35%">
+            <BarChart data={data} margin={{ top: 12, right: 16, left: 4, bottom: 12 }} barCategoryGap="35%">
               <CartesianGrid strokeDasharray="3 3" stroke="#dbe4f0" />
-              <XAxis dataKey="date" stroke="#334155" tick={{ fontSize: 13, fill: "#000000", fontWeight: 600 }} />
-              <YAxis stroke="#334155" tick={{ fontSize: 13, fill: "#000000", fontWeight: 600 }} />
+              <XAxis dataKey="date" stroke="#334155" tick={{ fontSize: 12, fill: "#334155", fontWeight: 600 }} />
+              <YAxis stroke="#334155" tick={{ fontSize: 12, fill: "#334155", fontWeight: 600 }} />
               <Tooltip contentStyle={tooltipStyle} />
-              <Bar dataKey="value" fill="#2563eb" radius={[14, 14, 0, 0]} barSize={64} maxBarSize={72} />
+              <Bar dataKey="value" fill="#2563EB" radius={[14, 14, 0, 0]} barSize={64} maxBarSize={72} />
             </BarChart>
           ) : (
-            <LineChart data={data} margin={{ top: 12, right: 24, left: 12, bottom: 12 }}>
+            <LineChart data={data} margin={{ top: 12, right: 16, left: 4, bottom: 12 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#dbe4f0" />
-              <XAxis dataKey="date" stroke="#334155" tick={{ fontSize: 13, fill: "#000000", fontWeight: 600 }} />
-              <YAxis stroke="#334155" tick={{ fontSize: 13, fill: "#000000", fontWeight: 600 }} />
+              <XAxis dataKey="date" stroke="#334155" tick={{ fontSize: 12, fill: "#334155", fontWeight: 600 }} />
+              <YAxis stroke="#334155" tick={{ fontSize: 12, fill: "#334155", fontWeight: 600 }} />
               <Tooltip contentStyle={tooltipStyle} />
               <Line
                 type="monotone"
                 dataKey="value"
-                stroke="#2563eb"
+                stroke="#2563EB"
                 strokeWidth={4}
                 dot={{ r: 5, strokeWidth: 2, fill: "#ffffff" }}
                 activeDot={{ r: 7, strokeWidth: 2, fill: "#ffffff" }}
@@ -197,13 +203,13 @@ const ReportCharts = ({ reportType, rows }) => {
 
     return (
       <Card title="Housekeeping Status Mix" subtitle="Room condition distribution for selected rows">
-        <ResponsiveContainer width="100%" height={320}>
-          <BarChart data={data} margin={{ top: 12, right: 30, left: 18, bottom: 12 }} barCategoryGap="30%">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data} margin={{ top: 12, right: 16, left: 4, bottom: 12 }} barCategoryGap="30%">
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             <XAxis dataKey="name" stroke="#64748b" tick={{ fontSize: 12 }} />
             <YAxis stroke="#64748b" tick={{ fontSize: 12 }} />
             <Tooltip contentStyle={tooltipStyle} />
-            <Bar dataKey="value" fill="#f59e0b" radius={[12, 12, 0, 0]} maxBarSize={128} />
+            <Bar dataKey="value" fill="#F59E0B" radius={[12, 12, 0, 0]} maxBarSize={128} />
           </BarChart>
         </ResponsiveContainer>
       </Card>
@@ -225,13 +231,13 @@ const ReportCharts = ({ reportType, rows }) => {
 
     return (
       <Card title="Accounts Overview" subtitle="Income vs expense vs net impact">
-        <ResponsiveContainer width="100%" height={320}>
-          <BarChart data={data} margin={{ top: 12, right: 30, left: 18, bottom: 12 }} barCategoryGap="30%">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data} margin={{ top: 12, right: 16, left: 4, bottom: 12 }} barCategoryGap="30%">
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             <XAxis dataKey="name" stroke="#64748b" tick={{ fontSize: 12 }} />
             <YAxis stroke="#64748b" tick={{ fontSize: 12 }} />
             <Tooltip contentStyle={tooltipStyle} />
-            <Bar dataKey="value" fill="#8b5cf6" radius={[12, 12, 0, 0]} maxBarSize={128} />
+            <Bar dataKey="value" fill="#8B5CF6" radius={[12, 12, 0, 0]} maxBarSize={128} />
           </BarChart>
         </ResponsiveContainer>
       </Card>
@@ -250,25 +256,27 @@ const ReportCharts = ({ reportType, rows }) => {
 
   return (
     <Card title="Room Status Mix" subtitle="Occupancy and room state distribution">
-      <div className="grid h-full gap-4 xl:grid-cols-[minmax(0,1fr)_210px]">
-        <div className="rounded-[24px] border border-slate-100 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.10),transparent_38%),linear-gradient(180deg,rgba(248,250,252,0.95)_0%,rgba(255,255,255,0.92)_100%)] p-3">
-          <div className="mb-2 flex flex-wrap items-center justify-between gap-2 px-2 pt-1">
+      <div className="grid h-full gap-3 sm:gap-4 lg:grid-cols-[minmax(0,1fr)_200px] xl:grid-cols-[minmax(0,1fr)_210px]">
+        <div className="rounded-2xl border border-slate-100 bg-[radial-gradient(circle_at_top,rgba(29,78,216,0.08),transparent_38%),linear-gradient(180deg,rgba(248,250,252,0.95)_0%,rgba(255,255,255,0.92)_100%)] p-3 sm:rounded-[24px]">
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2 px-1 pt-1 sm:px-2">
             <div>
-              <div className="text-[13px] font-semibold uppercase tracking-[0.22em] text-slate-700">
+              <div className="text-xs font-bold uppercase tracking-wide text-slate-500 sm:text-sm">
                 Room Overview
               </div>
-              <div className="mt-1 text-[13px] font-semibold text-black">
-                Total visible rooms <span className="font-bold text-black">{formatCompactNumber(total)}</span>
+              <div className="mt-1 text-sm font-medium text-slate-600 sm:text-[16px]">
+                Total visible rooms{" "}
+                <span className="font-bold text-slate-900">{formatCompactNumber(total)}</span>
               </div>
             </div>
             {topStatus ? (
-              <div className="rounded-full border border-slate-300 bg-white/90 px-3 py-2 text-[13px] font-semibold text-black shadow-sm">
-                Top: <span className="text-black">{topStatus.name}</span> ({topStatus.percentLabel})
+              <div className="rounded-full border border-slate-200 bg-white/90 px-3 py-1.5 text-xs font-bold text-slate-700 shadow-sm sm:text-sm">
+                Top:{" "}
+                <span className="text-[#1D4ED8]">{topStatus.name}</span> ({topStatus.percentLabel})
               </div>
             ) : null}
           </div>
 
-          <ResponsiveContainer width="100%" height={270}>
+          <ResponsiveContainer width="100%" height={220}>
             <PieChart>
               <Pie
                 data={enrichedData}
@@ -276,8 +284,8 @@ const ReportCharts = ({ reportType, rows }) => {
                 nameKey="name"
                 cx="50%"
                 cy="50%"
-                innerRadius={76}
-                outerRadius={112}
+                innerRadius={64}
+                outerRadius={96}
                 paddingAngle={3}
                 stroke="#ffffff"
                 strokeWidth={3}
@@ -287,36 +295,48 @@ const ReportCharts = ({ reportType, rows }) => {
                 ))}
               </Pie>
               <Tooltip content={<CustomPieTooltip />} />
-              <text x="50%" y="46%" textAnchor="middle" dominantBaseline="central" className="fill-slate-400 text-[11px] font-semibold uppercase tracking-[0.24em]">
+              <text
+                x="50%"
+                y="46%"
+                textAnchor="middle"
+                dominantBaseline="central"
+                className="fill-slate-400 text-[10px] font-bold uppercase tracking-[0.22em] sm:text-[11px]"
+              >
                 Rooms
               </text>
-              <text x="50%" y="55%" textAnchor="middle" dominantBaseline="central" className="fill-slate-900 text-[28px] font-black">
+              <text
+                x="50%"
+                y="56%"
+                textAnchor="middle"
+                dominantBaseline="central"
+                className="fill-slate-900 text-[22px] font-black sm:text-[26px]"
+              >
                 {formatCompactNumber(total)}
               </text>
             </PieChart>
           </ResponsiveContainer>
         </div>
 
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-2.5 sm:gap-3">
           {enrichedData.map((item) => (
             <div
               key={item.name}
-              className="rounded-[20px] border border-slate-200/80 bg-white/92 p-3 shadow-[0_10px_24px_rgba(15,23,42,0.05)]"
+              className="rounded-2xl border border-slate-200/80 bg-white/92 p-3 shadow-[0_10px_24px_rgba(15,23,42,0.05)] transition-all duration-300 hover:-translate-y-0.5 hover:border-[#BFDBFE] hover:shadow-[0_10px_24px_rgba(29,78,216,0.10)]"
             >
               <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2.5">
                   <span
-                    className="h-3.5 w-3.5 rounded-full shadow-sm"
+                    className="h-3.5 w-3.5 shrink-0 rounded-full shadow-sm"
                     style={{ backgroundColor: item.fill }}
                   />
                   <div>
-                    <div className="text-[13px] font-bold text-black">{item.name}</div>
-                    <div className="text-[13px] font-semibold text-black">{item.percentLabel} share</div>
+                    <div className="text-sm font-bold text-slate-900">{item.name}</div>
+                    <div className="text-xs font-medium text-slate-500 sm:text-sm">{item.percentLabel} share</div>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-lg font-black text-black">{formatCompactNumber(item.value)}</div>
-                  <div className="text-[13px] font-semibold uppercase tracking-[0.16em] text-slate-700">rooms</div>
+                  <div className="text-lg font-black text-slate-900">{formatCompactNumber(item.value)}</div>
+                  <div className="text-[11px] font-bold uppercase tracking-wide text-slate-400">rooms</div>
                 </div>
               </div>
             </div>

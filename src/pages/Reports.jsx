@@ -331,18 +331,44 @@ async function loadReportRows(reportType) {
   return [];
 }
 
+/* ------------------------------------------------------------------ */
+/* Shared premium UI primitives (design tokens match User Management  */
+/* / Audit Logs: deep blue gradient hero, white glass cards, rounded  */
+/* corners, soft layered shadows, blue focus states).                 */
+/* ------------------------------------------------------------------ */
+
+const CARD_BASE =
+  "rounded-2xl sm:rounded-[24px] border border-slate-200/70 bg-white/90 shadow-[0_10px_30px_rgba(15,23,42,0.06)] backdrop-blur-xl";
+
+/* Requested palette */
+const BRAND = {
+  primary: "#1D4ED8",
+  secondary: "#2563EB",
+  accent: "#38BDF8",
+  bg: "#F8FAFC",
+};
+
 const SummaryPanel = ({ cards }) => (
-  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+  <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
     {cards.map((card) => (
       <div
         key={card.label}
-        className="rounded-[22px] border border-slate-300 bg-white p-5 shadow-[0_12px_30px_rgba(15,23,42,0.06)]"
+        className={`${CARD_BASE} group flex h-full flex-col p-5 transition-all duration-300 hover:-translate-y-1 hover:border-[#BFDBFE] hover:shadow-[0_18px_40px_rgba(29,78,216,0.14)] sm:p-6`}
       >
-        <div className="text-[13px] font-semibold uppercase tracking-[0.18em] text-slate-800">
-          {card.label}
+        <div className="flex items-center gap-3">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#1D4ED8]/10 text-[#1D4ED8] shadow-[inset_0_0_0_1px_rgba(29,78,216,0.12)] transition-transform duration-300 group-hover:scale-105">
+            {card.icon}
+          </span>
+          <span className="text-xs font-bold uppercase tracking-wide text-slate-500 sm:text-sm md:text-[16px]">
+            {card.label}
+          </span>
         </div>
-        <div className="mt-3 text-2xl font-black text-slate-950">{card.value}</div>
-        <div className="mt-2 text-[14px] font-semibold leading-6 text-black">{card.note}</div>
+        <div className="mt-4 text-[26px] font-bold leading-none text-slate-900 sm:text-[30px] md:text-[34px] lg:text-[42px]">
+          {card.value}
+        </div>
+        <div className="mt-3 text-sm font-medium leading-6 text-slate-500 sm:text-[16px]">
+          {card.note}
+        </div>
       </div>
     ))}
   </div>
@@ -514,63 +540,69 @@ const Reports = () => {
         label: "Visible Rows",
         value: rowsCount,
         note: "The report rows currently visible after applying filters and search.",
+        icon: <FaSearch className="text-[16px]" />,
       },
       {
         label: "Primary Total",
         value: primaryValue,
         note: reportType === "housekeeping" ? "Total room count in selected rows." : "Selected report type ka main business total.",
+        icon: <FaChartLine className="text-[16px]" />,
       },
       {
         label: "Active Days",
         value: uniqueDays || "--",
         note: "How many distinct dates’ records are currently visible on the screen.",
+        icon: <FaCalendarAlt className="text-[16px]" />,
       },
       {
         label: "Status Mix",
         value: activeStatuses || "--",
         note: "Selected rows unique operational statuses.",
+        icon: <FaSyncAlt className="text-[16px]" />,
       },
     ];
   }, [filtered, reportType]);
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-[linear-gradient(135deg,#f5fbff_0%,#f3f8f4_28%,#fff8f1_58%,#f8fafc_100%)] p-4 sm:p-6 lg:p-8">
-      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute left-[-8%] top-[-6%] h-72 w-72 rounded-full bg-cyan-200/45 blur-3xl sm:h-96 sm:w-96" />
-        <div className="absolute right-[-10%] top-[8%] h-72 w-72 rounded-full bg-amber-200/45 blur-3xl sm:h-[28rem] sm:w-[28rem]" />
-        <div className="absolute bottom-[18%] left-[18%] h-56 w-56 rounded-full bg-emerald-200/30 blur-3xl sm:h-80 sm:w-80" />
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.55)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.45)_1px,transparent_1px)] bg-[size:72px_72px] opacity-25" />
-      </div>
+    <div className="min-h-screen w-full overflow-x-hidden bg-[#F8FAFC]">
+      <div className="w-full space-y-6 px-3 py-4 sm:space-y-7 sm:px-5 sm:py-6 md:px-8 md:py-8 lg:px-10 xl:px-12">
+        {/* ---------------------------------------------------------- */}
+        {/* Hero                                                       */}
+        {/* ---------------------------------------------------------- */}
+        <section className="relative w-full overflow-hidden rounded-[24px] border border-white/10 bg-[linear-gradient(135deg,theme(colors.blue.950),theme(colors.blue.700),theme(colors.sky.500))] px-5 py-7 shadow-[0_24px_60px_rgba(29,78,216,0.28)] sm:rounded-[28px] sm:px-7 sm:py-8 md:px-9 lg:px-10">
+          {/* decorative abstract shapes */}
+          <div className="pointer-events-none absolute inset-0 overflow-hidden">
+            <div className="absolute -left-16 -top-20 h-64 w-64 rounded-full bg-[#38BDF8]/25 blur-3xl sm:h-80 sm:w-80" />
+            <div className="absolute -right-10 top-[-10%] h-72 w-72 rounded-full bg-[#60A5FA]/25 blur-3xl sm:h-96 sm:w-96" />
+            <div className="absolute bottom-[-30%] left-[30%] h-64 w-64 rounded-full bg-[#38BDF8]/10 blur-3xl" />
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.06)_1px,transparent_1px)] bg-[size:44px_44px] opacity-40" />
+          </div>
 
-      <div className="w-full space-y-7">
-        <section className="overflow-hidden rounded-[28px] border border-white/12 bg-[linear-gradient(90deg,#1C3F8A_0%,#243B52_100%)] px-5 py-6 shadow-[0_22px_55px_rgba(15,23,42,0.16)] sm:px-7 sm:py-8">
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.9fr)] lg:items-center">
+          <div className="relative grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(300px,0.9fr)] lg:items-center">
             <div className="space-y-4">
-              <p className="text-[15px] font-semibold uppercase tracking-[0.26em] text-cyan-200">
+              <p className="text-xs font-bold uppercase tracking-wide text-sky-200 sm:text-sm md:text-[14px]">
                 Insight Studio
               </p>
               <div className="space-y-2">
-                <h1 className="text-4xl font-black leading-tight text-white sm:text-4xl">
+                <h1 className="text-[26px] font-black leading-tight text-white sm:text-[32px] md:text-[36px] lg:text-[40px]">
                   Reports built for faster daily decisions
                 </h1>
-                <p className="max-w-3xl text-sm font-semibold leading-relaxed text-slate-100/85 sm:text-base">
-                  A clean, dashboard-style analytics workspace from which room, banquet, restaurant, housekeeping, accounts, and combined billing reports can all be managed in one place.
-                </p>
+                
               </div>
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap gap-3">
                 <button
                   type="button"
                   onClick={fetchData}
                   disabled={loading}
-                  className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-bold text-slate-900 shadow-[0_16px_35px_rgba(255,255,255,0.15)] transition hover:-translate-y-0.5 hover:bg-sky-500 hover:text-white hover:shadow-[0_16px_35px_rgba(59,130,246,0.28)] disabled:cursor-not-allowed disabled:opacity-70"
+                  className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-bold text-[#1D4ED8] shadow-[0_16px_35px_rgba(255,255,255,0.18)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[linear-gradient(90deg,#1D4ED8_0%,#2563EB_100%)] hover:text-white hover:shadow-[0_18px_38px_rgba(37,99,235,0.35)] disabled:cursor-not-allowed disabled:opacity-70 sm:text-[16px]"
                 >
-                  <FaSyncAlt />
+                  <FaSyncAlt className={loading ? "animate-spin" : ""} />
                   {loading ? "Refreshing..." : "Refresh Reports"}
                 </button>
                 <button
                   type="button"
                   onClick={exportCSV}
-                  className="rounded-full border border-white/18 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur-md transition hover:border-sky-300 hover:bg-sky-500 hover:text-white hover:shadow-[0_16px_35px_rgba(59,130,246,0.28)]"
+                  className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-5 py-3 text-sm font-bold text-white backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-cyan-200/60 hover:bg-white/20 hover:shadow-[0_16px_35px_rgba(56,189,248,0.22)] sm:text-[16px]"
                 >
                   Export Current Report
                 </button>
@@ -579,21 +611,27 @@ const Reports = () => {
 
             <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
               {[
-                { label: "Current Type", value: reportMeta?.label || reportType },
-                { label: "Visible Rows", value: filtered.length || 0 },
+                { label: "Current Type", value: reportMeta?.label || reportType, icon: <FaSyncAlt /> },
+                { label: "Visible Rows", value: filtered.length || 0, icon: <FaSearch /> },
                 {
                   label: "Last Update",
                   value: lastFetchedAt
                     ? lastFetchedAt.toLocaleTimeString()
                     : "--",
+                  icon: <FaCalendarAlt />,
                 },
               ].map((item) => (
                 <div
                   key={item.label}
-                  className="rounded-[22px] border border-white/14 bg-white/10 px-4 py-4 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md transition hover:-translate-y-0.5 hover:border-sky-300 hover:bg-sky-500/45 hover:shadow-[0_14px_32px_rgba(59,130,246,0.26)]"
+                  className="rounded-2xl border border-white/15 bg-white/10 px-4 py-4 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-[#38BDF8]/50 hover:bg-white/15 hover:shadow-[0_14px_32px_rgba(56,189,248,0.22)]"
                 >
-                  <span className="text-[13px] font-semibold text-slate-100/85">{item.label}</span>
-                  <div className="mt-3 text-2xl font-bold leading-none">
+                  <span className="flex items-center gap-2 text-xs font-medium text-slate-100/85 sm:text-sm md:text-[16px]">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/15 text-[11px] text-[#BAE0FD]">
+                      {item.icon}
+                    </span>
+                    {item.label}
+                  </span>
+                  <div className="mt-2 text-[22px] font-bold leading-none sm:text-2xl md:text-[28px]">
                     {item.value}
                   </div>
                 </div>
@@ -602,17 +640,20 @@ const Reports = () => {
           </div>
         </section>
 
-        <section className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_340px]">
-          <div className="rounded-[26px] border border-white/60 bg-white/82 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
-            <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        {/* ---------------------------------------------------------- */}
+        {/* Module selector + Insight Snapshot                         */}
+        {/* ---------------------------------------------------------- */}
+        <section className="grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_380px]">
+          <div className={`${CARD_BASE} flex flex-col p-4 sm:p-6`}>
+            <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div>
-                <p className="text-[15px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
+                <p className="text-xs font-bold uppercase tracking-wide text-[#1D4ED8] sm:text-sm md:text-[16px]">
                   Report Type
                 </p>
-                <h2 className="mt-1 text-3xl font-black text-slate-900 sm:text-[30px]">
+                <h2 className="mt-1 text-xl font-black text-slate-900 sm:text-2xl md:text-[28px] lg:text-[34px]">
                   Select analytics module
                 </h2>
-                <p className="mt-2 text-[14px] font-semibold text-slate-700">
+                <p className="mt-2 text-sm leading-7 text-slate-500 sm:text-[16px]">
                   {reportMeta?.note || "Operational report module"}
                 </p>
               </div>
@@ -622,7 +663,7 @@ const Reports = () => {
                     key={days}
                     type="button"
                     onClick={() => applyQuickRange(days)}
-                    className="rounded-full border border-slate-300 bg-white px-4 py-2.5 text-[14px] font-semibold text-slate-900 shadow-sm transition hover:border-sky-300 hover:bg-sky-500 hover:text-white hover:shadow-[0_14px_28px_rgba(59,130,246,0.24)]"
+                    className="rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-[#2563EB]/40 hover:bg-[linear-gradient(90deg,#1D4ED8_0%,#2563EB_100%)] hover:text-white hover:shadow-[0_14px_28px_rgba(37,99,235,0.24)] sm:text-[16px]"
                   >
                     Last {days} days
                   </button>
@@ -636,23 +677,23 @@ const Reports = () => {
             />
           </div>
 
-          <div className="rounded-[26px] border border-white/60 bg-white/82 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
-            <p className="text-[14px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
+          <div className={`${CARD_BASE} flex flex-col p-4 sm:p-6`}>
+            <p className="text-xs font-bold uppercase tracking-wide text-[#1D4ED8] sm:text-sm md:text-[16px]">
               Insight Snapshot
             </p>
-            <div className="mt-2 flex items-start gap-3">
-              <span className="flex h-16 w-16 items-center justify-center rounded-full bg-cyan-100 text-[22px] text-slate-900">
+            <div className="mt-3 flex items-start gap-3">
+              <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#1D4ED8_0%,#2563EB_100%)] text-[20px] text-white shadow-[0_10px_24px_rgba(29,78,216,0.28)]">
                 <FaChartLine />
               </span>
               <div>
-                <div className="text-xl font-bold text-slate-900">Smart takeaway</div>
-                <p className="mt-2 text-[16px] font-semibold leading-6 text-slate-700">
+                <div className="text-lg font-bold text-slate-900 sm:text-xl">Smart takeaway</div>
+                <p className="mt-2 text-sm font-medium leading-6 text-slate-600 sm:text-[16px]">
                   {getInsight(reportType, filtered)}
                 </p>
               </div>
             </div>
             {summary ? (
-              <div className="mt-5 grid grid-cols-2 gap-4 text-sm">
+              <div className="mt-5 grid grid-cols-2 gap-3 sm:gap-4">
                 {[
                   ["Rooms", summary.totalRooms],
                   ["Hotel", summary.hotelBookings],
@@ -663,12 +704,12 @@ const Reports = () => {
                 ].map(([label, value]) => (
                   <div
                     key={label}
-                    className="rounded-2xl border border-slate-300 bg-slate-50 px-4 py-4"
+                    className="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 to-[#EFF6FF] px-4 py-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-[#BFDBFE] hover:shadow-[0_10px_24px_rgba(29,78,216,0.10)]"
                   >
-                    <div className="text-[14px] font-semibold uppercase tracking-[0.12em] text-slate-800">
+                    <div className="text-xs font-medium uppercase tracking-wide text-slate-500 sm:text-sm">
                       {label}
                     </div>
-                    <div className="mt-3 text-[28px] font-black leading-none text-slate-950">
+                    <div className="mt-2 text-[22px] font-bold leading-none text-slate-900 sm:text-[26px]">
                       {value}
                     </div>
                   </div>
@@ -678,24 +719,30 @@ const Reports = () => {
           </div>
         </section>
 
+        {/* ---------------------------------------------------------- */}
+        {/* Summary cards                                               */}
+        {/* ---------------------------------------------------------- */}
         <SummaryPanel cards={summaryCards} />
 
-        <section className="rounded-[26px] border border-white/60 bg-white/82 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
+        {/* ---------------------------------------------------------- */}
+        {/* Search + export/print + filters                            */}
+        {/* ---------------------------------------------------------- */}
+        <section className={`${CARD_BASE} p-4 sm:p-6`}>
           <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
             <div className="relative w-full">
-              <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600" />
+              <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search guest, hall, source, payment mode, amount..."
-                className="w-full rounded-[20px] border border-slate-300 bg-white py-3 pl-11 pr-4 text-[13px] font-semibold text-black outline-none transition placeholder:text-slate-500 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100"
+                className="h-12 w-full rounded-2xl border border-slate-200 bg-white pl-11 pr-4 text-sm font-medium text-slate-900 outline-none transition-all duration-300 placeholder:text-slate-400 focus:border-[#38BDF8] focus:ring-4 focus:ring-[#38BDF8]/20 sm:text-[16px]"
               />
             </div>
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
                 onClick={exportCSV}
-                className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-teal-600 to-emerald-500 px-4 py-2.5 text-[13px] font-semibold text-white shadow-[0_12px_30px_rgba(13,148,136,0.24)] transition hover:-translate-y-0.5"
+                className="inline-flex h-12 items-center gap-2 rounded-full bg-[linear-gradient(90deg,#1D4ED8_0%,#2563EB_100%)] px-5 text-sm font-bold text-white shadow-[0_14px_30px_rgba(29,78,216,0.28)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(29,78,216,0.36)] sm:text-[16px]"
               >
                 <FaDownload />
                 Export CSV
@@ -703,7 +750,7 @@ const Reports = () => {
               <button
                 type="button"
                 onClick={printReport}
-                className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-4 py-2.5 text-[13px] font-semibold text-black transition hover:border-cyan-200 hover:text-black"
+                className="inline-flex h-12 items-center gap-2 rounded-full border border-slate-200 bg-white px-5 text-sm font-bold text-slate-700 transition-all duration-300 hover:-translate-y-0.5 hover:border-[#2563EB]/40 hover:text-[#1D4ED8] hover:shadow-[0_10px_22px_rgba(28,63,138,0.12)] sm:text-[16px]"
               >
                 <FaPrint />
                 Print
@@ -711,18 +758,18 @@ const Reports = () => {
             </div>
           </div>
 
-          <div className="mt-4 flex flex-wrap items-center gap-3 text-[13px] font-semibold text-black">
-            <span className="inline-flex items-center gap-2 rounded-full bg-slate-50 px-3 py-2 text-black">
+          <div className="mt-4 flex flex-wrap items-center gap-2 sm:gap-3">
+            <span className="inline-flex items-center gap-2 rounded-full bg-[#1D4ED8]/8 px-3 py-2 text-sm font-medium text-[#1E3A8A] sm:text-[16px]">
               <FaCalendarAlt />
               {filters.dateFrom || "--"} to {filters.dateTo || "--"}
             </span>
-            <span className="rounded-full bg-slate-50 px-3 py-2 text-black">
-              Rows: <strong className="text-black">{filtered.length}</strong>
+            <span className="rounded-full bg-[#1D4ED8]/8 px-3 py-2 text-sm font-medium text-[#1E3A8A] sm:text-[16px]">
+              Rows: <strong className="font-bold">{filtered.length}</strong>
             </span>
             {lastFetchedAt ? (
-              <span className="rounded-full bg-slate-50 px-3 py-2 text-black">
+              <span className="rounded-full bg-[#1D4ED8]/8 px-3 py-2 text-sm font-medium text-[#1E3A8A] sm:text-[16px]">
                 Last fetched:{" "}
-                <strong className="text-black">
+                <strong className="font-bold">
                   {lastFetchedAt.toLocaleString()}
                 </strong>
               </span>
@@ -738,24 +785,29 @@ const Reports = () => {
         />
 
         {error ? (
-          <div className="rounded-[22px] border border-rose-200 bg-rose-50 px-4 py-4 text-sm font-semibold text-rose-700">
+          <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-4 text-sm font-bold text-rose-700 sm:text-[16px]">
             {error}
           </div>
         ) : null}
 
-        <section className="grid gap-4 xl:grid-cols-[minmax(0,1.3fr)_360px]">
-          <ReportCharts reportType={reportType} rows={filtered} />
+        {/* ---------------------------------------------------------- */}
+        {/* Charts + report summary                                    */}
+        {/* ---------------------------------------------------------- */}
+        <section className="grid gap-4 xl:grid-cols-[minmax(0,1.3fr)_380px]">
+          <div className={`${CARD_BASE} min-w-0 p-4 sm:p-6`}>
+            <ReportCharts reportType={reportType} rows={filtered} />
+          </div>
 
-          <div className="rounded-[26px] border border-white/60 bg-white/82 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
+          <div className={`${CARD_BASE} p-4 sm:p-6`}>
             <div className="mb-4 flex items-start gap-3">
-              <span className="rounded-2xl bg-amber-50 p-3 text-amber-600">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-amber-500 text-white shadow-[0_10px_22px_rgba(217,119,6,0.28)]">
                 <FaFileInvoice />
               </span>
               <div>
-                <p className="text-[14px] font-semibold uppercase tracking-[0.24em] text-emerald-500">
+                <p className="text-xs font-bold uppercase tracking-wide text-[#1D4ED8] sm:text-sm md:text-[16px]">
                   Report Summary
                 </p>
-                <h2 className="mt-1 text-[32px] font-bold leading-tight text-black">
+                <h2 className="mt-1 text-xl font-black leading-tight text-slate-900 sm:text-2xl md:text-[28px]">
                   Filter-based metrics
                 </h2>
               </div>
@@ -765,22 +817,32 @@ const Reports = () => {
               {summaryCards.map((card) => (
                 <div
                   key={card.label}
-                  className="rounded-[20px] border border-slate-300 bg-slate-50 p-4"
+                  className="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 to-[#EFF6FF] p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-[#BFDBFE] hover:shadow-[0_10px_22px_rgba(29,78,216,0.10)]"
                 >
-                  <div className="text-[15px] font-semibold uppercase tracking-[0.16em] text-slate-800">
+                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-slate-500 sm:text-sm">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#1D4ED8]/10 text-[#1D4ED8]">
+                      {card.icon}
+                    </span>
                     {card.label}
                   </div>
-                  <div className="mt-2 text-[32px] font-black leading-none text-black">
+                  <div className="mt-2 text-[24px] font-bold leading-none text-slate-900 sm:text-[28px]">
                     {card.value}
                   </div>
-                  <div className="mt-2 text-[15px] font-semibold leading-7 text-black">{card.note}</div>
+                  <div className="mt-2 text-sm font-medium leading-6 text-slate-500 sm:text-[16px]">
+                    {card.note}
+                  </div>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        <ReportTable reportType={reportType} rows={filtered} loading={loading} />
+        {/* ---------------------------------------------------------- */}
+        {/* Table                                                       */}
+        {/* ---------------------------------------------------------- */}
+        <div className={`${CARD_BASE} overflow-hidden p-0`}>
+          <ReportTable reportType={reportType} rows={filtered} loading={loading} />
+        </div>
       </div>
     </div>
   );

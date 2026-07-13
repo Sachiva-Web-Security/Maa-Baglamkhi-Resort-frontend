@@ -422,12 +422,12 @@ const User = () => {
                 <div className="flex h-9 w-9 sm:h-11 sm:w-11 md:h-12 md:w-12 shrink-0 items-center justify-center rounded-xl sm:rounded-2xl bg-white/15 shadow-inner backdrop-blur-md">
                   <FaUsers className="text-base sm:text-lg md:text-xl text-white" />
                 </div>
-                <p className="text-xs sm:text-sm md:text-[16px] font-bold uppercase tracking-[0.15em] sm:tracking-[0.22em] md:tracking-[0.28em] text-white/80">
+                <p className="text-xs sm:text-sm md:text-[14px] font-bold uppercase tracking-[0.15em] sm:tracking-[0.22em] md:tracking-[0.28em] text-white/80">
                   Team Directory
                 </p>
               </div>
               <div className="space-y-2 sm:space-y-3">
-                <h1 className="break-words text-[26px] leading-tight text-white sm:text-[36px] md:text-[42px] lg:text-[48px] sm:leading-[1.15] font-black">
+                <h1 className="break-words text-[26px] leading-tight text-white sm:text-[32px] md:text-[36px] lg:text-[40px] sm:leading-[1.15] font-black">
                   User management made cleaner and faster
                 </h1>
                 
