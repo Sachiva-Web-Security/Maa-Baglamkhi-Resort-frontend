@@ -4,14 +4,28 @@ import {
   FaClipboardList,
   FaPlayCircle,
   FaTasks,
+  FaInfoCircle,
+  FaUserCircle,
+  FaBed,
+  FaFlag,
+  FaClock,
+  FaStickyNote,
+  FaUsers,
+  FaDoorOpen,
+  FaExclamationTriangle,
+  FaEdit,
+  FaTrashAlt,
+  FaPlus,
 } from "react-icons/fa";
 
 import API from "../api";
 
 const fieldCls =
-  "w-full rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-xl text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100";
+  "w-full h-14 sm:h-[60px] rounded-2xl border border-blue-100 bg-white pl-12 pr-4 text-sm sm:text-[16px] text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-100 shadow-sm";
 
-const textAreaCls = `${fieldCls} min-h-[112px] resize-y`;
+const textAreaCls =
+  "w-full min-h-[132px] resize-y rounded-2xl border border-blue-100 bg-white pl-12 pr-4 py-4 text-sm sm:text-[16px] text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-100 shadow-sm";
+
 const managerRoles = new Set(["admin", "manager", "receptionist"]);
 const assignableRoles = new Set(["housekeeping", "accountant", "staff"]);
 const statusOptions = ["Pending", "In Progress", "Completed", "Cancelled"];
@@ -98,32 +112,32 @@ const getStatusBadge = (status) => {
   const normalized = normalizeLower(status);
 
   if (normalized === "completed") {
-    return "border-emerald-200 bg-emerald-50 text-emerald-700";
+    return "border border-emerald-200 bg-emerald-50 text-emerald-700";
   }
   if (normalized === "in progress") {
-    return "border-sky-200 bg-sky-50 text-sky-700";
+    return "border border-sky-200 bg-sky-50 text-sky-700";
   }
   if (normalized === "cancelled") {
-    return "border-slate-200 bg-slate-100 text-slate-600";
+    return "border border-slate-200 bg-slate-100 text-slate-600";
   }
 
-  return "border-amber-200 bg-amber-50 text-amber-700";
+  return "border border-amber-200 bg-amber-50 text-amber-700";
 };
 
 const getPriorityBadge = (priority) => {
   const normalized = normalizeLower(priority);
 
   if (normalized === "urgent") {
-    return "border-rose-200 bg-rose-50 text-rose-700";
+    return "bg-gradient-to-r from-rose-600 to-rose-400 text-white shadow-sm shadow-rose-200";
   }
   if (normalized === "high") {
-    return "border-orange-200 bg-orange-50 text-orange-700";
+    return "bg-gradient-to-r from-orange-500 to-amber-400 text-white shadow-sm shadow-orange-200";
   }
   if (normalized === "low") {
-    return "border-slate-200 bg-slate-100 text-slate-600";
+    return "bg-gradient-to-r from-slate-400 to-slate-300 text-white shadow-sm shadow-slate-200";
   }
 
-  return "border-cyan-200 bg-cyan-50 text-cyan-700";
+  return "bg-gradient-to-r from-sky-600 to-cyan-400 text-white shadow-sm shadow-sky-200";
 };
 
 const formatTimestamp = (value) => {
@@ -383,43 +397,73 @@ const Assignment = () => {
     { icon: FaCheckCircle, label: "Completed", value: stats.completed || 0 },
   ];
 
-    return (
-      <div className="relative min-h-screen w-full overflow-x-hidden bg-[linear-gradient(135deg,#f5fbff_0%,#f3f8f4_28%,#fff8f1_58%,#f8fafc_100%)] p-4 sm:p-6 lg:p-8">
-      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute left-[-8%] top-[-6%] h-72 w-72 rounded-full bg-cyan-200/45 blur-3xl sm:h-96 sm:w-96" />
-        <div className="absolute right-[-10%] top-[8%] h-72 w-72 rounded-full bg-amber-200/45 blur-3xl sm:h-[28rem] sm:w-[28rem]" />
-        <div className="absolute bottom-[18%] left-[18%] h-56 w-56 rounded-full bg-emerald-200/30 blur-3xl sm:h-80 sm:w-80" />
-      </div>
+  return (
+    <div className="relative min-h-screen w-full overflow-x-hidden bg-slate-100 p-4 sm:p-6 lg:p-8">
+      <div className="w-full space-y-6 sm:space-y-7">
+        {/* HERO */}
+        <section className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-blue-950 via-blue-700 to-sky-500 px-5 py-7 shadow-[0_25px_60px_rgba(15,23,80,0.28)] sm:px-8 sm:py-9">
+          {/* dot grid pattern */}
+          <div
+            className="pointer-events-none absolute inset-0 opacity-[0.18]"
+            style={{
+              backgroundImage:
+                "radial-gradient(rgba(255,255,255,0.9) 1px, transparent 1px)",
+              backgroundSize: "18px 18px",
+            }}
+          />
+          {/* glowing circles */}
+          <div className="pointer-events-none absolute -left-16 -top-16 h-64 w-64 rounded-full bg-sky-300/30 blur-3xl sm:h-80 sm:w-80" />
+          <div className="pointer-events-none absolute -right-10 top-10 h-64 w-64 rounded-full bg-cyan-200/30 blur-3xl sm:h-96 sm:w-96" />
+          <div className="pointer-events-none absolute bottom-[-40%] left-1/3 h-72 w-72 rounded-full bg-blue-400/20 blur-3xl" />
 
-      <div className="w-full space-y-7">
-        <section className="overflow-hidden rounded-[28px] border border-sky-500/45 bg-[linear-gradient(120deg,#1e3a8a_0%,#075985_52%,#0f172a_100%)] px-5 py-6 shadow-[0_22px_55px_rgba(15,23,42,0.2)] sm:px-7 sm:py-8">
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(360px,1fr)] lg:items-center">
-            <div className="space-y-4">
-              <p className="text-[15px] font-semibold uppercase tracking-[0.26em] text-white">
+          {/* abstract wave */}
+          <svg
+            className="pointer-events-none absolute bottom-0 left-0 h-24 w-full opacity-40 sm:h-32"
+            viewBox="0 0 1200 200"
+            preserveAspectRatio="none"
+          >
+            <path
+              d="M0,120 C200,180 400,60 600,110 C800,160 1000,80 1200,130 L1200,200 L0,200 Z"
+              fill="rgba(255,255,255,0.10)"
+            />
+            <path
+              d="M0,150 C250,90 450,170 700,120 C900,80 1050,150 1200,110 L1200,200 L0,200 Z"
+              fill="rgba(255,255,255,0.06)"
+            />
+          </svg>
+
+          <div className="relative grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(360px,1fr)] lg:items-center">
+            <div className="space-y-3 sm:space-y-4">
+              <p className="text-xs font-bold uppercase tracking-wide text-sky-100 sm:text-sm md:text-[14px]">
                 Task Assignment
               </p>
-              <h1 className="text-4xl font-black leading-tight text-white sm:text-4xl">
+              <h1 className="text-[26px] font-black leading-tight text-white sm:text-[32px] md:text-[36px] lg:text-[40px]">
                 Assignment operations board
               </h1>
-              <p className="max-w-3xl text-3xl  font-semibold leading-6 text-white sm:text-base">
-             Tasks assigned by reception, managers, and admins are shown here in real time. Housekeeping, accounts, and staff teams can start and complete their assigned work.
+              <p className="max-w-3xl text-sm font-medium leading-7 text-sky-50/90 sm:text-[16px] md:text-[18px]">
+                Tasks assigned by reception, managers, and admins are shown here in real time.
+                Housekeeping, accounts, and staff teams can start and complete their assigned work.
               </p>
             </div>
 
-            <div className="grid gap-3 text-xl sm:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-2">
               {summaryCards.map((item) => {
                 const Icon = item.icon;
                 return (
                   <div
                     key={item.label}
-                    className="rounded-[22px] border text-xl border-sky-100/35 bg-white/14 px-4 py-4 text-white backdrop-blur-md"
+                    className="group rounded-3xl border border-white/40 bg-white px-4 py-4 shadow-[0_14px_35px_rgba(15,23,42,0.14)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_45px_rgba(15,23,42,0.2)] sm:px-5 sm:py-5"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <span className="text-[15px] font-bold text-white">{item.label}</span>
-                        <div className="mt-3 text-2xl font-bold leading-none text-white">{item.value}</div>
+                        <span className="text-xs font-semibold text-slate-500 sm:text-sm md:text-[16px]">
+                          {item.label}
+                        </span>
+                        <div className="mt-2 text-[26px] font-bold leading-none text-blue-900 sm:text-[30px] md:text-[34px] lg:text-[42px]">
+                          {item.value}
+                        </div>
                       </div>
-                      <span className="rounded-2xl bg-white/14 p-3 text-white">
+                      <span className="rounded-2xl bg-blue-50 p-3 text-blue-700 transition-transform duration-300 group-hover:scale-110">
                         <Icon />
                       </span>
                     </div>
@@ -430,135 +474,191 @@ const Assignment = () => {
           </div>
         </section>
 
+        {/* NOTIFICATION */}
         {assignmentNotice ? (
-          <section className="rounded-[24px] border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-semibold text-emerald-700 shadow-[0_12px_30px_rgba(16,185,129,0.08)]">
+          <section className="flex items-center gap-3 rounded-[22px] border border-blue-200 bg-blue-50/70 px-5 py-4 text-sm font-semibold text-blue-800 shadow-[0_12px_30px_rgba(37,99,235,0.08)] backdrop-blur-md sm:text-[16px]">
+            <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+              <FaInfoCircle />
+            </span>
             {assignmentNotice}
           </section>
         ) : null}
 
+        {/* FORM */}
         {canManageAssignments && (
-          <section className="rounded-[26px] border border-white/60 bg-white/82 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
-            <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+          <section className="rounded-[28px] border border-white/70 bg-white/85 p-5 shadow-[0_20px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-7">
+            <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
               <div>
-                <p className="text-[14px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
+                <p className="text-xs font-bold uppercase tracking-wide text-blue-500 sm:text-sm md:text-[16px]">
                   New Assignment
                 </p>
-                <h2 className="mt-1 text-xl font-bold text-slate-900">
+                <h2 className="mt-1 text-xl font-black text-slate-900 sm:text-2xl md:text-[28px] lg:text-[34px]">
                   Assign task with priority and timing
                 </h2>
               </div>
-              <div className="text-right text-xl text-slate-500">
-                <div>{selectableStaff.length} assignable staff loaded</div>
-                <div>{selectableRooms.length} current rooms loaded</div>
-                <div>{stats.overdue || 0} overdue tasks right now</div>
+              <div className="space-y-2 text-right text-sm text-slate-500 sm:text-[16px]">
+                <div className="flex items-center justify-end gap-2">
+                  <span>{selectableStaff.length} assignable staff loaded</span>
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-50 text-blue-600">
+                    <FaUsers className="text-xs" />
+                  </span>
+                </div>
+                <div className="flex items-center justify-end gap-2">
+                  <span>{selectableRooms.length} current rooms loaded</span>
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-50 text-blue-600">
+                    <FaDoorOpen className="text-xs" />
+                  </span>
+                </div>
+                <div className="flex items-center justify-end gap-2">
+                  <span>{stats.overdue || 0} overdue tasks right now</span>
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-rose-50 text-rose-600">
+                    <FaExclamationTriangle className="text-xs" />
+                  </span>
+                </div>
               </div>
             </div>
 
             <form onSubmit={handleSubmit} className="grid gap-4 lg:grid-cols-4">
-              <select
-                name="staff_name"
-                value={form.staff_name}
-                onChange={handleChange}
-                className={fieldCls}
-                required
-              >
-                <option value="">
-                  {selectableStaff.length ? "Select Staff" : "No staff available"}
-                </option>
-                {selectableStaff.map((user) => (
-                  <option key={user.id} value={user.name}>
-                    {user.name} ({user.role})
-                  </option>
-                ))}
-              </select>
-
-              <select
-                name="room_number"
-                value={form.room_number}
-                onChange={handleChange}
-                className={fieldCls}
-                required
-              >
-                <option value="">
-                  {selectableRooms.length ? "Select Room" : "No rooms available"}
-                </option>
-                {selectableRooms.map((room) => (
-                  <option key={room.roomNo} value={room.roomNo}>
-                    Room {room.roomNo}
-                    {room.roomType ? ` - ${room.roomType}` : ""}
-                    {room.status ? ` - ${room.status}` : ""}
-                  </option>
-                ))}
-              </select>
-
-              <select
-                name="priority"
-                value={form.priority}
-                onChange={handleChange}
-                className={fieldCls}
-              >
-                {priorityOptions.map((priority) => (
-                  <option key={priority} value={priority}>
-                    {priority} Priority
-                  </option>
-                ))}
-              </select>
-
-              <input
-                type="time"
-                name="due_time"
-                value={form.due_time}
-                onChange={handleChange}
-                className={fieldCls}
-              />
-
-              <input
-                type="text"
-                name="task"
-                placeholder="Task"
-                value={form.task}
-                onChange={handleChange}
-                className={fieldCls}
-                required
-              />
-
-              <select
-                name="status"
-                value={form.status}
-                onChange={handleChange}
-                className={fieldCls}
-                disabled={!editId}
-              >
-                {statusOptions.map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
-              </select>
-
-              <div className="lg:col-span-2">
-                <textarea
-                  name="notes"
-                  placeholder="Notes for team"
-                  value={form.notes}
+              <div className="relative self-start">
+                <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-blue-400">
+                  <FaUserCircle />
+                </span>
+                <select
+                  name="staff_name"
+                  value={form.staff_name}
                   onChange={handleChange}
-                  className={textAreaCls}
+                  className={fieldCls}
+                  required
+                >
+                  <option value="">
+                    {selectableStaff.length ? "Select Staff" : "No staff available"}
+                  </option>
+                  {selectableStaff.map((user) => (
+                    <option key={user.id} value={user.name}>
+                      {user.name} ({user.role})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="relative self-start">
+                <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-blue-400">
+                  <FaBed />
+                </span>
+                <select
+                  name="room_number"
+                  value={form.room_number}
+                  onChange={handleChange}
+                  className={fieldCls}
+                  required
+                >
+                  <option value="">
+                    {selectableRooms.length ? "Select Room" : "No rooms available"}
+                  </option>
+                  {selectableRooms.map((room) => (
+                    <option key={room.roomNo} value={room.roomNo}>
+                      Room {room.roomNo}
+                      {room.roomType ? ` - ${room.roomType}` : ""}
+                      {room.status ? ` - ${room.status}` : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="relative self-start">
+                <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-blue-400">
+                  <FaFlag />
+                </span>
+                <select
+                  name="priority"
+                  value={form.priority}
+                  onChange={handleChange}
+                  className={fieldCls}
+                >
+                  {priorityOptions.map((priority) => (
+                    <option key={priority} value={priority}>
+                      {priority} Priority
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="relative self-start">
+                <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-blue-400">
+                  <FaClock />
+                </span>
+                <input
+                  type="time"
+                  name="due_time"
+                  value={form.due_time}
+                  onChange={handleChange}
+                  className={fieldCls}
                 />
               </div>
 
-              <div className="flex flex-wrap items-start gap-3">
+              <div className="relative self-start">
+                <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-blue-400">
+                  <FaClipboardList />
+                </span>
+                <input
+                  type="text"
+                  name="task"
+                  placeholder="Task"
+                  value={form.task}
+                  onChange={handleChange}
+                  className={fieldCls}
+                  required
+                />
+              </div>
+
+              <div className="relative self-start">
+                <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-blue-400">
+                  <FaCheckCircle />
+                </span>
+                <select
+                  name="status"
+                  value={form.status}
+                  onChange={handleChange}
+                  className={`${fieldCls} disabled:opacity-60`}
+                  disabled={!editId}
+                >
+                  {statusOptions.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="lg:col-span-2">
+                <div className="relative self-start">
+                  <span className="pointer-events-none absolute left-4 top-5 text-blue-400">
+                    <FaStickyNote />
+                  </span>
+                  <textarea
+                    name="notes"
+                    placeholder="Notes for team"
+                    value={form.notes}
+                    onChange={handleChange}
+                    className={textAreaCls}
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-start gap-3 lg:col-span-2">
                 <button
                   type="submit"
                   disabled={saving}
-                  className="rounded-[20px] bg-gradient-to-r from-sky-600 to-cyan-500 px-5 py-3 text-sm font-bold text-white shadow-[0_16px_35px_rgba(14,165,233,0.24)] disabled:opacity-60"
+                  className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-900 to-blue-500 px-6 py-3.5 text-sm font-bold text-white shadow-[0_18px_38px_rgba(30,64,175,0.35)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_22px_45px_rgba(30,64,175,0.45)] disabled:opacity-60 sm:text-[16px]"
                 >
+                  <FaPlus className="text-xs" />
                   {saving ? "Saving..." : editId ? "Update Task" : "Assign Task"}
                 </button>
                 {editId && (
                   <button
                     type="button"
                     onClick={resetForm}
-                    className="rounded-[20px] border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700"
+                    className="rounded-2xl border border-slate-200 bg-white px-6 py-3.5 text-sm font-bold text-slate-700 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md sm:text-[16px]"
                   >
                     Cancel Edit
                   </button>
@@ -568,39 +668,42 @@ const Assignment = () => {
           </section>
         )}
 
-        <section className="rounded-[26px] border border-white/60 bg-white/82 shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
-          <div className="overflow-x-auto">
+        {/* TABLE */}
+        <section className="rounded-[28px] border border-white/70 bg-white/90 shadow-[0_20px_50px_rgba(15,23,42,0.08)]">
+          <div className="max-h-[640px] overflow-auto rounded-[28px]">
             <table className="min-w-full text-left">
-              <thead className="bg-slate-50 text-xl uppercase tracking-[0.18em] text-slate-500">
+              <thead className="sticky top-0 z-10 bg-slate-50/95 text-[15px] uppercase tracking-wide text-slate-500 backdrop-blur">
                 <tr>
-                  <th className="px-5 py-4 font-semibold">Staff</th>
-                  <th className="px-5 py-4 font-semibold">Room</th>
-                  <th className="px-5 py-4 font-semibold">Task</th>
-                  <th className="px-5 py-4 font-semibold">Priority</th>
-                  <th className="px-5 py-4 font-semibold hidden lg:table-cell">Due</th>
-                  <th className="px-5 py-4 font-semibold">Status</th>
-                  <th className="px-5 py-4 font-semibold hidden xl:table-cell">Assigned By</th>
-                  <th className="px-5 py-4 font-semibold hidden xl:table-cell">Assigned On</th>
-                  <th className="px-5 py-4 font-semibold hidden xl:table-cell">Updated</th>
-                  <th className="px-5 py-4 font-semibold">Action</th>
+                  <th className="px-5 py-4 font-bold">Staff</th>
+                  <th className="px-5 py-4 font-bold">Room</th>
+                  <th className="px-5 py-4 font-bold">Task</th>
+                  <th className="px-5 py-4 font-bold">Priority</th>
+                  <th className="px-5 py-4 font-bold hidden lg:table-cell">Due</th>
+                  <th className="px-5 py-4 font-bold">Status</th>
+                  <th className="px-5 py-4 font-bold hidden xl:table-cell">Assigned By</th>
+                  <th className="px-5 py-4 font-bold hidden xl:table-cell">Assigned On</th>
+                  <th className="px-5 py-4 font-bold hidden xl:table-cell">Updated</th>
+                  <th className="px-5 py-4 font-bold">Action</th>
                 </tr>
               </thead>
               <tbody>
-                {assignments.map((assignment) => (
+                {assignments.map((assignment, index) => (
                   <tr
                     key={assignment.id}
-                    className="border-t border-slate-200/80 align-top hover:bg-slate-50/80"
+                    className={`border-t border-slate-100 align-top transition-colors duration-200 hover:bg-blue-50/60 ${
+                      index % 2 === 0 ? "bg-white" : "bg-slate-50/50"
+                    }`}
                   >
-                    <td className="px-5 py-4 text-xl font-semibold text-slate-900">
+                    <td className="px-5 py-4 text-[16px] font-semibold text-slate-900">
                       {assignment.staff_name}
                     </td>
-                    <td className="px-5 py-4 text-xl text-slate-600">
+                    <td className="px-5 py-4 text-[16px] text-slate-600">
                       {assignment.room_number}
                     </td>
-                    <td className="px-5 py-4 text-xl text-slate-600">
+                    <td className="px-5 py-4 text-[16px] text-slate-600">
                       <div className="font-medium text-slate-700">{assignment.task}</div>
                       {assignment.notes ? (
-                        <div className="mt-2 text-xl leading-5 text-slate-500">
+                        <div className="mt-2 text-sm leading-5 text-slate-500">
                           {assignment.notes}
                         </div>
                       ) : null}
@@ -610,28 +713,28 @@ const Assignment = () => {
                     </td>
                     <td className="px-5 py-4">
                       <span
-                        className={`inline-flex rounded-full border px-3 py-1 text-xl font-bold ${getPriorityBadge(assignment.priority)}`}
+                        className={`inline-flex rounded-full px-3.5 py-1.5 text-sm font-bold ${getPriorityBadge(assignment.priority)}`}
                       >
                         {assignment.priority || "Normal"}
                       </span>
                     </td>
-                    <td className="px-5 py-4 hidden text-sm text-slate-600 lg:table-cell">
+                    <td className="px-5 py-4 hidden text-[16px] text-slate-600 lg:table-cell">
                       {assignment.due_time || "--"}
                     </td>
                     <td className="px-5 py-4">
                       <span
-                        className={`inline-flex rounded-full border px-3 py-1 text-xl font-bold ${getStatusBadge(assignment.status)}`}
+                        className={`inline-flex rounded-full px-3.5 py-1.5 text-sm font-bold ${getStatusBadge(assignment.status)}`}
                       >
                         {assignment.status || "Pending"}
                       </span>
                     </td>
-                    <td className="px-5 py-4 hidden text-xl text-slate-600 xl:table-cell">
+                    <td className="px-5 py-4 hidden text-[16px] text-slate-600 xl:table-cell">
                       {assignment.assigned_by || assignment.created_by_name || "--"}
                     </td>
-                    <td className="px-5 py-4 hidden text-xl text-slate-600 xl:table-cell">
+                    <td className="px-5 py-4 hidden text-[16px] text-slate-600 xl:table-cell">
                       {formatTimestamp(assignment.created_at)}
                     </td>
-                    <td className="px-5 py-4 hidden text-xl text-slate-600 xl:table-cell">
+                    <td className="px-5 py-4 hidden text-[16px] text-slate-600 xl:table-cell">
                       {formatTimestamp(assignment.updated_at || assignment.created_at)}
                     </td>
                     <td className="px-5 py-4">
@@ -639,7 +742,7 @@ const Assignment = () => {
                         {normalizeLower(assignment.status) === "pending" && (
                           <button
                             onClick={() => updateTaskStatus(assignment.id, "In Progress")}
-                            className="rounded-full bg-sky-600 px-3 py-2 text-xl font-bold text-white"
+                            className="rounded-full bg-gradient-to-r from-sky-600 to-cyan-400 px-4 py-2 text-sm font-bold text-white shadow-sm shadow-sky-200 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
                           >
                             Start
                           </button>
@@ -647,7 +750,7 @@ const Assignment = () => {
                         {normalizeLower(assignment.status) === "in progress" && (
                           <button
                             onClick={() => updateTaskStatus(assignment.id, "Completed")}
-                            className="rounded-full bg-emerald-600 px-3 py-2 text-xl font-bold text-white"
+                            className="rounded-full bg-gradient-to-r from-emerald-600 to-emerald-400 px-4 py-2 text-sm font-bold text-white shadow-sm shadow-emerald-200 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
                           >
                             Complete
                           </button>
@@ -655,16 +758,18 @@ const Assignment = () => {
                         {canManageAssignments && (
                           <button
                             onClick={() => editTask(assignment)}
-                            className="rounded-full bg-sky-50 px-3 py-2 text-xl font-bold text-sky-700"
+                            className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-blue-700 to-blue-500 px-4 py-2 text-sm font-bold text-white shadow-sm shadow-blue-200 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
                           >
+                            <FaEdit className="text-xs" />
                             Edit
                           </button>
                         )}
                         {canManageAssignments && (
                           <button
                             onClick={() => deleteTask(assignment.id)}
-                            className="rounded-full bg-rose-50 px-3 py-2 text-xl font-bold text-rose-700"
+                            className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-rose-600 to-rose-400 px-4 py-2 text-sm font-bold text-white shadow-sm shadow-rose-200 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
                           >
+                            <FaTrashAlt className="text-xs" />
                             Delete
                           </button>
                         )}
@@ -677,7 +782,7 @@ const Assignment = () => {
                   <tr>
                     <td
                       colSpan="10"
-                      className="px-5 py-12 text-center text-xl font-semibold text-slate-500"
+                      className="px-5 py-14 text-center text-[16px] font-semibold text-slate-500"
                     >
                       No tasks assigned yet
                     </td>
@@ -688,7 +793,7 @@ const Assignment = () => {
                   <tr>
                     <td
                       colSpan="10"
-                      className="px-5 py-12 text-center text-xl font-semibold text-slate-500"
+                      className="px-5 py-14 text-center text-[16px] font-semibold text-slate-500"
                     >
                       Loading assignments...
                     </td>

@@ -1,5 +1,16 @@
 import React, { useCallback, useState } from "react";
 import { HiOutlineEnvelope, HiOutlinePhone } from "react-icons/hi2";
+import {
+  HiOutlineUserCircle,
+  HiOutlineMagnifyingGlass,
+  HiOutlineDocumentText,
+  HiOutlineCalendarDays,
+  HiOutlineBanknotes,
+  HiOutlineMoon,
+  HiOutlinePlus,
+  HiOutlineArrowLeft,
+  HiOutlineUserGroup,
+} from "react-icons/hi2";
 import { useNavigate } from "react-router-dom";
 import API, { getBackendBaseURL } from "../../api";
 import { setStoredBookingId } from "./bookingSession";
@@ -40,6 +51,15 @@ const buildUploadUrl = (value) => {
   if (/^https?:\/\//i.test(raw)) return raw;
   return `${getBackendBaseURL()}${raw.startsWith("/") ? raw : `/${raw}`}`;
 };
+
+// ─── Shared premium button style (Blue-950 → Blue-700 → Sky-500) ──────────────
+// Buttons: 52px mobile / 54px tablet / 56px desktop, full width on mobile, auto width on desktop
+const primaryBtnCls =
+  "inline-flex h-[52px] sm:h-[54px] lg:h-14 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-950 via-blue-700 to-sky-500 px-6 text-[16px] font-bold text-white shadow-lg shadow-blue-200 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-blue-300/50 disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-lg";
+const secondaryBtnCls =
+  "inline-flex h-[52px] sm:h-[54px] lg:h-14 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-6 text-[16px] font-bold text-slate-700 transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200 hover:bg-blue-50/60 hover:shadow-md";
+const viewBtnCls =
+  "inline-flex h-10 items-center justify-center whitespace-nowrap rounded-full bg-gradient-to-r from-blue-950 to-blue-700 px-5 text-sm font-bold text-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-200";
 
 const GuestProfile = ({ isModal = false, onClose }) => {
   const navigate = useNavigate();
@@ -93,45 +113,73 @@ const GuestProfile = ({ isModal = false, onClose }) => {
   }, [profile]);
 
   return (
-    <div className="min-h-screen w-full bg-[radial-gradient(circle_at_top_right,_rgba(16,185,129,0.1),_transparent_30%),linear-gradient(135deg,#f8fbff_0%,#f0fdf4_50%,#fff8ef_100%)] p-4 sm:p-6">
-      <div className="w-full space-y-5">
-        <section className="overflow-hidden rounded-[32px] border border-white/70 bg-[linear-gradient(135deg,#052e16_0%,#166534_48%,#0f766e_100%)] px-6 py-7 text-white shadow-[0_22px_70px_rgba(15,23,42,0.22)]">
-          <p className="text-sm font-bold uppercase tracking-[0.32em] text-emerald-200">
-            Guest Intelligence
-          </p>
-          <h1 className="mt-3 text-4xl font-black sm:text-5xl">
-            Guest Profile & Stay History
-          </h1>
-          <p className="mt-3 max-w-2xl text-base font-medium leading-7 text-slate-100/85 sm:text-lg">
-            "Search by mobile number or name to view all of a guest&apos;s past stays, total spend,
-            and booking patterns in one place."
-          </p>
+    <div className="min-h-screen w-full overflow-x-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-white p-4 sm:p-6 md:p-8 lg:p-10">
+      <div className="mx-auto w-full max-w-[1600px] min-w-0 space-y-6 sm:space-y-7 lg:space-y-8">
+
+        {/* Hero */}
+        <section className="relative w-full min-w-0 overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-blue-950 via-blue-700 to-sky-500 px-5 py-8 text-white shadow-[0_30px_80px_rgba(15,23,42,0.25)] sm:px-8 sm:py-10 md:px-10">
+          {/* Abstract wave / glass decoration */}
+          <div className="pointer-events-none absolute inset-0 overflow-hidden">
+            <div className="absolute -right-20 -top-20 h-56 w-56 rounded-full bg-sky-300/25 blur-3xl sm:h-72 sm:w-72" />
+            <div className="absolute -bottom-28 left-0 h-64 w-64 rounded-full bg-blue-400/20 blur-3xl sm:h-80 sm:w-80" />
+            <svg
+              className="absolute bottom-0 right-0 w-2/3 opacity-25"
+              viewBox="0 0 800 200"
+              preserveAspectRatio="none"
+            >
+              <path
+                d="M0,120 C200,180 400,40 800,100 L800,200 L0,200 Z"
+                fill="rgba(255,255,255,0.18)"
+              />
+              <path
+                d="M0,150 C250,90 550,190 800,130 L800,200 L0,200 Z"
+                fill="rgba(255,255,255,0.12)"
+              />
+            </svg>
+          </div>
+
+          <div className="relative min-w-0 text-center sm:text-left">
+            <p className="text-sm font-bold uppercase tracking-[0.32em] text-sky-200">
+              Guest Intelligence
+            </p>
+            <h1 className="mt-3 break-words text-[28px] font-black leading-tight sm:text-[30px] md:text-[36px] lg:text-[42px]">
+              Guest Profile &amp; Stay History
+            </h1>
+            <p className="mx-auto mt-4 max-w-2xl break-words text-[16px] font-medium leading-7 text-blue-50/90 sm:mx-0">
+              "Search by mobile number or name to view all of a guest&apos;s past stays, total spend,
+              and booking patterns in one place."
+            </p>
+          </div>
         </section>
 
-        <div className="rounded-[28px] border border-white/70 bg-white/90 p-5 shadow-[0_12px_40px_rgba(15,23,42,0.08)] backdrop-blur">
-          <label className="mb-2 block text-sm font-bold uppercase tracking-[0.2em] text-slate-600">
+        {/* Search */}
+        <div className="w-full min-w-0 rounded-3xl border border-slate-200 bg-white/90 p-4 shadow-xl shadow-blue-100/40 backdrop-blur sm:p-6 md:p-8">
+          <label className="mb-3 block text-[16px] font-semibold uppercase tracking-[0.2em] text-slate-600">
             Search Guest by Mobile or Name
           </label>
-          <div className="flex gap-3">
-            <input
-              type="text"
-              placeholder="9876543210 ya 'Rahul Sharma'"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-              className="flex-1 rounded-[20px] border border-slate-200 px-5 py-3.5 text-base font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 sm:text-lg"
-            />
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <div className="relative min-w-0 flex-1">
+              <HiOutlineMagnifyingGlass className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-xl text-slate-400 sm:text-2xl" />
+              <input
+                type="text"
+                placeholder="9876543210 ya 'Rahul Sharma'"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                className="h-14 w-full min-w-0 rounded-xl border border-slate-200 bg-white pl-14 pr-5 text-[16px] font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 lg:h-[60px]"
+              />
+            </div>
             <button
               type="button"
               onClick={handleSearch}
               disabled={searching || !searchQuery.trim()}
-              className="rounded-[20px] bg-gradient-to-r from-emerald-600 to-teal-500 px-6 py-3.5 text-base font-bold text-white shadow-[0_10px_24px_rgba(16,185,129,0.22)] transition hover:-translate-y-0.5 disabled:opacity-60 sm:text-lg"
+              className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-950 via-blue-700 to-sky-500 px-8 text-[16px] font-bold text-white shadow-lg shadow-blue-200 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-blue-300/50 disabled:opacity-60 sm:w-auto sm:min-w-[160px] lg:h-[60px]"
             >
               {searching ? "Searching..." : "Search"}
             </button>
           </div>
           {error && (
-            <p className="mt-3 rounded-xl bg-rose-50 px-4 py-3 text-base font-semibold text-rose-700">
+            <p className="mt-4 break-words rounded-xl bg-rose-50 px-4 py-3 text-[16px] font-semibold text-rose-700">
               Warning: {error}
             </p>
           )}
@@ -139,48 +187,58 @@ const GuestProfile = ({ isModal = false, onClose }) => {
 
         {profile && (
           <>
-            <div className="rounded-[28px] border border-white/70 bg-white/90 p-5 shadow-[0_12px_40px_rgba(15,23,42,0.08)] backdrop-blur">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="flex h-18 w-18 items-center justify-center rounded-[22px] bg-emerald-100 text-3xl font-black text-emerald-700">
+            {/* Guest Summary */}
+            <div className="w-full min-w-0 rounded-3xl border border-slate-200 bg-white shadow-lg transition-all duration-300 hover:shadow-2xl">
+              <div className="flex flex-col gap-6 p-5 sm:p-6 lg:flex-row lg:items-center lg:justify-between lg:p-8">
+                <div className="flex min-w-0 items-center gap-4 sm:gap-5">
+                  <div className="flex h-[60px] w-[60px] shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-950 via-blue-700 to-sky-500 text-2xl font-black text-white shadow-lg shadow-blue-200 sm:h-[68px] sm:w-[68px] sm:text-3xl lg:h-[76px] lg:w-[76px]">
                     {(profile.guest?.guest_name || "G").charAt(0).toUpperCase()}
                   </div>
-                  <div>
-                    <h2 className="text-4xl font-black text-slate-900">
+                  <div className="min-w-0">
+                    <h2 className="break-words text-[22px] font-bold text-slate-900 sm:text-[28px] lg:text-[32px]">
                       {profile.guest?.guest_name || "-"}
                     </h2>
-                    <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-lg font-medium text-slate-500">
-                      <span className="inline-flex items-center gap-1.5">
-                        <HiOutlinePhone className="text-xl text-emerald-600" />
+                    <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-[16px] font-semibold text-slate-500">
+                      <span className="inline-flex min-w-0 items-center gap-1.5 break-words">
+                        <HiOutlinePhone className="shrink-0 text-lg text-blue-600 sm:text-xl" />
                         {profile.guest?.mobile || "-"}
                       </span>
                       <span className="hidden text-slate-300 sm:inline">|</span>
-                      <span className="inline-flex items-center gap-1.5">
-                        <HiOutlineEnvelope className="text-xl text-violet-600" />
+                      <span className="inline-flex min-w-0 items-center gap-1.5 break-words">
+                        <HiOutlineEnvelope className="shrink-0 text-lg text-sky-600 sm:text-xl" />
                         {profile.guest?.guest_email || "-"}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-3 sm:min-w-[320px]">
-                  <div className="rounded-[18px] bg-emerald-50 p-3 text-center">
-                    <div className="text-base font-bold uppercase tracking-wide text-emerald-600">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:min-w-[420px] lg:grid-cols-3">
+                  <div className="group rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-4 text-center transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-100 sm:p-5">
+                    <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-xl bg-blue-100 text-blue-700">
+                      <HiOutlineUserGroup className="text-[22px] sm:text-2xl lg:text-[28px]" />
+                    </div>
+                    <div className="text-[16px] font-semibold uppercase tracking-wide text-blue-600">
                       Stays
                     </div>
-                    <div className="mt-1 text-4xl font-black text-emerald-900">{totalStats.stays}</div>
+                    <div className="mt-1 text-3xl font-black text-blue-950 sm:text-4xl">{totalStats.stays}</div>
                   </div>
-                  <div className="rounded-[18px] bg-blue-50 p-3 text-center">
-                    <div className="text-base font-bold uppercase tracking-wide text-blue-600">
+                  <div className="group rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-4 text-center transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-100 sm:p-5">
+                    <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-xl bg-blue-100 text-blue-700">
+                      <HiOutlineMoon className="text-[22px] sm:text-2xl lg:text-[28px]" />
+                    </div>
+                    <div className="text-[16px] font-semibold uppercase tracking-wide text-blue-600">
                       Nights
                     </div>
-                    <div className="mt-1 text-4xl font-black text-blue-900">{totalStats.nights}</div>
+                    <div className="mt-1 text-3xl font-black text-blue-950 sm:text-4xl">{totalStats.nights}</div>
                   </div>
-                  <div className="rounded-[18px] bg-amber-50 p-3 text-center">
-                    <div className="text-base font-bold uppercase tracking-wide text-amber-600">
+                  <div className="group rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-4 text-center transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-100 sm:p-5">
+                    <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-xl bg-blue-100 text-blue-700">
+                      <HiOutlineBanknotes className="text-[22px] sm:text-2xl lg:text-[28px]" />
+                    </div>
+                    <div className="text-[16px] font-semibold uppercase tracking-wide text-blue-600">
                       Total Spent
                     </div>
-                    <div className="mt-1 text-3xl font-black text-amber-900">
+                    <div className="mt-1 break-words text-2xl font-black text-blue-950 sm:text-3xl">
                       {formatCurrency(totalStats.revenue)}
                     </div>
                   </div>
@@ -188,62 +246,73 @@ const GuestProfile = ({ isModal = false, onClose }) => {
               </div>
             </div>
 
-            <div className="rounded-[28px] border border-white/70 bg-white/90 p-5 shadow-[0_12px_40px_rgba(15,23,42,0.08)] backdrop-blur">
-              <div className="mb-5 flex items-center justify-between gap-3">
-                <div>
-                  <h3 className="text-3xl font-black text-slate-900">
+            {/* Uploaded Documents */}
+            <div className="w-full min-w-0 rounded-3xl border border-slate-200 bg-white p-5 shadow-lg transition-all duration-300 hover:shadow-2xl sm:p-6 md:p-8">
+              <div className="mb-6 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <h3 className="break-words text-[24px] font-bold text-slate-900 sm:text-[30px] lg:text-[34px]">
                     Uploaded Documents ({profile.documents?.length || 0})
                   </h3>
-                  <p className="mt-1 text-lg font-medium text-slate-500">
+                  <p className="mt-1 text-[16px] font-medium text-slate-500">
                     Hardcopy check-in forms aur guest related images ab table format me available hain.
                   </p>
+                </div>
+                <div className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-700 sm:flex">
+                  <HiOutlineDocumentText className="text-2xl lg:text-[26px]" />
                 </div>
               </div>
 
               {!profile.documents?.length ? (
-                <p className="rounded-2xl border border-dashed border-slate-200 px-4 py-6 text-center text-lg font-semibold text-slate-400">
-                  Is guest ke liye abhi koi uploaded document nahi mila.
-                </p>
+                <div className="rounded-3xl border-2 border-dashed border-blue-100 bg-blue-50/40 px-4 py-14 text-center sm:px-6">
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-100 text-blue-600">
+                    <HiOutlineDocumentText className="text-[28px] sm:text-[32px]" />
+                  </div>
+                  <p className="break-words text-[16px] font-semibold text-slate-500">
+                    Is guest ke liye abhi koi uploaded document nahi mila.
+                  </p>
+                </div>
               ) : (
-                <div className="overflow-hidden rounded-[24px] border border-slate-200 bg-white">
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full text-left">
-                      <thead className="bg-slate-50">
-                        <tr className="text-sm font-bold uppercase tracking-[0.22em] text-slate-500">
-                          <th className="px-4 py-4">Preview</th>
-                          <th className="px-4 py-4">Document Type</th>
-                          <th className="px-4 py-4">Booking</th>
-                          <th className="px-4 py-4">Uploaded On</th>
-                          <th className="px-4 py-4">Terms</th>
-                          <th className="px-4 py-4">Notes</th>
-                          <th className="px-4 py-4">Action</th>
+                <div className="w-full min-w-0 overflow-hidden rounded-3xl border border-slate-200 shadow-sm">
+                  <div className="max-h-[520px] w-full overflow-auto">
+                    <table className="w-full min-w-[720px] text-left">
+                      <thead className="sticky top-0 z-10 bg-slate-50">
+                        <tr className="text-[15px] font-bold uppercase tracking-wide text-blue-900/80">
+                          <th className="px-4 py-4 sm:px-6 sm:py-5">Preview</th>
+                          <th className="px-4 py-4 sm:px-6 sm:py-5">Document Type</th>
+                          <th className="px-4 py-4 sm:px-6 sm:py-5">Booking</th>
+                          <th className="px-4 py-4 sm:px-6 sm:py-5">Uploaded On</th>
+                          <th className="px-4 py-4 sm:px-6 sm:py-5">Terms</th>
+                          <th className="px-4 py-4 sm:px-6 sm:py-5">Notes</th>
+                          <th className="px-4 py-4 sm:px-6 sm:py-5">Action</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {profile.documents.map((document) => (
+                        {profile.documents.map((document, idx) => (
                           <tr
                             key={document.id}
-                            className="border-t border-slate-200 align-middle text-lg text-slate-700"
+                            className={`border-t border-slate-100 align-middle text-[16px] font-medium text-slate-700 transition-colors duration-200 hover:bg-blue-50/50 ${
+                              idx % 2 === 1 ? "bg-slate-50/50" : "bg-white"
+                            }`}
                           >
-                            <td className="px-4 py-4">
+                            <td className="px-4 py-4 sm:px-6 sm:py-5">
                               <img
                                 src={buildUploadUrl(document.file_url)}
                                 alt={documentTypeLabels[document.document_type] || "Guest document"}
-                                className="h-18 w-28 rounded-xl border border-slate-200 object-cover"
+                                className="h-16 w-24 rounded-xl border border-slate-200 object-cover shadow-sm transition-transform duration-300 hover:scale-105 sm:h-20 sm:w-32 sm:rounded-2xl"
                               />
                             </td>
-                            <td className="px-4 py-4 text-xl font-bold text-slate-900">
+                            <td className="px-4 py-4 text-[16px] font-bold text-slate-900 sm:px-6 sm:py-5">
                               {documentTypeLabels[document.document_type] || "Document"}
                             </td>
-                            <td className="px-4 py-4 text-lg font-medium text-slate-600">
+                            <td className="px-4 py-4 text-[16px] font-medium text-slate-600 sm:px-6 sm:py-5">
                               {document.booking_code || `#${document.booking_id}`}
                             </td>
-                            <td className="px-4 py-4 text-lg font-medium text-slate-600">
+                            <td className="px-4 py-4 text-[16px] font-medium text-slate-600 sm:px-6 sm:py-5">
                               {formatDate(document.uploaded_at)}
                             </td>
-                            <td className="px-4 py-4">
+                            <td className="px-4 py-4 sm:px-6 sm:py-5">
                               <span
-                                className={`rounded-full px-3.5 py-1.5 text-sm font-bold uppercase tracking-[0.16em] ${
+                                className={`whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-bold uppercase tracking-wide ${
                                   Number(document.terms_accepted)
                                     ? "bg-emerald-100 text-emerald-700"
                                     : "bg-rose-100 text-rose-700"
@@ -252,15 +321,15 @@ const GuestProfile = ({ isModal = false, onClose }) => {
                                 {Number(document.terms_accepted) ? "Accepted" : "Pending"}
                               </span>
                             </td>
-                            <td className="max-w-[260px] px-4 py-4 text-lg font-medium text-slate-600">
+                            <td className="max-w-[260px] break-words px-4 py-4 text-[16px] font-medium text-slate-600 sm:px-6 sm:py-5">
                               {document.notes || "--"}
                             </td>
-                            <td className="px-4 py-4">
+                            <td className="px-4 py-4 sm:px-6 sm:py-5">
                               <a
                                 href={buildUploadUrl(document.file_url)}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="inline-flex items-center justify-center rounded-full bg-slate-900 px-5 py-2.5 text-base font-bold text-white transition hover:bg-emerald-700"
+                                className={viewBtnCls}
                               >
                                 View
                               </a>
@@ -274,68 +343,77 @@ const GuestProfile = ({ isModal = false, onClose }) => {
               )}
             </div>
 
-            <div className="rounded-[28px] border border-white/70 bg-white/90 p-5 shadow-[0_12px_40px_rgba(15,23,42,0.08)] backdrop-blur">
-                <div className="mb-5 flex items-center justify-between">
-                <h3 className="text-3xl font-black text-slate-900">
+            {/* Stay History */}
+            <div className="w-full min-w-0 rounded-3xl border border-slate-200 bg-white p-5 shadow-lg transition-all duration-300 hover:shadow-2xl sm:p-6 md:p-8">
+              <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <h3 className="break-words text-[24px] font-bold text-slate-900 sm:text-[30px] lg:text-[34px]">
                   Stay History ({profile.bookings?.length || 0} bookings)
                 </h3>
-                  <button
-                    type="button"
-                    onClick={() => (isModal ? onClose?.() : navigate("/hotel/guest"))}
-                  className="rounded-full bg-emerald-600 px-5 py-2.5 text-base font-bold text-white transition hover:bg-emerald-700"
-                  >
-                    + New Booking
-                  </button>
+                <button
+                  type="button"
+                  onClick={() => (isModal ? onClose?.() : navigate("/hotel/guest"))}
+                  className={`${primaryBtnCls} w-full sm:w-auto`}
+                >
+                  <HiOutlinePlus className="text-xl" />
+                  New Booking
+                </button>
               </div>
 
               {!profile.bookings?.length ? (
-                <p className="py-8 text-center text-lg font-semibold text-slate-400">No past bookings found.</p>
+                <div className="rounded-3xl border-2 border-dashed border-blue-100 bg-blue-50/40 px-4 py-14 text-center sm:px-6">
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-100 text-blue-600">
+                    <HiOutlineCalendarDays className="text-[28px] sm:text-[32px]" />
+                  </div>
+                  <p className="break-words text-[16px] font-semibold text-slate-500">No past bookings found.</p>
+                </div>
               ) : (
-                <div className="overflow-hidden rounded-[24px] border border-slate-200 bg-white">
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full text-left">
-                      <thead className="bg-slate-50">
-                        <tr className="text-sm font-bold uppercase tracking-[0.22em] text-slate-500">
-                          <th className="px-4 py-4">Booking</th>
-                          <th className="px-4 py-4">Rooms</th>
-                          <th className="px-4 py-4">Stay Dates</th>
-                          <th className="px-4 py-4">Status</th>
-                          <th className="px-4 py-4">Paid</th>
-                          <th className="px-4 py-4">Due</th>
-                          <th className="px-4 py-4">Action</th>
+                <div className="w-full min-w-0 overflow-hidden rounded-3xl border border-slate-200 shadow-sm">
+                  <div className="max-h-[520px] w-full overflow-auto">
+                    <table className="w-full min-w-[760px] text-left">
+                      <thead className="sticky top-0 z-10 bg-slate-50">
+                        <tr className="text-[15px] font-bold uppercase tracking-wide text-blue-900/80">
+                          <th className="px-4 py-4 sm:px-6 sm:py-5">Booking</th>
+                          <th className="px-4 py-4 sm:px-6 sm:py-5">Rooms</th>
+                          <th className="px-4 py-4 sm:px-6 sm:py-5">Stay Dates</th>
+                          <th className="px-4 py-4 sm:px-6 sm:py-5">Status</th>
+                          <th className="px-4 py-4 sm:px-6 sm:py-5">Paid</th>
+                          <th className="px-4 py-4 sm:px-6 sm:py-5">Due</th>
+                          <th className="px-4 py-4 sm:px-6 sm:py-5">Action</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {profile.bookings.map((b) => (
+                        {profile.bookings.map((b, idx) => (
                           <tr
                             key={b.bookingId}
-                            className="border-t border-slate-200 align-middle text-lg text-slate-700"
+                            className={`border-t border-slate-100 align-middle text-[16px] font-medium text-slate-700 transition-colors duration-200 hover:bg-blue-50/50 ${
+                              idx % 2 === 1 ? "bg-slate-50/50" : "bg-white"
+                            }`}
                           >
-                            <td className="px-4 py-4 text-xl font-black text-slate-900">#{b.bookingId}</td>
-                            <td className="px-4 py-4 text-xl font-bold text-slate-800">
+                            <td className="px-4 py-4 text-[16px] font-black text-slate-900 sm:px-6 sm:py-5">#{b.bookingId}</td>
+                            <td className="px-4 py-4 text-[16px] font-bold text-slate-800 sm:px-6 sm:py-5">
                               {b.rooms || "Room not set"}
                             </td>
-                            <td className="px-4 py-4 text-lg font-medium text-slate-600">
+                            <td className="whitespace-nowrap px-4 py-4 text-[16px] font-medium text-slate-600 sm:px-6 sm:py-5">
                               {formatDate(b.check_in)} to {formatDate(b.check_out)}
                             </td>
-                            <td className="px-4 py-4">
+                            <td className="px-4 py-4 sm:px-6 sm:py-5">
                               <span
-                                className={`rounded-full px-3.5 py-1.5 text-sm font-bold ${
+                                className={`whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-bold ${
                                   STATUS_COLORS[b.booking_status] || "bg-slate-100 text-slate-600"
                                 }`}
                               >
                                 {b.booking_status || "Unknown"}
                               </span>
                             </td>
-                            <td className="px-4 py-4 text-xl font-black text-emerald-700">
+                            <td className="px-4 py-4 text-[16px] font-black text-blue-700 sm:px-6 sm:py-5">
                               {formatCurrency(b.paidAmount)}
                             </td>
-                            <td className="px-4 py-4 text-xl font-black text-rose-600">
+                            <td className="px-4 py-4 text-[16px] font-black text-rose-600 sm:px-6 sm:py-5">
                               {Number(b.remainingAmount) > 0
                                 ? formatCurrency(b.remainingAmount)
                                 : formatCurrency(0)}
                             </td>
-                            <td className="px-4 py-4">
+                            <td className="px-4 py-4 sm:px-6 sm:py-5">
                               <button
                                 type="button"
                                 onClick={() => {
@@ -347,7 +425,7 @@ const GuestProfile = ({ isModal = false, onClose }) => {
                                     });
                                   }
                                 }}
-                                className="rounded-full bg-slate-900 px-5 py-2.5 text-base font-bold text-white transition hover:bg-emerald-700"
+                                className={viewBtnCls}
                               >
                                 View
                               </button>
@@ -364,21 +442,25 @@ const GuestProfile = ({ isModal = false, onClose }) => {
         )}
 
         {!profile && !error && !searching && (
-          <div className="rounded-[28px] border-2 border-dashed border-slate-200 py-16 text-center">
-            <div className="text-5xl font-black text-slate-700">Guest</div>
-            <p className="mt-4 text-xl font-black text-slate-500">Enter a guest mobile no.</p>
-            <p className="mt-2 text-base font-medium text-slate-400">
+          <div className="w-full min-w-0 rounded-3xl border-2 border-dashed border-blue-100 bg-white px-4 py-16 text-center shadow-sm sm:py-20">
+            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-blue-100 to-sky-50 text-blue-600 shadow-inner sm:h-24 sm:w-24">
+              <HiOutlineUserCircle className="text-[48px] sm:text-[60px]" />
+            </div>
+            <div className="text-[24px] font-bold text-slate-800 sm:text-[28px]">Guest</div>
+            <p className="mt-3 break-words text-[16px] font-semibold text-slate-500">Enter a guest mobile no.</p>
+            <p className="mx-auto mt-2 max-w-md break-words text-[16px] font-medium leading-7 text-slate-400">
               "Past stays, total spend, and booking history will all be visible in one place."
             </p>
           </div>
         )}
 
-        <div className="flex gap-3 pt-2">
+        <div className="flex flex-col gap-3 pt-2 sm:flex-row">
           <button
             type="button"
-          onClick={() => (isModal ? onClose?.() : navigate("/hotel/all-bookings"))}
-            className="rounded-full border border-slate-200 bg-white px-5 py-2.5 text-base font-bold text-slate-700 transition hover:bg-slate-50"
+            onClick={() => (isModal ? onClose?.() : navigate("/hotel/all-bookings"))}
+            className={`${secondaryBtnCls} w-full sm:w-auto`}
           >
+            <HiOutlineArrowLeft className="text-xl" />
             Back to All Bookings
           </button>
         </div>
