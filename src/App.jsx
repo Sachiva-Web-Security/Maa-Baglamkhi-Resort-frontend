@@ -37,6 +37,7 @@ import Housekeeping from "./pages/Housekeeping";
 import HousekeepingDashboard from "./pages/HousekeepingDashboard";
 import Kitchen from "./pages/Kitchen";
 import KitchenDashboard from "./pages/KitchenDashboard";
+import WaiterDeliveryQueue from "./pages/WaiterDeliveryQueue";
 import Login from "./pages/Login";
 import ManagerDashboard from "./pages/ManagerDashboard";
 import Profile from "./pages/Profile";
@@ -239,6 +240,7 @@ function AppRoutes({ isAuthenticated, setIsAuthenticated, protect }) {
           <Route path="/reports" element={protect(<Reports />, ROLES.REPORTS)} />
           <Route path="/assignments" element={protect(<Assignment />, ROLES.ASSIGNMENTS)} />
           <Route path="/kitchen" element={protect(<Kitchen />, ROLES.KITCHEN)} />
+          <Route path="/waiter-delivery" element={protect(<WaiterDeliveryQueue />, ROLES.RESTAURANT)} />
           <Route path="/user" element={protect(<User />, ROLES.ADMIN_ONLY)} />
           <Route path="/invoice/:customerId" element={protect(<CustomerInvoicePage />, ROLES.ALL)} />
 

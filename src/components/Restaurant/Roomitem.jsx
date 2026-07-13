@@ -51,10 +51,10 @@ const Roomitem = () => {
   const [tokenSnapshots, setTokenSnapshots] = useState({});
   const [billByRoom, setBillByRoom] = useState({});
   const [roomPage, setRoomPage] = useState(1);
+  const [addonForms, setAddonForms] = useState({});
 
   const [search, setSearch] = useState("");
   const [menuItems, setMenuItems] = useState([]);
-  const [addonForms, setAddonForms] = useState({});
 
   const focusRoomNo = String(location.state?.focusRoomNo || "");
 
@@ -403,19 +403,21 @@ const Roomitem = () => {
 
   /* ---------- navigation / invoice / pay-now (unchanged logic) ---------- */
 
-  const openRoomFlow = (room, target = "token") => {
-    setSelectedTable(room.roomNo);
-    const state = {
-      entityType: "Room",
-      roomData: room,
-    };
+  const openRoomMenu = (room) => {
+    const roomRef = String(room.roomNo);
+    const booking = getBookingForRoom(room);
+    const activeBooking = booking || getBookingForRoom(room);
 
-    if (target === "items") {
-      navigate(`/restaurant/token-items/${room.roomNo}`, { state });
-      return;
-    }
-
-    navigate(`/restaurant/token/${room.roomNo}`, { state });
+    navigate(`/restaurant/menu/${roomRef}`, {
+      state: {
+        entityType: "Room",
+        roomData: room,
+        bookingId: activeBooking?.bookingId || null,
+        guestName: room.guest || activeBooking?.guestName || "",
+        roomId: room.roomId || room.id || null,
+        focusRoomNo: roomRef,
+      },
+    });
   };
 
   const openRoomInvoice = async (room) => {
@@ -690,59 +692,13 @@ const Roomitem = () => {
                       </div>
                     </div>
 
-                    {addonForm.open ? (
-                      <div className="mt-3 space-y-2">
-                        <div className="flex gap-2">
-                          <select
-                            value={addonForm.menuItemId}
-                            onChange={(e) => updateAddonForm(roomRef, { menuItemId: e.target.value })}
-                            className="flex-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2 text-[12.5px] text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                          >
-                            <option value="">Select item</option>
-                            {menuItems.map((item) => (
-                              <option key={item.id} value={item.id}>
-                                {item.name} — {formatCurrency(item.price)}
-                              </option>
-                            ))}
-                          </select>
-                          <input
-                            type="number"
-                            min="1"
-                            value={addonForm.qty}
-                            onChange={(e) =>
-                              updateAddonForm(roomRef, { qty: Math.max(1, Number(e.target.value || 1)) })
-                            }
-                            className="w-16 rounded-lg border border-slate-200 bg-slate-50 px-2 py-2 text-[12.5px] text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                          />
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleAddToBill(room)}
-                          disabled={addonForm.submitting || !addonForm.menuItemId}
-                          className="w-full rounded-lg bg-blue-600 px-3 py-2 text-[12.5px] font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                          {addonForm.submitting ? "Adding..." : "Add to Bill"}
-                        </button>
-                      </div>
-                    ) : null}
-
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        onClick={() => toggleAddonForm(roomRef)}
-                        className="flex-1 rounded-lg bg-gradient-to-r from-emerald-500 to-green-600 px-3 py-2.5 text-[12.5px] font-bold text-white shadow-sm transition hover:shadow-md"
-                      >
-                        + Add-on
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => openRoomInvoice(room)}
-                        disabled={!hasMenuItems}
-                        className="flex-1 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-2.5 text-[12.5px] font-bold text-white shadow-sm transition hover:shadow-md disabled:cursor-not-allowed disabled:opacity-40"
-                      >
-                        Create Invoice
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => openRoomMenu(room)}
+                      className="w-full rounded-xl border-2 border-dashed border-blue-300 bg-blue-50/60 px-4 py-3 text-center text-[12.5px] font-bold text-blue-700 transition hover:bg-blue-100"
+                    >
+                      Book Order — Open Menu Card to Add Items
+                    </button>
 
                     {showPayNow ? (
                       <button
@@ -755,11 +711,11 @@ const Roomitem = () => {
                     ) : null}
 
                     <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-2 text-[11px] font-semibold text-slate-400">
-                      <button type="button" onClick={() => openRoomFlow(room, "token")} className="hover:text-slate-600">
-                        + Token
+                      <button type="button" onClick={() => openRoomMenu(room)} className="hover:text-blue-600">
+                        Open Menu Card
                       </button>
-                      <button type="button" onClick={() => openRoomFlow(room, "items")} className="hover:text-slate-600">
-                        Room Items
+                      <button type="button" onClick={() => openRoomInvoice(room)} className="hover:text-slate-600">
+                        View Bill
                       </button>
                     </div>
                   </>

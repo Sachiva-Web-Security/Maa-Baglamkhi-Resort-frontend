@@ -113,6 +113,39 @@ export const restaurantService = {
     return response.data;
   },
 
+  // ── Room Service Delivery ─────────────────────────────────────────────────
+  async assignWaiter(payload) {
+    const response = await API.post("/room-service-delivery/assign-waiter", payload);
+    return response.data;
+  },
+
+  async getWaiterDeliveryQueue(waiterName) {
+    const response = await API.get("/room-service-delivery/waiter-queue", {
+      params: { waiterName },
+    });
+    return response.data;
+  },
+
+  async markDelivered(assignmentId) {
+    const response = await API.post(`/room-service-delivery/mark-delivered/${assignmentId}`);
+    return response.data;
+  },
+
+  async cancelRoomServiceOrder(payload) {
+    const response = await API.post("/room-service-delivery/cancel", payload);
+    return response.data;
+  },
+
+  async getReadyRoomOrders() {
+    const response = await API.get("/room-service-delivery/ready-room-orders");
+    return response.data;
+  },
+
+  async getCancellationLog(kitchenOrderId) {
+    const response = await API.get(`/room-service-delivery/cancellation-log/${kitchenOrderId}`);
+    return response.data;
+  },
+
   async getKitchenOrders() {
     const response = await API.get("/kitchen/orders");
     return response.data;

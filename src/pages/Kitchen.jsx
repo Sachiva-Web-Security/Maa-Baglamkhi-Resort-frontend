@@ -9,6 +9,7 @@ import {
 import { FaSyncAlt } from "react-icons/fa";
 import API from "../api";
 import { restaurantService } from "../services/restaurantService";
+import WaiterAssignmentCard from "../components/Restaurant/WaiterAssignmentCard";
 
 const PREP_TIME_OPTIONS = [10, 15, 20, 30, 45, 60];
 const ORDERS_PER_PAGE = 6;
@@ -83,6 +84,8 @@ const Kitchen = () => {
   const [, setTicker] = useState(0);
   const [confirmModal, setConfirmModal] = useState({ open: false, type: "", order: null });
   const [noticeModal, setNoticeModal] = useState({ open: false, type: "success", message: "" });
+  // ── Table / Room filter chip ───────────────────────────────────────────────
+  const [entityFilter, setEntityFilter] = useState("All"); // "All" | "Table" | "Room"
   const orderSound = useRef(null);
   const firstLoad = useRef(true);
   const seenOrderIds = useRef(new Set());
@@ -314,7 +317,15 @@ const Kitchen = () => {
   const cancelledOrders = orders.filter((o) => String(o.status || "").toLowerCase() === "cancelled");
   const visibleOrders = orders.filter((o) => {
     const status = String(o.status || "").toLowerCase();
-    return !["cancelled", "saved", "served", "complete", "completed"].includes(status);
+    if (["cancelled", "saved", "served", "complete", "completed"].includes(status)) return false;
+    // Entity filter chip
+    if (entityFilter === "Table") {
+      return resolveEntityType(o) === "Table";
+    }
+    if (entityFilter === "Room") {
+      return resolveEntityType(o) === "Room";
+    }
+    return true;
   });
   const readyCount = visibleOrders.filter((o) => o.status === "Ready").length;
   const pendingCount = Math.max(0, visibleOrders.length - readyCount);
@@ -468,6 +479,27 @@ const Kitchen = () => {
                   Kitchen orders
                 </h2>
               </div>
+              {/* ── Table / Room filter chips ─────────────────────────── */}
+              <div className="flex flex-wrap gap-2">
+                {["All", "Table", "Room"].map((filter) => (
+                  <button
+                    key={filter}
+                    type="button"
+                    onClick={() => { setEntityFilter(filter); setCurrentPage(1); }}
+                    className={`rounded-full px-4 py-2 text-sm font-bold transition ${
+                      entityFilter === filter
+                        ? filter === "Room"
+                          ? "bg-sky-600 text-white shadow-md"
+                          : filter === "Table"
+                          ? "bg-emerald-600 text-white shadow-md"
+                          : "bg-slate-900 text-white shadow-md"
+                        : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                    }`}
+                  >
+                    {filter}
+                  </button>
+                ))}
+              </div>
               <button
                 type="button"
                 onClick={fetchOrders}
@@ -609,6 +641,19 @@ const Kitchen = () => {
                                     <FiCheckCircle />
                                     Order Ready
                                   </button>
+                                ) : null}
+                                {/* Room-order ready: show waiter assignment card inline */}
+                                {status === "Ready" && entityType === "Room" ? (
+                                  <WaiterAssignmentCard
+                                    order={order}
+                                    onAssigned={(id, data) => {
+                                      global.io?.emit("room-service-waiter-assigned", { kitchenOrderId: id });
+                                    }}
+                                    onDelivered={(id, data) => {
+                                      fetchOrders();
+                                      showNotice("success", "Delivery confirmed. Charge posted to guest folio.");
+                                    }}
+                                  />
                                 ) : null}
                                 <button
                                   type="button"

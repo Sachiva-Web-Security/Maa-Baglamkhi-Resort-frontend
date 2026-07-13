@@ -374,6 +374,8 @@ const MenuPage = () => {
         table,
         waiter: waiterName,
         entityType,
+        referenceType: entityType === "Room" ? "room" : "table",
+        bookingId: entityType === "Room" ? (location.state?.bookingId || 0) : (location.state?.bookingId || 0),
         prepTimeMinutes,
         items: order.map(({ name, qty: quantity, rate: price }) => ({ name, quantity, price })),
       });
