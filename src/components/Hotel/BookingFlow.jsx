@@ -1353,6 +1353,18 @@ const handleJumpStep = (stepView) => {
       showToast("error", "Valid email required", "Please enter a valid guest email address.");
       return false;
     }
+    if (!formData.mobile.trim() || !/^\d{10}$/.test(formData.mobile.trim())) {
+      showToast("error", "Mobile number required", "Please enter a valid 10-digit mobile number.");
+      return false;
+    }
+    if (!formData.guestCapacity.trim()) {
+      showToast("error", "Guest capacity required", "Please enter the guest capacity (adults + children).");
+      return false;
+    }
+    if (!formData.address.trim()) {
+      showToast("error", "Address required", "Please enter the guest's address.");
+      return false;
+    }
     if (!formData.checkIn || !formData.checkOut) {
       showToast("error", "Stay dates required", "Please select both check-in and check-out dates.");
       return false;
@@ -1851,7 +1863,7 @@ const handleJumpStep = (stepView) => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
               <div>
-                <label className={labelCls}>First Name</label>
+                <label className={labelCls}>First Name <span className="text-red-500">*</span></label>
                 <input
                   name="firstName"
                   value={formData.firstName}
@@ -1862,7 +1874,7 @@ const handleJumpStep = (stepView) => {
               </div>
 
               <div>
-                <label className={labelCls}>Last Name</label>
+                <label className={labelCls}>Last Name <span className="text-red-500">*</span></label>
                 <input
                   name="lastName"
                   value={formData.lastName}
@@ -1873,7 +1885,7 @@ const handleJumpStep = (stepView) => {
               </div>
 
               <div className="sm:col-span-2">
-                <label className={labelCls}>Email Address</label>
+                <label className={labelCls}>Email Address <span className="text-red-500">*</span></label>
                 <input
                   type="email"
                   name="guestEmail"
@@ -1885,7 +1897,7 @@ const handleJumpStep = (stepView) => {
               </div>
 
               <div className="sm:col-span-2">
-                <label className={labelCls}>Phone Number</label>
+                <label className={labelCls}>Phone Number <span className="text-red-500">*</span></label>
                 <input
                   name="mobile"
                   value={formData.mobile}
@@ -2028,7 +2040,7 @@ const handleJumpStep = (stepView) => {
                 </div>
               </div>
               <div>
-                <label className={labelCls}>Guest Capacity</label>
+                <label className={labelCls}>Guest Capacity <span className="text-red-500">*</span></label>
                 <input name="guestCapacity" value={formData.guestCapacity} onChange={handleChange} className={fieldCls} placeholder="Adults + Children" />
               </div>
               <div>
@@ -2040,7 +2052,7 @@ const handleJumpStep = (stepView) => {
                 <input name="owner" value={formData.owner} onChange={handleChange} className={fieldCls} placeholder="Enter owner name" />
               </div>
               <div className="sm:col-span-2">
-                <label className={labelCls}>Address</label>
+                <label className={labelCls}>Address <span className="text-red-500">*</span></label>
                 <textarea name="address" value={formData.address} onChange={handleChange} rows={2} className={`${fieldCls} h-auto py-3`} placeholder="Enter address" />
               </div>
             </div>

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import {
   FaBars,
@@ -29,9 +30,20 @@ const Header = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const userName = localStorage.getItem("name") || "Admin User";
   const userRole = localStorage.getItem("role") || "admin";
   const avatarUrl = localStorage.getItem("avatarUrl") || "";
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Safe portal render - only when body exists
+  const renderPortal = (children) => {
+    if (!isMounted || typeof document === 'undefined' || !document.body) return null;
+    return createPortal(children, document.body);
+  };
 
   useEffect(() => {
     const syncNotifications = () => {
@@ -233,8 +245,11 @@ const Header = ({
               )}
             </button>
 
-            {notificationMenuOpen ? (
-              <div className="absolute right-0 top-[calc(100%+10px)] z-[90] w-[min(94vw,360px)] max-w-[92vw] overflow-hidden rounded-[22px] border border-white/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(249,247,255,0.94)_100%)] p-3 shadow-[0_24px_58px_rgba(15,23,42,0.14)] backdrop-blur-xl sm:w-[min(94vw,420px)] sm:rounded-[26px] sm:p-4 md:w-[min(94vw,520px)] md:rounded-[30px]">
+            {notificationMenuOpen && renderPortal(
+              <div
+                className="fixed left-1/2 top-[90px] z-[99999] w-[min(94vw,360px)] -translate-x-1/2 overflow-hidden rounded-[22px] border border-white/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(249,247,255,0.94)_100%)] p-3 shadow-[0_24px_58px_rgba(15,23,42,0.14)] backdrop-blur-xl sm:left-auto sm:right-4 sm:top-[92px] sm:w-[min(94vw,420px)] sm:-translate-x-0 sm:rounded-[26px] sm:p-4 md:w-[min(94vw,520px)] md:rounded-[30px]"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <div className="mb-3 flex items-center justify-between sm:mb-4">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet-500 sm:text-sm md:tracking-[0.26em] md:text-base">
@@ -278,12 +293,13 @@ const Header = ({
                     ))
                   ) : (
                     <div className="rounded-[16px] border border-dashed border-slate-200 bg-slate-50 px-3 py-4 text-xs text-slate-500 sm:rounded-[18px] sm:px-4 sm:py-5 sm:text-sm">
-                      No notifications yet. Booking, cleaning aur messages yahan show honge.
+                      No notifications yet.
                     </div>
                   )}
                 </div>
-              </div>
-            ) : null}
+              </div>,
+              document.body
+            )}
           </div>
 
           <div className="relative">
@@ -324,8 +340,11 @@ const Header = ({
               </span>
             </button>
 
-            {profileMenuOpen ? (
-              <div className="absolute right-0 top-[calc(100%+12px)] w-[min(88vw,15rem)] max-w-[90vw] overflow-hidden rounded-[20px] border border-slate-200/80 bg-white/98 p-2 shadow-[0_22px_55px_rgba(15,23,42,0.16)] backdrop-blur-xl sm:rounded-[24px]">
+            {profileMenuOpen && renderPortal(
+              <div
+                className="fixed left-1/2 top-[90px] z-[99999] w-[min(88vw,15rem)] -translate-x-1/2 overflow-hidden rounded-[20px] border border-slate-200/80 bg-white/98 p-2 shadow-[0_22px_55px_rgba(15,23,42,0.16)] backdrop-blur-xl sm:left-auto sm:right-4 sm:top-[92px] sm:-translate-x-0 sm:rounded-[24px]"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <div className="mb-2 rounded-[16px] bg-slate-50 px-3 py-3 sm:rounded-[18px] sm:px-4">
                   <p className="truncate text-sm font-semibold text-slate-900">{userName}</p>
                   <p className="mt-1 truncate text-xs text-slate-500">
@@ -369,7 +388,7 @@ const Header = ({
                   <span className="truncate">Logout</span>
                 </button>
               </div>
-            ) : null}
+            )}
           </div>
         </div>
       </div>

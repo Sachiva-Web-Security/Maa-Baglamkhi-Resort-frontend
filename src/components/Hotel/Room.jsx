@@ -33,7 +33,7 @@ const ROOM_LIST_PAGE_SIZE = 8;
 
 // ─── Room status helpers ───────────────────────────────────────────────────────
 // Returns "blocked" | "occupied" | "booked" | "available"
-// Priority: blocked > occupied > booked (active booking) > available
+// Priority: blocked > booked (active booking) > occupied > available
 
 const getRoomAvailabilityState = (
   roomNo,
@@ -47,7 +47,10 @@ const getRoomAvailabilityState = (
   // 1. Check maintenance block (highest priority)
   if (blockedRoomNumbers.has(key)) return "blocked";
 
-  // 2. Check inventory operational status
+  // 2. Check active bookings FIRST — only "booked" if there's an actual active booking
+  if (bookedRoomNumbers.has(key)) return "booked";
+
+  // 3. Check inventory operational status
   const inventoryStatus = String(
     inventoryStatusMap.get(key) || "",
   ).toLowerCase();
@@ -56,9 +59,6 @@ const getRoomAvailabilityState = (
     return "blocked";
   if (inventoryStatus.includes("occupied"))
     return "occupied";
-
-  // 3. Check active bookings
-  if (bookedRoomNumbers.has(key)) return "booked";
 
   return "available";
 };
