@@ -237,7 +237,45 @@ const Kitchen = () => {
         status: "Ready",
         readyMessage: `${entityType} ${ref} ka order ready hai. Service ke liye bhej dijiye.`,
       });
+
+      // Send notification to the waiter using both ID and name
+      const waiterId = order.waiter_id;
+      const waiterName = order.waiter_name || order.waiter || "";
+
+      if (waiterId || waiterName) {
+        const notification = {
+          id: `ready-${order.id}-${Date.now()}`,
+          title: "Order Ready!",
+          message: `${entityType} ${ref} ka order ready hai. Abhi serve kar sakte ho.`,
+          type: "success",
+          route: `/restaurant/edit-token/${ref}`,
+          meta: {
+            orderId: order.id,
+            tableNumber: ref,
+            entityType: entityType,
+            waiterId: waiterId,
+            waiterName: waiterName,
+          },
+          createdAt: new Date().toISOString(),
+          read: false,
+        };
+
+        // Store by waiter ID if available
+        if (waiterId) {
+          localStorage.setItem(`waiter_notification_id_${waiterId}`, JSON.stringify(notification));
+          window.dispatchEvent(new CustomEvent(`waiter-notification-id-${waiterId}`));
+        }
+
+        // Also store by waiter name (normalized)
+        if (waiterName) {
+          const normalizedName = waiterName.toLowerCase().replace(/\s+/g, "_");
+          localStorage.setItem(`waiter_notification_name_${normalizedName}`, JSON.stringify(notification));
+          window.dispatchEvent(new CustomEvent(`waiter-notification-name-${normalizedName}`));
+        }
+      }
+
       fetchOrders();
+      showNotice("success", "Order ready marked. Waiter notified.");
     } catch (err) {
       console.error(err);
       showNotice("error", "Order ready mark nahi ho paaya.");
@@ -246,11 +284,50 @@ const Kitchen = () => {
 
   const markOrderPreparing = async (order) => {
     try {
+      const etaMinutes = order.prepTimeMinutes || 20;
       await restaurantService.updateKitchenOrderStatus(order.id, {
         status: "Preparing",
+        prepTimeMinutes: etaMinutes,
       });
+
+      // Send notification to the waiter using both ID and name
+      const waiterId = order.waiter_id;
+      const waiterName = order.waiter_name || order.waiter || "";
+
+      if (waiterId || waiterName) {
+        const notification = {
+          id: `prep-${order.id}-${Date.now()}`,
+          title: "Order Being Prepared",
+          message: `Your order for ${order.table || order.table_number || "Table"} is now being prepared. ETA: ${etaMinutes} minutes.`,
+          type: "info",
+          route: `/restaurant/edit-token/${order.table || order.table_number}`,
+          meta: {
+            orderId: order.id,
+            tableNumber: order.table || order.table_number,
+            etaMinutes: etaMinutes,
+            waiterId: waiterId,
+            waiterName: waiterName,
+          },
+          createdAt: new Date().toISOString(),
+          read: false,
+        };
+
+        // Store by waiter ID if available
+        if (waiterId) {
+          localStorage.setItem(`waiter_notification_id_${waiterId}`, JSON.stringify(notification));
+          window.dispatchEvent(new CustomEvent(`waiter-notification-id-${waiterId}`));
+        }
+
+        // Also store by waiter name (normalized)
+        if (waiterName) {
+          const normalizedName = waiterName.toLowerCase().replace(/\s+/g, "_");
+          localStorage.setItem(`waiter_notification_name_${normalizedName}`, JSON.stringify(notification));
+          window.dispatchEvent(new CustomEvent(`waiter-notification-name-${normalizedName}`));
+        }
+      }
+
       fetchOrders();
-      showNotice("success", "Order abhi prepare ho raha hai.");
+      showNotice("success", `Order is now being prepared. Waiter notified. ETA: ${etaMinutes} minutes.`);
     } catch (err) {
       console.error(err);
       showNotice("error", "Order preparing mark nahi ho paaya.");
@@ -531,6 +608,7 @@ const Kitchen = () => {
                       <tr>
                         <th className="px-4 py-3">Reference</th>
                         <th className="px-4 py-3">Status</th>
+                        <th className="px-4 py-3">Waiter Info</th>
                         <th className="px-4 py-3">Kitchen ETA</th>
                         <th className="px-4 py-3">Ready Window</th>
                         <th className="px-4 py-3">Items</th>
@@ -581,6 +659,14 @@ const Kitchen = () => {
                               >
                                 {overdue ? "Overdue" : status}
                               </span>
+                            </td>
+                            <td className="px-4 py-4">
+                              <div className="text-base font-semibold text-slate-900">
+                                {order.waiter_name || order.waiter || "--"}
+                              </div>
+                              <div className="text-xs text-slate-500">
+                                ID: {order.waiter_id || "--"}
+                              </div>
                             </td>
                             <td className="px-4 py-4">
                               <div className="flex min-w-[160px] items-center gap-2">
@@ -668,6 +754,7 @@ const Kitchen = () => {
                                   </button>
                                 ) : null}
                                 {/* Room-order ready: show waiter assignment card inline */}
+                                {/*
                                 {status === "Ready" && entityType === "Room" ? (
                                   <WaiterAssignmentCard
                                     order={order}
@@ -680,6 +767,7 @@ const Kitchen = () => {
                                     }}
                                   />
                                 ) : null}
+                                */}
                                 <button
                                   type="button"
                                   onClick={() => openCancelOrderModal(order)}

@@ -21,8 +21,7 @@ import {
 } from "react-icons/fa";
 
 import { getRoleHome } from "../../utils/roleHome";
-import { useReadyOrdersCount } from "../../hooks/useReadyOrdersCount";
-import WaiterNotificationPanel from "../Waiter/WaiterNotificationPanel";
+import useReadyOrdersCount from "../../hooks/useReadyOrdersCount";
 
 const HEADER_HEIGHT = 92;
 
@@ -55,9 +54,9 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
   const location = useLocation();
   const [hoveredItem, setHoveredItem] = useState(null);
   const [hoveredControl, setHoveredControl] = useState(null);
-  const [showNotifications, setShowNotifications] = useState(false);
   const readyOrdersCount = useReadyOrdersCount();
 
+  const role = (localStorage.getItem("role") || "").toLowerCase();
   const unreadNotificationCount = role === "waiter" ? readyOrdersCount : 0;
 
   const clearHoveredStates = () => {
@@ -84,7 +83,6 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
     }
   };
 
-  const role = (localStorage.getItem("role") || "").toLowerCase();
   const dashboardPath = getRoleHome(role);
   const roleLabel = ROLE_LABEL_MAP[role] || "Staff Member";
   const brandInitial = BRAND_NAME.trim().charAt(0).toUpperCase();
@@ -162,7 +160,7 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
     ],
     waiter: [
       { id: 2, name: "Restaurant POS", icon: FaUtensils, path: "/restaurant", section: "operations" },
-      { id: 16, name: "Room Orders", icon: FaStar, path: "/restaurant/room-items", section: "operations" },
+   
     ],
     staff: [
       { id: 2, name: "Assignments", icon: FaTasks, path: "/assignments", section: "operations" },
@@ -381,10 +379,8 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
             {role === "waiter" && (
               <button
                 type="button"
-                onClick={() => setShowNotifications((prev) => !prev)}
-                className={`mt-2 flex min-h-[44px] w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.06] px-3 py-2.5 text-sm font-bold text-slate-200 transition-all duration-300 hover:border-blue-400/50 hover:bg-white/[0.09] hover:text-white ${
-                  showNotifications ? "border-blue-400/50 bg-white/[0.09] text-white" : ""
-                }`}
+                onClick={() => navigate("/restaurant/notifications")}
+                className="mt-2 flex min-h-[44px] w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.06] px-3 py-2.5 text-sm font-bold text-slate-200 transition-all duration-300 hover:border-blue-400/50 hover:bg-white/[0.09] hover:text-white"
               >
                 🔔
                 {showLabels && <span>Notifications</span>}
@@ -472,12 +468,6 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
           </div>
         </div>
       </div>
-      {role === "waiter" && (
-        <WaiterNotificationPanel
-          isOpen={showNotifications}
-          onClose={() => setShowNotifications(false)}
-        />
-      )}
     </>
   );
 };

@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import API from "../../api";
 
 const NOTIFICATIONS_KEY = "waiter_notifications";
 
