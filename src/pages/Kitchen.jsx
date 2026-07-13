@@ -244,6 +244,19 @@ const Kitchen = () => {
     }
   };
 
+  const markOrderPreparing = async (order) => {
+    try {
+      await restaurantService.updateKitchenOrderStatus(order.id, {
+        status: "Preparing",
+      });
+      fetchOrders();
+      showNotice("success", "Order abhi prepare ho raha hai.");
+    } catch (err) {
+      console.error(err);
+      showNotice("error", "Order preparing mark nahi ho paaya.");
+    }
+  };
+
   const openCancelOrderModal = (order) => {
     setConfirmModal({ open: true, type: "cancel-order", order });
   };
@@ -559,6 +572,8 @@ const Kitchen = () => {
                                 className={`rounded-full px-4 py-1.5 text-sm font-semibold ${
                                   status === "Ready"
                                     ? "bg-emerald-50 text-emerald-700"
+                                    : status === "Preparing"
+                                    ? "bg-sky-50 text-sky-700"
                                     : overdue
                                     ? "bg-rose-50 text-rose-700"
                                     : "bg-amber-50 text-amber-700"
@@ -632,7 +647,17 @@ const Kitchen = () => {
                             <td className="px-4 py-4 text-xl font-black text-slate-900">Rs. {total}</td>
                             <td className="px-4 py-4">
                               <div className="flex min-w-[180px] flex-col gap-2">
-                                {status !== "Ready" ? (
+                                {status !== "Ready" && status !== "Preparing" ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => markOrderPreparing(order)}
+                                    className="inline-flex items-center justify-center gap-2 rounded-full bg-amber-500 px-4 py-2.5 text-sm font-bold text-white transition hover:-translate-y-0.5"
+                                  >
+                                    <FiClock />
+                                    Start Preparing
+                                  </button>
+                                ) : null}
+                                {status === "Preparing" ? (
                                   <button
                                     type="button"
                                     onClick={() => markOrderReady(order)}

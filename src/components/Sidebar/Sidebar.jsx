@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { matchPath, useLocation, useNavigate } from "react-router-dom";
 import {
+  FaBell,
   FaBoxes,
   FaBroom,
   FaChartBar,
@@ -11,6 +12,7 @@ import {
   FaHome,
   FaHotel,
   FaSignOutAlt,
+  FaStar,
   FaTasks,
   FaUser,
   FaUserCheck,
@@ -19,6 +21,8 @@ import {
 } from "react-icons/fa";
 
 import { getRoleHome } from "../../utils/roleHome";
+import { useReadyOrdersCount } from "../../hooks/useReadyOrdersCount";
+import WaiterNotificationPanel from "../Waiter/WaiterNotificationPanel";
 
 const HEADER_HEIGHT = 92;
 
@@ -51,6 +55,10 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
   const location = useLocation();
   const [hoveredItem, setHoveredItem] = useState(null);
   const [hoveredControl, setHoveredControl] = useState(null);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const readyOrdersCount = useReadyOrdersCount();
+
+  const unreadNotificationCount = role === "waiter" ? readyOrdersCount : 0;
 
   const clearHoveredStates = () => {
     setHoveredItem(null);
@@ -154,7 +162,7 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
     ],
     waiter: [
       { id: 2, name: "Restaurant POS", icon: FaUtensils, path: "/restaurant", section: "operations" },
-      
+      { id: 16, name: "Room Orders", icon: FaStar, path: "/restaurant/room-items", section: "operations" },
     ],
     staff: [
       { id: 2, name: "Assignments", icon: FaTasks, path: "/assignments", section: "operations" },
@@ -163,7 +171,10 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
 
   const menuItems = [
     { id: 1, name: "Dashboard", icon: FaHome, path: dashboardPath },
-    ...(roleMenuMap[role] || []),
+    ...(roleMenuMap[role] || []).map((item) => ({
+      ...item,
+      badgeCount: role === "waiter" && item.path === "/restaurant" ? readyOrdersCount : 0,
+    })),
     { id: 99, name: "My Profile", icon: FaUser, path: "/profile" },
   ];
 
@@ -210,6 +221,7 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
     const active = isActive(item.path);
     const hovered = hoveredItem === item.id;
     const highlighted = isItemHighlighted(item.id, active);
+    const showBadge = item.badgeCount > 0;
 
     return (
       <button
@@ -257,6 +269,11 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
           }`}
         >
           <Icon className="text-xl" />
+          {showBadge ? (
+            <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[11px] font-black text-white ring-2 ring-[#0b1728]">
+              {item.badgeCount > 9 ? "9+" : item.badgeCount}
+            </span>
+          ) : null}
         </span>
         {showLabels ? (
           <span className="relative z-10 min-w-0 flex-1 truncate text-left text-sm font-semibold leading-tight text-white sm:text-[15px] lg:text-base">
@@ -360,6 +377,24 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
                 </span>
               ) : null}
             </button>
+
+            {role === "waiter" && (
+              <button
+                type="button"
+                onClick={() => setShowNotifications((prev) => !prev)}
+                className={`mt-2 flex min-h-[44px] w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.06] px-3 py-2.5 text-sm font-bold text-slate-200 transition-all duration-300 hover:border-blue-400/50 hover:bg-white/[0.09] hover:text-white ${
+                  showNotifications ? "border-blue-400/50 bg-white/[0.09] text-white" : ""
+                }`}
+              >
+                🔔
+                {showLabels && <span>Notifications</span>}
+                {unreadNotificationCount > 0 && (
+                  <span className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full bg-rose-500 px-1.5 text-[11px] font-black text-white">
+                    {unreadNotificationCount > 9 ? "9+" : unreadNotificationCount}
+                  </span>
+                )}
+              </button>
+            )}
           </div>
 
           <div className="relative flex min-h-0 flex-1 flex-col">
@@ -437,6 +472,12 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
           </div>
         </div>
       </div>
+      {role === "waiter" && (
+        <WaiterNotificationPanel
+          isOpen={showNotifications}
+          onClose={() => setShowNotifications(false)}
+        />
+      )}
     </>
   );
 };

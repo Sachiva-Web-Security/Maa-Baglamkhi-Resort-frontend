@@ -14,6 +14,7 @@ const ROLE_LOGIN_HINTS = [
   { role: "accountant", email: "accounts@resort.com", label: "Accounts" },
   { role: "housekeeping", email: "tarun@resort.com", label: "Housekeeping" },
   { role: "waiter", email: "waiter@resort.com", label: "Waiter" },
+  { role: "chef", email: "chef@resort.com", label: "Chef" },
 ];
 
 const LOGIN_EMAIL_ALIASES = {
@@ -29,6 +30,8 @@ const LOGIN_EMAIL_ALIASES = {
   "hk@test.com": "tarun@resort.com",
   "waiter@resort.com": "waiter@test.com",
   "waiter@test.com": "waiter@resort.com",
+  "chef@resort.com": "chef@test.com",
+  "chef@test.com": "chef@resort.com",
 };
 
 const Login = ({ setIsAuthenticated }) => {
