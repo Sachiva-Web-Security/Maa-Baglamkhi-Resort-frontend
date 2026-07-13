@@ -150,19 +150,20 @@ const EditToken = () => {
     }
 
     try {
-      await Promise.all(
-        items.map((item) =>
-          API.put("/token/item", {
-            id: item.id,
-            qty: Number(item.qty),
-            rate: Number(item.rate),
-          }),
-        ),
-      );
+      // Update each item one by one to handle errors properly
+      for (const item of items) {
+        await API.put("/token/item", {
+          id: item.id,
+          qty: Number(item.qty),
+          rate: Number(item.rate),
+        });
+      }
 
-      alert("Token updated successfully");
+      alert("Token updated successfully!");
+      window.dispatchEvent(new Event("tokenUpdated"));
     } catch (error) {
-      alert(error.response?.data?.message || "Token update nahi ho paaya.");
+      const errorMsg = error?.response?.data?.message || error.message || "Token update nahi ho paaya.";
+      alert(errorMsg);
     }
   };
 
@@ -358,6 +359,7 @@ const EditToken = () => {
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-2">
+                      {/*
                       <button
                         onClick={() => requestItemAction(item, "Complimentary")}
                         className="rounded-xl bg-sky-500 px-3 py-2 text-xs font-bold text-white"
@@ -370,6 +372,7 @@ const EditToken = () => {
                       >
                         Void
                       </button>
+                      */}
                       {!isWaiter ? (
                         <button
                           onClick={() => deleteItem(item.id)}
@@ -403,6 +406,7 @@ const EditToken = () => {
                     <div className="text-center text-sm font-bold text-slate-900">Rs. {Number(item.qty) * Number(item.rate)}</div>
                     <div className="flex justify-center">
                       <div className="flex flex-wrap justify-center gap-2">
+                      {/*
                       <button
                         onClick={() => requestItemAction(item, "Complimentary")}
                         className="rounded-xl bg-sky-500 px-3 py-2 text-xs font-bold text-white"
@@ -415,6 +419,7 @@ const EditToken = () => {
                       >
                         Void
                       </button>
+                      */}
                       {!isWaiter ? (
                         <button
                           onClick={() => deleteItem(item.id)}
@@ -497,14 +502,13 @@ const EditToken = () => {
               <div className="mt-3 grid gap-3">
                 <button
                   onClick={handleUpdate}
-                  disabled={!isOwnedByCurrentWaiter}
                   className="rounded-[16px] bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white"
                 >
                   Update Token
                 </button>
                 <button
                   onClick={handleInvoice}
-                  disabled={!items.length || !isOwnedByCurrentWaiter}
+                  disabled={!items.length}
                   className="rounded-[16px] bg-blue-600 px-4 py-2.5 text-sm font-bold text-white"
                 >
                   Create Invoice

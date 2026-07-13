@@ -37,8 +37,12 @@ const formatShortDate = (value) => {
   return parsed.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 };
 
-const isOccupiedRoomStatus = (room) =>
-  String(room.status || room.hotelStatus || "").toLowerCase() === "occupied";
+const isOccupiedRoomStatus = (room, booking) => {
+  // Room is occupied if status is "occupied" OR if there's an active booking with checked-in status
+  const statusOccupied = String(room.status || room.hotelStatus || "").toLowerCase() === "occupied";
+  const bookingOccupied = booking && !String(booking.bookingStatus || "").toLowerCase().includes("checked out");
+  return statusOccupied || bookingOccupied;
+};
 
 const Roomitem = () => {
   const navigate = useNavigate();
@@ -114,7 +118,12 @@ const Roomitem = () => {
     getRoomBookingForDate(room.roomNo, today, mergedBookings, false) ||
     getRoomBookingReference(room.roomNo, today, mergedBookings);
 
-  const occupiedRooms = useMemo(() => rooms.filter(isOccupiedRoomStatus), [rooms]);
+  const occupiedRooms = useMemo(() => {
+    return rooms.filter((room) => {
+      const booking = getBookingForRoom(room);
+      return isOccupiedRoomStatus(room, booking);
+    });
+  }, [rooms, mergedBookings, today]);
 
   // Menu items for the inline "Add-on" quick-add dropdown on each occupied
   // room card. Uses the same restaurantService.getMenu() endpoint that
@@ -154,8 +163,8 @@ const Roomitem = () => {
     () =>
       rooms
         .map((room) => {
-          const occupied = isOccupiedRoomStatus(room);
-          const booking = occupied ? getBookingForRoom(room) : null;
+          const booking = getBookingForRoom(room);
+          const occupied = isOccupiedRoomStatus(room, booking);
           return { room, booking, occupied };
         })
         .filter(({ occupied }) => occupied), // show only occupied rooms

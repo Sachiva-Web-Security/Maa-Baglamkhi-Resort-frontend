@@ -26,6 +26,7 @@ const RestaurantPOS = () => {
         { label: "My Tables", path: "/restaurant", icon: FaThLarge },
         { label: "Payment", path: "/restaurant/payment", icon: FaRegCreditCard },
         { label: "Bills", path: "/restaurant/payment-bills", icon: FaClipboardList },
+        { label: "Room Orders", path: "/restaurant/room-items", icon: FaStar },
       ]
     : [
         { label: "Tables", path: "/restaurant", icon: FaThLarge },
@@ -66,7 +67,7 @@ const RestaurantPOS = () => {
     ? "Operational snapshot for waiter"
     : "Operational snapshot for restaurant";
 
-  const heroCopy = actor.isWaiter
+  const heroCopy = actor.isWaiter      
     ? "Manage live table activity, kitchen sync, and point-of-sale handoff from one unified waiter workspace."
     : "Manage live floor activity, kitchen sync, and point-of-sale transactions from one unified resort sanctuary.";
 

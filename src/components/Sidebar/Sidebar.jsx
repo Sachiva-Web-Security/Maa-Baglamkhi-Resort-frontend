@@ -154,9 +154,7 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
     ],
     waiter: [
       { id: 2, name: "Restaurant POS", icon: FaUtensils, path: "/restaurant", section: "operations" },
-      { id: 3, name: "Tables", icon: FaClipboardList, path: "/restaurant", section: "operations" },
-      { id: 4, name: "Orders", icon: FaTasks, path: "/restaurant", section: "operations" },
-      { id: 5, name: "Billing", icon: FaWallet, path: "/restaurant/payment-bills", section: "records" },
+      
     ],
     staff: [
       { id: 2, name: "Assignments", icon: FaTasks, path: "/assignments", section: "operations" },

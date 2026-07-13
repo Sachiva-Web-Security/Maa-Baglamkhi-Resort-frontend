@@ -19,10 +19,17 @@ const formatDate = (value) => {
   });
 };
 
-const getCustomerDisplay = (bill) => ({
-  name: String(bill?.customerName || "").trim() || "Walk-in Customer",
-  phone: String(bill?.phone || "").trim() || "--",
-});
+const getCustomerDisplay = (bill, enrichedGuest) => {
+  // Use bill's customer data first, or fallback to enriched guest data from rooms/bookings
+  const billName = String(bill?.customerName || "").trim();
+  const billPhone = String(bill?.phone || "").trim();
+
+  // enrichedGuest comes from room/booking data
+  const guestName = billName || String(enrichedGuest?.guestName || enrichedGuest?.name || "").trim() || "Walk-in Customer";
+  const phone = billPhone || String(enrichedGuest?.mobile || enrichedGuest?.phone || "").trim() || "--";
+
+  return { name: guestName, phone: phone };
+};
 const createBillCardKey = (bill) =>
   bill?.tokenId
     ? `${String(bill.entityType || "Table").toLowerCase()}:token:${Number(bill.tokenId)}`
@@ -51,8 +58,30 @@ const PaymentBills = () => {
   const [bills, setBills] = useState([]);
   const [loading, setLoading] = useState(true);
   const [roomNumbers, setRoomNumbers] = useState(new Set());
+  const [rooms, setRooms] = useState([]);
   const [selectedBill, setSelectedBill] = useState(null);
   const [billPage, setBillPage] = useState(1);
+
+  // Create guest info lookup from rooms (for enriching bill data)
+  const guestLookup = useMemo(() => {
+    const lookup = new Map();
+    (Array.isArray(rooms) ? rooms : []).forEach((room) => {
+      const roomNo = String(room.roomNo || room.roomNumber || "").trim();
+      if (roomNo) {
+        lookup.set(roomNo, {
+          name: room.guest || null,
+          mobile: room.mobile || room.phone || null,
+        });
+      }
+    });
+    return lookup;
+  }, [rooms]);
+
+  // Get enriched guest info for a bill based on room number
+  const getGuestInfoForBill = (bill) => {
+    const roomNo = String(bill?.tableNumber || "").trim();
+    return guestLookup.get(roomNo) || null;
+  };
 
   useEffect(() => {
     const fetchBills = async () => {
@@ -73,10 +102,12 @@ const PaymentBills = () => {
               .filter(Boolean),
           ),
         );
+        setRooms(Array.isArray(roomsResponse.data) ? roomsResponse.data : []);
       } catch (error) {
         setBills([]);
         setSelectedBill(null);
         setRoomNumbers(new Set());
+        setRooms([]);
       } finally {
         setLoading(false);
       }
@@ -145,8 +176,8 @@ const PaymentBills = () => {
             <div className="mt-4 space-y-4">
               <div className="rounded-[20px] bg-slate-50 p-4">
                 <div className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Customer</div>
-                <div className="mt-2 text-3xl font-black text-slate-900">{getCustomerDisplay(latestBill).name}</div>
-                <div className="mt-1 text-base font-semibold text-slate-600">{getCustomerDisplay(latestBill).phone}</div>
+                <div className="mt-2 text-3xl font-black text-slate-900">{getCustomerDisplay(latestBill, getGuestInfoForBill(latestBill)).name}</div>
+                <div className="mt-1 text-base font-semibold text-slate-600">{getCustomerDisplay(latestBill, getGuestInfoForBill(latestBill)).phone}</div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -208,7 +239,7 @@ const PaymentBills = () => {
                   <tbody>
                     {paginatedBills.map((bill) => {
                       const statusMeta = getStatusMeta(bill);
-                      const customer = getCustomerDisplay(bill);
+                      const customer = getCustomerDisplay(bill, getGuestInfoForBill(bill));
                       const active = selectedBill?.id === bill.id;
 
                       return (
@@ -336,11 +367,11 @@ const PaymentBills = () => {
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
               <div className="rounded-[20px] border border-slate-200 bg-slate-50 px-4 py-4">
                 <div className="text-sm uppercase tracking-[0.18em] text-slate-500">Customer Name</div>
-                <div className="mt-2 text-2xl font-black text-slate-900">{getCustomerDisplay(selectedBill).name}</div>
+                <div className="mt-2 text-2xl font-black text-slate-900">{getCustomerDisplay(selectedBill, getGuestInfoForBill(selectedBill)).name}</div>
               </div>
               <div className="rounded-[20px] border border-slate-200 bg-slate-50 px-4 py-4">
                 <div className="text-sm uppercase tracking-[0.18em] text-slate-500">Mobile Number</div>
-                <div className="mt-2 text-2xl font-black text-slate-900">{getCustomerDisplay(selectedBill).phone}</div>
+                <div className="mt-2 text-2xl font-black text-slate-900">{getCustomerDisplay(selectedBill, getGuestInfoForBill(selectedBill)).phone}</div>
               </div>
               <div className="rounded-[20px] border border-slate-200 bg-slate-50 px-4 py-4">
                 <div className="text-sm uppercase tracking-[0.18em] text-slate-500">Bill Status</div>
