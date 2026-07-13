@@ -108,6 +108,11 @@ export const restaurantService = {
     return response.data;
   },
 
+  async chargeSplitBillToRoom(payload) {
+    const response = await API.post("/restaurant/split-bill/charge-to-room", payload);
+    return response.data;
+  },
+
   async createKitchenOrder(payload) {
     const response = await API.post("/kitchen/order", payload);
     return response.data;

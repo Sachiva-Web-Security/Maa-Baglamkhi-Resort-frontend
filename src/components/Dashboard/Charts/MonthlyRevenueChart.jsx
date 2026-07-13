@@ -91,11 +91,12 @@ const MonthlyRevenueChart = () => {
       </div>
 
       <div className="min-h-0 flex-1 pt-5">
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart
-            data={data}
-            margin={{ top: 14, right: 12, left: 0, bottom: 4 }}
-          >
+        <div style={{ minWidth: 0, minHeight: 200 }}>
+          <ResponsiveContainer width="100%" height={250}>
+            <AreaChart
+              data={data}
+              margin={{ top: 14, right: 12, left: 0, bottom: 4 }}
+            >
             <defs>
               <linearGradient id="reservationCurveFill" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="#d7dbe2" stopOpacity={0.7} />
@@ -145,6 +146,7 @@ const MonthlyRevenueChart = () => {
           </AreaChart>
         </ResponsiveContainer>
       </div>
+    </div>
     </div>
   );
 };

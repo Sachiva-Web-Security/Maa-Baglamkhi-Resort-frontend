@@ -8,6 +8,7 @@ import {
   FiShoppingBag,
   FiHome,
 } from "react-icons/fi";
+import { FaTimes } from "react-icons/fa";
 import API from "../../api";
 import { restaurantService } from "../../services/restaurantService";
 import { getCurrentActor } from "../../utils/currentActor";
@@ -19,6 +20,48 @@ import {
   normalizeRooms,
   todayISO,
 } from "../Dashboard/stayoverUtils";
+import FolioView from "../Hotel/FolioView";
+
+// ─── FeatureModal (same as BookingFlow) ───────────────────────────────────────
+const FeatureModal = ({ title, subtitle, size = "max-w-6xl", onClose, children }) => {
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-[950] flex items-center justify-center bg-slate-950/70 px-3 py-4 backdrop-blur-sm sm:px-6"
+      onClick={onClose}
+    >
+      <div
+        className={`relative max-h-[92vh] w-full ${size} overflow-y-auto rounded-[28px] bg-white shadow-[0_30px_90px_rgba(15,23,42,0.35)]`}
+        onClick={(event) => event.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+      >
+        <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-slate-100 bg-white/95 px-5 py-4 backdrop-blur">
+          <div>
+            <h3 className="text-lg font-black text-slate-900">{title}</h3>
+            {subtitle && <p className="mt-1 text-sm text-slate-500">{subtitle}</p>}
+          </div>
+          <button
+            type="button"
+            aria-label="Close modal"
+            onClick={onClose}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50"
+          >
+            <FaTimes />
+          </button>
+        </div>
+        <div className="p-4 sm:p-5">{children}</div>
+      </div>
+    </div>
+  );
+};
 
 const ACTIVE_INVOICE_KEY = "restaurant-active-invoice";
 const SAVED_INVOICE_KEY = "restaurant-saved-invoice";
@@ -939,6 +982,9 @@ const Payment = ({
     });
   }, [chargeableRooms, roomChargeQuery]);
   const isRoomChargeMode = paymentMethod === "Charge To Room";
+  const isRoomEntity = String(entityType || "").toLowerCase() === "room";
+  // Split bills should go to folio if: (1) Charge To Room mode with room selected, OR (2) Room entity type with active booking
+  const shouldPostSplitToFolio = isRoomChargeMode || isRoomEntity;
   const waiterDiscountLocked = actor.isWaiter;
   const canChargeToRoom = chargeableRooms.length > 0;
 
@@ -1255,31 +1301,121 @@ const Payment = ({
     return undefined;
   };
 
+  // Result popup state
+  const [folioResult, setFolioResult] = useState({ show: false, success: false, message: "", roomNumber: "" });
+  const [showFolioPopup, setShowFolioPopup] = useState(false);
+  const [folioBookingId, setFolioBookingId] = useState(null);
+  const [folioBookingCode, setFolioBookingCode] = useState(null);
+
   const handleCreateSplitBill = async () => {
     if (!invoice) return;
 
     try {
       setSubmitting(true);
-      await Promise.all(
-        splitPreview.map((split) =>
-          restaurantService.createSplitBill({
-            billId: generatedBill?.id || invoice.billId || null,
-            tableNumber: invoice.table,
-            entityType,
-            splitLabel: split.splitLabel,
-            splitNo: split.splitNo,
-            splitCount: split.splitCount,
-            subtotal: split.subtotal,
-            gst: split.gst,
-            total: split.total,
-            paymentMethod,
-            items: invoice.items || [],
-          }),
-        ),
-      );
-      alert("Split bill saved successfully.");
+
+      if (shouldPostSplitToFolio) {
+        // Determine which room to charge
+        let targetRoom = null;
+
+        if (isRoomChargeMode && selectedChargeRoom) {
+          // Table with "Charge To Room" mode - use selected room
+          targetRoom = selectedChargeRoom;
+        } else if (isRoomEntity && invoice.table) {
+          // Room entity type - use invoice's room and booking info directly
+          targetRoom = {
+            roomNumber: invoice.table,
+            bookingId: invoice.bookingId || null,
+            bookingCode: invoice.bookingCode || "",
+          };
+        }
+
+        if (!targetRoom?.roomNumber) {
+          setFolioResult({
+            show: true,
+            success: false,
+            message: "Room number nahi mila. Room charge ke liye room select kijiye.",
+            roomNumber: "",
+          });
+          setSubmitting(false);
+          return;
+        }
+
+        // Save split bills AND post each split to room folio
+        const roomChargePromises = splitPreview.map((split) =>
+          Promise.all([
+            restaurantService.createSplitBill({
+              billId: generatedBill?.id || invoice.billId || null,
+              tableNumber: invoice.table,
+              entityType,
+              splitLabel: split.splitLabel,
+              splitNo: split.splitNo,
+              splitCount: split.splitCount,
+              subtotal: split.subtotal,
+              gst: split.gst,
+              total: split.total,
+              paymentMethod: "Charge To Room",
+              items: invoice.items || [],
+            }),
+            restaurantService.chargeSplitBillToRoom({
+              roomNumber: targetRoom.roomNumber,
+              bookingId: targetRoom.bookingId || invoice.bookingId || null,
+              splits: [split],
+              tableNumber: invoice.table,
+              billId: generatedBill?.id || invoice.billId || null,
+              splitCount: split.splitCount,
+              entityType,
+            }),
+          ]),
+        );
+
+        await Promise.all(roomChargePromises);
+        // Dispatch event to refresh folio view
+        window.dispatchEvent(new Event("folioUpdated"));
+        window.dispatchEvent(new Event("tokenUpdated"));
+
+        // Show success popup
+        setFolioResult({
+          show: true,
+          success: true,
+          message: `Split bills Room ${targetRoom.roomNumber} ke folio me add ho gaye! Total ${splitPreview.length} split(s) posted.`,
+          roomNumber: targetRoom.roomNumber,
+        });
+      } else {
+        await Promise.all(
+          splitPreview.map((split) =>
+            restaurantService.createSplitBill({
+              billId: generatedBill?.id || invoice.billId || null,
+              tableNumber: invoice.table,
+              entityType,
+              splitLabel: split.splitLabel,
+              splitNo: split.splitNo,
+              splitCount: split.splitCount,
+              subtotal: split.subtotal,
+              gst: split.gst,
+              total: split.total,
+              paymentMethod,
+              items: invoice.items || [],
+            }),
+          ),
+        );
+        // Show success popup
+        setFolioResult({
+          show: true,
+          success: true,
+          message: `Split bill saved successfully! Total ${splitPreview.length} split(s) created.`,
+          roomNumber: "",
+        });
+      }
     } catch (error) {
-      alert(error.response?.data?.message || "Split bill save nahi ho paaya.");
+      console.error("Split bill error:", error);
+      const errorMsg = error.response?.data?.message || error.message || "Unknown error";
+      // Show error popup
+      setFolioResult({
+        show: true,
+        success: false,
+        message: `Error: ${errorMsg}`,
+        roomNumber: "",
+      });
     } finally {
       setSubmitting(false);
     }
@@ -1305,8 +1441,123 @@ const Payment = ({
     ? `${String(entityType || "Table").toLowerCase() === "room" ? "Room" : "Table"} ${invoice.table}`
     : "Payment Desk";
 
+  // ─── Result Popup Modal ────────────────────────────────────────────────────────
+  const FolioResultPopup = () => {
+    if (!folioResult.show) return null;
+
+    return (
+      <div
+        className="fixed inset-0 z-[2000] flex items-center justify-center bg-slate-950/60 px-4 backdrop-blur-sm"
+        onClick={() => setFolioResult({ ...folioResult, show: false })}
+      >
+        <div
+          className={`w-full max-w-md overflow-hidden rounded-[28px] border ${
+            folioResult.success
+              ? "border-emerald-200/70 bg-gradient-to-br from-emerald-50 to-white"
+              : "border-rose-200/70 bg-gradient-to-br from-rose-50 to-white"
+          } shadow-[0_30px_90px_rgba(15,23,42,0.28)]`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className={`px-6 py-5 ${folioResult.success ? "bg-emerald-600" : "bg-rose-600"} text-white`}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">{folioResult.success ? "✅" : "❌"}</span>
+                <div>
+                  <p className="text-sm font-bold uppercase tracking-wider opacity-80">
+                    {folioResult.success ? "Success" : "Failed"}
+                  </p>
+                  <h2 className="mt-1 text-2xl font-black">
+                    {folioResult.success ? "Post to Folio" : "Error"}
+                  </h2>
+                </div>
+              </div>
+              <button
+                onClick={() => setFolioResult({ ...folioResult, show: false })}
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-xl font-bold text-white transition hover:bg-white/30"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="space-y-4 p-6">
+            <div className={`rounded-2xl border p-4 ${
+              folioResult.success
+                ? "border-emerald-100 bg-emerald-50/50"
+                : "border-rose-100 bg-rose-50/50"
+            }`}>
+              <p className={`text-base font-semibold ${
+                folioResult.success ? "text-emerald-800" : "text-rose-800"
+              }`}>
+                {folioResult.message}
+              </p>
+            </div>
+
+            {folioResult.success && folioResult.roomNumber && (
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-center">
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Room</p>
+                  <p className="mt-1 text-lg font-black text-slate-900">{folioResult.roomNumber}</p>
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-center">
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Splits</p>
+                  <p className="mt-1 text-lg font-black text-slate-900">{splitPreview.length}</p>
+                </div>
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setFolioResult({ ...folioResult, show: false })}
+                className={`flex-1 rounded-full py-3 text-base font-bold shadow-sm transition ${
+                  folioResult.success
+                    ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                    : "bg-rose-600 text-white hover:bg-rose-700"
+                }`}
+              >
+                OK
+              </button>
+              {folioResult.success && (
+                <button
+                  onClick={() => {
+                    setFolioResult({ ...folioResult, show: false });
+                    // Open folio popup
+                    if (folioResult.roomNumber && invoice?.bookingId) {
+                      setFolioBookingId(invoice.bookingId);
+                      setFolioBookingCode(invoice.bookingCode || "");
+                      setShowFolioPopup(true);
+                    }
+                  }}
+                  className="flex-1 rounded-full border border-slate-200 bg-white py-3 text-base font-bold text-slate-700 shadow-sm transition hover:bg-slate-50"
+                >
+                  View Folio
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className={shellClassName}>
+      {/* Result Popup */}
+      <FolioResultPopup />
+
+      {/* Folio Popup */}
+      {showFolioPopup && (
+        <FeatureModal title="Guest Folio" onClose={() => setShowFolioPopup(false)}>
+          <FolioView
+            bookingId={folioBookingId}
+            bookingCode={folioBookingCode}
+            isModal={true}
+            onClose={() => setShowFolioPopup(false)}
+          />
+        </FeatureModal>
+      )}
       <div className={asModal ? "w-full max-w-[460px]" : "w-full space-y-5"}>
 
         {/* ---------- Page header ---------- */}
@@ -1736,10 +1987,10 @@ const Payment = ({
                       />
                       <button
                         onClick={handleCreateSplitBill}
-                        disabled={submitting}
+                        disabled={submitting || (isRoomChargeMode && !selectedChargeRoom)}
                         className="rounded-lg bg-blue-600 px-3.5 py-2.5 text-[12.5px] font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
                       >
-                        Save Split Bill
+                        {shouldPostSplitToFolio ? "Post To Folio" : "Save Split Bill"}
                       </button>
                     </div>
                     <div className="mt-2.5 space-y-1.5">

@@ -57,20 +57,22 @@ const FoodSalesChart = () => {
         Food sales this week
       </h3>
       <div className="mt-4 min-h-0 flex-1 w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data}>
-            <XAxis dataKey="day" tick={{ fontSize: 13, fill: "#64748b" }} />
-            <YAxis tick={{ fontSize: 13, fill: "#64748b" }} />
-            <Tooltip />
+        <div style={{ minWidth: 0, minHeight: 200 }}>
+          <ResponsiveContainer width="100%" height={250}>
+            <LineChart data={data}>
+              <XAxis dataKey="day" tick={{ fontSize: 13, fill: "#64748b" }} />
+              <YAxis tick={{ fontSize: 13, fill: "#64748b" }} />
+              <Tooltip />
 
-            <Line
-              type="monotone"
-              dataKey="sales"
-              stroke="#06b6d4"
-              strokeWidth={3}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+              <Line
+                type="monotone"
+                dataKey="sales"
+                stroke="#06b6d4"
+                strokeWidth={3}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
       </div>
     </div>
   );
