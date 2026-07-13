@@ -146,7 +146,7 @@ const LiveBoard = () => {
         </div>
 
         {/* Stats */}
-        <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-7">
           <div className="rounded-2xl bg-white p-4 shadow-sm">
             <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Total Active</p>
             <p className="mt-1 text-2xl font-black text-slate-900">{orders.length}</p>
@@ -156,15 +156,33 @@ const LiveBoard = () => {
             <p className="mt-1 text-2xl font-black text-emerald-600">{myOrders.length}</p>
           </div>
           <div className="rounded-2xl bg-white p-4 shadow-sm">
-            <p className="text-xs font-bold uppercase tracking-wider text-amber-500">Ready</p>
-            <p className="mt-1 text-2xl font-black text-amber-600">
-              {orders.filter((o) => o.orderStatus === "ready").length}
+            <p className="text-xs font-bold uppercase tracking-wider text-red-500">Pending</p>
+            <p className="mt-1 text-2xl font-black text-red-600">
+              {orders.filter((o) => o.orderStatus === "pending").length}
             </p>
           </div>
           <div className="rounded-2xl bg-white p-4 shadow-sm">
             <p className="text-xs font-bold uppercase tracking-wider text-sky-500">Preparing</p>
             <p className="mt-1 text-2xl font-black text-sky-600">
               {orders.filter((o) => o.orderStatus === "preparing").length}
+            </p>
+          </div>
+          <div className="rounded-2xl bg-white p-4 shadow-sm">
+            <p className="text-xs font-bold uppercase tracking-wider text-amber-500">Ready to Pick</p>
+            <p className="mt-1 text-2xl font-black text-amber-600">
+              {orders.filter((o) => o.orderStatus === "ready").length}
+            </p>
+          </div>
+          <div className="rounded-2xl bg-white p-4 shadow-sm">
+            <p className="text-xs font-bold uppercase tracking-wider text-purple-500">Picked Up</p>
+            <p className="mt-1 text-2xl font-black text-purple-600">
+              {orders.filter((o) => o.orderStatus === "picked_up").length}
+            </p>
+          </div>
+          <div className="rounded-2xl bg-white p-4 shadow-sm">
+            <p className="text-xs font-bold uppercase tracking-wider text-cyan-500">Served</p>
+            <p className="mt-1 text-2xl font-black text-cyan-600">
+              {orders.filter((o) => o.orderStatus === "served").length}
             </p>
           </div>
         </div>
@@ -252,7 +270,7 @@ const LiveBoard = () => {
                 <div className="flex flex-wrap gap-2">
                   {order.isOwnedByCurrentWaiter ? (
                     <>
-                      {order.orderStatus === "ready" && (
+                      {String(order.orderStatus).toLowerCase() === "ready" && (
                         <button
                           onClick={() => handlePickup(order)}
                           disabled={actionLoading === order.tokenId}
@@ -268,7 +286,7 @@ const LiveBoard = () => {
                           )}
                         </button>
                       )}
-                      {order.orderStatus === "picked_up" && (
+                      {String(order.orderStatus).toLowerCase() === "picked_up" && (
                         <button
                           onClick={() => handleServed(order)}
                           disabled={actionLoading === order.tokenId}
@@ -292,12 +310,17 @@ const LiveBoard = () => {
                       </button>
                     </>
                   ) : (
-                    <button
-                      onClick={() => handleGoToTable(order)}
-                      className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-bold text-slate-600 transition hover:bg-slate-50"
-                    >
-                      View Details
-                    </button>
+                    <>
+                      <div className="flex-1 rounded-xl border border-dashed border-slate-300 px-3 py-2 text-center text-xs font-semibold text-slate-400">
+                        Status: {order.orderStatus || "unknown"}
+                      </div>
+                      <button
+                        onClick={() => handleGoToTable(order)}
+                        className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-bold text-slate-600 transition hover:bg-slate-50"
+                      >
+                        View
+                      </button>
+                    </>
                   )}
                 </div>
               </div>

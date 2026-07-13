@@ -80,8 +80,16 @@ const EditToken = () => {
 
     const loadKitchenOrder = async () => {
       try {
-        const response = await API.get("/kitchen/orders");
-        const rows = Array.isArray(response.data) ? response.data : [];
+        // Fetch both token and kitchen order to get full status
+        const [tokenRes, kitchenRes] = await Promise.all([
+          API.get(`/token/table/${table}`),
+          API.get("/kitchen/orders"),
+        ]);
+
+        if (!active) return;
+
+        const tokenData = tokenRes.data;
+        const rows = Array.isArray(kitchenRes.data) ? kitchenRes.data : [];
         const match = rows.find((order) => {
           const orderRef = String(order.table || order.table_number || order.table_no || "");
           const orderEntityType = String(order.entityType || "").trim() || "Table";
@@ -92,12 +100,18 @@ const EditToken = () => {
           );
         });
 
+        // Create merged object with both kitchen and token status
+        const mergedOrder = match ? {
+          ...match,
+          tokenOrderStatus: tokenData?.order_status || null,
+        } : null;
+
         if (!active) return;
 
-        setKitchenOrder(match || null);
+        setKitchenOrder(mergedOrder);
 
-        if (match && String(match.status || "").toLowerCase() === "ready") {
-          const readyKey = `${match.id}:${match.readyAt || match.expectedReadyAt || "ready"}`;
+        if (mergedOrder && String(mergedOrder.status || "").toLowerCase() === "ready") {
+          const readyKey = `${mergedOrder.id}:${mergedOrder.readyAt || mergedOrder.expectedReadyAt || "ready"}`;
           if (lastReadyKey.current !== readyKey) {
             lastReadyKey.current = readyKey;
             readySound.current?.play().catch(() => {});
@@ -166,6 +180,41 @@ const EditToken = () => {
       alert(errorMsg);
     }
   };
+
+  // Pick Up Order - mark order as picked up from kitchen
+  const handlePickup = async () => {
+    if (!tokenId) {
+      alert("Token not found");
+      return;
+    }
+    try {
+      await API.patch(`/waiter/orders/${tokenId}/pickup`);
+      alert("Order picked up successfully!");
+      window.dispatchEvent(new Event("tokenUpdated"));
+      window.dispatchEvent(new Event("live-board-updated"));
+    } catch (error) {
+      alert(error?.response?.data?.message || "Pick up failed. Order ready nahi hai ya already picked up hai.");
+    }
+  };
+
+  // Mark Order Served - complete the serving process
+  const handleServed = async () => {
+    if (!tokenId) {
+      alert("Token not found");
+      return;
+    }
+    try {
+      await API.patch(`/waiter/orders/${tokenId}/served`);
+      alert("Order marked as served!");
+      window.dispatchEvent(new Event("tokenUpdated"));
+      window.dispatchEvent(new Event("live-board-updated"));
+    } catch (error) {
+      alert(error?.response?.data?.message || "Serve marking failed.");
+    }
+  };
+
+  // Get token order status for button visibility
+  const tokenOrderStatus = kitchenOrder?.tokenOrderStatus || null;
 
   const handleInvoice = () => {
     const invoicePayload = {
@@ -500,6 +549,22 @@ const EditToken = () => {
             <div className="rounded-[24px] border border-slate-200/70 bg-white/95 p-4 shadow-[0_14px_36px_rgba(15,23,42,0.09)]">
               <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-sky-700">Actions</p>
               <div className="mt-3 grid gap-3">
+                {String(tokenOrderStatus || kitchenOrder?.status || "").toLowerCase() === "ready" && (
+                  <button
+                    onClick={handlePickup}
+                    className="rounded-[16px] bg-purple-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-purple-700"
+                  >
+                    Pick Up Order
+                  </button>
+                )}
+                {String(tokenOrderStatus || kitchenOrder?.status || "").toLowerCase() === "picked_up" && (
+                  <button
+                    onClick={handleServed}
+                    className="rounded-[16px] bg-cyan-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-cyan-700"
+                  >
+                    Mark as Served
+                  </button>
+                )}
                 <button
                   onClick={handleUpdate}
                   className="rounded-[16px] bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white"

@@ -86,7 +86,7 @@ const buildMenuPlaceholder = (item) => {
   };
 };
 
-const MENU_ITEMS_PAGE_SIZE = 8;
+const MENU_ITEMS_PAGE_SIZE = 10;
 
 const MenuPage = () => {
   const navigate = useNavigate();
@@ -523,7 +523,7 @@ const MenuPage = () => {
             ) : null}
 
             {!isLoadingMenu && !menuError && filteredItems.length ? (
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {paginatedMenuItems.map((item) => {
                   const effectivePrice = Number(
                     item.effectivePrice ?? item.effective_price ?? item.price ?? 0,
@@ -533,50 +533,50 @@ const MenuPage = () => {
                   return (
                     <div
                       key={item.id}
-                      className="flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md"
+                      className="group flex items-center gap-3 overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-sm transition-all duration-200 hover:border-emerald-300 hover:shadow-lg"
                     >
-                      <div className="h-24 w-full overflow-hidden bg-slate-50 sm:h-28">
+                      {/* Image - Left Side */}
+                      <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-slate-100 sm:h-24 sm:w-24">
                         {itemImageSrc ? (
                           <img
                             src={itemImageSrc}
                             alt={item.name}
-                            className="h-full w-full object-cover"
+                            className="h-full w-full rounded-xl object-cover transition-transform duration-200 group-hover:scale-110"
                             loading="lazy"
                           />
                         ) : (
-                          <div className="flex h-full w-full flex-col items-center justify-center bg-[linear-gradient(135deg,#ecfeff_0%,#eff6ff_55%,#f8fafc_100%)] px-2 text-center">
-                            <span className="text-sm font-black leading-none text-cyan-700 sm:text-base">
+                          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-cyan-100 to-blue-100">
+                            <span className="text-xl font-black text-cyan-600 sm:text-2xl">
                               {placeholder.initials}
-                            </span>
-                            <span className="mt-0.5 line-clamp-1 text-[8px] font-semibold uppercase tracking-[0.12em] text-slate-500 sm:text-[9px]">
-                              {placeholder.category}
                             </span>
                           </div>
                         )}
+                        {/* Category Badge */}
+                        <span className="absolute -bottom-1 -right-1 rounded-bl-lg rounded-tr-xl bg-gradient-to-r from-blue-600 to-blue-700 px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider text-white shadow-md sm:text-[9px]">
+                          {item.category || "Other"}
+                        </span>
                       </div>
 
-                      <div className="flex flex-1 flex-col gap-1 p-2 sm:gap-2 sm:p-2.5">
-                        <div>
-                          <div className="truncate text-[12px] font-bold leading-4 text-slate-900 sm:text-[13px]" title={item.name}>
+                      {/* Content - Right Side */}
+                      <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                        <div className="flex flex-col">
+                          <span className="truncate text-[13px] font-bold leading-tight text-slate-900 sm:text-[14px]" title={item.name}>
                             {item.name}
-                          </div>
-                          <div className="mt-0.5 truncate text-[10px] text-slate-500 sm:text-[11px]">
-                            {item.category || "Other"}
-                          </div>
+                          </span>
+                          <span className="mt-0.5 text-[14px] font-extrabold text-emerald-600 sm:text-[15px]">
+                            Rs. {item.price}
+                          </span>
                         </div>
 
-                        <div className="text-[13px] font-bold text-slate-900 sm:text-[14px]">
-                          Rs. {item.price}
-                        </div>
-
-                        <div className="mt-auto grid grid-cols-2 gap-1 sm:gap-1.5">
+                        {/* Tax & Qty */}
+                        <div className="flex items-center gap-1.5">
                           <input
                             type="number"
                             min="0"
                             step="0.1"
                             value={taxByItem[item.id] ?? item.tax ?? 5}
                             onChange={(e) => handleTaxChange(item.id, e.target.value)}
-                            className="h-7 w-full rounded-md border border-slate-200 px-1 text-center text-[10px] font-semibold text-slate-700 sm:h-8 sm:text-xs"
+                            className="h-8 w-14 rounded-lg border border-slate-200 bg-slate-50 px-1 text-center text-[10px] font-semibold text-slate-700 transition focus:border-emerald-400 focus:bg-white focus:outline-none sm:w-16 sm:text-xs"
                             placeholder="Tax%"
                           />
                           <input
@@ -585,16 +585,15 @@ const MenuPage = () => {
                             value={qty[item.id] || ""}
                             onChange={(e) => handleQtyChange(item.id, e.target.value)}
                             placeholder="Qty"
-                            className="h-7 w-full rounded-md border border-slate-200 px-1 text-center text-[10px] font-semibold text-slate-700 sm:h-8 sm:text-xs"
+                            className="h-8 w-12 rounded-lg border border-slate-200 bg-slate-50 px-1 text-center text-[10px] font-semibold text-slate-700 transition focus:border-emerald-400 focus:bg-white focus:outline-none sm:w-14 sm:text-xs"
                           />
+                          <button
+                            onClick={() => handleAdd(item)}
+                            className="ml-auto flex h-8 items-center justify-center rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-600 px-3 text-[10px] font-bold text-white shadow-sm transition-all duration-200 hover:from-emerald-600 hover:to-emerald-700 hover:shadow-md sm:px-4 sm:text-xs"
+                          >
+                            + Add
+                          </button>
                         </div>
-
-                        <button
-                          onClick={() => handleAdd(item)}
-                          className="h-7 w-full rounded-md bg-emerald-500 text-[10px] font-bold text-white shadow-sm transition hover:bg-emerald-600 sm:h-8 sm:text-xs"
-                        >
-                          Add
-                        </button>
                       </div>
                     </div>
                   );
