@@ -35,6 +35,7 @@ import Dashboard from "./pages/Dashboard";
 import Hotel from "./pages/Hotel";
 import Housekeeping from "./pages/Housekeeping";
 import HousekeepingDashboard from "./pages/HousekeepingDashboard";
+import HousekeeperNotification from "./pages/housekeepernotification";
 import Kitchen from "./pages/Kitchen";
 import KitchenDashboard from "./pages/KitchenDashboard";
 import WaiterDeliveryQueue from "./pages/WaiterDeliveryQueue";
@@ -64,7 +65,7 @@ const ROLES = {
   KITCHEN: ["admin", "manager", "kitchen"],
   ACCOUNTS: ["admin", "manager", "accountant"],
   INVENTORY: ["admin", "manager", "kitchen", "receptionist"],
-  HOUSEKEEPING: ["admin", "manager", "housekeeping"],
+  HOUSEKEEPING: ["admin", "manager", "housekeeping", "receptionist"],
   BANQUET: ["admin", "manager", "receptionist"],
   REPORTS: ["admin", "manager", "accountant"],
   AUDIT: ["admin", "manager", "accountant"],
@@ -238,6 +239,10 @@ function AppRoutes({ isAuthenticated, setIsAuthenticated, protect }) {
 <Route path="/inventory/masters" element={protect(<InventoryMastersModulePage />, ROLES.INVENTORY)} />
           <Route path="/inventory/recipes" element={protect(<MenuRecipeModulePage />, ROLES.INVENTORY)} />
           <Route path="/housekeeping" element={protect(<Housekeeping />, ROLES.HOUSEKEEPING)} />
+          <Route
+            path="/housekeeping/notifications"
+            element={protect(<HousekeeperNotification />, ROLES.HOUSEKEEPING)}
+          />
           <Route path="/banquet" element={protect(<Banquet />, ROLES.BANQUET)} />
           <Route path="/reports" element={protect(<Reports />, ROLES.REPORTS)} />
           <Route path="/assignments" element={protect(<Assignment />, ROLES.ASSIGNMENTS)} />
@@ -314,3 +319,4 @@ function App() {
 }
 
 export default App;
+

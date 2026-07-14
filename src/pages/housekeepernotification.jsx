@@ -1,0 +1,301 @@
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  Bell,
+  CheckCircle2,
+  Clock3,
+  User,
+  BedDouble,
+  Sparkles,
+  CalendarDays,
+  Check,
+} from "lucide-react";
+import API from "../api";
+
+const formatDate = (value) => {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  return date.toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+};
+
+const formatTime = (value) => {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  return date.toLocaleTimeString("en-IN", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+const normalizeNotification = (row) => ({
+  id: row.id,
+  room: row.roomNo || row.room_no || row.room || "-",
+  assignedTo: row.assignedTo || row.assigned_to || "No Housekeeper",
+  receptionist: row.receptionist || "Reception",
+  task: row.message || row.taskLabel || row.task_label || "Room Cleaning",
+  taskLabel: row.taskLabel || row.task_label || "Room Cleaning",
+  sentAt: row.sentAt || row.sent_at,
+  dueAt: row.dueAt || row.due_at,
+  completedAt: row.completedAt || row.completed_at,
+  status: row.status || "New",
+});
+
+export default function HousekeeperNotification() {
+  const currentUser = localStorage.getItem("name") || "";
+  const currentRole = String(localStorage.getItem("role") || "").toLowerCase();
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const fetchNotifications = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError("");
+      const response = await API.get("/housekeeping/notifications");
+      setNotifications(Array.isArray(response.data) ? response.data.map(normalizeNotification) : []);
+    } catch {
+      setError("Housekeeping notifications load nahi ho paaye.");
+      setNotifications([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchNotifications();
+  }, [fetchNotifications]);
+
+  const canComplete = (item) => {
+    if (["admin", "manager"].includes(currentRole)) return true;
+    return Boolean(currentUser) && item.assignedTo === currentUser;
+  };
+
+  const completeTask = async (id) => {
+    const previous = notifications;
+    setNotifications((prev) =>
+      prev.map((item) =>
+        item.id === id
+          ? { ...item, status: "Completed", completedAt: new Date().toISOString() }
+          : item,
+      ),
+    );
+
+    try {
+      await API.put(`/housekeeping/notifications/${id}/complete`);
+    } catch {
+      setNotifications(previous);
+      setError("Task complete update nahi ho paaya. Please retry.");
+    }
+  };
+
+  const total = notifications.length;
+  const completed = notifications.filter((n) => n.status === "Completed").length;
+  const pending = notifications.filter((n) => n.status !== "Completed").length;
+  const assignedToYou = useMemo(
+    () => notifications.filter((n) => currentUser && n.assignedTo === currentUser).length,
+    [currentUser, notifications],
+  );
+
+  return (
+    <div className="min-h-screen bg-slate-100 p-6 lg:p-10">
+      <div className="rounded-3xl bg-gradient-to-r from-blue-900 via-blue-700 to-sky-500 p-8 text-white shadow-2xl">
+        <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <div className="inline-flex items-center gap-3 rounded-full bg-white/20 px-5 py-2">
+              <Bell className="h-5 w-5" />
+              <span className="text-sm font-semibold">Housekeeping Notifications</span>
+            </div>
+
+            <h1 className="mt-5 text-4xl font-extrabold">Task Assignment Center</h1>
+
+            <p className="mt-3 max-w-2xl text-lg text-blue-100">
+              Real room assignments sent from reception and the cleaning log panel.
+            </p>
+          </div>
+
+          <div className="flex h-32 w-32 items-center justify-center rounded-full bg-white/15 backdrop-blur-xl">
+            <Bell className="h-16 w-16 text-white" />
+          </div>
+        </div>
+      </div>
+
+      {error ? (
+        <div className="mt-6 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 font-semibold text-rose-700">
+          {error}
+        </div>
+      ) : null}
+
+      <div className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+        <div className="rounded-3xl bg-white p-6 shadow-xl">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-slate-500">Total Notifications</p>
+              <h2 className="mt-2 text-4xl font-bold text-blue-900">{total}</h2>
+            </div>
+            <div className="rounded-2xl bg-blue-100 p-4">
+              <Bell className="h-8 w-8 text-blue-700" />
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-3xl bg-white p-6 shadow-xl">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-slate-500">Pending Tasks</p>
+              <h2 className="mt-2 text-4xl font-bold text-orange-500">{pending}</h2>
+            </div>
+            <div className="rounded-2xl bg-orange-100 p-4">
+              <Clock3 className="h-8 w-8 text-orange-500" />
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-3xl bg-white p-6 shadow-xl">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-slate-500">Completed</p>
+              <h2 className="mt-2 text-4xl font-bold text-green-600">{completed}</h2>
+            </div>
+            <div className="rounded-2xl bg-green-100 p-4">
+              <CheckCircle2 className="h-8 w-8 text-green-600" />
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-3xl bg-white p-6 shadow-xl">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-slate-500">Assigned To You</p>
+              <h2 className="mt-2 text-4xl font-bold text-sky-600">{assignedToYou}</h2>
+            </div>
+            <div className="rounded-2xl bg-sky-100 p-4">
+              <User className="h-8 w-8 text-sky-600" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-10 space-y-6">
+        {loading ? (
+          <div className="rounded-3xl bg-white p-10 text-center text-lg font-semibold text-slate-500 shadow-xl">
+            Loading housekeeping notifications...
+          </div>
+        ) : notifications.length === 0 ? (
+          <div className="rounded-3xl bg-white p-10 text-center text-lg font-semibold text-slate-500 shadow-xl">
+            No housekeeping notifications yet.
+          </div>
+        ) : (
+          notifications.map((item) => {
+            const isMine = Boolean(currentUser) && item.assignedTo === currentUser;
+            const allowedToComplete = canComplete(item);
+
+            return (
+              <div
+                key={item.id}
+                className="rounded-3xl border border-blue-100 bg-white shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
+              >
+                <div className="p-6 lg:p-8">
+                  <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="flex flex-1 gap-5">
+                      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-900 to-sky-500 text-white shadow-lg">
+                        <BedDouble className="h-8 w-8" />
+                      </div>
+
+                      <div className="flex-1">
+                        <div className="flex flex-wrap items-center gap-3">
+                          <h2 className="text-2xl font-bold text-slate-900">Room {item.room}</h2>
+
+                          <span
+                            className={`rounded-full px-4 py-1 text-sm font-semibold ${
+                              item.status === "Completed"
+                                ? "bg-green-100 text-green-700"
+                                : item.status === "In Progress"
+                                  ? "bg-orange-100 text-orange-700"
+                                  : "bg-blue-100 text-blue-700"
+                            }`}
+                          >
+                            {item.status}
+                          </span>
+                        </div>
+
+                        <p className="mt-3 text-slate-600">
+                          <span className="font-semibold text-blue-800">Receptionist:</span> {item.receptionist}
+                        </p>
+
+                        <p className="mt-1 text-slate-600">
+                          <span className="font-semibold text-blue-800">Assigned To:</span> {item.assignedTo}
+                        </p>
+
+                        <p className="mt-1 text-slate-600">
+                          <span className="font-semibold text-blue-800">Message:</span> {item.task}
+                        </p>
+
+                        <p className="mt-1 text-slate-600">
+                          <span className="font-semibold text-blue-800">Task:</span> {item.taskLabel}
+                        </p>
+
+                        <div className="mt-4 flex flex-wrap gap-6 text-sm text-slate-500">
+                          <div className="flex items-center gap-2">
+                            <CalendarDays size={18} />
+                            Sent {formatDate(item.sentAt)}
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <Clock3 size={18} />
+                            {formatTime(item.sentAt)}
+                          </div>
+
+                          <div className="flex items-center gap-2 font-semibold text-orange-600">
+                            <Clock3 size={18} />
+                            Due {formatDate(item.dueAt)} {formatTime(item.dueAt)}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col items-start gap-4 lg:items-end">
+                      {allowedToComplete ? (
+                        item.status === "Completed" ? (
+                          <div className="flex items-center gap-2 rounded-2xl bg-green-100 px-5 py-3 font-semibold text-green-700">
+                            <CheckCircle2 size={20} />
+                            Completed
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => completeTask(item.id)}
+                            className="rounded-2xl bg-gradient-to-r from-blue-900 via-blue-700 to-sky-500 px-8 py-3 font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105"
+                          >
+                            <span className="flex items-center gap-2">
+                              <Check size={18} />
+                              Mark as Complete
+                            </span>
+                          </button>
+                        )
+                      ) : (
+                        <div className="rounded-2xl bg-slate-100 px-5 py-3 font-medium text-slate-500">
+                          Assigned to another housekeeper
+                        </div>
+                      )}
+
+                      {isMine && (
+                        <div className="rounded-full bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700">
+                          <Sparkles className="mr-2 inline h-4 w-4" />
+                          Assigned to You
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+}

@@ -254,12 +254,35 @@ export default function Housekeeping() {
     } catch { /* ignore */ }
   };
 
-  const handleSendMessage = (room) => {
+  const handleSendMessage = async (room) => {
     const key = String(room.id || room.roomNo);
     const msg = roomMessageDrafts[key] || "";
     if (!msg.trim()) return;
-    API.post("/housekeeping/message", { roomId: room.id, roomNo: room.roomNo, message: msg }).catch(() => {});
-    setRoomMessageDrafts(prev => ({ ...prev, [key]: "" }));
+
+    const existingTask = cleaningTasks.find((task) => String(task.roomId) === String(room.id));
+    const task = existingTask || {
+      roomId: room.id,
+      startedAt: new Date().toISOString(),
+      dueAt: new Date(Date.now() + 30 * 60000).toISOString(),
+    };
+
+    if (!existingTask) {
+      setCleaningTasks((prev) => [...prev, task]);
+    }
+
+    try {
+      await API.post("/housekeeping/message", {
+        roomId: room.id,
+        roomNo: room.roomNo,
+        assignedTo: room.assignee,
+        message: msg,
+        taskLabel: room.status || "Room Cleaning",
+        dueAt: task.dueAt,
+      });
+      setRoomMessageDrafts((prev) => ({ ...prev, [key]: "" }));
+    } catch {
+      // keep draft so reception can retry
+    }
   };
 
   const handleExtendTime = (room, minutes) => {
@@ -736,3 +759,4 @@ function ParametersForm({ onClose, apiBase }) {
     </div>
   );
 }
+

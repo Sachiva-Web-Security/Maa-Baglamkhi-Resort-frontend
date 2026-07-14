@@ -517,7 +517,7 @@ const FeatureModal = ({ title, subtitle, size = "max-w-6xl", onClose, children }
       onClick={onClose}
     >
       <div
-        className={`relative max-h-[92vh] w-full ${size} overflow-y-auto rounded-[28px] bg-white shadow-[0_30px_90px_rgba(15,23,42,0.35)]`}
+        className={`relative max-h-[140vh] w-full ${size} overflow-y-auto rounded-[28px] bg-white shadow-[0_30px_90px_rgba(15,23,42,0.35)]`}
         onClick={(event) => event.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -1850,14 +1850,14 @@ const handleJumpStep = (stepView) => {
                         <FaTrash className="text-[18px] sm:text-xl" />
                         <span>Delete</span>
                       </button>
-                      <button
+                      {/* <button
                         title="Group Booking"
                         onClick={() => handleOpenGroupBooking(b)}
                         className={rowActionBtn("neutral")}
                       >
                         <FaUsers className="text-[18px] sm:text-xl" />
                         <span>Group Booking</span>
-                      </button>
+                      </button> */}
                       <button
                         title="Guest Profile"
                         onClick={() => handleOpenGuestProfile(b)}
@@ -2740,7 +2740,7 @@ const handleJumpStep = (stepView) => {
 
       {/* guest folio popup */}
       {showFolio && (
-        <FeatureModal title="Guest Folio" onClose={handleCloseFolio}>
+        <FeatureModal title="Guest Folio" size="max-w-[95vw]" onClose={handleCloseFolio}>
           <FolioView bookingId={selectedBookingId} onClose={handleCloseFolio} />
         </FeatureModal>
       )}
@@ -2754,7 +2754,7 @@ const handleJumpStep = (stepView) => {
 
       {/* guest profile popup */}
       {showGuestProfile && (
-        <FeatureModal title="Guest Profile" onClose={handleCloseGuestProfile}>
+        <FeatureModal title="Guest Profile" size="max-w-[95vw]" onClose={handleCloseGuestProfile}>
           <GuestProfile bookingId={selectedBookingId} onClose={handleCloseGuestProfile} />
         </FeatureModal>
       )}
