@@ -83,14 +83,25 @@ import Room from "./Room";
 /* ─────────────────────────── shared style tokens ─────────────────────────── */
 /* One scale, used everywhere on the page (list, form, confirmation, details,
    manage, modals) so typography, spacing and sizing never drift between
-   sections. This is intentionally the same scale the old "New Booking"
-   section used for its main columns, just applied consistently. */
+   sections. This matches the premium typography scale used on Guest Profile,
+   Occupancy Forecast and Add Room:
+     Hero Title   : 30px mobile / 36px tablet / 42px desktop
+     Section Title: 24px mobile / 30px tablet / 34px desktop
+     Card Title   : 22px mobile / 24px tablet / 28px desktop
+     Labels       : 17px / weight 600 / dark slate
+     Inputs / Dropdowns / Radio labels / Date-Time text: 17px / weight 500
+     Placeholder text: 16px / weight 500 / light gray
+     Table Header : 16px   Table Body: 17px
+     Buttons / Pagination: 17px / weight 600
+     Status Badges: 14px
+     Modal Title  : 28px   Modal Content: 16-17px
+*/
 
 const fieldCls =
-  "w-full h-12 sm:h-13 md:h-14 rounded-2xl border border-blue-200 bg-white px-4 sm:px-5 text-base sm:text-lg font-medium text-slate-800 shadow-sm transition-all duration-300 placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 focus:shadow-lg outline-none";
+  "w-full h-[52px] sm:h-[54px] md:h-14 rounded-2xl border border-blue-200 bg-white px-4 sm:px-5 text-[17px] font-medium text-slate-800 shadow-sm transition-all duration-300 placeholder:text-base placeholder:font-medium placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 focus:shadow-lg outline-none";
 
 const labelCls =
-  "mb-2 block text-sm sm:text-base md:text-lg font-semibold text-slate-700";
+  "mb-2 block text-[17px] font-semibold text-slate-700";
 
 const panelCls =
   `
@@ -117,10 +128,24 @@ gap-3
 border-b-2
 border-blue-100
 pb-3 sm:pb-4
-text-lg sm:text-xl md:text-2xl
+text-2xl sm:text-3xl md:text-[34px]
 font-bold
 text-blue-900
+leading-tight
 `;
+
+/* Card title scale (28/24/22) — used for the biggest heading inside a card
+   (e.g. "New Booking" / "Edit Booking", "All Bookings"). */
+const cardTitleCls =
+  "text-[22px] sm:text-2xl md:text-[28px] font-bold text-slate-900 leading-tight";
+
+/* Hero title scale (42/36/30) — used for the top-level page/screen heading,
+   e.g. the "Booking Confirmed!" screen title. */
+const heroTitleCls =
+  "text-[30px] sm:text-4xl md:text-[42px] font-black text-slate-900 leading-tight";
+
+/* Modal title scale (28px, all breakpoints) */
+const modalTitleCls = "text-[28px] font-black leading-tight text-slate-900";
 
 const btnBase =
   `
@@ -128,12 +153,12 @@ inline-flex
 items-center
 justify-center
 gap-2
-rounded-2xl
+rounded-xl
 px-5 sm:px-7 md:px-8
-py-3
-sm:py-3.5
-text-base
-sm:text-lg
+h-[52px]
+sm:h-[54px]
+md:h-14
+text-[17px]
 font-semibold
 transition-all
 duration-300
@@ -184,6 +209,43 @@ hover:bg-red-100
 hover:-translate-y-0.5
 `;
 
+/* Compact "action pill" used inside table rows — icon + text label, same
+   height/padding for every action so the row of buttons stays visually even.
+   Blue & white premium theme, rounded-xl, shadow + hover lift, exactly like
+   the primary/ghost/danger buttons elsewhere on the page — just sized to sit
+   inline in a table cell. */
+const rowActionBtn = (tone = "neutral") => {
+  const toneCls =
+    tone === "danger"
+      ? "border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100 hover:border-rose-300"
+      : tone === "primary"
+      ? "border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 hover:border-blue-300"
+      : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:border-slate-300";
+  return `
+inline-flex
+items-center
+justify-center
+gap-1.5
+sm:gap-2
+rounded-xl
+border
+px-3
+sm:px-3.5
+h-10
+sm:h-11
+text-[17px]
+font-semibold
+shadow-sm
+transition-all
+duration-300
+hover:-translate-y-0.5
+hover:shadow-md
+active:scale-[0.98]
+whitespace-nowrap
+${toneCls}
+`;
+};
+
 const softBtn = (active) =>
   `
 inline-flex
@@ -192,8 +254,9 @@ justify-center
 gap-2
 rounded-2xl
 px-4 sm:px-5
-py-2.5 sm:py-3
-text-sm sm:text-base md:text-lg
+h-11
+sm:h-12
+text-[17px]
 font-semibold
 transition-all
 duration-300
@@ -256,7 +319,7 @@ const statusStyle = (status) => {
 };
 
 const statusBadgeCls = (status) =>
-  `inline-block rounded-full px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-bold ${statusStyle(status)}`;
+  `inline-block rounded-full px-3 sm:px-4 py-1 sm:py-1.5 text-sm font-bold ${statusStyle(status)}`;
 
 /* ─────────────────────────── shared modal primitive ─────────────────────────── */
 /* Every popup on the page (Toast, Cancel Booking, Collect Payment, Refund) is
@@ -293,7 +356,7 @@ const Modal = ({
               </span>
             )}
             {title && (
-              <h3 className="mt-1 text-xl sm:text-2xl font-black leading-tight text-slate-900">
+              <h3 className={`mt-1 ${modalTitleCls}`}>
                 {title}
               </h3>
             )}
@@ -307,7 +370,7 @@ const Modal = ({
             </button>
           </div>
         )}
-        <div className="text-base sm:text-lg leading-relaxed text-slate-600">{children}</div>
+        <div className="text-[17px] leading-relaxed text-slate-600">{children}</div>
         {actions && (
           <div className="mt-7 sm:mt-8 flex flex-wrap justify-end gap-3">{actions}</div>
         )}
@@ -372,7 +435,7 @@ const FlowBar = ({ view, onJump }) => (
               title={step.desc}
             >
               <span
-                className={`flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-full text-base sm:text-lg transition ${
+                className={`flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-full text-lg sm:text-xl transition ${
                   isActive
                     ? "bg-sky-500 text-white shadow-[0_8px_18px_rgba(14,165,233,0.35)]"
                     : "bg-sky-50 text-sky-600 group-hover:bg-sky-100"
@@ -380,7 +443,7 @@ const FlowBar = ({ view, onJump }) => (
               >
                 <Icon />
               </span>
-              <span className={`text-xs sm:text-sm font-bold leading-snug ${isActive ? "text-sky-700" : "text-slate-700"}`}>
+              <span className={`text-[17px] font-bold leading-snug ${isActive ? "text-sky-700" : "text-slate-700"}`}>
                 {step.num}. {step.title}
               </span>
             </button>
@@ -461,8 +524,8 @@ const FeatureModal = ({ title, subtitle, size = "max-w-6xl", onClose, children }
       >
         <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-slate-100 bg-white/95 px-5 py-4 backdrop-blur">
           <div>
-            <h3 className="text-lg font-black text-slate-900">{title}</h3>
-            {subtitle && <p className="mt-1 text-sm text-slate-500">{subtitle}</p>}
+            <h3 className={modalTitleCls}>{title}</h3>
+            {subtitle && <p className="mt-1 text-[17px] text-slate-500">{subtitle}</p>}
           </div>
           <button
             type="button"
@@ -531,7 +594,7 @@ const PaymentHistoryModal = ({ booking, onClose }) => {
     >
       <div className="space-y-4">
         <div className="flex flex-wrap justify-between items-center gap-4">
-          <h3 className="text-lg font-bold text-slate-900">All Payment Transactions</h3>
+          <h3 className={cardTitleCls}>All Payment Transactions</h3>
           <button onClick={loadPaymentHistory} disabled={loading} className={ghostBtn}>
             <FaSync className={loading ? "animate-spin" : ""} /> Refresh
           </button>
@@ -546,7 +609,7 @@ const PaymentHistoryModal = ({ booking, onClose }) => {
         ) : (
           <div className="overflow-x-auto rounded-xl border border-slate-200">
             <table className="w-full min-w-[600px] text-left">
-              <thead className="bg-slate-50 text-xs sm:text-sm font-bold uppercase text-slate-400">
+              <thead className="bg-slate-50 text-base font-bold uppercase text-slate-400">
                 <tr>
                   <th className="px-4 sm:px-5 py-3">Date & Time</th>
                   <th className="px-4 sm:px-5 py-3">Type</th>
@@ -556,12 +619,12 @@ const PaymentHistoryModal = ({ booking, onClose }) => {
                   <th className="px-4 sm:px-5 py-3">Reference</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 text-sm sm:text-base">
+              <tbody className="divide-y divide-slate-100 text-[17px]">
                 {history.map((payment) => (
                   <tr key={payment.id}>
                     <td className="px-4 sm:px-5 py-3 text-slate-700">{formatDate(payment.created_at)}</td>
                     <td className="px-4 sm:px-5 py-3">
-                      <span className={`inline-block rounded-full px-3 py-1 text-xs font-bold ${
+                      <span className={`inline-block rounded-full px-3 py-1 text-sm font-bold ${
                         payment.payment_type === "Advance" ? "bg-blue-50 text-blue-700" :
                         payment.payment_type === "Refund" ? "bg-amber-50 text-amber-700" :
                         "bg-emerald-50 text-emerald-700"
@@ -580,7 +643,7 @@ const PaymentHistoryModal = ({ booking, onClose }) => {
                         {payment.payment_status || "Pending"}
                       </span>
                     </td>
-                    <td className="px-4 sm:px-5 py-3 text-slate-600 font-mono text-sm">
+                    <td className="px-4 sm:px-5 py-3 text-slate-600 font-mono text-[17px]">
                       {payment.transaction_id || payment.reference_id || "-"}
                     </td>
                   </tr>
@@ -598,7 +661,7 @@ const PaymentHistoryModal = ({ booking, onClose }) => {
         )}
 
         <div className="mt-6 flex flex-wrap justify-between items-center gap-4 pt-4 border-t border-slate-200">
-          <div className="text-sm text-slate-500">
+          <div className="text-[17px] text-slate-500">
             Showing {history.length} transaction{history.length !== 1 ? "s" : ""}
           </div>
           <div className="flex gap-2">
@@ -708,7 +771,7 @@ const DocumentUploadModal = ({ booking, onClose }) => {
                 placeholder="Aadhaar, passport, signed check-in form..."
               />
             </div>
-            <label className="flex items-center gap-2 text-sm font-bold text-slate-700">
+            <label className="flex items-center gap-2 text-[17px] font-bold text-slate-700">
               <input
                 type="checkbox"
                 checked={form.termsAccepted}
@@ -739,7 +802,7 @@ const DocumentUploadModal = ({ booking, onClose }) => {
                   <div key={doc.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50/70 p-4">
                     <div>
                       <div className="font-black text-slate-900">{label}</div>
-                      <div className="mt-1 text-sm text-slate-500">{doc.notes || "No notes"} - {formatDate(doc.uploaded_at)}</div>
+                      <div className="mt-1 text-[17px] text-slate-500">{doc.notes || "No notes"} - {formatDate(doc.uploaded_at)}</div>
                     </div>
                     <div className="flex gap-2">
                       <a href={url} target="_blank" rel="noreferrer" className={ghostBtn}>
@@ -912,25 +975,25 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex flex-wrap justify-between gap-4 border-b border-slate-100 pb-5">
               <div>
-                <div className="text-[11px] font-bold uppercase text-slate-400">Invoice No</div>
+                <div className="text-sm font-bold uppercase text-slate-400">Invoice No</div>
                 <div className="text-2xl font-black text-slate-900">{invoiceNo}</div>
               </div>
               <div className="text-right">
-                <div className="text-[11px] font-bold uppercase text-slate-400">Total</div>
+                <div className="text-sm font-bold uppercase text-slate-400">Total</div>
                 <div className="text-3xl font-black text-emerald-600">{formatCurrency(invoiceTotal)}</div>
               </div>
             </div>
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
               {buildLines().slice(1, 6).map(([key, value]) => (
                 <div key={key} className="rounded-xl bg-slate-50 p-3">
-                  <div className="text-[11px] font-bold uppercase text-slate-400">{key}</div>
+                  <div className="text-sm font-bold uppercase text-slate-400">{key}</div>
                   <div className="font-bold text-slate-800">{value}</div>
                 </div>
               ))}
             </div>
             <div className="mt-5 overflow-x-auto rounded-xl border border-slate-100">
-              <table className="w-full min-w-[560px] text-left text-sm">
-                <thead className="bg-slate-50 text-[11px] font-bold uppercase text-slate-400">
+              <table className="w-full min-w-[560px] text-left text-[17px]">
+                <thead className="bg-slate-50 text-base font-bold uppercase text-slate-400">
                   <tr><th className="px-4 py-3">Item</th><th className="px-4 py-3">Qty</th><th className="px-4 py-3">Rate</th><th className="px-4 py-3 text-right">Total</th></tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -1681,11 +1744,11 @@ const handleJumpStep = (stepView) => {
     <div className={panelCls}>
       <div className="mb-5 sm:mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900">All Bookings</h2>
-          <p className="mt-1 text-base sm:text-lg text-slate-500">View and manage all your hotel reservations</p>
+          <h2 className={cardTitleCls}>All Bookings</h2>
+          <p className="mt-1 text-[17px] text-slate-500">View and manage all your hotel reservations</p>
         </div>
         <button type="button" onClick={openNewBooking} className={primaryBtn}>
-          <FaPlus className="text-lg sm:text-xl" /> New Booking
+          <FaPlus className="text-lg" /> New Booking
         </button>
       </div>
 
@@ -1712,7 +1775,7 @@ const handleJumpStep = (stepView) => {
 
       <div className="max-w-full overflow-x-auto rounded-xl border border-slate-100">
         <table className="w-full min-w-[860px] text-left">
-          <thead className="sticky top-0 z-10 bg-slate-50 text-xs sm:text-sm font-bold uppercase tracking-wide text-slate-500">
+          <thead className="sticky top-0 z-10 bg-slate-50 text-base font-bold uppercase tracking-wide text-slate-500">
             <tr>
               <th className="px-4 sm:px-5 py-3 sm:py-4">Booking No</th>
               <th className="px-4 sm:px-5 py-3 sm:py-4">Guest Name</th>
@@ -1725,7 +1788,7 @@ const handleJumpStep = (stepView) => {
               <th className="px-4 sm:px-5 py-3 sm:py-4 text-right">Action</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 text-sm sm:text-base md:text-lg">
+          <tbody className="divide-y divide-slate-100 text-[17px]">
             {loading ? (
               <tr>
                 <td colSpan={9} className="px-4 py-10 text-center text-slate-400">
@@ -1754,24 +1817,54 @@ const handleJumpStep = (stepView) => {
                   </td>
                   <td className="px-4 sm:px-5 py-3 sm:py-4 text-slate-600">{b.bookingType || "-"}</td>
                   <td className="px-4 sm:px-5 py-3 sm:py-4">
-                    <div className="flex items-center justify-end gap-2">
-                      <button title="View details" onClick={() => openDetails(b)} className="rounded-lg border border-slate-200 p-2.5 text-slate-600 transition hover:bg-slate-50 active:scale-95">
-                        <FaEye className="text-sm sm:text-base" />
+                    <div className="flex flex-wrap items-center justify-end gap-2">
+                      <button
+                        title="View details"
+                        onClick={() => openDetails(b)}
+                        className={rowActionBtn("neutral")}
+                      >
+                        <FaEye className="text-[18px] sm:text-xl" />
+                        <span>View</span>
                       </button>
-                      <button title="Edit booking" onClick={() => openEditBooking(b)} className="rounded-lg border border-slate-200 p-2.5 text-slate-600 transition hover:bg-slate-50 active:scale-95">
-                        <FaEdit className="text-sm sm:text-base" />
+                      <button
+                        title="Edit booking"
+                        onClick={() => openEditBooking(b)}
+                        className={rowActionBtn("neutral")}
+                      >
+                        <FaEdit className="text-[18px] sm:text-xl" />
+                        <span>Edit</span>
                       </button>
-                      <button title="Guest folio" onClick={() => handleOpenFolio(b)} className="rounded-lg border border-slate-200 p-2.5 text-slate-600 transition hover:bg-slate-50 active:scale-95">
-                        <FaBook className="text-sm sm:text-base" />
+                      <button
+                        title="Guest folio"
+                        onClick={() => handleOpenFolio(b)}
+                        className={rowActionBtn("primary")}
+                      >
+                        <FaBook className="text-[18px] sm:text-xl" />
+                        <span>Folio</span>
                       </button>
-                      <button title="Manage booking" onClick={() => openManage(b)} className="rounded-lg border border-rose-200 p-2.5 text-rose-600 transition hover:bg-rose-50 active:scale-95">
-                        <FaTrash className="text-sm sm:text-base" />
+                      <button
+                        title="Manage booking"
+                        onClick={() => openManage(b)}
+                        className={rowActionBtn("danger")}
+                      >
+                        <FaTrash className="text-[18px] sm:text-xl" />
+                        <span>Delete</span>
                       </button>
-                      <button title="Group Booking" onClick={() => handleOpenGroupBooking(b)} className="rounded-lg border border-slate-200 p-2.5 text-slate-600 transition hover:bg-slate-50 active:scale-95">
-                        <FaUsers className="text-sm sm:text-base" />
+                      <button
+                        title="Group Booking"
+                        onClick={() => handleOpenGroupBooking(b)}
+                        className={rowActionBtn("neutral")}
+                      >
+                        <FaUsers className="text-[18px] sm:text-xl" />
+                        <span>Group Booking</span>
                       </button>
-                      <button title="Guest Profile" onClick={() => handleOpenGuestProfile(b)} className="rounded-lg border border-slate-200 p-2.5 text-slate-600 transition hover:bg-slate-50 active:scale-95">
-                        <FaIdCard className="text-sm sm:text-base" />
+                      <button
+                        title="Guest Profile"
+                        onClick={() => handleOpenGuestProfile(b)}
+                        className={rowActionBtn("neutral")}
+                      >
+                        <FaIdCard className="text-[18px] sm:text-xl" />
+                        <span>Guest Profile</span>
                       </button>
 
                     </div>
@@ -1783,16 +1876,16 @@ const handleJumpStep = (stepView) => {
         </table>
       </div>
 
-      <div className="mt-5 flex flex-wrap items-center justify-between gap-3 text-sm sm:text-base text-slate-500">
-        <span>
+      <div className="mt-5 flex flex-col sm:flex-row flex-wrap items-center justify-center sm:justify-between gap-3 text-[17px] text-slate-500">
+        <span className="text-center sm:text-left">
           Showing {pagedBookings.length ? (page - 1) * pageSize + 1 : 0}
           {" "}to {(page - 1) * pageSize + pagedBookings.length} of {filteredBookings.length} entries
         </span>
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        <div className="flex flex-wrap items-center justify-center gap-2">
           <button
             disabled={page <= 1}
             onClick={() => setPage((p) => Math.max(1, p - 1))}
-            className="rounded-lg border border-slate-200 p-2.5 text-slate-500 transition disabled:opacity-40"
+            className="flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition disabled:opacity-40"
           >
             <FaChevronLeft className="text-sm" />
           </button>
@@ -1800,7 +1893,7 @@ const handleJumpStep = (stepView) => {
             <button
               key={i}
               onClick={() => setPage(i + 1)}
-              className={`h-9 w-9 sm:h-10 sm:w-10 rounded-lg text-sm sm:text-base font-bold transition ${
+              className={`h-10 w-10 sm:h-11 sm:w-11 rounded-lg text-[17px] font-bold transition ${
                 page === i + 1 ? "bg-sky-500 text-white" : "text-slate-500 hover:bg-slate-100"
               }`}
             >
@@ -1810,7 +1903,7 @@ const handleJumpStep = (stepView) => {
           <button
             disabled={page >= totalPages}
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            className="rounded-lg border border-slate-200 p-2.5 text-slate-500 transition disabled:opacity-40"
+            className="flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition disabled:opacity-40"
           >
             <FaChevronRight className="text-sm" />
           </button>
@@ -1825,8 +1918,8 @@ const handleJumpStep = (stepView) => {
     <div className={panelCls}>
       <div className="mb-6 sm:mb-8 flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-5 sm:pb-6">
         <div>
-          <h2 className="text-2xl sm:text-3xl font-black text-slate-900">{isEdit ? "Edit Booking" : "New Booking"}</h2>
-          <p className="mt-1 text-base sm:text-lg text-slate-500">
+          <h2 className={cardTitleCls}>{isEdit ? "Edit Booking" : "New Booking"}</h2>
+          <p className="mt-1 text-[17px] text-slate-500">
             {isEdit ? "Update the booking details below." : "Fill all details below to create a new booking — everything happens on this one page."}
           </p>
         </div>
@@ -1909,7 +2002,7 @@ const handleJumpStep = (stepView) => {
             </div>
 
             <div className="mt-5 sm:mt-6 border-t border-slate-200 pt-5 sm:pt-6">
-              <div className="mb-3 text-base sm:text-lg md:text-xl font-bold text-blue-900">
+              <div className="mb-3 text-xl font-bold text-blue-900">
                 Stay Details
               </div>
 
@@ -1981,13 +2074,13 @@ const handleJumpStep = (stepView) => {
                 <label className={labelCls}>Booking Type</label>
                 <div className="flex flex-wrap gap-4 sm:gap-5 pt-1">
                   {["Walk-In", "VIA", "Online"].map((t) => (
-                    <label key={t} className="flex items-center gap-2 text-base sm:text-lg font-semibold text-slate-700">
+                    <label key={t} className="flex items-center gap-2 text-[17px] font-semibold text-slate-700">
                       <input
                         type="radio"
                         name="bookingType"
                         checked={formData.bookingType === t}
                         onChange={() => setField("bookingType", t)}
-                        className="h-4 w-4 sm:h-5 sm:w-5 accent-blue-600"
+                        className="h-5 w-5 sm:h-6 sm:w-6 accent-blue-600"
                       />
                       {t}
                     </label>
@@ -2034,7 +2127,7 @@ const handleJumpStep = (stepView) => {
                     onChange={handleChange}
                     className={fieldCls}
                   />
-                  <button type="button" onClick={addRoomRow} className="shrink-0 rounded-2xl bg-sky-500 px-4 sm:px-5 text-base sm:text-lg font-bold text-white transition hover:bg-sky-600 active:scale-95">
+                  <button type="button" onClick={addRoomRow} className="shrink-0 h-[52px] sm:h-[54px] md:h-14 rounded-xl bg-sky-500 px-4 sm:px-5 text-[17px] font-bold text-white transition hover:bg-sky-600 active:scale-95">
                     + Add
                   </button>
                 </div>
@@ -2060,7 +2153,7 @@ const handleJumpStep = (stepView) => {
             {formData.rooms.length > 0 && (
               <div className="mt-4 sm:mt-5 max-w-full overflow-x-auto rounded-xl border border-slate-200">
                 <table className="w-full min-w-[560px] text-left">
-                  <thead className="sticky top-0 z-10 bg-slate-100 text-xs sm:text-sm font-bold uppercase text-slate-500">
+                  <thead className="sticky top-0 z-10 bg-slate-100 text-base font-bold uppercase text-slate-500">
                     <tr>
                       <th className="px-3 py-2.5">Category</th>
                       <th className="px-3 py-2.5">Room No</th>
@@ -2071,14 +2164,14 @@ const handleJumpStep = (stepView) => {
                       <th className="px-3 py-2.5" />
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 bg-white text-sm sm:text-base md:text-lg">
+                  <tbody className="divide-y divide-slate-100 bg-white text-[17px]">
                     {formData.rooms.map((row) => (
                       <tr key={row.id}>
                         <td className="px-3 py-2">
                           <select
                             value={row.categoryId || ""}
                             onChange={(e) => updateRoomRow(row.id, "categoryId", e.target.value)}
-                            className="w-28 sm:w-32 rounded-lg border border-slate-200 px-2 py-1.5 text-sm sm:text-base"
+                            className="w-28 sm:w-32 rounded-lg border border-slate-200 px-2 py-1.5 text-[17px]"
                           >
                             <option value="">Select category</option>
                             {categorySetup.map((c) => (
@@ -2091,7 +2184,7 @@ const handleJumpStep = (stepView) => {
                             value={row.roomNo}
                             onChange={(e) => updateRoomRow(row.id, "roomNo", e.target.value)}
                             disabled={!row.categoryId}
-                            className="w-24 sm:w-28 rounded-lg border border-slate-200 px-2 py-1.5 text-sm sm:text-base disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
+                            className="w-24 sm:w-28 rounded-lg border border-slate-200 px-2 py-1.5 text-[17px] disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
                           >
                             <option value="">
                               {row.categoryId ? "Select room" : "Pick category first"}
@@ -2112,7 +2205,7 @@ const handleJumpStep = (stepView) => {
                             type="number"
                             value={row.price}
                             onChange={(e) => updateRoomRow(row.id, "price", e.target.value)}
-                            className="w-20 sm:w-24 rounded-lg border border-slate-200 px-2 py-1.5 text-sm sm:text-base"
+                            className="w-20 sm:w-24 rounded-lg border border-slate-200 px-2 py-1.5 text-[17px]"
                           />
                         </td>
                         <td className="px-3 py-2">
@@ -2120,7 +2213,7 @@ const handleJumpStep = (stepView) => {
                             type="number"
                             value={row.gst}
                             onChange={(e) => updateRoomRow(row.id, "gst", e.target.value)}
-                            className="w-16 sm:w-20 rounded-lg border border-slate-200 px-2 py-1.5 text-sm sm:text-base"
+                            className="w-16 sm:w-20 rounded-lg border border-slate-200 px-2 py-1.5 text-[17px]"
                           />
                         </td>
                         <td className="px-3 py-2">
@@ -2129,13 +2222,13 @@ const handleJumpStep = (stepView) => {
                             min={1}
                             value={row.quantity}
                             onChange={(e) => updateRoomRow(row.id, "quantity", e.target.value)}
-                            className="w-16 sm:w-20 rounded-lg border border-slate-200 px-2 py-1.5 text-sm sm:text-base"
+                            className="w-16 sm:w-20 rounded-lg border border-slate-200 px-2 py-1.5 text-[17px]"
                           />
                         </td>
                         <td className="px-3 py-2 font-semibold text-slate-700">{formatCurrency(rowTotal(row, stayNights))}</td>
                         <td className="px-3 py-2">
                           <button onClick={() => removeRoomRow(row.id)} className="text-rose-500 transition hover:text-rose-700 active:scale-95">
-                            <FaTimes className="text-base sm:text-lg" />
+                            <FaTimes className="text-lg" />
                           </button>
                         </td>
                       </tr>
@@ -2196,30 +2289,30 @@ const handleJumpStep = (stepView) => {
 
       {/* booking summary footer */}
       <div className="mt-6 sm:mt-8 flex flex-wrap items-center justify-between gap-5 sm:gap-6 rounded-2xl border border-slate-200 bg-slate-50 px-5 sm:px-6 py-4 sm:py-5">
-        <div className="flex flex-wrap gap-6 sm:gap-8 text-base sm:text-lg">
+        <div className="flex flex-wrap gap-6 sm:gap-8 text-[17px]">
           <div>
-            <div className="text-xs sm:text-sm font-bold uppercase text-slate-400">Guest Name</div>
+            <div className="text-sm font-bold uppercase text-slate-400">Guest Name</div>
             <div className="font-bold text-slate-800">{guestFullName || "-"}</div>
           </div>
           <div>
-            <div className="text-xs sm:text-sm font-bold uppercase text-slate-400">Stay Duration</div>
+            <div className="text-sm font-bold uppercase text-slate-400">Stay Duration</div>
             <div className="font-bold text-slate-800">{stayNights} Night{stayNights === 1 ? "" : "s"}</div>
           </div>
           <div>
-            <div className="text-xs sm:text-sm font-bold uppercase text-slate-400">Check-In</div>
+            <div className="text-sm font-bold uppercase text-slate-400">Check-In</div>
             <div className="font-bold text-slate-800">{formData.checkIn ? formatDate(formData.checkIn) : "-"}</div>
           </div>
           <div>
-            <div className="text-xs sm:text-sm font-bold uppercase text-slate-400">Check-Out</div>
+            <div className="text-sm font-bold uppercase text-slate-400">Check-Out</div>
             <div className="font-bold text-slate-800">{formData.checkOut ? formatDate(formData.checkOut) : "-"}</div>
           </div>
           <div>
-            <div className="text-xs sm:text-sm font-bold uppercase text-slate-400">Total Rooms</div>
+            <div className="text-sm font-bold uppercase text-slate-400">Total Rooms</div>
             <div className="font-bold text-slate-800">{formData.rooms.length || "-"}</div>
           </div>
         </div>
         <div className="text-right">
-          <div className="text-xs sm:text-sm font-bold uppercase text-slate-400">Total Amount</div>
+          <div className="text-sm font-bold uppercase text-slate-400">Total Amount</div>
           <div className="text-2xl sm:text-3xl font-black text-emerald-600">{formatCurrency(grandTotal)}</div>
         </div>
       </div>
@@ -2240,6 +2333,9 @@ const handleJumpStep = (stepView) => {
         lg:p-16
         xl:p-20
         text-center
+        flex
+        flex-col
+        items-center
       `}
     >
       {/* Success Icon */}
@@ -2248,71 +2344,71 @@ const handleJumpStep = (stepView) => {
       </div>
 
       {/* Heading */}
-      <h2 className="mt-5 text-3xl sm:text-4xl font-black text-slate-900">
+      <h2 className={`mt-5 ${heroTitleCls} text-center`}>
         Booking Confirmed!
       </h2>
 
-      <p className="mt-2 text-base sm:text-lg md:text-xl text-slate-500">
+      <p className="mt-2 text-[17px] sm:text-lg text-slate-500 text-center">
         Your booking has been confirmed successfully.
       </p>
 
       {/* Booking Reference */}
-      <div className="mx-auto mt-6 w-full max-w-xs rounded-2xl bg-emerald-50 px-5 py-4 shadow-sm">
-        <div className="text-xs sm:text-sm font-bold uppercase text-emerald-600">
+      <div className="mx-auto mt-6 w-full max-w-xs rounded-2xl bg-emerald-50 px-5 py-4 shadow-sm text-center">
+        <div className="text-sm font-bold uppercase text-emerald-600">
           Booking Reference
         </div>
 
-        <div className="mt-1 text-xl sm:text-2xl font-black text-emerald-700 break-all">
+        <div className="mt-1 text-2xl font-black text-emerald-700 break-all">
           {formData.bookingCode || formData.bookingId}
         </div>
       </div>
 
       {/* Details */}
-      <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-5 text-left">
+      <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-5 text-center w-full max-w-xl mx-auto justify-items-center">
         <div>
-          <div className="text-xs sm:text-sm font-semibold uppercase tracking-wide text-slate-400">
+          <div className="text-sm font-semibold uppercase tracking-wide text-slate-400">
             Guest Name
           </div>
-          <div className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-slate-800 break-words">
+          <div className="text-lg sm:text-xl font-bold text-slate-800 break-words">
             {guestFullName}
           </div>
         </div>
 
         <div>
-          <div className="text-xs sm:text-sm font-semibold uppercase tracking-wide text-slate-400">
+          <div className="text-sm font-semibold uppercase tracking-wide text-slate-400">
             Rooms
           </div>
-          <div className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-slate-800 break-words">
+          <div className="text-lg sm:text-xl font-bold text-slate-800 break-words">
             {formData.rooms.length}
           </div>
         </div>
 
         <div>
-          <div className="text-xs sm:text-sm font-semibold uppercase tracking-wide text-slate-400">
+          <div className="text-sm font-semibold uppercase tracking-wide text-slate-400">
             Check-In
           </div>
-          <div className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-slate-800 break-words">
+          <div className="text-lg sm:text-xl font-bold text-slate-800 break-words">
             {formatDate(formData.checkIn)}
           </div>
         </div>
 
         <div>
-          <div className="text-xs sm:text-sm font-semibold uppercase tracking-wide text-slate-400">
+          <div className="text-sm font-semibold uppercase tracking-wide text-slate-400">
             Check-Out
           </div>
-          <div className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-slate-800 break-words">
+          <div className="text-lg sm:text-xl font-bold text-slate-800 break-words">
             {formatDate(formData.checkOut)}
           </div>
         </div>
 
-        <div className="col-span-2 border-t border-slate-200 pt-5">
-          <div className="text-xs sm:text-sm font-semibold uppercase tracking-wide text-slate-400">
+        <div className="col-span-2 border-t border-slate-200 pt-5 text-center">
+          <div className="text-sm font-semibold uppercase tracking-wide text-slate-400">
             Total Amount
           </div>
 
-          <div className="mt-1 text-2xl sm:text-3xl lg:text-4xl font-black text-blue-700">
+          <div className="mt-1 text-2xl sm:text-3xl font-black text-blue-700">
             {formatCurrency(grandTotal)}
-            <div className="text-base text-emerald-600">
+            <div className="text-[17px] text-emerald-600">
               ({formData.rooms.length} room{formData.rooms.length > 1 ? 's' : ''} × {stayNights} night{stayNights > 1 ? 's' : ''})
             </div>
           </div>
@@ -2320,7 +2416,7 @@ const handleJumpStep = (stepView) => {
       </div>
 
       {/* Buttons */}
-      <div className="mt-10 flex justify-center">
+      <div className="mt-10 flex justify-center w-full">
         <div className="grid w-full max-w-xl grid-cols-1 gap-4 sm:grid-cols-2">
           <button
             type="button"
@@ -2381,8 +2477,8 @@ const handleJumpStep = (stepView) => {
       <div className={panelCls}>
         <div className="mb-5 sm:mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4 sm:pb-5">
           <div>
-            <div className="text-xs sm:text-sm font-bold uppercase text-slate-400">Booking Reference</div>
-            <h2 className="text-xl sm:text-2xl font-black text-slate-900">{d.booking_code || b.bookingCode || `BK-${b.bookingId}`}</h2>
+            <div className="text-sm font-bold uppercase text-slate-400">Booking Reference</div>
+            <h2 className={cardTitleCls}>{d.booking_code || b.bookingCode || `BK-${b.bookingId}`}</h2>
           </div>
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <span className={statusBadgeCls(d.booking_status || b.booking_status)}>
@@ -2406,7 +2502,7 @@ const handleJumpStep = (stepView) => {
           <div className="grid gap-5 md:grid-cols-3">
             <div className={cardTileCls}>
               <div className={sectionTitleCls}>Guest Information</div>
-              <dl className="space-y-2.5 text-base sm:text-lg">
+              <dl className="space-y-2.5 text-[17px]">
                 <div className="flex justify-between gap-3"><dt className="text-slate-500">Name</dt><dd className="font-bold text-slate-800">{d.guest_name || b.guest_name || "-"}</dd></div>
                 <div className="flex justify-between gap-3"><dt className="text-slate-500">Email</dt><dd className="font-bold text-slate-800">{d.guest_email || "-"}</dd></div>
                 <div className="flex justify-between gap-3"><dt className="text-slate-500">Mobile</dt><dd className="font-bold text-slate-800">{d.mobile || b.mobile || "-"}</dd></div>
@@ -2415,7 +2511,7 @@ const handleJumpStep = (stepView) => {
 
             <div className={cardTileCls}>
               <div className={sectionTitleCls}>Stay Information</div>
-              <dl className="space-y-2.5 text-base sm:text-lg">
+              <dl className="space-y-2.5 text-[17px]">
                 <div className="flex justify-between gap-3"><dt className="text-slate-500">Check-In</dt><dd className="font-bold text-slate-800">{formatDate(d.check_in || b.check_in)}</dd></div>
                 <div className="flex justify-between gap-3"><dt className="text-slate-500">Check-Out</dt><dd className="font-bold text-slate-800">{formatDate(d.check_out || b.check_out)}</dd></div>
                 <div className="flex justify-between gap-3"><dt className="text-slate-500">Rooms</dt><dd className="font-bold text-slate-800">{b.rooms || (d.rooms || []).length || "-"}</dd></div>
@@ -2424,7 +2520,7 @@ const handleJumpStep = (stepView) => {
 
             <div className={cardTileCls}>
               <div className={sectionTitleCls}>Payment Information</div>
-              <dl className="space-y-2.5 text-base sm:text-lg">
+              <dl className="space-y-2.5 text-[17px]">
                 <div className="flex justify-between gap-3"><dt className="text-slate-500">Room Charges</dt><dd className="font-bold text-slate-800">{formatCurrency(roomChargesTotal)}</dd></div>
                 <div className="flex justify-between gap-3"><dt className="text-slate-500">Folio Charges</dt><dd className="font-bold text-slate-800">{formatCurrency(folioChargesTotal)}</dd></div>
                 <div className="flex justify-between gap-3"><dt className="text-slate-500">Total (Room + Folio)</dt><dd className="font-bold text-slate-800">{formatCurrency(updatedTotalAmount)}</dd></div>
@@ -2438,7 +2534,7 @@ const handleJumpStep = (stepView) => {
                 <div className={sectionTitleCls}>Room &amp; Tariff Information</div>
                 <div className="max-w-full overflow-x-auto">
                   <table className="w-full min-w-[460px] text-left">
-                    <thead className="text-xs sm:text-sm font-bold uppercase text-slate-400">
+                    <thead className="text-base font-bold uppercase text-slate-400">
                       <tr>
                         <th className="py-2 pr-4">Room No</th>
                         <th className="py-2 pr-4">Tariff</th>
@@ -2447,7 +2543,7 @@ const handleJumpStep = (stepView) => {
                         <th className="py-2">Total</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-200 text-sm sm:text-base md:text-lg">
+                    <tbody className="divide-y divide-slate-200 text-[17px]">
                       {d.rooms.map((r, i) => (
                         <tr key={i}>
                           <td className="py-2 pr-4 font-semibold text-slate-800">{r.room_number || r.roomNumber || r.roomNo}</td>
@@ -2473,14 +2569,14 @@ const handleJumpStep = (stepView) => {
               ) : (
                 <div className="max-w-full overflow-x-auto">
                   <table className="w-full min-w-[460px] text-left">
-                    <thead className="text-xs sm:text-sm font-bold uppercase text-slate-400">
+                    <thead className="text-base font-bold uppercase text-slate-400">
                       <tr>
                         <th className="py-2 pr-4">Charge Name</th>
                         <th className="py-2 pr-4">Description</th>
                         <th className="py-2">Amount</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-200 text-sm sm:text-base md:text-lg">
+                    <tbody className="divide-y divide-slate-200 text-[17px]">
                       {folioCharges.map((entry) => (
                         <tr key={entry.id}>
                           <td className="py-2 pr-4 font-semibold text-slate-800">{entry.category || "Extra Charge"}</td>
@@ -2507,7 +2603,7 @@ const handleJumpStep = (stepView) => {
                 <div className="text-2xl sm:text-3xl font-black text-emerald-600">{formatCurrency(updatedTotalAmount)}</div>
               </div>
               <div className="text-right">
-                <div className="text-xs sm:text-sm font-bold uppercase text-slate-400">Remaining Charge</div>
+                <div className="text-sm font-bold uppercase text-slate-400">Remaining Charge</div>
                 <div className="text-2xl sm:text-3xl font-black text-rose-600">{formatCurrency(remainingAmount)}</div>
               </div>
             </div>
@@ -2539,8 +2635,8 @@ const handleJumpStep = (stepView) => {
     return (
       <div className={panelCls}>
         <div className="mb-5 sm:mb-6 border-b border-slate-100 pb-4 sm:pb-5">
-          <div className="text-xs sm:text-sm font-bold uppercase text-slate-400">Managing Booking</div>
-          <h2 className="text-xl sm:text-2xl font-black text-slate-900">{b.bookingCode || `BK-${b.bookingId}`}</h2>
+          <div className="text-sm font-bold uppercase text-slate-400">Managing Booking</div>
+          <h2 className={cardTitleCls}>{b.bookingCode || `BK-${b.bookingId}`}</h2>
           <span className={`mt-2 ${statusBadgeCls(b.booking_status)}`}>
             {b.booking_status || "Pending"}
           </span>

@@ -1,6 +1,26 @@
 // src/components/Hotel/Room.jsx
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import {
+  Building2,
+  KeyRound,
+  Wrench,
+  Snowflake,
+  Wind,
+  Crown,
+  Sparkles,
+  Gem,
+  Users,
+  ChevronDown,
+  ChevronUp,
+  Plus,
+  Save,
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
+  BadgeCheck,
+  ListChecks,
+} from "lucide-react";
 
 import API from "../../api";
 import { expandBookings } from "../Dashboard/stayoverUtils";
@@ -23,13 +43,26 @@ const DEFAULT_ROOMS = [
   { id: 6, name: "DELUXE DORMITORY",  defaultPrice: 800,  unitLabel: "PER BED"   },
 ];
 
+// ─── Premium field / control classes (Blue & White theme) ─────────────────────
 const fieldCls =
-  "w-full rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100";
+  "w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-[15px] font-medium text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100";
 const pickerButtonCls =
-  "w-full rounded-2xl border border-cyan-200 bg-[linear-gradient(135deg,#f8fdff_0%,#eefaff_100%)] px-4 py-3 text-left text-sm text-slate-900 shadow-[0_10px_24px_rgba(6,182,212,0.08)] outline-none transition hover:border-cyan-300 hover:shadow-[0_14px_30px_rgba(6,182,212,0.14)] focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100";
+  "w-full rounded-2xl border border-blue-100 bg-white px-4 py-3.5 text-left text-[15px] text-slate-900 shadow-sm outline-none transition hover:border-blue-300 hover:shadow-md focus:border-blue-500 focus:ring-4 focus:ring-blue-100";
 
 const formatPriceText = (price, unitLabel) => `Rs ${price} ${unitLabel}`;
 const ROOM_LIST_PAGE_SIZE = 8;
+
+// ─── Icon chosen per room category (visual only, no logic impact) ─────────────
+const getCategoryIcon = (name = "") => {
+  const key = name.toLowerCase();
+  if (key.includes("non-ac") || key.includes("non ac")) return Wind;
+  if (key.includes("super deluxe")) return Crown;
+  if (key.includes("suite")) return Gem;
+  if (key.includes("dorm")) return Users;
+  if (key.includes("deluxe")) return Sparkles;
+  if (key.includes("ac")) return Snowflake;
+  return Building2;
+};
 
 // ─── Room status helpers ───────────────────────────────────────────────────────
 // Returns "blocked" | "occupied" | "booked" | "available"
@@ -63,30 +96,34 @@ const getRoomAvailabilityState = (
   return "available";
 };
 
-// Badge UI per state
+// Badge UI per state (Emerald = Available, Rose = Blocked, Violet = Booked, Amber = Occupied)
 const AVAILABILITY_BADGE = {
   blocked: {
     label:    "Blocked",
-    classes:  "bg-red-100 text-red-500",
-    pill:     "border-red-200 bg-red-50 text-red-700",
+    classes:  "bg-rose-100 text-rose-600",
+    pill:     "border-rose-200 bg-rose-50 text-rose-700",
+    dot:      "bg-rose-500",
     disabled: true,
   },
   occupied: {
     label:    "Occupied",
-    classes:  "bg-pink-200 text-pink-500",
-    pill:     "border-pink-200 bg-pink-50 text-pink-700",
+    classes:  "bg-amber-100 text-amber-600",
+    pill:     "border-amber-200 bg-amber-50 text-amber-700",
+    dot:      "bg-amber-500",
     disabled: true,
   },
   booked: {
     label:    "Booked",
-    classes:  "bg-white/90 text-[#5676d8]",
-    pill:     "border-[#7187cf] bg-[#6d82c7] text-white shadow-[0_10px_24px_rgba(109,130,199,0.18)]",
+    classes:  "bg-violet-100 text-violet-600",
+    pill:     "border-violet-200 bg-violet-50 text-violet-700",
+    dot:      "bg-violet-500",
     disabled: true,
   },
   available: {
     label:    "Available",
-    classes:  "bg-green-200 text-green-500",
-    pill:     "border-slate-200 bg-slate-50 text-slate-700",
+    classes:  "bg-emerald-100 text-emerald-600",
+    pill:     "border-emerald-200 bg-emerald-50 text-emerald-700",
+    dot:      "bg-emerald-500",
     disabled: false,
   },
 };
@@ -502,401 +539,455 @@ const Room = () => {
 
   // ─── Render ────────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen w-full bg-[linear-gradient(135deg,#f4fbff_0%,#f8fff9_42%,#fffaf1_100%)] p-4 sm:p-6">
-      <div className="w-full space-y-6">
+    <div className="min-h-screen w-full overflow-x-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-white p-4 sm:p-6 lg:p-8 xl:p-10 2xl:p-12">
+      <div className="mx-auto w-full max-w-[1800px] space-y-5 sm:space-y-6 lg:space-y-8">
 
-        {/* Header */}
-        <section className="overflow-hidden rounded-[28px] border border-white/70 bg-[linear-gradient(135deg,#08253d_0%,#0e5b6a_48%,#0f766e_100%)] px-6 py-7 text-white shadow-[0_24px_70px_rgba(15,23,42,0.18)]">
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(420px,500px)] lg:items-center">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200">
-                Room Selection
-              </p>
-              <h1 className="mt-3 text-3xl font-black sm:text-4xl">
-                Pick available rooms for this booking
-              </h1>
+        {/* Hero */}
+        <section className="relative overflow-hidden rounded-[24px] border border-white/10 bg-gradient-to-br from-blue-950 via-blue-700 to-sky-500 px-5 py-7 text-white shadow-[0_30px_90px_rgba(15,23,42,0.18)] sm:rounded-[32px] sm:px-8 sm:py-8 lg:px-10 lg:py-10">
+          {/* Abstract wave / glow decoration */}
+          <div className="pointer-events-none absolute inset-0 overflow-hidden">
+            <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-sky-300/20 blur-3xl" />
+            <div className="absolute -bottom-32 left-10 h-80 w-80 rounded-full bg-blue-400/20 blur-3xl" />
+            <svg
+              className="absolute bottom-0 left-0 w-full opacity-20"
+              viewBox="0 0 1200 120"
+              preserveAspectRatio="none"
+            >
+              <path
+                d="M0,60 C300,120 900,0 1200,60 L1200,120 L0,120 Z"
+                fill="rgba(255,255,255,0.25)"
+              />
+            </svg>
+            <div className="absolute right-16 top-10 h-2 w-2 rounded-full bg-white/70 shadow-[0_0_18px_6px_rgba(255,255,255,0.35)]" />
+            <div className="absolute right-32 top-24 h-1.5 w-1.5 rounded-full bg-white/50 shadow-[0_0_14px_4px_rgba(255,255,255,0.3)]" />
+          </div>
+
+          <div className="relative grid gap-6 md:grid-cols-[minmax(0,1.1fr)_minmax(280px,380px)] md:items-center lg:grid-cols-[minmax(0,1.1fr)_minmax(420px,540px)]">
+            <div className="flex items-start gap-4">
+              <div className="hidden h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/20 bg-white/10 backdrop-blur sm:flex">
+                <Building2 size={30} className="text-cyan-100" strokeWidth={2} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[12px] font-bold uppercase tracking-[0.3em] text-cyan-200 sm:text-[13px]">
+                  Room Selection
+                </p>
+                <h1 className="mt-3 text-[20px] font-black leading-tight tracking-tight sm:text-[26px] md:text-[30px] lg:text-[34px]">
+                  Pick available rooms for this booking
+                </h1>
+              </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-4 lg:gap-5">
-              <div className="min-w-0 rounded-[20px] border border-white/15 bg-white/10 px-4 py-5 text-center backdrop-blur">
-                <div className="text-[12px] uppercase tracking-[0.16em] text-cyan-100/80">Booking ID</div>
-                <div className="mt-3 text-2xl font-black leading-none">{bookingRef || "—"}</div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
+              <div className="min-w-0 rounded-3xl border border-white/15 bg-white/10 px-4 py-5 text-center shadow-inner backdrop-blur-md transition hover:bg-white/[0.14]">
+                <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-2xl bg-white/15">
+                  <KeyRound size={22} className="text-cyan-100" />
+                </div>
+                <div className="text-[12px] font-bold uppercase tracking-[0.16em] text-cyan-100/80">Booking ID</div>
+                <div className="mt-2 truncate text-[26px] font-black leading-none sm:text-[32px]">{bookingRef || "—"}</div>
               </div>
-              <div className="min-w-0 rounded-[20px] border border-white/15 bg-emerald-900/40 px-4 py-5 text-center backdrop-blur">
-                <div className="text-[12px] uppercase tracking-[0.16em] text-emerald-200">Available</div>
-                <div className="mt-3 text-2xl font-black leading-none text-emerald-100">{availableCount}</div>
+              <div className="min-w-0 rounded-3xl border border-emerald-300/20 bg-emerald-400/10 px-4 py-5 text-center shadow-inner backdrop-blur-md transition hover:bg-emerald-400/[0.16]">
+                <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-400/20">
+                  <CheckCircle2 size={22} className="text-emerald-200" />
+                </div>
+                <div className="text-[12px] font-bold uppercase tracking-[0.16em] text-emerald-200">Available</div>
+                <div className="mt-2 text-[26px] font-black leading-none text-emerald-100 sm:text-[32px]">{availableCount}</div>
               </div>
-              <div className="min-w-0 rounded-[20px] border border-rose-400/30 bg-rose-900/30 px-4 py-5 text-center backdrop-blur">
-                <div className="text-[12px] uppercase tracking-[0.16em] text-rose-200">Unavailable</div>
-                <div className="mt-3 text-2xl font-black leading-none text-rose-100">{blockedCount}</div>
+              <div className="min-w-0 rounded-3xl border border-rose-300/20 bg-rose-400/10 px-4 py-5 text-center shadow-inner backdrop-blur-md transition hover:bg-rose-400/[0.16]">
+                <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-2xl bg-rose-400/20">
+                  <Wrench size={22} className="text-rose-200" />
+                </div>
+                <div className="text-[12px] font-bold uppercase tracking-[0.16em] text-rose-200">Unavailable</div>
+                <div className="mt-2 text-[26px] font-black leading-none text-rose-100 sm:text-[32px]">{blockedCount}</div>
               </div>
             </div>
           </div>
         </section>
 
         {/* Legend */}
-        <div className="flex flex-wrap gap-3 rounded-[18px] border border-white/70 bg-white/80 px-5 py-3 text-xs font-semibold shadow-sm backdrop-blur">
-                   <span className="text-slate-900 text-xl font-bold self-center">Legend:</span>
-
-          {Object.entries(AVAILABILITY_BADGE).map(([state, meta]) => (
-            <span
-              key={state}
-              className={`rounded-full px-3 py-1 text-[18px] font-bold ${meta.classes}`}
-            >
-              {meta.label}
-            </span>
-          ))}
+        <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-blue-100 bg-white px-4 py-4 shadow-sm sm:px-5">
+          <span className="text-[15px] font-black text-slate-900">Legend</span>
+          <div className="flex flex-wrap gap-2.5">
+            {Object.entries(AVAILABILITY_BADGE).map(([state, meta]) => (
+              <span
+                key={state}
+                className={`inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-[13px] font-bold transition duration-300 hover:-translate-y-0.5 hover:shadow-md ${meta.pill}`}
+              >
+                <span className={`h-2 w-2 rounded-full ${meta.dot}`} />
+                {meta.label}
+              </span>
+            ))}
+          </div>
         </div>
 
         {/* Room category cards */}
-        <section className="rounded-[26px] border border-slate-200/80 bg-white/90 p-6 shadow-[0_18px_45px_rgba(15,23,42,0.06)]">
-          <div className="space-y-5">
-            {roomCatalog.map((room, index) => (
+        <section className="space-y-5 sm:space-y-6">
+          {roomCatalog.map((room, index) => {
+            const CategoryIcon = getCategoryIcon(room.name);
+            return (
               <div
                 key={room.id}
-                className="overflow-hidden rounded-[28px] border border-sky-100/90 bg-[linear-gradient(135deg,#8cc5e3_0%,#90cbe6_58%,#8fd0e7_100%)] p-5 shadow-[0_24px_55px_rgba(143,208,231,0.16)]"
+                className="overflow-hidden rounded-[24px] border border-blue-100 bg-white p-4 shadow-xl shadow-blue-100/40 transition duration-300 hover:-translate-y-0.5 hover:shadow-2xl sm:rounded-[30px] sm:p-7 lg:p-8"
               >
-                <div className="flex flex-col gap-5">
-                  <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-                    <div className="space-y-3">
-                      <div className="flex flex-wrap items-center gap-3">
-                        <h3 className="text-[28px] font-black tracking-[0.01em] text-slate-950">{room.name}</h3>
-                        <span className="rounded-full border border-white/45 bg-white/28 px-3 py-1 text-sm font-black text-sky-700 backdrop-blur-sm">
-                          {selectedRooms[room.id]?.length || 0} selected
-                        </span>
-                        <span className="rounded-full border border-white/45 bg-white/28 px-3 py-1 text-sm font-black text-slate-700 backdrop-blur-sm">
-                          {formatPriceText(room.defaultPrice, room.unitLabel)}
-                        </span>
+                <div className="flex flex-col gap-6">
+                  <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
+                    <div className="flex min-w-0 items-start gap-4">
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-900 to-blue-600 shadow-md shadow-blue-200 sm:h-[44px] sm:w-[44px]">
+                        <CategoryIcon size={24} className="text-white" strokeWidth={2} />
                       </div>
-                      <p className="max-w-3xl text-[15px] font-semibold leading-7 text-slate-900/85">
-                        Set the room price first, then open availability to select, review, and add room numbers from one place.
-                      </p>
+                      <div className="min-w-0 space-y-2.5">
+                        <div className="flex flex-wrap items-center gap-2.5">
+                          <h3 className="text-[18px] font-black tracking-tight text-slate-900 sm:text-[22px] lg:text-[24px]">
+                            {room.name}
+                          </h3>
+                          <span className="rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-[13px] font-bold text-blue-700">
+                            Seasonal
+                          </span>
+                          <span className="rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-[13px] font-bold text-blue-700">
+                            {formatPriceText(room.defaultPrice, room.unitLabel)}
+                          </span>
+                        </div>
+                        <p className="max-w-3xl text-[14px] font-medium leading-6 text-slate-500 sm:text-[15px] md:text-[16px]">
+                          Set the room price first, then open availability to select, review, and add room numbers from one place.
+                        </p>
+                      </div>
                     </div>
 
                     <button
                       type="button"
                       onClick={() => handleAvailability(index)}
-                      className="inline-flex items-center justify-center rounded-[20px] bg-gradient-to-r from-amber-500 to-orange-500 px-5 py-3 text-sm font-bold text-white shadow-[0_12px_30px_rgba(245,158,11,0.24)] transition hover:-translate-y-0.5"
+                      className="inline-flex h-[56px] w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-900 to-blue-600 px-6 text-[15px] font-bold text-white shadow-lg shadow-blue-200 transition duration-300 hover:-translate-y-0.5 hover:shadow-xl md:w-auto"
                     >
+                      {activeRoom === index ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                       {activeRoom === index ? "Hide Rooms" : "Check Availability"}
                     </button>
                   </div>
 
-                  <div className="grid gap-4">
-                    <div className="rounded-[24px] border border-white/45 bg-white/18 p-4 backdrop-blur-sm">
-                      <div className="grid gap-3 sm:grid-cols-3">
-                        <div className="rounded-[22px] border border-white/45 bg-white/26 px-5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-sm">
-                          <div className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-800/70">
-                            Total Rooms
-                          </div>
-                          <div className="mt-3 text-[32px] font-black leading-none text-slate-950">
-                            {(roomOptions[room.id] || []).length}
-                          </div>
-                          <div className="mt-2 text-sm font-semibold text-slate-800/80">
-                            Room inventory
-                          </div>
-                        </div>
-                        <div className="rounded-[22px] border border-white/45 bg-white/26 px-5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-sm">
-                          <div className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-800/70">
-                            Available
-                          </div>
-                          <div className="mt-3 text-[32px] font-black leading-none text-slate-950">
-                            {getAvailableRoomsForType(room.id).length}
-                          </div>
-                          <div className="mt-2 text-sm font-semibold text-slate-800/80">
-                            Ready to assign
-                          </div>
-                        </div>
-                        <div className="rounded-[22px] border border-white/45 bg-white/26 px-5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-sm">
-                          <div className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-800/70">
-                            Selected
-                          </div>
-                          <div className="mt-3 text-[32px] font-black leading-none text-slate-950">
-                            {selectedRooms[room.id]?.length || 0}
-                          </div>
-                          <div className="mt-2 text-sm font-semibold text-slate-800/80">
-                            Chosen for booking
-                          </div>
-                        </div>
+                  {/* Stats */}
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
+                    <div className="rounded-3xl border border-blue-100 bg-blue-50/60 px-5 py-5 transition duration-300 hover:-translate-y-0.5 hover:shadow-md">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-900 to-blue-600 shadow shadow-blue-200">
+                        <Building2 size={18} className="text-white" />
+                      </div>
+                      <div className="mt-3 text-[13px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                        Total Rooms
+                      </div>
+                      <div className="mt-1 text-[32px] font-black leading-none text-slate-900 sm:text-[36px]">
+                        {(roomOptions[room.id] || []).length}
+                      </div>
+                      <div className="mt-1.5 text-[13px] font-semibold text-slate-400">
+                        Room inventory
+                      </div>
+                    </div>
+                    <div className="rounded-3xl border border-emerald-100 bg-emerald-50/60 px-5 py-5 transition duration-300 hover:-translate-y-0.5 hover:shadow-md">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-600 to-emerald-400 shadow shadow-emerald-200">
+                        <KeyRound size={18} className="text-white" />
+                      </div>
+                      <div className="mt-3 text-[13px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                        Available
+                      </div>
+                      <div className="mt-1 text-[32px] font-black leading-none text-slate-900 sm:text-[36px]">
+                        {getAvailableRoomsForType(room.id).length}
+                      </div>
+                      <div className="mt-1.5 text-[13px] font-semibold text-slate-400">
+                        Ready to assign
+                      </div>
+                    </div>
+                    <div className="rounded-3xl border border-blue-100 bg-blue-50/60 px-5 py-5 transition duration-300 hover:-translate-y-0.5 hover:shadow-md">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-900 to-blue-600 shadow shadow-blue-200">
+                        <ListChecks size={18} className="text-white" />
+                      </div>
+                      <div className="mt-3 text-[13px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                        Selected
+                      </div>
+                      <div className="mt-1 text-[32px] font-black leading-none text-slate-900 sm:text-[36px]">
+                        {selectedRooms[room.id]?.length || 0}
+                      </div>
+                      <div className="mt-1.5 text-[13px] font-semibold text-slate-400">
+                        Chosen for booking
                       </div>
                     </div>
                   </div>
 
-                {/* Expanded availability panel */}
-                {activeRoom === index && (
-                  <div className="mt-1 rounded-[22px] border border-sky-100/90 bg-[linear-gradient(135deg,#8cc5e3_0%,#90cbe6_58%,#8fd0e7_100%)] p-5 shadow-[0_22px_48px_rgba(143,208,231,0.18)]">
-                    <div className="mb-3 flex items-center justify-between gap-3">
-                      <div>
-                        <div className="text-[18px] font-black uppercase tracking-[0.24em] text-slate-950">
-                          Room Availability
-
-                        </div>
-                        <div className="mt-2 text-base font-semibold text-slate-900/85">
-                          {getAvailableRoomsForType(room.id).length} room(s) ready for booking
-                        </div>
-                      </div>
-                      <span className="rounded-full border border-white/45 bg-white/28 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.14em] text-slate-900">
-                        {room.name}
-                      </span>
-                    </div>
-
-                    {/* Quick-pick available rooms dropdown */}
-                    <div className="grid gap-3 xl:max-w-[720px] xl:grid-cols-[minmax(0,1fr)_150px_118px] xl:items-stretch">                      <div className="relative">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setOpenPickers((prev) => ({ ...prev, [room.id]: !prev[room.id] }))
-                          }
-                          className={`${pickerButtonCls} h-[52px] overflow-hidden border-slate-200/80 bg-white shadow-none hover:border-cyan-300`}
-                        >
-                          <div className="flex items-center justify-between gap-3">
-                            <div className="min-w-0 flex-1">
-                             
-                              <div className="truncate text-xl font-semibold text-slate-900">
-                                {pickerValues[room.id] || "Select room"}
-                              </div>
-                            </div>
-                            <span className="shrink-0 text-xl text-cyan-700">
-                              {openPickers[room.id] ? "▲" : "▼"}
-                            </span>
-                          </div>
-                        </button>
-
-                        {openPickers[room.id] ? (
-                          <div className="absolute left-0 right-0 top-[calc(100%+10px)] z-20 overflow-hidden rounded-[22px] border border-cyan-100 bg-white shadow-[0_24px_60px_rgba(15,23,42,0.16)]">
-                            <div className="border-b border-slate-100 bg-slate-50 px-4 py-3">
-                              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                                Select available room
-                              </div>
-                              <div className="mt-1 text-sm text-slate-600">
-                                {getAvailableRoomsForType(room.id).length} room(s) ready to assign
-                              </div>
-                            </div>
-
-                            {getAvailableRoomsForType(room.id).length ? (
-                              <div className="max-h-64 overflow-y-auto p-2">
-                                {getAvailableRoomsForType(room.id).map((item) => (
-                                  <button
-                                    key={item}
-                                    type="button"
-                                    onClick={() => {
-                                      setPickerValues((prev) => ({ ...prev, [room.id]: item }));
-                                      handlePickAvailableRoom(room.id, item);
-                                    }}
-                                    className="flex w-full items-center justify-between rounded-[18px] px-4 py-3 text-left transition hover:bg-cyan-50"
-                                  >
-                                    <div>
-                                      <div className="text-base font-black text-slate-900">{item}</div>
-                                      <div className="mt-1 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                                        Ready for booking
-                                      </div>
-                                    </div>
-                                    <span className="rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-emerald-700">
-                                      Available
-                                    </span>
-                                  </button>
-                                ))}
-                              </div>
-                            ) : (
-                              <div className="px-4 py-5 text-sm font-semibold text-slate-500">
-                                No available room in this type
-                              </div>
-                            )}
-                          </div>
-                        ) : null}
-                      </div>
-
-                      <div>
-                        <input
-                          value={inputValue[room.id] || ""}
-                          onChange={(e) =>
-                            setInputValue((prev) => ({
-                              ...prev,
-                              [room.id]: e.target.value,
-                            }))
-                          }
-                          placeholder="Room no."
-                       className="h-[55px] w-full rounded-3xl border border-slate-200/80 bg-white px-4 py-3 text-xl text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100"
-
-                        />
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleAddOption(room.id)}
-                        className="inline-flex min-w-[144px] text-[15px] items-center justify-center rounded-3xl bg-[#3b82f6] px-5 text-[14px] font-bold tracking-[0.01em] text-white shadow-[0_10px_22px_rgba(59,130,246,0.22)] transition hover:bg-[#2563eb]"
-                      >
-                        Add Room
-                      </button>
-                    </div>
-
-                    {/* Room checkbox grid — BUG FIX: proper state-based badge */}
-                    <div className="mt-5 rounded-[22px] border border-white/45 bg-white/22 p-4 backdrop-blur-sm">
-                      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                  {/* Expanded availability panel */}
+                  {activeRoom === index && (
+                    <div className="rounded-[20px] border border-blue-100 bg-gradient-to-br from-blue-50/70 to-white p-4 sm:rounded-[26px] sm:p-6 lg:p-7">
+                      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                         <div>
-                          <div className="text-[18px] font-black uppercase tracking-[0.24em] text-slate-950">
-                            Room List
+                          <div className="text-[16px] font-black uppercase tracking-[0.2em] text-slate-900">
+                            Room Availability
                           </div>
-                          <div className="mt-2 text-base font-semibold text-slate-900/85">
-                            Overall room inventory for this category with price setup.
+                          <div className="mt-1.5 text-[14px] font-semibold text-slate-500 sm:text-[15px]">
+                            {getAvailableRoomsForType(room.id).length} room(s) ready for booking
                           </div>
                         </div>
+                        <span className="rounded-full border border-blue-200 bg-white px-4 py-1.5 text-[12px] font-black uppercase tracking-[0.14em] text-blue-700 shadow-sm">
+                          {room.name}
+                        </span>
+                      </div>
 
-                        <div className="grid gap-3 sm:grid-cols-[minmax(0,170px)_140px]">
-                          <div className="rounded-[18px] border border-white/45 bg-white/24 p-3">
-                            <div className="text-[14px] font-black uppercase tracking-[0.22em] text-slate-950">
-                              Price Setup
-                            </div>
-                            <div className="mt-2">
-                              <input
-                                type="number"
-                                min="0"
-                                value={priceInputs[room.id] ?? room.defaultPrice}
-                                onChange={(e) =>
-                                  setPriceInputs((prev) => ({
-                                    ...prev,
-                                    [room.id]: e.target.value,
-                                  }))
-                                }
-                                className={`${fieldCls} py-2.5`}
-                                placeholder="Enter price"
-                              />
-                            </div>
-                          </div>
-
+                      {/* Quick-pick available rooms dropdown */}
+                      <div className="grid gap-3 lg:max-w-[760px] lg:grid-cols-[minmax(0,1fr)_170px_150px] lg:items-stretch">
+                        <div className="relative">
                           <button
                             type="button"
-                            onClick={() => handlePriceSave(room.id)}
-                            className="inline-flex h-[54px] items-center justify-center rounded-[18px] bg-sky-500 px-4 text-sm font-bold text-white shadow-[0_12px_30px_rgba(14,165,233,0.18)] transition hover:bg-sky-600"
+                            onClick={() =>
+                              setOpenPickers((prev) => ({ ...prev, [room.id]: !prev[room.id] }))
+                            }
+                            className={`${pickerButtonCls} h-[56px] overflow-hidden`}
                           >
-                            Save Price
-                          </button>
-                        </div>
-                      </div>
-
-                      {(() => {
-                        const rooms = roomOptions[room.id] || [];
-                        const totalPages = Math.max(1, Math.ceil(rooms.length / ROOM_LIST_PAGE_SIZE));
-                        const currentPage = Math.min(roomListPages[room.id] || 1, totalPages);
-                        const startIndex = (currentPage - 1) * ROOM_LIST_PAGE_SIZE;
-                        const visibleRooms = rooms.slice(startIndex, startIndex + ROOM_LIST_PAGE_SIZE);
-                        const showingFrom = rooms.length ? startIndex + 1 : 0;
-                        const showingTo = Math.min(startIndex + visibleRooms.length, rooms.length);
-
-                        return (
-                          <>
-                            <div className="mt-4 flex flex-wrap gap-3">
-                              {visibleRooms.map((item) => {
-                                const roomState = getRoomState(item);
-                                const meta = AVAILABILITY_BADGE[roomState];
-                                const isSelected = selectedRooms[room.id]?.includes(item);
-                                const isLocked = meta.disabled;
-
-                                return (
-                                  <label
-                                    key={item}
-                                    className={`flex cursor-pointer items-center gap-2.5 rounded-full border px-5 py-3 text-[15px] font-bold transition
-                                      ${isLocked ? "cursor-not-allowed opacity-70" : "hover:border-sky-300"}
-                                      ${isSelected ? "border-sky-200 bg-sky-50 text-sky-700" : meta.pill}
-                                    `}
-                                  >
-                                    <input
-                                      type="checkbox"
-                                      checked={isSelected || false}
-                                      disabled={isLocked}
-                                      onChange={() => handleSelect(room.id, item)}
-                                      className="h-4 w-4"
-                                    />
-                                    {item}
-                                    <span
-                                      className={`rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.16em] ${meta.classes}`}
-                                    >
-                                      {meta.label}
-                                    </span>
-                                  </label>
-                                );
-                              })}
-
-                              {!rooms.length && (
-                                <p className="text-sm italic text-slate-400">
-                          No rooms added yet — add room number above.
-                                </p>
-                              )}
-                            </div>
-
-                            {rooms.length > ROOM_LIST_PAGE_SIZE && (
-                              <div className="mt-4 flex flex-col gap-3 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
-                                <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                                  Showing {showingFrom}-{showingTo} of {rooms.length} rooms
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      setRoomListPages((prev) => ({
-                                        ...prev,
-                                        [room.id]: Math.max(1, currentPage - 1),
-                                      }))
-                                    }
-                                    disabled={currentPage === 1}
-                                    className="rounded-full border border-slate-200 px-3 py-2 text-xs font-bold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-                                  >
-                                    Prev
-                                  </button>
-                                  <span className="rounded-full bg-slate-100 px-3 py-2 text-xs font-bold text-slate-600">
-                                    Page {currentPage} / {totalPages}
-                                  </span>
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      setRoomListPages((prev) => ({
-                                        ...prev,
-                                        [room.id]: Math.min(totalPages, currentPage + 1),
-                                      }))
-                                    }
-                                    disabled={currentPage === totalPages}
-                                    className="rounded-full border border-slate-200 px-3 py-2 text-xs font-bold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-                                  >
-                                    Next
-                                  </button>
+                            <div className="flex items-center justify-between gap-3">
+                              <div className="min-w-0 flex-1">
+                                <div className="truncate text-[16px] font-semibold text-slate-900">
+                                  {pickerValues[room.id] || "Select room"}
                                 </div>
                               </div>
-                            )}
-                          </>
-                        );
-                      })()}
+                              <span className="shrink-0 text-blue-600">
+                                {openPickers[room.id] ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                              </span>
+                            </div>
+                          </button>
+
+                          {openPickers[room.id] ? (
+                            <div className="absolute left-0 right-0 top-[calc(100%+10px)] z-20 overflow-hidden rounded-2xl border border-blue-100 bg-white shadow-2xl shadow-blue-100/60">
+                              <div className="border-b border-slate-100 bg-blue-50/60 px-4 py-3">
+                                <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">
+                                  Select available room
+                                </div>
+                                <div className="mt-1 text-[14px] font-semibold text-slate-600">
+                                  {getAvailableRoomsForType(room.id).length} room(s) ready to assign
+                                </div>
+                              </div>
+
+                              {getAvailableRoomsForType(room.id).length ? (
+                                <div className="max-h-64 overflow-y-auto overscroll-contain p-2">
+                                  {getAvailableRoomsForType(room.id).map((item) => (
+                                    <button
+                                      key={item}
+                                      type="button"
+                                      onClick={() => {
+                                        setPickerValues((prev) => ({ ...prev, [room.id]: item }));
+                                        handlePickAvailableRoom(room.id, item);
+                                      }}
+                                      className="flex w-full items-center justify-between rounded-xl px-4 py-3 text-left transition hover:bg-blue-50"
+                                    >
+                                      <div>
+                                        <div className="text-[15px] font-black text-slate-900">{item}</div>
+                                        <div className="mt-0.5 text-[12px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+                                          Ready for booking
+                                        </div>
+                                      </div>
+                                      <span className="rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-emerald-700">
+                                        Available
+                                      </span>
+                                    </button>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div className="px-4 py-5 text-[14px] font-semibold text-slate-500">
+                                  No available room in this type
+                                </div>
+                              )}
+                            </div>
+                          ) : null}
+                        </div>
+
+                        <div>
+                          <input
+                            value={inputValue[room.id] || ""}
+                            onChange={(e) =>
+                              setInputValue((prev) => ({
+                                ...prev,
+                                [room.id]: e.target.value,
+                              }))
+                            }
+                            placeholder="Room no."
+                            className={`${fieldCls} h-[56px]`}
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleAddOption(room.id)}
+                          className="inline-flex h-[56px] w-full min-w-0 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-900 to-blue-600 px-5 text-[14px] font-bold tracking-[0.01em] text-white shadow-lg shadow-blue-200 transition duration-300 hover:-translate-y-0.5 hover:shadow-xl lg:w-auto lg:min-w-[150px]"
+                        >
+                          <Plus size={18} />
+                          Add Room
+                        </button>
+                      </div>
+
+                      {/* Room checkbox grid — BUG FIX: proper state-based badge */}
+                      <div className="mt-6 rounded-[20px] border border-blue-100 bg-white p-4 sm:rounded-[24px] sm:p-5 lg:p-6">
+                        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                          <div>
+                            <div className="text-[16px] font-black uppercase tracking-[0.2em] text-slate-900">
+                              Room List
+                            </div>
+                            <div className="mt-1.5 text-[14px] font-semibold text-slate-500 sm:text-[15px]">
+                              Overall room inventory for this category with price setup.
+                            </div>
+                          </div>
+
+                          <div className="grid gap-3 md:grid-cols-[minmax(0,190px)_160px]">
+                            <div className="rounded-2xl border border-blue-100 bg-blue-50/60 p-3.5 backdrop-blur-sm">
+                              <div className="text-[13px] font-black uppercase tracking-[0.2em] text-slate-700">
+                                Price Setup
+                              </div>
+                              <div className="mt-2">
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={priceInputs[room.id] ?? room.defaultPrice}
+                                  onChange={(e) =>
+                                    setPriceInputs((prev) => ({
+                                      ...prev,
+                                      [room.id]: e.target.value,
+                                    }))
+                                  }
+                                  className={fieldCls}
+                                  placeholder="Enter price"
+                                />
+                              </div>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => handlePriceSave(room.id)}
+                              className="inline-flex h-[56px] items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-900 to-blue-600 px-4 text-[14px] font-bold text-white shadow-lg shadow-blue-200 transition duration-300 hover:-translate-y-0.5 hover:shadow-xl"
+                            >
+                              <Save size={18} />
+                              Save Price
+                            </button>
+                          </div>
+                        </div>
+
+                        {(() => {
+                          const rooms = roomOptions[room.id] || [];
+                          const totalPages = Math.max(1, Math.ceil(rooms.length / ROOM_LIST_PAGE_SIZE));
+                          const currentPage = Math.min(roomListPages[room.id] || 1, totalPages);
+                          const startIndex = (currentPage - 1) * ROOM_LIST_PAGE_SIZE;
+                          const visibleRooms = rooms.slice(startIndex, startIndex + ROOM_LIST_PAGE_SIZE);
+                          const showingFrom = rooms.length ? startIndex + 1 : 0;
+                          const showingTo = Math.min(startIndex + visibleRooms.length, rooms.length);
+
+                          return (
+                            <>
+                              <div className="mt-5 flex flex-wrap gap-2 sm:gap-3">
+                                {visibleRooms.map((item) => {
+                                  const roomState = getRoomState(item);
+                                  const meta = AVAILABILITY_BADGE[roomState];
+                                  const isSelected = selectedRooms[room.id]?.includes(item);
+                                  const isLocked = meta.disabled;
+
+                                  return (
+                                    <label
+                                      key={item}
+                                      className={`flex max-w-full cursor-pointer items-center gap-2 rounded-2xl border px-4 py-3 text-[14px] font-bold transition duration-300 sm:gap-3 sm:px-5 sm:py-3.5 sm:text-[15px]
+                                        ${isLocked ? "cursor-not-allowed opacity-70" : "hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md"}
+                                        ${isSelected
+                                          ? "border-transparent bg-white shadow-[0_0_0_2px_theme(colors.blue.500),0_10px_28px_rgba(37,99,235,0.22)]"
+                                          : `bg-white ${meta.pill}`
+                                        }
+                                      `}
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        checked={isSelected || false}
+                                        disabled={isLocked}
+                                        onChange={() => handleSelect(room.id, item)}
+                                        className="h-[22px] w-[22px] shrink-0 accent-blue-600"
+                                      />
+                                      <span className={`truncate ${isSelected ? "text-blue-700" : "text-slate-900"}`}>{item}</span>
+                                      <span
+                                        className={`shrink-0 rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.16em] ${meta.classes}`}
+                                      >
+                                        {meta.label}
+                                      </span>
+                                    </label>
+                                  );
+                                })}
+
+                                {!rooms.length && (
+                                  <p className="text-[14px] italic text-slate-400">
+                                    No rooms added yet — add room number above.
+                                  </p>
+                                )}
+                              </div>
+
+                              {rooms.length > ROOM_LIST_PAGE_SIZE && (
+                                <div className="mt-5 flex flex-col items-center gap-3 border-t border-slate-100 pt-4 text-center sm:flex-row sm:items-center sm:justify-between sm:text-left">
+                                  <div className="text-[12px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                                    Showing {showingFrom}-{showingTo} of {rooms.length} rooms
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        setRoomListPages((prev) => ({
+                                          ...prev,
+                                          [room.id]: Math.max(1, currentPage - 1),
+                                        }))
+                                      }
+                                      disabled={currentPage === 1}
+                                      className="rounded-full border border-slate-200 px-5 py-2.5 text-[13px] font-bold text-slate-600 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:py-2 sm:text-[12px]"
+                                    >
+                                      Prev
+                                    </button>
+                                    <span className="rounded-full bg-blue-50 px-4 py-2 text-[12px] font-bold text-blue-700">
+                                      Page {currentPage} / {totalPages}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        setRoomListPages((prev) => ({
+                                          ...prev,
+                                          [room.id]: Math.min(totalPages, currentPage + 1),
+                                        }))
+                                      }
+                                      disabled={currentPage === totalPages}
+                                      className="rounded-full border border-slate-200 px-5 py-2.5 text-[13px] font-bold text-slate-600 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:py-2 sm:text-[12px]"
+                                    >
+                                      Next
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                            </>
+                          );
+                        })()}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
                 </div>
               </div>
-            ))}
-          </div>
-
-          {/* Footer actions */}
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-end">
-            <button
-              type="button"
-              onClick={() => navigate("/hotel/company")}
-              className="rounded-[22px] border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
-            >
-              Go Back
-            </button>
-
-            <BookingCancelAction
-              bookingId={bookingId}
-              bookingCode={bookingCode}
-              buttonClassName="sm:min-w-[170px]"
-            />
-
-            <button
-              type="button"
-              onClick={handleProceed}
-              className="rounded-[22px] bg-gradient-to-r from-sky-600 to-cyan-500 px-6 py-3 text-sm font-bold text-white shadow-[0_16px_35px_rgba(14,165,233,0.24)] transition hover:-translate-y-0.5"
-            >
-              Save & Proceed
-            </button>
-          </div>
+            );
+          })}
         </section>
+
+        {/* Footer actions */}
+        <div className="flex flex-col gap-3 rounded-[22px] border border-blue-100 bg-white p-4 shadow-sm sm:flex-row sm:justify-end sm:rounded-[26px] sm:p-5 lg:p-6">
+          <button
+            type="button"
+            onClick={() => navigate("/hotel/company")}
+            className="inline-flex h-[56px] items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-6 text-[15px] font-bold text-slate-700 transition duration-300 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md"
+          >
+            <ArrowLeft size={20} />
+            Go Back
+          </button>
+
+          <BookingCancelAction
+            bookingId={bookingId}
+            bookingCode={bookingCode}
+            buttonClassName="sm:min-w-[170px] h-[56px] rounded-2xl"
+          />
+
+          <button
+            type="button"
+            onClick={handleProceed}
+            className="inline-flex h-[56px] items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-900 to-blue-600 px-7 text-[15px] font-bold text-white shadow-lg shadow-blue-200 transition duration-300 hover:-translate-y-0.5 hover:shadow-xl"
+          >
+            Save & Proceed
+            <ArrowRight size={20} />
+          </button>
+        </div>
 
         {notice.open && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-sm">
@@ -907,7 +998,7 @@ const Room = () => {
               aria-labelledby="room-notice-title"
               aria-describedby="room-notice-message"
               tabIndex={-1}
-              className="w-full max-w-md rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_28px_70px_rgba(15,23,42,0.22)]"
+              className="w-full max-w-md rounded-[28px] border border-blue-100 bg-white p-6 shadow-2xl"
             >
               <div className="flex items-start gap-4">
                 <div
@@ -916,16 +1007,16 @@ const Room = () => {
                       ? "bg-rose-50 text-rose-600"
                       : notice.tone === "warning"
                         ? "bg-amber-50 text-amber-600"
-                        : "bg-sky-50 text-sky-600"
+                        : "bg-blue-50 text-blue-600"
                   }`}
                 >
-                  !
+                  <BadgeCheck size={26} />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h3 id="room-notice-title" className="text-xl font-black text-slate-900">
+                  <h3 id="room-notice-title" className="text-[20px] font-black text-slate-900">
                     {notice.title}
                   </h3>
-                  <p id="room-notice-message" className="mt-2 text-sm leading-6 text-slate-600">
+                  <p id="room-notice-message" className="mt-2 text-[15px] leading-6 text-slate-600">
                     {notice.message}
                   </p>
                 </div>
@@ -940,7 +1031,7 @@ const Room = () => {
                       open: false,
                     }))
                   }
-                  className="inline-flex min-w-[96px] items-center justify-center rounded-[16px] bg-gradient-to-r from-sky-600 to-blue-500 px-5 py-3 text-sm font-bold text-white shadow-[0_12px_30px_rgba(37,99,235,0.24)] transition hover:-translate-y-0.5"
+                  className="inline-flex h-[52px] min-w-[110px] items-center justify-center rounded-2xl bg-gradient-to-r from-blue-900 to-blue-600 px-6 text-[15px] font-bold text-white shadow-lg shadow-blue-200 transition duration-300 hover:-translate-y-0.5 hover:shadow-xl"
                 >
                   OK
                 </button>

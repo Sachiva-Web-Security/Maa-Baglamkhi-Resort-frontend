@@ -11,6 +11,12 @@ import {
   FaDownload,
   FaChevronRight,
   FaTimes,
+  FaDoorOpen,
+  FaChartPie,
+  FaChartLine,
+  FaWallet,
+  FaHistory,
+  FaClipboardList,
 } from "react-icons/fa";
 
 import API from "../api";
@@ -92,26 +98,63 @@ const formatDate = (value) => {
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
+// Premium gradient pill badges — Blue + White enterprise theme with
+// Emerald / Amber / Rose accents for state (matches Occupancy Overview).
 const statusPill = (status) => {
   const s = String(status || "").toLowerCase();
-  if (s.includes("checked in")) return "bg-sky-100 text-sky-700";
-  if (s.includes("checked out")) return "bg-slate-100 text-slate-600";
-  if (s.includes("cancel")) return "bg-rose-100 text-rose-700";
-  if (s.includes("pending") || s.includes("tentative")) return "bg-amber-100 text-amber-700";
-  return "bg-emerald-100 text-emerald-700"; // Confirmed / default
+  if (s.includes("checked in"))
+    return "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-sm shadow-blue-200";
+  if (s.includes("checked out"))
+    return "bg-gradient-to-r from-slate-400 to-slate-500 text-white shadow-sm shadow-slate-200";
+  if (s.includes("cancel"))
+    return "bg-gradient-to-r from-rose-500 to-rose-600 text-white shadow-sm shadow-rose-200";
+  if (s.includes("pending") || s.includes("tentative"))
+    return "bg-gradient-to-r from-amber-400 to-amber-500 text-white shadow-sm shadow-amber-200";
+  return "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-sm shadow-emerald-200"; // Confirmed / default
 };
 
-const QuickActionCard = ({ icon: Icon, iconTone, title, description, buttonLabel, onClick }) => (
-  <div className="flex flex-col rounded-2xl border border-slate-100 bg-white p-5 shadow-sm transition hover:shadow-md">
-    <div className={`mb-4 flex h-11 w-11 items-center justify-center rounded-xl ${iconTone}`}>
-      <Icon className="text-lg" />
+// Small shared helper for the other premium badges used in Booking History /
+// Payment History (purely presentational, mirrors statusPill's gradient style).
+const premiumBadge = (variant) => {
+  switch (variant) {
+    case "completed":
+    case "paid":
+      return "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-sm shadow-emerald-200";
+    case "cancelled":
+      return "bg-gradient-to-r from-rose-500 to-rose-600 text-white shadow-sm shadow-rose-200";
+    case "balance":
+    case "pending":
+      return "bg-gradient-to-r from-amber-400 to-amber-500 text-white shadow-sm shadow-amber-200";
+    default:
+      return "bg-gradient-to-r from-slate-400 to-slate-500 text-white shadow-sm shadow-slate-200";
+  }
+};
+
+const Badge = ({ variant, children }) => (
+  <span
+    className={`inline-flex items-center rounded-full px-4 py-1.5 text-xs sm:text-[13px] font-bold tracking-wide ${premiumBadge(
+      variant,
+    )}`}
+  >
+    {children}
+  </span>
+);
+
+const QuickActionCard = ({ icon: Icon, iconGradient, title, description, buttonLabel, onClick }) => (
+  <div className="group relative flex w-full flex-col overflow-hidden rounded-[24px] border border-blue-100/50 bg-white p-6 sm:p-7 shadow-[0_4px_20px_rgba(15,23,42,0.06)] transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-[0_20px_45px_-12px_rgba(37,99,235,0.28)]">
+    <div
+      className={`mb-5 flex h-16 w-16 sm:h-[72px] sm:w-[72px] items-center justify-center rounded-2xl shadow-[0_8px_20px_-6px_rgba(37,99,235,0.45)] ring-1 ring-white/40 transition-transform duration-300 group-hover:scale-105 ${iconGradient}`}
+    >
+      <Icon className="text-[32px] sm:text-[38px] text-white drop-shadow-sm" />
     </div>
-    <div className="text-base font-bold text-slate-900">{title}</div>
-    <p className="mt-1 flex-1 text-sm text-slate-500">{description}</p>
+    <h3 className="text-xl sm:text-2xl md:text-[28px] font-bold text-slate-900">{title}</h3>
+    <p className="mt-2 flex-1 text-[15px] sm:text-[16px] md:text-[17px] leading-relaxed text-slate-500">
+      {description}
+    </p>
     <button
       type="button"
       onClick={onClick}
-      className="mt-4 rounded-xl bg-indigo-600 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700"
+      className="mt-6 w-full rounded-2xl bg-gradient-to-r from-blue-900 via-blue-700 to-sky-500 py-3.5 text-[16px] sm:text-[18px] font-bold text-white shadow-[0_10px_25px_-8px_rgba(30,64,175,0.5)] transition-all duration-200 hover:shadow-[0_14px_32px_-6px_rgba(30,64,175,0.6)] hover:brightness-110 active:scale-[0.98]"
     >
       {buttonLabel}
     </button>
@@ -120,19 +163,19 @@ const QuickActionCard = ({ icon: Icon, iconTone, title, description, buttonLabel
 
 const OccupancyDonut = ({ occupied, available, outOfService, occupiedPct }) => {
   const total = occupied + available + outOfService;
-  const R = 60;
+  const R = 80;
   const C = 2 * Math.PI * R;
   const segs = [
-    { value: occupied, color: "#6366f1" },
-    { value: available, color: "#22c55e" },
+    { value: occupied, color: "#2563eb" },
+    { value: available, color: "#10b981" },
     { value: outOfService, color: "#f59e0b" },
   ];
   let offset = 0;
 
   return (
-    <div className="relative flex h-40 w-40 items-center justify-center">
-      <svg viewBox="0 0 140 140" className="h-40 w-40 -rotate-90">
-        <circle cx="70" cy="70" r={R} fill="none" stroke="#f1f5f9" strokeWidth="16" />
+    <div className="relative flex h-56 w-56 sm:h-60 sm:w-60 lg:h-64 lg:w-64 items-center justify-center">
+      <svg viewBox="0 0 200 200" className="h-56 w-56 sm:h-60 sm:w-60 lg:h-64 lg:w-64 -rotate-90">
+        <circle cx="100" cy="100" r={R} fill="none" stroke="#eef2ff" strokeWidth="20" />
         {total > 0 &&
           segs.map((seg, i) => {
             if (seg.value <= 0) return null;
@@ -141,15 +184,15 @@ const OccupancyDonut = ({ occupied, available, outOfService, occupiedPct }) => {
             const circle = (
               <circle
                 key={i}
-                cx="70"
-                cy="70"
+                cx="100"
+                cy="100"
                 r={R}
                 fill="none"
                 stroke={seg.color}
-                strokeWidth="16"
+                strokeWidth="20"
                 strokeDasharray={`${dash} ${C - dash}`}
                 strokeDashoffset={-offset}
-                strokeLinecap="butt"
+                strokeLinecap="round"
               />
             );
             offset += dash;
@@ -157,12 +200,61 @@ const OccupancyDonut = ({ occupied, available, outOfService, occupiedPct }) => {
           })}
       </svg>
       <div className="absolute flex flex-col items-center">
-        <div className="text-2xl font-black text-slate-900">{occupiedPct}%</div>
-        <div className="text-xs font-semibold text-slate-400">Occupied</div>
+        <div className="text-[38px] sm:text-[42px] md:text-[46px] font-extrabold bg-gradient-to-r from-blue-900 to-blue-600 bg-clip-text text-transparent">
+          {occupiedPct}%
+        </div>
+        <div className="text-xs sm:text-sm md:text-[15px] font-bold uppercase tracking-wide text-slate-400">
+          Occupied
+        </div>
       </div>
     </div>
   );
 };
+
+const StatCard = ({ icon: Icon, label, value, iconBg, waveBg, accent, cardBg }) => (
+  <div
+    className={`group relative flex flex-col items-center overflow-hidden rounded-[26px] border border-slate-100 pb-14 pt-6 shadow-[0_2px_10px_rgba(15,23,42,0.04)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(15,23,42,0.08)] ${cardBg}`}
+  >
+    <div
+      className={`mb-4 flex lg:h-18 lg:w-18 h-14 w-14 items-center justify-center rounded-2xl shadow-sm ${iconBg}`}
+    >
+      <Icon className="lg:text-[28px] text-[22px] text-white" />
+    </div>
+    <div className="text-[32px] sm:text-[36px] font-extrabold leading-none text-slate-900">{value}</div>
+    <div className="mt-2 text-[14px] sm:text-[15px] font-semibold text-slate-500">{label}</div>
+
+    {/* Wave sits flush against the card's actual bottom edge (no gap) */}
+    <div className={`absolute inset-x-[-10%] bottom-0 h-14 rounded-t-[50%] ${waveBg}`} />
+    
+  </div>
+);
+
+const SectionHeader = ({ icon: Icon, title, subtitle, onViewAll }) => (
+  <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+    <div className="flex items-start gap-3">
+      {Icon ? (
+        <div className="mt-1 hidden h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-900 via-blue-700 to-sky-500 text-white shadow-[0_8px_20px_-6px_rgba(30,64,175,0.5)] sm:flex">
+          <Icon className="text-lg" />
+        </div>
+      ) : null}
+      <div>
+        <h2 className="text-2xl sm:text-[28px] md:text-[34px] font-extrabold leading-tight text-blue-950">
+          {title}
+        </h2>
+        {subtitle ? <p className="mt-1 text-[15px] sm:text-[16px] text-slate-500">{subtitle}</p> : null}
+      </div>
+    </div>
+    {onViewAll ? (
+      <button
+        type="button"
+        onClick={onViewAll}
+        className="flex items-center gap-1.5 rounded-full border border-blue-100 bg-blue-50/60 px-4 py-2 text-sm sm:text-[16px] font-bold text-blue-700 transition hover:bg-blue-600 hover:text-white"
+      >
+        View All <FaChevronRight className="text-xs" />
+      </button>
+    ) : null}
+  </div>
+);
 
 const HotelDashboardHome = () => {
   const navigate = useNavigate();
@@ -174,6 +266,8 @@ const HotelDashboardHome = () => {
   const [payments, setPayments] = useState([]); // aggregated payment history
   const [loading, setLoading] = useState(true);
   const [paymentsLoading, setPaymentsLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [tick, setTick] = useState(0); // forces a re-render so "X min ago" stays fresh
 
   const [quickForm, setQuickForm] = useState({ guestName: "", checkIn: "", checkOut: "", roomType: "" });
   const [quickSaving, setQuickSaving] = useState(false);
@@ -227,6 +321,7 @@ const HotelDashboardHome = () => {
       setRoomBlocks(Array.isArray(blocksRes.data) ? blocksRes.data : []);
       setBookings(Array.isArray(bookingsRes.data) ? bookingsRes.data : []);
       setHistory(Array.isArray(historyRes.data) ? historyRes.data : []);
+      setLastUpdated(new Date());
     } catch (err) {
       console.error("Failed to load dashboard data:", err);
     } finally {
@@ -237,6 +332,20 @@ const HotelDashboardHome = () => {
   useEffect(() => {
     loadCore();
   }, [loadCore]);
+
+  // Keep the "X min ago" label fresh without re-fetching data.
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), 30000);
+    return () => clearInterval(id);
+  }, []);
+
+  const lastUpdatedLabel = useMemo(() => {
+    if (!lastUpdated) return "—";
+    const diffMins = Math.floor((Date.now() - lastUpdated.getTime()) / 60000);
+    if (diffMins < 1) return "just now";
+    if (diffMins === 1) return "1 min ago";
+    return `${diffMins} min ago`;
+  }, [lastUpdated, tick]);
 
   // Aggregate payment history dynamically from the most recent bookings
   // (there's no single "all payments" endpoint in the backend, so we combine
@@ -414,13 +523,13 @@ const HotelDashboardHome = () => {
   /* ─────────────────────────── render ─────────────────────────── */
 
   return (
-    <div className="min-h-screen w-full bg-slate-50 p-4 sm:p-6 md:p-8">
-      <div className="mx-auto max-w-7xl space-y-6">
+    <div className="min-h-screen w-full bg-slate-50 px-4 py-6 sm:px-6 sm:py-8 md:px-8 md:py-9 lg:px-10 lg:py-10 min-[1600px]:px-12">
+      <div className="w-full max-w-none space-y-6 md:space-y-8">
         {/* Quick action cards */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid w-full grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           <QuickActionCard
             icon={FaBuilding}
-            iconTone="bg-indigo-50 text-indigo-600"
+            iconGradient="bg-gradient-to-br from-blue-600 to-blue-900"
             title="Occupancy"
             description="View current occupancy and room status"
             buttonLabel="View Occupancy"
@@ -428,7 +537,7 @@ const HotelDashboardHome = () => {
           />
           <QuickActionCard
             icon={FaBed}
-            iconTone="bg-sky-50 text-sky-600"
+            iconGradient="bg-gradient-to-br from-yellow-400 to-orange-600"
             title="Add Room"
             description="Add new room to inventory"
             buttonLabel="Add Room"
@@ -436,7 +545,7 @@ const HotelDashboardHome = () => {
           />
           <QuickActionCard
             icon={FaUserPlus}
-            iconTone="bg-emerald-50 text-emerald-600"
+            iconGradient="bg-gradient-to-br from-emerald-400 to-emerald-600"
             title="Guest Profile"
             description="View and manage guest profiles"
             buttonLabel="View Profiles"
@@ -444,7 +553,7 @@ const HotelDashboardHome = () => {
           />
           <QuickActionCard
             icon={FaBolt}
-            iconTone="bg-violet-50 text-violet-600"
+            iconGradient="bg-gradient-to-br from-violet-500 to-indigo-700"
             title="Book Now"
             description="Quick booking for walk-in guest"
             buttonLabel="Book Now"
@@ -452,246 +561,317 @@ const HotelDashboardHome = () => {
           />
         </div>
 
-        {/* Occupancy overview */}
-        <div className="rounded-2xl border border-slate-100 bg-white p-5 sm:p-6 shadow-sm">
-          <h2 className="mb-5 text-lg font-bold text-slate-900">Occupancy Overview</h2>
+        {/* Occupancy overview — the visual highlight of the page */}
+        <div className="w-full overflow-hidden rounded-[28px] border border-slate-100 bg-white p-6 sm:p-7 md:p-8 shadow-[0_8px_30px_rgba(15,23,42,0.06)]">
+          {/* Header row: icon + title/subtitle on the left, Live Updates badge on the right */}
+          <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+            <div className="flex items-start gap-4">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-900 via-blue-700 to-sky-500 text-white shadow-[0_8px_20px_-6px_rgba(30,64,175,0.5)]">
+                <FaChartPie className="text-2xl" />
+              </div>
+              <div>
+                <h2 className="text-2xl sm:text-[28px] md:text-[34px] font-extrabold leading-tight text-blue-950">
+                  Occupancy Overview
+                </h2>
+                <p className="mt-1 text-[15px] sm:text-[16px] text-slate-500">
+                  Real-time room status across your property
+                </p>
+              </div>
+            </div>
+            <div className="rounded-2xl bg-slate-50 px-4 py-2.5 sm:px-5 sm:py-3">
+              <div className="flex items-center gap-2 text-[14px] sm:text-[15px] font-bold text-slate-800">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                </span>
+                Live Updates
+              </div>
+              <div className="mt-0.5 text-[12px] sm:text-[13px] text-slate-400">
+                Last updated: {lastUpdatedLabel}
+              </div>
+            </div>
+          </div>
+
           {loading ? (
-            <div className="py-10 text-center text-slate-400">Loading occupancy…</div>
+            <div className="py-14 text-center text-slate-400">Loading occupancy…</div>
           ) : (
-            <div className="grid grid-cols-1 items-center gap-6 lg:grid-cols-[auto_1fr_auto]">
-              <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-center">
-                <OccupancyDonut
-                  occupied={occupiedCount}
-                  available={availableCount}
-                  outOfService={outOfServiceCount}
-                  occupiedPct={occupiedPct}
+            <div className="grid w-full grid-cols-1 gap-6 lg:grid-cols-[440px_1fr] xl:grid-cols-[480px_1fr]">
+              {/* Overall Occupancy card */}
+              <div className="rounded-[26px] border border-slate-100 bg-white p-6 sm:p-8">
+                <div className="mb-6 flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                    <FaChartLine className="text-[16px]" />
+                  </div>
+                  <h3 className="text-lg sm:text-xl font-extrabold text-blue-950">Overall Occupancy</h3>
+                </div>
+
+                <div className="flex justify-center">
+                  <OccupancyDonut
+                    occupied={occupiedCount}
+                    available={availableCount}
+                    outOfService={outOfServiceCount}
+                    occupiedPct={occupiedPct}
+                  />
+                </div>
+
+                <div className="mt-7 divide-y divide-slate-100 border-t border-slate-100">
+                  <div className="flex items-center justify-between gap-2 py-3.5">
+                    <span className="flex items-center gap-2.5">
+                      <span className="h-2.5 w-2.5 rounded-full bg-blue-600" />
+                      <span className="text-[14px] sm:text-[15px] font-semibold text-slate-700">Occupied Rooms</span>
+                    </span>
+                    <span className="text-[14px] sm:text-[15px] font-bold text-slate-900">
+                      {occupiedCount} ({occupiedPct}%)
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between gap-2 py-3.5">
+                    <span className="flex items-center gap-2.5">
+                      <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                      <span className="text-[14px] sm:text-[15px] font-semibold text-slate-700">Available Rooms</span>
+                    </span>
+                    <span className="text-[14px] sm:text-[15px] font-bold text-slate-900">
+                      {availableCount} ({availablePct}%)
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between gap-2 py-3.5">
+                    <span className="flex items-center gap-2.5">
+                      <span className="h-2.5 w-2.5 rounded-full bg-amber-500" />
+                      <span className="text-[14px] sm:text-[15px] font-semibold text-slate-700">Out of Service</span>
+                    </span>
+                    <span className="text-[14px] sm:text-[15px] font-bold text-slate-900">
+                      {outOfServiceCount} ({outOfServicePct}%)
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Stat cards — narrow, minimum-width tiles that fill the
+                  remaining space left by the wider Overall Occupancy card */}
+              <div className=" w-full grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+                <StatCard
+                  icon={FaBuilding}
+                  label="Total Rooms"
+                  value={totalRooms}
+                  cardBg="bg-gradient-to-br from-blue-50 to-blue-100/50"
+                  iconBg="bg-gradient-to-br from-blue-600 to-blue-800"
+                  waveBg="bg-blue-100/70"
+                  accent="text-blue-600"
                 />
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2">
-                    <span className="h-2.5 w-2.5 rounded-full bg-indigo-500" />
-                    <span className="text-slate-600">Occupied Rooms</span>
-                    <span className="font-bold text-slate-900">{occupiedCount} ({occupiedPct}%)</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
-                    <span className="text-slate-600">Available Rooms</span>
-                    <span className="font-bold text-slate-900">{availableCount} ({availablePct}%)</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="h-2.5 w-2.5 rounded-full bg-amber-500" />
-                    <span className="text-slate-600">Out of Service</span>
-                    <span className="font-bold text-slate-900">{outOfServiceCount} ({outOfServicePct}%)</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-center gap-3 rounded-2xl bg-indigo-50/60 p-4">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-600 text-white">
-                  <FaBuilding />
-                </div>
-                <div>
-                  <div className="text-xs font-semibold uppercase text-slate-400">Total Rooms</div>
-                  <div className="text-2xl font-black text-slate-900">{totalRooms}</div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="flex items-center gap-3 rounded-2xl bg-emerald-50 p-4">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500 text-white">
-                    <FaSignInAlt className="text-sm" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-semibold text-emerald-700">Check-in Today</div>
-                    <div className="text-xl font-black text-emerald-900">{checkInToday}</div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 rounded-2xl bg-rose-50 p-4">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-rose-500 text-white">
-                    <FaSignOutAlt className="text-sm" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-semibold text-rose-700">Check-out Today</div>
-                    <div className="text-xl font-black text-rose-900">{checkOutToday}</div>
-                  </div>
-                </div>
+                <StatCard
+                  icon={FaBed}
+                  label="Occupied Rooms"
+                  value={occupiedCount}
+                  cardBg="bg-gradient-to-br from-violet-50 to-purple-100/50"
+                  iconBg="bg-gradient-to-br from-violet-500 to-purple-700"
+                  waveBg="bg-violet-100/70"
+                  accent="text-violet-600"
+                />
+                <StatCard
+                  icon={FaDoorOpen}
+                  label="Available Rooms"
+                  value={availableCount}
+                  cardBg="bg-gradient-to-br from-emerald-50 to-emerald-100/50"
+                  iconBg="bg-gradient-to-br from-emerald-500 to-emerald-600"
+                  waveBg="bg-emerald-100/70"
+                  accent="text-emerald-600"
+                />
+                <StatCard
+                  icon={FaSignInAlt}
+                  label="Check-in Today"
+                  value={checkInToday}
+                  cardBg="bg-gradient-to-br from-yellow-50 to-orange-100/50"
+                  iconBg="bg-gradient-to-br from-yellow-400 to-orange-500"
+                  waveBg="bg-yellow-100/70"
+                  accent="text-yellow-600"
+                />
+                <StatCard
+                  icon={FaSignOutAlt}
+                  label="Check-out Today"
+                  value={checkOutToday}
+                  cardBg="bg-gradient-to-br from-rose-50 to-rose-100/50"
+                  iconBg="bg-gradient-to-br from-rose-400 to-rose-600"
+                  waveBg="bg-rose-100/70"
+                  accent="text-rose-600"
+                />
               </div>
             </div>
           )}
         </div>
 
-
         {/* All Bookings */}
-        <div className="rounded-2xl border border-slate-100 bg-white p-5 sm:p-6 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-bold text-slate-900">All Bookings</h2>
-            <button type="button" onClick={onViewAllBookings} className="flex items-center gap-1 text-sm font-semibold text-indigo-600 hover:text-indigo-700">
-              View All <FaChevronRight className="text-xs" />
-            </button>
-          </div>
+        <div className="w-full rounded-[24px] border border-blue-100/50 bg-white p-6 sm:p-7 md:p-8 shadow-[0_8px_30px_rgba(15,23,42,0.06)]">
+          <SectionHeader icon={FaClipboardList} title="All Bookings" onViewAll={onViewAllBookings} />
           {loading ? (
             <div className="py-8 text-center text-slate-400">Loading bookings…</div>
           ) : recentBookings.length === 0 ? (
             <div className="py-8 text-center text-slate-400">No bookings found.</div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[760px] text-left text-sm">
-                <thead className="text-xs font-bold uppercase text-slate-400">
-                  <tr>
-                    <th className="py-2.5 pr-4">Booking ID</th>
-                    <th className="py-2.5 pr-4">Guest Name</th>
-                    <th className="py-2.5 pr-4">Room No.</th>
-                    <th className="py-2.5 pr-4">Room Type</th>
-                    <th className="py-2.5 pr-4">Check-in</th>
-                    <th className="py-2.5 pr-4">Check-out</th>
-                    <th className="py-2.5 pr-4">Status</th>
-                    <th className="py-2.5 pr-4">Amount</th>
-                    <th className="py-2.5">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {recentBookings.map((b) => (
-                    <tr key={b.bookingId} className="hover:bg-slate-50/70">
-                      <td className="py-3 pr-4 font-bold text-slate-800">{b.bookingCode || `BK-${b.bookingId}`}</td>
-                      <td className="py-3 pr-4 text-slate-700">{b.guest_name || "Walk-in Guest"}</td>
-                      <td className="py-3 pr-4 text-slate-600">{b.rooms || "-"}</td>
-                      <td className="py-3 pr-4 text-slate-600">{getRoomType(b.rooms)}</td>
-                      <td className="py-3 pr-4 text-slate-600">{formatDate(b.check_in)}</td>
-                      <td className="py-3 pr-4 text-slate-600">{formatDate(b.check_out)}</td>
-                      <td className="py-3 pr-4">
-                        <span className={`rounded-full px-3 py-1 text-xs font-bold ${statusPill(b.booking_status)}`}>
-                          {b.booking_status || "Pending"}
-                        </span>
-                      </td>
-                      <td className="py-3 pr-4 font-semibold text-slate-800">{formatCurrency(b.totalAmount)}</td>
-                      <td className="py-3">
-                        <button type="button" onClick={() => onOpenBooking(b)} className="rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-slate-50">
-                          <FaEye className="text-xs" />
-                        </button>
-                      </td>
+            <div className="w-full overflow-hidden rounded-2xl border border-slate-100">
+              <div className="w-full overflow-x-auto">
+                <table className="w-full min-w-[820px] text-left">
+                  <thead className="sticky top-0 z-10 bg-gradient-to-r from-blue-50 to-sky-50/60 text-[15px] md:text-[16px] font-bold uppercase tracking-wide text-slate-500">
+                    <tr>
+                      <th className="py-4 pl-5 pr-6">Booking ID</th>
+                      <th className="py-4 pr-6">Guest Name</th>
+                      <th className="py-4 pr-6">Room No.</th>
+                      <th className="py-4 pr-6">Room Type</th>
+                      <th className="py-4 pr-6">Check-in</th>
+                      <th className="py-4 pr-6">Check-out</th>
+                      <th className="py-4 pr-6">Status</th>
+                      <th className="py-4 pr-6">Amount</th>
+                      <th className="py-4 pr-5">Action</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-[16px] md:text-[17px]">
+                    {recentBookings.map((b) => (
+                      <tr key={b.bookingId} className="transition hover:bg-blue-50/40">
+                        <td className="py-4 pl-5 pr-6 font-bold text-slate-800">{b.bookingCode || `BK-${b.bookingId}`}</td>
+                        <td className="py-4 pr-6 text-slate-700">{b.guest_name || "Walk-in Guest"}</td>
+                        <td className="py-4 pr-6 text-slate-600">{b.rooms || "-"}</td>
+                        <td className="py-4 pr-6 text-slate-600">{getRoomType(b.rooms)}</td>
+                        <td className="py-4 pr-6 text-slate-600">{formatDate(b.check_in)}</td>
+                        <td className="py-4 pr-6 text-slate-600">{formatDate(b.check_out)}</td>
+                        <td className="py-4 pr-6">
+                          <span className={`inline-flex items-center rounded-full px-4 py-1.5 text-xs sm:text-[13px] font-bold tracking-wide ${statusPill(b.booking_status)}`}>
+                            {b.booking_status || "Pending"}
+                          </span>
+                        </td>
+                        <td className="py-4 pr-6 font-semibold text-slate-800">{formatCurrency(b.totalAmount)}</td>
+                        <td className="py-4 pr-5">
+                          <button
+                            type="button"
+                            onClick={() => onOpenBooking(b)}
+                            className="rounded-xl border border-blue-100 bg-blue-50/60 p-2.5 text-blue-600 shadow-sm transition hover:bg-gradient-to-br hover:from-blue-600 hover:to-sky-500 hover:text-white"
+                          >
+                            <FaEye className="text-[15px]" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </div>
 
         {/* Booking History */}
-        <div className="rounded-2xl border border-slate-100 bg-white p-5 sm:p-6 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-bold text-slate-900">Booking History</h2>
-            <button type="button" onClick={onViewBookingHistory} className="flex items-center gap-1 text-sm font-semibold text-indigo-600 hover:text-indigo-700">
-              View All <FaChevronRight className="text-xs" />
-            </button>
-          </div>
+        <div className="w-full rounded-[24px] border border-blue-100/50 bg-white p-6 sm:p-7 md:p-8 shadow-[0_8px_30px_rgba(15,23,42,0.06)]">
+          <SectionHeader icon={FaHistory} title="Booking History" onViewAll={onViewBookingHistory} />
           {loading ? (
             <div className="py-8 text-center text-slate-400">Loading history…</div>
           ) : recentHistory.length === 0 ? (
             <div className="py-8 text-center text-slate-400">No booking history yet.</div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[720px] text-left text-sm">
-                <thead className="text-xs font-bold uppercase text-slate-400">
-                  <tr>
-                    <th className="py-2.5 pr-4">Booking ID</th>
-                    <th className="py-2.5 pr-4">Guest Name</th>
-                    <th className="py-2.5 pr-4">Room Type</th>
-                    <th className="py-2.5 pr-4">Check-in</th>
-                    <th className="py-2.5 pr-4">Check-out</th>
-                    <th className="py-2.5 pr-4">Total Amount</th>
-                    <th className="py-2.5">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {recentHistory.map((row) => (
-                    <tr key={row.bookingId} className="hover:bg-slate-50/70">
-                      <td className="py-3 pr-4 font-bold text-slate-800">{row.bookingCode || `BK-${row.bookingId}`}</td>
-                      <td className="py-3 pr-4 text-slate-700">{row.guest_name || "Guest"}</td>
-                      <td className="py-3 pr-4 text-slate-600">{getRoomType(row.rooms || row.roomDetails)}</td>
-                      <td className="py-3 pr-4 text-slate-600">{formatDate(row.check_in)}</td>
-                      <td className="py-3 pr-4 text-slate-600">{formatDate(row.check_out)}</td>
-                      <td className="py-3 pr-4 font-semibold text-slate-800">{formatCurrency(row.totalAmount)}</td>
-                      <td className="py-3">
-                        <span className={`rounded-full px-3 py-1 text-xs font-bold ${Number(row.remainingAmount) > 0 ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"}`}>
-                          {Number(row.remainingAmount) > 0 ? "Balance Due" : "Completed"}
-                        </span>
-                      </td>
+            <div className="w-full overflow-hidden rounded-2xl border border-slate-100">
+              <div className="w-full overflow-x-auto">
+                <table className="w-full min-w-[760px] text-left">
+                  <thead className="sticky top-0 z-10 bg-gradient-to-r from-blue-50 to-sky-50/60 text-[15px] md:text-[16px] font-bold uppercase tracking-wide text-slate-500">
+                    <tr>
+                      <th className="py-4 pl-5 pr-6">Booking ID</th>
+                      <th className="py-4 pr-6">Guest Name</th>
+                      <th className="py-4 pr-6">Room Type</th>
+                      <th className="py-4 pr-6">Check-in</th>
+                      <th className="py-4 pr-6">Check-out</th>
+                      <th className="py-4 pr-6">Total Amount</th>
+                      <th className="py-4 pr-5">Status</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-[16px] md:text-[17px]">
+                    {recentHistory.map((row) => (
+                      <tr key={row.bookingId} className="transition hover:bg-blue-50/40">
+                        <td className="py-4 pl-5 pr-6 font-bold text-slate-800">{row.bookingCode || `BK-${row.bookingId}`}</td>
+                        <td className="py-4 pr-6 text-slate-700">{row.guest_name || "Guest"}</td>
+                        <td className="py-4 pr-6 text-slate-600">{getRoomType(row.rooms || row.roomDetails)}</td>
+                        <td className="py-4 pr-6 text-slate-600">{formatDate(row.check_in)}</td>
+                        <td className="py-4 pr-6 text-slate-600">{formatDate(row.check_out)}</td>
+                        <td className="py-4 pr-6 font-semibold text-slate-800">{formatCurrency(row.totalAmount)}</td>
+                        <td className="py-4 pr-5">
+                          <Badge variant={Number(row.remainingAmount) > 0 ? "balance" : "completed"}>
+                            {Number(row.remainingAmount) > 0 ? "Balance Due" : "Completed"}
+                          </Badge>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </div>
 
         {/* Payment History */}
-        <div className="rounded-2xl border border-slate-100 bg-white p-5 sm:p-6 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-bold text-slate-900">Payment History</h2>
-            <button type="button" onClick={onViewPaymentHistory} className="flex items-center gap-1 text-sm font-semibold text-indigo-600 hover:text-indigo-700">
-              View All <FaChevronRight className="text-xs" />
-            </button>
-          </div>
+        <div className="w-full rounded-[24px] border border-blue-100/50 bg-white p-6 sm:p-7 md:p-8 shadow-[0_8px_30px_rgba(15,23,42,0.06)]">
+          <SectionHeader icon={FaWallet} title="Payment History" onViewAll={onViewPaymentHistory} />
           {paymentsLoading ? (
             <div className="py-8 text-center text-slate-400">Loading payments…</div>
           ) : payments.length === 0 ? (
             <div className="py-8 text-center text-slate-400">No payment records found.</div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[720px] text-left text-sm">
-                <thead className="text-xs font-bold uppercase text-slate-400">
-                  <tr>
-                    <th className="py-2.5 pr-4">Payment ID</th>
-                    <th className="py-2.5 pr-4">Booking ID</th>
-                    <th className="py-2.5 pr-4">Guest Name</th>
-                    <th className="py-2.5 pr-4">Amount</th>
-                    <th className="py-2.5 pr-4">Payment Method</th>
-                    <th className="py-2.5 pr-4">Payment Date</th>
-                    <th className="py-2.5">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {payments.map((p) => (
-                    <tr key={p.id} className="hover:bg-slate-50/70">
-                      <td className="py-3 pr-4 font-bold text-slate-800">PAY-{String(p.id).slice(-4)}</td>
-                      <td className="py-3 pr-4 text-slate-600">{p.bookingCode}</td>
-                      <td className="py-3 pr-4 text-slate-700">{p.guestName}</td>
-                      <td className="py-3 pr-4 font-semibold text-slate-800">{formatCurrency(p.amount)}</td>
-                      <td className="py-3 pr-4 text-slate-600">{p.paymentMode}</td>
-                      <td className="py-3 pr-4 text-slate-600">{formatDate(p.createdAt)}</td>
-                      <td className="py-3 flex items-center gap-2">
-                        <span className={`rounded-full px-3 py-1 text-xs font-bold ${p.status === "Paid" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
-                          {p.status}
-                        </span>
-                        <FaDownload className="text-xs text-slate-400" />
-                      </td>
+            <div className="w-full overflow-hidden rounded-2xl border border-slate-100">
+              <div className="w-full overflow-x-auto">
+                <table className="w-full min-w-[760px] text-left">
+                  <thead className="sticky top-0 z-10 bg-gradient-to-r from-blue-50 to-sky-50/60 text-[15px] md:text-[16px] font-bold uppercase tracking-wide text-slate-500">
+                    <tr>
+                      <th className="py-4 pl-5 pr-6">Payment ID</th>
+                      <th className="py-4 pr-6">Booking ID</th>
+                      <th className="py-4 pr-6">Guest Name</th>
+                      <th className="py-4 pr-6">Amount</th>
+                      <th className="py-4 pr-6">Payment Method</th>
+                      <th className="py-4 pr-6">Payment Date</th>
+                      <th className="py-4 pr-5">Status</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-[16px] md:text-[17px]">
+                    {payments.map((p) => (
+                      <tr key={p.id} className="transition hover:bg-blue-50/40">
+                        <td className="py-4 pl-5 pr-6 font-bold text-slate-800">PAY-{String(p.id).slice(-4)}</td>
+                        <td className="py-4 pr-6 text-slate-600">{p.bookingCode}</td>
+                        <td className="py-4 pr-6 text-slate-700">{p.guestName}</td>
+                        <td className="py-4 pr-6 font-semibold text-slate-800">{formatCurrency(p.amount)}</td>
+                        <td className="py-4 pr-6 text-slate-600">{p.paymentMode}</td>
+                        <td className="py-4 pr-6 text-slate-600">{formatDate(p.createdAt)}</td>
+                        <td className="py-4 pr-5">
+                          <div className="flex items-center gap-2.5">
+                            <Badge variant={p.status === "Paid" ? "paid" : "pending"}>{p.status}</Badge>
+                            <button
+                              type="button"
+                              className="rounded-lg border border-slate-200 p-2 text-slate-500 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600"
+                              aria-label="Download receipt"
+                            >
+                              <FaDownload className="text-[13px]" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </div>
 
         {/* Occupancy Forecast Modal */}
         {showOccupancyForecast && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/45 px-4 py-6 backdrop-blur-sm">
-            <div className="relative max-h-[90vh] w-full max-w-6xl overflow-y-auto rounded-[28px] bg-white shadow-[0_30px_90px_rgba(15,23,42,0.35)]">
-              <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-slate-100 bg-white/95 px-5 py-4 backdrop-blur">
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/55 p-2 sm:p-4 backdrop-blur-sm">
+            <div className="relative flex h-full max-h-[1500px] w-full max-w-[1700px] flex-col overflow-y-auto rounded-[32px] bg-white shadow-[0_30px_90px_rgba(15,23,42,0.35)]">
+              <div className="h-1.5 w-full bg-gradient-to-r from-blue-900 via-blue-600 to-sky-500" />
+              <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-slate-100 bg-white/95 px-6 py-5 sm:px-8 sm:py-6 backdrop-blur">
                 <div>
-                  <h3 className="text-lg font-black text-slate-900">Occupancy Forecast</h3>
-                  <p className="mt-1 text-sm text-slate-500">Detailed room occupancy analysis and forecast</p>
+                  <h3 className="text-2xl sm:text-[28px] font-extrabold text-slate-900">Occupancy Forecast</h3>
+                  <p className="mt-1 text-[15px] sm:text-[16px] text-slate-500">Detailed room occupancy analysis and forecast</p>
                 </div>
                 <button
                   type="button"
                   aria-label="Close modal"
                   onClick={() => setShowOccupancyForecast(false)}
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50"
+                  className="flex h-11 w-11 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50"
                 >
-                  <FaTimes />
+                  <FaTimes className="text-lg" />
                 </button>
               </div>
-              <div className="p-4 sm:p-5">
+              <div className="p-5 sm:p-7">
                 <OccupancyForecast onClose={() => setShowOccupancyForecast(false)} />
               </div>
             </div>
@@ -700,23 +880,24 @@ const HotelDashboardHome = () => {
 
         {/* Room Modal */}
         {showRoomModal && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/45 px-4 py-6 backdrop-blur-sm">
-            <div className="relative max-h-[90vh] w-full max-w-6xl overflow-y-auto rounded-[28px] bg-white shadow-[0_30px_90px_rgba(15,23,42,0.35)]">
-              <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-slate-100 bg-white/95 px-5 py-4 backdrop-blur">
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/55 p-2 sm:p-4 backdrop-blur-sm">
+            <div className="relative flex h-full max-h-[1500px] w-full max-w-[1700px] flex-col overflow-y-auto rounded-[32px] bg-white shadow-[0_30px_90px_rgba(15,23,42,0.35)]">
+              <div className="h-1.5 w-full bg-gradient-to-r from-blue-900 via-blue-600 to-sky-500" />
+              <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-slate-100 bg-white/95 px-6 py-5 sm:px-8 sm:py-6 backdrop-blur">
                 <div>
-                  <h3 className="text-lg font-black text-slate-900">Add Room</h3>
-                  <p className="mt-1 text-sm text-slate-500">Add new room to inventory</p>
+                  <h3 className="text-2xl sm:text-[28px] font-extrabold text-slate-900">Add Room</h3>
+                  <p className="mt-1 text-[15px] sm:text-[16px] text-slate-500">Add new room to inventory</p>
                 </div>
                 <button
                   type="button"
                   aria-label="Close modal"
                   onClick={() => setShowRoomModal(false)}
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50"
+                  className="flex h-11 w-11 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50"
                 >
-                  <FaTimes />
+                  <FaTimes className="text-lg" />
                 </button>
               </div>
-              <div className="p-4 sm:p-5">
+              <div className="p-5 sm:p-7">
                 <Room />
               </div>
             </div>
@@ -725,23 +906,24 @@ const HotelDashboardHome = () => {
 
         {/* Guest Profile Modal */}
         {showGuestProfile && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/45 px-4 py-6 backdrop-blur-sm">
-            <div className="relative max-h-[90vh] w-full max-w-6xl overflow-y-auto rounded-[28px] bg-white shadow-[0_30px_90px_rgba(15,23,42,0.35)]">
-              <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-slate-100 bg-white/95 px-5 py-4 backdrop-blur">
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/55 p-2 sm:p-4 backdrop-blur-sm">
+            <div className="relative flex h-full max-h-[1500px] w-full max-w-[1700px] flex-col overflow-y-auto rounded-[32px] bg-white shadow-[0_30px_90px_rgba(15,23,42,0.35)]">
+              <div className="h-1.5 w-full bg-gradient-to-r from-blue-900 via-blue-600 to-sky-500" />
+              <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-slate-100 bg-white/95 px-6 py-5 sm:px-8 sm:py-6 backdrop-blur">
                 <div>
-                  <h3 className="text-lg font-black text-slate-900">Guest Profile</h3>
-                  <p className="mt-1 text-sm text-slate-500">Manage guest profiles and reservations</p>
+                  <h3 className="text-2xl sm:text-[28px] font-extrabold text-slate-900">Guest Profile</h3>
+                  <p className="mt-1 text-[15px] sm:text-[16px] text-slate-500">Manage guest profiles and reservations</p>
                 </div>
                 <button
                   type="button"
                   aria-label="Close modal"
                   onClick={() => setShowGuestProfile(false)}
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50"
+                  className="flex h-11 w-11 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50"
                 >
-                  <FaTimes />
+                  <FaTimes className="text-lg" />
                 </button>
               </div>
-              <div className="p-4 sm:p-5">
+              <div className="p-5 sm:p-7">
                 <GuestProfile onClose={() => setShowGuestProfile(false)} />
               </div>
             </div>
@@ -770,10 +952,10 @@ const Hotel = () => {
     FULL_WIDTH_PATHS.some((p) => location.pathname.includes(`/hotel/${p}`));
 
   return (
-    <div className="min-h-screen w-full bg-[radial-gradient(circle_at_top,_rgba(14,165,233,0.16),_transparent_24%),linear-gradient(180deg,#f8fbff_0%,#f7fffb_55%,#fff8ef_100%)] p-4 sm:p-6">
-      <div className="w-full space-y-5">
+    <div className="min-h-screen w-full max-w-none bg-[radial-gradient(circle_at_top,_rgba(30,64,175,0.10),_transparent_35%),linear-gradient(180deg,#f5f8ff_0%,#ffffff_45%,#f6faff_100%)] px-4 py-4 sm:px-6 sm:py-6 md:px-8 md:py-8 lg:px-10 lg:py-10 min-[1600px]:px-12">
+      <div className="w-full max-w-none space-y-5">
         {!isBookingFlowPage ? (
-          <div className="rounded-[28px] border border-white/70 bg-white/80 p-4 shadow-[0_15px_45px_rgba(15,23,42,0.08)] backdrop-blur">
+          <div className="w-full rounded-[28px] border border-blue-100/60 bg-white/80 p-4 shadow-[0_15px_45px_rgba(30,64,175,0.08)] backdrop-blur">
             <BookingSteps />
           </div>
         ) : null}
@@ -781,8 +963,8 @@ const Hotel = () => {
         <div
           className={
             isBookingFlowPage
-              ? "w-full"
-              : "rounded-[30px] border border-white/70 bg-white/80 p-4 shadow-[0_18px_55px_rgba(15,23,42,0.08)] backdrop-blur"
+              ? "w-full max-w-none"
+              : "w-full max-w-none rounded-[30px] border border-blue-100/60 bg-white/80 p-4 shadow-[0_18px_55px_rgba(30,64,175,0.08)] backdrop-blur"
           }
         >
           <Routes>
