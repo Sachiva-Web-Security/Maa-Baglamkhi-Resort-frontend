@@ -37,11 +37,10 @@ import {
   STATUS_META,
   todayISO,
 } from "./stayoverUtils";
-import {
-  getCleaningTasks,
-  removeCleaningTask,
-  upsertCleaningTask,
-} from "../Hotel/bookingSession";
+// Cleaning-task state used to be stored in localStorage via the
+// bookingSession helpers. That logic has been moved to MySQL (the
+// `hk_messages` table). See /housekeeping/notifications, /housekeeping/message,
+// /housekeeping/assignee/:id and /housekeeping/status/:id endpoints.
 
 const getHousekeepingUsers = (users) =>
   (Array.isArray(users) ? users : [])
@@ -101,7 +100,7 @@ const Stayover = () => {
   const [selectedAssignee, setSelectedAssignee] = useState("");
   const [selectedCleaningMinutes, setSelectedCleaningMinutes] = useState(30);
   const [assigningCleaning, setAssigningCleaning] = useState(false);
-  const [cleaningTaskStamp, setCleaningTaskStamp] = useState(0);
+  const [cleaningNotifications, setCleaningNotifications] = useState([]);
   const [bookingDateDraft, setBookingDateDraft] = useState({ checkIn: "", checkOut: "" });
   const [savingBookingDates, setSavingBookingDates] = useState(false);
   const [actionPopup, setActionPopup] = useState({ open: false, type: "success", message: "" });
@@ -110,6 +109,16 @@ const Stayover = () => {
 // format: `${room.id}-${date}`
   const showActionPopup = React.useCallback((type, message) => {
     setActionPopup({ open: true, type, message });
+  }, []);
+
+  const fetchCleaningNotifications = React.useCallback(async () => {
+    try {
+      const res = await API.get("/housekeeping/notifications");
+      setCleaningNotifications(Array.isArray(res.data) ? res.data : []);
+    } catch (error) {
+      console.error("Notifications fetch failed", error);
+      setCleaningNotifications([]);
+    }
   }, []);
 
   const loadData = React.useCallback(async (silent = false) => {
@@ -148,7 +157,8 @@ const Stayover = () => {
 
   useEffect(() => {
     loadData();
-  }, [loadData]);
+    fetchCleaningNotifications();
+  }, [loadData, fetchCleaningNotifications]);
 
   useEffect(() => {
     const handleFocus = () => {
@@ -179,38 +189,64 @@ const Stayover = () => {
     let mounted = true;
 
     const syncExpiredCleaningTasks = async () => {
-      const tasks = getCleaningTasks();
+      // Source of truth = /housekeeping/notifications (the hk_messages table).
+      let tasks = [];
+      try {
+        const res = await API.get("/housekeeping/notifications");
+        tasks = Array.isArray(res.data) ? res.data : [];
+      } catch (error) {
+        console.error("Notifications fetch failed", error);
+        return;
+      }
+
       const now = Date.now();
       let changed = false;
 
-      for (const [roomKey, task] of Object.entries(tasks)) {
-        const dueAt = task?.dueAt ? new Date(task.dueAt).getTime() : 0;
-        if (dueAt && now >= dueAt) {
-          try {
-            await API.put(`/housekeeping/status/${task.roomId || roomKey}`, {
-              status: "Vacant Clean",
-            });
-          } catch (error) {
-            console.error("Auto release failed", error);
-          }
+      for (const task of tasks) {
+        const dueAt = task?.dueAt || task?.due_at;
+        const dueMs = dueAt ? new Date(dueAt).getTime() : 0;
+        const completed =
+          task?.status === "Completed" || task?.completedAt || task?.completed_at;
+        if (!dueMs || completed || now < dueMs) continue;
 
-          pushDashboardNotification({
-            title: `Cleaning completed - Room ${task.roomNumber || roomKey}`,
-            message: `Room ${task.roomNumber || roomKey} is available again.`,
-            type: "success",
-            route: "/housekeeping",
+        const taskRoom =
+          task.roomId ||
+          task.room_id ||
+          task.roomNo ||
+          task.room_no ||
+          task.room;
+        if (!taskRoom) continue;
+
+        try {
+          await API.put(`/housekeeping/status/${taskRoom}`, {
+            status: "Vacant Clean",
           });
-
-          removeCleaningTask(roomKey);
-          setCleaningTaskStamp((value) => value + 1);
-          changed = true;
+        } catch (error) {
+          console.error("Auto release failed", error);
         }
+
+        try {
+          if (task.id) {
+            await API.put(`/housekeeping/notifications/${task.id}/complete`);
+          }
+        } catch (error) {
+          console.error("Mark complete failed", error);
+        }
+
+        pushDashboardNotification({
+          title: `Cleaning completed - Room ${taskRoom}`,
+          message: `Room ${taskRoom} is available again.`,
+          type: "success",
+          route: "/housekeeping",
+        });
+
+        changed = true;
       }
 
       if (!mounted) return;
-
       if (changed) {
         await loadData(true);
+        await fetchCleaningNotifications();
       }
     };
 
@@ -220,7 +256,7 @@ const Stayover = () => {
       mounted = false;
       globalThis.clearInterval(timer);
     };
-  }, [loadData]);
+  }, [loadData, fetchCleaningNotifications]);
 
   useEffect(() => {
     if (!location.state?.startDate) return;
@@ -327,14 +363,27 @@ const Stayover = () => {
   }, [activeBookingsPage, totalActiveBookingPages]);
 
   const activeCleaningTasks = useMemo(() => {
-    const tasks = getCleaningTasks();
-    return Object.entries(tasks)
-      .map(([roomKey, task]) => ({
-        roomKey,
-        ...task,
+    return cleaningNotifications
+      .filter(
+        (n) =>
+          n.status !== "Completed" && !n.completedAt && !n.completed_at,
+      )
+      .map((n) => ({
+        roomKey:
+          n.roomId ||
+          n.room_id ||
+          n.roomNo ||
+          n.room_no ||
+          n.room,
+        roomId: n.roomId || n.room_id,
+        roomNumber: n.roomNo || n.room_no || n.room,
+        assignee: n.assignedTo || n.assigned_to,
+        minutes: n.minutes,
+        dueAt: n.dueAt || n.due_at,
+        status: n.status,
       }))
-      .filter((task) => task?.assignee || task?.dueAt || task?.minutes);
-  }, [loading, refreshing, hasLoadedOnce, cleaningTaskStamp]);
+      .filter((task) => task?.assignee || task?.dueAt);
+  }, [cleaningNotifications]);
 
   const busyHousekeepers = useMemo(() => {
     const busy = new Set();
@@ -456,19 +505,21 @@ const Stayover = () => {
   useEffect(() => {
     if (!selectedRoom) return;
 
-    const roomId = selectedRoom.roomData?.id || selectedRoom.roomId || selectedRoom.roomNumber;
+    const roomId =
+      selectedRoom.roomData?.id || selectedRoom.roomId || selectedRoom.roomNumber;
     const assignee = selectedRoom.roomData?.assignee;
 
-    try {
-      const tasks = getCleaningTasks();
-      const task = tasks[String(roomId)];
-      setSelectedAssignee(task?.assignee || (assignee && assignee !== "No Housekeeper" ? assignee : housekeepers[0] || ""));
-      setSelectedCleaningMinutes(task?.minutes ? Number(task.minutes) || 30 : 30);
-    } catch {
-      setSelectedAssignee(assignee && assignee !== "No Housekeeper" ? assignee : housekeepers[0] || "");
-      setSelectedCleaningMinutes(30);
-    }
-  }, [selectedRoom, housekeepers]);
+    const task = activeCleaningTasks.find(
+      (t) => String(t.roomKey) === String(roomId),
+    );
+    setSelectedAssignee(
+      task?.assignee ||
+        (assignee && assignee !== "No Housekeeper"
+          ? assignee
+          : housekeepers[0] || ""),
+    );
+    setSelectedCleaningMinutes(task?.minutes ? Number(task.minutes) || 30 : 30);
+  }, [selectedRoom, housekeepers, activeCleaningTasks]);
 
   useEffect(() => {
     setBookingDateDraft({
@@ -591,19 +642,26 @@ const Stayover = () => {
       setAssigningCleaning(true);
       await API.put(`/housekeeping/assignee/${roomId}`, { assignee: selectedAssignee });
       await API.put(`/housekeeping/status/${roomId}`, { status: "Vacant Dirty" });
-      upsertCleaningTask(roomId, {
+
+      const receptionist =
+        localStorage.getItem("name") ||
+        localStorage.getItem("email") ||
+        "Front Desk";
+      const roomLabel = selectedRoom.roomNumber || roomId;
+      const roomType = selectedRoom.roomData?.categoryName || "";
+
+      await API.post("/housekeeping/message", {
         roomId,
-        roomNumber: selectedRoom.roomNumber,
-        roomType: selectedRoom.roomData?.categoryName || selectedRoom.roomType || "Room",
-        assignee: selectedAssignee,
-        minutes: selectedCleaningMinutes,
-        status: "dirty",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        startedAt: new Date().toISOString(),
-        dueAt: new Date(Date.now() + Number(selectedCleaningMinutes || 30) * 60000).toISOString(),
+        roomNo: roomId,
+        assignedTo: selectedAssignee,
+        receptionist,
+        message: `Cleaning assigned for Room ${roomLabel}${roomType ? ` (${roomType})` : ""} — please complete within ${selectedCleaningMinutes} minutes.`,
+        taskLabel: "Manual Cleaning Assignment",
+        dueAt: new Date(
+          Date.now() + Number(selectedCleaningMinutes || 30) * 60000,
+        ).toISOString(),
       });
-      setCleaningTaskStamp((value) => value + 1);
+
       pushDashboardNotification({
         title: `Cleaning assigned - Room ${selectedRoom.roomNumber}`,
         message: `Assigned to ${selectedAssignee} for ${selectedCleaningMinutes} min`,
@@ -611,6 +669,7 @@ const Stayover = () => {
         route: "/housekeeping",
       });
       await loadData(true);
+      await fetchCleaningNotifications();
       setSelectedRoom((prev) =>
         prev
           ? {
@@ -624,7 +683,10 @@ const Stayover = () => {
             }
           : prev,
       );
-      showActionPopup("success", "Cleaning assigned.");
+      showActionPopup(
+        "success",
+        `Cleaning assigned. Visible on /housekeepernotification.`,
+      );
     } catch (err) {
       console.error(err);
       showActionPopup("error", "Cleaning assign nahi ho paaya.");
@@ -643,9 +705,26 @@ const Stayover = () => {
     try {
       setAssigningCleaning(true);
       await API.put(`/housekeeping/status/${roomId}`, { status: "Vacant Clean" });
-      removeCleaningTask(roomId);
-      setCleaningTaskStamp((value) => value + 1);
+
+      // Also flip any matching hk_messages row to Completed so it leaves the
+      // /housekeepernotification feed as well.
+      const matchingTask = cleaningNotifications.find((n) => {
+        if (n.status === "Completed" || n.completedAt || n.completed_at) return false;
+        const ids = [n.roomId, n.room_id, n.roomNo, n.room_no, n.room]
+          .filter((value) => value !== undefined && value !== null && String(value).trim() !== "")
+          .map((value) => String(value).trim());
+        return ids.includes(String(roomId));
+      });
+      if (matchingTask?.id) {
+        try {
+          await API.put(`/housekeeping/notifications/${matchingTask.id}/complete`);
+        } catch (error) {
+          console.error("Mark complete failed", error);
+        }
+      }
+
       await loadData(true);
+      await fetchCleaningNotifications();
       setSelectedRoom((prev) =>
         prev
           ? {
