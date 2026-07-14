@@ -56,18 +56,38 @@ export default function HousekeeperNotification() {
     try {
       setLoading(true);
       setError("");
-      const response = await API.get("/housekeeping/notifications");
-      setNotifications(Array.isArray(response.data) ? response.data.map(normalizeNotification) : []);
+      // Admins/managers see everything; regular housekeepers only see their own.
+      // The backend supports `?assignee=` so we don't pull rows we'll have to hide.
+      const isPrivileged = ["admin", "manager"].includes(currentRole);
+      const params = isPrivileged ? {} : currentUser ? { assignee: currentUser } : { status: "None" };
+      const response = await API.get("/housekeeping/notifications", { params });
+      const rows = Array.isArray(response.data) ? response.data : [];
+      // Default: hide Completed unless the user is privileged and the call returned the full set.
+      const filtered = isPrivileged
+        ? rows
+        : rows.filter((row) => String(row.status).toLowerCase() !== "completed");
+      setNotifications(filtered.map(normalizeNotification));
     } catch {
       setError("Housekeeping notifications load nahi ho paaye.");
       setNotifications([]);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentRole, currentUser]);
 
   useEffect(() => {
     fetchNotifications();
+
+    // Auto-refresh so newly-assigned tasks from /stayover or /dashboard
+    // surface without a manual reload.
+    const intervalId = globalThis.setInterval(fetchNotifications, 30000);
+    const onFocus = () => fetchNotifications();
+    globalThis.addEventListener("focus", onFocus);
+
+    return () => {
+      globalThis.clearInterval(intervalId);
+      globalThis.removeEventListener("focus", onFocus);
+    };
   }, [fetchNotifications]);
 
   const canComplete = (item) => {
@@ -87,6 +107,9 @@ export default function HousekeeperNotification() {
 
     try {
       await API.put(`/housekeeping/notifications/${id}/complete`);
+      // Re-fetch so the row vanishes from the housekeeper's list
+      // (it's now Completed, which we filter out by default).
+      await fetchNotifications();
     } catch {
       setNotifications(previous);
       setError("Task complete update nahi ho paaya. Please retry.");
@@ -186,8 +209,21 @@ export default function HousekeeperNotification() {
             Loading housekeeping notifications...
           </div>
         ) : notifications.length === 0 ? (
-          <div className="rounded-3xl bg-white p-10 text-center text-lg font-semibold text-slate-500 shadow-xl">
-            No housekeeping notifications yet.
+          <div className="rounded-3xl bg-white p-10 text-center shadow-xl">
+            {currentUser ? (
+              <>
+                <p className="text-lg font-semibold text-slate-700">
+                  No housekeeping tasks assigned to {currentUser} yet.
+                </p>
+                <p className="mt-2 text-sm font-medium text-slate-500">
+                  Tasks assigned from the Stay Overview or Dashboard will show up here automatically.
+                </p>
+              </>
+            ) : (
+              <p className="text-lg font-semibold text-slate-700">
+                Please log in to view your housekeeping tasks.
+              </p>
+            )}
           </div>
         ) : (
           notifications.map((item) => {

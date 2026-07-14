@@ -33,7 +33,7 @@
 // -----------------------------------------------------------------------------
 
 import React, { useEffect, useMemo, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { jsPDF } from "jspdf";
 import {
   FaPlus,
@@ -74,7 +74,10 @@ import {
 
 import API, { getBackendBaseURL } from "../../api";
 import { todayISO } from "../Dashboard/stayoverUtils";
-import { setStoredBookingId, setStoredBookingCode } from "./bookingSession";
+import {
+  setStoredBookingId,
+  setStoredBookingCode,
+} from "./bookingSession";
 import FolioView from "./FolioView";
 import GroupBooking from "./GroupBooking";
 import OccupancyForecast from "./OccupancyForecast";
@@ -290,6 +293,19 @@ const formatDate = (value) => {
 };
 
 const uid = () => Math.random().toString(36).slice(2, 9);
+
+// Normalize a free-form room-type label into a comparable key:
+//   "AC ROOM"     -> "AC ROOM"
+//   "ac-room "    -> "AC ROOM"
+//   " Deluxe "    -> "DELUXE"
+// Used by the dashboard deep-link prefill to match the dashboard's roomType
+// (e.g. "AC ROOM") against the real backend category names from /hotel/rooms/setup.
+const normalizeRoomTypeName = (value) =>
+  String(value || "")
+    .trim()
+    .toUpperCase()
+    .replace(/[-_]+/g, " ")
+    .replace(/\s+/g, " ");
 
 const DOCUMENT_TYPE_LABELS = {
   checkin_form: "Check-in Form",
@@ -1018,7 +1034,29 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
 const BookingFlow = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const today = todayISO();
+
+  // Pull any room prefill data the dashboard may have passed along.
+  // Accepts both router state (location.state) and URL query params (?roomNo=..&roomType=..)
+  // so links from anywhere (preview modal, query string, future email/SMS deep-links)
+  // all land on a ready-to-go booking form with the room already locked in.
+  const prefillRoomNumber =
+    (location.state && (location.state.roomNumber || location.state.roomNo)) ||
+    searchParams.get("roomNo") ||
+    searchParams.get("roomNumber") ||
+    "";
+  const prefillCategory =
+    (location.state && (location.state.category || location.state.roomType)) ||
+    searchParams.get("roomType") ||
+    searchParams.get("category") ||
+    "";
+  const prefillCheckIn =
+    (location.state && location.state.checkIn) || searchParams.get("checkIn") || today;
+  const prefillCheckOut =
+    (location.state && location.state.checkOut) || searchParams.get("checkOut") || "";
+  const shouldResetDraft =
+    (location.state && location.state.resetBookingDraft) || searchParams.get("reset") === "true";
 
   // "view" controls which screen of the flow we're on — this is the ONLY thing
   // that changes when the user moves between steps. No route change happens.
@@ -1079,6 +1117,87 @@ const BookingFlow = () => {
       .catch((err) => console.error("Failed to load room categories:", err));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Auto-fill from dashboard deep link (?roomNo=&roomType=) or location.state.
+  // Runs after categorySetup so we can map the incoming room type string to a
+  // real categoryId and seed a fully populated room row in one shot.
+  useEffect(() => {
+    if (!prefillRoomNumber) return;
+
+    // Always land on the booking form when a deep link carries room data.
+    setView("form");
+
+    setFormData((prev) => {
+      const base = shouldResetDraft ? emptyForm() : prev;
+      return {
+        ...base,
+        checkIn: prefillCheckIn || base.checkIn,
+        checkOut: prefillCheckOut || base.checkOut,
+      };
+    });
+
+    // Match the incoming room-type string (e.g. "AC ROOM") to a real category
+    // by normalized name. Falls back to the first matching room's category if
+    // a direct name match isn't found.
+    const resolveCategoryId = () => {
+      if (!prefillCategory || !categorySetup.length) return "";
+      const wanted = normalizeRoomTypeName(prefillCategory);
+
+      const exact = categorySetup.find(
+        (c) => normalizeRoomTypeName(c.name) === wanted,
+      );
+      if (exact) return String(exact.id);
+
+      // Soft match: any category whose name contains a key token from the input
+      const tokens = wanted.split(/\s+/).filter(Boolean);
+      const fuzzy = categorySetup.find((c) =>
+        tokens.every((t) => normalizeRoomTypeName(c.name).includes(t)),
+      );
+      if (fuzzy) return String(fuzzy.id);
+
+      // Last resort: find the category that actually owns this room number
+      const ownerByRoom = categorySetup.find((c) =>
+        (Array.isArray(c.rooms) ? c.rooms : []).some(
+          (rn) => String(rn).trim() === String(prefillRoomNumber).trim(),
+        ),
+      );
+      return ownerByRoom ? String(ownerByRoom.id) : "";
+    };
+
+    const categoryId = resolveCategoryId();
+    const owningCategory = categorySetup.find(
+      (c) => String(c.id) === String(categoryId),
+    );
+    const defaultPrice = owningCategory ? Number(owningCategory.defaultPrice || 0) : 0;
+
+    setFormData((prev) => {
+      // If the deep link didn't ask for a reset, leave any existing rows alone.
+      // If it did, drop in a single ready-to-go row.
+      if (!shouldResetDraft && prev.rooms.length > 0) {
+        return prev;
+      }
+      return {
+        ...prev,
+        roomCategory: categoryId,
+        noOfRooms: 1,
+        rooms: [
+          {
+            id: uid(),
+            categoryId,
+            roomNo: String(prefillRoomNumber).trim(),
+            price: defaultPrice,
+            gst: 0,
+            quantity: 1,
+          },
+        ],
+      };
+    });
+
+    // Clear the router state so a page refresh / re-render doesn't keep
+    // re-applying the same prefill forever.
+    navigate(location.pathname, { replace: true, state: null });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categorySetup.length, prefillRoomNumber, prefillCategory]);
 
   // NOTE: There used to be a useEffect here that rewrote every row's price
   // whenever `formData.roomCategory` changed. That was the root cause of the
@@ -1559,14 +1678,91 @@ const handleJumpStep = (stepView) => {
 
   /* ---------- manage-booking actions ---------- */
 
+  // Parse room numbers from a booking's `rooms` field, which the backend may
+  // return as either a comma-separated string ("101, 102") or an array of
+  // room objects / room number strings.
+  const extractRoomNumbersFromBooking = (booking) => {
+    if (!booking) return [];
+    const raw = booking.rooms;
+    if (Array.isArray(raw)) {
+      return raw
+        .map((r) => {
+          if (!r) return "";
+          if (typeof r === "string") return r;
+          return r.room_number || r.roomNumber || r.roomNo || r.roomId || "";
+        })
+        .map((v) => String(v).trim())
+        .filter(Boolean);
+    }
+    return String(raw || "")
+      .split(",")
+      .map((v) => v.trim())
+      .filter(Boolean);
+  };
+
+  // After a guest checks out we want the room(s) to appear in the Dashboard's
+  // "Cleaning" section. Everything is now stored in MySQL (no localStorage):
+  //   1. PUT /housekeeping/status/<room> with `Vacant Dirty` flips the
+  //      `housekeeping.status` row AND syncs `hotel_room_inventory.status =
+  //      "Cleaning"` (see Housekeeping.syncOperationalStatus), so the
+  //      Dashboard's GET /housekeeping surfaces the room in the cleaning
+  //      bucket on its next refresh.
+  //   2. POST /housekeeping/message creates a row in `hk_messages` so the
+  //      housekeeping team sees the cleaning job in their queue — assignee,
+  //      task label, and due_at all live in the DB.
+  const queueRoomsForCleaning = async (booking) => {
+    const roomNumbers = extractRoomNumbersFromBooking(booking);
+    if (!roomNumbers.length) return;
+
+    const guestName = booking?.guest_name || booking?.guestName || "";
+    const bookingCode = booking?.bookingCode || booking?.booking_code || "";
+
+    for (const roomNumber of roomNumbers) {
+      const roomKey = String(roomNumber).trim();
+      if (!roomKey) continue;
+
+      // 1. Flip the housekeeping row to "Vacant Dirty". The backend also
+      //    mirrors this into hotel_room_inventory.status = "Cleaning" via
+      //    Housekeeping.syncOperationalStatus, so GET /housekeeping returns
+      //    the room in the cleaning bucket on the next refresh.
+      try {
+        await API.put(`/housekeeping/status/${roomKey}`, { status: "Vacant Dirty" });
+      } catch (error) {
+        console.warn(`Failed to mark room ${roomKey} dirty after checkout`, error);
+      }
+
+      // 2. Create a DB-backed cleaning task in the hk_messages table so the
+      //    housekeeping team sees the job in their queue (status, assignee,
+      //    due_at — all stored in MySQL, no localStorage).
+      try {
+        const dueAt = new Date(Date.now() + 30 * 60000).toISOString();
+        await API.post("/housekeeping/message", {
+          roomId: roomKey,
+          roomNo: roomKey,
+          assignedTo: "Unassigned",
+          message: `Cleaning required after check-out${bookingCode ? ` (Booking ${bookingCode})` : ""}${guestName ? ` • Guest: ${guestName}` : ""}`,
+          taskLabel: "Post Check-Out Cleaning",
+          dueAt,
+        });
+      } catch (error) {
+        console.warn(`Failed to create cleaning task message for room ${roomKey}`, error);
+      }
+    }
+  };
+
   const handleLifecycle = async (action) => {
     if (!selectedBooking?.bookingId) return;
     try {
       await API.put(`/hotel/${action}/${selectedBooking.bookingId}`);
+      if (action === "check-out") {
+        await queueRoomsForCleaning(selectedBooking);
+      }
       showToast(
         "success",
         action === "check-out" ? "Checked Out" : "Checked In",
-        action === "check-out" ? "Guest has been checked out successfully." : "Guest has been checked in successfully.",
+        action === "check-out"
+          ? "Guest has been checked out. Room moved to Cleaning on the Dashboard."
+          : "Guest has been checked in successfully.",
       );
       await fetchBookings();
       openManage({ ...selectedBooking, booking_status: action === "check-out" ? "Checked-Out" : "Checked-In" });

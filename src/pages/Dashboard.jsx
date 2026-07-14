@@ -23,11 +23,8 @@ import FoodSalesChart from "../components/Dashboard/Charts/FoodSalesChart";
 import MonthlyRevenueChart from "../components/Dashboard/Charts/MonthlyRevenueChart";
 import RoomOccupancyChart from "../components/Dashboard/Charts/RoomOccupancyChart";
 import MetricCard from "../components/Dashboard/MetricCard/MetricCard";
-import {
-  getCleaningTasks,
-  setCleaningTasks,
-  upsertCleaningTask,
-} from "../components/Hotel/bookingSession";
+// Cleaning-task state now lives in the DB (housekeeping + hk_messages tables);
+// no localStorage helpers are imported here anymore.
 import { pushDashboardNotification } from "../components/Dashboard/dashboardNotifications";
 import {
   addDays,
@@ -279,35 +276,58 @@ const Dashboard = () => {
     let mounted = true;
 
     const syncExpiredCleaningTasks = async () => {
-      const tasks = getCleaningTasks();
+      // Pull active cleaning-task messages directly from MySQL via the
+      // /housekeeping/notifications endpoint. For each task whose due_at has
+      // passed, flip the room back to "Vacant Clean" and mark the message
+      // Completed — both writes go to the DB.
+      let tasks = [];
+      try {
+        const res = await API.get("/housekeeping/notifications");
+        tasks = Array.isArray(res.data) ? res.data : [];
+      } catch (error) {
+        console.error("Failed to load cleaning notifications", error);
+        return;
+      }
+
       const now = Date.now();
       let changed = false;
 
-      for (const [roomKey, task] of Object.entries(tasks)) {
-        const dueAt = task?.dueAt ? new Date(task.dueAt).getTime() : 0;
-        if (dueAt && now >= dueAt) {
-          try {
-            await API.put(`/housekeeping/status/${task.roomId || roomKey}`, {
-              status: "Vacant Clean",
-            });
-          } catch (error) {
-            console.error("Auto release failed", error);
-          }
-          pushDashboardNotification({
-            title: `Cleaning completed - Room ${task.roomNumber || roomKey}`,
-            message: `Room ${task.roomNumber || roomKey} is available again.`,
-            type: "success",
-            route: "/housekeeping",
+      for (const task of tasks) {
+        if (!task || task.status === "Completed") continue;
+        const dueAt = task.dueAt ? new Date(task.dueAt).getTime() : 0;
+        if (!dueAt || now < dueAt) continue;
+
+        const roomKey = task.roomNo || task.roomId;
+        if (!roomKey) continue;
+
+        try {
+          await API.put(`/housekeeping/status/${roomKey}`, {
+            status: "Vacant Clean",
           });
-          delete tasks[roomKey];
-          changed = true;
+        } catch (error) {
+          console.error("Auto release failed", error);
         }
+
+        try {
+          if (task.id) {
+            await API.put(`/housekeeping/notifications/${task.id}/complete`);
+          }
+        } catch (error) {
+          console.error("Auto complete failed", error);
+        }
+
+        pushDashboardNotification({
+          title: `Cleaning completed - Room ${roomKey}`,
+          message: `Room ${roomKey} is available again.`,
+          type: "success",
+          route: "/housekeeping",
+        });
+        changed = true;
       }
 
       if (!mounted) return;
 
       if (changed) {
-        setCleaningTasks(tasks);
         await loadDashboardData();
       }
     };
@@ -942,35 +962,69 @@ const Dashboard = () => {
                         <div className="space-y-2.5 pt-2.5">
                           {group.items.length ? (
                             group.items.map((item) => (
-                            <button
-                              type="button"
+                            <div
                               key={item.id}
-                              onClick={() => openRoomPreview(item)}
-                              className={`w-full rounded-[16px] border px-3.5 py-3 text-left text-sm shadow-[0_10px_24px_rgba(15,23,42,0.06)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_28px_rgba(15,23,42,0.1)] ${tone.border} ${tone.soft}`}
+                              className={`rounded-[16px] border shadow-[0_10px_24px_rgba(15,23,42,0.06)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_28px_rgba(15,23,42,0.1)] ${tone.border} ${tone.soft}`}
                             >
-                              {item.statusLabel ? (
-                                <div className="mb-1 flex justify-end">
-                                  <span className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold uppercase tracking-[0.14em] ${tone.pill}`}>
-                                    {item.statusLabel}
-                                  </span>
+                              <button
+                                type="button"
+                                onClick={() => openRoomPreview(item)}
+                                className="block w-full px-3.5 pt-3 pb-2 text-left text-sm"
+                              >
+                                {item.statusLabel ? (
+                                  <div className="mb-1 flex justify-end">
+                                    <span className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold uppercase tracking-[0.14em] ${tone.pill}`}>
+                                      {item.statusLabel}
+                                    </span>
+                                  </div>
+                                ) : null}
+                                <div className={`text-base font-black ${tone.title}`}>
+                                  {key === "confirmed" || key === "pencil"
+                                    ? item.booking?.guestName || `Room ${item.roomNumber}`
+                                    : `Room ${item.roomNumber}`}
+                                </div>
+                                <div className={`mt-1 text-sm font-semibold uppercase tracking-[0.14em] ${tone.sub}`}>
+                                  {key === "confirmed" || key === "pencil"
+                                    ? `Room ${item.roomNumber} | ID ${item.roomId || "--"}`
+                                    : `ID ${item.roomId || "--"}`}
+                                </div>
+                                {key === "confirmed" || key === "pencil" ? (
+                                  <div className={`mt-1 text-sm ${tone.title}`}>
+                                    {item.booking?.mobile || item.subtitle || item.statusLabel || "Booking details"}
+                                  </div>
+                                ) : null}
+                              </button>
+
+                              {key === "available" ? (
+                                <div className="flex items-center justify-end gap-2 border-t border-white/40 px-3.5 pb-3 pt-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => openRoomPreview(item)}
+                                    className={`rounded-lg border border-current/30 bg-white/70 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.12em] ${tone.sub} transition hover:bg-white`}
+                                  >
+                                    Preview
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={(event) => {
+                                      event.stopPropagation();
+                                      navigate("/hotel/guest", {
+                                        state: {
+                                          roomNumber: item.roomNumber,
+                                          category: item.roomType || item.title || "",
+                                          checkIn: selectedDate || todayISO(),
+                                          checkOut: selectedDate || todayISO(),
+                                          resetBookingDraft: true,
+                                        },
+                                      });
+                                    }}
+                                    className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.12em] text-white shadow-sm transition hover:from-blue-700 hover:to-blue-800"
+                                  >
+                                    Book Now
+                                  </button>
                                 </div>
                               ) : null}
-                              <div className={`text-base font-black ${tone.title}`}>
-                                {key === "confirmed" || key === "pencil"
-                                  ? item.booking?.guestName || `Room ${item.roomNumber}`
-                                  : `Room ${item.roomNumber}`}
-                              </div>
-                              <div className={`mt-1 text-sm font-semibold uppercase tracking-[0.14em] ${tone.sub}`}>
-                                {key === "confirmed" || key === "pencil"
-                                  ? `Room ${item.roomNumber} | ID ${item.roomId || "--"}`
-                                  : `ID ${item.roomId || "--"}`}
-                              </div>
-                              {key === "confirmed" || key === "pencil" ? (
-                                <div className={`mt-1 text-sm ${tone.title}`}>
-                                  {item.booking?.mobile || item.subtitle || item.statusLabel || "Booking details"}
-                                </div>
-                              ) : null}
-                            </button>
+                            </div>
                           ))
                         ) : (
                             <div className={`rounded-[16px] border px-3 py-4 text-center text-sm ${tone.empty}`}>
@@ -1086,14 +1140,7 @@ const Dashboard = () => {
     const roomId = getRoomTaskKey(selectedRoom);
     const assignee = selectedRoom.roomData?.assignee;
     setSelectedAssignee(assignee && assignee !== "No Housekeeper" ? assignee : "");
-
-    try {
-      const tasks = getCleaningTasks();
-      const task = tasks[String(roomId)];
-      setSelectedCleaningMinutes(task?.minutes ? Number(task.minutes) || 30 : 30);
-    } catch {
-      setSelectedCleaningMinutes(30);
-    }
+    setSelectedCleaningMinutes(30);
   }, [selectedRoom]);
 
   const handleAssignCleaning = async () => {
@@ -1116,48 +1163,34 @@ const Dashboard = () => {
 
     try {
       setAssigningCleaning(true);
-      const nowIso = new Date().toISOString();
       const dueAt = new Date(Date.now() + cleaningMinutes * 60000).toISOString();
-      const existingTask = getCleaningTasks()[String(roomId)] || null;
 
-      if (
-        existingTask &&
-        existingTask.assignee === selectedAssignee &&
-        Number(existingTask.minutes || 0) === cleaningMinutes &&
-        existingTask.dueAt &&
-        new Date(existingTask.dueAt).getTime() > Date.now()
-      ) {
-        toast.info("Ye cleaning task already active hai.");
-        setAssigningCleaning(false);
-        return;
-      }
+      // Persist everything to the DB — no localStorage:
+      //   1. /housekeeping/assignee/<room> -> housekeeping.assignee
+      //   2. /housekeeping/status/<room>   -> housekeeping.status = "Vacant Dirty"
+      //      (the backend also mirrors to hotel_room_inventory.status = "Cleaning")
+      //   3. /housekeeping/message         -> new row in hk_messages (task with
+      //      due_at, assigned_to, task_label) so the cleaning queue + the
+      //      /housekeepernotification page pick it up.
+      await API.put(`/housekeeping/assignee/${roomId}`, { assignee: selectedAssignee });
+      await API.put(`/housekeeping/status/${roomId}`, { status: "Vacant Dirty" });
 
-      upsertCleaningTask(roomId, {
+      const receptionist =
+        localStorage.getItem("name") ||
+        localStorage.getItem("email") ||
+        "Front Desk";
+      const roomLabel = selectedRoom.roomNumber || selectedRoom.roomNo || roomId;
+      const roomType = selectedRoom.roomType || selectedRoom.roomData?.categoryName || "";
+
+      await API.post("/housekeeping/message", {
         roomId,
-        roomNumber: selectedRoom.roomNumber,
-        roomType: selectedRoom.roomData?.categoryName || selectedRoom.roomType || "Room",
-        assignee: selectedAssignee,
-        minutes: cleaningMinutes,
-        status: "dirty",
-        createdAt: existingTask?.createdAt || nowIso,
-        updatedAt: nowIso,
-        startedAt: nowIso,
+        roomNo: roomId,
+        assignedTo: selectedAssignee,
+        receptionist,
+        message: `Cleaning assigned for Room ${roomLabel}${roomType ? ` (${roomType})` : ""} — please complete within ${cleaningMinutes} minutes.`,
+        taskLabel: "Manual Cleaning Assignment",
         dueAt,
       });
-
-      try {
-        await API.put(`/housekeeping/assignee/${roomId}`, { assignee: selectedAssignee });
-        await API.put(`/housekeeping/status/${roomId}`, { status: "Vacant Dirty" });
-      } catch (error) {
-        const rollbackTasks = getCleaningTasks();
-        if (existingTask) {
-          rollbackTasks[String(roomId)] = existingTask;
-        } else {
-          delete rollbackTasks[String(roomId)];
-        }
-        setCleaningTasks(rollbackTasks);
-        throw error;
-      }
 
       pushDashboardNotification({
         title: `Cleaning assigned - Room ${selectedRoom.roomNumber}`,
@@ -1179,7 +1212,9 @@ const Dashboard = () => {
             }
           : prev,
       );
-      toast.success("Housekeeper assign ho gaya aur cleaning time save ho gaya.");
+      toast.success(
+        `Task sent to ${selectedAssignee}. Visible on /housekeepernotification.`,
+      );
     } catch (error) {
       console.error(error);
       toast.error("Housekeeping assignment save nahi ho paaya.");
@@ -1909,29 +1944,40 @@ const Dashboard = () => {
 
               {isCleaningTaskEditable(selectedRoom) && (
                 <div className="rounded-[1.5rem] border border-violet-200 bg-violet-50 p-4 shadow-sm">
-                  <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-start justify-between gap-3">
                     <div>
-                      <div className="text-sm font-semibold text-slate-900">Cleaning Task</div>
-                      <div className="text-xs text-slate-500">
-                        Housekeeper assign karein aur estimated cleaning time set karein.
+                      <div className="text-sm font-bold uppercase tracking-[0.18em] text-violet-700">
+                        Assign Task for Housekeeper
+                      </div>
+                      <div className="mt-1 text-xs text-slate-500">
+                        Room {selectedRoom.roomNumber || selectedRoom.roomNo || "--"}
+                        {selectedRoom.roomType ? ` • ${selectedRoom.roomType}` : ""} — pick an available housekeeper and ETA. The task is pushed to the housekeeping notification feed in MySQL.
                       </div>
                     </div>
-                    <div className="rounded-full bg-white px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-violet-700">
-                      {selectedRoom.roomData?.assignee && selectedRoom.roomData?.assignee !== "No Housekeeper"
+                    <div
+                      className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] ${
+                        selectedRoom.roomData?.assignee &&
+                        selectedRoom.roomData?.assignee !== "No Housekeeper"
+                          ? "bg-emerald-100 text-emerald-700"
+                          : "bg-white text-violet-700"
+                      }`}
+                    >
+                      {selectedRoom.roomData?.assignee &&
+                      selectedRoom.roomData?.assignee !== "No Housekeeper"
                         ? `Assigned: ${selectedRoom.roomData.assignee}`
                         : "Unassigned"}
                     </div>
                   </div>
 
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
                     <label className="space-y-2">
                       <span className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                        Assign Housekeeper
+                        Available Housekeeper
                       </span>
                       <select
                         value={selectedAssignee}
                         onChange={(e) => setSelectedAssignee(e.target.value)}
-                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none"
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-200"
                       >
                         <option value="">Select housekeeper</option>
                         {housekeepers.length ? (
@@ -1946,16 +1992,21 @@ const Dashboard = () => {
                           </option>
                         )}
                       </select>
+                      <p className="text-[11px] text-slate-500">
+                        {housekeepers.length
+                          ? `${housekeepers.length} housekeeper${housekeepers.length === 1 ? "" : "s"} available from /users`
+                          : "Add a user with the housekeeping role to populate this list."}
+                      </p>
                     </label>
 
                     <label className="space-y-2">
                       <span className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                        Cleaning Time
+                        Cleaning Time (ETA)
                       </span>
                       <select
                         value={selectedCleaningMinutes}
                         onChange={(e) => setSelectedCleaningMinutes(Number(e.target.value) || 30)}
-                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none"
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-200"
                       >
                         {CLEANING_TIME_OPTIONS.map((mins) => (
                           <option key={mins} value={mins}>
@@ -1963,17 +2014,27 @@ const Dashboard = () => {
                           </option>
                         ))}
                       </select>
+                      <p className="text-[11px] text-slate-500">
+                        due_at = now + ETA. The room auto-releases to Vacant Clean when it elapses.
+                      </p>
                     </label>
                   </div>
 
-                  <div className="mt-4 flex flex-wrap gap-3">
+                  <div className="mt-4 flex flex-wrap items-center gap-3">
                     <button
                       type="button"
                       onClick={handleAssignCleaning}
-                      disabled={assigningCleaning}
-                      className="rounded-xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-60"
+                      disabled={assigningCleaning || !selectedAssignee}
+                      className="rounded-xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      {assigningCleaning ? "Saving..." : "Assign Cleaning"}
+                      {assigningCleaning ? "Saving..." : "Assign Task"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => navigate("/housekeepernotification")}
+                      className="rounded-xl border border-violet-200 bg-white px-4 py-3 text-sm font-semibold text-violet-700 transition hover:bg-violet-100"
+                    >
+                      View Notifications
                     </button>
                     <div className="rounded-xl border border-violet-200 bg-white px-4 py-3 text-sm text-slate-700">
                       ETA: <span className="font-semibold text-slate-900">{selectedCleaningMinutes} min</span>
