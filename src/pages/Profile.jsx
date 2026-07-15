@@ -271,7 +271,7 @@ const Profile = () => {
       const msg =
         err.response?.data?.message ||
         err.message ||
-        "Phone number save fail ho gaya.";
+        "Phone number save  is fail .";
       setError(msg);
     } finally {
       setLoadingPhone(false);

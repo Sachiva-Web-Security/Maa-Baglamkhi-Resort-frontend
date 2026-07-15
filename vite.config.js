@@ -11,6 +11,13 @@ export default defineConfig(({ mode }) => {
       host: env.VITE_DEV_HOST || 'localhost',
       port: Number(env.VITE_DEV_PORT || 5173),
       strictPort: true,
+      proxy: {
+        '/api': {
+          target: env.VITE_BACKEND_URL || 'http://localhost:5002',
+          changeOrigin: true,
+          secure: false,
+        },
+      },
     },
   }
 })

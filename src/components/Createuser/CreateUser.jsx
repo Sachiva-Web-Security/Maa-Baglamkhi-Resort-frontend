@@ -29,18 +29,12 @@ const CreateUser = ({ onClose, onUserCreated }) => {
     try {
       const res = await API.post("/users", form, { skipAuthRedirect: true });
 
-      const existing = JSON.parse(localStorage.getItem("users")) || [];
       const createdUser = res.data?.user || {
         id: Date.now(),
         name: form.name,
         email: form.email,
         role: form.role.toLowerCase(),
       };
-
-      const dedupedUsers = existing.filter(
-        (item) => String(item.email || "").toLowerCase() !== String(createdUser.email || "").toLowerCase()
-      );
-      localStorage.setItem("users", JSON.stringify([...dedupedUsers, createdUser]));
 
       if (onUserCreated) {
         onUserCreated(createdUser);

@@ -1,24 +1,30 @@
-import { useMemo, useState } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { matchPath, useLocation, useNavigate } from "react-router-dom";
 import {
+  FaBalanceScale,
   FaBell,
   FaBoxes,
   FaBroom,
   FaChartBar,
+  FaChevronDown,
   FaClipboardList,
   FaFire,
   FaGlassCheers,
   FaHistory,
   FaHome,
   FaHotel,
+  FaListAlt,
   FaMoneyBillWave,
+  FaShoppingCart,
   FaSignOutAlt,
   FaStar,
   FaTasks,
+  FaTruck,
   FaUser,
   FaUserCheck,
   FaUtensils,
   FaWallet,
+  FaWarehouse,
   FaWhatsapp,
 } from "react-icons/fa";
 
@@ -56,6 +62,7 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
   const location = useLocation();
   const [hoveredItem, setHoveredItem] = useState(null);
   const [hoveredControl, setHoveredControl] = useState(null);
+  const [expandedItem, setExpandedItem] = useState(null);
   const readyOrdersCount = useReadyOrdersCount();
 
   const role = (localStorage.getItem("role") || "").toLowerCase();
@@ -118,7 +125,18 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
       { id: 108, name: "Assign Notifications", icon: FaBell, path: "/assignment-notification", section: "operations" },
       { id: 109, name: "Banquet", icon: FaGlassCheers, path: "/banquet", section: "operations" },
       { id: 109, name: "Accounts", icon: FaWallet, path: "/accounts", section: "records" },
-      { id: 110, name: "Inventory", icon: FaBoxes, path: "/inventory", section: "records" },
+      { id: 110, name: "Inventory", icon: FaBoxes, path: "/inventory", section: "records",
+        children: [
+          { id: 1100, name: "Categories", path: "/inventory/categories", icon: FaListAlt },
+          { id: 1101, name: "Vendors", path: "/inventory/vendors", icon: FaTruck },
+          { id: 1102, name: "Units", path: "/inventory/units", icon: FaBalanceScale },
+          { id: 1103, name: "Items / Stock", path: "/inventory/items", icon: FaWarehouse },
+          { id: 1104, name: "Menu Items", path: "/inventory/menu-items", icon: FaUtensils },
+          { id: 1105, name: "Menu List", path: "/inventory/menu-list", icon: FaClipboardList },
+          { id: 1106, name: "Purchase Invoices", path: "/inventory/purchases", icon: FaShoppingCart },
+          { id: 1107, name: "Reports", path: "/inventory/reports", icon: FaChartBar },
+        ]
+      },
       { id: 111, name: "Reports", icon: FaChartBar, path: "/reports", section: "records" },
       { id: 112, name: "Audit Logs", icon: FaHistory, path: "/reports/audit", section: "records" },
       { id: 113, name: "User Management", icon: FaUserCheck, path: "/user", section: "records" },
@@ -135,7 +153,18 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
       { id: 207, name: "Restaurant POS", icon: FaUtensils, path: "/restaurant", section: "operations" },
       { id: 208, name: "Accounts", icon: FaWallet, path: "/accounts", section: "records" },
       { id: 209, name: "Reports", icon: FaChartBar, path: "/reports", section: "records" },
-      { id: 210, name: "Inventory", icon: FaBoxes, path: "/inventory", section: "records" },
+      { id: 210, name: "Inventory", icon: FaBoxes, path: "/inventory", section: "records",
+        children: [
+          { id: 2100, name: "Categories", path: "/inventory/categories", icon: FaListAlt },
+          { id: 2101, name: "Vendors", path: "/inventory/vendors", icon: FaTruck },
+          { id: 2102, name: "Units", path: "/inventory/units", icon: FaBalanceScale },
+          { id: 2103, name: "Items / Stock", path: "/inventory/items", icon: FaWarehouse },
+          { id: 2104, name: "Menu Items", path: "/inventory/menu-items", icon: FaUtensils },
+          { id: 2105, name: "Menu List", path: "/inventory/menu-list", icon: FaClipboardList },
+          { id: 2106, name: "Purchase Invoices", path: "/inventory/purchases", icon: FaShoppingCart },
+          { id: 2107, name: "Reports", path: "/inventory/reports", icon: FaChartBar },
+        ]
+      },
       { id: 211, name: "Audit Logs", icon: FaHistory, path: "/reports/audit", section: "records" },
       { id: 212, name: "My Attendance", icon: FaUserCheck, path: "/my-attendance", section: "operations" },
     ],
@@ -150,7 +179,18 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
       { id: 308, name: "Assign Notifications", icon: FaBell, path: "/assignment-notification", section: "operations" },
       { id: 309, name: "Banquet", icon: FaGlassCheers, path: "/banquet", section: "operations" },
       { id: 310, name: "Restaurant POS", icon: FaUtensils, path: "/restaurant", section: "operations" },
-      { id: 311, name: "Inventory", icon: FaBoxes, path: "/inventory", section: "records" },
+      { id: 311, name: "Inventory", icon: FaBoxes, path: "/inventory", section: "records",
+        children: [
+          { id: 3110, name: "Categories", path: "/inventory/categories", icon: FaListAlt },
+          { id: 3111, name: "Vendors", path: "/inventory/vendors", icon: FaTruck },
+          { id: 3112, name: "Units", path: "/inventory/units", icon: FaBalanceScale },
+          { id: 3113, name: "Items / Stock", path: "/inventory/items", icon: FaWarehouse },
+          { id: 3114, name: "Menu Items", path: "/inventory/menu-items", icon: FaUtensils },
+          { id: 3115, name: "Menu List", path: "/inventory/menu-list", icon: FaClipboardList },
+          { id: 3116, name: "Purchase Invoices", path: "/inventory/purchases", icon: FaShoppingCart },
+          { id: 3117, name: "Reports", path: "/inventory/reports", icon: FaChartBar },
+        ]
+      },
     ],
     housekeeping: [
       { id: 401, name: "Room Status", icon: FaBroom, path: "/housekeeping", section: "operations" },
@@ -164,13 +204,35 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
       { id: 502, name: "Assign Notifications", icon: FaBell, path: "/assignment-notification", section: "operations" },
       { id: 503, name: "Accounts", icon: FaWallet, path: "/accounts", section: "records" },
       { id: 504, name: "Reports", icon: FaChartBar, path: "/reports", section: "records" },
-      { id: 505, name: "Inventory", icon: FaBoxes, path: "/inventory", section: "records" },
+      { id: 505, name: "Inventory", icon: FaBoxes, path: "/inventory", section: "records",
+        children: [
+          { id: 5050, name: "Categories", path: "/inventory/categories", icon: FaListAlt },
+          { id: 5051, name: "Vendors", path: "/inventory/vendors", icon: FaTruck },
+          { id: 5052, name: "Units", path: "/inventory/units", icon: FaBalanceScale },
+          { id: 5053, name: "Items / Stock", path: "/inventory/items", icon: FaWarehouse },
+          { id: 5054, name: "Menu Items", path: "/inventory/menu-items", icon: FaUtensils },
+          { id: 5055, name: "Menu List", path: "/inventory/menu-list", icon: FaClipboardList },
+          { id: 5056, name: "Purchase Invoices", path: "/inventory/purchases", icon: FaShoppingCart },
+          { id: 5057, name: "Reports", path: "/inventory/reports", icon: FaChartBar },
+        ]
+      },
       { id: 506, name: "Audit Logs", icon: FaHistory, path: "/reports/audit", section: "records" },
     ],
     kitchen: [
       { id: 601, name: "Kitchen Orders", icon: FaFire, path: "/kitchen", section: "operations" },
       { id: 602, name: "Restaurant POS", icon: FaUtensils, path: "/restaurant", section: "operations" },
-      { id: 603, name: "Inventory", icon: FaBoxes, path: "/inventory", section: "records" },
+      { id: 603, name: "Inventory", icon: FaBoxes, path: "/inventory", section: "records",
+        children: [
+          { id: 6031, name: "Categories", path: "/inventory/categories", icon: FaListAlt },
+          { id: 6032, name: "Vendors", path: "/inventory/vendors", icon: FaTruck },
+          { id: 6033, name: "Units", path: "/inventory/units", icon: FaBalanceScale },
+          { id: 6034, name: "Items / Stock", path: "/inventory/items", icon: FaWarehouse },
+          { id: 6035, name: "Menu Items", path: "/inventory/menu-items", icon: FaUtensils },
+          { id: 6036, name: "Menu List", path: "/inventory/menu-list", icon: FaClipboardList },
+          { id: 6037, name: "Purchase Invoices", path: "/inventory/purchases", icon: FaShoppingCart },
+          { id: 6038, name: "Reports", path: "/inventory/reports", icon: FaChartBar },
+        ]
+      },
     ],
     waiter: [
       { id: 701, name: "Restaurant POS", icon: FaUtensils, path: "/restaurant", section: "operations" },
@@ -207,6 +269,20 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
     return { headItems: head, groupedSections: sections, profileItem: profile };
   }, [menuItems]);
 
+  // Auto-expand any parent whose child matches the active route (unless user has manually collapsed).
+  useEffect(() => {
+    const allItems = [
+      ...(groupedSections || []).flatMap((g) => g.items),
+      ...(headItems || []),
+    ];
+    for (const item of allItems) {
+      if (item.children && isChildActive(item.children)) {
+        setExpandedItem((prev) => prev ?? item.id);
+        break;
+      }
+    }
+  }, [groupedSections, headItems, location.pathname]);
+
   const handleNavClick = (path) => {
     navigate(path);
 
@@ -220,6 +296,10 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
     }
   };
 
+  const toggleExpand = (itemId) => {
+    setExpandedItem((prev) => (prev === itemId ? null : itemId));
+  };
+
   const isActive = (path) => {
     if (location.pathname === path) {
       return true;
@@ -228,73 +308,135 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
     return Boolean(matchPath({ path: `${path}/*`, end: false }, location.pathname));
   };
 
+  const isChildActive = (children) => {
+    if (!children || !Array.isArray(children)) return false;
+    return children.some((child) => isActive(child.path));
+  };
+
   const showLabels = sidebarOpen;
 
   const renderNavButton = (item) => {
     const Icon = item.icon;
-    const active = isActive(item.path);
+    const hasChildren = Array.isArray(item.children) && item.children.length > 0;
+    const isExpanded = expandedItem === item.id;
+    // A parent with children is "active" if any child route matches
+    const directActive = hasChildren ? false : isActive(item.path);
+    const groupActive = hasChildren ? isChildActive(item.children) : false;
+    const active = directActive || groupActive;
     const hovered = hoveredItem === item.id;
     const highlighted = isItemHighlighted(item.id, active);
     const showBadge = item.badgeCount > 0;
 
+    const handleClick = () => {
+      if (hasChildren) {
+        toggleExpand(item.id);
+        // Also navigate to the parent path so child routes don't strand the user
+        if (item.path) {
+          handleNavClick(item.path);
+        }
+      } else {
+        handleNavClick(item.path);
+      }
+    };
+
     return (
-      <button
-        type="button"
-        key={item.id}
-        onClick={() => handleNavClick(item.path)}
-        onMouseEnter={() => setHoveredItem(item.id)}
-        onMouseMove={() => setHoveredItem(item.id)}
-        onMouseLeave={() => setHoveredItem(null)}
-        onPointerEnter={handlePointerHover(item.id)}
-        onPointerMove={handlePointerHover(item.id)}
-        onPointerLeave={clearPointerHover(item.id)}
-        onFocus={() => setHoveredItem(item.id)}
-        onBlur={() => setHoveredItem(null)}
-        onTouchStart={() => setHoveredItem(item.id)}
-        onTouchEnd={clearHoveredStates}
-        onTouchCancel={clearHoveredStates}
-        title={!showLabels ? item.name : undefined}
-        className={`
-          sidebar-nav-button group relative isolate flex min-h-[44px] w-full cursor-pointer items-center overflow-hidden rounded-2xl border transition-all duration-300
-          ${
-            showLabels
-              ? "justify-start gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3"
-              : "justify-center px-2.5 py-2.5 sm:px-3 sm:py-3"
-          }
-          ${
-            highlighted
-              ? "is-highlighted border-blue-400/60 bg-white/[0.03] text-white shadow-[0_14px_28px_rgba(37,99,235,0.3)]"
-              : "border-transparent bg-white/[0.03] text-slate-200 hover:border-blue-400/40 hover:text-white hover:shadow-[0_14px_28px_rgba(37,99,235,0.25)]"
-          }
-          ${hovered && !active ? "scale-[1.01] border-blue-400/40 text-white shadow-[0_14px_28px_rgba(37,99,235,0.3)]" : ""}
-        `}
-      >
-        <span
-          aria-hidden="true"
-          className={`sidebar-nav-fill absolute inset-0 rounded-2xl bg-[linear-gradient(270deg,#2563eb_0%,#2f6df6_48%,#4f8dff_100%)] ${
-            highlighted ? "scale-x-100" : ""
-          }`}
-        />
-        <span
-          className={`relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all duration-300 sm:h-10 sm:w-10 lg:h-11 lg:w-11 ${
-            highlighted
-              ? "bg-white/18 text-white"
-              : "bg-slate-800/80 text-slate-100 group-hover:bg-white/18 group-hover:text-white"
-          }`}
+      <div key={item.id} className="w-full">
+        <button
+          type="button"
+          onClick={handleClick}
+          onMouseEnter={() => setHoveredItem(item.id)}
+          onMouseMove={() => setHoveredItem(item.id)}
+          onMouseLeave={() => setHoveredItem(null)}
+          onPointerEnter={handlePointerHover(item.id)}
+          onPointerMove={handlePointerHover(item.id)}
+          onPointerLeave={clearPointerHover(item.id)}
+          onFocus={() => setHoveredItem(item.id)}
+          onBlur={() => setHoveredItem(null)}
+          onTouchStart={() => setHoveredItem(item.id)}
+          onTouchEnd={clearHoveredStates}
+          onTouchCancel={clearHoveredStates}
+          title={!showLabels ? item.name : undefined}
+          className={`
+            sidebar-nav-button group relative isolate flex min-h-[44px] w-full cursor-pointer items-center overflow-hidden rounded-2xl border transition-all duration-300
+            ${
+              showLabels
+                ? "justify-start gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3"
+                : "justify-center px-2.5 py-2.5 sm:px-3 sm:py-3"
+            }
+            ${
+              highlighted
+                ? "is-highlighted border-blue-400/60 bg-white/[0.03] text-white shadow-[0_14px_28px_rgba(37,99,235,0.3)]"
+                : "border-transparent bg-white/[0.03] text-slate-200 hover:border-blue-400/40 hover:text-white hover:shadow-[0_14px_28px_rgba(37,99,235,0.25)]"
+            }
+            ${hovered && !active ? "scale-[1.01] border-blue-400/40 text-white shadow-[0_14px_28px_rgba(37,99,235,0.3)]" : ""}
+          `}
         >
-          <Icon className="text-xl" />
-          {showBadge ? (
-            <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[11px] font-black text-white ring-2 ring-[#0b1728]">
-              {item.badgeCount > 9 ? "9+" : item.badgeCount}
+          <span
+            aria-hidden="true"
+            className={`sidebar-nav-fill absolute inset-0 rounded-2xl bg-[linear-gradient(270deg,#2563eb_0%,#2f6df6_48%,#4f8dff_100%)] ${
+              highlighted ? "scale-x-100" : ""
+            }`}
+          />
+          <span
+            className={`relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all duration-300 sm:h-10 sm:w-10 lg:h-11 lg:w-11 ${
+              highlighted
+                ? "bg-white/18 text-white"
+                : "bg-slate-800/80 text-slate-100 group-hover:bg-white/18 group-hover:text-white"
+            }`}
+          >
+            <Icon className="text-xl" />
+            {showBadge ? (
+              <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[11px] font-black text-white ring-2 ring-[#0b1728]">
+                {item.badgeCount > 9 ? "9+" : item.badgeCount}
+              </span>
+            ) : null}
+          </span>
+          {showLabels ? (
+            <span className="relative z-10 min-w-0 flex-1 truncate text-left text-sm font-semibold leading-tight text-white sm:text-[15px] lg:text-base">
+              {item.name}
             </span>
           ) : null}
-        </span>
-        {showLabels ? (
-          <span className="relative z-10 min-w-0 flex-1 truncate text-left text-sm font-semibold leading-tight text-white sm:text-[15px] lg:text-base">
-            {item.name}
-          </span>
+          {showLabels && hasChildren ? (
+            <FaChevronDown
+              className={`relative z-10 text-xs text-slate-400 transition-transform duration-300 ${
+                isExpanded ? "rotate-180 text-white" : ""
+              }`}
+            />
+          ) : null}
+        </button>
+
+        {/* Children - only render when expanded OR active child */}
+        {hasChildren && showLabels && (isExpanded || groupActive) ? (
+          <div className="mt-1 ml-3 space-y-1 border-l border-white/10 pl-2">
+            {item.children.map((child) => {
+              const ChildIcon = child.icon;
+              const childActive = isActive(child.path);
+              return (
+                <button
+                  key={child.id || child.path}
+                  type="button"
+                  onClick={() => handleNavClick(child.path)}
+                  onMouseEnter={() => setHoveredItem(`${item.id}-${child.path}`)}
+                  onMouseLeave={() => setHoveredItem(null)}
+                  title={!showLabels ? child.name : undefined}
+                  className={`flex min-h-[36px] w-full cursor-pointer items-center gap-2 rounded-xl px-3 py-1.5 text-left text-[13px] font-semibold transition-all duration-200 ${
+                    childActive
+                      ? "bg-white/10 text-white shadow-[0_8px_18px_rgba(37,99,235,0.18)]"
+                      : "text-slate-300 hover:bg-white/[0.05] hover:text-white"
+                  }`}
+                >
+                  {ChildIcon ? (
+                    <ChildIcon
+                      className={`text-[13px] ${childActive ? "text-blue-300" : "text-slate-400"}`}
+                    />
+                  ) : null}
+                  <span className="truncate">{child.name}</span>
+                </button>
+              );
+            })}
+          </div>
         ) : null}
-      </button>
+      </div>
     );
   };
 

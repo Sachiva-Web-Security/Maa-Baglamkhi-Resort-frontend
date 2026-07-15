@@ -1,12 +1,22 @@
 import { BrowserRouter as Router, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 
+import API from "./api";
 import { RestaurantProvider } from "./Context/RestaurantContext.jsx";
 import DashboardFooter from "./components/Dashboard/DashboardFooter";
 import Header from "./components/Header/Header";
 import InventoryDashboard from "./components/Inventory/InventoryDashboard";
+import InventoryHubPage from "./pages/InventoryHubPage";
 import InventoryMastersModulePage from "./pages/InventoryMastersModulePage";
 import InventoryProcurementPage from "./pages/InventoryProcurementPage";
+import InventoryItemsPage from "./pages/InventoryItemsPage";
+import InventoryVendorsPage from "./pages/InventoryVendorsPage";
+import InventoryPurchasesPage from "./pages/InventoryPurchasesPage";
+import InventoryReportsPage from "./pages/InventoryReportsPage";
+import InventoryUnitsPage from "./pages/InventoryUnitsPage";
+import InventoryCategoriesPage from "./pages/InventoryCategoriesPage";
+import InventoryMenuItemsPage from "./pages/InventoryMenuItemsPage";
+import InventoryMenuListPage from "./pages/InventoryMenuListPage";
 import MenuRecipeModulePage from "./pages/MenuRecipeModulePage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AddMenuItemPage from "./components/Restaurant/AddMenuItemPage";
@@ -180,6 +190,15 @@ function AppRoutes({ isAuthenticated, setIsAuthenticated, protect }) {
   const isAuthRoute =
     location.pathname === "/login" || location.pathname === "/register";
 
+  // While the session is being verified, render a minimal splash
+  if (isAuthenticated === null) {
+    return (
+      <div className="flex h-screen items-center justify-center text-sm text-slate-500">
+        Loading...
+      </div>
+    );
+  }
+
   return (
     <div className={`desktop-scale-shell ${isAuthRoute ? "auth-route-shell" : ""}`}>
       <div className={`desktop-scale-content ${isAuthRoute ? "auth-route-content" : ""}`}>
@@ -240,8 +259,16 @@ function AppRoutes({ isAuthenticated, setIsAuthenticated, protect }) {
             path="/accounts/customer-invoices"
             element={protect(<AccountsCustomerInvoices />, ROLES.ACCOUNTS)}
           />
-<Route path="/inventory" element={protect(<InventoryDashboard />, ROLES.INVENTORY)} />
-<Route path="/inventory/procurement" element={protect(<InventoryProcurementPage />, ROLES.INVENTORY)} />
+<Route path="/inventory" element={protect(<InventoryHubPage />, ROLES.INVENTORY)} />
+<Route path="/inventory/items" element={protect(<InventoryItemsPage />, ROLES.INVENTORY)} />
+<Route path="/inventory/categories" element={protect(<InventoryCategoriesPage />, ROLES.INVENTORY)} />
+<Route path="/inventory/units" element={protect(<InventoryUnitsPage />, ROLES.INVENTORY)} />
+<Route path="/inventory/vendors" element={protect(<InventoryVendorsPage />, ROLES.INVENTORY)} />
+<Route path="/inventory/menu-items" element={protect(<InventoryMenuItemsPage />, ROLES.INVENTORY)} />
+<Route path="/inventory/menu-list" element={protect(<InventoryMenuListPage />, ROLES.INVENTORY)} />
+<Route path="/inventory/purchases" element={protect(<InventoryPurchasesPage />, ROLES.INVENTORY)} />
+<Route path="/inventory/reports" element={protect(<InventoryReportsPage />, ROLES.INVENTORY)} />
+<Route path="/inventory/procurement" element={protect(<Navigate to="/inventory/purchases" replace />, ROLES.INVENTORY)} />
 <Route path="/inventory/masters" element={protect(<InventoryMastersModulePage />, ROLES.INVENTORY)} />
           <Route path="/inventory/recipes" element={protect(<MenuRecipeModulePage />, ROLES.INVENTORY)} />
           <Route path="/housekeeping" element={protect(<Housekeeping />, ROLES.HOUSEKEEPING)} />
@@ -307,9 +334,25 @@ function AppRoutes({ isAuthenticated, setIsAuthenticated, protect }) {
 }
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(
-    Boolean(localStorage.getItem("token")),
-  );
+  const [isAuthenticated, setIsAuthenticated] = useState(null); // null = loading, true/false = checked
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const verify = async () => {
+      try {
+        const res = await API.get("/auth/me");
+        if (!cancelled) setIsAuthenticated(true);
+      } catch {
+        if (!cancelled) setIsAuthenticated(false);
+      }
+    };
+
+    verify();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const protect = (element, roles) => (
     <ProtectedRoute allowedRoles={roles}>

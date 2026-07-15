@@ -81,13 +81,8 @@ const Login = ({ setIsAuthenticated }) => {
 
       const data = res.data;
 
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("role", data.role.toLowerCase());
-      localStorage.setItem("name", data.name);
-      localStorage.setItem("email", data.email);
-      localStorage.setItem("isAuthenticated", "true");
-      localStorage.setItem("freshLogin", "true");
-
+      // Backend now sets httpOnly cookie for auth.
+      // We only keep minimal non-sensitive state.
       if (setIsAuthenticated) setIsAuthenticated(true);
       navigate(getRoleHome(data.role), { replace: true });
     } catch (err) {

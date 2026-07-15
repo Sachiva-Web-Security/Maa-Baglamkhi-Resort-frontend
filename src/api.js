@@ -6,8 +6,9 @@ const ENV =
     : {};
 
 const API = axios.create({
-  baseURL: ENV.VITE_API_URL || ENV.VITE_BACKEND_ORIGIN || "/api",
+  baseURL: ENV.VITE_API_BASE || ENV.VITE_API_URL || ENV.VITE_BACKEND_ORIGIN || "/api",
   timeout: 15_000,
+  withCredentials: true,
 });
 
 API.interceptors.request.use((req) => {

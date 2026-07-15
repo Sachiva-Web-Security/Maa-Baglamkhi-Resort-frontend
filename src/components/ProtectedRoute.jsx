@@ -1,14 +1,48 @@
+import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 
+import API from "../api";
 import { getRoleHome } from "../utils/roleHome";
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
-  const token = localStorage.getItem("token");
-  const role = (localStorage.getItem("role") || "").toLowerCase().trim();
+  const [session, setSession] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  if (!token) {
+  useEffect(() => {
+    let cancelled = false;
+
+    const verify = async () => {
+      try {
+        const res = await API.get("/auth/me", { skipRetry: true });
+        if (!cancelled) {
+          setSession(res.data);
+        }
+      } catch (err) {
+        if (!cancelled) setSession(null);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    verify();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center text-sm text-slate-500">
+        Verifying session...
+      </div>
+    );
+  }
+
+  if (!session) {
     return <Navigate to="/login" replace />;
   }
+
+  const role = String(session.role || "").toLowerCase().trim();
 
   if (allowedRoles && allowedRoles.length > 0 && !allowedRoles.includes(role)) {
     return <Navigate to={getRoleHome(role)} replace />;

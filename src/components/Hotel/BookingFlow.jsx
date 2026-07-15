@@ -1570,6 +1570,20 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
 
       console.log("[Invoice] Final adminNumber to send:", adminNumber || "(empty — backend will DB-fallback)");
 
+      // c) Fallback to the env-defined ADMIN_WHATSAPP_NUMBER baked at build time.
+      //    Ensures the admin still gets notified even when no one's filled in
+      //    their Profile phone yet.
+      if (!adminNumber) {
+        const envAdmin =
+          (import.meta && import.meta.env && import.meta.env.VITE_ADMIN_WHATSAPP_NUMBER) || "";
+        if (envAdmin) {
+          adminNumber = envAdmin;
+          console.log("[Invoice] using VITE_ADMIN_WHATSAPP_NUMBER from env:", envAdmin);
+        }
+      }
+
+      console.log("[Invoice] Final adminNumber to send:", adminNumber || "(empty — backend will DB-fallback)");
+
       // Step 1: send to both customer and admin
       const payload = {
         adminNumber,

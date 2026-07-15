@@ -631,12 +631,13 @@ const AllBooking = () => {
         <table className="w-full table-fixed text-left">
           <thead className="bg-slate-50">
             <tr className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
-              <th className="w-[24%] px-6 py-4">Guest</th>
-              <th className="w-[12%] px-6 py-4">Phone</th>
+              <th className="w-[18%] px-6 py-4">Guest</th>
+              <th className="w-[10%] px-6 py-4">Type</th>
+              <th className="w-[10%] px-6 py-4">Phone</th>
               <th className="w-[8%] px-6 py-4">Room</th>
-              <th className="w-[12%] px-6 py-4">Check-in date</th>
-              <th className="w-[12%] px-6 py-4">Check-out date</th>
-              <th className="w-[12%] px-6 py-4 text-right">Total amount</th>
+              <th className="w-[10%] px-6 py-4">Check-in</th>
+              <th className="w-[10%] px-6 py-4">Check-out</th>
+              <th className="w-[10%] px-6 py-4 text-right">Total</th>
               <th className="w-[12%] px-6 py-4">Status</th>
               <th className="w-[8%] px-6 py-4 text-right">Actions</th>
             </tr>
@@ -666,6 +667,11 @@ const AllBooking = () => {
                         <div className="mt-1 text-xs font-medium text-slate-400">{bookingRef}</div>
                       </div>
                     </div>
+                  </td>
+                  <td className="px-6 py-5">
+                    <span className="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-bold text-indigo-700">
+                      {booking.bookingType || "Walk-in"}
+                    </span>
                   </td>
                   <td className="px-6 py-5">
                     <div className="flex items-center gap-2">

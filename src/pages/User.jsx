@@ -40,9 +40,23 @@ const User = () => {
   const [editError, setEditError] = useState("");
   const [isUpdatingUser, setIsUpdatingUser] = useState(false);
 
-  const loggedInEmail = localStorage.getItem("email") || "";
-  const loggedInAvatar = localStorage.getItem("avatarUrl") || "";
-  const currentUserRole = (localStorage.getItem("role") || "").toLowerCase();
+  const [currentUserRole, setIsCurrentUserRole] = useState("");
+  const [loggedInEmail, setLoggedInEmail] = useState("");
+
+  useEffect(() => {
+    const fetchMe = async () => {
+      try {
+        const res = await API.get("/auth/me");
+        setIsCurrentUserRole(String(res.data.role || "").toLowerCase());
+        setLoggedInEmail(String(res.data.email || "").toLowerCase());
+      } catch {
+        setIsCurrentUserRole("");
+        setLoggedInEmail("");
+      }
+    };
+    fetchMe();
+  }, []);
+
   const isAdmin = currentUserRole === "admin";
 
   useEffect(() => {
@@ -53,24 +67,12 @@ const User = () => {
           ? res.data
           : res.data.users || [];
 
-        const localUsers = JSON.parse(localStorage.getItem("users")) || [];
-        const mergedUsers = [...apiData];
-
-        localUsers.forEach((localUser) => {
-          const exists = mergedUsers.some(
-            (apiUser) => apiUser.email === localUser.email
-          );
-          if (!exists) {
-            mergedUsers.push(localUser);
-          }
-        });
-
         setError("");
-        setUsers(mergedUsers);
+        setUsers(apiData);
       } catch (err) {
         console.error("Failed to load users", err);
         setError("Unable to load users. Please check the backend connection.");
-        setUsers(JSON.parse(localStorage.getItem("users")) || []);
+        setUsers([]);
       }
     };
 
@@ -106,19 +108,6 @@ const User = () => {
         prev.filter((item) => String(item.id || item._id) !== String(id))
       );
 
-      const localUsers = JSON.parse(localStorage.getItem("users")) || [];
-      localStorage.setItem(
-        "users",
-        JSON.stringify(
-          localUsers.filter(
-            (item) =>
-              String(item.id) !== String(id) &&
-              String(item.email || "").toLowerCase() !==
-                String(user.email || "").toLowerCase()
-          )
-        )
-      );
-
       setDeleteMessage(`${user.name || user.fullName || "User"} deleted successfully`);
     } catch (err) {
       console.error("Failed to delete user", err);
@@ -134,18 +123,6 @@ const User = () => {
               String(item.id || item._id) !== String(id) &&
               String(item.email || "").toLowerCase() !==
                 String(user.email || "").toLowerCase()
-          )
-        );
-        const localUsers = JSON.parse(localStorage.getItem("users")) || [];
-        localStorage.setItem(
-          "users",
-          JSON.stringify(
-            localUsers.filter(
-              (item) =>
-                String(item.id) !== String(id) &&
-                String(item.email || "").toLowerCase() !==
-                  String(user.email || "").toLowerCase()
-            )
           )
         );
         setDeleteMessage(`${user.name || user.fullName || "User"} deleted successfully`);
@@ -249,26 +226,6 @@ const User = () => {
             : user
         )
       );
-
-      const localUsers = JSON.parse(localStorage.getItem("users")) || [];
-      localStorage.setItem(
-        "users",
-        JSON.stringify(
-          localUsers.map((user) =>
-            String(user.id) === String(id) ? { ...user, ...updatedUser } : user
-          )
-        )
-      );
-
-      const updatedEmail = updatedUser.email || payload.email;
-      if (
-        String(editingUser.email || "").toLowerCase() ===
-        String(loggedInEmail || "").toLowerCase()
-      ) {
-        localStorage.setItem("name", updatedUser.name || payload.name);
-        localStorage.setItem("email", updatedEmail);
-        localStorage.setItem("role", updatedUser.role || payload.role);
-      }
 
       setEditingUser(null);
       setSuccessMessage(`${updatedUser.name || "User"} updated successfully`);
@@ -374,10 +331,7 @@ const User = () => {
     const role = user.role || user.userRole || "N/A";
     const initial = displayName.toString().charAt(0).toUpperCase();
     const backendAvatar = user.avatar || user.avatarUrl || "";
-    const avatarSrc =
-      (email && email === loggedInEmail && loggedInAvatar) ||
-      backendAvatar ||
-      "";
+    const avatarSrc = backendAvatar || "";
 
     return { displayName, email, role, initial, avatarSrc, index: index + 1 };
   };
