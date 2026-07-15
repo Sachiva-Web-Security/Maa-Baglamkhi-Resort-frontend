@@ -411,7 +411,7 @@ if (exists) {
   };
 
   return (
-    <div className="relative space-y-6 p-1">
+    <div className="relative w-full max-w-full space-y-4 overflow-x-hidden p-1 sm:space-y-6 sm:p-1">
       {/* Ambient background glow */}
       <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
         <div className="absolute -top-40 -left-32 h-96 w-96 rounded-full bg-sky-300/25 blur-[110px]" />
@@ -420,7 +420,7 @@ if (exists) {
       </div>
 
       {/* Header */}
-      <div className="relative overflow-hidden rounded-[28px] border border-blue-100/70 bg-white/80 p-7 shadow-[0_20px_50px_-15px_rgba(30,64,175,0.15)] backdrop-blur-xl sm:p-9">
+      <div className="relative overflow-hidden rounded-2xl border border-blue-100/70 bg-white/80 p-4 shadow-[0_20px_50px_-15px_rgba(30,64,175,0.15)] backdrop-blur-xl xs:p-5 sm:rounded-[28px] sm:p-7 lg:p-9">
         {/* subtle wave pattern */}
         <svg
           className="pointer-events-none absolute inset-0 h-full w-full opacity-[0.06]"
@@ -441,22 +441,22 @@ if (exists) {
           </defs>
         </svg>
 
-        <div className="relative flex flex-wrap items-start justify-between gap-5">
-          <div>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-blue-950 via-blue-700 to-sky-500 px-3 py-1 text-[13px] font-bold uppercase tracking-wider text-white shadow-sm">
+        <div className="relative flex flex-col items-start gap-4 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between sm:gap-5">
+          <div className="w-full sm:w-auto">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-blue-950 via-blue-700 to-sky-500 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-white shadow-sm sm:text-[13px]">
               Live Floor
             </span>
-            <h2 className="mt-3 text-[34px] font-extrabold leading-tight tracking-tight text-slate-900">
+            <h2 className="mt-3 text-2xl font-extrabold leading-tight tracking-tight text-slate-900 sm:text-[28px] lg:text-[34px]">
               Dashboard
             </h2>
-            <p className="mt-1.5 text-[18px] text-slate-500">
+            <p className="mt-1.5 text-sm text-slate-500 sm:text-[16px] lg:text-[18px]">
               Real-time floor occupancy and invoicing
             </p>
           </div>
           {!isWaiter ? (
             <button
               onClick={() => setShowAddTable(true)}
-              className="group inline-flex items-center gap-2 rounded-xl bg-blue-700 px-5 py-3 text-[17px] font-bold text-white shadow-lg shadow-blue-600/30 transition-all duration-200 hover:bg-blue-800 hover:shadow-xl hover:shadow-blue-600/40 active:scale-[0.98]"
+              className="group inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-700 px-5 py-3 text-[15px] font-bold text-white shadow-lg shadow-blue-600/30 transition-all duration-200 hover:bg-blue-800 hover:shadow-xl hover:shadow-blue-600/40 active:scale-[0.98] sm:w-auto sm:text-[17px]"
             >
               <FiPlusCircle className="text-xl transition-transform duration-200 group-hover:rotate-90" /> Add Table
             </button>
@@ -465,39 +465,39 @@ if (exists) {
       </div>
 
       {/* Stat cards */}
-      <div className="grid gap-5 md:grid-cols-3">
-        <div className="group flex flex-col justify-between rounded-3xl border border-blue-100/70 bg-white/90 p-6 shadow-[0_10px_30px_-12px_rgba(30,64,175,0.12)] backdrop-blur transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_-14px_rgba(30,64,175,0.22)]">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3 md:gap-5">
+        <div className="group flex flex-col justify-between rounded-2xl border border-blue-100/70 bg-white/90 p-4 shadow-[0_10px_30px_-12px_rgba(30,64,175,0.12)] backdrop-blur transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_-14px_rgba(30,64,175,0.22)] sm:rounded-3xl sm:p-6">
           <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-[15px] font-bold uppercase tracking-wide text-blue-900/60">Running Tables</p>
-              <p className="mt-2 text-4xl font-extrabold leading-none text-slate-900">{runningTables}</p>
-              <p className="mt-2 text-[15px] text-slate-400">Currently active</p>
+            <div className="min-w-0">
+              <p className="text-[12px] font-bold uppercase tracking-wide text-blue-900/60 sm:text-[15px]">Running Tables</p>
+              <p className="mt-2 text-3xl font-extrabold leading-none text-slate-900 sm:text-4xl">{runningTables}</p>
+              <p className="mt-2 text-[13px] text-slate-400 sm:text-[15px]">Currently active</p>
             </div>
-            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-950 via-blue-700 to-sky-500 text-2xl text-white shadow-md shadow-blue-600/30">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-950 via-blue-700 to-sky-500 text-xl text-white shadow-md shadow-blue-600/30 sm:h-14 sm:w-14 sm:text-2xl">
               <FiHome />
             </span>
           </div>
         </div>
-        <div className="group flex flex-col justify-between rounded-3xl border border-blue-100/70 bg-white/90 p-6 shadow-[0_10px_30px_-12px_rgba(30,64,175,0.12)] backdrop-blur transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_-14px_rgba(30,64,175,0.22)]">
+        <div className="group flex flex-col justify-between rounded-2xl border border-blue-100/70 bg-white/90 p-4 shadow-[0_10px_30px_-12px_rgba(30,64,175,0.12)] backdrop-blur transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_-14px_rgba(30,64,175,0.22)] sm:rounded-3xl sm:p-6">
           <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-[15px] font-bold uppercase tracking-wide text-blue-900/60">Blank Tables</p>
-              <p className="mt-2 text-4xl font-extrabold leading-none text-slate-900">{blankTables}</p>
-              <p className="mt-2 text-[15px] text-slate-400">Available for seating</p>
+            <div className="min-w-0">
+              <p className="text-[12px] font-bold uppercase tracking-wide text-blue-900/60 sm:text-[15px]">Blank Tables</p>
+              <p className="mt-2 text-3xl font-extrabold leading-none text-slate-900 sm:text-4xl">{blankTables}</p>
+              <p className="mt-2 text-[13px] text-slate-400 sm:text-[15px]">Available for seating</p>
             </div>
-            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-400 text-2xl text-white shadow-md shadow-emerald-500/30">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-400 text-xl text-white shadow-md shadow-emerald-500/30 sm:h-14 sm:w-14 sm:text-2xl">
               <FiGrid />
             </span>
           </div>
         </div>
-        <div className="group flex flex-col justify-between rounded-3xl border border-blue-100/70 bg-white/90 p-6 shadow-[0_10px_30px_-12px_rgba(30,64,175,0.12)] backdrop-blur transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_-14px_rgba(30,64,175,0.22)]">
+        <div className="group flex flex-col justify-between rounded-2xl border border-blue-100/70 bg-white/90 p-4 shadow-[0_10px_30px_-12px_rgba(30,64,175,0.12)] backdrop-blur transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_-14px_rgba(30,64,175,0.22)] sm:col-span-2 sm:rounded-3xl sm:p-6 md:col-span-1">
           <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-[15px] font-bold uppercase tracking-wide text-blue-900/60">Invoice Pending</p>
-              <p className="mt-2 text-4xl font-extrabold leading-none text-slate-900">{pendingInvoice}</p>
-              <p className="mt-2 text-[15px] text-slate-400">Awaiting finalization</p>
+            <div className="min-w-0">
+              <p className="text-[12px] font-bold uppercase tracking-wide text-blue-900/60 sm:text-[15px]">Invoice Pending</p>
+              <p className="mt-2 text-3xl font-extrabold leading-none text-slate-900 sm:text-4xl">{pendingInvoice}</p>
+              <p className="mt-2 text-[13px] text-slate-400 sm:text-[15px]">Awaiting finalization</p>
             </div>
-            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500 to-amber-400 text-2xl text-white shadow-md shadow-amber-500/30">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500 to-amber-400 text-xl text-white shadow-md shadow-amber-500/30 sm:h-14 sm:w-14 sm:text-2xl">
               <FiRefreshCw />
             </span>
           </div>
@@ -505,30 +505,177 @@ if (exists) {
       </div>
 
       {/* Table list card */}
-      <div className="overflow-hidden rounded-3xl border border-blue-100/70 bg-white/90 shadow-[0_20px_50px_-20px_rgba(30,64,175,0.18)] backdrop-blur">
-        <div className="flex items-start justify-between gap-4 border-b border-blue-100/70 bg-gradient-to-r from-blue-50/60 via-white to-white px-7 py-6">
-          <div className="flex items-start gap-4">
-            <span className="mt-0.5 flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-950 via-blue-700 to-sky-500 text-lg text-white shadow-md shadow-blue-600/30">
+      <div className="overflow-hidden rounded-2xl border border-blue-100/70 bg-white/90 shadow-[0_20px_50px_-20px_rgba(30,64,175,0.18)] backdrop-blur sm:rounded-3xl">
+        <div className="flex flex-col gap-4 border-b border-blue-100/70 bg-gradient-to-r from-blue-50/60 via-white to-white px-4 py-5 sm:flex-row sm:items-start sm:justify-between sm:px-7 sm:py-6">
+          <div className="flex items-start gap-3 sm:gap-4">
+            <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-950 via-blue-700 to-sky-500 text-base text-white shadow-md shadow-blue-600/30 sm:h-11 sm:w-11 sm:text-lg">
               <FiActivity />
             </span>
-            <div>
-              <div className="text-[15px] font-bold uppercase tracking-wider text-blue-700">Table Management</div>
-              <h3 className="mt-1 text-[24px] font-extrabold tracking-tight text-slate-900">Restaurant tables in list view</h3>
-              <p className="mt-1.5 text-[17px] text-slate-500">Status, section, booking info, person count, and actions in one place.</p>
+            <div className="min-w-0">
+              <div className="text-[12px] font-bold uppercase tracking-wider text-blue-700 sm:text-[15px]">Table Management</div>
+              <h3 className="mt-1 text-lg font-extrabold tracking-tight text-slate-900 sm:text-[24px]">Restaurant tables in list view</h3>
+              <p className="mt-1.5 text-[13px] text-slate-500 sm:text-[17px]">Status, section, booking info, person count, and actions in one place.</p>
             </div>
           </div>
 
           <button
             type="button"
-            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-blue-200 bg-white text-blue-600 shadow-sm transition-all duration-200 hover:border-blue-300 hover:bg-blue-50 hover:shadow-md"
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center self-end rounded-xl border border-blue-200 bg-white text-blue-600 shadow-sm transition-all duration-200 hover:border-blue-300 hover:bg-blue-50 hover:shadow-md sm:h-11 sm:w-11 sm:self-auto"
             aria-label="Filter table list"
           >
             <FiFilter className="text-lg" />
           </button>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="min-w-[980px] w-full border-collapse">
+        {/* Mobile / tablet card layout (below lg) */}
+        <div className="flex flex-col gap-3 p-3 lg:hidden">
+          {paginatedTableRows.map(({ table, status, occupied, snapshot, itemCount, showPayNow }) => {
+            const assignedWaiterName = getDisplayWaiterName(snapshot.waiterName);
+            const tableOwnedByCurrentWaiter =
+              !snapshot.tokenId ||
+              !snapshot.waiterName ||
+              namesMatch(snapshot.waiterName, actor.name);
+            const waiterLocked = isWaiter && !tableOwnedByCurrentWaiter;
+
+            return (
+              <div
+                key={table.id}
+                className="rounded-2xl border border-blue-100 bg-white p-4 shadow-sm"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="text-[17px] font-extrabold text-blue-700">T{table.name}</div>
+                    <div className="mt-0.5 text-[13px] font-medium text-slate-400">ID #{table.id}</div>
+                  </div>
+                  <span
+                    className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1 text-[13px] font-bold shadow-sm ${
+                      occupied
+                        ? "border-amber-200 bg-gradient-to-r from-amber-50 to-amber-100/60 text-amber-700"
+                        : "border-emerald-200 bg-gradient-to-r from-emerald-50 to-emerald-100/60 text-emerald-700"
+                    }`}
+                  >
+                    <span className={`h-1.5 w-1.5 rounded-full ${occupied ? "bg-amber-500" : "bg-emerald-500"}`} />
+                    {status}
+                  </span>
+                </div>
+
+                <div className="mt-3 grid grid-cols-2 gap-3">
+                  <div>
+                    <div className="text-[11px] font-bold uppercase tracking-wide text-blue-900/50">Section</div>
+                    <div className="mt-1 text-[14px] font-medium text-slate-600">
+                      {[table.floorName, table.sectionName].filter(Boolean).join(" / ") || "Unmapped section"}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-[11px] font-bold uppercase tracking-wide text-blue-900/50">Persons</div>
+                    <div className="mt-1">
+                      {isWaiter ? (
+                        <div className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50/70 px-2.5 py-1.5 text-[14px] font-bold text-slate-700">
+                          <FiUsers className="text-blue-400" /> {table.seatCount || 1}
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1.5">
+                          <input
+                            type="number"
+                            min="1"
+                            value={seatDrafts[table.id] ?? String(table.seatCount || 1)}
+                            onChange={(event) =>
+                              setSeatDrafts((current) => ({
+                                ...current,
+                                [table.id]: event.target.value.replace(/\D/g, "").slice(0, 2) || "1",
+                              }))
+                            }
+                            className="h-10 w-16 rounded-lg border border-blue-200 bg-white px-2 text-[15px] font-bold text-slate-800 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/15"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleSeatSave(table)}
+                            disabled={savingSeatId === table.id}
+                            className="h-10 rounded-lg bg-blue-700 px-3 text-[13px] font-bold uppercase tracking-wide text-white shadow-md shadow-blue-600/25 transition-all duration-200 hover:bg-blue-800 disabled:opacity-60"
+                          >
+                            {savingSeatId === table.id ? "..." : "Save"}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-3">
+                  <div className="text-[11px] font-bold uppercase tracking-wide text-blue-900/50">Booking Info</div>
+                  <div className="mt-1 inline-flex rounded-lg bg-gradient-to-r from-blue-50 to-sky-50 px-3 py-1.5 text-[13px] font-bold text-blue-700 shadow-sm ring-1 ring-blue-100">
+                    {snapshot.tokenCode || "No Active Booking"}
+                  </div>
+                  <div className="mt-2 text-[13px] text-slate-500">
+                    {itemCount ? `${itemCount} menu items added` : "No items yet"}
+                  </div>
+                  <div className="mt-2 text-[12px] font-semibold uppercase tracking-wide text-slate-400">
+                    Waiter: <span className="text-slate-700">{assignedWaiterName}</span>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <button
+                    className="flex-1 basis-[45%] rounded-xl bg-slate-900 px-4 py-2.5 text-[14px] font-bold text-white shadow-md shadow-slate-900/20 transition-all duration-200 hover:bg-slate-800 hover:shadow-lg disabled:opacity-50"
+                    disabled={waiterLocked}
+                    onClick={() => {
+                      setSelectedTable(table.name);
+                      navigate(`/restaurant/token/${table.name}`);
+                    }}
+                  >
+                    {waiterLocked ? "Assigned" : "+ Booking"}
+                  </button>
+
+                  {occupied && itemCount ? (
+                    <button
+                      className="flex-1 basis-[45%] rounded-xl bg-blue-700 px-4 py-2.5 text-[14px] font-bold text-white shadow-md shadow-blue-600/25 transition-all duration-200 hover:bg-blue-800 hover:shadow-lg disabled:opacity-50"
+                      disabled={waiterLocked}
+                      onClick={() => openCreateInvoice(table.name)}
+                    >
+                      Invoice
+                    </button>
+                  ) : null}
+
+                  {showPayNow ? (
+                    <button
+                      className="flex-1 basis-[45%] rounded-xl bg-amber-500 px-4 py-2.5 text-[14px] font-bold text-white shadow-md shadow-amber-500/25 transition-all duration-200 hover:bg-amber-600 hover:shadow-lg disabled:opacity-50"
+                      disabled={waiterLocked}
+                      onClick={() => openPayNow(table.name)}
+                    >
+                      Pay
+                    </button>
+                  ) : null}
+
+                  <button
+                    className="flex-1 basis-[45%] rounded-xl border border-blue-200 bg-white px-4 py-2.5 text-[14px] font-bold text-blue-700 shadow-sm transition-all duration-200 hover:border-blue-300 hover:bg-blue-50 disabled:opacity-50"
+                    disabled={waiterLocked}
+                    onClick={() => {
+                      setSelectedTable(table.name);
+                      navigate(`/restaurant/token-items/${table.name}`);
+                    }}
+                  >
+                    Items
+                  </button>
+
+                  {!isWaiter ? (
+                    <button
+                      type="button"
+                      onClick={() => setRemoveDialogTable(table)}
+                      disabled={removingTableId === table.id}
+                      className="flex-1 basis-[45%] rounded-xl bg-rose-50 px-4 py-2.5 text-[14px] font-bold text-rose-600 shadow-sm transition-all duration-200 hover:bg-rose-100 hover:shadow-md disabled:opacity-60"
+                    >
+                      {removingTableId === table.id ? "Removing..." : "Remove"}
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Desktop / large tablet table layout (lg and up) */}
+        <div className="hidden overflow-x-auto lg:block">
+          <table className="w-full min-w-[980px] border-collapse">
             <thead className="bg-gradient-to-r from-blue-50/70 to-blue-50/30">
               <tr className="text-left">
                 <th className="px-6 py-4 text-[16px] font-bold uppercase tracking-wide text-blue-900/60">Table ID</th>
@@ -673,8 +820,8 @@ if (exists) {
           </table>
         </div>
 
-        <div className="flex flex-col gap-3 border-t border-blue-100/70 bg-blue-50/20 px-7 py-5 lg:flex-row lg:items-center lg:justify-between">
-          <div className="text-[17px] text-slate-500">
+        <div className="flex flex-col gap-3 border-t border-blue-100/70 bg-blue-50/20 px-4 py-4 sm:px-7 sm:py-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="text-center text-[14px] text-slate-500 sm:text-left sm:text-[17px]">
             Showing{" "}
             <span className="font-bold text-slate-900">{visibleTableStart}</span>-
             <span className="font-bold text-slate-900">{visibleTableEnd}</span> of{" "}
@@ -682,12 +829,12 @@ if (exists) {
           </div>
 
           {totalTablePages > 1 ? (
-            <div className="flex flex-wrap items-center gap-1.5">
+            <div className="flex flex-wrap items-center justify-center gap-1.5 sm:justify-start">
               <button
                 type="button"
                 onClick={() => setTablePage((current) => Math.max(1, current - 1))}
                 disabled={tablePage === 1}
-                className="rounded-xl border border-blue-200 bg-white px-4 py-2.5 text-[15px] font-bold text-slate-600 shadow-sm transition-all duration-200 hover:border-blue-400 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-xl border border-blue-200 bg-white px-3 py-2 text-[13px] font-bold text-slate-600 shadow-sm transition-all duration-200 hover:border-blue-400 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:py-2.5 sm:text-[15px]"
               >
                 Previous
               </button>
@@ -699,7 +846,7 @@ if (exists) {
                     key={`table-page-${pageNumber}`}
                     type="button"
                     onClick={() => setTablePage(pageNumber)}
-                    className={`h-10 min-w-10 rounded-xl px-3 text-[15px] font-bold transition-all duration-200 ${
+                    className={`h-9 min-w-9 rounded-xl px-2.5 text-[13px] font-bold transition-all duration-200 sm:h-10 sm:min-w-10 sm:px-3 sm:text-[15px] ${
                       isActive
                         ? "bg-blue-700 text-white shadow-md shadow-blue-600/30"
                         : "border border-blue-200 bg-white text-slate-600 hover:border-blue-400 hover:text-blue-700"
@@ -714,7 +861,7 @@ if (exists) {
                 type="button"
                 onClick={() => setTablePage((current) => Math.min(totalTablePages, current + 1))}
                 disabled={tablePage === totalTablePages}
-                className="rounded-xl border border-blue-200 bg-white px-4 py-2.5 text-[15px] font-bold text-slate-600 shadow-sm transition-all duration-200 hover:border-blue-400 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-xl border border-blue-200 bg-white px-3 py-2 text-[13px] font-bold text-slate-600 shadow-sm transition-all duration-200 hover:border-blue-400 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:py-2.5 sm:text-[15px]"
               >
                 Next
               </button>
@@ -735,29 +882,29 @@ if (exists) {
       ) : null}
 
       {!isWaiter && removeDialogTable ? (
-        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-950/50 px-4 backdrop-blur-sm">
-          <div className="w-full max-w-md overflow-hidden rounded-[28px] border border-blue-100 bg-white shadow-2xl">
-            <div className="border-b border-blue-100/70 bg-gradient-to-r from-rose-50/60 to-white px-7 py-6">
-              <div className="inline-flex items-center rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-[13px] font-bold uppercase tracking-wide text-rose-600">
+        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
+          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-blue-100 bg-white shadow-2xl sm:rounded-[28px]">
+            <div className="border-b border-blue-100/70 bg-gradient-to-r from-rose-50/60 to-white px-5 py-5 sm:px-7 sm:py-6">
+              <div className="inline-flex items-center rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-[12px] font-bold uppercase tracking-wide text-rose-600 sm:text-[13px]">
                 Remove Table
               </div>
-              <h3 className="mt-4 text-[24px] font-extrabold text-slate-900">Remove Table {removeDialogTable.name}?</h3>
-              <p className="mt-2 text-[17px] leading-6 text-slate-500">
+              <h3 className="mt-4 text-xl font-extrabold text-slate-900 sm:text-[24px]">Remove Table {removeDialogTable.name}?</h3>
+              <p className="mt-2 text-[15px] leading-6 text-slate-500 sm:text-[17px]">
                 This table will be removed from the restaurant dashboard. You can add it again later if needed.
               </p>
             </div>
 
-            <div className="px-7 py-6">
-              <div className="rounded-2xl border border-blue-100 bg-blue-50/40 px-5 py-4">
-                <div className="text-[13px] font-bold uppercase tracking-wide text-blue-900/60">Selected Table</div>
+            <div className="px-5 py-5 sm:px-7 sm:py-6">
+              <div className="rounded-2xl border border-blue-100 bg-blue-50/40 px-4 py-4 sm:px-5">
+                <div className="text-[12px] font-bold uppercase tracking-wide text-blue-900/60 sm:text-[13px]">Selected Table</div>
                 <div className="mt-2 flex items-center justify-between gap-3">
-                  <div>
-                    <div className="text-[18px] font-extrabold text-slate-900">T{removeDialogTable.name}</div>
-                    <div className="text-[16px] text-slate-500">
+                  <div className="min-w-0">
+                    <div className="text-[16px] font-extrabold text-slate-900 sm:text-[18px]">T{removeDialogTable.name}</div>
+                    <div className="truncate text-[14px] text-slate-500 sm:text-[16px]">
                       {[removeDialogTable.floorName, removeDialogTable.sectionName].filter(Boolean).join(" / ") || "Unmapped section"}
                     </div>
                   </div>
-                  <div className="rounded-full bg-white px-3 py-1 text-[14px] font-bold text-slate-600 shadow-sm ring-1 ring-blue-100">
+                  <div className="shrink-0 rounded-full bg-white px-3 py-1 text-[13px] font-bold text-slate-600 shadow-sm ring-1 ring-blue-100 sm:text-[14px]">
                     ID #{removeDialogTable.id}
                   </div>
                 </div>
@@ -768,7 +915,7 @@ if (exists) {
                   type="button"
                   onClick={() => setRemoveDialogTable(null)}
                   disabled={removingTableId === removeDialogTable.id}
-                  className="rounded-xl border border-blue-200 bg-white px-5 py-2.5 text-[17px] font-bold text-slate-700 shadow-sm transition-all duration-200 hover:border-blue-300 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="w-full rounded-xl border border-blue-200 bg-white px-5 py-2.5 text-[15px] font-bold text-slate-700 shadow-sm transition-all duration-200 hover:border-blue-300 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:text-[17px]"
                 >
                   Keep Table
                 </button>
@@ -776,7 +923,7 @@ if (exists) {
                   type="button"
                   onClick={confirmRemoveTable}
                   disabled={removingTableId === removeDialogTable.id}
-                  className="rounded-xl bg-rose-600 px-5 py-2.5 text-[17px] font-bold text-white shadow-md shadow-rose-500/25 transition-all duration-200 hover:bg-rose-700 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
+                  className="w-full rounded-xl bg-rose-600 px-5 py-2.5 text-[15px] font-bold text-white shadow-md shadow-rose-500/25 transition-all duration-200 hover:bg-rose-700 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:text-[17px]"
                 >
                   {removingTableId === removeDialogTable.id ? "Removing..." : "Remove Table"}
                 </button>

@@ -1,11 +1,7 @@
 import React from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { usePendingOrdersCount } from "../hooks/usePendingOrdersCount";
 import {
-  FaConciergeBell,
-  FaCashRegister,
   FaClipboardList,
-  FaLayerGroup,
   FaExternalLinkAlt,
   FaPlusCircle,
   FaReceipt,
@@ -33,7 +29,7 @@ const RestaurantPOS = () => {
         { label: "Payment", path: "/restaurant/payment", icon: FaRegCreditCard },
         { label: "Bills", path: "/restaurant/payment-bills", icon: FaClipboardList },
         { label: "Room Orders", path: "/restaurant/room-items", icon: FaStar },
-        { label: "Add Menu", path: "/restaurant/add-menu-item", icon: FaPlusCircle },
+        // { label: "Add Menu", path: "/restaurant/add-menu-item", icon: FaPlusCircle },
       ];
 
   const isLinkActive = (path) =>
@@ -43,25 +39,6 @@ const RestaurantPOS = () => {
   const activeLink =
     links.find((link) => isLinkActive(link.path)) ||
     links[0];
-
-  const pendingCount = usePendingOrdersCount();
-  const heroStats = [
-    {
-      label: actor.isWaiter ? "WAITER STATION" : "RESTAURANT + POS",
-      value: actor.isWaiter ? "Active Service" : "Active Station",
-      icon: FaConciergeBell,
-    },
-    {
-      label: "LIVE QUEUE",
-      value: actor.isWaiter ? "Orders In Motion" : `${pendingCount} Pending`,
-      icon: FaLayerGroup,
-    },
-    {
-      label: actor.isWaiter ? "BILLING FLOW" : "TABLES TO BILLING",
-      value: "Ready to Close",
-      icon: FaCashRegister,
-    },
-  ];
 
   const heroTitle = actor.isWaiter
     ? "Operational snapshot for Waiter"
@@ -74,7 +51,7 @@ const RestaurantPOS = () => {
   const activeSectionLabel = activeLink?.label || (actor.isWaiter ? "My Tables" : "Tables");
 
   return (
-    <div className="relative isolate w-full overflow-x-hidden bg-[#f4f7fc] p-3 sm:p-5 lg:p-6">
+    <div className="relative isolate w-full max-w-full overflow-x-hidden bg-[#f4f7fc] p-2.5 xs:p-3 sm:p-5 lg:p-6">
       {/* Ambient background glow */}
       <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute left-[-8%] top-[-10%] h-72 w-72 rounded-full bg-blue-200/40 blur-3xl sm:h-96 sm:w-96" />
@@ -82,10 +59,9 @@ const RestaurantPOS = () => {
         <div className="absolute bottom-[10%] left-[22%] h-60 w-60 rounded-full bg-blue-100/50 blur-3xl sm:h-80 sm:w-80" />
       </div>
 
-      <div className="w-full space-y-6">
-        {/* HERO */}
+      <div className="w-full max-w-full space-y-4 sm:space-y-6">
+        {/* HERO
         <section className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-blue-950 via-blue-900 via-blue-700 to-sky-500 px-6 py-8 shadow-[0_25px_50px_-12px_rgba(23,54,120,0.35)] sm:px-9 sm:py-9">
-          {/* subtle background pattern */}
           <div
             className="pointer-events-none absolute inset-0 opacity-[0.08]"
             style={{
@@ -130,39 +106,13 @@ const RestaurantPOS = () => {
                 ) : null}
               </div>
             </div>
-
-            <div className="grid gap-4 lg:grid-cols-3">
-              {heroStats.map((item) => {
-                const Icon = item.icon;
-
-                return (
-                  <div
-                    key={item.label}
-                    className="rounded-[20px] border border-white/15 bg-white/10 px-5 py-5 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] backdrop-blur-md transition hover:bg-white/[0.13]"
-                  >
-                    <div className="flex items-center gap-4">
-                      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/15 text-[20px] text-white ring-1 ring-white/10">
-                        <Icon />
-                      </span>
-                      <div className="min-w-0">
-                        <div className="text-[13px] font-bold uppercase tracking-[0.1em] text-blue-50/80">
-                          {item.label}
-                        </div>
-                        <div className="mt-1.5 text-[28px] font-bold leading-tight text-white sm:text-[30px]">
-                          {item.value}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
           </div>
         </section>
+        */}
 
         {/* NAV TABS */}
-        <section className="rounded-[24px] bg-white/90 p-2.5 shadow-[0_10px_30px_rgba(15,23,42,0.06)] ring-1 ring-blue-100/70 backdrop-blur-sm">
-          <div className="flex flex-wrap gap-2.5">
+        <section className="rounded-2xl bg-white/90 p-2 shadow-[0_10px_30px_rgba(15,23,42,0.06)] ring-1 ring-blue-100/70 backdrop-blur-sm sm:rounded-[24px] sm:p-2.5">
+          <div className="flex flex-nowrap gap-2 overflow-x-auto scrollbar-none sm:flex-wrap sm:gap-2.5 sm:overflow-visible">
             {links.map((link) => {
               const Icon = link.icon || FaUtensils;
               const active = isLinkActive(link.path);
@@ -172,13 +122,13 @@ const RestaurantPOS = () => {
                   key={`${link.path}-${link.label}`}
                   type="button"
                   onClick={() => navigate(link.path)}
-                  className={`inline-flex items-center gap-2.5 rounded-full px-5 py-3 text-[16px] font-bold transition duration-200 sm:text-[17px] ${
+                  className={`inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-2.5 text-[13px] font-bold transition duration-200 xs:px-4 xs:text-[14px] sm:gap-2.5 sm:px-5 sm:py-3 sm:text-[16px] lg:text-[17px] ${
                     active
                       ? "bg-gradient-to-r from-blue-700 to-sky-500 text-white shadow-[0_10px_22px_rgba(31,103,223,0.28)]"
                       : "bg-[#eef3fb] text-[#3c4a68] hover:bg-[#e2ebfa] hover:text-[#1f2a44]"
                   }`}
                 >
-                  <Icon className={`text-[16px] ${active ? "text-white" : "text-[#3f6099]"}`} />
+                  <Icon className={`text-[13px] sm:text-[16px] ${active ? "text-white" : "text-[#3f6099]"}`} />
                   {link.label}
                 </button>
               );
@@ -187,23 +137,25 @@ const RestaurantPOS = () => {
         </section>
 
         {/* COMMAND CENTER / OUTLET */}
-        <section>
-          <div className="rounded-[26px] border border-blue-100/60 bg-white/90 p-3 shadow-[0_18px_40px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-4">
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-[20px] bg-gradient-to-b from-[#f8fbff] to-[#eef4ff] px-5 py-4 ring-1 ring-blue-100/70">
-              <div>
-                <p className="text-[13px] font-bold uppercase tracking-[0.16em] text-[#6a7a96]">
+        <section className="w-full max-w-full">
+          <div className="w-full max-w-full rounded-2xl border border-blue-100/60 bg-white/90 p-2.5 shadow-[0_18px_40px_rgba(15,23,42,0.08)] backdrop-blur-xl xs:p-3 sm:rounded-[26px] sm:p-4">
+            <div className="mb-3 flex flex-col gap-3 rounded-2xl bg-gradient-to-b from-[#f8fbff] to-[#eef4ff] px-4 py-4 ring-1 ring-blue-100/70 sm:mb-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-3 sm:rounded-[20px] sm:px-5">
+              <div className="min-w-0">
+                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#6a7a96] sm:text-[13px]">
                   Restaurant Command Center
                 </p>
-                <h2 className="mt-1 text-[30px] font-bold leading-tight text-[#1f2a44] sm:text-[32px]">
+                <h2 className="mt-1 text-[22px] font-bold leading-tight text-[#1f2a44] xs:text-[24px] sm:text-[30px] lg:text-[32px]">
                   {activeSectionLabel}
                 </h2>
               </div>
-              <span className="inline-flex items-center gap-2 rounded-full bg-[#eaf2ff] px-4 py-2 text-[15px] font-bold uppercase tracking-[0.08em] text-[#1f67df] ring-1 ring-blue-100 sm:text-[16px]">
-                <FaReceipt className="text-[13px]" />
+              <span className="inline-flex w-fit items-center gap-2 rounded-full bg-[#eaf2ff] px-3.5 py-1.5 text-[12px] font-bold uppercase tracking-[0.08em] text-[#1f67df] ring-1 ring-blue-100 sm:px-4 sm:py-2 sm:text-[15px] lg:text-[16px]">
+                <FaReceipt className="text-[11px] sm:text-[13px]" />
                 Live workspace
               </span>
             </div>
-            <Outlet />
+            <div className="w-full max-w-full overflow-x-hidden">
+              <Outlet />
+            </div>
           </div>
         </section>
       </div>

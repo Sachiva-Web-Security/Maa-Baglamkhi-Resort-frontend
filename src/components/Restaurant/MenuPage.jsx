@@ -401,23 +401,37 @@ const MenuPage = () => {
     : "Category-wise item selection";
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#19253c_0%,#1f2d47_100%)] p-4 lg:p-6">
-      <div className="w-full rounded-[26px] border border-white/10 bg-white/95 p-4 shadow-[0_30px_80px_rgba(15,23,42,0.28)] lg:p-5">
-        <div className="mb-4 rounded-[22px] bg-[linear-gradient(135deg,#111827_0%,#1d4ed8_50%,#0f766e_100%)] px-4 py-4 text-white lg:px-5">
-          <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+    <div className="min-h-screen w-full overflow-x-hidden bg-gradient-to-b from-slate-50 to-blue-50 p-3 sm:p-4 lg:p-6">
+      <div className="w-full min-w-0">
+        {/* Hero */}
+        <div className="relative mb-4 overflow-hidden rounded-[18px] bg-[linear-gradient(120deg,#172554_0%,#1D4ED8_55%,#0EA5E9_100%)] px-4 py-5 text-white shadow-[0_30px_80px_rgba(15,23,42,0.35)] sm:mb-6 sm:rounded-[24px] sm:px-6 sm:py-6 md:rounded-[30px] md:px-8 md:py-8 lg:px-8 lg:py-8">
+          {/* Abstract wave / light pattern */}
+          <svg
+            className="pointer-events-none absolute inset-0 h-full w-full opacity-25"
+            viewBox="0 0 1200 400"
+            preserveAspectRatio="none"
+            aria-hidden="true"
+          >
+            <path d="M0,300 C250,220 350,380 600,300 C850,220 950,380 1200,300 L1200,400 L0,400 Z" fill="rgba(255,255,255,0.10)" />
+            <path d="M0,340 C300,260 400,400 700,330 C900,280 1000,360 1200,320 L1200,400 L0,400 Z" fill="rgba(255,255,255,0.08)" />
+            <circle cx="1080" cy="70" r="140" fill="rgba(255,255,255,0.06)" />
+            <circle cx="120" cy="40" r="90" fill="rgba(255,255,255,0.05)" />
+          </svg>
+
+          <div className="relative flex flex-col gap-4 sm:gap-5 xl:flex-row xl:items-start xl:justify-between">
             <div className="min-w-0 flex-1">
-              <div className="text-[11px] uppercase tracking-[0.28em] text-cyan-200">
+              <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-sky-200 sm:text-[13px] sm:tracking-[0.28em]">
                 {banquetMenuPicker ? "Banquet Menu Picker" : "Restaurant Menu Card"}
               </div>
-              <div className="mt-1.5 text-xl font-black leading-tight sm:text-2xl">
+              <div className="mt-2 break-words text-xl font-black leading-tight sm:text-2xl md:text-3xl lg:text-4xl">
                 {dashboardTitle}
               </div>
-              <div className="mt-1 text-sm text-white/80">
+              <div className="mt-2 break-words text-base text-white/85 sm:text-lg lg:text-xl">
                 {dashboardSubtitle}
               </div>
               {!banquetMenuPicker ? (
-                <div className="mt-3 inline-flex max-w-full items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white/90 backdrop-blur-md">
-                  <span className="rounded-full bg-white/15 px-2 py-1 text-[10px] uppercase tracking-[0.18em] text-cyan-100">
+                <div className="mt-3 inline-flex max-w-full flex-wrap items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-sm font-bold text-white/90 backdrop-blur-md sm:mt-4 sm:gap-2.5 sm:px-4 sm:py-2 sm:text-base">
+                  <span className="rounded-full bg-white/15 px-2.5 py-1 text-xs font-bold uppercase tracking-[0.14em] text-sky-100 sm:px-3 sm:text-sm sm:tracking-[0.16em]">
                     {entityType}
                   </span>
                   <span className="truncate">Active service for {entityType === "Room" ? "room" : "table"} {table}</span>
@@ -426,12 +440,12 @@ const MenuPage = () => {
             </div>
 
             {!banquetMenuPicker ? (
-              <div className="w-full xl:max-w-[640px] rounded-[20px] border border-white/15 bg-white/10 p-3 backdrop-blur-md">
-                <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-100">
+              <div className="w-full rounded-[18px] border border-white/20 bg-white/10 p-4 shadow-2xl backdrop-blur-xl sm:rounded-[24px] sm:p-5 xl:max-w-[640px]">
+                <div className="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-sky-100 sm:text-sm sm:tracking-[0.2em]">
                   Quick Add Item
                 </div>
-                <div className="grid gap-2 lg:grid-cols-[minmax(0,1.9fr)_120px_120px]">
-                  <div className="relative">
+                <div className="grid gap-3 lg:grid-cols-[minmax(0,1.9fr)_130px_150px]">
+                  <div className="relative min-w-0">
                     <input
                       type="text"
                       value={quickAddQuery}
@@ -448,10 +462,10 @@ const MenuPage = () => {
                         setQuickAddItemId(matchedItem ? String(matchedItem.id) : "");
                       }}
                       placeholder="Search item or category"
-                      className="h-10 w-full rounded-xl border border-white/20 bg-white px-3 text-sm font-medium text-slate-800 outline-none ring-0"
+                      className="h-12 w-full min-w-0 rounded-2xl border border-white/20 bg-white px-4 text-base font-medium text-slate-800 shadow-sm outline-none transition focus:ring-2 focus:ring-sky-300 sm:text-lg"
                     />
                     {showQuickAddSuggestions && quickAddMatches.length ? (
-                      <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-20 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_18px_40px_rgba(15,23,42,0.18)]">
+                      <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-20 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_18px_40px_rgba(15,23,42,0.18)]">
                         <div className="max-h-56 overflow-y-auto py-1">
                           {quickAddMatches.map((item) => {
                             const effectivePrice = Number(
@@ -467,10 +481,10 @@ const MenuPage = () => {
                                   setQuickAddItemId(String(item.id));
                                   setShowQuickAddSuggestions(false);
                                 }}
-                                className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-slate-50"
+                                className="flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left text-base text-slate-700 transition hover:bg-blue-50"
                               >
-                                <span className="truncate font-medium text-slate-900">{item.name}</span>
-                                <span className="shrink-0 text-xs font-semibold text-slate-500">
+                                <span className="truncate font-semibold text-slate-900">{item.name}</span>
+                                <span className="shrink-0 text-sm font-bold text-slate-500">
                                   Rs. {effectivePrice}
                                 </span>
                               </button>
@@ -486,19 +500,19 @@ const MenuPage = () => {
                     min="1"
                     value={quickAddQty}
                     onChange={(event) => setQuickAddQty(event.target.value.replace(/\D/g, "").slice(0, 2) || "1")}
-                    className="h-10 rounded-xl border border-white/20 bg-white px-3 text-sm font-bold text-slate-800 outline-none ring-0"
+                    className="h-12 w-full min-w-0 rounded-2xl border border-white/20 bg-white px-4 text-base font-bold text-slate-800 shadow-sm outline-none transition focus:ring-2 focus:ring-sky-300 sm:text-lg lg:w-auto"
                     placeholder="Qty"
                   />
                   <button
                     type="button"
                     onClick={handleQuickAdd}
-                    className="h-10 rounded-xl bg-white px-4 text-sm font-bold text-slate-900 shadow-lg"
+                    className="h-12 w-full min-w-0 rounded-2xl bg-white px-4 text-base font-bold text-slate-900 shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl sm:text-lg lg:w-auto"
                   >
                     Add Item
                   </button>
                 </div>
-                <div className="mt-2 flex items-center justify-start">
-                  <span className="text-[11px] text-white/75">
+                <div className="mt-2.5 flex items-center justify-start">
+                  <span className="text-sm text-white/75">
                     Fast add without opening the full side panel.
                   </span>
                 </div>
@@ -507,119 +521,160 @@ const MenuPage = () => {
           </div>
         </div>
 
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
-          <div className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm lg:p-5">
-            <div className="mb-4 flex items-center justify-between">
-              <div className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">Menu Items</div>
-              <div className="text-xs font-semibold text-slate-400">
+        <div className="grid gap-4 sm:gap-5 lg:gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+          {/* Menu Items */}
+          <div className="min-w-0 rounded-[18px] border border-blue-100 bg-white p-3 shadow-[0_20px_50px_rgba(15,23,42,0.06)] sm:rounded-[24px] sm:p-5 lg:p-6">
+            <div className="mb-4 flex items-center justify-between sm:mb-5">
+              <div className="text-xl font-black leading-none text-slate-900 sm:text-2xl lg:text-[30px]">Menu Items</div>
+              <div className="text-sm font-semibold text-slate-400 sm:text-base">
                 {filteredItems.length} item{filteredItems.length === 1 ? "" : "s"}
               </div>
             </div>
 
-            {isLoadingMenu ? <div className="p-6 text-center text-slate-500">Loading menu...</div> : null}
-            {menuError ? <div className="p-6 text-center text-rose-600">{menuError}</div> : null}
+            {isLoadingMenu ? <div className="p-6 text-center text-lg text-slate-500 sm:text-xl">Loading menu...</div> : null}
+            {menuError ? <div className="p-6 text-center text-lg text-rose-600 sm:text-xl">{menuError}</div> : null}
             {!isLoadingMenu && !menuError && !filteredItems.length ? (
-              <div className="p-6 text-center text-slate-500">No items in this category.</div>
+              <div className="p-6 text-center text-lg text-slate-500 sm:text-xl">No items in this category.</div>
             ) : null}
 
             {!isLoadingMenu && !menuError && filteredItems.length ? (
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
                 {paginatedMenuItems.map((item) => {
                   const effectivePrice = Number(
                     item.effectivePrice ?? item.effective_price ?? item.price ?? 0,
                   );
                   const itemImageSrc = buildMenuImageSrc(item.image_url || item.imageUrl);
                   const placeholder = buildMenuPlaceholder(item);
+                  const currentTax = Number(taxByItem[item.id] ?? item.tax ?? 5);
+                  const adjustTax = (delta) => {
+                    const next = Math.max(0, Math.round((currentTax + delta) * 100) / 100);
+                    handleTaxChange(item.id, next);
+                  };
                   return (
                     <div
-                      key={item.id}
-                      className="group flex items-center gap-3 overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-sm transition-all duration-200 hover:border-emerald-300 hover:shadow-lg"
-                    >
-                      {/* Image - Left Side */}
-                      <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-slate-100 sm:h-24 sm:w-24">
-                        {itemImageSrc ? (
-                          <img
-                            src={itemImageSrc}
-                            alt={item.name}
-                            className="h-full w-full rounded-xl object-cover transition-transform duration-200 group-hover:scale-110"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-cyan-100 to-blue-100">
-                            <span className="text-xl font-black text-cyan-600 sm:text-2xl">
-                              {placeholder.initials}
-                            </span>
-                          </div>
-                        )}
-                        {/* Category Badge */}
-                        <span className="absolute -bottom-1 -right-1 rounded-bl-lg rounded-tr-xl bg-gradient-to-r from-blue-600 to-blue-700 px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider text-white shadow-md sm:text-[9px]">
-                          {item.category || "Other"}
-                        </span>
-                      </div>
+  key={item.id}
+  className="group flex min-h-[150px] min-w-0 overflow-hidden rounded-[16px] border border-blue-100 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.05)] transition-all duration-200 sm:min-h-[180px] sm:rounded-[20px] lg:hover:-translate-y-1 lg:hover:border-blue-200 lg:hover:shadow-[0_20px_45px_rgba(15,23,42,0.12)]"
+>
+  {/* Image Section (2/5) */}
+  <div className="relative w-2/5 shrink-0 overflow-hidden bg-slate-100">
+    {itemImageSrc ? (
+      <img
+        src={itemImageSrc}
+        alt={item.name}
+        className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+        loading="lazy"
+      />
+    ) : (
+      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-sky-100 to-blue-100">
+        <span className="text-xl font-black text-blue-600 sm:text-2xl lg:text-3xl">
+          {placeholder.initials}
+        </span>
+      </div>
+    )}
+  </div>
 
-                      {/* Content - Right Side */}
-                      <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-                        <div className="flex flex-col">
-                          <span className="truncate text-[13px] font-bold leading-tight text-slate-900 sm:text-[14px]" title={item.name}>
-                            {item.name}
-                          </span>
-                          <span className="mt-0.5 text-[14px] font-extrabold text-emerald-600 sm:text-[15px]">
-                            Rs. {item.price}
-                          </span>
-                        </div>
+  {/* Content Section (3/5) */}
+  <div className="flex w-3/5 min-w-0 flex-col justify-between p-3 sm:p-4">
+    <div className="min-w-0">
+      <div
+        className="truncate text-base font-bold text-slate-900 sm:text-lg lg:text-xl"
+        title={item.name}
+      >
+        {item.name}
+      </div>
 
-                        {/* Tax & Qty */}
-                        <div className="flex items-center gap-1.5">
-                          <input
-                            type="number"
-                            min="0"
-                            step="0.1"
-                            value={taxByItem[item.id] ?? item.tax ?? 5}
-                            onChange={(e) => handleTaxChange(item.id, e.target.value)}
-                            className="h-8 w-14 rounded-lg border border-slate-200 bg-slate-50 px-1 text-center text-[10px] font-semibold text-slate-700 transition focus:border-emerald-400 focus:bg-white focus:outline-none sm:w-16 sm:text-xs"
-                            placeholder="Tax%"
-                          />
-                          <input
-                            type="number"
-                            min="1"
-                            value={qty[item.id] || ""}
-                            onChange={(e) => handleQtyChange(item.id, e.target.value)}
-                            placeholder="Qty"
-                            className="h-8 w-12 rounded-lg border border-slate-200 bg-slate-50 px-1 text-center text-[10px] font-semibold text-slate-700 transition focus:border-emerald-400 focus:bg-white focus:outline-none sm:w-14 sm:text-xs"
-                          />
-                          <button
-                            onClick={() => handleAdd(item)}
-                            className="ml-auto flex h-8 items-center justify-center rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-600 px-3 text-[10px] font-bold text-white shadow-sm transition-all duration-200 hover:from-emerald-600 hover:to-emerald-700 hover:shadow-md sm:px-4 sm:text-xs"
-                          >
-                            + Add
-                          </button>
-                        </div>
-                      </div>
-                    </div>
+      <div className="mt-1 truncate text-lg font-extrabold text-emerald-600 sm:mt-2 sm:text-xl lg:text-2xl">
+        Rs. {item.price}
+      </div>
+    </div>
+
+    {/* Tax & Qty */}
+    <div className="mt-3 flex items-center gap-1.5 sm:mt-4 sm:gap-2">
+      <div className="flex h-10 flex-1 min-w-0 items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 px-1 sm:h-11">
+        <button
+          type="button"
+          onClick={() => adjustTax(-0.5)}
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-lg font-bold text-slate-600 hover:bg-slate-200"
+        >
+          −
+        </button>
+
+        <input
+          type="number"
+          min="0"
+          step="0.1"
+          value={taxByItem[item.id] ?? item.tax ?? 5}
+          onChange={(e) => handleTaxChange(item.id, e.target.value)}
+          className="h-full w-full min-w-0 bg-transparent text-center text-sm font-bold outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+        />
+
+        <button
+          type="button"
+          onClick={() => adjustTax(0.5)}
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-lg font-bold text-slate-600 hover:bg-slate-200"
+        >
+          +
+        </button>
+      </div>
+
+      <input
+        type="number"
+        min="1"
+        value={qty[item.id] || ""}
+        onChange={(e) => handleQtyChange(item.id, e.target.value)}
+        placeholder="Qty"
+        className="h-10 w-14 shrink-0 rounded-xl border border-slate-200 bg-slate-50 text-center text-sm font-semibold outline-none focus:border-blue-400 sm:h-11 sm:w-16"
+      />
+    </div>
+
+    {/* Add Button */}
+    <button
+      onClick={() => handleAdd(item)}
+      className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-full bg-blue-600 text-sm font-bold text-white transition hover:bg-blue-700 sm:mt-4 sm:text-base"
+    >
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <circle cx="12" cy="12" r="10" fill="rgba(255,255,255,0.2)" />
+        <path
+          d="M12 8v8M8 12h8"
+          stroke="white"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+      </svg>
+      Add
+    </button>
+  </div>
+</div>
                   );
                 })}
               </div>
             ) : null}
 
             {!isLoadingMenu && !menuError && filteredItems.length > MENU_ITEMS_PAGE_SIZE ? (
-              <div className="mt-5 flex items-center justify-center gap-4 border-t border-slate-100 pt-4">
+              <div className="mt-5 flex flex-wrap items-center justify-center gap-3 border-t border-slate-100 pt-4 sm:mt-6 sm:gap-4 sm:pt-5">
                 <button
                   type="button"
                   onClick={() => setMenuPage((current) => Math.max(1, current - 1))}
                   disabled={menuPage === 1}
-                  className="flex items-center gap-1 text-sm font-semibold text-slate-500 transition hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="flex items-center gap-1 text-sm font-semibold text-slate-500 transition hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-40 sm:text-base"
                 >
                   <span aria-hidden="true">‹</span> Previous
                 </button>
-                <div className="text-sm text-slate-500">
-                  Page <span className="font-semibold text-slate-900">{menuPage}</span> of{" "}
-                  <span className="font-semibold text-slate-900">{totalMenuPages}</span>
+                <div className="text-sm text-slate-500 sm:text-base">
+                  Page <span className="font-bold text-slate-900">{menuPage}</span> of{" "}
+                  <span className="font-bold text-slate-900">{totalMenuPages}</span>
                 </div>
                 <button
                   type="button"
                   onClick={() => setMenuPage((current) => Math.min(totalMenuPages, current + 1))}
                   disabled={menuPage === totalMenuPages}
-                  className="flex items-center gap-1 text-sm font-semibold text-blue-600 transition hover:text-blue-800 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="flex items-center gap-1 text-sm font-semibold text-blue-600 transition hover:text-blue-800 disabled:cursor-not-allowed disabled:opacity-40 sm:text-base"
                 >
                   Next <span aria-hidden="true">›</span>
                 </button>
@@ -627,14 +682,28 @@ const MenuPage = () => {
             ) : null}
           </div>
 
-          <div className="space-y-4">
-            <div className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm">
-              <div className="mb-3 text-sm font-black text-slate-900">Categories</div>
-              <div className="max-h-[320px] space-y-2 overflow-auto pr-1">
+          {/* Right Sidebar */}
+          <div className="min-w-0 space-y-4 sm:space-y-5">
+            {/* Categories */}
+            <div className="min-w-0 rounded-[18px] border border-blue-100 bg-white p-4 shadow-sm sm:rounded-[24px] sm:p-5">
+              <div className="mb-3 text-xl font-black text-slate-900 sm:mb-4 sm:text-2xl">Categories</div>
+              <div className="max-h-[320px] space-y-2 overflow-auto pr-1 sm:space-y-2.5">
                 {categories.map((cat) => (
-                  <button key={cat} onClick={() => setSelectedCategory(cat)} className={`flex w-full items-center justify-between rounded-[16px] border px-4 py-3 text-left text-sm font-bold transition ${selectedCategory === cat ? "border-blue-300 bg-blue-600 text-white" : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"}`}>
-                    <span>{cat}</span>
-                    <span className={`rounded-full px-2 py-1 text-[10px] ${selectedCategory === cat ? "bg-white/15" : "bg-white text-slate-500"}`}>
+                  <button
+                    key={cat}
+                    onClick={() => setSelectedCategory(cat)}
+                    className={`flex w-full min-w-0 items-center justify-between gap-2 rounded-2xl border px-3 py-3 text-left text-base font-bold transition sm:px-4 sm:py-3.5 sm:text-lg ${
+                      selectedCategory === cat
+                        ? "border-blue-700 bg-blue-700 text-white shadow-md"
+                        : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-blue-50"
+                    }`}
+                  >
+                    <span className="min-w-0 truncate">{cat}</span>
+                    <span
+                      className={`shrink-0 rounded-full px-2.5 py-1 text-sm font-bold ${
+                        selectedCategory === cat ? "bg-white/20" : "bg-white text-slate-500"
+                      }`}
+                    >
                       {cat === "All" ? menu.length : filteredItems.filter((item) => normalizeCategory(item.category) === normalizeCategory(cat)).length}
                     </span>
                   </button>
@@ -642,39 +711,40 @@ const MenuPage = () => {
               </div>
             </div>
 
-            <div className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm">
-              <div className="mb-3 text-sm font-black text-slate-900">Order Summary</div>
-              <div className="max-h-[260px] overflow-auto pr-1 text-sm">
+            {/* Order Summary */}
+            <div className="min-w-0 rounded-[18px] border border-blue-100 bg-white p-4 shadow-sm sm:rounded-[24px] sm:p-5">
+              <div className="mb-3 text-xl font-black text-slate-900 sm:mb-4 sm:text-2xl">Order Summary</div>
+              <div className="max-h-[260px] overflow-auto pr-1">
                 {order.map((item) => {
                   const itemTotal = Number(item.total ?? item.amount ?? Number(item.qty || 0) * Number(item.rate || 0));
                   return (
-                  <div key={getOrderItemKey(item)} className="border-b border-slate-100 py-3 last:border-b-0">
-                    <div className="flex items-start justify-between gap-3">
+                  <div key={getOrderItemKey(item)} className="border-b border-slate-100 py-3 last:border-b-0 sm:py-3.5">
+                    <div className="flex items-start justify-between gap-2 sm:gap-3">
                       <div className="min-w-0">
-                        <div className="truncate font-semibold text-slate-700">{item.name}</div>
-                        <div className="mt-1 text-xs text-slate-500">Qty {item.qty} x Rs. {Number(item.rate || 0).toFixed(2)}</div>
+                        <div className="truncate text-base font-semibold text-slate-700 sm:text-lg">{item.name}</div>
+                        <div className="mt-1 truncate text-sm text-slate-500 sm:text-base">Qty {item.qty} x Rs. {Number(item.rate || 0).toFixed(2)}</div>
                       </div>
-                      <div className="shrink-0 font-bold text-slate-900">Rs. {itemTotal.toFixed(2)}</div>
+                      <div className="shrink-0 text-base font-black text-slate-900 sm:text-lg">Rs. {itemTotal.toFixed(2)}</div>
                     </div>
-                    <div className="mt-3 flex items-center gap-2">
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
                       <button
                         type="button"
                         onClick={() => handleOrderQtyAdjust(item, -1)}
-                        className="h-8 min-w-8 rounded-lg border border-slate-200 bg-white px-2 text-sm font-bold text-slate-700"
+                        className="h-9 min-w-9 rounded-xl border border-slate-200 bg-white px-2 text-sm font-bold text-slate-700 transition hover:bg-slate-50 sm:text-base"
                       >
                         -1
                       </button>
                       <button
                         type="button"
                         onClick={() => handleOrderQtyAdjust(item, 1)}
-                        className="h-8 min-w-8 rounded-lg border border-slate-200 bg-white px-2 text-sm font-bold text-slate-700"
+                        className="h-9 min-w-9 rounded-xl border border-slate-200 bg-white px-2 text-sm font-bold text-slate-700 transition hover:bg-slate-50 sm:text-base"
                       >
                         +1
                       </button>
                       <button
                         type="button"
                         onClick={() => handleOrderItemRemove(item)}
-                        className="h-8 rounded-lg border border-rose-200 bg-rose-50 px-3 text-xs font-bold text-rose-700"
+                        className="h-9 rounded-xl border border-rose-200 bg-rose-50 px-3 text-xs font-bold text-rose-700 transition hover:bg-rose-100 sm:text-sm"
                       >
                         Remove
                       </button>
@@ -682,23 +752,24 @@ const MenuPage = () => {
                   </div>
                 )})}
               </div>
-              <div className="mt-4 space-y-2 rounded-[18px] bg-[linear-gradient(135deg,#eff6ff_0%,#f0fdf4_100%)] p-4">
-                <div className="flex justify-between text-sm"><span>Subtotal</span><span>Rs. {subtotal.toFixed(2)}</span></div>
-                <div className="flex justify-between text-sm"><span>Tax</span><span>Rs. {taxTotal.toFixed(2)}</span></div>
-                <div className="flex justify-between text-lg font-black"><span>Total</span><span>Rs. {grandTotal.toFixed(2)}</span></div>
+              <div className="mt-4 space-y-2 rounded-2xl bg-[linear-gradient(135deg,#eff6ff_0%,#f0fdf4_100%)] p-3 sm:p-4">
+                <div className="flex justify-between text-sm text-slate-600 sm:text-base"><span>Subtotal</span><span className="font-semibold">Rs. {subtotal.toFixed(2)}</span></div>
+                <div className="flex justify-between text-sm text-slate-600 sm:text-base"><span>Tax</span><span className="font-semibold">Rs. {taxTotal.toFixed(2)}</span></div>
+                <div className="flex justify-between border-t border-blue-100 pt-2 text-xl font-black text-blue-900 sm:text-2xl"><span>Total</span><span>Rs. {grandTotal.toFixed(2)}</span></div>
               </div>
 
-              {submitError ? <div className="mt-4 text-sm text-rose-600">{submitError}</div> : null}
+              {submitError ? <div className="mt-4 text-sm text-rose-600 sm:text-base">{submitError}</div> : null}
             </div>
 
-            <div className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm">
-              <div className="mb-3 text-sm font-black text-slate-900">Kitchen & Actions</div>
-              <div className="rounded-[18px] border border-slate-200 bg-slate-50 p-4">
-                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Kitchen ETA</div>
+            {/* Kitchen & Actions */}
+            <div className="min-w-0 rounded-[18px] border border-blue-100 bg-white p-4 shadow-sm sm:rounded-[24px] sm:p-5">
+              <div className="mb-3 text-xl font-black text-slate-900 sm:mb-4 sm:text-2xl">Kitchen & Actions</div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3 sm:p-4">
+                <div className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500 sm:text-sm sm:tracking-[0.18em]">Kitchen ETA</div>
                 <select
                   value={prepTimeMinutes}
                   onChange={(event) => setPrepTimeMinutes(Number(event.target.value))}
-                  className="mt-3 w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-semibold text-slate-700"
+                  className="mt-3 h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-base font-semibold text-slate-700 shadow-sm outline-none transition focus:border-blue-400 sm:text-lg"
                 >
                   {[10, 15, 20, 30, 45, 60].map((minutes) => (
                     <option key={minutes} value={minutes}>
@@ -706,7 +777,7 @@ const MenuPage = () => {
                     </option>
                   ))}
                 </select>
-                <div className="mt-2 text-xs text-slate-500">
+                <div className="mt-2.5 text-sm text-slate-500">
                   Ye time kitchen card par dikhega aur ready countdown isi se chalega.
                 </div>
               </div>
@@ -715,7 +786,7 @@ const MenuPage = () => {
                 <button
                   onClick={handleSubmit}
                   disabled={isSubmitting}
-                  className="rounded-xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white shadow-sm disabled:opacity-60"
+                  className="h-[52px] rounded-2xl bg-emerald-600 text-base font-bold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 sm:text-lg"
                 >
                   {banquetMenuPicker ? "Use In Banquet" : isSubmitting ? "Submitting..." : "Submit"}
                 </button>
@@ -725,7 +796,7 @@ const MenuPage = () => {
                       ? navigate(banquetReturnPath, { state: { banquetMenuCancelled: true } })
                       : navigate("/restaurant")
                   }
-                  className="rounded-xl bg-rose-500 px-4 py-3 text-sm font-bold text-white"
+                  className="h-[52px] rounded-2xl bg-rose-500 text-base font-bold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg sm:text-lg"
                 >
                   {banquetMenuPicker ? "Back To Banquet" : "Cancel"}
                 </button>
@@ -734,7 +805,6 @@ const MenuPage = () => {
           </div>
         </div>
       </div>
-
     </div>
   );
 };

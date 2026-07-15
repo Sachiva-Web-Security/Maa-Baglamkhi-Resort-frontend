@@ -556,9 +556,9 @@ const Roomitem = () => {
   /* ---------- render ---------- */
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50/40 via-white to-blue-50/30 p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-gradient-to-b from-blue-50/40 via-white to-blue-50/30 p-3 sm:p-6 lg:p-8">
       {/* ---------- hero section ---------- */}
-      <div className="relative mb-8 overflow-hidden rounded-[28px] bg-gradient-to-br from-blue-950 via-blue-700 to-sky-500 px-6 py-8 shadow-[0_20px_60px_rgba(29,78,216,0.35)] sm:px-10 sm:py-10">
+      <div className="relative mb-5 sm:mb-8 overflow-hidden rounded-[18px] sm:rounded-[28px] bg-gradient-to-br from-blue-950 via-blue-900 via-blue-700 to-sky-500 px-4 py-6 sm:px-10 sm:py-10 shadow-[0_10px_30px_rgba(29,78,216,0.3)] sm:shadow-[0_20px_60px_rgba(29,78,216,0.35)]">
         {/* soft abstract wave background */}
         <svg
           className="pointer-events-none absolute inset-0 h-full w-full opacity-30"
@@ -578,14 +578,16 @@ const Roomitem = () => {
         <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-sky-400/40 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-20 left-1/3 h-56 w-56 rounded-full bg-blue-500/30 blur-3xl" />
 
-        <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-start gap-4">
-            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-white shadow-lg backdrop-blur-md ring-1 ring-white/25">
-              <FiHome size={24} />
+        <div className="relative flex flex-col gap-4 sm:gap-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3 sm:gap-4">
+            <span className="flex h-11 w-11 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-xl sm:rounded-2xl bg-white/15 text-white shadow-lg backdrop-blur-md ring-1 ring-white/25">
+              <FiHome className="h-[18px] w-[18px] sm:h-6 sm:w-6" />
             </span>
-            <div>
-              <h2 className="text-2xl font-black tracking-tight text-white">Room Dashboard</h2>
-              <p className="mt-1.5 max-w-xl text-[18px] font-medium text-blue-50/90">
+            <div className="min-w-0">
+              <h2 className="text-[24px] sm:text-[32px] font-black leading-tight tracking-tight text-white break-words">
+                Room Dashboard
+              </h2>
+              <p className="mt-1 sm:mt-1.5 max-w-xl text-[14px] sm:text-[18px] font-medium leading-snug text-blue-50/90">
                 Every room, its guest, and its running bill — add an add-on and the total updates instantly.
               </p>
             </div>
@@ -594,67 +596,67 @@ const Roomitem = () => {
       </div>
 
       {/* ---------- stat cards ---------- */}
-      <div className="mb-8 grid grid-cols-1 gap-5 sm:grid-cols-3">
-        <div className="group flex h-full items-center justify-between rounded-[26px] border border-blue-100 bg-white/90 p-6 shadow-[0_10px_30px_rgba(29,78,216,0.08)] backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(29,78,216,0.14)]">
-          <div>
-            <div className="text-[17px] font-bold uppercase tracking-wide text-blue-500/80">Total Rooms</div>
-            <div className="mt-2 text-4xl font-black text-slate-900">{rooms.length}</div>
-            <div className="mt-1 text-[15px] font-medium text-slate-400">Total rooms in the property</div>
+      <div className="mb-5 sm:mb-8 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
+        <div className="group flex h-full items-center justify-between gap-3 rounded-[18px] sm:rounded-[26px] border border-blue-100 bg-white/90 p-4 sm:p-6 shadow-[0_10px_30px_rgba(29,78,216,0.08)] backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(29,78,216,0.14)] sm:col-span-2 lg:col-span-1">
+          <div className="min-w-0">
+            <div className="text-[13px] sm:text-[17px] font-bold uppercase tracking-wide text-blue-500/80">Total Rooms</div>
+            <div className="mt-1 sm:mt-2 text-2xl sm:text-4xl font-black text-slate-900">{rooms.length}</div>
+            <div className="mt-1 text-[12px] sm:text-[15px] font-medium text-slate-400">Total rooms in the property</div>
           </div>
-          <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 ring-1 ring-blue-100 transition-transform duration-300 group-hover:scale-110">
-            <FiHome size={22} />
+          <span className="flex h-11 w-11 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-xl sm:rounded-2xl bg-blue-50 text-blue-600 ring-1 ring-blue-100 transition-transform duration-300 group-hover:scale-110">
+            <FiHome className="h-[18px] w-[18px] sm:h-[22px] sm:w-[22px]" />
           </span>
         </div>
 
-        <div className="group flex h-full items-center justify-between rounded-[26px] border border-blue-100 bg-white/90 p-6 shadow-[0_10px_30px_rgba(29,78,216,0.08)] backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(29,78,216,0.14)]">
-          <div>
-            <div className="text-[17px] font-bold uppercase tracking-wide text-amber-500/80">Occupied</div>
-            <div className="mt-2 text-4xl font-black text-slate-900">{occupiedRooms.length}</div>
-            <div className="mt-1 text-[15px] font-medium text-slate-400">Rooms currently occupied</div>
+        <div className="group flex h-full items-center justify-between gap-3 rounded-[18px] sm:rounded-[26px] border border-blue-100 bg-white/90 p-4 sm:p-6 shadow-[0_10px_30px_rgba(29,78,216,0.08)] backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(29,78,216,0.14)]">
+          <div className="min-w-0">
+            <div className="text-[13px] sm:text-[17px] font-bold uppercase tracking-wide text-amber-500/80">Occupied</div>
+            <div className="mt-1 sm:mt-2 text-2xl sm:text-4xl font-black text-slate-900">{occupiedRooms.length}</div>
+            <div className="mt-1 text-[12px] sm:text-[15px] font-medium text-slate-400">Rooms currently occupied</div>
           </div>
-          <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-amber-50 text-amber-600 ring-1 ring-amber-100 transition-transform duration-300 group-hover:scale-110">
-            <FiFileText size={22} />
+          <span className="flex h-11 w-11 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-xl sm:rounded-2xl bg-amber-50 text-amber-600 ring-1 ring-amber-100 transition-transform duration-300 group-hover:scale-110">
+            <FiFileText className="h-[18px] w-[18px] sm:h-[22px] sm:w-[22px]" />
           </span>
         </div>
 
-        <div className="group flex h-full items-center justify-between rounded-[26px] border border-blue-100 bg-white/90 p-6 shadow-[0_10px_30px_rgba(29,78,216,0.08)] backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(29,78,216,0.14)]">
-          <div>
-            <div className="text-[17px] font-bold uppercase tracking-wide text-emerald-500/80">Pending Bill Total</div>
-            <div className="mt-2 text-4xl font-black text-slate-900">{formatCurrency(pendingBillTotal)}</div>
-            <div className="mt-1 text-[15px] font-medium text-slate-400">Total pending amount</div>
+        <div className="group flex h-full items-center justify-between gap-3 rounded-[18px] sm:rounded-[26px] border border-blue-100 bg-white/90 p-4 sm:p-6 shadow-[0_10px_30px_rgba(29,78,216,0.08)] backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(29,78,216,0.14)]">
+          <div className="min-w-0">
+            <div className="text-[13px] sm:text-[17px] font-bold uppercase tracking-wide text-emerald-500/80">Pending Bill Total</div>
+            <div className="mt-1 sm:mt-2 text-xl sm:text-4xl font-black text-slate-900 break-words">{formatCurrency(pendingBillTotal)}</div>
+            <div className="mt-1 text-[12px] sm:text-[15px] font-medium text-slate-400">Total pending amount</div>
           </div>
-          <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100 transition-transform duration-300 group-hover:scale-110">
-            <FiTrendingUp size={22} />
+          <span className="flex h-11 w-11 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-xl sm:rounded-2xl bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100 transition-transform duration-300 group-hover:scale-110">
+            <FiTrendingUp className="h-[18px] w-[18px] sm:h-[22px] sm:w-[22px]" />
           </span>
         </div>
       </div>
 
       {/* ---------- search + add room ---------- */}
-      <div className="mb-8 flex flex-col items-stretch gap-3 rounded-[26px] border border-blue-100 bg-white/90 p-4 shadow-[0_10px_30px_rgba(29,78,216,0.08)] backdrop-blur-sm sm:flex-row sm:items-center">
-        <div className="relative flex-1">
-          <FiSearch className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-blue-300" size={20} />
+      <div className="mb-5 sm:mb-8 flex flex-col items-stretch gap-3 rounded-[18px] sm:rounded-[26px] border border-blue-100 bg-white/90 p-3 sm:p-4 shadow-[0_10px_30px_rgba(29,78,216,0.08)] backdrop-blur-sm sm:flex-row sm:items-center">
+        <div className="relative flex-1 min-w-0">
+          <FiSearch className="pointer-events-none absolute left-4 sm:left-5 top-1/2 -translate-y-1/2 text-blue-300" size={18} />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search room no. or guest name"
-            className="h-14 w-full rounded-xl border-2 border-blue-100 bg-white pl-12 pr-4 text-[17px] text-slate-700 shadow-sm transition focus:border-blue-400 focus:outline-none focus:ring-4 focus:ring-blue-100"
+            className="h-12 sm:h-14 w-full rounded-xl border-2 border-blue-100 bg-white pl-11 sm:pl-12 pr-4 text-[15px] sm:text-[17px] text-slate-700 shadow-sm transition focus:border-blue-400 focus:outline-none focus:ring-4 focus:ring-blue-100"
           />
         </div>
 
         <button
           type="button"
           onClick={handleAddRoomClick}
-          className="inline-flex h-14 items-center justify-center gap-2 rounded-xl bg-blue-700 px-7 text-[17px] font-bold text-white shadow-[0_8px_20px_rgba(29,78,216,0.25)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-800 hover:shadow-[0_10px_26px_rgba(29,78,216,0.32)]"
+          className="inline-flex h-12 sm:h-14 w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-blue-700 px-5 sm:px-7 text-[15px] sm:text-[17px] font-bold text-white shadow-[0_8px_20px_rgba(29,78,216,0.25)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-800 hover:shadow-[0_10px_26px_rgba(29,78,216,0.32)]"
         >
-          <FiPlusCircle size={19} /> Add Room
+          <FiPlusCircle size={18} /> Add Room
         </button>
       </div>
 
       {/* ---------- room card grid ---------- */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
         {loading ? (
-          <div className="col-span-full rounded-[28px] border-2 border-dashed border-blue-200 bg-blue-50/30 p-12 text-center text-[21px] font-semibold text-blue-900/70">
+          <div className="col-span-full rounded-[18px] sm:rounded-[28px] border-2 border-dashed border-blue-200 bg-blue-50/30 p-8 sm:p-12 text-center text-[16px] sm:text-[21px] font-semibold text-blue-900/70">
             Loading hotel rooms...
           </div>
         ) : paginatedCards.length ? (
@@ -678,19 +680,19 @@ const Roomitem = () => {
             return (
               <div
                 key={`${room.roomId}-${room.roomNo}`}
-                className={`flex h-full flex-col rounded-[24px] border bg-white/90 p-6 shadow-[0_10px_30px_rgba(29,78,216,0.08)] backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(29,78,216,0.14)] ${
+                className={`flex h-full min-w-0 flex-col rounded-[18px] sm:rounded-[24px] border bg-white/90 p-4 sm:p-6 shadow-[0_10px_30px_rgba(29,78,216,0.08)] backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(29,78,216,0.14)] ${
                   isFocused ? "border-blue-400 ring-4 ring-blue-100" : "border-blue-100"
                 }`}
               >
                 <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <div className="text-[23px] font-black text-slate-900">Room {room.roomNo}</div>
-                    <div className="text-[15px] font-medium text-slate-400">
+                  <div className="min-w-0">
+                    <div className="text-[18px] sm:text-[23px] font-black text-slate-900 break-words">Room {room.roomNo}</div>
+                    <div className="text-[13px] sm:text-[15px] font-medium text-slate-400 break-words">
                       {room.categoryName || room.roomType || "Hotel Room"}
                     </div>
                   </div>
                   <span
-                    className={`inline-flex shrink-0 items-center rounded-full px-4 py-1.5 text-[15px] font-bold ${
+                    className={`inline-flex shrink-0 items-center rounded-full px-3 sm:px-4 py-1 sm:py-1.5 text-[12px] sm:text-[15px] font-bold ${
                       occupied ? "bg-amber-50 text-amber-600" : "bg-emerald-50 text-emerald-600"
                     }`}
                   >
@@ -703,40 +705,40 @@ const Roomitem = () => {
 
                 {occupied ? (
                   <>
-                    <div className="mt-4">
-                      <div className="text-[18px] font-bold text-slate-800">{guestName}</div>
-                      <div className="mt-1 text-[16px] text-slate-500">
+                    <div className="mt-3 sm:mt-4 min-w-0">
+                      <div className="text-[15px] sm:text-[18px] font-bold text-slate-800 break-words">{guestName}</div>
+                      <div className="mt-1 text-[13px] sm:text-[16px] text-slate-500 break-words">
                         {checkInLabel} → {checkOutLabel}
                       </div>
                     </div>
 
-                    <div className="mt-4 rounded-2xl border border-blue-100/70 bg-blue-50/50 px-4 py-4">
+                    <div className="mt-3 sm:mt-4 rounded-2xl border border-blue-100/70 bg-blue-50/50 px-3 sm:px-4 py-3 sm:py-4">
                       {hasMenuItems ? (
                         <div className="space-y-2">
                           {items.map((item) => (
-                            <div key={item.id} className="flex items-center justify-between text-[16px] text-slate-700">
-                              <span>
+                            <div key={item.id} className="flex items-center justify-between gap-2 text-[13px] sm:text-[16px] text-slate-700">
+                              <span className="min-w-0 truncate">
                                 {item.item_name} x{item.qty}
                               </span>
-                              <span className="font-semibold">
+                              <span className="shrink-0 font-semibold">
                                 {formatCurrency(Number(item.qty || 0) * Number(item.rate || 0))}
                               </span>
                             </div>
                           ))}
                         </div>
                       ) : (
-                        <div className="text-[16px] text-slate-400">No items added yet</div>
+                        <div className="text-[13px] sm:text-[16px] text-slate-400">No items added yet</div>
                       )}
-                      <div className="mt-3 flex items-center justify-between border-t border-dashed border-blue-200 pt-3 text-[17px] font-black text-slate-900">
+                      <div className="mt-3 flex items-center justify-between gap-2 border-t border-dashed border-blue-200 pt-3 text-[14px] sm:text-[17px] font-black text-slate-900">
                         <span>Total</span>
-                        <span>{formatCurrency(itemsTotal)}</span>
+                        <span className="truncate">{formatCurrency(itemsTotal)}</span>
                       </div>
                     </div>
 
                     <button
                       type="button"
                       onClick={() => openRoomMenu(room)}
-                      className="mt-4 h-[52px] w-full rounded-xl border-2 border-blue-200 bg-white text-center text-[17px] font-bold text-blue-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-50 hover:shadow-md"
+                      className="mt-3 sm:mt-4 h-auto min-h-[46px] sm:min-h-[52px] w-full rounded-xl border-2 border-blue-200 bg-white px-3 py-2.5 text-center text-[14px] sm:text-[17px] font-bold leading-snug text-blue-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-50 hover:shadow-md"
                     >
                       Book Order — Open Menu Card to Add Items
                     </button>
@@ -745,13 +747,13 @@ const Roomitem = () => {
                       <button
                         type="button"
                         onClick={() => openPayNow(room)}
-                        className="mt-2.5 h-[50px] w-full rounded-xl border border-emerald-200 bg-emerald-50 text-[17px] font-bold text-emerald-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-100"
+                        className="mt-2.5 h-[44px] sm:h-[50px] w-full rounded-xl border border-emerald-200 bg-emerald-50 text-[14px] sm:text-[17px] font-bold text-emerald-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-100"
                       >
                         Pay Now
                       </button>
                     ) : null}
 
-                    <div className="mt-4 flex flex-1 items-end justify-between border-t border-blue-100 pt-3 text-[16px] font-semibold text-blue-500">
+                    <div className="mt-3 sm:mt-4 flex flex-wrap flex-1 items-end justify-between gap-2 border-t border-blue-100 pt-3 text-[14px] sm:text-[16px] font-semibold text-blue-500">
                       <button type="button" onClick={() => openRoomMenu(room)} className="transition hover:text-blue-700">
                         Open Menu Card
                       </button>
@@ -761,12 +763,12 @@ const Roomitem = () => {
                     </div>
                   </>
                 ) : (
-                  <div className="mt-5 flex flex-1 flex-col justify-between">
-                    <div className="text-[17px] text-slate-400">Ready for check-in.</div>
+                  <div className="mt-4 sm:mt-5 flex flex-1 flex-col justify-between">
+                    <div className="text-[14px] sm:text-[17px] text-slate-400">Ready for check-in.</div>
                     <button
                       type="button"
                       onClick={() => openCheckIn(room)}
-                      className="mt-4 h-[52px] w-full rounded-xl border-2 border-blue-200 bg-white text-[17px] font-bold text-blue-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-50 hover:shadow-md"
+                      className="mt-4 h-[46px] sm:h-[52px] w-full rounded-xl border-2 border-blue-200 bg-white text-[14px] sm:text-[17px] font-bold text-blue-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-50 hover:shadow-md"
                     >
                       Check-in Guest
                     </button>
@@ -776,27 +778,27 @@ const Roomitem = () => {
             );
           })
         ) : (
-          <div className="col-span-full rounded-[28px] border-2 border-dashed border-blue-200 bg-blue-50/30 p-12 text-center text-[21px] font-semibold text-blue-900/70">
+          <div className="col-span-full rounded-[18px] sm:rounded-[28px] border-2 border-dashed border-blue-200 bg-blue-50/30 p-8 sm:p-12 text-center text-[16px] sm:text-[21px] font-semibold text-blue-900/70">
             No rooms match your search.
           </div>
         )}
       </div>
 
       {/* ---------- pagination ---------- */}
-      <div className="mt-8 flex flex-col gap-4 rounded-[26px] border border-blue-100 bg-white/90 px-6 py-5 shadow-[0_10px_30px_rgba(29,78,216,0.08)] backdrop-blur-sm lg:flex-row lg:items-center lg:justify-between">
-        <div className="text-[16px] text-slate-500">
+      <div className="mt-5 sm:mt-8 flex flex-col gap-4 rounded-[18px] sm:rounded-[26px] border border-blue-100 bg-white/90 px-4 sm:px-6 py-4 sm:py-5 shadow-[0_10px_30px_rgba(29,78,216,0.08)] backdrop-blur-sm lg:flex-row lg:items-center lg:justify-between">
+        <div className="text-center text-[13px] sm:text-[16px] text-slate-500 lg:text-left">
           Showing <span className="font-bold text-slate-900">{visibleRoomStart}</span>-
           <span className="font-bold text-slate-900">{visibleRoomEnd}</span> of{" "}
           <span className="font-bold text-slate-900">{filteredRoomCards.length}</span> rooms
         </div>
 
         {totalRoomPages > 1 ? (
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center justify-center gap-2 lg:justify-end">
             <button
               type="button"
               onClick={() => setRoomPage((current) => Math.max(1, current - 1))}
               disabled={roomPage === 1}
-              className="rounded-full border-2 border-blue-100 bg-white px-5 py-2.5 text-[16px] font-bold text-slate-600 transition-all duration-200 hover:-translate-y-0.5 hover:border-blue-300 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
+              className="rounded-full border-2 border-blue-100 bg-white px-4 sm:px-5 py-2 sm:py-2.5 text-[13px] sm:text-[16px] font-bold text-slate-600 transition-all duration-200 hover:-translate-y-0.5 hover:border-blue-300 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
             >
               Previous
             </button>
@@ -808,7 +810,7 @@ const Roomitem = () => {
                   key={`room-page-${pageNumber}`}
                   type="button"
                   onClick={() => setRoomPage(pageNumber)}
-                  className={`h-11 min-w-11 rounded-full px-3.5 text-[16px] font-bold transition-all duration-200 ${
+                  className={`h-9 w-9 sm:h-11 sm:min-w-11 sm:w-auto rounded-full px-2.5 sm:px-3.5 text-[13px] sm:text-[16px] font-bold transition-all duration-200 ${
                     isActive
                       ? "bg-blue-700 text-white shadow-[0_10px_24px_rgba(29,78,216,0.3)]"
                       : "border-2 border-blue-100 bg-white text-slate-600 hover:-translate-y-0.5 hover:border-blue-300 hover:text-blue-700"
@@ -823,7 +825,7 @@ const Roomitem = () => {
               type="button"
               onClick={() => setRoomPage((current) => Math.min(totalRoomPages, current + 1))}
               disabled={roomPage === totalRoomPages}
-              className="rounded-full border-2 border-blue-100 bg-white px-5 py-2.5 text-[16px] font-bold text-slate-600 transition-all duration-200 hover:-translate-y-0.5 hover:border-blue-300 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
+              className="rounded-full border-2 border-blue-100 bg-white px-4 sm:px-5 py-2 sm:py-2.5 text-[13px] sm:text-[16px] font-bold text-slate-600 transition-all duration-200 hover:-translate-y-0.5 hover:border-blue-300 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
             >
               Next
             </button>

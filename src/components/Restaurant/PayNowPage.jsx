@@ -10,7 +10,7 @@ const PayNowPage = () => {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-[28px] border border-white/10 bg-[linear-gradient(135deg,#0f172a_0%,#1d4ed8_50%,#0f766e_100%)] px-6 py-6 text-white shadow-[0_24px_70px_rgba(15,23,42,0.25)]">
+      {/* <section className="rounded-[28px] border border-white/10 bg-[linear-gradient(135deg,#0f172a_0%,#1d4ed8_50%,#0f766e_100%)] px-6 py-6 text-white shadow-[0_24px_70px_rgba(15,23,42,0.25)]">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-cyan-200">Direct Payment Page</p>
@@ -27,7 +27,7 @@ const PayNowPage = () => {
             {String(invoice?.entityType || "").toLowerCase() === "room" ? "Back To Rooms" : "Back To Tables"}
           </button>
         </div>
-      </section>
+      </section> */}
 
       <Payment
         invoice={invoice}
