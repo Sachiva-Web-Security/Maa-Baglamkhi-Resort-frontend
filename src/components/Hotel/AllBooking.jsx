@@ -14,6 +14,7 @@ import {
   FaLayerGroup,
   FaMoneyBillWave,
   FaMoneyCheckAlt,
+  FaPhone,
   FaPlus,
   FaReceipt,
   FaRedoAlt,
@@ -22,6 +23,7 @@ import {
   FaTimes,
   FaTimesCircle,
   FaWallet,
+  FaWhatsapp,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import API from "../../api";
@@ -180,7 +182,12 @@ const AllBooking = () => {
   const [openActionMenu, setOpenActionMenu] = useState("");
   const [cancelModal, setCancelModal] = useState({ open: false, booking: null, reason: "", submitting: false });
   const [feedbackModal, setFeedbackModal] = useState({ open: false, type: "success", title: "", message: "" });
+  const [phoneEditModal, setPhoneEditModal] = useState({ open: false, booking: null, mobile: "", saving: false });
   const navigate = useNavigate();
+
+  // Admin-only — employees can VIEW but not edit phone numbers.
+  const currentRole = (localStorage.getItem("role") || "").toLowerCase();
+  const isAdmin = currentRole === "admin";
 
   const openFeedbackModal = (type, title, message) => {
     setFeedbackModal({ open: true, type, title, message });
@@ -270,6 +277,37 @@ const AllBooking = () => {
     } catch (err) {
       console.error("Refund failed:", err);
       alert("Refund Failed");
+    }
+  };
+
+  // Admin-only: update the customer's phone number so WhatsApp + SMS
+  // notifications go to the correct number.
+  const handleSavePhone = async () => {
+    const booking = phoneEditModal.booking;
+    if (!booking?.bookingId) return;
+    const mobile = String(phoneEditModal.mobile || "").replace(/\D+/g, "");
+    if (mobile.length < 10) {
+      alert("Please enter a valid phone number (at least 10 digits).");
+      return;
+    }
+    setPhoneEditModal((current) => ({ ...current, saving: true }));
+    try {
+      await API.put(`/hotel/guest/phone/${booking.bookingId}`, { mobile });
+      setPhoneEditModal({ open: false, booking: null, mobile: "", saving: false });
+      await fetchBookings();
+      openFeedbackModal(
+        "success",
+        "Phone Number Updated",
+        `Phone number for booking #${booking.bookingId} has been updated.`,
+      );
+    } catch (err) {
+      console.error("Phone update failed:", err);
+      setPhoneEditModal((current) => ({ ...current, saving: false }));
+      openFeedbackModal(
+        "error",
+        "Update Failed",
+        err.response?.data?.error || "We could not save the phone number. Please try again.",
+      );
     }
   };
 
@@ -425,6 +463,43 @@ const AllBooking = () => {
       onClick: () => navigate("/hotel/payment-history", { state: { bookingId: booking.bookingId } }),
     });
 
+    // Admin-only: edit phone & send invoice via WhatsApp
+    if (isAdmin) {
+      items.push({
+        key: "editPhone",
+        label: "Edit Phone",
+        className: `${actionButtonCls} border border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100`,
+        onClick: () => setPhoneEditModal({ open: true, booking, mobile: booking.mobile || "", saving: false }),
+      });
+      items.push({
+        key: "sendWhatsapp",
+        label: "Send Invoice",
+        className: `${actionButtonCls} bg-emerald-600 text-white hover:bg-emerald-700`,
+        onClick: async () => {
+          try {
+            const res = await API.post(`/hotel/invoice/send-whatsapp/${booking.bookingId}`);
+            const customerOk = res.data?.customer?.result?.ok;
+            const adminOk = res.data?.admin?.result?.ok;
+            const ok = customerOk && (adminOk || res.data?.admin?.result?.skipped);
+            openFeedbackModal(
+              ok ? "success" : "error",
+              ok ? "Invoice sent" : "Send failed",
+              ok
+                ? "Invoice PDF was sent to the customer's WhatsApp and admin."
+                : "Could not send the invoice via WhatsApp. Check the admin number under WhatsApp Settings.",
+            );
+          } catch (err) {
+            console.error(err);
+            openFeedbackModal(
+              "error",
+              "Send Failed",
+              err.response?.data?.error || "Could not send invoice via WhatsApp.",
+            );
+          }
+        },
+      });
+    }
+
     return items;
   };
 
@@ -483,6 +558,10 @@ const AllBooking = () => {
                 <div className="rounded-2xl border border-slate-200 bg-white p-4">
                   <div className="text-sm uppercase tracking-[0.2em] font-bold text-slate-500">Total</div>
                   <div className="mt-2 text-xl font-black text-slate-900">{formatCurrency(total)}</div>
+                </div>
+                <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                  <div className="text-sm uppercase tracking-[0.2em] font-bold text-slate-500">Phone</div>
+                  <div className="mt-2 text-lg font-bold text-slate-900 break-all">{booking.mobile || "--"}</div>
                 </div>
                 <div className="rounded-2xl border border-slate-200 bg-white p-4">
                   <div className="text-sm uppercase tracking-[0.2em] font-bold text-slate-500">Paid</div>
@@ -552,13 +631,14 @@ const AllBooking = () => {
         <table className="w-full table-fixed text-left">
           <thead className="bg-slate-50">
             <tr className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
-              <th className="w-[26%] px-6 py-4">Guest</th>
-              <th className="w-[10%] px-6 py-4">Room</th>
-              <th className="w-[13%] px-6 py-4">Check-in date</th>
-              <th className="w-[13%] px-6 py-4">Check-out date</th>
-              <th className="w-[14%] px-6 py-4 text-right">Total amount</th>
-              <th className="w-[14%] px-6 py-4">Status</th>
-              <th className="w-[10%] px-6 py-4 text-right">Actions</th>
+              <th className="w-[24%] px-6 py-4">Guest</th>
+              <th className="w-[12%] px-6 py-4">Phone</th>
+              <th className="w-[8%] px-6 py-4">Room</th>
+              <th className="w-[12%] px-6 py-4">Check-in date</th>
+              <th className="w-[12%] px-6 py-4">Check-out date</th>
+              <th className="w-[12%] px-6 py-4 text-right">Total amount</th>
+              <th className="w-[12%] px-6 py-4">Status</th>
+              <th className="w-[8%] px-6 py-4 text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -585,6 +665,11 @@ const AllBooking = () => {
                         <div className="truncate text-base font-bold text-slate-900">{guestName}</div>
                         <div className="mt-1 text-xs font-medium text-slate-400">{bookingRef}</div>
                       </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-5">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-slate-900">{booking.mobile || "--"}</span>
                     </div>
                   </td>
                   <td className="px-6 py-5">
@@ -1088,6 +1173,83 @@ const AllBooking = () => {
           </div>
         ) : null}
       </div>
+
+      {/* Admin-only: Edit Customer Phone Modal */}
+      {phoneEditModal.open && (
+        <div
+          className="fixed inset-0 z-[1100] flex items-center justify-center bg-slate-950/55 px-4 backdrop-blur-sm"
+          onClick={() => !phoneEditModal.saving && setPhoneEditModal({ open: false, booking: null, mobile: "", saving: false })}
+        >
+          <div
+            className="w-full max-w-md overflow-hidden rounded-[30px] border border-white/70 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] shadow-[0_30px_90px_rgba(15,23,42,0.28)]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="relative flex items-start gap-4 bg-gradient-to-r from-sky-500 to-blue-600 px-6 py-6 text-white">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.24),_transparent_46%)]" />
+              <div className="relative rounded-[20px] border border-white/20 bg-white/15 p-3 shadow-[0_12px_30px_rgba(255,255,255,0.08)]">
+                <FaPhone className="text-xl" />
+              </div>
+              <div className="relative min-w-0 flex-1">
+                <div className="mb-2 inline-flex rounded-full px-3 py-1 text-sm font-bold uppercase tracking-[0.22em] bg-white/15 text-white ring-1 ring-white/20">
+                  Admin Only
+                </div>
+                <h2 className="text-lg font-black leading-tight">Edit Customer Phone</h2>
+                <p className="mt-1 text-sm leading-relaxed text-sky-50">
+                  Booking #{phoneEditModal.booking?.bookingId} — {phoneEditModal.booking?.guest_name || "Guest"}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPhoneEditModal({ open: false, booking: null, mobile: "", saving: false })}
+                className="relative rounded-full border border-white/15 p-2 text-white/85 transition hover:bg-white/10 hover:text-white"
+                aria-label="Close popup"
+              >
+                <FaTimes />
+              </button>
+            </div>
+            <div className="px-6 py-6">
+              <div className="rounded-[22px] border border-slate-200/80 bg-slate-50/80 p-4">
+                <label className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
+                  Mobile Number
+                </label>
+                <input
+                  type="tel"
+                  value={phoneEditModal.mobile}
+                  onChange={(event) =>
+                    setPhoneEditModal((current) => ({ ...current, mobile: event.target.value }))
+                  }
+                  placeholder="e.g. 9876543210"
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
+                  autoFocus
+                />
+                <p className="mt-2 text-xs text-slate-500">
+                  Digits only — country code (91) is added automatically if missing.
+                </p>
+              </div>
+              <div className="mt-6 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setPhoneEditModal({ open: false, booking: null, mobile: "", saving: false })}
+                  className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+                  disabled={phoneEditModal.saving}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSavePhone}
+                  disabled={phoneEditModal.saving}
+                  className={`inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-sky-600 to-blue-600 px-6 py-3 text-sm font-bold text-white shadow-[0_14px_30px_rgba(14,165,233,0.24)] transition hover:brightness-110 ${
+                    phoneEditModal.saving ? "cursor-not-allowed opacity-70" : ""
+                  }`}
+                >
+                  {phoneEditModal.saving ? "Saving…" : "Save Phone"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

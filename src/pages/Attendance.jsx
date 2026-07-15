@@ -42,7 +42,8 @@ const Attendance = () => {
     const fetchAttendance = async () => {
       try {
         const res = await API.get("/attendance", { params: { date } });
-        setEmployees(res.data || []);
+        const data = Array.isArray(res.data) ? res.data : [];
+        setEmployees(data);
       } catch (err) {
         console.error("Error loading attendance", err);
       }
@@ -53,26 +54,25 @@ const Attendance = () => {
 
   /* ================= FILTER ================= */
 
-  const filteredEmployees = useMemo(
-    () =>
-      employees.filter((employee) => {
-        const matchesDepartment =
-          department === "All Departments" ||
-          employee.department === department;
+  const filteredEmployees = useMemo(() => {
+    const list = Array.isArray(employees) ? employees : [];
+    return list.filter((employee) => {
+      const matchesDepartment =
+        department === "All Departments" ||
+        employee.department === department;
 
-        const matchesRole =
-          roleFilter === "All Roles" || employee.role === roleFilter;
+      const matchesRole =
+        roleFilter === "All Roles" || employee.role === roleFilter;
 
-        const matchesSearch =
-          searchQuery === "" ||
-          (employee.name || "")
-            .toLowerCase()
-            .includes(searchQuery.toLowerCase());
+      const matchesSearch =
+        searchQuery === "" ||
+        (employee.name || "")
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase());
 
-        return matchesDepartment && matchesRole && matchesSearch;
-      }),
-    [department, employees, roleFilter, searchQuery]
-  );
+      return matchesDepartment && matchesRole && matchesSearch;
+    });
+  }, [department, employees, roleFilter, searchQuery]);
 
   /* ================= PAGINATION ================= */
 

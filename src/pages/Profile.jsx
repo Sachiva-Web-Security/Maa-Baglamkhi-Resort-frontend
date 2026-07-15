@@ -7,10 +7,12 @@ import {
   FaExclamationCircle,
   FaLock,
   FaPen,
+  FaPhone,
   FaShieldAlt,
   FaTimes,
   FaUpload,
   FaUserCircle,
+  FaWhatsapp,
 } from "react-icons/fa";
 import API, { getBackendBaseURL } from "../api";
 import { withAudit } from "../utils/auditAction";
@@ -23,6 +25,8 @@ const Profile = () => {
   const [name, setName] = useState(localStorage.getItem("name") || "");
   const [role, setRole] = useState(localStorage.getItem("role") || "");
   const [email, setEmail] = useState(localStorage.getItem("email") || "");
+  const [phone, setPhone] = useState(localStorage.getItem("phone") || "");
+  const [phoneDraft, setPhoneDraft] = useState("");
   const [avatarUrl, setAvatarUrl] = useState(
     localStorage.getItem("avatarUrl") || "",
   );
@@ -38,6 +42,7 @@ const Profile = () => {
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [loadingAvatar, setLoadingAvatar] = useState(false);
   const [loadingPassword, setLoadingPassword] = useState(false);
+  const [loadingPhone, setLoadingPhone] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
@@ -51,6 +56,11 @@ const Profile = () => {
         if (d.name) { setName(d.name); localStorage.setItem("name", d.name); }
         if (d.role) { setRole(d.role); localStorage.setItem("role", (d.role || "").toLowerCase()); }
         if (d.email) { setEmail(d.email); localStorage.setItem("email", d.email); }
+        if (d.phone) {
+          setPhone(d.phone);
+          setPhoneDraft(d.phone);
+          localStorage.setItem("phone", d.phone);
+        }
         if (d.avatarUrl) {
           const full = d.avatarUrl.startsWith("http") ? d.avatarUrl : `${getBackendBaseURL()}${d.avatarUrl}`;
           setAvatarUrl(full);
@@ -237,6 +247,37 @@ const Profile = () => {
     }
   };
 
+  const handlePhoneSave = async () => {
+    setMessage("");
+    setError("");
+    const digits = String(phoneDraft || "").replace(/\D+/g, "");
+    if (!digits || digits.length < 10) {
+      setError("Please enter a valid 10-digit phone number (with country code if outside India).");
+      return;
+    }
+    try {
+      setLoadingPhone(true);
+      const res = await API.put(
+        "/users/me/phone",
+        { phone: digits },
+        withAudit("update_profile_phone"),
+      );
+      const saved = res.data?.phone || digits;
+      setPhone(saved);
+      setPhoneDraft(saved);
+      localStorage.setItem("phone", saved);
+      setMessage("WhatsApp number saved. Booking invoices will now be sent to you.");
+    } catch (err) {
+      const msg =
+        err.response?.data?.message ||
+        err.message ||
+        "Phone number save fail ho gaya.";
+      setError(msg);
+    } finally {
+      setLoadingPhone(false);
+    }
+  };
+
   const prettyRole =
     role && typeof role === "string"
       ? role.charAt(0).toUpperCase() + role.slice(1)
@@ -395,12 +436,73 @@ const Profile = () => {
                 <FaPen className="shrink-0 text-xs text-slate-300 lg:text-sm" />
               </div>
 
+              <div className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-5 py-4 lg:px-6 lg:py-5">
+                <div className="flex min-w-0 items-center gap-3 lg:gap-4">
+                  <FaPhone className="shrink-0 text-slate-400 lg:text-lg" />
+                  <span className="truncate text-sm font-semibold text-slate-800 sm:text-base lg:text-lg">
+                    {phone || "Phone not set"}
+                  </span>
+                </div>
+                <FaWhatsapp className="shrink-0 text-xs text-emerald-400 lg:text-sm" />
+              </div>
+
               {loadingProfile ? (
                 <p className="text-sm font-semibold text-slate-400 sm:text-base lg:text-lg">
                   Profile details load ho rahe hain...
                 </p>
               ) : null}
             </div>
+          </div>
+
+          {/* ── WhatsApp Phone card ────────────────────────────── */}
+          <div className="rounded-[24px] border border-emerald-200 bg-white p-6 shadow-[0_10px_40px_rgba(15,23,42,0.06)] sm:rounded-[28px] sm:p-8 lg:p-10 2xl:p-12">
+            <div className="flex items-center gap-3 lg:gap-4">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 sm:h-12 sm:w-12 lg:h-14 lg:w-14 lg:text-xl 2xl:h-16 2xl:w-16 2xl:text-2xl">
+                <FaWhatsapp />
+              </span>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-600 sm:text-sm lg:text-base">
+                  WhatsApp Number
+                </p>
+                <h2 className="text-lg font-black text-slate-900 sm:text-xl lg:text-2xl 2xl:text-3xl">
+                  Invoice Delivery
+                </h2>
+              </div>
+            </div>
+
+            <p className="mt-4 text-sm font-medium leading-relaxed text-slate-500 sm:text-base lg:mt-5 lg:text-lg 2xl:text-xl">
+              Apna WhatsApp number yahan daalein. Booking banne par ya payment update hone par invoice PDF is number par bheja jayega.
+            </p>
+
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center lg:mt-8">
+              <input
+                type="tel"
+                inputMode="numeric"
+                placeholder="9876543210"
+                value={phoneDraft}
+                onChange={(e) => setPhoneDraft(e.target.value.replace(/\D+/g, "").slice(0, 15))}
+                className="flex-1 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-100 sm:text-base lg:py-4 lg:text-lg"
+              />
+              <button
+                type="button"
+                onClick={handlePhoneSave}
+                disabled={loadingPhone || phoneDraft === phone}
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-emerald-500 px-6 py-3 text-sm font-bold text-white shadow-[0_10px_24px_rgba(16,185,129,0.28)] transition hover:-translate-y-0.5 hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-60 sm:py-3.5 sm:text-base lg:py-4 lg:text-lg"
+              >
+                <FaCheckCircle className="text-xs sm:text-sm lg:text-base" />
+                {loadingPhone ? "Saving..." : phoneDraft === phone ? "Saved" : "Save Number"}
+              </button>
+            </div>
+
+            {phone ? (
+              <p className="mt-3 text-xs font-medium text-slate-400 sm:text-sm lg:text-base">
+                Current number: +{phone}
+              </p>
+            ) : (
+              <p className="mt-3 text-xs font-medium text-amber-600 sm:text-sm lg:text-base">
+                Abhi koi number set nahi hai. Invoice WhatsApp par nahi bheja jayega.
+              </p>
+            )}
           </div>
 
           {/* ── Password card ────────────────────────────────── */}

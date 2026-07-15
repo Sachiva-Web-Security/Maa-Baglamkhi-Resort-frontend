@@ -259,7 +259,7 @@ function AppRoutes({ isAuthenticated, setIsAuthenticated, protect }) {
           <Route path="/kitchen" element={protect(<Kitchen />, ROLES.KITCHEN)} />
           <Route path="/waiter-delivery" element={protect(<WaiterDeliveryQueue />, ROLES.RESTAURANT)} />
           <Route path="/user" element={protect(<User />, ROLES.ADMIN_ONLY)} />
-          <Route path="/invoice/:customerId" element={protect(<CustomerInvoicePage />, ROLES.ALL)} />
+                    <Route path="/invoice/:customerId" element={protect(<CustomerInvoicePage />, ROLES.ALL)} />
 
           <Route path="/reports/sales" element={protect(<SalesReport />, ROLES.REPORTS)} />
           <Route

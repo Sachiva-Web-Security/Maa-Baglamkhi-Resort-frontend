@@ -19,6 +19,7 @@ import {
   FaUserCheck,
   FaUtensils,
   FaWallet,
+  FaWhatsapp,
 } from "react-icons/fa";
 
 import { getRoleHome } from "../../utils/roleHome";
@@ -121,6 +122,7 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
       { id: 111, name: "Reports", icon: FaChartBar, path: "/reports", section: "records" },
       { id: 112, name: "Audit Logs", icon: FaHistory, path: "/reports/audit", section: "records" },
       { id: 113, name: "User Management", icon: FaUserCheck, path: "/user", section: "records" },
+      { id: 115, name: "WhatsApp Settings", icon: FaWhatsapp, path: "/whatsapp-settings", section: "records" },
       { id: 114, name: "Salary", icon: FaMoneyBillWave, path: "/salary", section: "records" },
     ],
     manager: [

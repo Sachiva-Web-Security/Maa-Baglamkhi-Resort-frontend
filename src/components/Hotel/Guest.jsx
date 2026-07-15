@@ -219,6 +219,9 @@ const Guest = () => {
         ...formData,
         guestEmail: email,
         bookingStatus: "Confirmed",
+        // Automatically send the WhatsApp invoice to the customer AND the
+        // admin immediately after the booking is created.
+        sendInvoice: true,
       };
 
       const res = await API.post("/hotel/guest", payload);

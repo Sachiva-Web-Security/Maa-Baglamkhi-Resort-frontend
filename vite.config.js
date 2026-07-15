@@ -4,8 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '')
-  const backendOrigin = env.VITE_BACKEND_ORIGIN || "http://localhost:5002"
-  const devHost = env.VITE_DEV_HOST || "localhost"
+  const devHost = env.VITE_DEV_HOST || "192.168.1.23"
   const devPort = Number(env.VITE_DEV_PORT || 5173)
 
   return {
@@ -19,26 +18,6 @@ export default defineConfig(({ mode }) => {
         port: devPort,
         clientPort: devPort,
         protocol: "ws",
-      },
-      proxy: {
-        "/api": {
-          target: backendOrigin,
-          changeOrigin: true,
-          configure: (proxy) => {
-            proxy.on("error", (err) => {
-              console.error("[vite proxy] backend connection failed:", err.message);
-            });
-          },
-        },
-        "/uploads": {
-          target: backendOrigin,
-          changeOrigin: true,
-        },
-        "/socket.io": {
-          target: backendOrigin,
-          ws: true,
-          changeOrigin: true,
-        },
       },
     },
   }
