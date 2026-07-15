@@ -540,6 +540,85 @@ const rowTotal = (row, nights = 0) => {
   return base + (base * Number(row.gst || 0)) / 100;
 };
 
+// ─────────────────────────────────────────────────────────────────────────
+// normalizeBooking
+// -----------------------------------------------------------------------
+// The "All Bookings" list renders straight off whatever `/hotel/all-bookings`
+// returns (b.totalAmount, b.bookingType, b.rooms). The problem: different
+// endpoints on the backend save/return these under different key names
+// (snake_case vs camelCase, or a differently-named column altogether), so a
+// freshly created booking can come back with e.g. `total_amount` instead of
+// `totalAmount`, or `booking_type` instead of `bookingType` — the table then
+// reads `undefined` and shows 0 / "-". This normalizer runs once, right
+// after the list is fetched, and maps every alias we know the backend might
+// use onto the single set of keys the rest of this file already expects
+// (the same "try every alias" pattern already used for room numbers in
+// extractRoomNumbersFromBooking / openEditBooking above).
+const normalizeBooking = (b) => {
+  if (!b || typeof b !== "object") return b;
+
+  // ---- amount -------------------------------------------------------
+  let totalAmount = Number(
+    b.totalAmount ??
+      b.total_amount ??
+      b.grandTotal ??
+      b.grand_total ??
+      b.finalTotal ??
+      b.final_total ??
+      b.invoiceTotal ??
+      b.invoice_total ??
+      b.amount ??
+      b.bookingAmount ??
+      b.booking_amount ??
+      0,
+  );
+  if (!Number.isFinite(totalAmount)) totalAmount = 0;
+
+  // Nothing usable came back at all (0 / missing) — fall back to summing the
+  // room/tariff rows if the backend included them on this row.
+  if (!totalAmount && Array.isArray(b.rooms) && b.rooms.length) {
+    totalAmount = b.rooms.reduce((sum, r) => {
+      if (!r || typeof r !== "object") return sum;
+      const rowT = Number(r.total ?? r.amount ?? 0);
+      if (rowT) return sum + rowT;
+      const tariff = Number(r.tariff ?? r.price ?? 0);
+      const qty = Number(r.quantity ?? 1);
+      const gst = Number(r.gst ?? r.gstPercent ?? 0);
+      const base = tariff * qty;
+      return sum + base + (base * gst) / 100;
+    }, 0);
+  }
+
+  // ---- booking type ---------------------------------------------------
+  const bookingType =
+    b.bookingType ||
+    b.booking_type ||
+    b.bookingSource ||
+    b.booking_source ||
+    b.booking_Type ||
+    b.type ||
+    b.source ||
+    "";
+
+  // ---- rooms (keep string/array display-friendly, just fill in aliases) ---
+  let rooms = b.rooms ?? b.room_numbers ?? b.roomNumbers ?? b.room_no ?? b.roomNo ?? "";
+  if (Array.isArray(rooms)) {
+    // Render-safe: turn an array of room objects/strings into a comma list,
+    // same shape extractRoomNumbersFromBooking already expects elsewhere.
+    rooms = rooms
+      .map((r) => (typeof r === "string" ? r : r?.room_number || r?.roomNumber || r?.roomNo || r?.roomId || ""))
+      .filter(Boolean)
+      .join(", ");
+  }
+
+  return {
+    ...b,
+    totalAmount,
+    bookingType,
+    rooms,
+  };
+};
+
 /* ─────────────────────────── main component ─────────────────────────── */
 
 const FeatureModal = ({ title, subtitle, size = "max-w-6xl", onClose, children }) => {
@@ -1709,7 +1788,8 @@ const BookingFlow = () => {
     try {
       setLoading(true);
       const res = await API.get("/hotel/all-bookings");
-      setBookings(Array.isArray(res.data) ? res.data : []);
+      const raw = Array.isArray(res.data) ? res.data : [];
+      setBookings(raw.map(normalizeBooking));
     } catch (err) {
       console.error("Failed to load bookings:", err);
       showToast("error", "Could not load bookings", "Please check your connection and try again.");
