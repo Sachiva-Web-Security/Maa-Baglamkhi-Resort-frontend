@@ -27,6 +27,15 @@ const TRANSACTION_PAGE_SIZE = 10;
 const BILLING_PAGE_SIZE = 10;
 const ACCOUNTS_MODULE_PAGE_SIZE = 10;
 
+const SummaryRow = ({ label, value, tone }) => (
+  <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+    <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+      {label}
+    </span>
+    <span className={`text-lg font-black ${tone || "text-slate-900"}`}>{value}</span>
+  </div>
+);
+
 const getInvoiceRoomValue = (invoice) =>
   String(invoice.room_no || invoice.roomNo || invoice.roomNumber || "").trim();
 
@@ -1425,6 +1434,80 @@ const Accounts = () => {
   paymentModeSummary.combinedAmount =
     paymentModeSummary.recordsAmount + paymentModeSummary.invoiceAmount;
 
+  // Today's payment overview — derived from accounts_transactions (records)
+  // records[].date format: "DD MMM YYYY" (e.g. "15 Jul 2026")
+  const MONTHS_INDEX = {
+    Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
+    Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11,
+  };
+  const parseRecordDate = (text) => {
+    if (!text) return null;
+    const match = String(text).match(/(\d{1,2})\s+([A-Za-z]{3})\s+(\d{4})/);
+    if (!match) return null;
+    const day = Number(match[1]);
+    const month = MONTHS_INDEX[match[2]];
+    const year = Number(match[3]);
+    if (month == null || Number.isNaN(day) || Number.isNaN(year)) return null;
+    return new Date(year, month, day);
+  };
+  const isSameDay = (a, b) =>
+    a &&
+    b &&
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate();
+  const today = new Date();
+  const todayRecords = (records || []).filter((record) =>
+    isSameDay(parseRecordDate(record.date), today),
+  );
+  const todayStats = {
+    count: todayRecords.length,
+    total: todayRecords.reduce((sum, record) => sum + toNumber(record.amount), 0),
+    income: todayRecords
+      .filter((record) => record.type === "Income")
+      .reduce((sum, record) => sum + toNumber(record.amount), 0),
+    expense: todayRecords
+      .filter((record) => record.type === "Expense")
+      .reduce((sum, record) => sum + toNumber(record.amount), 0),
+  };
+
+  // Extract booking id from a transaction row (description like "Hotel payment received - Booking #123 - Guest Name")
+  const extractBookingId = (record) => {
+    if (!record) return null;
+    const text = String(record.description || "");
+    const match = text.match(/Booking\s*#\s*(\d+)/i);
+    if (match) return match[1];
+    // Fallback: sourceModule == hotel-payment rows have synthetic ids like hotel-payment-7
+    if (record.id && String(record.id).startsWith("hotel-payment-")) {
+      return String(record.id).replace("hotel-payment-", "");
+    }
+    return null;
+  };
+
+  const selectedBookingId = selectedRecord ? extractBookingId(selectedRecord) : null;
+  const bookingPaymentGroups = selectedBookingId
+    ? [
+        {
+          bookingId: selectedBookingId,
+          transactions: (records || []).filter(
+            (record) => extractBookingId(record) === selectedBookingId,
+          ),
+          invoices: (customerInvoices || []).filter(
+            (invoice) => String(invoice.booking_id || invoice.bookingId || "") === selectedBookingId,
+          ),
+          hotelBookings: (hotelBookings || []).filter(
+            (booking) => String(booking.bookingId || booking.id || "") === selectedBookingId,
+          ),
+          restaurantBills: (restaurantBills || []).filter(
+            (bill) => String(bill.bookingId || bill.booking_id || bill.id || "") === selectedBookingId,
+          ),
+          banquetBookings: (banquetBookings || []).filter(
+            (booking) => String(booking.bookingId || booking.booking_id || booking.id || "") === selectedBookingId,
+          ),
+        },
+      ]
+    : [];
+
   useEffect(() => {
     setTransactionPage(1);
   }, [selectedPaymentMode]);
@@ -1665,6 +1748,52 @@ const Accounts = () => {
                 <div key={item.label} className="rounded-[22px] border border-sky-100/40 bg-white/18 px-4 py-4 backdrop-blur-md">
                   <span className="text-base text-slate-950">{item.label}</span>
                   <div className="mt-3 text-4xl font-bold leading-none text-slate-950">{item.value}</div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {[
+                {
+                  label: "Today's Payments",
+                  value: String(todayStats.count),
+                  note: todayStats.count
+                    ? `${todayStats.count} transaction${todayStats.count === 1 ? "" : "s"} logged today`
+                    : "No transactions recorded today",
+                  tone: "text-cyan-700",
+                },
+                {
+                  label: "Today's Total Amount",
+                  value: formatINR(todayStats.total),
+                  note: todayStats.count
+                    ? "Sum of all income + expense entries today"
+                    : "Awaiting first entry for the day",
+                  tone: "text-emerald-700",
+                },
+                {
+                  label: "Today's Income",
+                  value: formatINR(todayStats.income),
+                  note: "Income entries posted today",
+                  tone: "text-sky-700",
+                },
+                {
+                  label: "Today's Expense",
+                  value: formatINR(todayStats.expense),
+                  note: "Expense entries posted today",
+                  tone: "text-rose-700",
+                },
+              ].map((card) => (
+                <div
+                  key={card.label}
+                  className="rounded-[20px] border border-sky-100/40 bg-white/18 px-4 py-4 backdrop-blur-md"
+                >
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-700">
+                    {card.label}
+                  </div>
+                  <div className={`mt-2 text-2xl font-black leading-none ${card.tone}`}>
+                    {card.value}
+                  </div>
+                  <div className="mt-1 text-[11px] text-slate-700">{card.note}</div>
                 </div>
               ))}
             </div>
@@ -2212,21 +2341,149 @@ const Accounts = () => {
 
         {showView && selectedRecord && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm">
-            <div className="w-full max-w-lg rounded-[28px] bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.25)]">
-              <h3 className="text-2xl font-black text-slate-900">Record Details</h3>
-              <div className="mt-4 space-y-2 text-sm text-slate-600">
-                <p>Date: {selectedRecord.date}</p>
-                <p>Type: {selectedRecord.type}</p>
-                <p>Description: {selectedRecord.description}</p>
-                <p>Amount: {formatINR(selectedRecord.amount)}</p>
-                <p>Payment Mode: {selectedRecord.paymentMode}</p>
+            <div className="w-full max-w-3xl overflow-hidden rounded-[28px] bg-white shadow-[0_24px_80px_rgba(15,23,42,0.25)]">
+              <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+                <div>
+                  <h3 className="text-xl font-black text-slate-900">
+                    {selectedBookingId
+                      ? `Payments for Booking #${selectedBookingId}`
+                      : "Record Details"}
+                  </h3>
+                  <p className="mt-1 text-sm text-slate-500">
+                    {selectedBookingId
+                      ? `All transactions, invoices, and payments linked to this booking.`
+                      : "No booking id found on this record."}
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowView(false);
+                    setSelectedRecord(null);
+                  }}
+                  className="rounded-full border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50"
+                >
+                  Close
+                </button>
               </div>
-              <button
-                onClick={() => setShowView(false)}
-                className="mt-5 rounded-full bg-rose-600 px-4 py-2 text-sm font-bold text-white"
-              >
-                Close
-              </button>
+              <div className="max-h-[70vh] overflow-y-auto px-6 py-5 space-y-5">
+                {selectedBookingId && bookingPaymentGroups.map((group) => (
+                  <div key={group.bookingId} className="space-y-4">
+                    <SummaryRow
+                      label="Transaction Total"
+                      value={formatINR(
+                        group.transactions.reduce((sum, record) => sum + toNumber(record.amount), 0),
+                      )}
+                      tone="text-emerald-700"
+                    />
+                    <SummaryRow
+                      label="Invoice Total"
+                      value={formatINR(
+                        group.invoices.reduce((sum, invoice) => sum + toNumber(invoice.totalAmount || invoice.total_amount || invoice.final_total || 0), 0),
+                      )}
+                      tone="text-sky-700"
+                    />
+                    <SummaryRow
+                      label="Booking Total"
+                      value={formatINR(
+                        group.hotelBookings.reduce((sum, booking) => sum + toNumber(booking.totalAmount || booking.total_amount || 0), 0),
+                      )}
+                      tone="text-cyan-700"
+                    />
+                    <SummaryRow
+                      label="Restaurant Bills"
+                      value={formatINR(
+                        group.restaurantBills.reduce((sum, bill) => sum + toNumber(bill.total || 0), 0),
+                      )}
+                      tone="text-amber-700"
+                    />
+                    <SummaryRow
+                      label="Banquet Bookings"
+                      value={formatINR(
+                        group.banquetBookings.reduce((sum, booking) => sum + toNumber(booking.grand_total || booking.total || 0), 0),
+                      )}
+                      tone="text-purple-700"
+                    />
+                    {group.transactions.length > 0 && (
+                      <div>
+                        <div className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                          Account Transactions
+                        </div>
+                        <table className="min-w-full rounded-xl border border-slate-200 text-left text-sm">
+                          <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+                            <tr>
+                              <th className="px-3 py-2">Date</th>
+                              <th className="px-3 py-2">Type</th>
+                              <th className="px-3 py-2">Description</th>
+                              <th className="px-3 py-2">Amount</th>
+                              <th className="px-3 py-2">Mode</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {group.transactions.map((record) => (
+                              <tr key={record.id} className="border-t border-slate-100">
+                                <td className="px-3 py-2">{record.date}</td>
+                                <td className="px-3 py-2">{record.type}</td>
+                                <td className="px-3 py-2">{record.description}</td>
+                                <td className="px-3 py-2 font-semibold">{formatINR(record.amount)}</td>
+                                <td className="px-3 py-2">{record.paymentMode}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                    {group.invoices.length > 0 && (
+                      <div>
+                        <div className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                          Linked Invoices
+                        </div>
+                        <table className="min-w-full rounded-xl border border-slate-200 text-left text-sm">
+                          <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+                            <tr>
+                              <th className="px-3 py-2">Invoice</th>
+                              <th className="px-3 py-2">Guest</th>
+                              <th className="px-3 py-2">Room</th>
+                              <th className="px-3 py-2">Total</th>
+                              <th className="px-3 py-2">Status</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {group.invoices.map((invoice) => (
+                              <tr key={invoice.id} className="border-t border-slate-100">
+                                <td className="px-3 py-2">{invoice.invoice_no || `#${invoice.id}`}</td>
+                                <td className="px-3 py-2">{invoice.customer_name || invoice.guest_name || "-"}</td>
+                                <td className="px-3 py-2">{invoice.room_no || "-"}</td>
+                                <td className="px-3 py-2 font-semibold">{formatINR(invoice.totalAmount || invoice.total_amount || invoice.final_total || 0)}</td>
+                                <td className="px-3 py-2">
+                                  {invoice.payment_status || invoice.status || "-"}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                    {group.transactions.length === 0 && group.invoices.length === 0 && (
+                      <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">
+                        No transactions or invoices found for Booking #{group.bookingId}.
+                      </div>
+                    )}
+                  </div>
+                ))}
+                {!selectedBookingId && (
+                  <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">
+                    Could not extract a booking id from this record. Showing raw details only.
+                    <div className="mt-3 space-y-1 text-left">
+                      <p><strong>Date:</strong> {selectedRecord.date}</p>
+                      <p><strong>Type:</strong> {selectedRecord.type}</p>
+                      <p><strong>Description:</strong> {selectedRecord.description}</p>
+                      <p><strong>Amount:</strong> {formatINR(selectedRecord.amount)}</p>
+                      <p><strong>Payment Mode:</strong> {selectedRecord.paymentMode}</p>
+                      <p><strong>Source Module:</strong> {selectedRecord.sourceModule || "-"}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}

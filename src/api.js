@@ -7,6 +7,7 @@ const ENV =
 
 const API = axios.create({
   baseURL: ENV.VITE_API_URL || ENV.VITE_BACKEND_ORIGIN || "/api",
+  timeout: 15_000,
 });
 
 API.interceptors.request.use((req) => {
@@ -33,6 +34,31 @@ API.interceptors.request.use((req) => {
 
   return req;
 });
+
+// Retry on transient backend-down errors (ECONNREFUSED / proxy 502/503/504)
+API.interceptors.response.use(
+  (res) => res,
+  (err) => {
+    const shouldRetry =
+      !err.config?.skipRetry &&
+      err.code === "ERR_NETWORK" &&
+      (err.message?.includes("ECONNREFUSED") ||
+        err.message?.includes("ECONNRESET") ||
+        err.message?.includes("ETIMEDOUT") ||
+        err.message?.includes("socket hang up"));
+
+    if (!shouldRetry || err.config?.__retryCount >= 3) {
+      return Promise.reject(err);
+    }
+
+    const delay = [500, 1500, 3000][Math.min(err.config.__retryCount || 0, 2)];
+    err.config.__retryCount = (err.config.__retryCount || 0) + 1;
+
+    return new Promise((resolve) => {
+      setTimeout(() => resolve(API.request(err.config)), delay);
+    });
+  }
+);
 
 // On 401 (expired/invalid token), clear auth and redirect to login
 API.interceptors.response.use(

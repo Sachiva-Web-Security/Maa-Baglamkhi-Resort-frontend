@@ -21,6 +21,13 @@ const normalizeStatus = (raw) =>
 
 const fallback = "--";
 
+const formatDate = (value) => {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  return date.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+};
+
 const statusPill = (status) => {
   const s = normalizeStatus(status).toLowerCase();
   if (s.includes("clean") && !s.includes("dirty")) return { label: status, cls: "bg-emerald-50 text-emerald-700 border border-emerald-200" };
@@ -56,12 +63,14 @@ const timeLeftLabel = (dueAt) => {
 export default function Housekeeping() {
   const [rooms, setRooms] = useState([]);
   const [notifications, setNotifications] = useState([]);
+  const [blockedRooms, setBlockedRooms] = useState([]);
 
   const fetchData = useCallback(async () => {
     try {
-      const [roomsRes, notifRes] = await Promise.allSettled([
+      const [roomsRes, notifRes, blocksRes] = await Promise.allSettled([
         API.get("/housekeeping"),
         API.get("/housekeeping/notifications"),
+        API.get("/hotel/room-blocks", { params: { status: "Active" } }),
       ]);
 
       const roomsData =
@@ -72,9 +81,14 @@ export default function Housekeeping() {
         notifRes.status === "fulfilled" && Array.isArray(notifRes.data?.data)
           ? notifRes.data.data
           : [];
+      const blocksData =
+        blocksRes.status === "fulfilled" && Array.isArray(blocksRes.data)
+          ? blocksRes.data
+          : [];
 
       setRooms(roomsData);
       setNotifications(notifData.map(normalizeNotification));
+      setBlockedRooms(blocksData);
     } catch {
       // silently ignore — empty state shown below
     }
@@ -97,6 +111,17 @@ export default function Housekeeping() {
     occupied: rooms.filter(r => String(r.status || "").toLowerCase().includes("occupied")).length,
     oos:      rooms.filter(r => String(r.status || "").toLowerCase().includes("out of service") || String(r.status || "").toLowerCase().includes("block")).length,
   }), [rooms]);
+
+  // Lookup: which rooms are currently under an active block?
+  const blockedRoomMap = useMemo(() => {
+    const map = new Map();
+    blockedRooms.forEach((b) => {
+      const key = String(b.room_number || "").trim();
+      if (!key) return;
+      map.set(key, b);
+    });
+    return map;
+  }, [blockedRooms]);
 
   // Index the most-recent notification per room.
   const notifMap = useMemo(() => {
@@ -130,6 +155,8 @@ export default function Housekeeping() {
           taskLabel: n?.taskLabel || "Room Cleaning",
           duration: durationFromTimestamps(n?.sentAt, n?.dueAt),
           timeLeft: timeLeftLabel(n?.dueAt),
+          isBlocked: blockedRoomMap.has(roomKey),
+          blockInfo: blockedRoomMap.get(roomKey) || null,
         };
       })
       .filter((e) => e.roomNo !== fallback)
@@ -139,7 +166,7 @@ export default function Housekeeping() {
         if (aScore !== bScore) return aScore - bScore;
         return String(a.roomNo).localeCompare(String(b.roomNo), undefined, { numeric: true });
       });
-  }, [rooms, notifMap]);
+  }, [rooms, notifMap, blockedRoomMap]);
 
   // Rooms that are clean — available for checkout / new booking.
   const checkoutReadyRooms = useMemo(() => {
@@ -180,6 +207,20 @@ export default function Housekeeping() {
         ))}
       </div>
 
+      {/* Blocked Rooms Banner */}
+      {blockedRooms.length > 0 && (
+        <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-3">
+          <p className="text-sm font-bold text-rose-700">
+            Blocked Rooms ({blockedRooms.length}):
+            {blockedRooms.map((b) => (
+              <span key={b.id} className="ml-3 inline-flex items-center gap-1 rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-700">
+                Room {b.room_number} — {b.block_type} (until {formatDate(b.blocked_until)})
+              </span>
+            ))}
+          </p>
+        </div>
+      )}
+
       {/* Full Assignment List */}
       <div className="mb-6 rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
         <div className="border-b border-slate-200 px-5 py-4">
@@ -204,8 +245,20 @@ export default function Housekeeping() {
             <tbody>
               {assignmentEntries.length ? (
                 assignmentEntries.map((row) => (
-                  <tr key={row.id} className="border-t border-slate-100 text-sm text-slate-700 transition hover:bg-slate-50">
-                    <td className="px-4 py-3.5 text-[16px] font-bold text-slate-900 whitespace-nowrap">{row.roomNo}</td>
+                  <tr
+                    key={row.id}
+                    className={`border-t text-sm text-slate-700 transition hover:bg-slate-50 ${
+                      row.isBlocked ? "border-rose-200 bg-rose-50/60" : "border-slate-100"
+                    }`}
+                  >
+                    <td className="px-4 py-3.5 text-[16px] font-bold text-slate-900 whitespace-nowrap">
+                      {row.roomNo}
+                      {row.isBlocked && (
+                        <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold text-rose-700">
+                          🔒 BLOCKED
+                        </span>
+                      )}
+                    </td>
                     <td className="px-4 py-3.5 whitespace-nowrap">{row.roomType}</td>
                     <td className="px-4 py-3.5 whitespace-nowrap">{row.assignedTo}</td>
                     <td className="px-4 py-3.5 whitespace-nowrap">{row.assignedBy}</td>
@@ -213,7 +266,7 @@ export default function Housekeeping() {
                     <td className="px-4 py-3.5 whitespace-nowrap">{row.duration}</td>
                     <td className="px-4 py-3.5 whitespace-nowrap">
                       <span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${row.statusPill.cls}`}>
-                        {row.statusPill.label}
+                        {row.isBlocked ? `Out of Service (${row.blockInfo?.block_type})` : row.statusPill.label}
                       </span>
                     </td>
                   </tr>

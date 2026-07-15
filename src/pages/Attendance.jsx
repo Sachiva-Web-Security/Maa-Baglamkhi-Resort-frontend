@@ -15,6 +15,10 @@ import SummaryCard from "../components/Attendance/SummaryCard";
 import API from "../api";
 
 const Attendance = () => {
+  /* ================= ROLE ================= */
+
+  const role = (localStorage.getItem("role") || "").toLowerCase();
+  const isAdmin = role === "admin";
 
   /* ================= STATE ================= */
 
@@ -23,12 +27,12 @@ const Attendance = () => {
   );
 
   const [department, setDepartment] = useState("All Departments");
-  const [role, setRole] = useState("All Roles");
+  const [roleFilter, setRoleFilter] = useState("All Roles");
   const [searchQuery, setSearchQuery] = useState("");
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [employees, setEmployees] = useState([]);
 
-  // ✅ Pagination State
+  // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 5;
 
@@ -37,9 +41,7 @@ const Attendance = () => {
   useEffect(() => {
     const fetchAttendance = async () => {
       try {
-        const res = await API.get("/attendance", {
-          params: { date },
-        });
+        const res = await API.get("/attendance", { params: { date } });
         setEmployees(res.data || []);
       } catch (err) {
         console.error("Error loading attendance", err);
@@ -59,7 +61,7 @@ const Attendance = () => {
           employee.department === department;
 
         const matchesRole =
-          role === "All Roles" || employee.role === role;
+          roleFilter === "All Roles" || employee.role === roleFilter;
 
         const matchesSearch =
           searchQuery === "" ||
@@ -69,7 +71,7 @@ const Attendance = () => {
 
         return matchesDepartment && matchesRole && matchesSearch;
       }),
-    [department, employees, role, searchQuery]
+    [department, employees, roleFilter, searchQuery]
   );
 
   /* ================= PAGINATION ================= */
@@ -86,7 +88,6 @@ const Attendance = () => {
     filteredEmployees.length / recordsPerPage
   );
 
-  // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [filteredEmployees]);
@@ -98,10 +99,18 @@ const Attendance = () => {
   const absentStaff = employees.filter((e) => e.status === "Absent").length;
   const lateStaff = employees.filter((e) => e.status === "Late").length;
   const onLeaveStaff = employees.filter((e) => e.status === "On Leave").length;
+  const totalSalary = employees.reduce(
+    (sum, e) => sum + parseFloat(e.salary_amount || 0),
+    0
+  );
 
-  /* ================= ADD ================= */
+  /* ================= ADD (admin only) ================= */
 
   const handleManualSubmit = async (data) => {
+    if (!isAdmin) {
+      window.alert("Only admin can add attendance");
+      return;
+    }
     try {
       const payload = {
         ...data,
@@ -111,8 +120,15 @@ const Attendance = () => {
 
       const res = await API.post("/attendance", payload);
       const newId = res.data?.id || Date.now();
-
-      setEmployees((prev) => [{ id: newId, ...payload }, ...prev]);
+      setEmployees((prev) => [
+        {
+          id: newId,
+          ...payload,
+          salary_amount: res.data?.salary_amount || 0,
+          user_salary: res.data?.user_salary || 0,
+        },
+        ...prev,
+      ]);
       setShowManualEntry(false);
       window.alert("Attendance saved");
     } catch (err) {
@@ -129,22 +145,29 @@ const Attendance = () => {
       <FiltersSection
         date={date}
         department={department}
-        role={role}
+        role={roleFilter}
         searchQuery={searchQuery}
         onDateChange={setDate}
         onDepartmentChange={setDepartment}
-        onRoleChange={setRole}
+        onRoleChange={setRoleFilter}
         onSearchChange={setSearchQuery}
         onAddManualEntry={() => setShowManualEntry(true)}
+        showAddButton={isAdmin}
       />
 
-      {/* Summary */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      {/* Summary cards */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <SummaryCard label="Total" value={totalStaff} icon={FaUsers} />
         <SummaryCard label="Present" value={presentStaff} color="green" icon={FaUserCheck} />
         <SummaryCard label="Absent" value={absentStaff} color="red" icon={FaClipboardCheck} />
         <SummaryCard label="Late" value={lateStaff} color="yellow" icon={FaClock} />
         <SummaryCard label="Leave" value={onLeaveStaff} color="blue" icon={FaCalendarAlt} />
+        <SummaryCard
+          label="Total Salary"
+          value={`₹ ${totalSalary.toFixed(0)}`}
+          color="emerald"
+          icon={FaUsers}
+        />
       </div>
 
       {/* TABLE */}
@@ -152,24 +175,31 @@ const Attendance = () => {
         <table className="w-full text-sm">
           <thead className="bg-gray-100">
             <tr>
-              <th className="p-3">Employee</th>
-              <th>Role</th>
+              <th className="p-3 text-left">Employee</th>
               <th>Check In</th>
               <th>Check Out</th>
               <th>Status</th>
               <th>Method</th>
-              <th>Action</th>
+              <th>Daily Salary</th>
+              {isAdmin && <th>Action</th>}
             </tr>
           </thead>
 
           <tbody>
             {currentRecords.map((employee) => (
-              <AttendanceRow key={employee.id} employee={employee} />
+              <AttendanceRow
+                key={employee.id}
+                employee={employee}
+                isAdmin={isAdmin}
+              />
             ))}
 
             {currentRecords.length === 0 && (
               <tr>
-                <td colSpan={7} className="text-center p-6">
+                <td
+                  colSpan={isAdmin ? 7 : 6}
+                  className="text-center p-6"
+                >
                   No data found
                 </td>
               </tr>
@@ -177,43 +207,45 @@ const Attendance = () => {
           </tbody>
         </table>
 
-        {/* ✅ PAGINATION UI */}
-        <div className="flex justify-center gap-2 p-4">
-          <button
-            onClick={() => setCurrentPage((prev) => prev - 1)}
-            disabled={currentPage === 1}
-            className="px-3 py-1 bg-red-600 rounded"
-          >
-            Prev
-          </button>
-
-          {[...Array(totalPages)].map((_, i) => (
+        {/* PAGINATION */}
+        {totalPages > 1 && (
+          <div className="flex justify-center gap-2 p-4">
             <button
-              key={i}
-              onClick={() => setCurrentPage(i + 1)}
-              className={`px-3 py-1 rounded ${
-                currentPage === i + 1
-                  ? "bg-blue-900 text-white"
-                  : "bg-gray-200"
-              }`}
+              onClick={() => setCurrentPage((prev) => prev - 1)}
+              disabled={currentPage === 1}
+              className="px-3 py-1 bg-red-600 text-white rounded disabled:opacity-50"
             >
-              {i + 1}
+              Prev
             </button>
-          ))}
 
-          <button
-            onClick={() => setCurrentPage((prev) => prev + 1)}
-             disabled={currentPage >= totalPages || totalPages === 0}
-            className="px-3 py-1 bg-green-500 rounded"
-          >
-            Next
-          </button>
-        </div>
+            {[...Array(totalPages)].map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentPage(i + 1)}
+                className={`px-3 py-1 rounded ${
+                  currentPage === i + 1
+                    ? "bg-blue-900 text-white"
+                    : "bg-gray-200"
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+
+            <button
+              onClick={() => setCurrentPage((prev) => prev + 1)}
+              disabled={currentPage >= totalPages}
+              className="px-3 py-1 bg-green-500 text-white rounded disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* MODAL */}
-      {showManualEntry && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/40">
+      {/* MODAL - admin only */}
+      {isAdmin && showManualEntry && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
           <div className="bg-white p-6 rounded-xl w-full max-w-lg">
             <AttendanceForm
               onSubmit={handleManualSubmit}

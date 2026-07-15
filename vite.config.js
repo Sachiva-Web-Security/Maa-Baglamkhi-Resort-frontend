@@ -24,6 +24,11 @@ export default defineConfig(({ mode }) => {
         "/api": {
           target: backendOrigin,
           changeOrigin: true,
+          configure: (proxy) => {
+            proxy.on("error", (err) => {
+              console.error("[vite proxy] backend connection failed:", err.message);
+            });
+          },
         },
         "/uploads": {
           target: backendOrigin,

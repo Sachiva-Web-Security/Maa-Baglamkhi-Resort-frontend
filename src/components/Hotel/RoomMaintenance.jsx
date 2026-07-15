@@ -39,13 +39,14 @@ const BLOCK_ICONS = {
 
 // ─── Block Room Modal ──────────────────────────────────────────────────────────
 const BlockModal = ({ rooms, onClose, onSaved }) => {
+  const currentUser = localStorage.getItem("name") || "Manager";
   const [form, setForm] = useState({
     room_number: rooms[0]?.roomNumber || "",
     block_type: "Maintenance",
     reason: "",
     blocked_from: today(),
     blocked_until: today(),
-    blocked_by: "Manager",
+    blocked_by: currentUser,
   });
   const [saving, setSaving] = useState(false);
   const set = (k, v) => setForm((p) => ({ ...p, [k]: v }));
@@ -207,6 +208,10 @@ const BlockModal = ({ rooms, onClose, onSaved }) => {
 // ─── Main Component ────────────────────────────────────────────────────────────
 const RoomMaintenance = () => {
   const navigate = useNavigate();
+  const currentRole = String(localStorage.getItem("role") || "").toLowerCase();
+  const currentUser = localStorage.getItem("name") || "Manager";
+  const canCreateBlock = ["admin", "manager", "receptionist"].includes(currentRole);
+  const canResolveBlock = ["admin", "manager"].includes(currentRole);
   const [blocks, setBlocks] = useState([]);
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -323,13 +328,15 @@ const RoomMaintenance = () => {
                 </button>
               ))}
             </div>
-            <button
-              type="button"
-              onClick={() => setShowModal(true)}
-              className="rounded-full bg-gradient-to-r from-violet-600 to-indigo-500 px-6 py-3 text-base font-bold text-white shadow-[0_8px_20px_rgba(79,70,229,0.2)] transition hover:-translate-y-0.5"
-            >
-              + Block Room
-            </button>
+            {canCreateBlock && (
+              <button
+                type="button"
+                onClick={() => setShowModal(true)}
+                className="rounded-full bg-gradient-to-r from-violet-600 to-indigo-500 px-6 py-3 text-base font-bold text-white shadow-[0_8px_20px_rgba(79,70,229,0.2)] transition hover:-translate-y-0.5"
+              >
+                + Block Room
+              </button>
+            )}
           </div>
 
           {/* Blocks Grid */}
@@ -411,7 +418,7 @@ const RoomMaintenance = () => {
                     <span>By: {block.blocked_by || "—"}</span>
                   </div>
 
-                  {block.status === "Active" && (
+                  {block.status === "Active" && canResolveBlock && (
                     <div className="mt-4 flex gap-2">
                       <button
                         type="button"
@@ -427,6 +434,11 @@ const RoomMaintenance = () => {
                       >
                         Cancel
                       </button>
+                    </div>
+                  )}
+                  {block.status === "Active" && !canResolveBlock && (
+                    <div className="mt-4 rounded-full bg-slate-100 px-4 py-2 text-center text-xs font-semibold text-slate-500">
+                      Blocked — only Manager/Admin can resolve
                     </div>
                   )}
                 </article>

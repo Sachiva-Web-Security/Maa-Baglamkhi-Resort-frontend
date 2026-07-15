@@ -11,6 +11,7 @@ import {
   FaHistory,
   FaHome,
   FaHotel,
+  FaMoneyBillWave,
   FaSignOutAlt,
   FaStar,
   FaTasks,
@@ -120,6 +121,7 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
       { id: 111, name: "Reports", icon: FaChartBar, path: "/reports", section: "records" },
       { id: 112, name: "Audit Logs", icon: FaHistory, path: "/reports/audit", section: "records" },
       { id: 113, name: "User Management", icon: FaUserCheck, path: "/user", section: "records" },
+      { id: 114, name: "Salary", icon: FaMoneyBillWave, path: "/salary", section: "records" },
     ],
     manager: [
       { id: 201, name: "All Bookings", icon: FaHotel, path: "/hotel/all-bookings", section: "operations" },
@@ -133,6 +135,7 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
       { id: 209, name: "Reports", icon: FaChartBar, path: "/reports", section: "records" },
       { id: 210, name: "Inventory", icon: FaBoxes, path: "/inventory", section: "records" },
       { id: 211, name: "Audit Logs", icon: FaHistory, path: "/reports/audit", section: "records" },
+      { id: 212, name: "My Attendance", icon: FaUserCheck, path: "/my-attendance", section: "operations" },
     ],
     receptionist: [
       { id: 301, name: "Guest Booking", icon: FaHotel, path: "/hotel/guest", section: "operations" },
@@ -174,6 +177,7 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
     staff: [
       { id: 801, name: "Assignments", icon: FaTasks, path: "/assignments", section: "operations" },
       { id: 802, name: "Assign Notifications", icon: FaBell, path: "/assignment-notification", section: "operations" },
+      { id: 803, name: "My Attendance", icon: FaUserCheck, path: "/my-attendance", section: "operations" },
     ],
   };
 

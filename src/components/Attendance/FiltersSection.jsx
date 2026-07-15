@@ -41,6 +41,7 @@ const FiltersSection = ({
   onRoleChange,
   onSearchChange,
   onAddManualEntry,
+  showAddButton = true,
 }) => {
   return (
     <section
@@ -99,39 +100,41 @@ const FiltersSection = ({
 
         </div>
 
-        <button
-          onClick={onAddManualEntry}
-          className="
-          inline-flex
-          items-center
-          gap-3
+        {showAddButton && (
+          <button
+            onClick={onAddManualEntry}
+            className="
+            inline-flex
+            items-center
+            gap-3
 
-          rounded-2xl
+            rounded-2xl
 
-          bg-gradient-to-r
-          from-blue-600
-          via-blue-500
-          to-sky-500
+            bg-gradient-to-r
+            from-blue-600
+            via-blue-500
+            to-sky-500
 
-          px-7
-          py-4
+            px-7
+            py-4
 
-          text-[16px]
-          font-bold
-          text-white
+            text-[16px]
+            font-bold
+            text-white
 
-          shadow-[0_15px_35px_rgba(37,99,235,0.30)]
+            shadow-[0_15px_35px_rgba(37,99,235,0.30)]
 
-          transition-all
-          duration-300
+            transition-all
+            duration-300
 
-          hover:-translate-y-1
-          hover:scale-105
-        "
-        >
-          <FaUserPlus className="text-xl" />
-          Add Manual Entry
-        </button>
+            hover:-translate-y-1
+            hover:scale-105
+          "
+          >
+            <FaUserPlus className="text-xl" />
+            Add Manual Entry
+          </button>
+        )}
 
       </div>
 

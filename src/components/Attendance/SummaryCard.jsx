@@ -3,7 +3,9 @@ const SummaryCard = ({ label, value, color, icon: Icon }) => {
     green: "from-emerald-500 to-green-600",
     red: "from-rose-500 to-red-600",
     yellow: "from-amber-500 to-orange-500",
+    amber: "from-amber-500 to-orange-500",
     blue: "from-blue-600 to-sky-500",
+    emerald: "from-emerald-500 to-teal-500",
   };
 
   return (
