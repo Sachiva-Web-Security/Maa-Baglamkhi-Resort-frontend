@@ -70,6 +70,7 @@ import {
   FaIdCard,
   FaDoorOpen,
   FaSync,
+  FaArrowLeft,
 } from "react-icons/fa";
 
 import API, { getBackendBaseURL } from "../../api";
@@ -2926,6 +2927,17 @@ const handleJumpStep = (stepView) => {
       className="min-h-screen w-full max-w-full overflow-x-hidden bg-gradient-to-br from-blue-50 via-white to-blue-100 space-y-6 sm:space-y-8 p-3 sm:p-6 md:p-8 lg:p-10 xl:p-12"
       style={{ fontFamily: '"Segoe UI", "Helvetica Neue", Arial, sans-serif' }}
     >
+    <div className="flex items-center gap-3 mb-2">
+        <button
+          onClick={() => navigate("/hotel")}
+          className="flex items-center gap-2 rounded-lg bg-white/80 px-4 py-2 text-sm font-medium text-slate-700 shadow-sm ring-1 ring-slate-200 hover:bg-white hover:text-blue-700 active:scale-[0.98] transition"
+          title="Back to Hotel"
+        >
+          <FaArrowLeft className="text-base" />
+          Back
+        </button>
+      </div>
+
       <FlowBar view={view} onJump={handleJumpStep} />
 
       {view === "list" && renderList()}

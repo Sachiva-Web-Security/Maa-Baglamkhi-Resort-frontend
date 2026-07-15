@@ -20,6 +20,10 @@ import API from "../../api";
 import EditBooking from "../Hotel/EditBooking";
 import { pushDashboardNotification } from "./dashboardNotifications";
 import {
+  getHousekeepingSocket,
+  releaseHousekeepingSocket,
+} from "../../utils/housekeepingSocket";
+import {
   addDays,
   buildStaySummary,
   expandBookings,
@@ -182,6 +186,42 @@ const Stayover = () => {
       globalThis.removeEventListener("focus", handleFocus);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       globalThis.clearInterval(intervalId);
+    };
+  }, [loadData]);
+
+  // Real-time refresh: listen for the `housekeeping-task-updated` event
+  // that the backend emits after a housekeeper marks a room clean via
+  // `PUT /housekeeping/notifications/:id/complete`. This updates the room
+  // strip instantly — no waiting for the 30-second poll cycle.
+  useEffect(() => {
+    let mounted = true;
+
+    const setupSocket = async () => {
+      try {
+        const socket = await getHousekeepingSocket();
+        if (!socket || !mounted) return;
+
+        const onUpdate = async (payload) => {
+          if (!mounted) return;
+          // Only react to the "notification completed" event so other
+          // housekeeping changes (assignee updates, log entries, etc.)
+          // don't trigger unnecessary refreshes.
+          if (payload?.type !== "notification-completed") return;
+          await loadData(true);
+        };
+
+        socket.on("housekeeping-task-updated", onUpdate);
+      } catch {
+        // Socket connection failed — the 30-second polling keeps the page
+        // up to date anyway, so silently fall back.
+      }
+    };
+
+    setupSocket();
+
+    return () => {
+      mounted = false;
+      releaseHousekeepingSocket();
     };
   }, [loadData]);
 

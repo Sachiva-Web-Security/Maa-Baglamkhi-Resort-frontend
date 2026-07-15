@@ -8,8 +8,14 @@ import {
   Sparkles,
   CalendarDays,
   Check,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
 } from "lucide-react";
 import API from "../api";
+
+const PAGE_SIZES = [5, 10, 20, 50];
 
 const formatDate = (value) => {
   if (!value) return "-";
@@ -51,6 +57,8 @@ export default function HousekeeperNotification() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [pageSize, setPageSize] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const fetchNotifications = useCallback(async () => {
     try {
@@ -67,6 +75,7 @@ export default function HousekeeperNotification() {
         ? rows
         : rows.filter((row) => String(row.status).toLowerCase() !== "completed");
       setNotifications(filtered.map(normalizeNotification));
+      setCurrentPage(1);
     } catch {
       setError("Housekeeping notifications load nahi ho paaye.");
       setNotifications([]);
@@ -107,8 +116,13 @@ export default function HousekeeperNotification() {
 
     try {
       await API.put(`/housekeeping/notifications/${id}/complete`);
-      // Re-fetch so the row vanishes from the housekeeper's list
-      // (it's now Completed, which we filter out by default).
+
+      // Small pause so the housekeeper sees the confirmation message
+      // before the card is removed by the Completed filter below.
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      // Re-fetch so the row is either refreshed or vanishes from the
+      // housekeeper's list (Completed items are filtered out for them).
       await fetchNotifications();
     } catch {
       setNotifications(previous);
@@ -123,6 +137,32 @@ export default function HousekeeperNotification() {
     () => notifications.filter((n) => currentUser && n.assignedTo === currentUser).length,
     [currentUser, notifications],
   );
+
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [pageSize]);
+
+  const pageItems = useMemo(() => {
+    const start = (safePage - 1) * pageSize;
+    return notifications.slice(start, start + pageSize);
+  }, [notifications, safePage, pageSize]);
+
+  const goToPage = (page) => {
+    const p = Math.max(1, Math.min(page, totalPages));
+    setCurrentPage(p);
+  };
+
+  const getPageRange = () => {
+    const delta = 2;
+    const range = [];
+    const left = Math.max(1, safePage - delta);
+    const right = Math.min(totalPages, safePage + delta);
+    for (let i = left; i <= right; i++) range.push(i);
+    return range;
+  };
 
   return (
     <div className="min-h-screen bg-slate-100 p-6 lg:p-10">
@@ -203,12 +243,20 @@ export default function HousekeeperNotification() {
         </div>
       </div>
 
-      <div className="mt-10 space-y-6">
+      {/* Results info */}
+      {!loading && total > 0 && (
+        <p className="mt-6 text-sm font-medium text-slate-500">
+          Showing {Math.min((safePage - 1) * pageSize + 1, total)} –{" "}
+          {Math.min(safePage * pageSize, total)} of {total} notifications
+        </p>
+      )}
+
+      <div className="mt-4 space-y-6">
         {loading ? (
           <div className="rounded-3xl bg-white p-10 text-center text-lg font-semibold text-slate-500 shadow-xl">
             Loading housekeeping notifications...
           </div>
-        ) : notifications.length === 0 ? (
+        ) : pageItems.length === 0 ? (
           <div className="rounded-3xl bg-white p-10 text-center shadow-xl">
             {currentUser ? (
               <>
@@ -226,7 +274,7 @@ export default function HousekeeperNotification() {
             )}
           </div>
         ) : (
-          notifications.map((item) => {
+          pageItems.map((item) => {
             const isMine = Boolean(currentUser) && item.assignedTo === currentUser;
             const allowedToComplete = canComplete(item);
 
@@ -297,9 +345,14 @@ export default function HousekeeperNotification() {
                     <div className="flex flex-col items-start gap-4 lg:items-end">
                       {allowedToComplete ? (
                         item.status === "Completed" ? (
-                          <div className="flex items-center gap-2 rounded-2xl bg-green-100 px-5 py-3 font-semibold text-green-700">
-                            <CheckCircle2 size={20} />
-                            Completed
+                          <div className="flex flex-col items-start gap-2 lg:items-end">
+                            <div className="flex items-center gap-2 rounded-2xl bg-emerald-100 px-5 py-3 font-semibold text-emerald-700">
+                              <CheckCircle2 size={20} />
+                              Marked Clean
+                            </div>
+                            <div className="rounded-2xl border border-emerald-200 bg-white px-5 py-3 font-semibold text-emerald-700 shadow-sm">
+                              This room is ready to book now.
+                            </div>
                           </div>
                         ) : (
                           <button
@@ -308,7 +361,7 @@ export default function HousekeeperNotification() {
                           >
                             <span className="flex items-center gap-2">
                               <Check size={18} />
-                              Mark as Complete
+                              Mark Clean
                             </span>
                           </button>
                         )
@@ -332,6 +385,94 @@ export default function HousekeeperNotification() {
           })
         )}
       </div>
+
+      {/* Pagination controls */}
+      {totalPages > 1 && (
+        <div className="mt-6 flex flex-col items-center justify-between gap-4 rounded-3xl border border-slate-200 bg-white px-4 py-4 shadow-sm sm:flex-row">
+          {/* Page-size selector */}
+          <div className="flex items-center gap-2 text-sm text-slate-600">
+            <span className="font-medium">Rows per page:</span>
+            <select
+              value={pageSize}
+              onChange={(e) => setPageSize(Number(e.target.value))}
+              className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 outline-none"
+            >
+              {PAGE_SIZES.map((size) => (
+                <option key={size} value={size}>
+                  {size}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Page number buttons */}
+          <div className="flex flex-wrap items-center justify-center gap-1.5">
+            {/* First */}
+            <button
+              type="button"
+              onClick={() => goToPage(1)}
+              disabled={safePage === 1}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-sm font-bold text-slate-600 transition hover:border-blue-300 hover:text-blue-700 disabled:opacity-40"
+              title="First page"
+            >
+              <ChevronsLeft className="h-3.5 w-3.5" />
+            </button>
+
+            {/* Prev */}
+            <button
+              type="button"
+              onClick={() => goToPage(safePage - 1)}
+              disabled={safePage === 1}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-sm font-bold text-slate-600 transition hover:border-blue-300 hover:text-blue-700 disabled:opacity-40"
+              title="Previous page"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+            </button>
+
+            {/* Page numbers */}
+            {getPageRange().map((p) => (
+              <button
+                type="button"
+                key={p}
+                onClick={() => goToPage(p)}
+                className={`inline-flex h-9 min-w-[2.25rem] items-center justify-center rounded-xl px-2 text-sm font-bold transition ${
+                  p === safePage
+                    ? "border border-blue-600 bg-blue-600 text-white shadow-md"
+                    : "border border-slate-200 text-slate-600 hover:border-blue-300 hover:text-blue-700"
+                }`}
+              >
+                {p}
+              </button>
+            ))}
+
+            {/* Next */}
+            <button
+              type="button"
+              onClick={() => goToPage(safePage + 1)}
+              disabled={safePage === totalPages}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-sm font-bold text-slate-600 transition hover:border-blue-300 hover:text-blue-700 disabled:opacity-40"
+              title="Next page"
+            >
+              <ChevronRight className="h-3.5 w-3.5" />
+            </button>
+
+              <button
+                type="button"
+                onClick={() => goToPage(totalPages)}
+                disabled={safePage === totalPages}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-sm font-bold text-slate-600 transition hover:border-blue-300 hover:text-blue-700 disabled:opacity-40"
+                title="Last page"
+              >
+                <ChevronsRight className="h-3.5 w-3.5" />
+              </button>
+          </div>
+
+          {/* Page indicator */}
+          <p className="text-sm font-medium text-slate-500">
+            Page {safePage} of {totalPages}
+          </p>
+        </div>
+      )}
     </div>
   );
 }

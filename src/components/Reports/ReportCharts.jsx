@@ -32,7 +32,7 @@ const Card = ({ title, subtitle, children }) => (
         <div className="mt-1 text-sm leading-6 text-slate-500 sm:text-[16px]">{subtitle}</div>
       ) : null}
     </div>
-    <div className="mx-auto h-[260px] w-full min-w-0 sm:h-[300px] md:h-[320px]">{children}</div>
+    <div className="h-[260px] w-full min-w-0 sm:h-[300px] md:h-[320px]">{children}</div>
   </div>
 );
 

@@ -1,6 +1,5 @@
 import {
   FaBed,
-  FaBroom,
   FaCalendarAlt,
   FaCheckCircle,
   FaClipboardCheck,
@@ -42,7 +41,7 @@ import {
   todayISO,
 } from "../components/Dashboard/stayoverUtils";
 
-const boardOrder = ["available", "confirmed", "cleaning", "pencil", "blocked", "checked_in"];
+const boardOrder = ["available", "confirmed", "blocked", "checked_in"];
 const CLEANING_TIME_OPTIONS = [15, 30, 45, 60, 90, 120];
 const METRIC_PANEL_PAGE_SIZE = 6;
 const AVAILABLE_ROOM_TYPE_ORDER = [
@@ -404,13 +403,6 @@ const Dashboard = () => {
         detail: `Confirmed for ${formatDateLabel(selectedDate)} from live booking board.`,
       },
       {
-        key: "cleaning",
-        tone: "border-violet-200 bg-violet-50",
-        iconClass: "text-violet-500",
-        title: `${selectedDaySnapshot.cleaning.length} cleaning room${selectedDaySnapshot.cleaning.length === 1 ? "" : "s"}`,
-        detail: `Cleaning queue for ${formatDateLabel(selectedDate)} from housekeeping feed.`,
-      },
-      {
         key: "checked-in",
         tone: "border-cyan-200 bg-cyan-50",
         iconClass: "text-cyan-500",
@@ -453,13 +445,6 @@ const Dashboard = () => {
           message: `Confirmed arrivals for ${formatDateLabel(selectedDate)} from live booking board.`,
           route: "/stayover",
           createdAt: `${selectedDate}T08:00:00`,
-        },
-        {
-          id: `notif-cleaning-${selectedDate}`,
-          title: `${selectedDaySnapshot.cleaning.length} rooms in cleaning`,
-          message: `Housekeeping queue for ${formatDateLabel(selectedDate)} from live room feed.`,
-          route: "/housekeeping",
-          createdAt: `${selectedDate}T07:00:00`,
         },
         {
           id: `notif-checkin-${selectedDate}`,
@@ -623,16 +608,6 @@ const Dashboard = () => {
       icon: FaDoorOpen,
       route: "/hotel/guest",
       tone: "from-blue-600 to-blue-500",
-    },
-    {
-      label: "Cleaning Log",
-      helper: "Review room readiness",
-      liveValue: `${selectedDaySnapshot.cleaning.length}`,
-      liveLabel: "rooms in queue",
-      detail: `${selectedDaySnapshot.cleaning.length} live housekeeping room(s) need readiness review`,
-      icon: FaBroom,
-      route: "/housekeeping?view=cleaning-log",
-      tone: "from-emerald-500 to-emerald-400",
     },
     {
       label: "Settlement Review",
@@ -834,7 +809,7 @@ const Dashboard = () => {
       key === "cleaning" ? cleaningInventory : availableInventory,
     );
 
-    if (["available", "confirmed", "cleaning", "pencil", "blocked", "checked_in"].includes(key)) {
+    if (["available", "confirmed", "cleaning", "blocked", "checked_in"].includes(key)) {
       const toneMap = {
         available: {
           border: "border-emerald-400",
@@ -869,17 +844,6 @@ const Dashboard = () => {
           empty: "border-dashed border-violet-400 bg-[linear-gradient(135deg,rgba(255,255,255,0.65)_0%,rgba(245,243,255,0.78)_100%)] text-violet-500",
           pill: "border-violet-200 bg-[linear-gradient(135deg,#f5f3ff_0%,#e9d5ff_100%)] text-violet-700",
         },
-        pencil: {
-          border: "border-amber-400",
-          soft: "bg-[linear-gradient(135deg,rgba(255,251,235,0.92)_0%,rgba(254,243,199,0.65)_100%)]",
-          badge: "border-amber-200 bg-[linear-gradient(135deg,#fffbeb_0%,#fef3c7_100%)] text-amber-700 shadow-[0_10px_24px_rgba(245,158,11,0.18)]",
-          title: "text-amber-900",
-          sub: "text-amber-700",
-          button: "border-amber-300 bg-[linear-gradient(135deg,rgba(255,255,255,0.7)_0%,rgba(255,251,235,0.95)_100%)]",
-          dot: "border-amber-200 bg-[linear-gradient(135deg,#fffbeb_0%,#fef3c7_100%)] text-amber-600",
-          empty: "border-dashed border-amber-400 bg-[linear-gradient(135deg,rgba(255,255,255,0.65)_0%,rgba(255,251,235,0.78)_100%)] text-amber-500",
-          pill: "border-amber-200 bg-[linear-gradient(135deg,#fffbeb_0%,#fef3c7_100%)] text-amber-700",
-        },
         blocked: {
           border: "border-slate-400",
           soft: "bg-[linear-gradient(135deg,rgba(248,250,252,0.92)_0%,rgba(226,232,240,0.72)_100%)]",
@@ -907,8 +871,6 @@ const Dashboard = () => {
       const subtitleMap = {
         available: "available",
         confirmed: "confirmed",
-        cleaning: "cleaning",
-        pencil: "pencil",
         blocked: "blocked",
         checked_in: "checked in",
       };
@@ -979,16 +941,16 @@ const Dashboard = () => {
                                   </div>
                                 ) : null}
                                 <div className={`text-base font-black ${tone.title}`}>
-                                  {key === "confirmed" || key === "pencil"
+                                  {key === "confirmed"
                                     ? item.booking?.guestName || `Room ${item.roomNumber}`
                                     : `Room ${item.roomNumber}`}
                                 </div>
                                 <div className={`mt-1 text-sm font-semibold uppercase tracking-[0.14em] ${tone.sub}`}>
-                                  {key === "confirmed" || key === "pencil"
+                                  {key === "confirmed"
                                     ? `Room ${item.roomNumber} | ID ${item.roomId || "--"}`
                                     : `ID ${item.roomId || "--"}`}
                                 </div>
-                                {key === "confirmed" || key === "pencil" ? (
+                                {key === "confirmed" ? (
                                   <div className={`mt-1 text-sm ${tone.title}`}>
                                     {item.booking?.mobile || item.subtitle || item.statusLabel || "Booking details"}
                                   </div>
@@ -1655,18 +1617,11 @@ const Dashboard = () => {
                           item.route,
                           item.route === "/hotel/guest"
                             ? { state: { resetBookingDraft: true } }
-                            : item.route === "/housekeeping" && item.label === "Cleaning Log"
-                              ? { state: { openOption: "cleaning-log" } }
-                              : undefined,
+                            : undefined,
                         )
                       }
                       className="dashboard-card-subtle relative flex w-full items-center justify-between overflow-visible px-4 py-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
                     >
-                      {item.label === "Cleaning Log" ? (
-                        <span className="absolute -right-2 -top-2 z-20 flex h-7 w-7 items-center justify-center rounded-full border border-emerald-200 bg-white text-[18px] font-black text-emerald-700 shadow-[0_8px_20px_rgba(16,185,129,0.12)]">
-                          {selectedDaySnapshot.cleaning.length}
-                        </span>
-                      ) : null}
                       <div className="flex items-center gap-3">
                         <span className={`flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-r ${item.tone} text-white`}>
                           <Icon />
@@ -1730,10 +1685,6 @@ const Dashboard = () => {
                     confirmed: {
                       dot: "bg-amber-600",
                       line: "border-amber-100/80",
-                    },
-                    cleaning: {
-                      dot: "bg-slate-500",
-                      line: "border-slate-100",
                     },
                     "checked-in": {
                       dot: "bg-sky-600",
@@ -1941,107 +1892,6 @@ const Dashboard = () => {
                   ) : null}
                 </div>
               </div>
-
-              {isCleaningTaskEditable(selectedRoom) && (
-                <div className="rounded-[1.5rem] border border-violet-200 bg-violet-50 p-4 shadow-sm">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <div className="text-sm font-bold uppercase tracking-[0.18em] text-violet-700">
-                        Assign Task for Housekeeper
-                      </div>
-                      <div className="mt-1 text-xs text-slate-500">
-                        Room {selectedRoom.roomNumber || selectedRoom.roomNo || "--"}
-                        {selectedRoom.roomType ? ` • ${selectedRoom.roomType}` : ""} — pick an available housekeeper and ETA. The task is pushed to the housekeeping notification feed in MySQL.
-                      </div>
-                    </div>
-                    <div
-                      className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] ${
-                        selectedRoom.roomData?.assignee &&
-                        selectedRoom.roomData?.assignee !== "No Housekeeper"
-                          ? "bg-emerald-100 text-emerald-700"
-                          : "bg-white text-violet-700"
-                      }`}
-                    >
-                      {selectedRoom.roomData?.assignee &&
-                      selectedRoom.roomData?.assignee !== "No Housekeeper"
-                        ? `Assigned: ${selectedRoom.roomData.assignee}`
-                        : "Unassigned"}
-                    </div>
-                  </div>
-
-                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                    <label className="space-y-2">
-                      <span className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                        Available Housekeeper
-                      </span>
-                      <select
-                        value={selectedAssignee}
-                        onChange={(e) => setSelectedAssignee(e.target.value)}
-                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-200"
-                      >
-                        <option value="">Select housekeeper</option>
-                        {housekeepers.length ? (
-                          housekeepers.map((name, index) => (
-                            <option key={`${name}-${index}`} value={name}>
-                              {name}
-                            </option>
-                          ))
-                        ) : (
-                          <option value="" disabled>
-                            No housekeeping users found
-                          </option>
-                        )}
-                      </select>
-                      <p className="text-[11px] text-slate-500">
-                        {housekeepers.length
-                          ? `${housekeepers.length} housekeeper${housekeepers.length === 1 ? "" : "s"} available from /users`
-                          : "Add a user with the housekeeping role to populate this list."}
-                      </p>
-                    </label>
-
-                    <label className="space-y-2">
-                      <span className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                        Cleaning Time (ETA)
-                      </span>
-                      <select
-                        value={selectedCleaningMinutes}
-                        onChange={(e) => setSelectedCleaningMinutes(Number(e.target.value) || 30)}
-                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-200"
-                      >
-                        {CLEANING_TIME_OPTIONS.map((mins) => (
-                          <option key={mins} value={mins}>
-                            {mins} minutes
-                          </option>
-                        ))}
-                      </select>
-                      <p className="text-[11px] text-slate-500">
-                        due_at = now + ETA. The room auto-releases to Vacant Clean when it elapses.
-                      </p>
-                    </label>
-                  </div>
-
-                  <div className="mt-4 flex flex-wrap items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={handleAssignCleaning}
-                      disabled={assigningCleaning || !selectedAssignee}
-                      className="rounded-xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      {assigningCleaning ? "Saving..." : "Assign Task"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => navigate("/housekeepernotification")}
-                      className="rounded-xl border border-violet-200 bg-white px-4 py-3 text-sm font-semibold text-violet-700 transition hover:bg-violet-100"
-                    >
-                      View Notifications
-                    </button>
-                    <div className="rounded-xl border border-violet-200 bg-white px-4 py-3 text-sm text-slate-700">
-                      ETA: <span className="font-semibold text-slate-900">{selectedCleaningMinutes} min</span>
-                    </div>
-                  </div>
-                </div>
-              )}
 
               <div className="grid gap-3 sm:grid-cols-2">
                 {selectedRoom.booking?.bookingId && !String(selectedRoom.booking.bookingId).startsWith("room-") ? (

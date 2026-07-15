@@ -28,6 +28,7 @@ import ReconciliationDataPage from "./pages/ReconciliationDataPage";
 import AccountsCustomerInvoices from "./pages/AccountsCustomerInvoices";
 import AccountsDashboard from "./pages/AccountsDashboard";
 import Assignment from "./pages/Assignments";
+import AssignmentNotification from "./pages/assignmentnotification";
 import Attendance from "./pages/Attendance";
 import Banquet from "./pages/Banquet";
 import CustomerInvoicePage from "./pages/CustomerInvoicePage";
@@ -70,6 +71,7 @@ const ROLES = {
   REPORTS: ["admin", "manager", "accountant"],
   AUDIT: ["admin", "manager", "accountant"],
   ASSIGNMENTS: ["admin", "manager", "receptionist", "housekeeping", "accountant", "staff"],
+  ASSIGNMENT_NOTIFICATIONS: ["admin", "manager", "receptionist", "housekeeping", "accountant", "staff"],
 };
 
 const HEADER_HEIGHT = 92;
@@ -246,6 +248,10 @@ function AppRoutes({ isAuthenticated, setIsAuthenticated, protect }) {
           <Route path="/banquet" element={protect(<Banquet />, ROLES.BANQUET)} />
           <Route path="/reports" element={protect(<Reports />, ROLES.REPORTS)} />
           <Route path="/assignments" element={protect(<Assignment />, ROLES.ASSIGNMENTS)} />
+          <Route
+            path="/assignment-notification"
+            element={protect(<AssignmentNotification />, ROLES.ASSIGNMENT_NOTIFICATIONS)}
+          />
           <Route path="/kitchen" element={protect(<Kitchen />, ROLES.KITCHEN)} />
           <Route path="/waiter-delivery" element={protect(<WaiterDeliveryQueue />, ROLES.RESTAURANT)} />
           <Route path="/user" element={protect(<User />, ROLES.ADMIN_ONLY)} />

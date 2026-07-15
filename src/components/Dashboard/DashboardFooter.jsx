@@ -16,7 +16,7 @@ const DashboardFooter = ({ contentOffset = 0 }) => {
       <div className="relative mx-auto flex min-h-[74px] w-full max-w-7xl items-center justify-between gap-4">
         <div>
           <p className=" ml-14 text-xl font-semibold text-slate-200">
-            Website secured and maintained by Sachiva Web & Security
+           This software  secured and maintained by Sachiva Web & Security
             <br />
             &copy; {currentYear} All rights reserved for Sachiva Web & Security
           </p>
