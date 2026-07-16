@@ -274,12 +274,12 @@ function AppRoutes({ isAuthenticated, setIsAuthenticated, protect }) {
           <Route path="/reports/audit" element={protect(<AuditReport />, ROLES.AUDIT)} />
 
           <Route
-            path="/restaurant/*"
+            path="/restaurant"
             element={
               <ProtectedRoute allowedRoles={ROLES.RESTAURANT}>
                 <Layout setIsAuthenticated={setIsAuthenticated}>
                   <RestaurantProvider>
-                    <Outlet />
+                    <RestaurantPOS />
                   </RestaurantProvider>
                 </Layout>
               </ProtectedRoute>
