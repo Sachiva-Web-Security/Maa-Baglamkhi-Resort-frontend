@@ -165,79 +165,81 @@ export default function HousekeeperNotification() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 p-6 lg:p-10">
-      <div className="rounded-3xl bg-gradient-to-r from-blue-900 via-blue-700 to-sky-500 p-8 text-white shadow-2xl">
-        <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <div className="inline-flex items-center gap-3 rounded-full bg-white/20 px-5 py-2">
-              <Bell className="h-5 w-5" />
-              <span className="text-sm font-semibold">Housekeeping Notifications</span>
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-slate-100 p-3 sm:p-6 lg:p-10">
+      <div className="rounded-2xl bg-gradient-to-r from-blue-900 via-blue-700 to-sky-500 p-5 text-white shadow-2xl sm:rounded-3xl sm:p-8">
+        <div className="flex flex-col gap-6 sm:gap-8 lg:flex-row lg:items-center lg:justify-between">
+          <div className="min-w-0">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1.5 sm:gap-3 sm:px-5 sm:py-2">
+              <Bell className="h-4 w-4 shrink-0 sm:h-5 sm:w-5" />
+              <span className="text-xs font-semibold sm:text-sm">Housekeeping Notifications</span>
             </div>
 
-            <h1 className="mt-5 text-4xl font-extrabold">Task Assignment Center</h1>
+            <h1 className="mt-4 text-2xl font-extrabold sm:mt-5 sm:text-3xl lg:text-4xl">
+              Task Assignment Center
+            </h1>
 
-            <p className="mt-3 max-w-2xl text-lg text-blue-100">
+            <p className="mt-2 max-w-2xl text-sm text-blue-100 sm:mt-3 sm:text-lg">
               Real room assignments sent from reception and the cleaning log panel.
             </p>
           </div>
 
-          <div className="flex h-32 w-32 items-center justify-center rounded-full bg-white/15 backdrop-blur-xl">
-            <Bell className="h-16 w-16 text-white" />
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center self-start rounded-full bg-white/15 backdrop-blur-xl sm:h-24 sm:w-24 lg:h-32 lg:w-32 lg:self-auto">
+            <Bell className="h-8 w-8 text-white sm:h-12 sm:w-12 lg:h-16 lg:w-16" />
           </div>
         </div>
       </div>
 
       {error ? (
-        <div className="mt-6 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 font-semibold text-rose-700">
+        <div className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700 sm:mt-6 sm:px-5 sm:py-4 sm:text-base">
           {error}
         </div>
       ) : null}
 
-      <div className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-3xl bg-white p-6 shadow-xl">
+      <div className="mt-6 grid grid-cols-1 gap-4 sm:mt-8 sm:grid-cols-2 sm:gap-6 xl:grid-cols-4">
+        <div className="rounded-2xl bg-white p-4 shadow-xl sm:rounded-3xl sm:p-6">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-slate-500">Total Notifications</p>
-              <h2 className="mt-2 text-4xl font-bold text-blue-900">{total}</h2>
+            <div className="min-w-0">
+              <p className="text-sm text-slate-500 sm:text-base">Total Notifications</p>
+              <h2 className="mt-1 text-2xl font-bold text-blue-900 sm:mt-2 sm:text-4xl">{total}</h2>
             </div>
-            <div className="rounded-2xl bg-blue-100 p-4">
-              <Bell className="h-8 w-8 text-blue-700" />
+            <div className="shrink-0 rounded-2xl bg-blue-100 p-3 sm:p-4">
+              <Bell className="h-6 w-6 text-blue-700 sm:h-8 sm:w-8" />
             </div>
           </div>
         </div>
 
-        <div className="rounded-3xl bg-white p-6 shadow-xl">
+        <div className="rounded-2xl bg-white p-4 shadow-xl sm:rounded-3xl sm:p-6">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-slate-500">Pending Tasks</p>
-              <h2 className="mt-2 text-4xl font-bold text-orange-500">{pending}</h2>
+            <div className="min-w-0">
+              <p className="text-sm text-slate-500 sm:text-base">Pending Tasks</p>
+              <h2 className="mt-1 text-2xl font-bold text-orange-500 sm:mt-2 sm:text-4xl">{pending}</h2>
             </div>
-            <div className="rounded-2xl bg-orange-100 p-4">
-              <Clock3 className="h-8 w-8 text-orange-500" />
+            <div className="shrink-0 rounded-2xl bg-orange-100 p-3 sm:p-4">
+              <Clock3 className="h-6 w-6 text-orange-500 sm:h-8 sm:w-8" />
             </div>
           </div>
         </div>
 
-        <div className="rounded-3xl bg-white p-6 shadow-xl">
+        <div className="rounded-2xl bg-white p-4 shadow-xl sm:rounded-3xl sm:p-6">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-slate-500">Completed</p>
-              <h2 className="mt-2 text-4xl font-bold text-green-600">{completed}</h2>
+            <div className="min-w-0">
+              <p className="text-sm text-slate-500 sm:text-base">Completed</p>
+              <h2 className="mt-1 text-2xl font-bold text-green-600 sm:mt-2 sm:text-4xl">{completed}</h2>
             </div>
-            <div className="rounded-2xl bg-green-100 p-4">
-              <CheckCircle2 className="h-8 w-8 text-green-600" />
+            <div className="shrink-0 rounded-2xl bg-green-100 p-3 sm:p-4">
+              <CheckCircle2 className="h-6 w-6 text-green-600 sm:h-8 sm:w-8" />
             </div>
           </div>
         </div>
 
-        <div className="rounded-3xl bg-white p-6 shadow-xl">
+        <div className="rounded-2xl bg-white p-4 shadow-xl sm:rounded-3xl sm:p-6">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-slate-500">Assigned To You</p>
-              <h2 className="mt-2 text-4xl font-bold text-sky-600">{assignedToYou}</h2>
+            <div className="min-w-0">
+              <p className="text-sm text-slate-500 sm:text-base">Assigned To You</p>
+              <h2 className="mt-1 text-2xl font-bold text-sky-600 sm:mt-2 sm:text-4xl">{assignedToYou}</h2>
             </div>
-            <div className="rounded-2xl bg-sky-100 p-4">
-              <User className="h-8 w-8 text-sky-600" />
+            <div className="shrink-0 rounded-2xl bg-sky-100 p-3 sm:p-4">
+              <User className="h-6 w-6 text-sky-600 sm:h-8 sm:w-8" />
             </div>
           </div>
         </div>
@@ -245,22 +247,22 @@ export default function HousekeeperNotification() {
 
       {/* Results info */}
       {!loading && total > 0 && (
-        <p className="mt-6 text-sm font-medium text-slate-500">
+        <p className="mt-4 text-xs font-medium text-slate-500 sm:mt-6 sm:text-sm">
           Showing {Math.min((safePage - 1) * pageSize + 1, total)} –{" "}
           {Math.min(safePage * pageSize, total)} of {total} notifications
         </p>
       )}
 
-      <div className="mt-4 space-y-6">
+      <div className="mt-3 space-y-4 sm:mt-4 sm:space-y-6">
         {loading ? (
-          <div className="rounded-3xl bg-white p-10 text-center text-lg font-semibold text-slate-500 shadow-xl">
+          <div className="rounded-2xl bg-white p-6 text-center text-base font-semibold text-slate-500 shadow-xl sm:rounded-3xl sm:p-10 sm:text-lg">
             Loading housekeeping notifications...
           </div>
         ) : pageItems.length === 0 ? (
-          <div className="rounded-3xl bg-white p-10 text-center shadow-xl">
+          <div className="rounded-2xl bg-white p-6 text-center shadow-xl sm:rounded-3xl sm:p-10">
             {currentUser ? (
               <>
-                <p className="text-lg font-semibold text-slate-700">
+                <p className="text-base font-semibold text-slate-700 sm:text-lg">
                   No housekeeping tasks assigned to {currentUser} yet.
                 </p>
                 <p className="mt-2 text-sm font-medium text-slate-500">
@@ -268,7 +270,7 @@ export default function HousekeeperNotification() {
                 </p>
               </>
             ) : (
-              <p className="text-lg font-semibold text-slate-700">
+              <p className="text-base font-semibold text-slate-700 sm:text-lg">
                 Please log in to view your housekeeping tasks.
               </p>
             )}
@@ -281,21 +283,23 @@ export default function HousekeeperNotification() {
             return (
               <div
                 key={item.id}
-                className="rounded-3xl border border-blue-100 bg-white shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
+                className="rounded-2xl border border-blue-100 bg-white shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl sm:rounded-3xl"
               >
-                <div className="p-6 lg:p-8">
-                  <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-                    <div className="flex flex-1 gap-5">
-                      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-900 to-sky-500 text-white shadow-lg">
-                        <BedDouble className="h-8 w-8" />
+                <div className="p-4 sm:p-6 lg:p-8">
+                  <div className="flex flex-col gap-5 sm:gap-6 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="flex flex-1 gap-3 sm:gap-5 min-w-0">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-900 to-sky-500 text-white shadow-lg sm:h-16 sm:w-16">
+                        <BedDouble className="h-6 w-6 sm:h-8 sm:w-8" />
                       </div>
 
-                      <div className="flex-1">
-                        <div className="flex flex-wrap items-center gap-3">
-                          <h2 className="text-2xl font-bold text-slate-900">Room {item.room}</h2>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                          <h2 className="break-words text-lg font-bold text-slate-900 sm:text-2xl">
+                            Room {item.room}
+                          </h2>
 
                           <span
-                            className={`rounded-full px-4 py-1 text-sm font-semibold ${
+                            className={`rounded-full px-3 py-1 text-xs font-semibold sm:px-4 sm:text-sm ${
                               item.status === "Completed"
                                 ? "bg-green-100 text-green-700"
                                 : item.status === "In Progress"
@@ -307,72 +311,76 @@ export default function HousekeeperNotification() {
                           </span>
                         </div>
 
-                        <p className="mt-3 text-slate-600">
+                        <p className="mt-2 break-words text-sm text-slate-600 sm:mt-3 sm:text-base">
                           <span className="font-semibold text-blue-800">Receptionist:</span> {item.receptionist}
                         </p>
 
-                        <p className="mt-1 text-slate-600">
+                        <p className="mt-1 break-words text-sm text-slate-600 sm:text-base">
                           <span className="font-semibold text-blue-800">Assigned To:</span> {item.assignedTo}
                         </p>
 
-                        <p className="mt-1 text-slate-600">
+                        <p className="mt-1 break-words text-sm text-slate-600 sm:text-base">
                           <span className="font-semibold text-blue-800">Message:</span> {item.task}
                         </p>
 
-                        <p className="mt-1 text-slate-600">
+                        <p className="mt-1 break-words text-sm text-slate-600 sm:text-base">
                           <span className="font-semibold text-blue-800">Task:</span> {item.taskLabel}
                         </p>
 
-                        <div className="mt-4 flex flex-wrap gap-6 text-sm text-slate-500">
+                        <div className="mt-3 flex flex-wrap gap-3 text-xs text-slate-500 sm:mt-4 sm:gap-6 sm:text-sm">
                           <div className="flex items-center gap-2">
-                            <CalendarDays size={18} />
+                            <CalendarDays size={16} className="shrink-0 sm:hidden" />
+                            <CalendarDays size={18} className="hidden shrink-0 sm:block" />
                             Sent {formatDate(item.sentAt)}
                           </div>
 
                           <div className="flex items-center gap-2">
-                            <Clock3 size={18} />
+                            <Clock3 size={16} className="shrink-0 sm:hidden" />
+                            <Clock3 size={18} className="hidden shrink-0 sm:block" />
                             {formatTime(item.sentAt)}
                           </div>
 
                           <div className="flex items-center gap-2 font-semibold text-orange-600">
-                            <Clock3 size={18} />
+                            <Clock3 size={16} className="shrink-0 sm:hidden" />
+                            <Clock3 size={18} className="hidden shrink-0 sm:block" />
                             Due {formatDate(item.dueAt)} {formatTime(item.dueAt)}
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex flex-col items-start gap-4 lg:items-end">
+                    <div className="flex flex-col items-stretch gap-3 sm:gap-4 lg:items-end">
                       {allowedToComplete ? (
                         item.status === "Completed" ? (
-                          <div className="flex flex-col items-start gap-2 lg:items-end">
-                            <div className="flex items-center gap-2 rounded-2xl bg-emerald-100 px-5 py-3 font-semibold text-emerald-700">
-                              <CheckCircle2 size={20} />
+                          <div className="flex flex-col items-stretch gap-2 lg:items-end">
+                            <div className="flex items-center justify-center gap-2 rounded-2xl bg-emerald-100 px-4 py-2.5 text-sm font-semibold text-emerald-700 sm:justify-start sm:px-5 sm:py-3 sm:text-base">
+                              <CheckCircle2 size={18} className="shrink-0 sm:hidden" />
+                              <CheckCircle2 size={20} className="hidden shrink-0 sm:block" />
                               Marked Clean
                             </div>
-                            <div className="rounded-2xl border border-emerald-200 bg-white px-5 py-3 font-semibold text-emerald-700 shadow-sm">
+                            <div className="rounded-2xl border border-emerald-200 bg-white px-4 py-2.5 text-center text-sm font-semibold text-emerald-700 shadow-sm sm:px-5 sm:py-3 sm:text-base sm:text-left">
                               This room is ready to book now.
                             </div>
                           </div>
                         ) : (
                           <button
                             onClick={() => completeTask(item.id)}
-                            className="rounded-2xl bg-gradient-to-r from-blue-900 via-blue-700 to-sky-500 px-8 py-3 font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105"
+                            className="w-full whitespace-nowrap rounded-2xl bg-gradient-to-r from-blue-900 via-blue-700 to-sky-500 px-6 py-3 font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 sm:w-auto sm:px-8"
                           >
-                            <span className="flex items-center gap-2">
+                            <span className="flex items-center justify-center gap-2">
                               <Check size={18} />
                               Mark Clean
                             </span>
                           </button>
                         )
                       ) : (
-                        <div className="rounded-2xl bg-slate-100 px-5 py-3 font-medium text-slate-500">
+                        <div className="rounded-2xl bg-slate-100 px-4 py-2.5 text-center text-sm font-medium text-slate-500 sm:px-5 sm:py-3 sm:text-base sm:text-left">
                           Assigned to another housekeeper
                         </div>
                       )}
 
                       {isMine && (
-                        <div className="rounded-full bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700">
+                        <div className="self-start rounded-full bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700">
                           <Sparkles className="mr-2 inline h-4 w-4" />
                           Assigned to You
                         </div>
@@ -388,7 +396,7 @@ export default function HousekeeperNotification() {
 
       {/* Pagination controls */}
       {totalPages > 1 && (
-        <div className="mt-6 flex flex-col items-center justify-between gap-4 rounded-3xl border border-slate-200 bg-white px-4 py-4 shadow-sm sm:flex-row">
+        <div className="mt-6 flex flex-col items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white px-3 py-4 shadow-sm sm:rounded-3xl sm:px-4 sm:flex-row">
           {/* Page-size selector */}
           <div className="flex items-center gap-2 text-sm text-slate-600">
             <span className="font-medium">Rows per page:</span>
@@ -412,7 +420,7 @@ export default function HousekeeperNotification() {
               type="button"
               onClick={() => goToPage(1)}
               disabled={safePage === 1}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-sm font-bold text-slate-600 transition hover:border-blue-300 hover:text-blue-700 disabled:opacity-40"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 text-sm font-bold text-slate-600 transition hover:border-blue-300 hover:text-blue-700 disabled:opacity-40 sm:h-9 sm:w-9"
               title="First page"
             >
               <ChevronsLeft className="h-3.5 w-3.5" />
@@ -423,7 +431,7 @@ export default function HousekeeperNotification() {
               type="button"
               onClick={() => goToPage(safePage - 1)}
               disabled={safePage === 1}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-sm font-bold text-slate-600 transition hover:border-blue-300 hover:text-blue-700 disabled:opacity-40"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 text-sm font-bold text-slate-600 transition hover:border-blue-300 hover:text-blue-700 disabled:opacity-40 sm:h-9 sm:w-9"
               title="Previous page"
             >
               <ChevronLeft className="h-3.5 w-3.5" />
@@ -435,7 +443,7 @@ export default function HousekeeperNotification() {
                 type="button"
                 key={p}
                 onClick={() => goToPage(p)}
-                className={`inline-flex h-9 min-w-[2.25rem] items-center justify-center rounded-xl px-2 text-sm font-bold transition ${
+                className={`inline-flex h-8 min-w-[2rem] items-center justify-center rounded-xl px-2 text-sm font-bold transition sm:h-9 sm:min-w-[2.25rem] ${
                   p === safePage
                     ? "border border-blue-600 bg-blue-600 text-white shadow-md"
                     : "border border-slate-200 text-slate-600 hover:border-blue-300 hover:text-blue-700"
@@ -450,7 +458,7 @@ export default function HousekeeperNotification() {
               type="button"
               onClick={() => goToPage(safePage + 1)}
               disabled={safePage === totalPages}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-sm font-bold text-slate-600 transition hover:border-blue-300 hover:text-blue-700 disabled:opacity-40"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 text-sm font-bold text-slate-600 transition hover:border-blue-300 hover:text-blue-700 disabled:opacity-40 sm:h-9 sm:w-9"
               title="Next page"
             >
               <ChevronRight className="h-3.5 w-3.5" />
@@ -460,7 +468,7 @@ export default function HousekeeperNotification() {
                 type="button"
                 onClick={() => goToPage(totalPages)}
                 disabled={safePage === totalPages}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-sm font-bold text-slate-600 transition hover:border-blue-300 hover:text-blue-700 disabled:opacity-40"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 text-sm font-bold text-slate-600 transition hover:border-blue-300 hover:text-blue-700 disabled:opacity-40 sm:h-9 sm:w-9"
                 title="Last page"
               >
                 <ChevronsRight className="h-3.5 w-3.5" />

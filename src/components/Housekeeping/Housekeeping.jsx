@@ -1,5 +1,14 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
-import { FaSyncAlt, FaCheckCircle } from "react-icons/fa";
+import {
+  FaSyncAlt,
+  FaCheckCircle,
+  FaBuilding,
+  FaBroom,
+  FaUsers,
+  FaExclamationTriangle,
+  FaClipboardList,
+  FaBed,
+} from "react-icons/fa";
 import API from "../../api";
 
 const normalizeNotification = (row) => ({
@@ -33,8 +42,8 @@ const statusPill = (status) => {
   if (s.includes("clean") && !s.includes("dirty")) return { label: status, cls: "bg-emerald-50 text-emerald-700 border border-emerald-200" };
   if (s.includes("dirty")) return { label: status, cls: "bg-amber-50 text-amber-700 border border-amber-200" };
   if (s.includes("progress") || s.includes("cleaning")) return { label: status, cls: "bg-violet-50 text-violet-700 border border-violet-200" };
-  if (s.includes("occupied")) return { label: status, cls: "bg-rose-50 text-rose-700 border border-rose-200" };
-  if (s.includes("block") || s.includes("service")) return { label: status, cls: "bg-slate-50 text-slate-600 border border-slate-200" };
+  if (s.includes("occupied")) return { label: status, cls: "bg-blue-50 text-blue-700 border border-blue-200" };
+  if (s.includes("block") || s.includes("service")) return { label: status, cls: "bg-rose-50 text-rose-700 border border-rose-200" };
   return { label: status || "Unknown", cls: "bg-slate-50 text-slate-600 border border-slate-200" };
 };
 
@@ -179,157 +188,195 @@ export default function Housekeeping() {
   }, [rooms]);
 
   return (
-    <div className="min-h-screen bg-slate-50 p-4 lg:p-6">
-      {/* Header */}
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-4xl font-black text-slate-900">Housekeeping</h1>
-          <p className="text-xl text-slate-500">Room assignments, status, aur checkout-available rooms — sab list format mein.</p>
-        </div>
-        <button onClick={fetchData} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xl font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50">
-          <FaSyncAlt className="text-xl" /> Refresh
-        </button>
-      </div>
+    <div className="min-h-screen w-full overflow-x-hidden bg-gradient-to-br from-blue-50 via-slate-50 to-blue-50 p-3 sm:p-4 lg:p-6">
+      <div className="w-full">
 
-      {/* Stats */}
-      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-5">
-        {[
-          { label: "Total Rooms", value: stats.total, color: "text-slate-900" },
-          { label: "Clean / Ready", value: stats.clean, color: "text-emerald-600" },
-          { label: "Dirty", value: stats.dirty, color: "text-amber-600" },
-          { label: "Occupied", value: stats.occupied, color: "text-blue-600" },
-          { label: "Out of Service", value: stats.oos, color: "text-rose-600" },
-        ].map((s) => (
-          <div key={s.label} className="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
-            <div className="text-sm font-semibold uppercase tracking-wide text-slate-500">{s.label}</div>
-            <div className={`mt-1 text-3xl font-black ${s.color}`}>{s.value}</div>
+        {/* Header */}
+        <div className="mb-5 flex flex-col gap-4 rounded-3xl bg-gradient-to-r from-[#0a1e57] via-[#1e56e6] to-[#7db8f5] p-5 shadow-[0_8px_30px_rgba(37,99,235,0.25)] sm:flex-row sm:items-center sm:justify-between lg:p-10">
+          <div className="flex items-center gap-4">
+            <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl bg-white/15 text-white ring-1 ring-white/30 sm:h-16 sm:w-16">
+              <FaBuilding className="text-2xl sm:text-3xl" />
+            </div>
+            <div className="min-w-0">
+              <h1 className="text-[26px] font-black leading-tight text-white xs:text-[28px] sm:text-[38px] lg:text-[32px]">Housekeeping</h1>
+              <p className="mt-0.5 break-words text-sm text-blue-50 sm:text-lg lg:text-xl">View and manage room assignments, room status, and checkout-ready rooms from one organized list.</p>
+            </div>
           </div>
-        ))}
-      </div>
+          <button
+            onClick={fetchData}
+            className="inline-flex w-full items-center justify-center gap-2 self-start whitespace-nowrap rounded-xl border border-white/60 bg-white/10 px-5 py-3 text-base font-bold text-white shadow-sm backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/20 hover:shadow-md sm:w-auto sm:self-auto sm:text-lg lg:text-xl"
+          >
+            <FaSyncAlt className="text-lg lg:text-xl" /> Refresh
+          </button>
+        </div>
 
-      {/* Blocked Rooms Banner */}
-      {blockedRooms.length > 0 && (
-        <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-3">
-          <p className="text-sm font-bold text-rose-700">
-            Blocked Rooms ({blockedRooms.length}):
-            {blockedRooms.map((b) => (
-              <span key={b.id} className="ml-3 inline-flex items-center gap-1 rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-700">
-                Room {b.room_number} — {b.block_type} (until {formatDate(b.blocked_until)})
+        {/* Stats */}
+        <div className="mb-5 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-5">
+          {[
+            { label: "Total Rooms", desc: "All Rooms", value: stats.total, icon: FaBuilding, iconBg: "bg-blue-100", iconColor: "text-blue-600", valueColor: "text-blue-600" },
+            { label: "Clean / Ready", desc: "Ready for Check-in", value: stats.clean, icon: FaCheckCircle, iconBg: "bg-emerald-100", iconColor: "text-emerald-600", valueColor: "text-emerald-600" },
+            { label: "Dirty", desc: "Needs Cleaning", value: stats.dirty, icon: FaBroom, iconBg: "bg-amber-100", iconColor: "text-amber-600", valueColor: "text-amber-600" },
+            { label: "Occupied", desc: "Currently Occupied", value: stats.occupied, icon: FaUsers, iconBg: "bg-sky-100", iconColor: "text-sky-600", valueColor: "text-sky-600" },
+            { label: "Out of Service", desc: "Maintenance / Issues", value: stats.oos, icon: FaExclamationTriangle, iconBg: "bg-rose-100", iconColor: "text-rose-600", valueColor: "text-rose-600" },
+          ].map((s) => (
+            <div
+              key={s.label}
+              className="group min-w-0 rounded-2xl border border-slate-100 bg-white p-3 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg sm:p-5"
+            >
+              <div className={`mb-3 flex h-11 w-11 items-center justify-center rounded-xl ${s.iconBg} ${s.iconColor} transition-transform duration-300 group-hover:scale-110 sm:h-14 sm:w-14`}>
+                <s.icon className="text-lg sm:text-2xl" />
+              </div>
+              <div className="truncate text-xs font-bold uppercase tracking-wide text-slate-400 sm:text-sm">{s.label}</div>
+              <div className={`mt-1 text-[26px] font-black leading-none sm:text-[38px] ${s.valueColor}`}>{s.value}</div>
+              <div className="mt-1 truncate text-xs text-slate-400 sm:text-base">{s.desc}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Blocked Rooms Banner */}
+        {blockedRooms.length > 0 && (
+          <div className="mb-5 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-4 shadow-sm sm:px-5">
+            <p className="text-sm font-bold text-rose-700 sm:text-base">
+              Blocked Rooms ({blockedRooms.length}):
+              <span className="mt-2 flex flex-wrap gap-2 pt-2 sm:inline sm:pt-0">
+                {blockedRooms.map((b) => (
+                  <span key={b.id} className="ml-0 mr-2 mt-2 inline-flex items-center gap-1 whitespace-normal rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-700 sm:ml-3 sm:mt-0">
+                    Room {b.room_number} — {b.block_type} (until {formatDate(b.blocked_until)})
+                  </span>
+                ))}
               </span>
-            ))}
-          </p>
-        </div>
-      )}
+            </p>
+          </div>
+        )}
 
-      {/* Full Assignment List */}
-      <div className="mb-6 rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-        <div className="border-b border-slate-200 px-5 py-4">
-          <h2 className="text-2xl font-black text-slate-900">Room Assignment List</h2>
-          <p className="text-base text-slate-500">
-            Kisko room assign hua, room type, duration, kisne assign kiya h, aur real status — sab yahan.
-          </p>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-left">
-            <thead className="bg-slate-50 text-xs uppercase tracking-[0.18em] text-slate-500">
-              <tr>
-                <th className="px-4 py-3 font-semibold whitespace-nowrap">Room No</th>
-                <th className="px-4 py-3 font-semibold whitespace-nowrap">Room Type</th>
-                <th className="px-4 py-3 font-semibold whitespace-nowrap">Assigned To (Housekeeper)</th>
-                <th className="px-4 py-3 font-semibold whitespace-nowrap">Assigned By</th>
-                <th className="px-4 py-3 font-semibold whitespace-nowrap">Task</th>
-                <th className="px-4 py-3 font-semibold whitespace-nowrap">Duration Given</th>
-                <th className="px-4 py-3 font-semibold whitespace-nowrap">Real Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {assignmentEntries.length ? (
-                assignmentEntries.map((row) => (
-                  <tr
-                    key={row.id}
-                    className={`border-t text-sm text-slate-700 transition hover:bg-slate-50 ${
-                      row.isBlocked ? "border-rose-200 bg-rose-50/60" : "border-slate-100"
-                    }`}
-                  >
-                    <td className="px-4 py-3.5 text-[16px] font-bold text-slate-900 whitespace-nowrap">
-                      {row.roomNo}
-                      {row.isBlocked && (
-                        <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold text-rose-700">
-                          🔒 BLOCKED
+        {/* Full Assignment List */}
+        <div className="mb-5 overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-[0_8px_30px_rgba(15,23,42,0.05)]">
+          <div className="flex items-center gap-3 border-b border-slate-100 px-4 py-5 sm:gap-4 sm:px-6">
+            <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 sm:h-12 sm:w-12">
+              <FaClipboardList className="text-lg sm:text-xl" />
+            </div>
+            <div className="min-w-0">
+              <h2 className="text-[20px] font-black text-slate-900 sm:text-[30px] lg:text-[32px]">Room Assignment List</h2>
+              <p className="mt-0.5 break-words text-xs text-slate-500 sm:text-base lg:text-lg">
+                Kisko room assign hua, room type, duration, kisne assign kiya h, aur real status — sab yahan.
+              </p>
+            </div>
+          </div>
+          <div className="overflow-x-auto [-webkit-overflow-scrolling:touch]">
+            <table className="min-w-full text-left">
+              <thead className="bg-blue-50/60 text-[13px] font-bold uppercase tracking-[0.14em] text-blue-500 sm:text-sm">
+                <tr>
+                  <th className="whitespace-nowrap px-5 py-3.5 sm:px-6">Room No</th>
+                  <th className="whitespace-nowrap px-5 py-3.5 sm:px-6">Room Type</th>
+                  <th className="whitespace-nowrap px-5 py-3.5 sm:px-6">Assigned To (Housekeeper)</th>
+                  <th className="whitespace-nowrap px-5 py-3.5 sm:px-6">Assigned By</th>
+                  <th className="whitespace-nowrap px-5 py-3.5 sm:px-6">Task</th>
+                  <th className="whitespace-nowrap px-5 py-3.5 sm:px-6">Duration Given</th>
+                  <th className="whitespace-nowrap px-5 py-3.5 sm:px-6">Real Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {assignmentEntries.length ? (
+                  assignmentEntries.map((row) => (
+                    <tr
+                      key={row.id}
+                      className={`border-t text-sm text-slate-700 transition-colors duration-200 hover:bg-blue-50/40 sm:text-base ${
+                        row.isBlocked ? "border-rose-100 bg-rose-50/50" : "border-slate-50"
+                      }`}
+                    >
+                      <td className="whitespace-nowrap px-5 py-4 text-[17px] font-bold text-slate-900 sm:px-6">
+                        {row.roomNo}
+                        {row.isBlocked && (
+                          <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold text-rose-700">
+                            🔒 BLOCKED
+                          </span>
+                        )}
+                      </td>
+                      <td className="whitespace-nowrap px-5 py-4 sm:px-6">{row.roomType}</td>
+                      <td className="whitespace-nowrap px-5 py-4 sm:px-6">{row.assignedTo}</td>
+                      <td className="whitespace-nowrap px-5 py-4 sm:px-6">{row.assignedBy}</td>
+                      <td className="whitespace-nowrap px-5 py-4 sm:px-6">{row.taskLabel}</td>
+                      <td className="whitespace-nowrap px-5 py-4 sm:px-6">{row.duration}</td>
+                      <td className="whitespace-nowrap px-5 py-4 sm:px-6">
+                        <span className={`inline-flex rounded-full px-3 py-1 text-[15px] font-bold sm:text-base ${row.statusPill.cls}`}>
+                          {row.isBlocked ? `Out of Service (${row.blockInfo?.block_type})` : row.statusPill.label}
                         </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3.5 whitespace-nowrap">{row.roomType}</td>
-                    <td className="px-4 py-3.5 whitespace-nowrap">{row.assignedTo}</td>
-                    <td className="px-4 py-3.5 whitespace-nowrap">{row.assignedBy}</td>
-                    <td className="px-4 py-3.5 whitespace-nowrap">{row.taskLabel}</td>
-                    <td className="px-4 py-3.5 whitespace-nowrap">{row.duration}</td>
-                    <td className="px-4 py-3.5 whitespace-nowrap">
-                      <span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${row.statusPill.cls}`}>
-                        {row.isBlocked ? `Out of Service (${row.blockInfo?.block_type})` : row.statusPill.label}
-                      </span>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={7} className="px-5 py-16">
+                      <div className="flex flex-col items-center justify-center gap-3 text-center">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-400 sm:h-16 sm:w-16">
+                          <FaClipboardList className="text-xl sm:text-2xl" />
+                        </div>
+                        <p className="text-lg font-bold text-slate-800 sm:text-[21px]">No room Assignment found.</p>
+                        <p className="text-base text-slate-400 sm:text-lg">Jab bhi room assign hoga, yahan show hoga.</p>
+                      </div>
                     </td>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={7} className="px-5 py-10 text-center text-sm font-semibold text-slate-500">
-                    No room assignments found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
 
-      {/* Checkout Available Rooms */}
-      <div className="rounded-2xl border border-emerald-200 bg-white shadow-sm overflow-hidden">
-        <div className="border-b border-emerald-100 bg-emerald-50/50 px-5 py-4">
-          <div className="flex items-center gap-3">
-            <FaCheckCircle className="text-2xl text-emerald-600" />
-            <div>
-              <h2 className="text-2xl font-black text-slate-900">Rooms Available for Checkout / New Booking</h2>
-              <p className="text-base text-slate-500">
+        {/* Checkout Available Rooms */}
+        <div className="overflow-hidden rounded-3xl border border-emerald-100 bg-white shadow-[0_8px_30px_rgba(15,23,42,0.05)]">
+          <div className="flex items-center gap-3 border-b border-emerald-100 bg-emerald-50/40 px-4 py-5 sm:gap-4 sm:px-6">
+            <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600 sm:h-12 sm:w-12">
+              <FaCheckCircle className="text-lg sm:text-xl" />
+            </div>
+            <div className="min-w-0">
+              <h2 className="text-[20px] font-black text-slate-900 sm:text-[30px] lg:text-[32px]">Rooms Available for Checkout / New Booking</h2>
+              <p className="mt-0.5 break-words text-xs text-slate-500 sm:text-base lg:text-lg">
                 Total {checkoutReadyRooms.length} cleaned rooms jo abhi book nahi hue — checkout ke baad naye guest ke liye taiyaar.
               </p>
             </div>
           </div>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-left">
-            <thead className="bg-emerald-50/80 text-xs uppercase tracking-[0.18em] text-emerald-700">
-              <tr>
-                <th className="px-4 py-3 font-semibold">Room No</th>
-                <th className="px-4 py-3 font-semibold">Room Type</th>
-                <th className="px-4 py-3 font-semibold">Status</th>
-                <th className="px-4 py-3 font-semibold">Assigned To</th>
-              </tr>
-            </thead>
-            <tbody>
-              {checkoutReadyRooms.length ? (
-                checkoutReadyRooms.map((room, index) => (
-                  <tr key={room.id || index} className="border-t border-emerald-50 text-sm text-slate-700 transition hover:bg-emerald-50/40">
-                    <td className="px-4 py-3 text-[16px] font-bold text-slate-900">{room.roomNo || room.roomNumber}</td>
-                    <td className="px-4 py-3">{room.roomType || room.type || "Accommodation"}</td>
-                    <td className="px-4 py-3">
-                      <span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${statusPill(room.status).cls}`}>
-                        {statusPill(room.status).label}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">{room.assignee || "No Housekeeper"}</td>
-                  </tr>
-                ))
-              ) : (
+          <div className="overflow-x-auto [-webkit-overflow-scrolling:touch]">
+            <table className="min-w-full text-left">
+              <thead className="bg-emerald-50/60 text-[13px] font-bold uppercase tracking-[0.14em] text-emerald-600 sm:text-sm">
                 <tr>
-                  <td colSpan={4} className="px-5 py-10 text-center text-sm font-semibold text-slate-500">
-                    No rooms currently available for checkout.
-                  </td>
+                  <th className="whitespace-nowrap px-5 py-3.5 sm:px-6">Room No</th>
+                  <th className="whitespace-nowrap px-5 py-3.5 sm:px-6">Room Type</th>
+                  <th className="whitespace-nowrap px-5 py-3.5 sm:px-6">Status</th>
+                  <th className="whitespace-nowrap px-5 py-3.5 sm:px-6">Assigned To</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {checkoutReadyRooms.length ? (
+                  checkoutReadyRooms.map((room, index) => (
+                    <tr key={room.id || index} className="border-t border-emerald-50 text-sm text-slate-700 transition-colors duration-200 hover:bg-emerald-50/40 sm:text-base">
+                      <td className="whitespace-nowrap px-5 py-4 text-[17px] font-bold text-slate-900 sm:px-6">{room.roomNo || room.roomNumber}</td>
+                      <td className="whitespace-nowrap px-5 py-4 sm:px-6">{room.roomType || room.type || "Accommodation"}</td>
+                      <td className="whitespace-nowrap px-5 py-4 sm:px-6">
+                        <span className={`inline-flex rounded-full px-3 py-1 text-[15px] font-bold sm:text-base ${statusPill(room.status).cls}`}>
+                          {statusPill(room.status).label}
+                        </span>
+                      </td>
+                      <td className="whitespace-nowrap px-5 py-4 sm:px-6">{room.assignee || "No Housekeeper"}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={4} className="px-5 py-16">
+                      <div className="flex flex-col items-center justify-center gap-3 text-center">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-400 sm:h-16 sm:w-16">
+                          <FaBed className="text-xl sm:text-2xl" />
+                        </div>
+                        <p className="text-lg font-bold text-slate-800 sm:text-[21px]">No rooms currently available for checkout.</p>
+                        <p className="text-base text-slate-400 sm:text-lg">Jab bhi koi room checkout ke liye available hoga, yahan show hoga.</p>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
+
       </div>
     </div>
   );

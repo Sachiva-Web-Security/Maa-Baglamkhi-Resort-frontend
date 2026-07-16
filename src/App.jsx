@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { BrowserRouter as Router, Navigate, Route, Routes, useLocation, Outlet } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 
 import { RestaurantProvider } from "./Context/RestaurantContext.jsx";
@@ -279,7 +279,7 @@ function AppRoutes({ isAuthenticated, setIsAuthenticated, protect }) {
               <ProtectedRoute allowedRoles={ROLES.RESTAURANT}>
                 <Layout setIsAuthenticated={setIsAuthenticated}>
                   <RestaurantProvider>
-                    <RestaurantPOS />
+                    <Outlet />
                   </RestaurantProvider>
                 </Layout>
               </ProtectedRoute>
