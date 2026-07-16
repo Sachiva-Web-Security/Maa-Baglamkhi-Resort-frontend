@@ -210,13 +210,13 @@ const HousekeepingDashboard = () => {
     </div>
   );
 
-  const InsightCard = ({ item }) => (
+  const InsightCard = ({ label, value, note }) => (
     <div className="rounded-[22px] border border-slate-200/80 bg-slate-50 px-4 py-4">
       <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-        {item.label}
+        {label}
       </div>
-      <div className="mt-2 text-2xl font-black text-slate-900">{item.value ?? fallback}</div>
-      <div className="mt-2 text-sm text-slate-500">{item.note}</div>
+      <div className="mt-2 text-2xl font-black text-slate-900">{value ?? fallback}</div>
+      <div className="mt-2 text-sm text-slate-500">{note}</div>
     </div>
   );
 

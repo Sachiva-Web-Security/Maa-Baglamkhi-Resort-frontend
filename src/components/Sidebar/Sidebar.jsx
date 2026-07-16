@@ -204,18 +204,18 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
       { id: 502, name: "Assign Notifications", icon: FaBell, path: "/assignment-notification", section: "operations" },
       { id: 503, name: "Accounts", icon: FaWallet, path: "/accounts", section: "records" },
       { id: 504, name: "Reports", icon: FaChartBar, path: "/reports", section: "records" },
-      { id: 505, name: "Inventory", icon: FaBoxes, path: "/inventory", section: "records",
-        children: [
-          { id: 5050, name: "Categories", path: "/inventory/categories", icon: FaListAlt },
-          { id: 5051, name: "Vendors", path: "/inventory/vendors", icon: FaTruck },
-          { id: 5052, name: "Units", path: "/inventory/units", icon: FaBalanceScale },
-          { id: 5053, name: "Items / Stock", path: "/inventory/items", icon: FaWarehouse },
-          { id: 5054, name: "Menu Items", path: "/inventory/menu-items", icon: FaUtensils },
-          { id: 5055, name: "Menu List", path: "/inventory/menu-list", icon: FaClipboardList },
-          { id: 5056, name: "Purchase Invoices", path: "/inventory/purchases", icon: FaShoppingCart },
-          { id: 5057, name: "Reports", path: "/inventory/reports", icon: FaChartBar },
-        ]
-      },
+      // { id: 505, name: "Inventory", icon: FaBoxes, path: "/inventory", section: "records",
+      //   children: [
+      //     { id: 5050, name: "Categories", path: "/inventory/categories", icon: FaListAlt },
+      //     { id: 5051, name: "Vendors", path: "/inventory/vendors", icon: FaTruck },
+      //     { id: 5052, name: "Units", path: "/inventory/units", icon: FaBalanceScale },
+      //     { id: 5053, name: "Items / Stock", path: "/inventory/items", icon: FaWarehouse },
+      //     { id: 5054, name: "Menu Items", path: "/inventory/menu-items", icon: FaUtensils },
+      //     { id: 5055, name: "Menu List", path: "/inventory/menu-list", icon: FaClipboardList },
+      //     { id: 5056, name: "Purchase Invoices", path: "/inventory/purchases", icon: FaShoppingCart },
+      //     { id: 5057, name: "Reports", path: "/inventory/reports", icon: FaChartBar },
+      //   ]
+      // },
       { id: 506, name: "Audit Logs", icon: FaHistory, path: "/reports/audit", section: "records" },
     ],
     kitchen: [

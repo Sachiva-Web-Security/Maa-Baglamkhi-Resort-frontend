@@ -6,10 +6,10 @@ import {
   FaClipboardList,
   FaMoneyBillWave,
   FaUsers,
+  FaArrowRight,
 } from "react-icons/fa";
 
 import API from "../api";
-import RoleDashboardShell from "../components/roleDashboards/RoleDashboardShell";
 import useDashboardAutoRefresh from "../hooks/useDashboardAutoRefresh";
 
 const formatINR = (amount) =>
@@ -169,23 +169,310 @@ const ManagerDashboard = () => {
     emptyText: "No booking records available for manager dashboard.",
   }), [bookings]);
 
+  const toneColors = {
+    cyan: { border: "border-l-cyan-400", bg: "bg-cyan-50", text: "text-cyan-700", iconBg: "bg-gradient-to-br from-cyan-500 to-sky-500" },
+    emerald: { border: "border-l-emerald-400", bg: "bg-emerald-50", text: "text-emerald-700", iconBg: "bg-gradient-to-br from-emerald-500 to-teal-500" },
+    amber: { border: "border-l-amber-400", bg: "bg-amber-50", text: "text-amber-700", iconBg: "bg-gradient-to-br from-amber-500 to-orange-500" },
+    violet: { border: "border-l-violet-400", bg: "bg-violet-50", text: "text-violet-700", iconBg: "bg-gradient-to-br from-violet-500 to-fuchsia-500" },
+    rose: { border: "border-l-rose-400", bg: "bg-rose-50", text: "text-rose-700", iconBg: "bg-gradient-to-br from-rose-500 to-pink-500" },
+    slate: { border: "border-l-slate-400", bg: "bg-slate-50", text: "text-slate-700", iconBg: "bg-gradient-to-br from-slate-700 to-slate-500" },
+  };
+
+  const getTone = (tone) => toneColors[tone] || toneColors.slate;
+
+  const statusBadgeColor = (status) => {
+    const s = String(status || "").toLowerCase();
+    if (s.includes("confirmed") || s.includes("checked")) return "bg-emerald-100 text-emerald-700 border border-emerald-200";
+    if (s.includes("pending")) return "bg-amber-100 text-amber-700 border border-amber-200";
+    if (s.includes("cancel")) return "bg-rose-100 text-rose-700 border border-rose-200";
+    if (s.includes("checkout") || s.includes("check-out")) return "bg-cyan-100 text-cyan-700 border border-cyan-200";
+    return "bg-slate-100 text-slate-600 border border-slate-200";
+  };
+
+  const glassCardBase = "rounded-[24px] border border-white/20 bg-white/10 backdrop-blur-md shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]";
+
   return (
-    <RoleDashboardShell
-      badge="Manager Command Center"
-      title="Manager dashboard built for daily oversight"
-      description="Occupancy, revenue, staff movement, banquet activity aur inventory alerts ko ek focused operational screen par dekhiye."
-      stats={stats}
-      quickActions={[
-        { label: "Open Reports", helper: "Review revenue and trend reports.", route: "/reports", icon: FaChartBar, tone: "emerald" },
-        { label: "All Bookings", helper: "Manage front office pipeline and arrivals.", route: "/hotel/all-bookings", icon: FaClipboardList, tone: "cyan" },
-        { label: "Inventory Alerts", helper: "Immediately review low stock items.", route: "/inventory", icon: FaBoxOpen, tone: "amber" },
-        { label: "Banquet Board", helper: "View upcoming banquet load and hall planning.", route: "/banquet", icon: FaUsers, tone: "violet" },
-      ]}
-      insights={insights}
-      table={table}
-      loading={loading}
-      error={error}
-    />
+    <div className="relative min-h-screen overflow-x-hidden bg-[#F8FAFC]">
+      {/* ─── Background decorative blobs ─────────────────────────── */}
+      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+        <div className="absolute -top-32 -left-32 h-[500px] w-[500px] rounded-full bg-blue-200/40 blur-[100px]" />
+        <div className="absolute top-20 -right-40 h-[400px] w-[400px] rounded-full bg-sky-200/30 blur-[100px]" />
+        <div className="absolute bottom-40 left-1/4 h-[350px] w-[350px] rounded-full bg-cyan-200/25 blur-[100px]" />
+      </div>
+
+      <div className="w-full space-y-8 p-4 sm:p-6 lg:p-8 xl:p-10">
+        {/* ─── Error State ────────────────────────────────────────── */}
+        {error && (
+          <div className="animate-fade-in-up rounded-[24px] border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-semibold text-rose-700 shadow-sm">
+            {error}
+          </div>
+        )}
+
+        {/* ─── Loading State ──────────────────────────────────────── */}
+        {loading && (
+          <div className="animate-fade-in-up rounded-[24px] border border-cyan-200 bg-cyan-50 px-5 py-4 text-sm font-semibold text-cyan-700 shadow-sm">
+            Dashboard data loading...
+          </div>
+        )}
+
+        {/* ─── HERO SECTION ───────────────────────────────────────── */}
+        <section className="relative overflow-hidden rounded-[28px] border border-slate-900/10 bg-[linear-gradient(135deg,#172554_0%,#1e40af_52%,#0ea5e9_100%)] px-6 py-8 shadow-[0_22px_55px_rgba(15,23,42,0.18)] sm:px-8 sm:py-10 lg:px-10 lg:py-12">
+          {/* Abstract wave patterns */}
+          <div className="pointer-events-none absolute inset-0 overflow-hidden">
+            <div className="absolute -top-20 -right-20 h-80 w-80 rounded-full bg-sky-400/10 blur-[60px]" />
+            <div className="absolute bottom-0 left-0 h-64 w-full bg-gradient-to-t from-blue-950/40 to-transparent" />
+            <div className="absolute top-1/2 left-0 h-40 w-40 -translate-y-1/2 rounded-full bg-cyan-300/8 blur-[50px]" />
+            <svg className="absolute bottom-0 left-0 h-32 w-full opacity-[0.06]" viewBox="0 0 1200 120" preserveAspectRatio="none">
+              <path d="M0,60 C300,120 600,0 900,60 C1050,90 1150,40 1200,60 L1200,120 L0,120 Z" fill="white" />
+            </svg>
+            <svg className="absolute bottom-0 left-0 h-24 w-full opacity-[0.04]" viewBox="0 0 1200 80" preserveAspectRatio="none">
+              <path d="M0,40 C200,80 400,0 600,40 C800,80 1000,20 1200,40 L1200,80 L0,80 Z" fill="white" />
+            </svg>
+          </div>
+
+          <div className="relative z-10 grid gap-8 lg:grid-cols-[minmax(0,1.3fr)_minmax(340px,0.7fr)] lg:items-center">
+            {/* Left Side */}
+            <div className="space-y-5">
+              <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-cyan-200">
+                Manager Command Center
+              </p>
+              <div className="space-y-3">
+                <h1 className="text-[42px] font-black leading-[1.1] tracking-tight text-white sm:text-[46px]">
+                  Manager dashboard built for daily oversight
+                </h1>
+                <p className="max-w-2xl text-[17px] leading-[1.7] text-slate-100/85">
+                  Occupancy, revenue, staff movement, banquet activity aur inventory alerts ko ek focused operational screen par dekhiye.
+                </p>
+              </div>
+            </div>
+
+            {/* Right Side - 4 Glass Stat Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              {stats.slice(0, 4).map((card) => {
+                const Icon = card.icon;
+                const tone = getTone(card.tone);
+                return (
+                  <div
+                    key={card.label}
+                    className={`group ${glassCardBase} px-4 py-4 text-white transition-all duration-300 hover:scale-[1.03] hover:bg-white/15`}
+                  >
+                    <span className="text-[11px] font-medium text-slate-100/75">{card.label}</span>
+                    <div className="mt-3 text-[28px] font-bold leading-none tracking-tight">{card.value ?? "--"}</div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* ─── STATISTICS SECTION (6 cards) ───────────────────────── */}
+        <section>
+          <div className="mb-5">
+            <h2 className="text-[32px] font-bold tracking-tight text-slate-900">Dashboard Overview</h2>
+            <p className="mt-1.5 text-[17px] text-slate-500">Complete operational snapshot at a glance</p>
+          </div>
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+            {stats.map((card) => {
+              const Icon = card.icon;
+              const tone = getTone(card.tone);
+              return (
+                <div
+                  key={card.label}
+                  className={`group rounded-[24px] border-l-[4px] ${tone.border} ${tone.bg} bg-white p-6 shadow-[0_8px_30px_rgba(15,23,42,0.06)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(15,23,42,0.12)]`}
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">
+                        {card.label}
+                      </p>
+                      <p className="mt-3 text-[40px] font-black leading-none tracking-tight text-slate-900">
+                        {card.value ?? "--"}
+                      </p>
+                      <p className="mt-2.5 text-[15px] leading-relaxed text-slate-500">
+                        {card.note}
+                      </p>
+                    </div>
+                    <span className={`inline-flex shrink-0 items-center justify-center rounded-[18px] ${tone.iconBg} p-3.5 text-white shadow-lg shadow-black/10 transition-transform duration-300 group-hover:scale-110`}>
+                      <Icon size={26} />
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* ─── QUICK ACTIONS + OPERATIONAL HIGHLIGHTS ─────────────── */}
+        <section className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
+          {/* Quick Actions */}
+          <div className="rounded-[28px] border border-slate-900/5 bg-white p-6 shadow-[0_8px_30px_rgba(15,23,42,0.05)] sm:p-8">
+            <div className="mb-6">
+              <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-emerald-500">
+                Quick Actions
+              </p>
+              <h2 className="mt-2 text-[30px] font-bold tracking-tight text-slate-900">
+                Jump to active workflow
+              </h2>
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {stats.length > 0 && (
+                <>
+                  {[
+                    { label: "Open Reports", helper: "Review revenue and trend reports.", route: "/reports", icon: FaChartBar, tone: "emerald" },
+                    { label: "All Bookings", helper: "Manage front office pipeline and arrivals.", route: "/hotel/all-bookings", icon: FaClipboardList, tone: "cyan" },
+                    { label: "Inventory Alerts", helper: "Immediately review low stock items.", route: "/inventory", icon: FaBoxOpen, tone: "amber" },
+                    { label: "Banquet Board", helper: "View upcoming banquet load and hall planning.", route: "/banquet", icon: FaUsers, tone: "violet" },
+                  ].map((action) => {
+                    const Icon = action.icon;
+                    const tone = getTone(action.tone);
+                    return (
+                      <a
+                        key={action.label}
+                        href={action.route}
+                        className="group flex flex-col rounded-[22px] border border-slate-900/5 bg-white p-5 shadow-[0_4px_16px_rgba(15,23,42,0.04)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(15,23,42,0.1)]"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className={`inline-flex items-center justify-center rounded-2xl ${tone.iconBg} p-3 text-white shadow-lg shadow-black/10 transition-transform duration-300 group-hover:scale-110`}>
+                            <Icon size={22} />
+                          </span>
+                          <span className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-slate-50 p-2 text-slate-400 transition-colors duration-300 group-hover:border-slate-900 group-hover:bg-slate-900 group-hover:text-white">
+                            <FaArrowRight size={14} />
+                          </span>
+                        </div>
+                        <h3 className="mt-4 text-[22px] font-bold text-slate-900">{action.label}</h3>
+                        <p className="mt-1.5 text-[15px] leading-relaxed text-slate-500">{action.helper}</p>
+                      </a>
+                    );
+                  })}
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Operational Highlights */}
+          <div className="rounded-[28px] border border-slate-900/5 bg-white p-6 shadow-[0_8px_30px_rgba(15,23,42,0.05)] sm:p-8">
+            <div className="mb-6">
+              <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-emerald-500">
+                Snapshot
+              </p>
+              <h2 className="mt-2 text-[30px] font-bold tracking-tight text-slate-900">
+                Operational highlights
+              </h2>
+            </div>
+            <div className="space-y-4">
+              {insights.map((item) => (
+                <div
+                  key={item.label}
+                  className="rounded-[22px] border border-slate-900/5 bg-white p-5 shadow-[0_2px_10px_rgba(15,23,42,0.03)] transition-all duration-300 hover:shadow-[0_6px_20px_rgba(15,23,42,0.07)]"
+                >
+                  <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">
+                    {item.label}
+                  </p>
+                  <p className="mt-2.5 text-[38px] font-black leading-none tracking-tight text-slate-900">
+                    {item.value ?? "--"}
+                  </p>
+                  <p className="mt-2 text-[15px] leading-relaxed text-slate-500">
+                    {item.note}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ─── RECENT BOOKING TABLE ────────────────────────────────── */}
+        <section className="rounded-[28px] border border-slate-900/5 bg-white shadow-[0_8px_30px_rgba(15,23,42,0.05)] overflow-hidden">
+          {/* Table Header */}
+          <div className="flex flex-col gap-3 border-b border-slate-900/5 px-6 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-8 sm:py-6">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-emerald-500">
+                {table.eyebrow}
+              </p>
+              <h2 className="mt-2 text-[30px] font-bold tracking-tight text-slate-900">
+                {table.title}
+              </h2>
+            </div>
+            <div className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-bold text-slate-600">
+              {table.meta}
+            </div>
+          </div>
+
+          {/* Table Body */}
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-left">
+              <thead>
+                <tr className="border-b border-slate-900/5 bg-slate-50/60">
+                  {table.columns.map((column) => (
+                    <th
+                      key={column.key}
+                      className="whitespace-nowrap px-6 py-4 text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500 sm:px-8"
+                    >
+                      {column.label}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {table.rows.length ? (
+                  table.rows.map((row, index) => (
+                    <tr
+                      key={row.id || row.key || index}
+                      className="group border-b border-slate-900/5 transition-colors duration-200 hover:bg-slate-50/60"
+                    >
+                      {table.columns.map((column) => (
+                        <td
+                          key={column.key}
+                          className="whitespace-nowrap px-6 py-4.5 text-[15px] text-slate-700 sm:px-8 sm:py-5"
+                        >
+                          {column.render ? (
+                            <span
+                              className={`inline-flex rounded-full px-3.5 py-1.5 text-xs font-bold ${statusBadgeColor(column.render(row))}`}
+                            >
+                              {column.render(row)}
+                            </span>
+                          ) : (
+                            <span className="font-medium">{row[column.key] ?? "--"}</span>
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={table.columns.length} className="px-6 py-16 text-center sm:px-8">
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
+                          <FaClipboardList size={24} className="text-slate-400" />
+                        </div>
+                        <p className="text-[20px] font-bold text-slate-900">{table.emptyText || "No records available"}</p>
+                        <p className="text-[15px] text-slate-500">No booking records to display at this time.</p>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Table Footer / Pagination hint */}
+          {table.rows.length > 0 && (
+            <div className="flex items-center justify-between border-t border-slate-900/5 px-6 py-4 sm:px-8">
+              <p className="text-sm text-slate-500">
+                Showing <span className="font-semibold text-slate-700">{table.rows.length}</span> of{" "}
+                <span className="font-semibold text-slate-700">{table.meta?.split(" ")[0] || table.rows.length}</span> records
+              </p>
+              <button
+                type="button"
+                className="inline-flex items-center gap-2 rounded-[14px] border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition-all duration-300 hover:border-slate-900 hover:bg-slate-900 hover:text-white hover:shadow-md"
+              >
+                View All
+                <FaArrowRight size={14} />
+              </button>
+            </div>
+          )}
+        </section>
+      </div>
+    </div>
   );
 };
 

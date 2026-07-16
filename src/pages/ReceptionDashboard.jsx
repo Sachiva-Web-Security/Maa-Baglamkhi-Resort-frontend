@@ -10,7 +10,7 @@ import {
 } from "react-icons/fa";
 
 import API from "../api";
-import RoleDashboardShell from "../components/roleDashboards/RoleDashboardShell";
+import RoleDashboardShell from "../components/roleDashboards/ReceptionDashboardLayout";
 import useDashboardAutoRefresh from "../hooks/useDashboardAutoRefresh";
 
 const todayISO = () => new Date().toISOString().slice(0, 10);

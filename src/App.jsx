@@ -15,6 +15,7 @@ import InventoryPurchasesPage from "./pages/InventoryPurchasesPage";
 import InventoryReportsPage from "./pages/InventoryReportsPage";
 import InventoryUnitsPage from "./pages/InventoryUnitsPage";
 import InventoryCategoriesPage from "./pages/InventoryCategoriesPage";
+import InventoryStockCategoriesPage from "./pages/InventoryStockCategoriesPage";
 import InventoryMenuItemsPage from "./pages/InventoryMenuItemsPage";
 import InventoryMenuListPage from "./pages/InventoryMenuListPage";
 import MenuRecipeModulePage from "./pages/MenuRecipeModulePage";
@@ -259,17 +260,18 @@ function AppRoutes({ isAuthenticated, setIsAuthenticated, protect }) {
             path="/accounts/customer-invoices"
             element={protect(<AccountsCustomerInvoices />, ROLES.ACCOUNTS)}
           />
-<Route path="/inventory" element={protect(<InventoryHubPage />, ROLES.INVENTORY)} />
-<Route path="/inventory/items" element={protect(<InventoryItemsPage />, ROLES.INVENTORY)} />
-<Route path="/inventory/categories" element={protect(<InventoryCategoriesPage />, ROLES.INVENTORY)} />
-<Route path="/inventory/units" element={protect(<InventoryUnitsPage />, ROLES.INVENTORY)} />
-<Route path="/inventory/vendors" element={protect(<InventoryVendorsPage />, ROLES.INVENTORY)} />
-<Route path="/inventory/menu-items" element={protect(<InventoryMenuItemsPage />, ROLES.INVENTORY)} />
-<Route path="/inventory/menu-list" element={protect(<InventoryMenuListPage />, ROLES.INVENTORY)} />
-<Route path="/inventory/purchases" element={protect(<InventoryPurchasesPage />, ROLES.INVENTORY)} />
-<Route path="/inventory/reports" element={protect(<InventoryReportsPage />, ROLES.INVENTORY)} />
-<Route path="/inventory/procurement" element={protect(<Navigate to="/inventory/purchases" replace />, ROLES.INVENTORY)} />
-<Route path="/inventory/masters" element={protect(<InventoryMastersModulePage />, ROLES.INVENTORY)} />
+          <Route path="/inventory" element={protect(<InventoryHubPage />, ROLES.INVENTORY)} />
+          <Route path="/inventory/items" element={protect(<InventoryItemsPage />, ROLES.INVENTORY)} />
+          <Route path="/inventory/categories" element={protect(<InventoryCategoriesPage />, ROLES.INVENTORY)} />
+          <Route path="/inventory/stock-categories" element={protect(<InventoryStockCategoriesPage />, ROLES.INVENTORY)} />
+          <Route path="/inventory/units" element={protect(<InventoryUnitsPage />, ROLES.INVENTORY)} />
+          <Route path="/inventory/vendors" element={protect(<InventoryVendorsPage />, ROLES.INVENTORY)} />
+          <Route path="/inventory/menu-items" element={protect(<InventoryMenuItemsPage />, ROLES.INVENTORY)} />
+          <Route path="/inventory/menu-list" element={protect(<InventoryMenuListPage />, ROLES.INVENTORY)} />
+          <Route path="/inventory/purchases" element={protect(<InventoryPurchasesPage />, ROLES.INVENTORY)} />
+          <Route path="/inventory/reports" element={protect(<InventoryReportsPage />, ROLES.INVENTORY)} />
+          <Route path="/inventory/procurement" element={protect(<Navigate to="/inventory/purchases" replace />, ROLES.INVENTORY)} />
+          <Route path="/inventory/masters" element={protect(<InventoryMastersModulePage />, ROLES.INVENTORY)} />
           <Route path="/inventory/recipes" element={protect(<MenuRecipeModulePage />, ROLES.INVENTORY)} />
           <Route path="/housekeeping" element={protect(<Housekeeping />, ROLES.HOUSEKEEPING)} />
           <Route
@@ -372,4 +374,3 @@ function App() {
 }
 
 export default App;
-
