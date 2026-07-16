@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { BrowserRouter as Router, Navigate, Route, Routes, useLocation, Outlet } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 
 import API from "./api";
@@ -301,7 +301,7 @@ function AppRoutes({ isAuthenticated, setIsAuthenticated, protect }) {
           <Route path="/reports/audit" element={protect(<AuditReport />, ROLES.AUDIT)} />
 
           <Route
-            path="/restaurant/*"
+            path="/restaurant"
             element={
               <ProtectedRoute allowedRoles={ROLES.RESTAURANT}>
                 <Layout setIsAuthenticated={setIsAuthenticated}>

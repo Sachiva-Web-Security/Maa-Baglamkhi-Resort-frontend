@@ -127,13 +127,15 @@ const bookingFilterDefaults = {
 };
 
 const inputCls =
-  "w-full rounded-2xl border border-slate-200/80 bg-white/88 px-4 py-3 text-base font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100 sm:text-lg";
+  "w-full rounded-2xl border border-blue-100 bg-white px-4 py-3 text-[17px] font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-100 sm:text-lg";
 
 const labelCls =
-  "mb-2 block text-sm font-bold uppercase tracking-[0.18em] text-slate-600 sm:text-base";
+  "mb-2 block text-[17px] font-bold uppercase tracking-[0.16em] text-slate-600";
 
 const modalCloseBtnCls =
-  "rounded-full border border-slate-200 bg-white px-4 py-2 text-base font-bold text-slate-700 transition hover:border-cyan-200 hover:text-cyan-700";
+  "rounded-full border border-blue-100 bg-white px-4 py-2 text-[17px] font-bold text-slate-700 transition hover:border-blue-300 hover:text-blue-700";
+
+const statIcons = [FaCalendarAlt, FaCheckCircle, FaReceipt, FaUsers];
 
 function ModalShell({
   title,
@@ -144,20 +146,20 @@ function ModalShell({
   heightClass = "h-[min(88vh,760px)]",
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-3 backdrop-blur-sm sm:p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-blue-950/50 p-3 backdrop-blur-sm sm:p-4">
       <div className={`w-full ${widthClass}`}>
         <div
-          className={`mx-auto flex w-full flex-col overflow-hidden rounded-[30px] border border-white/50 bg-[linear-gradient(180deg,#fafdff_0%,#f8fbff_100%)] p-5 shadow-[0_24px_80px_rgba(15,23,42,0.25)] sm:p-7 ${heightClass}`}
+          className={`mx-auto flex w-full flex-col overflow-hidden rounded-[30px] border border-white/60 bg-[linear-gradient(180deg,#ffffff_0%,#f5f9ff_100%)] p-5 shadow-[0_30px_90px_rgba(15,40,90,0.28)] sm:p-7 ${heightClass}`}
         >
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               {eyebrow ? (
-                <p className="text-sm font-bold uppercase tracking-[0.24em] text-emerald-400">
+                <p className="text-[15px] font-bold uppercase tracking-[0.24em] text-sky-500">
                   {eyebrow}
                 </p>
               ) : null}
               {title ? (
-                <h3 className="mt-1 text-3xl font-black text-slate-900 sm:text-4xl">
+                <h3 className="mt-1 text-[32px] font-black text-blue-950 sm:text-[34px]">
                   {title}
                 </h3>
               ) : null}
@@ -216,19 +218,19 @@ function PaginationControls({
     });
 
   return (
-    <div className="flex flex-col gap-3 rounded-[22px] border border-slate-200/80 bg-white/80 px-4 py-4 lg:flex-row lg:items-center lg:justify-between">
+    <div className="flex flex-col gap-3 rounded-[22px] border border-blue-100 bg-white px-4 py-4 shadow-sm lg:flex-row lg:items-center lg:justify-between">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
-        <div className="text-base font-bold text-slate-600">
+        <div className="text-[17px] font-bold text-slate-600">
           {label} Page {page} of {totalPages}
           {startItem && endItem ? ` • Showing ${startItem}-${endItem} of ${totalItems}` : ""}
         </div>
         {pageSizeOptions?.length && onPageSizeChange ? (
-          <label className="flex items-center gap-2 text-base font-bold uppercase tracking-[0.14em] text-slate-500">
+          <label className="flex items-center gap-2 text-[16px] font-bold uppercase tracking-[0.14em] text-slate-500">
             Rows
             <select
               value={pageSize}
               onChange={(event) => onPageSizeChange(Number(event.target.value))}
-              className="rounded-full border border-slate-200 bg-white px-3 py-2 text-base font-bold text-slate-700 outline-none transition focus:border-cyan-300"
+              className="rounded-full border border-blue-100 bg-white px-3 py-2 text-[16px] font-bold text-slate-700 outline-none transition focus:border-blue-300"
             >
               {pageSizeOptions.map((option) => (
                 <option key={option} value={option}>
@@ -244,7 +246,7 @@ function PaginationControls({
           type="button"
           onClick={() => onChange(Math.max(1, page - 1))}
           disabled={page === 1}
-          className="rounded-full border border-slate-200 px-4 py-2.5 text-base font-bold text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-full border border-blue-100 px-4 py-2.5 text-[17px] font-bold text-slate-700 transition hover:border-blue-300 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Previous
         </button>
@@ -255,15 +257,15 @@ function PaginationControls({
           return (
             <div key={pageNumber} className="flex items-center gap-2">
               {shouldShowGap ? (
-                <span className="px-1 text-base font-bold text-slate-300">...</span>
+                <span className="px-1 text-[17px] font-bold text-slate-300">...</span>
               ) : null}
               <button
                 type="button"
                 onClick={() => onChange(pageNumber)}
-                className={`h-10 min-w-[40px] rounded-full px-3 text-base font-bold transition ${
+                className={`h-10 min-w-[40px] rounded-full px-3 text-[17px] font-bold transition ${
                   pageNumber === page
-                    ? "bg-slate-900 text-white shadow-[0_10px_25px_rgba(15,23,42,0.18)]"
-                    : "border border-slate-200 bg-white text-slate-700 hover:border-cyan-300 hover:text-cyan-700"
+                    ? "bg-gradient-to-r from-blue-800 to-sky-500 text-white shadow-[0_10px_25px_rgba(37,99,235,0.28)]"
+                    : "border border-blue-100 bg-white text-slate-700 hover:border-blue-300 hover:text-blue-700"
                 }`}
               >
                 {pageNumber}
@@ -275,7 +277,7 @@ function PaginationControls({
           type="button"
           onClick={() => onChange(Math.min(totalPages, page + 1))}
           disabled={page === totalPages}
-          className="rounded-full border border-slate-200 px-4 py-2.5 text-base font-bold text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-full border border-blue-100 px-4 py-2.5 text-[17px] font-bold text-slate-700 transition hover:border-blue-300 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Next
         </button>
@@ -308,27 +310,27 @@ function resolveBanquetHallImage(image) {
 
 function getReservationStatusBadgeClass(status) {
   const baseClass =
-    "inline-flex items-center rounded-full border px-3 py-1 text-sm font-bold uppercase tracking-[0.16em]";
+    "inline-flex items-center rounded-full border px-3 py-1 text-[15px] font-bold uppercase tracking-[0.14em] sm:text-[16px]";
 
   switch (status) {
     case "Confirmed":
       return `${baseClass} border-emerald-200 bg-emerald-50 text-emerald-700`;
     case "Completed":
-      return `${baseClass} border-amber-200 bg-amber-50 text-amber-700`;
+      return `${baseClass} border-purple-200 bg-purple-50 text-purple-700`;
     case "Billed":
-      return `${baseClass} border-cyan-200 bg-cyan-50 text-cyan-700`;
+      return `${baseClass} border-blue-200 bg-blue-50 text-blue-700`;
     case "Cancelled":
       return `${baseClass} border-rose-200 bg-rose-50 text-rose-700`;
     case "Refunded":
-      return `${baseClass} border-violet-200 bg-violet-50 text-violet-700`;
+      return `${baseClass} border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700`;
     default:
-      return `${baseClass} border-slate-200 bg-slate-100 text-slate-600`;
+      return `${baseClass} border-amber-200 bg-amber-50 text-amber-700`;
   }
 }
 
 function getPaymentStatusBadgeClass(status) {
   const baseClass =
-    "inline-flex items-center rounded-full border px-3 py-1 text-sm font-bold";
+    "inline-flex items-center rounded-full border px-3 py-1 text-[15px] font-bold sm:text-[16px]";
 
   switch (status) {
     case "Paid":
@@ -336,9 +338,9 @@ function getPaymentStatusBadgeClass(status) {
     case "Partial":
       return `${baseClass} border-amber-200 bg-amber-50 text-amber-700`;
     case "Refunded":
-      return `${baseClass} border-violet-200 bg-violet-50 text-violet-700`;
+      return `${baseClass} border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700`;
     default:
-      return `${baseClass} border-slate-200 bg-slate-100 text-slate-600`;
+      return `${baseClass} border-amber-200 bg-amber-50 text-amber-700`;
   }
 }
 
@@ -605,25 +607,25 @@ const Banquet = () => {
         label: "Total events",
         value: String(bookings.length),
         tone:
-          "border-white/12 bg-white/10 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]",
+          "border-white/15 bg-white/10 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]",
       },
       {
         label: "Confirmed",
         value: String(confirmedCount),
         tone:
-          "border-cyan-300/20 bg-cyan-400/10 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]",
+          "border-emerald-300/25 bg-emerald-400/10 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]",
       },
       {
         label: "Billed invoices",
         value: String(billedCount),
         tone:
-          "border-violet-300/20 bg-violet-400/10 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]",
+          "border-violet-300/25 bg-violet-400/10 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]",
       },
       {
         label: "Unique guests",
         value: String(uniqueGuests),
         tone:
-          "border-sky-300/20 bg-sky-400/10 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]",
+          "border-sky-300/25 bg-sky-400/10 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]",
       },
     ];
   }, [bookings]);
@@ -668,9 +670,9 @@ const Banquet = () => {
         value: `${availableHalls}/${halls.length || 0}`,
         note: "Venue slots ready for the next reservation.",
         tone:
-          "border-sky-200 bg-sky-50/80 text-sky-900",
+          "border-blue-200 bg-blue-50/80 text-blue-900",
         icon: FaUsers,
-        iconTone: "text-sky-600",
+        iconTone: "text-blue-600",
       },
       {
         label: "Live estimate",
@@ -1716,27 +1718,28 @@ const Banquet = () => {
         <div className="space-y-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-base font-black uppercase tracking-[0.24em] text-emerald-400">
+              <p className="text-[15px] font-black uppercase tracking-[0.24em] text-sky-500">
                 Venue Options
               </p>
-              <h3 className="mt-1 text-3xl font-black text-slate-900">
+              <h3 className="mt-1 text-[30px] font-black text-blue-950">
                 Banquet halls
               </h3>
             </div>
             <button
               type="button"
               onClick={openAddHallForm}
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-teal-600 to-emerald-500 px-4 py-2.5 text-base font-bold text-white"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-blue-800 to-sky-500 px-4 py-2.5 text-[17px] font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.28)] transition hover:-translate-y-0.5"
             >
               <FaPlus />
               Add Hall
             </button>
           </div>
-          <div className="overflow-hidden rounded-[24px] border border-slate-200/80 bg-white shadow-[0_18px_60px_rgba(148,163,184,0.12)]">
+          <div className="overflow-hidden rounded-[24px] border border-blue-100 bg-white shadow-[0_18px_60px_rgba(30,64,175,0.1)]">
             {halls.length ? (
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-left text-base">
-                <thead className="bg-[linear-gradient(180deg,#f8fbff_0%,#eef6ff_100%)] text-sm font-bold uppercase tracking-[0.18em] text-slate-500">
+              <>
+              <div className="hidden overflow-x-auto lg:block">
+                <table className="min-w-full text-left text-[17px]">
+                <thead className="bg-[linear-gradient(180deg,#f4f9ff_0%,#e8f2ff_100%)] text-[16px] font-bold uppercase tracking-[0.16em] text-slate-500">
                     <tr>
                       <th className="px-4 py-4">Image</th>
                       <th className="px-4 py-4">Hall Name</th>
@@ -1756,9 +1759,9 @@ const Banquet = () => {
                       return (
                         <tr
                           key={hall.id}
-                          className={`border-t border-slate-200 transition ${
-                            isSelected ? "bg-cyan-50/70" : "bg-white"
-                          }`}
+                          className={`border-t border-blue-50 transition ${
+                            isSelected ? "bg-blue-50/70" : "bg-white"
+                          } hover:bg-blue-50/40`}
                         >
                           <td className="px-4 py-4 align-top">
                             <button
@@ -1769,7 +1772,7 @@ const Banquet = () => {
                                   hallId: hall.id,
                                 }))
                               }
-                              className="flex h-[76px] w-[76px] items-center justify-center overflow-hidden rounded-[20px] border border-slate-200 bg-slate-50 shadow-sm transition hover:border-cyan-300 hover:shadow-[0_12px_30px_rgba(34,211,238,0.16)]"
+                              className="flex h-[76px] w-[76px] items-center justify-center overflow-hidden rounded-[20px] border border-blue-100 bg-slate-50 shadow-sm transition hover:border-blue-300 hover:shadow-[0_12px_30px_rgba(37,99,235,0.18)]"
                             >
                               {hallImage ? (
                                 <img
@@ -1778,7 +1781,7 @@ const Banquet = () => {
                                   className="h-full w-full object-cover"
                                 />
                               ) : (
-                                <div className="flex h-full w-full items-center justify-center bg-[linear-gradient(135deg,#dff7ff_0%,#eef6ff_50%,#fff4df_100%)] text-cyan-700">
+                                <div className="flex h-full w-full items-center justify-center bg-[linear-gradient(135deg,#e3f0ff_0%,#eef6ff_50%,#dceeff_100%)] text-blue-700">
                                   <FaGlassCheers className="text-2xl" />
                                 </div>
                               )}
@@ -1795,11 +1798,11 @@ const Banquet = () => {
                               }
                               className="text-left"
                             >
-                              <div className="text-lg font-black text-slate-900 transition hover:text-cyan-700">
+                              <div className="text-lg font-black text-blue-950 transition hover:text-blue-700">
                                 {hall.name || "Unnamed Hall"}
                               </div>
                             </button>
-                            <p className="mt-1 max-w-[34ch] text-base leading-7 text-slate-500">
+                            <p className="mt-1 max-w-[34ch] text-[16px] leading-7 text-slate-500">
                               Elegant venue setup for weddings, celebrations,
                               conferences and premium social events.
                             </p>
@@ -1811,13 +1814,13 @@ const Banquet = () => {
                             {formatINR(hall.ratePerHour)}
                           </td>
                           <td className="px-4 py-4 align-top">
-                            <span className="inline-flex rounded-full bg-cyan-50 px-3 py-1 text-sm font-bold text-cyan-700">
+                            <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-[15px] font-bold text-blue-700">
                               {hall.is_ac ? "AC Hall" : "Non-AC Hall"}
                             </span>
                           </td>
                           <td className="px-4 py-4 align-top">
                             <span
-                              className={`inline-flex rounded-full px-3 py-1 text-sm font-bold ${
+                              className={`inline-flex rounded-full px-3 py-1 text-[15px] font-bold ${
                                 hall.status === "Available"
                                   ? "bg-emerald-50 text-emerald-700"
                                   : hall.status === "Maintenance"
@@ -1833,14 +1836,14 @@ const Banquet = () => {
                               <button
                                 type="button"
                                 onClick={() => setDetailHall(hall)}
-                                className="rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1.5 text-sm font-bold text-cyan-700 transition hover:border-cyan-300 hover:bg-cyan-100"
+                                className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-[15px] font-bold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100"
                               >
                                 View
                               </button>
                               <button
                                 type="button"
                                 onClick={() => handleEditHall(hall)}
-                                className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-sm font-bold text-amber-700 transition hover:border-amber-300 hover:bg-amber-100"
+                                className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-[15px] font-bold text-amber-700 transition hover:border-amber-300 hover:bg-amber-100"
                               >
                                 <FaEdit />
                                 Edit
@@ -1848,7 +1851,7 @@ const Banquet = () => {
                               <button
                                 type="button"
                                 onClick={() => handleDeleteHall(hall)}
-                                className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-sm font-bold text-rose-700 transition hover:border-rose-300 hover:bg-rose-100"
+                                className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-[15px] font-bold text-rose-700 transition hover:border-rose-300 hover:bg-rose-100"
                               >
                                 <FaTrash />
                                 Delete
@@ -1861,8 +1864,106 @@ const Banquet = () => {
                   </tbody>
                 </table>
               </div>
+              <div className="grid gap-3 p-3 sm:p-4 lg:hidden">
+                {paginatedHalls.map((hall) => {
+                  const hallImage = resolveBanquetHallImage(hall.image);
+                  const isSelected = String(wizard.hallId) === String(hall.id);
+
+                  return (
+                    <div
+                      key={hall.id}
+                      className={`rounded-[20px] border p-4 shadow-sm transition ${
+                        isSelected
+                          ? "border-blue-300 bg-blue-50/70"
+                          : "border-blue-100 bg-white"
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setWizard((prev) => ({ ...prev, hallId: hall.id }))
+                          }
+                          className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[16px] border border-blue-100 bg-slate-50 shadow-sm"
+                        >
+                          {hallImage ? (
+                            <img
+                              src={hallImage}
+                              alt={hall.name || "Banquet hall"}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center bg-[linear-gradient(135deg,#e3f0ff_0%,#eef6ff_50%,#dceeff_100%)] text-blue-700">
+                              <FaGlassCheers className="text-xl" />
+                            </div>
+                          )}
+                        </button>
+                        <div className="min-w-0 flex-1">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setWizard((prev) => ({ ...prev, hallId: hall.id }))
+                            }
+                            className="text-left"
+                          >
+                            <div className="truncate text-[17px] font-black text-blue-950">
+                              {hall.name || "Unnamed Hall"}
+                            </div>
+                          </button>
+                          <div className="mt-1 flex flex-wrap items-center gap-2">
+                            <span className="inline-flex rounded-full bg-blue-50 px-2.5 py-1 text-[13px] font-bold text-blue-700">
+                              {hall.is_ac ? "AC Hall" : "Non-AC Hall"}
+                            </span>
+                            <span
+                              className={`inline-flex rounded-full px-2.5 py-1 text-[13px] font-bold ${
+                                hall.status === "Available"
+                                  ? "bg-emerald-50 text-emerald-700"
+                                  : hall.status === "Maintenance"
+                                    ? "bg-rose-50 text-rose-700"
+                                    : "bg-amber-50 text-amber-700"
+                              }`}
+                            >
+                              {hall.status || "Available"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="mt-3 grid grid-cols-2 gap-2 text-[15px] text-slate-600">
+                        <div>Capacity: <span className="font-bold text-slate-900">{hall.capacity || 0}</span></div>
+                        <div>Rate: <span className="font-bold text-slate-900">{formatINR(hall.ratePerHour)}</span></div>
+                      </div>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setDetailHall(hall)}
+                          className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-[14px] font-bold text-blue-700"
+                        >
+                          View
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleEditHall(hall)}
+                          className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-[14px] font-bold text-amber-700"
+                        >
+                          <FaEdit />
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteHall(hall)}
+                          className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-[14px] font-bold text-rose-700"
+                        >
+                          <FaTrash />
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              </>
             ) : (
-              <div className="p-6 text-base font-medium text-slate-500">
+              <div className="p-6 text-[17px] font-medium text-slate-500">
                 No banquet hall has been added yet. Create a new hall using Add
                 Hall.
               </div>
@@ -1889,20 +1990,20 @@ const Banquet = () => {
       return (
         <div className="space-y-5">
           <div>
-              <p className="text-base font-black uppercase tracking-[0.24em] text-emerald-400">
+              <p className="text-[15px] font-black uppercase tracking-[0.24em] text-sky-500">
               Banquet Addons
             </p>
-            <h3 className="mt-1 text-3xl font-black text-slate-900">
+            <h3 className="mt-1 text-[30px] font-black text-blue-950">
               Addon pricing controls
             </h3>
           </div>
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
             {pricingConfig.lightingOptions.map((option) => (
               <div
                 key={option.id}
-                className="rounded-[22px] border border-slate-200/80 bg-white p-5"
+                className="rounded-[22px] border border-blue-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
               >
-                <div className="text-base font-black text-slate-900">
+                <div className="text-[18px] font-black text-blue-950">
                   {option.label}
                 </div>
                 <div className="mt-3">
@@ -1920,9 +2021,9 @@ const Banquet = () => {
               </div>
             ))}
           </div>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-[22px] border border-slate-200/80 bg-white p-5">
-              <div className="text-base font-black text-slate-900">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="rounded-[22px] border border-blue-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+              <div className="text-[18px] font-black text-blue-950">
                 Event support
               </div>
               <label className={`${labelCls} mt-4`}>Setup Price</label>
@@ -1939,8 +2040,8 @@ const Banquet = () => {
                 className={inputCls}
               />
             </div>
-            <div className="rounded-[22px] border border-slate-200/80 bg-white p-5">
-              <div className="text-base font-black text-slate-900">
+            <div className="rounded-[22px] border border-blue-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+              <div className="text-[18px] font-black text-blue-950">
                 Decor and service
               </div>
               <label className={`${labelCls} mt-4`}>Decor Price</label>
@@ -1966,20 +2067,20 @@ const Banquet = () => {
       return (
         <div className="  space-y-4">
           <div>
-                <p className="text-sm font-bold uppercase tracking-[0.24em] text-emerald-400">
+                <p className="text-[15px] font-bold uppercase tracking-[0.24em] text-sky-500">
               Event Dining
             </p>
-              <h3 className="mt-1 text-3xl font-black text-slate-900">
+              <h3 className="mt-1 text-[30px] font-black text-blue-950">
                 Meal menu pricing
               </h3>
           </div>
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
             {pricingConfig.menuPackages.map((menu) => (
               <div
                 key={menu.id}
-                className="rounded-[22px] border border-slate-200/80 bg-white p-5"
+                className="rounded-[22px] border border-blue-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
               >
-                <div className="text-base font-black uppercase tracking-[0.14em] text-cyan-700">
+                <div className="text-[17px] font-black uppercase tracking-[0.14em] text-blue-700">
                   {menu.name}
                 </div>
                 <label className={`${labelCls} mt-4`}>Per Guest Price</label>
@@ -1992,18 +2093,18 @@ const Banquet = () => {
                   }
                   className={inputCls}
                 />
-                <p className="mt-4 text-base text-slate-500">{menu.mealLabel}</p>
+                <p className="mt-4 text-[17px] text-slate-500">{menu.mealLabel}</p>
               </div>
             ))}
           </div>
-          <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-5">
-            <div className="text-base font-black text-slate-900">
+          <div className="rounded-[24px] border border-blue-100 bg-blue-50/40 p-5">
+            <div className="text-[18px] font-black text-blue-950">
               Meal section prices
             </div>
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
               {mealSections.map((section) => (
-                <div key={section} className="rounded-2xl bg-white p-4">
-                  <div className="text-base font-bold text-slate-800">
+                <div key={section} className="rounded-2xl bg-white p-4 shadow-sm">
+                  <div className="text-[17px] font-bold text-slate-800">
                     {section}
                   </div>
                   <label className={`${labelCls} mt-3`}>Section Price</label>
@@ -2029,10 +2130,10 @@ const Banquet = () => {
         <div className="space-y-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-                <p className="text-base font-black uppercase tracking-[0.24em] text-emerald-400">
+                <p className="text-[15px] font-black uppercase tracking-[0.24em] text-sky-500">
                 Reservation Dashboard
               </p>
-              <h3 className="mt-1 text-3xl font-black text-slate-900">
+              <h3 className="mt-1 text-[30px] font-black text-blue-950">
                 Manage banquet reservations
               </h3>
             </div>
@@ -2042,7 +2143,7 @@ const Banquet = () => {
                 setActiveQuickSection(null);
                 openCreateReservationForm();
               }}
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-sky-600 to-cyan-500 px-4 py-2.5 text-base font-bold text-white"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-blue-800 to-sky-500 px-4 py-2.5 text-[17px] font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.28)] transition hover:-translate-y-0.5"
             >
               <FaPlus />
               Add New
@@ -2053,23 +2154,23 @@ const Banquet = () => {
               paginatedBookings.map((booking) => (
                 <div
                   key={booking.id}
-                  className="rounded-[22px] border border-slate-200/80 bg-white p-4 shadow-sm"
+                  className="rounded-[22px] border border-blue-100 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <div className="text-base font-bold text-slate-900">
+                      <div className="text-[17px] font-bold text-blue-950">
                         {booking.hallName}
                       </div>
-                      <div className="mt-1 text-sm text-slate-500">
+                      <div className="mt-1 text-[16px] text-slate-500">
                         {booking.customerName} |{" "}
                         {booking.eventTitle || booking.eventType}
                       </div>
                     </div>
-                    <span className="rounded-full bg-cyan-50 px-3 py-1 text-sm font-semibold text-cyan-700">
+                    <span className="rounded-full bg-blue-50 px-3 py-1 text-[15px] font-semibold text-blue-700">
                       {booking.status}
                     </span>
                   </div>
-                  <div className="mt-4 grid gap-2 text-sm text-slate-600 md:grid-cols-4">
+                  <div className="mt-4 grid grid-cols-2 gap-2 text-[16px] text-slate-600 md:grid-cols-4">
                     <div>Date: {booking.date}</div>
                     <div>
                       Time: {booking.startTime} - {booking.endTime}
@@ -2084,7 +2185,7 @@ const Banquet = () => {
                     <button
                       type="button"
                       onClick={() => handleEditBooking(booking)}
-                      className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700"
+                      className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white px-3 py-2 text-[15px] font-bold text-slate-700 transition hover:border-blue-300"
                     >
                       <FaEdit />
                       Edit
@@ -2093,7 +2194,7 @@ const Banquet = () => {
                       <button
                         type="button"
                         onClick={() => handleCancelBooking(booking)}
-                        className="rounded-full bg-rose-500 px-3 py-2 text-sm font-bold text-white"
+                        className="rounded-full bg-rose-500 px-3 py-2 text-[15px] font-bold text-white transition hover:bg-rose-600"
                       >
                         Cancel
                       </button>
@@ -2104,7 +2205,7 @@ const Banquet = () => {
                       <button
                         type="button"
                         onClick={() => handleRefundBooking(booking)}
-                        className="rounded-full bg-violet-600 px-3 py-2 text-sm font-bold text-white"
+                        className="rounded-full bg-violet-600 px-3 py-2 text-[15px] font-bold text-white transition hover:bg-violet-700"
                       >
                         Refund
                       </button>
@@ -2113,7 +2214,7 @@ const Banquet = () => {
                       <button
                         type="button"
                         onClick={() => handleDeleteBooking(booking)}
-                        className="rounded-full border border-rose-200 px-3 py-2 text-sm font-bold text-rose-600"
+                        className="rounded-full border border-rose-200 px-3 py-2 text-[15px] font-bold text-rose-600 transition hover:bg-rose-50"
                       >
                         Delete
                       </button>
@@ -2122,7 +2223,7 @@ const Banquet = () => {
                 </div>
               ))
             ) : (
-              <div className="rounded-[22px] border border-dashed border-slate-300 bg-white/70 p-6 text-base font-medium text-slate-500">
+              <div className="rounded-[22px] border border-dashed border-blue-200 bg-blue-50/40 p-6 text-[17px] font-medium text-slate-500">
       No reservations are available. Create your first booking using 'Add New'.
               </div>
             )}
@@ -2142,50 +2243,59 @@ const Banquet = () => {
     return (
       <div className="space-y-5">
         <div>
-          <p className="text-base font-black uppercase tracking-[0.24em] text-emerald-400">
+          <p className="text-[15px] font-black uppercase tracking-[0.24em] text-sky-500">
             Settlement Report
           </p>
-          <h3 className="mt-1 text-3xl font-black text-slate-900">
+          <h3 className="mt-1 text-[30px] font-black text-blue-950">
             Pricing and settlement preview
           </h3>
         </div>
-        <div className="grid gap-4 md:grid-cols-5">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
           {[
-            { label: "Hall amount", value: formatINR(wizardTotals.hallCharge) },
-            { label: "Meal amount", value: formatINR(wizardTotals.mealCharge) },
+            { label: "Hall amount", value: formatINR(wizardTotals.hallCharge), icon: FaGlassCheers },
+            { label: "Meal amount", value: formatINR(wizardTotals.mealCharge), icon: FaUtensils },
             {
               label: "Custom menu",
               value: formatINR(wizardTotals.customMenuCharge),
+              icon: FaUtensils,
             },
             {
               label: "Lighting setup",
               value: formatINR(wizardTotals.lightingCharge),
+              icon: FaLightbulb,
             },
             {
               label: "Event support",
               value: formatINR(wizardTotals.eventSupportCharge),
+              icon: FaHeadset,
             },
             {
               label: "Estimated total",
               value: formatINR(wizardTotals.grandTotal),
+              icon: FaReceipt,
             },
-          ].map((item) => (
+          ].map((item) => {
+            const Icon = item.icon;
+            return (
             <div
               key={item.label}
-              className="rounded-[22px] border border-slate-200/80 bg-white p-5"
+              className="rounded-[22px] border border-blue-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
             >
-                  <div className="text-base font-black uppercase tracking-[0.16em] text-slate-500">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                <Icon />
+              </div>
+                  <div className="mt-3 text-[16px] font-black uppercase tracking-[0.14em] text-slate-500">
                 {item.label}
               </div>
-              <div className="mt-3 text-3xl font-black text-slate-900">
+              <div className="mt-2 text-[30px] font-black text-blue-950">
                 {item.value}
               </div>
             </div>
-          ))}
+          );})}
         </div>
         <div className="grid gap-4 md:grid-cols-2">
-          <div className="rounded-[22px] border border-slate-200/80 bg-white p-5">
-            <div className="text-base font-black text-slate-900">
+          <div className="rounded-[22px] border border-blue-100 bg-white p-5 shadow-sm">
+            <div className="text-[18px] font-black text-blue-950">
               Global addon pricing
             </div>
             <div className="mt-4 space-y-4">
@@ -2221,8 +2331,8 @@ const Banquet = () => {
               </div>
             </div>
           </div>
-          <div className="rounded-[22px] border border-slate-200/80 bg-white p-5">
-            <div className="text-sm font-bold text-slate-900">
+          <div className="rounded-[22px] border border-blue-100 bg-white p-5 shadow-sm">
+            <div className="text-[18px] font-black text-blue-950">
               Menu package pricing
             </div>
             <div className="mt-4 space-y-4">
@@ -2248,35 +2358,41 @@ const Banquet = () => {
   };
 
   return (
-    <div className="relative min-h-screen w-full overflow-x-hidden bg-[linear-gradient(180deg,#f8fafc_0%,#eef6ff_32%,#f9fbff_100%)] p-4 sm:p-6 lg:p-8">
+    <div className="relative min-h-screen w-full overflow-x-hidden bg-[linear-gradient(180deg,#f6f9ff_0%,#eef5ff_32%,#f8fbff_100%)] p-3 sm:p-6 lg:p-8">
       <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute left-[-10%] top-[-8%] h-72 w-72 rounded-full bg-cyan-200/35 blur-3xl sm:h-[28rem] sm:w-[28rem]" />
+        <div className="absolute left-[-10%] top-[-8%] h-72 w-72 rounded-full bg-sky-200/35 blur-3xl sm:h-[28rem] sm:w-[28rem]" />
         <div className="absolute right-[-12%] top-[6%] h-72 w-72 rounded-full bg-blue-300/30 blur-3xl sm:h-[30rem] sm:w-[30rem]" />
-        <div className="absolute bottom-[12%] left-[20%] h-56 w-56 rounded-full bg-amber-100/40 blur-3xl sm:h-80 sm:w-80" />
+        <div className="absolute bottom-[12%] left-[20%] h-56 w-56 rounded-full bg-blue-100/50 blur-3xl sm:h-80 sm:w-80" />
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.7)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.7)_1px,transparent_1px)] bg-[size:72px_72px] opacity-20" />
       </div>
 
-      <div className="w-full space-y-6">
-        <section className="overflow-hidden rounded-[30px] border border-white/15 bg-[linear-gradient(90deg,#1C3F8A_0%,#243B52_100%)] px-5 py-6 shadow-[0_22px_55px_rgba(15,23,42,0.18)] backdrop-blur-xl sm:px-7 sm:py-8">
-          <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(340px,1fr)] xl:items-start">
+      <div className="w-full space-y-4 sm:space-y-6">
+        <section className="relative overflow-hidden rounded-[24px] border border-white/15 bg-gradient-to-br from-blue-950 via-blue-800 to-sky-500 px-4 py-6 shadow-[0_28px_70px_rgba(15,40,90,0.32)] sm:rounded-[32px] sm:px-8 sm:py-9">
+          <div className="pointer-events-none absolute inset-0 opacity-[0.14]">
+            <div className="absolute -right-16 -top-24 h-72 w-72 rounded-full border border-white/40" />
+            <div className="absolute -right-4 top-10 h-56 w-56 rounded-full border border-white/30" />
+            <div className="absolute bottom-[-4rem] left-[8%] h-64 w-64 rounded-full border border-white/20" />
+            <div className="absolute inset-0 bg-[linear-gradient(120deg,transparent_0%,rgba(255,255,255,0.06)_45%,transparent_60%)]" />
+          </div>
+          <div className="relative grid gap-6 sm:gap-7 xl:grid-cols-[minmax(0,1.35fr)_minmax(340px,1fr)] xl:items-start">
             <div className="space-y-4">
-              <p className="text-sm font-bold uppercase tracking-[0.28em] text-sky-200">
+              <p className="text-[13px] font-bold uppercase tracking-[0.32em] text-sky-200 sm:text-[15px]">
                 Dashboard
               </p>
               <div className="space-y-2">
-                <h1 className="text-4xl font-black leading-tight text-white sm:text-5xl">
+                <h1 className="text-[28px] font-black leading-tight text-white sm:text-[38px]">
                   Banquet operations dashboard
                 </h1>
-                <p className="max-w-3xl text-base font-medium leading-7 text-slate-100 sm:text-lg">
+                {/* <p className="max-w-3xl text-[18px] font-medium leading-7 text-blue-50 sm:text-[20px]">
                   Reservation activity, hall readiness, menu pricing, and billing actions are
                   shown in a clean workspace so the team can scan information faster.
-                </p>
+                </p> */}
               </div>
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2 pt-1">
                 <button
                   type="button"
                   onClick={() => window.location.reload()}
-                  className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2.5 text-base font-bold text-slate-900 shadow-[0_12px_28px_rgba(15,23,42,0.16)] transition hover:-translate-y-0.5 hover:bg-sky-500 hover:text-white hover:shadow-[0_14px_32px_rgba(59,130,246,0.32)]"
+                  className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 text-[15px] font-bold text-blue-900 shadow-[0_12px_28px_rgba(15,23,42,0.2)] transition duration-300 hover:-translate-y-0.5 hover:bg-sky-400 hover:text-white hover:shadow-[0_16px_34px_rgba(56,189,248,0.35)] sm:px-4 sm:py-2.5 sm:text-[17px]"
                 >
                   <FaSyncAlt />
                   Refresh
@@ -2284,7 +2400,7 @@ const Banquet = () => {
                 <button
                   type="button"
                   onClick={openAddHallForm}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2.5 text-base font-bold text-white transition hover:border-sky-300 hover:bg-sky-500 hover:text-white hover:shadow-[0_14px_32px_rgba(59,130,246,0.32)]"
+                  className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-2 text-[15px] font-bold text-white backdrop-blur-sm transition duration-300 hover:-translate-y-0.5 hover:border-sky-200 hover:bg-white hover:text-blue-800 hover:shadow-[0_16px_34px_rgba(56,189,248,0.3)] sm:px-4 sm:py-2.5 sm:text-[17px]"
                 >
                   <FaPlus />
                   Add hall
@@ -2292,7 +2408,7 @@ const Banquet = () => {
                 <button
                   type="button"
                   onClick={openCreateReservationForm}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2.5 text-base font-bold text-white transition hover:border-sky-300 hover:bg-sky-500 hover:text-white hover:shadow-[0_14px_32px_rgba(59,130,246,0.32)]"
+                  className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-2 text-[15px] font-bold text-white backdrop-blur-sm transition duration-300 hover:-translate-y-0.5 hover:border-sky-200 hover:bg-white hover:text-blue-800 hover:shadow-[0_16px_34px_rgba(56,189,248,0.3)] sm:px-4 sm:py-2.5 sm:text-[17px]"
                 >
                   <FaPlus />
                   New reservation
@@ -2305,7 +2421,7 @@ const Banquet = () => {
                       key={section.id}
                       type="button"
                       onClick={() => setActiveQuickSection(section.id)}
-                      className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2.5 text-base font-bold text-white transition hover:border-sky-300 hover:bg-sky-500 hover:text-white hover:shadow-[0_14px_32px_rgba(59,130,246,0.32)]"
+                      className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-2 text-[15px] font-bold text-white backdrop-blur-sm transition duration-300 hover:-translate-y-0.5 hover:border-sky-200 hover:bg-white hover:text-blue-800 hover:shadow-[0_16px_34px_rgba(56,189,248,0.3)] sm:px-4 sm:py-2.5 sm:text-[17px]"
                     >
                       <Icon />
                       {section.label}
@@ -2315,21 +2431,26 @@ const Banquet = () => {
               </div>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              {stats.map((item) => (
+            <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+              {stats.map((item, index) => {
+                const Icon = statIcons[index] || FaReceipt;
+                return (
                 <div
                   key={item.label}
-                  className="rounded-[24px] border border-white/15 bg-white/10 p-4 shadow-[0_10px_24px_rgba(15,23,42,0.12)] backdrop-blur-sm transition hover:-translate-y-0.5 hover:border-sky-300 hover:bg-sky-500/45 hover:shadow-[0_14px_32px_rgba(59,130,246,0.28)]"
+                  className="group rounded-[20px] border border-white/20 bg-white/10 p-3 shadow-[0_12px_28px_rgba(15,40,90,0.18)] backdrop-blur-md transition duration-300 hover:-translate-y-1 hover:border-sky-200/60 hover:bg-white/15 sm:rounded-[24px] sm:p-4"
                 >
-                  <div className="text-sm font-bold uppercase tracking-[0.16em] text-slate-200">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-white/15 text-[18px] text-white transition duration-300 group-hover:bg-sky-400 group-hover:text-white sm:h-11 sm:w-11 sm:text-[20px]">
+                    <Icon />
+                  </div>
+                  <div className="mt-3 text-[13px] font-bold uppercase tracking-[0.16em] text-blue-100 sm:text-[16px]">
                     {item.label}
                   </div>
-                  <div className="mt-3 text-4xl font-black leading-none text-white sm:text-[42px]">
+                  <div className="mt-2 text-[28px] font-black leading-none text-white sm:text-[38px] xl:text-[42px]">
                     {item.value}
                   </div>
                   <div className="mt-2 h-1.5 w-12 rounded-full bg-sky-300" />
                 </div>
-              ))}
+              );})}
             </div>
           </div>
         </section>
@@ -2341,15 +2462,15 @@ const Banquet = () => {
               setBookingFilters({ ...bookingFiltersDraft });
               setBookingPage(1);
             }}
-            className="rounded-[26px] border border-white/70 bg-white/90 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5"
+            className="rounded-[22px] border border-white/70 bg-white/95 p-4 shadow-[0_20px_50px_rgba(30,64,175,0.1)] backdrop-blur-xl sm:rounded-[28px] sm:p-6"
           >
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                  <p className="text-sm font-bold uppercase tracking-[0.24em] text-cyan-600">
+                  <p className="text-[15px] font-bold uppercase tracking-[0.24em] text-sky-500">
                     Filters
                   </p>
-                  <h2 className="mt-1 text-2xl font-black text-slate-900 sm:text-3xl">
+                  <h2 className="mt-1 text-[26px] font-black text-blue-950 sm:text-[30px] lg:text-[32px]">
                     Search banquet reservations
                   </h2>
                 </div>
@@ -2361,13 +2482,13 @@ const Banquet = () => {
                       setBookingFilters({ ...bookingFilterDefaults });
                       setBookingPage(1);
                     }}
-                    className="rounded-full border border-slate-200 bg-white px-4 py-2 text-base font-bold text-slate-600 transition hover:border-slate-300"
+                    className="rounded-full border border-blue-100 bg-white px-4 py-2 text-[15px] font-bold text-slate-600 transition hover:border-blue-300 sm:text-[17px]"
                   >
                     Clear
                   </button>
                   <button
                     type="submit"
-                    className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-sky-600 to-cyan-500 px-4 py-2 text-base font-bold text-white shadow-[0_12px_30px_rgba(14,165,233,0.24)] transition hover:-translate-y-0.5"
+                    className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-blue-800 to-sky-500 px-4 py-2 text-[15px] font-bold text-white shadow-[0_12px_30px_rgba(37,99,235,0.28)] transition hover:-translate-y-0.5 sm:text-[17px]"
                   >
                     <FaFilter />
                     Apply Filters
@@ -2375,9 +2496,9 @@ const Banquet = () => {
                 </div>
               </div>
 
-              <div className="grid gap-3 lg:grid-cols-3">
-                <label className="relative block lg:col-span-1">
-                  <FaSearch className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm text-sky-500" />
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <label className="relative block sm:col-span-2 lg:col-span-1">
+                  <FaSearch className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[15px] text-sky-500" />
                   <input
                     value={bookingFiltersDraft.search}
                     onChange={(event) =>
@@ -2429,8 +2550,8 @@ const Banquet = () => {
                   )}
                 </select>
 
-                <label className="relative block lg:col-span-1">
-                  <FaCalendarAlt className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm text-sky-500" />
+                <label className="relative block">
+                  <FaCalendarAlt className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[15px] text-sky-500" />
                   <input
                     type="date"
                     value={bookingFiltersDraft.dateFrom}
@@ -2444,8 +2565,8 @@ const Banquet = () => {
                   />
                 </label>
 
-                <label className="relative block lg:col-span-1">
-                  <FaCalendarAlt className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm text-sky-500" />
+                <label className="relative block">
+                  <FaCalendarAlt className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[15px] text-sky-500" />
                   <input
                     type="date"
                     value={bookingFiltersDraft.dateTo}
@@ -2460,28 +2581,31 @@ const Banquet = () => {
                 </label>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-3">
-                <div className="rounded-[20px] border border-slate-200/80 bg-slate-50 px-4 py-4">
-                  <div className="text-sm font-bold uppercase tracking-[0.16em] text-slate-500">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                <div className="rounded-[18px] border border-blue-100 bg-blue-50/50 px-3 py-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:rounded-[20px] sm:px-4 sm:py-4">
+                  <div className="flex items-center gap-2 text-[13px] font-bold uppercase tracking-[0.14em] text-slate-500 sm:text-[16px]">
+                    <FaSearch className="text-blue-500" />
                     Visible Results
                   </div>
-                  <div className="mt-2 text-3xl font-black text-slate-900">
+                  <div className="mt-2 text-[22px] font-black text-blue-950 sm:text-[30px]">
                     {filteredBookings.length}
                   </div>
                 </div>
-                <div className="rounded-[20px] border border-slate-200/80 bg-slate-50 px-4 py-4">
-                  <div className="text-sm font-bold uppercase tracking-[0.16em] text-slate-500">
+                <div className="rounded-[18px] border border-blue-100 bg-emerald-50/50 px-3 py-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:rounded-[20px] sm:px-4 sm:py-4">
+                  <div className="flex items-center gap-2 text-[13px] font-bold uppercase tracking-[0.14em] text-slate-500 sm:text-[16px]">
+                    <FaGlassCheers className="text-emerald-600" />
                     Available Halls
                   </div>
-                  <div className="mt-2 text-3xl font-black text-slate-900">
+                  <div className="mt-2 text-[22px] font-black text-blue-950 sm:text-[30px]">
                     {halls.filter((hall) => hall.status === "Available").length}
                   </div>
                 </div>
-                <div className="rounded-[20px] border border-slate-200/80 bg-slate-50 px-4 py-4">
-                  <div className="text-sm font-bold uppercase tracking-[0.16em] text-slate-500">
+                <div className="rounded-[18px] border border-blue-100 bg-violet-50/50 px-3 py-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:rounded-[20px] sm:px-4 sm:py-4 col-span-2 sm:col-span-1">
+                  <div className="flex items-center gap-2 text-[13px] font-bold uppercase tracking-[0.14em] text-slate-500 sm:text-[16px]">
+                    <FaReceipt className="text-violet-600" />
                     Draft Estimate
                   </div>
-                  <div className="mt-2 text-3xl font-black text-slate-900">
+                  <div className="mt-2 text-[22px] font-black text-blue-950 sm:text-[30px]">
                     {formatINR(wizardTotals.grandTotal)}
                   </div>
                 </div>
@@ -2489,32 +2613,32 @@ const Banquet = () => {
             </div>
           </form>
 
-          <aside className="rounded-[26px] border border-white/70 bg-white/90 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
+          <aside className="rounded-[22px] border border-white/70 bg-white/95 p-4 shadow-[0_20px_50px_rgba(30,64,175,0.1)] backdrop-blur-xl sm:rounded-[28px] sm:p-6">
             <div className="mb-4">
-              <p className="text-sm font-bold uppercase tracking-[0.24em] text-amber-500">
+              <p className="text-[15px] font-bold uppercase tracking-[0.24em] text-amber-500">
                 Snapshot
               </p>
-              <h2 className="mt-1 text-2xl font-black text-slate-900 sm:text-3xl">
+              <h2 className="mt-1 text-[26px] font-black text-blue-950 sm:text-[30px] xl:text-[32px]">
                 Live banquet health
               </h2>
             </div>
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-1">
               {healthSnapshot.map((card) => {
                 const Icon = card.icon;
 
                 return (
                   <div
                     key={card.label}
-                    className={`rounded-[20px] border px-4 py-4 ${card.tone}`}
+                    className={`rounded-[18px] border px-4 py-4 shadow-sm transition duration-300 hover:-translate-y-0.5 hover:shadow-md sm:rounded-[20px] ${card.tone}`}
                   >
-                    <div className={`inline-flex items-center gap-2 text-sm font-bold ${card.iconTone}`}>
+                    <div className={`inline-flex items-center gap-2 text-[15px] font-bold sm:text-[16px] ${card.iconTone}`}>
                       <Icon />
                       {card.label}
                     </div>
-                    <div className="mt-3 text-4xl font-black leading-none">
+                    <div className="mt-3 text-[26px] font-black leading-none sm:text-[30px]">
                       {card.value}
                     </div>
-                    <div className="mt-2 text-sm font-medium leading-6 opacity-80">
+                    <div className="mt-2 text-[15px] font-medium leading-6 opacity-80 sm:text-[17px]">
                       {card.note}
                     </div>
                   </div>
@@ -2525,13 +2649,13 @@ const Banquet = () => {
         </section>
 
         {activeQuickSection ? (
-          <section className="rounded-[26px] border border-white/70 bg-white/92 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
+          <section className="rounded-[22px] border border-white/70 bg-white/95 p-4 shadow-[0_20px_50px_rgba(30,64,175,0.1)] backdrop-blur-xl sm:rounded-[28px] sm:p-6">
             <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-sm font-bold uppercase tracking-[0.24em] text-emerald-400">
+                <p className="text-[15px] font-bold uppercase tracking-[0.24em] text-sky-500">
                   Section Preview
                 </p>
-                <h2 className="mt-1 text-3xl font-black text-slate-900 sm:text-4xl">
+                <h2 className="mt-1 text-[26px] font-black text-blue-950 sm:text-[32px] lg:text-[34px]">
                   Banquet Quick View
                 </h2>
               </div>
@@ -2549,17 +2673,17 @@ const Banquet = () => {
 
         <section
           id="reservation-section"
-          className="rounded-[26px] border border-white/70 bg-white/92 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5"
+          className="rounded-[22px] border border-white/70 bg-white/95 p-4 shadow-[0_20px_50px_rgba(30,64,175,0.1)] backdrop-blur-xl sm:rounded-[28px] sm:p-6"
         >
           <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <p className="text-sm font-bold uppercase tracking-[0.24em] text-cyan-600">
+              <p className="text-[15px] font-bold uppercase tracking-[0.24em] text-sky-500">
                 Reservation Ledger
               </p>
-              <h2 className="mt-1 text-2xl font-black text-slate-900 sm:text-3xl">
+              <h2 className="mt-1 text-[26px] font-black text-blue-950 sm:text-[30px] lg:text-[32px]">
                 Manage banquet reservations
               </h2>
-              <p className="mt-2 text-base font-medium text-slate-600">
+              <p className="mt-2 text-[15px] font-medium text-slate-600 sm:text-[17px]">
                 Showing {paginatedBookings.length} of {filteredBookings.length} filtered
                 reservations{hasAppliedBookingFilters ? " with active filters." : "."}
               </p>
@@ -2567,7 +2691,7 @@ const Banquet = () => {
             <button
               type="button"
               onClick={openCreateReservationForm}
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-sky-600 to-cyan-500 px-4 py-2.5 text-base font-bold text-white shadow-[0_12px_30px_rgba(14,165,233,0.24)] transition hover:-translate-y-0.5"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-blue-800 to-sky-500 px-4 py-2.5 text-[16px] font-bold text-white shadow-[0_12px_30px_rgba(37,99,235,0.28)] transition hover:-translate-y-0.5 sm:text-[17px]"
             >
               <FaPlus />
               Add New
@@ -2576,8 +2700,8 @@ const Banquet = () => {
 
           <div className="hidden overflow-x-auto lg:block">
             {filteredBookings.length ? (
-              <table className="min-w-full overflow-hidden rounded-[22px] border border-slate-200/80 bg-white">
-                <thead className="bg-[linear-gradient(180deg,#f8fbff_0%,#eef4ff_100%)] text-left text-sm uppercase tracking-[0.18em] text-slate-500">
+              <table className="min-w-full overflow-hidden rounded-[22px] border border-blue-100 bg-white">
+                <thead className="bg-[linear-gradient(180deg,#f4f9ff_0%,#e8f1ff_100%)] text-left text-[16px] uppercase tracking-[0.16em] text-slate-500">
                   <tr>
                     <th className="px-4 py-4">Guest</th>
                     <th className="px-4 py-4">Event</th>
@@ -2600,50 +2724,50 @@ const Banquet = () => {
                     return (
                       <tr
                         key={booking.id}
-                        className="border-t border-slate-200/80 align-top transition hover:bg-slate-50/80"
+                        className="border-t border-blue-50 align-top transition hover:bg-blue-50/50"
                       >
-                        <td className="px-4 py-4 text-base text-slate-700">
-                          <div className="font-bold text-slate-900">
+                        <td className="px-4 py-4 text-[17px] text-slate-700">
+                          <div className="font-bold text-blue-950">
                             {booking.customerName}
                           </div>
-                          <div className="mt-1 text-sm text-slate-500">
+                          <div className="mt-1 text-[16px] text-slate-500">
                             {booking.guestEmail || booking.phone || "Contact pending"}
                           </div>
                         </td>
-                        <td className="px-4 py-4 text-base text-slate-700">
-                          <div className="font-semibold text-slate-900">
+                        <td className="px-4 py-4 text-[17px] text-slate-700">
+                          <div className="font-semibold text-blue-950">
                             {booking.eventTitle || booking.eventType}
                           </div>
-                          <div className="mt-1 text-sm text-slate-500">
+                          <div className="mt-1 text-[16px] text-slate-500">
                             {booking.eventType || "Event"} • {booking.guests || 0} guests
                           </div>
                         </td>
-                        <td className="px-4 py-4 text-base text-slate-700">
-                          <div className="font-semibold text-slate-900">
+                        <td className="px-4 py-4 text-[17px] text-slate-700">
+                          <div className="font-semibold text-blue-950">
                             {booking.hallName || "Hall pending"}
                           </div>
-                          <div className="mt-1 text-sm text-slate-500">
+                          <div className="mt-1 text-[16px] text-slate-500">
                             {lightingLabelMap[booking.lightingSystem] ||
                               booking.lightingSystem ||
                               "Lighting pending"}
                           </div>
                         </td>
-                        <td className="px-4 py-4 text-base text-slate-700">
-                          <div className="font-semibold text-slate-900">
+                        <td className="px-4 py-4 text-[17px] text-slate-700">
+                          <div className="font-semibold text-blue-950">
                             {formatBookingDate(booking.date)}
                           </div>
-                          <div className="mt-1 text-sm text-slate-500">
+                          <div className="mt-1 text-[16px] text-slate-500">
                             {booking.startTime || "--"} - {booking.endTime || "--"}
                           </div>
                         </td>
-                        <td className="px-4 py-4 text-base text-slate-700">
-                          <div className="font-semibold text-slate-900">
+                        <td className="px-4 py-4 text-[17px] text-slate-700">
+                          <div className="font-semibold text-blue-950">
                             {formatINR(booking.grandTotal || 0)}
                           </div>
-                          <div className="mt-1 text-sm text-emerald-700">
+                          <div className="mt-1 text-[16px] text-emerald-700">
                             Received {formatINR(booking.netReceived || 0)}
                           </div>
-                          <div className="mt-1 text-sm text-rose-600">
+                          <div className="mt-1 text-[16px] text-rose-600">
                             Due {formatINR(booking.balanceDue || 0)}
                           </div>
                         </td>
@@ -2659,26 +2783,26 @@ const Banquet = () => {
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 py-4 text-base text-slate-700">
-                          <div className="font-semibold text-slate-900">
+                        <td className="px-4 py-4 text-[17px] text-slate-700">
+                          <div className="font-semibold text-blue-950">
                             {menuPackageNameMap[booking.menuPackageId] || "Custom package"}
                           </div>
-                          <div className="mt-1 text-sm text-slate-500">
+                          <div className="mt-1 text-[16px] text-slate-500">
                             {booking.mealSection || "Meal section pending"}
                           </div>
-                          <div className="mt-1 text-sm text-cyan-700">
+                          <div className="mt-1 text-[16px] text-blue-700">
                             {customItemsCount} custom selections
                           </div>
                         </td>
-                        <td className="px-4 py-4 text-base text-slate-700">
-                          <div className="font-semibold text-slate-900">
+                        <td className="px-4 py-4 text-[17px] text-slate-700">
+                          <div className="font-semibold text-blue-950">
                             {booking.invoiceNo || "Draft only"}
                           </div>
-                          <div className="mt-1 text-sm text-slate-500">
+                          <div className="mt-1 text-[16px] text-slate-500">
                             {booking.paymentMode || "Pending"}
                           </div>
                           {booking.paymentReferenceId ? (
-                            <div className="mt-1 text-sm text-slate-400">
+                            <div className="mt-1 text-[16px] text-slate-400">
                               Ref {booking.paymentReferenceId}
                             </div>
                           ) : null}
@@ -2688,7 +2812,7 @@ const Banquet = () => {
                             <button
                               type="button"
                               onClick={() => handleEditBooking(booking)}
-                              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 transition hover:border-cyan-200 hover:text-cyan-700"
+                              className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white px-3 py-2 text-[15px] font-bold text-slate-700 transition hover:border-blue-300 hover:text-blue-700"
                             >
                               <FaEdit />
                               Edit
@@ -2697,7 +2821,7 @@ const Banquet = () => {
                               <button
                                 type="button"
                                 onClick={() => handleCancelBooking(booking)}
-                                className="rounded-full bg-rose-500 px-3 py-2 text-sm font-bold text-white transition hover:bg-rose-600"
+                                className="rounded-full bg-rose-500 px-3 py-2 text-[15px] font-bold text-white transition hover:bg-rose-600"
                               >
                                 Cancel
                               </button>
@@ -2706,7 +2830,7 @@ const Banquet = () => {
                               <button
                                 type="button"
                                 onClick={() => handleCompleteBooking(booking.id)}
-                                className="rounded-full bg-amber-500 px-3 py-2 text-sm font-bold text-white transition hover:bg-amber-600"
+                                className="rounded-full bg-amber-500 px-3 py-2 text-[15px] font-bold text-white transition hover:bg-amber-600"
                               >
                                 Complete
                               </button>
@@ -2715,7 +2839,7 @@ const Banquet = () => {
                               <button
                                 type="button"
                                 onClick={() => handleGenerateBill(booking)}
-                                className="rounded-full bg-emerald-600 px-3 py-2 text-sm font-bold text-white transition hover:bg-emerald-700"
+                                className="rounded-full bg-emerald-600 px-3 py-2 text-[15px] font-bold text-white transition hover:bg-emerald-700"
                               >
                                 Bill
                               </button>
@@ -2727,7 +2851,7 @@ const Banquet = () => {
                                   setSelectedBooking(booking);
                                   setShowBill(true);
                                 }}
-                                className="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 transition hover:border-sky-200 hover:text-sky-700"
+                                className="rounded-full border border-blue-100 bg-white px-3 py-2 text-[15px] font-bold text-slate-700 transition hover:border-sky-300 hover:text-sky-700"
                               >
                                 View
                               </button>
@@ -2738,7 +2862,7 @@ const Banquet = () => {
                               <button
                                 type="button"
                                 onClick={() => handleRefundBooking(booking)}
-                                className="rounded-full bg-violet-600 px-3 py-2 text-sm font-bold text-white transition hover:bg-violet-700"
+                                className="rounded-full bg-violet-600 px-3 py-2 text-[15px] font-bold text-white transition hover:bg-violet-700"
                               >
                                 Refund
                               </button>
@@ -2746,7 +2870,7 @@ const Banquet = () => {
                             <button
                               type="button"
                               onClick={() => handleSendQuotation(booking, "email")}
-                              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 transition hover:border-sky-200 hover:text-sky-700"
+                              className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white px-3 py-2 text-[15px] font-bold text-slate-700 transition hover:border-sky-300 hover:text-sky-700"
                             >
                               <FaEnvelope />
                               Email
@@ -2754,7 +2878,7 @@ const Banquet = () => {
                             <button
                               type="button"
                               onClick={() => handleSendQuotation(booking, "whatsapp")}
-                              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 transition hover:border-emerald-200 hover:text-emerald-700"
+                              className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white px-3 py-2 text-[15px] font-bold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-700"
                             >
                               <FaWhatsapp />
                               WhatsApp
@@ -2763,7 +2887,7 @@ const Banquet = () => {
                               <button
                                 type="button"
                                 onClick={() => handleDeleteBooking(booking)}
-                      className="rounded-full border border-rose-200 bg-white px-3 py-2 text-sm font-bold text-rose-600 transition hover:bg-rose-50"
+                      className="rounded-full border border-rose-200 bg-white px-3 py-2 text-[15px] font-bold text-rose-600 transition hover:bg-rose-50"
                               >
                                 Delete
                               </button>
@@ -2776,7 +2900,7 @@ const Banquet = () => {
                 </tbody>
               </table>
             ) : (
-              <div className="rounded-[22px] border border-dashed border-slate-300 bg-white/70 p-6 text-sm text-slate-500">
+              <div className="rounded-[22px] border border-dashed border-blue-200 bg-blue-50/30 p-6 text-[17px] text-slate-500">
                 {hasAppliedBookingFilters
                   ? "Current filters ke saath koi reservation match nahi hua."
                   : "No reservations are available. Create your first booking using ‘Add New."}
@@ -2806,14 +2930,14 @@ const Banquet = () => {
                 return (
                   <div
                     key={booking.id}
-                    className="rounded-[22px] border border-slate-200/80 bg-white p-4 shadow-sm"
+                    className="rounded-[20px] border border-blue-100 bg-white p-4 shadow-sm sm:rounded-[22px]"
                   >
                     <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <div className="text-base font-bold text-slate-900">
+                      <div className="min-w-0">
+                        <div className="truncate text-[16px] font-bold text-blue-950 sm:text-[17px]">
                           {booking.customerName}
                         </div>
-                        <div className="mt-1 text-sm text-slate-500">
+                        <div className="mt-1 text-[14px] text-slate-500 sm:text-[16px]">
                           {booking.eventTitle || booking.eventType} • {booking.hallName}
                         </div>
                       </div>
@@ -2822,7 +2946,7 @@ const Banquet = () => {
                       </span>
                     </div>
 
-                    <div className="mt-4 grid gap-2 text-sm text-slate-600 sm:grid-cols-2">
+                    <div className="mt-4 grid grid-cols-2 gap-2 text-[14px] text-slate-600 sm:text-[16px]">
                       <div>Date: {formatBookingDate(booking.date)}</div>
                       <div>
                         Time: {booking.startTime || "--"} - {booking.endTime || "--"}
@@ -2841,7 +2965,7 @@ const Banquet = () => {
                       <button
                         type="button"
                         onClick={() => handleEditBooking(booking)}
-                        className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-2 text-sm font-bold text-slate-700"
+                        className="inline-flex items-center gap-2 rounded-full border border-blue-100 px-3 py-2 text-[14px] font-bold text-slate-700 sm:text-[15px]"
                       >
                         <FaEdit />
                         Edit
@@ -2850,7 +2974,7 @@ const Banquet = () => {
                         <button
                           type="button"
                           onClick={() => handleCancelBooking(booking)}
-                          className="rounded-full bg-rose-500 px-3 py-2 text-sm font-bold text-white"
+                          className="rounded-full bg-rose-500 px-3 py-2 text-[14px] font-bold text-white sm:text-[15px]"
                         >
                           Cancel
                         </button>
@@ -2859,7 +2983,7 @@ const Banquet = () => {
                         <button
                           type="button"
                           onClick={() => handleCompleteBooking(booking.id)}
-                          className="rounded-full bg-amber-500 px-3 py-2 text-sm font-bold text-white"
+                          className="rounded-full bg-amber-500 px-3 py-2 text-[14px] font-bold text-white sm:text-[15px]"
                         >
                           Complete
                         </button>
@@ -2868,7 +2992,7 @@ const Banquet = () => {
                         <button
                           type="button"
                           onClick={() => handleGenerateBill(booking)}
-                          className="rounded-full bg-emerald-600 px-3 py-2 text-sm font-bold text-white"
+                          className="rounded-full bg-emerald-600 px-3 py-2 text-[14px] font-bold text-white sm:text-[15px]"
                         >
                           Bill
                         </button>
@@ -2880,7 +3004,7 @@ const Banquet = () => {
                             setSelectedBooking(booking);
                             setShowBill(true);
                           }}
-                          className="rounded-full border border-slate-200 px-3 py-2 text-sm font-bold text-slate-700"
+                          className="rounded-full border border-blue-100 px-3 py-2 text-[14px] font-bold text-slate-700 sm:text-[15px]"
                         >
                           View
                         </button>
@@ -2891,7 +3015,7 @@ const Banquet = () => {
                         <button
                           type="button"
                           onClick={() => handleRefundBooking(booking)}
-                          className="rounded-full bg-violet-600 px-3 py-2 text-sm font-bold text-white"
+                          className="rounded-full bg-violet-600 px-3 py-2 text-[14px] font-bold text-white sm:text-[15px]"
                         >
                           Refund
                         </button>
@@ -2899,14 +3023,14 @@ const Banquet = () => {
                       <button
                         type="button"
                         onClick={() => handleSendQuotation(booking, "email")}
-                        className="rounded-full border border-slate-200 px-3 py-2 text-sm font-bold text-slate-700"
+                        className="rounded-full border border-blue-100 px-3 py-2 text-[14px] font-bold text-slate-700 sm:text-[15px]"
                       >
                         Email
                       </button>
                       <button
                         type="button"
                         onClick={() => handleSendQuotation(booking, "whatsapp")}
-                        className="rounded-full border border-slate-200 px-3 py-2 text-sm font-bold text-slate-700"
+                        className="rounded-full border border-blue-100 px-3 py-2 text-[14px] font-bold text-slate-700 sm:text-[15px]"
                       >
                         WhatsApp
                       </button>
@@ -2914,7 +3038,7 @@ const Banquet = () => {
                         <button
                           type="button"
                           onClick={() => handleDeleteBooking(booking)}
-                          className="rounded-full border border-rose-200 px-3 py-2 text-sm font-bold text-rose-600"
+                          className="rounded-full border border-rose-200 px-3 py-2 text-[14px] font-bold text-rose-600 sm:text-[15px]"
                         >
                           Delete
                         </button>
@@ -2924,7 +3048,7 @@ const Banquet = () => {
                 );
               })
             ) : (
-              <div className="rounded-[22px] border border-dashed border-slate-300 bg-white/70 p-6 text-sm text-slate-500">
+              <div className="rounded-[22px] border border-dashed border-blue-200 bg-blue-50/30 p-6 text-[16px] text-slate-500">
                 {hasAppliedBookingFilters
                   ? "Current filters ke saath koi reservation match nahi hua."
                   : "Koi reservation available nahi hai. `Add New` se pehli booking create kijiye."}
@@ -2948,7 +3072,7 @@ const Banquet = () => {
         >
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_340px]">
               <div className="space-y-6">
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <label className={labelCls}>Banquet Hall</label>
                     <select
@@ -3089,7 +3213,7 @@ const Banquet = () => {
                   </div>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <label className={labelCls}>Menu Package</label>
                     <select
@@ -3282,26 +3406,26 @@ const Banquet = () => {
 
                 <div>
                   <label className={labelCls}>Payment Receipt</label>
-                  <div className="space-y-3 rounded-[24px] border border-slate-200/80 bg-white p-4">
+                  <div className="space-y-3 rounded-[24px] border border-blue-100 bg-white p-4">
                     <input
                       key={receiptInputKey}
                       type="file"
                       accept="image/*,.pdf"
                       onChange={(e) => handleReceiptUpload(e.target.files?.[0])}
-                      className="block w-full text-sm text-slate-600 file:mr-4 file:rounded-full file:border-0 file:bg-slate-900 file:px-4 file:py-2 file:text-sm file:font-bold file:text-white"
+                      className="block w-full text-[16px] text-slate-600 file:mr-4 file:rounded-full file:border-0 file:bg-gradient-to-r file:from-blue-800 file:to-sky-500 file:px-4 file:py-2 file:text-[15px] file:font-bold file:text-white"
                     />
-                    <p className="text-sm text-slate-500">
+                    <p className="text-[16px] text-slate-500">
                       Optional hai. Image ya PDF receipt upload kar sakte hain.
                     </p>
                     {wizard.receiptFileName ? (
-                      <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                      <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-blue-50/60 px-4 py-3 text-[16px] text-slate-700">
                         <span className="font-semibold">{wizard.receiptFileName}</span>
                         {receiptPreviewUrl ? (
                           <a
                             href={receiptPreviewUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="font-semibold text-cyan-700"
+                            className="font-semibold text-blue-700"
                           >
                             View receipt
                           </a>
@@ -3320,13 +3444,13 @@ const Banquet = () => {
 
                 <div>
                   <label className={labelCls}>Custom Menu Items</label>
-                  <div className="space-y-4 rounded-[24px] border border-slate-200/80 bg-white p-4">
-                    <div className="flex flex-col gap-3 rounded-2xl border border-cyan-100 bg-cyan-50/70 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="space-y-4 rounded-[24px] border border-blue-100 bg-white p-4">
+                    <div className="flex flex-col gap-3 rounded-2xl border border-blue-100 bg-blue-50/60 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
                       <div>
-                        <div className="text-sm font-bold text-slate-900">
+                        <div className="text-[16px] font-bold text-blue-950">
                           Restaurant menu se select karein
                         </div>
-                        <div className="mt-1 text-sm text-slate-500">
+                        <div className="mt-1 text-[16px] text-slate-500">
                           Full restaurant menu khol kar items select kijiye, fir
                           yahin reservation form par wapas aa jayenge.
                         </div>
@@ -3334,7 +3458,7 @@ const Banquet = () => {
                       <button
                         type="button"
                         onClick={handleOpenRestaurantMenu}
-                        className="inline-flex items-center justify-center rounded-full bg-slate-900 px-4 py-2.5 text-sm font-bold text-white"
+                        className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-blue-800 to-sky-500 px-4 py-2.5 text-[16px] font-bold text-white shadow-sm transition hover:-translate-y-0.5"
                       >
                         Open Restaurant Menu
                       </button>
@@ -3343,8 +3467,8 @@ const Banquet = () => {
                       <div className="max-h-[320px] space-y-4 overflow-y-auto pr-1">
                         {menuCategories.length ? (
                           menuCategories.map((category) => (
-                            <div key={category} className="rounded-2xl border border-slate-100 p-4">
-                              <div className="text-sm font-bold text-slate-900">
+                            <div key={category} className="rounded-2xl border border-blue-50 p-4">
+                              <div className="text-[16px] font-bold text-blue-950">
                                 {category}
                               </div>
                               <div className="mt-3 grid gap-2 sm:grid-cols-2">
@@ -3357,17 +3481,17 @@ const Banquet = () => {
                                       key={item.id || `${category}-${item.name}`}
                                       type="button"
                                       onClick={() => toggleCustomMenuSelection(item.name)}
-                                      className={`rounded-2xl border px-3 py-3 text-left text-sm font-semibold transition ${
+                                      className={`rounded-2xl border px-3 py-3 text-left text-[16px] font-semibold transition ${
                                         isSelected
-                                          ? "border-cyan-200 bg-cyan-50 text-cyan-700"
-                                          : "border-slate-200 bg-slate-50 text-slate-600 hover:border-cyan-100 hover:text-cyan-700"
+                                          ? "border-blue-300 bg-blue-50 text-blue-700"
+                                          : "border-blue-50 bg-slate-50 text-slate-600 hover:border-blue-200 hover:text-blue-700"
                                       }`}
                                     >
-                                      <span className="block text-sm font-bold">
+                                      <span className="block text-[16px] font-bold">
                                         {item.name}
                                       </span>
                                       {item.price ? (
-                                        <span className="mt-1 block text-sm opacity-80">
+                                        <span className="mt-1 block text-[15px] opacity-80">
                                           {formatINR(item.price)}
                                         </span>
                                       ) : null}
@@ -3378,17 +3502,17 @@ const Banquet = () => {
                             </div>
                           ))
                         ) : (
-                          <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-5 text-sm text-slate-500">
+                          <div className="rounded-2xl border border-dashed border-blue-100 px-4 py-5 text-[16px] text-slate-500">
                             Restaurant menu abhi load nahi hua. Aap manual items add kar sakte hain.
                           </div>
                         )}
                       </div>
 
-                      <div className="space-y-3 rounded-2xl bg-slate-50 p-4">
-                        <div className="text-sm font-bold text-slate-900">
+                      <div className="space-y-3 rounded-2xl bg-blue-50/40 p-4">
+                        <div className="text-[16px] font-bold text-blue-950">
                           Manual item add
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex flex-col gap-2 sm:flex-row">
                           <input
                             value={wizard.manualMenuEntry}
                             onChange={(e) =>
@@ -3409,19 +3533,19 @@ const Banquet = () => {
                           <button
                             type="button"
                             onClick={handleAddManualMenuItem}
-                          className="rounded-full bg-slate-900 px-4 py-2 text-sm font-bold text-white"
+                          className="rounded-full bg-gradient-to-r from-blue-800 to-sky-500 px-4 py-2 text-[16px] font-bold text-white"
                           >
                             Add
                           </button>
                         </div>
-                        <div className="text-sm text-slate-500">
+                        <div className="text-[16px] text-slate-500">
               You can select from the full menu or manually add a custom item here.
                         </div>
                       </div>
                     </div>
 
                     <div>
-                      <div className="text-sm font-bold uppercase tracking-[0.16em] text-slate-500">
+                      <div className="text-[16px] font-bold uppercase tracking-[0.16em] text-slate-500">
                         Selected items
                       </div>
                       <div className="mt-3 flex flex-wrap gap-2">
@@ -3435,7 +3559,7 @@ const Banquet = () => {
                                 onClick={() =>
                                   handleRemoveSelectedRestaurantMenuItem(item, index)
                                 }
-                              className="rounded-2xl bg-cyan-50 px-3 py-2 text-sm font-semibold text-cyan-700"
+                              className="rounded-2xl bg-blue-50 px-3 py-2 text-[16px] font-semibold text-blue-700"
                               >
                                 {item.name} x{item.qty} • {formatINR(item.total)} x
                               </button>
@@ -3448,7 +3572,7 @@ const Banquet = () => {
                                   key={`selected-${item}`}
                                   type="button"
                                   onClick={() => handleRemoveSelectedCustomMenuItem(item)}
-                                  className="rounded-full bg-cyan-50 px-3 py-2 text-sm font-semibold text-cyan-700"
+                                  className="rounded-full bg-blue-50 px-3 py-2 text-[16px] font-semibold text-blue-700"
                                 >
                                   {item} x
                                 </button>
@@ -3459,24 +3583,24 @@ const Banquet = () => {
                                 key={`manual-${item}`}
                                 type="button"
                                 onClick={() => handleRemoveManualMenuItem(item)}
-                                className="rounded-full bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-700"
+                                className="rounded-full bg-amber-50 px-3 py-2 text-[16px] font-semibold text-amber-700"
                               >
                                 {item} x
                               </button>
                             ))}
                           </>
                         ) : (
-                          <div className="text-sm text-slate-500">
+                          <div className="text-[16px] text-slate-500">
             “No custom menu item has been selected yet.”
                           </div>
                         )}
                       </div>
                       {wizard.selectedRestaurantMenuItems.length ? (
-                        <div className="mt-4 flex items-center justify-between rounded-2xl border border-cyan-100 bg-cyan-50 px-4 py-3 text-sm">
+                        <div className="mt-4 flex items-center justify-between rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-[16px]">
                           <span className="font-semibold text-slate-700">
                             Selected items total
                           </span>
-                          <span className="font-black text-cyan-700">
+                          <span className="font-black text-blue-700">
                             {formatINR(wizardTotals.customMenuCharge)}
                           </span>
                         </div>
@@ -3498,75 +3622,75 @@ const Banquet = () => {
                   />
                 </div>
                 {reservationError ? (
-                  <div className="rounded-[22px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+                  <div className="rounded-[22px] border border-rose-200 bg-rose-50 px-4 py-3 text-[16px] font-semibold text-rose-700">
                     {reservationError}
                   </div>
                 ) : null}
               </div>
 
               <div className="space-y-4">
-                <div className="rounded-[24px] border border-slate-200/80 bg-white p-5 shadow-sm">
-                  <div className="text-sm font-bold text-slate-900">
+                <div className="rounded-[24px] border border-blue-100 bg-white p-5 shadow-sm">
+                  <div className="text-[17px] font-bold text-blue-950">
                     Reservation summary
                   </div>
-                  <div className="mt-4 space-y-3 text-sm text-slate-600">
+                  <div className="mt-4 space-y-3 text-[16px] text-slate-600">
                     <div className="flex items-center justify-between gap-3">
                       <span className="inline-flex items-center gap-2">
-                        <FaGlassCheers className="text-cyan-600" />
+                        <FaGlassCheers className="text-blue-600" />
                         Hall charge
                       </span>
-                      <span className="font-semibold text-slate-900">
+                      <span className="font-semibold text-blue-950">
                         {formatINR(wizardTotals.hallCharge)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between gap-3">
                       <span className="inline-flex items-center gap-2">
-                        <FaUtensils className="text-cyan-600" />
+                        <FaUtensils className="text-blue-600" />
                         Meal plan
                       </span>
-                      <span className="font-semibold text-slate-900">
+                      <span className="font-semibold text-blue-950">
                         {formatINR(wizardTotals.mealCharge)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between gap-3">
                       <span className="inline-flex items-center gap-2">
-                        <FaUtensils className="text-cyan-600" />
+                        <FaUtensils className="text-blue-600" />
                         Custom menu
                       </span>
-                      <span className="font-semibold text-slate-900">
+                      <span className="font-semibold text-blue-950">
                         {formatINR(wizardTotals.customMenuCharge)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between gap-3">
                       <span className="inline-flex items-center gap-2">
-                        <FaLightbulb className="text-cyan-600" />
+                        <FaLightbulb className="text-blue-600" />
                         Lighting
                       </span>
-                      <span className="font-semibold text-slate-900">
+                      <span className="font-semibold text-blue-950">
                         {formatINR(wizardTotals.lightingCharge)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between gap-3">
                       <span className="inline-flex items-center gap-2">
-                        <FaHeadset className="text-cyan-600" />
+                        <FaHeadset className="text-blue-600" />
                         Event support
                       </span>
-                      <span className="font-semibold text-slate-900">
+                      <span className="font-semibold text-blue-950">
                         {formatINR(wizardTotals.eventSupportCharge)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between gap-3">
                       <span className="inline-flex items-center gap-2">
-                        <FaUsers className="text-cyan-600" />
+                        <FaUsers className="text-blue-600" />
                         Guests
                       </span>
-                      <span className="font-semibold text-slate-900">
+                      <span className="font-semibold text-blue-950">
                         {wizard.guests || 0}
                       </span>
                     </div>
                     <div className="flex items-center justify-between gap-3">
                       <span className="inline-flex items-center gap-2">
-                        <FaMoneyCheckAlt className="text-cyan-600" />
+                        <FaMoneyCheckAlt className="text-blue-600" />
                         Payment received
                       </span>
                       <span className="font-semibold text-emerald-700">
@@ -3576,7 +3700,7 @@ const Banquet = () => {
                     {editingBookingId ? (
                       <div className="flex items-center justify-between gap-3">
                         <span className="inline-flex items-center gap-2">
-                          <FaMoneyCheckAlt className="text-cyan-600" />
+                          <FaMoneyCheckAlt className="text-blue-600" />
                           Payment refund
                         </span>
                         <span className="font-semibold text-amber-600">
@@ -3585,32 +3709,32 @@ const Banquet = () => {
                       </div>
                     ) : null}
                   </div>
-                  <div className="mt-5 rounded-[20px] bg-slate-950 px-4 py-4 text-white">
-              <div className="text-sm uppercase tracking-[0.2em] text-slate-300">
+                  <div className="mt-5 rounded-[20px] bg-gradient-to-br from-blue-950 to-blue-800 px-4 py-4 text-white">
+              <div className="text-[16px] uppercase tracking-[0.2em] text-blue-200">
                       Estimated total
                     </div>
-                    <div className="mt-2 text-3xl font-black">
+                    <div className="mt-2 text-[30px] font-black">
                       {formatINR(wizardTotals.grandTotal)}
                     </div>
-                    <div className="mt-3 text-sm text-slate-300">
+                    <div className="mt-3 text-[16px] text-blue-100">
                       Bakaya: {formatINR(wizardTotals.balanceDue)}
                     </div>
                   </div>
                 </div>
 
-                <div className="rounded-[24px] border border-slate-200/80 bg-white p-5 shadow-sm">
-                  <div className="text-sm font-bold text-slate-900">
+                <div className="rounded-[24px] border border-blue-100 bg-white p-5 shadow-sm">
+                  <div className="text-[17px] font-bold text-blue-950">
                     After booking
                   </div>
-                  <p className="mt-3 text-sm leading-6 text-slate-500">
+                  <p className="mt-3 text-[16px] leading-6 text-slate-500">
           “Action buttons are provided on the booking dashboard to send quotations to guests via email or WhatsApp.”
                   </p>
                   <div className="mt-4 flex flex-wrap gap-2">
-                    <span className="inline-flex items-center gap-2 rounded-full bg-cyan-50 px-3 py-2 text-sm font-semibold text-cyan-700">
+                    <span className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-2 text-[16px] font-semibold text-blue-700">
                       <FaEnvelope />
                       Email Quote
                     </span>
-                    <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700">
+                    <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-2 text-[16px] font-semibold text-emerald-700">
                       <FaWhatsapp />
                       WhatsApp Quote
                     </span>
@@ -3621,7 +3745,7 @@ const Banquet = () => {
                   type="button"
                   onClick={() => handleConfirmBooking()}
                   disabled={isSavingReservation}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-[22px] bg-gradient-to-r from-sky-600 to-cyan-500 px-5 py-4 text-sm font-bold text-white shadow-[0_16px_35px_rgba(14,165,233,0.24)] transition hover:-translate-y-0.5"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-[22px] bg-gradient-to-r from-blue-800 to-sky-500 px-5 py-4 text-[17px] font-bold text-white shadow-[0_16px_35px_rgba(37,99,235,0.28)] transition hover:-translate-y-0.5"
                 >
                   <FaPaperPlane />
                   {isSavingReservation
@@ -3635,7 +3759,7 @@ const Banquet = () => {
                     type="button"
                     onClick={() => handleConfirmBooking({ cancelAfterSave: true })}
                     disabled={isSavingReservation}
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-[22px] bg-gradient-to-r from-rose-600 to-rose-500 px-5 py-4 text-sm font-bold text-white shadow-[0_16px_35px_rgba(244,63,94,0.24)] transition hover:-translate-y-0.5"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-[22px] bg-gradient-to-r from-rose-600 to-rose-500 px-5 py-4 text-[17px] font-bold text-white shadow-[0_16px_35px_rgba(244,63,94,0.24)] transition hover:-translate-y-0.5"
                   >
                     Cancel Booking
                   </button>
@@ -3662,10 +3786,10 @@ const Banquet = () => {
           heightClass="h-[min(78vh,560px)]"
         >
           <div className="grid gap-4">
-            <div className="grid gap-5 md:grid-cols-[140px_minmax(0,1fr)]">
+            <div className="grid gap-5 sm:grid-cols-[140px_minmax(0,1fr)]">
               <div>
                 <label className={labelCls}>Hall Image</label>
-                <div className="flex aspect-square w-full max-w-[140px] items-center justify-center overflow-hidden rounded-[24px] border border-dashed border-slate-300 bg-slate-50">
+                <div className="flex aspect-square w-full max-w-[140px] items-center justify-center overflow-hidden rounded-[24px] border border-dashed border-blue-200 bg-blue-50/40">
                   {hallImagePreview || newHall.image ? (
                     <img
                       src={hallImagePreview || resolveBanquetHallImage(newHall.image)}
@@ -3673,7 +3797,7 @@ const Banquet = () => {
                       className="h-full w-full object-cover"
                     />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-[linear-gradient(135deg,#dff7ff_0%,#eef6ff_50%,#fff4df_100%)] text-cyan-700">
+                    <div className="flex h-full w-full items-center justify-center bg-[linear-gradient(135deg,#e3f0ff_0%,#eef6ff_50%,#dceeff_100%)] text-blue-700">
                       <FaGlassCheers className="text-3xl" />
                     </div>
                   )}
@@ -3700,10 +3824,10 @@ const Banquet = () => {
                         setHallImageMode("upload");
                         setNewHall((prev) => ({ ...prev, image: "" }));
                       }}
-                      className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition ${
+                      className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-[16px] font-bold transition ${
                         hallImageMode === "upload"
-                          ? "bg-slate-900 text-white"
-                          : "border border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+                          ? "bg-gradient-to-r from-blue-800 to-sky-500 text-white"
+                          : "border border-blue-100 bg-white text-slate-600 hover:border-blue-300"
                       }`}
                     >
                       <FaUpload />
@@ -3719,10 +3843,10 @@ const Banquet = () => {
                         setHallImagePreview("");
                         setHallImageMode("url");
                       }}
-                      className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition ${
+                      className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-[16px] font-bold transition ${
                         hallImageMode === "url"
-                          ? "bg-slate-900 text-white"
-                          : "border border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+                          ? "bg-gradient-to-r from-blue-800 to-sky-500 text-white"
+                          : "border border-blue-100 bg-white text-slate-600 hover:border-blue-300"
                       }`}
                     >
                       <FaLink />
@@ -3733,14 +3857,14 @@ const Banquet = () => {
                 {hallImageMode === "upload" ? (
                   <div>
                     <label className={labelCls}>Upload Image</label>
-                    <label className="flex cursor-pointer items-center gap-3 rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-600 transition hover:border-cyan-300 hover:bg-cyan-50/60">
+                    <label className="flex cursor-pointer items-center gap-3 rounded-2xl border border-dashed border-blue-200 bg-blue-50/40 px-4 py-3 text-[16px] font-medium text-slate-600 transition hover:border-blue-300 hover:bg-blue-50">
                       <FaImage className="text-slate-500" />
                       <span className="min-w-0 flex-1 truncate">
                         {hallImageFile
                           ? hallImageFile.name
                           : "Choose a square or landscape image"}
                       </span>
-                      <span className="rounded-full bg-white px-3 py-1 text-sm font-bold text-slate-700 shadow-sm">
+                      <span className="rounded-full bg-white px-3 py-1 text-[15px] font-bold text-slate-700 shadow-sm">
                         Browse
                       </span>
                       <input
@@ -3814,7 +3938,7 @@ const Banquet = () => {
                   </select>
                 </div>
               ) : null}
-              <label className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700">
+              <label className="flex items-center justify-between gap-3 rounded-2xl border border-blue-100 px-4 py-3 text-[16px] font-semibold text-slate-700">
                 <span>AC enabled hall</span>
                 <input
                   type="checkbox"
@@ -3822,11 +3946,11 @@ const Banquet = () => {
                   onChange={(e) =>
                     setNewHall((prev) => ({ ...prev, is_ac: e.target.checked }))
                   }
-                  className="h-5 w-5 accent-rose-500"
+                  className="h-5 w-5 accent-blue-600"
                 />
               </label>
               {hallFormError ? (
-                <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+                <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-[16px] font-semibold text-rose-700">
                   {hallFormError}
                 </div>
               ) : null}
@@ -3834,7 +3958,7 @@ const Banquet = () => {
                 type="button"
                 onClick={handleAddHall}
                 disabled={isAddingHall}
-                className="rounded-[22px] bg-gradient-to-r from-teal-600 to-emerald-500 px-5 py-4 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-[22px] bg-gradient-to-r from-blue-800 to-sky-500 px-5 py-4 text-[17px] font-bold text-white shadow-[0_16px_35px_rgba(37,99,235,0.28)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isAddingHall
                   ? editingHallId
@@ -3857,40 +3981,40 @@ const Banquet = () => {
           heightClass="h-[min(72vh,520px)]"
         >
           <div className="mt-2 grid gap-4 sm:grid-cols-2">
-              <div className="rounded-[22px] border border-slate-200/80 bg-slate-50 p-4">
-                <div className="text-sm uppercase tracking-[0.18em] text-slate-500">
+              <div className="rounded-[22px] border border-blue-100 bg-blue-50/40 p-4">
+                <div className="text-[16px] uppercase tracking-[0.18em] text-slate-500">
                   Capacity
                 </div>
-                <div className="mt-2 text-2xl font-black text-slate-900">
+                <div className="mt-2 text-[24px] font-black text-blue-950">
                   {delayedDetailHall.capacity}
                 </div>
               </div>
-              <div className="rounded-[22px] border border-slate-200/80 bg-slate-50 p-4">
-                <div className="text-sm uppercase tracking-[0.18em] text-slate-500">
+              <div className="rounded-[22px] border border-blue-100 bg-blue-50/40 p-4">
+                <div className="text-[16px] uppercase tracking-[0.18em] text-slate-500">
                   Rate / hour
                 </div>
-                <div className="mt-2 text-2xl font-black text-slate-900">
+                <div className="mt-2 text-[24px] font-black text-blue-950">
                   {formatINR(delayedDetailHall.ratePerHour)}
                 </div>
               </div>
-              <div className="rounded-[22px] border border-slate-200/80 bg-slate-50 p-4">
-                <div className="text-sm uppercase tracking-[0.18em] text-slate-500">
+              <div className="rounded-[22px] border border-blue-100 bg-blue-50/40 p-4">
+                <div className="text-[16px] uppercase tracking-[0.18em] text-slate-500">
                   Cooling
                 </div>
-                <div className="mt-2 text-lg font-bold text-slate-900">
+                <div className="mt-2 text-[18px] font-bold text-blue-950">
                   {delayedDetailHall.is_ac ? "AC Hall" : "Non-AC Hall"}
                 </div>
               </div>
-              <div className="rounded-[22px] border border-slate-200/80 bg-slate-50 p-4">
-                <div className="text-sm uppercase tracking-[0.18em] text-slate-500">
+              <div className="rounded-[22px] border border-blue-100 bg-blue-50/40 p-4">
+                <div className="text-[16px] uppercase tracking-[0.18em] text-slate-500">
                   Status
                 </div>
-                <div className="mt-2 text-lg font-bold text-slate-900">
+                <div className="mt-2 text-[18px] font-bold text-blue-950">
                   {delayedDetailHall.status}
                 </div>
               </div>
               {hallFormError ? (
-                <div className="rounded-[22px] border border-rose-200 bg-rose-50 p-4 text-sm font-semibold text-rose-700 sm:col-span-2">
+                <div className="rounded-[22px] border border-rose-200 bg-rose-50 p-4 text-[16px] font-semibold text-rose-700 sm:col-span-2">
                   {hallFormError}
                 </div>
               ) : null}
@@ -3898,7 +4022,7 @@ const Banquet = () => {
                 <button
                   type="button"
                   onClick={() => handleEditHall(delayedDetailHall)}
-                  className="inline-flex items-center gap-2 rounded-full bg-amber-500 px-4 py-2 text-sm font-bold text-white"
+                  className="inline-flex items-center gap-2 rounded-full bg-amber-500 px-4 py-2 text-[16px] font-bold text-white"
                 >
                   <FaEdit />
                   Edit Hall
@@ -3907,7 +4031,7 @@ const Banquet = () => {
                   type="button"
                   onClick={() => handleDeleteHall(delayedDetailHall)}
                   disabled={isDeletingHall}
-                  className="inline-flex items-center gap-2 rounded-full bg-rose-600 px-4 py-2 text-sm font-bold text-white disabled:opacity-60"
+                  className="inline-flex items-center gap-2 rounded-full bg-rose-600 px-4 py-2 text-[16px] font-bold text-white disabled:opacity-60"
                 >
                   <FaTrash />
                   {isDeletingHall ? "Deleting..." : "Delete Hall"}
@@ -3926,8 +4050,8 @@ const Banquet = () => {
           heightClass="h-auto"
         >
           <div className="space-y-5">
-            <div className="grid gap-5 md:grid-cols-[150px_minmax(0,1fr)]">
-              <div className="flex aspect-square w-full max-w-[150px] items-center justify-center overflow-hidden rounded-[24px] border border-slate-200 bg-slate-50">
+            <div className="grid gap-5 sm:grid-cols-[150px_minmax(0,1fr)]">
+              <div className="flex aspect-square w-full max-w-[150px] items-center justify-center overflow-hidden rounded-[24px] border border-blue-100 bg-blue-50/40">
                 {delayedHallDeleteTarget.image ? (
                   <img
                     src={resolveBanquetHallImage(delayedHallDeleteTarget.image)}
@@ -3935,39 +4059,39 @@ const Banquet = () => {
                     className="h-full w-full object-cover"
                   />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-[linear-gradient(135deg,#dff7ff_0%,#eef6ff_50%,#fff4df_100%)] text-cyan-700">
+                  <div className="flex h-full w-full items-center justify-center bg-[linear-gradient(135deg,#e3f0ff_0%,#eef6ff_50%,#dceeff_100%)] text-blue-700">
                     <FaGlassCheers className="text-4xl" />
                   </div>
                 )}
               </div>
 
               <div className="space-y-4">
-                <div className="rounded-[22px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm leading-6 text-rose-700">
+                <div className="rounded-[22px] border border-rose-200 bg-rose-50 px-4 py-3 text-[16px] leading-6 text-rose-700">
                   Are you sure you want to permanently delete this banquet hall? This action cannot be undone.
                 </div>
 
-                <div className="overflow-hidden rounded-[22px] border border-slate-200">
-                  <table className="min-w-full text-sm">
+                <div className="overflow-x-auto rounded-[22px] border border-blue-100">
+                  <table className="min-w-full text-[16px]">
                     <tbody>
-                      <tr className="border-b border-slate-200 bg-slate-50">
+                      <tr className="border-b border-blue-100 bg-blue-50/40">
                         <td className="px-4 py-3 font-semibold text-slate-500">Hall Name</td>
-                        <td className="px-4 py-3 font-bold text-slate-900">{delayedHallDeleteTarget.name || "-"}</td>
+                        <td className="px-4 py-3 font-bold text-blue-950">{delayedHallDeleteTarget.name || "-"}</td>
                       </tr>
-                      <tr className="border-b border-slate-200">
+                      <tr className="border-b border-blue-100">
                         <td className="px-4 py-3 font-semibold text-slate-500">Capacity</td>
-                        <td className="px-4 py-3 font-semibold text-slate-900">{delayedHallDeleteTarget.capacity || "-"}</td>
+                        <td className="px-4 py-3 font-semibold text-blue-950">{delayedHallDeleteTarget.capacity || "-"}</td>
                       </tr>
-                      <tr className="border-b border-slate-200 bg-slate-50">
+                      <tr className="border-b border-blue-100 bg-blue-50/40">
                         <td className="px-4 py-3 font-semibold text-slate-500">Rate Per Hour</td>
-                        <td className="px-4 py-3 font-semibold text-slate-900">{formatINR(delayedHallDeleteTarget.ratePerHour || 0)}</td>
+                        <td className="px-4 py-3 font-semibold text-blue-950">{formatINR(delayedHallDeleteTarget.ratePerHour || 0)}</td>
                       </tr>
-                      <tr className="border-b border-slate-200">
+                      <tr className="border-b border-blue-100">
                         <td className="px-4 py-3 font-semibold text-slate-500">Cooling</td>
-                        <td className="px-4 py-3 font-semibold text-slate-900">{delayedHallDeleteTarget.is_ac ? "Air Conditioned" : "Non Air Conditioned"}</td>
+                        <td className="px-4 py-3 font-semibold text-blue-950">{delayedHallDeleteTarget.is_ac ? "Air Conditioned" : "Non Air Conditioned"}</td>
                       </tr>
-                      <tr className="bg-slate-50">
+                      <tr className="bg-blue-50/40">
                         <td className="px-4 py-3 font-semibold text-slate-500">Status</td>
-                        <td className="px-4 py-3 font-semibold text-slate-900">{delayedHallDeleteTarget.status || "Available"}</td>
+                        <td className="px-4 py-3 font-semibold text-blue-950">{delayedHallDeleteTarget.status || "Available"}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -3976,7 +4100,7 @@ const Banquet = () => {
             </div>
 
             {hallFormError ? (
-              <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+              <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-[16px] font-semibold text-rose-700">
                 {hallFormError}
               </div>
             ) : null}
@@ -3993,7 +4117,7 @@ const Banquet = () => {
                 type="button"
                 onClick={confirmDeleteHall}
                 disabled={isDeletingHall}
-                className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-rose-600 to-rose-500 px-5 py-2.5 text-sm font-bold text-white shadow-[0_14px_30px_rgba(244,63,94,0.22)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-rose-600 to-rose-500 px-5 py-2.5 text-[16px] font-bold text-white shadow-[0_14px_30px_rgba(244,63,94,0.22)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isDeletingHall ? "Deleting..." : "Delete Hall"}
               </button>
@@ -4011,22 +4135,22 @@ const Banquet = () => {
           heightClass="h-auto"
         >
           <div className="space-y-5 text-center">
-            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.24),_rgba(6,182,212,0.12)_60%,_rgba(255,255,255,0.96)_100%)] shadow-[0_18px_45px_rgba(16,185,129,0.18)]">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-cyan-500 text-xl font-black text-white">
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-[radial-gradient(circle_at_top,_rgba(37,99,235,0.24),_rgba(56,189,248,0.12)_60%,_rgba(255,255,255,0.96)_100%)] shadow-[0_18px_45px_rgba(37,99,235,0.18)]">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-blue-800 to-sky-500 text-[20px] font-black text-white">
                 OK
               </div>
             </div>
 
             <div className="space-y-2">
-              <p className="text-lg font-black text-slate-900">
+              <p className="text-[19px] font-black text-blue-950">
                 {delayedReservationSuccess.customerName}
                 {delayedReservationSuccess.subjectLabel ? " " : "'s "}
                 {delayedReservationSuccess.message || "reservation has been saved."}
               </p>
               {delayedReservationSuccess.detail || delayedReservationSuccess.hallName ? (
-                <p className="text-sm leading-6 text-slate-600">
+                <p className="text-[16px] leading-6 text-slate-600">
                   {delayedReservationSuccess.hallName ? (
-                    <span className="font-semibold text-slate-900">
+                    <span className="font-semibold text-blue-950">
                       {delayedReservationSuccess.hallName}
                     </span>
                   ) : null}
@@ -4036,7 +4160,7 @@ const Banquet = () => {
                     ? " • "
                     : ""}
                   {delayedReservationSuccess.date ? (
-                    <span className="font-semibold text-slate-900">
+                    <span className="font-semibold text-blue-950">
                       {delayedReservationSuccess.date}
                     </span>
                   ) : null}
@@ -4053,7 +4177,7 @@ const Banquet = () => {
             <button
               type="button"
               onClick={() => setReservationSuccess(null)}
-              className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-teal-600 to-emerald-500 px-6 py-3 text-sm font-bold text-white shadow-[0_16px_35px_rgba(16,185,129,0.24)] transition hover:-translate-y-0.5"
+              className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-blue-800 to-sky-500 px-6 py-3 text-[16px] font-bold text-white shadow-[0_16px_35px_rgba(37,99,235,0.28)] transition hover:-translate-y-0.5"
             >
               Continue
             </button>
@@ -4088,7 +4212,7 @@ const Banquet = () => {
           heightClass="h-[min(78vh,620px)]"
         >
             <div>
-              <div className="text-sm font-bold uppercase tracking-[0.24em] text-cyan-600">
+              <div className="text-[16px] font-bold uppercase tracking-[0.24em] text-blue-600">
                 Package Pricing
               </div>
               <div className="mt-4 max-w-xs">
@@ -4114,21 +4238,21 @@ const Banquet = () => {
                   className={inputCls}
                 />
               </div>
-              <p className="mt-5 text-base leading-7 text-slate-600">
+              <p className="mt-5 text-[17px] leading-7 text-slate-600">
                 {delayedSelectedMenuPackage.description}
               </p>
             </div>
 
             <div className="mt-6 grid gap-4 sm:grid-cols-[minmax(0,1fr)_220px]">
-              <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-5">
-                <div className="text-sm font-bold uppercase tracking-[0.18em] text-slate-500">
+              <div className="rounded-[24px] border border-blue-100 bg-blue-50/30 p-5">
+                <div className="text-[16px] font-bold uppercase tracking-[0.18em] text-slate-500">
                   Included Highlights
                 </div>
                 <div className="mt-4 space-y-3">
                   {delayedSelectedMenuPackage.highlights.map((item) => (
                     <div
                       key={item}
-                      className="rounded-2xl bg-white px-4 py-3 text-sm font-medium text-slate-700"
+                      className="rounded-2xl bg-white px-4 py-3 text-[16px] font-medium text-slate-700"
                     >
                       {item}
                     </div>
@@ -4136,21 +4260,21 @@ const Banquet = () => {
                 </div>
               </div>
 
-              <div className="rounded-[24px] border border-cyan-100 bg-[linear-gradient(180deg,#ecfeff_0%,#f8fafc_100%)] p-5">
-                <div className="text-sm font-bold uppercase tracking-[0.18em] text-cyan-700">
+              <div className="rounded-[24px] border border-blue-100 bg-[linear-gradient(180deg,#eef6ff_0%,#f8fafc_100%)] p-5">
+                <div className="text-[16px] font-bold uppercase tracking-[0.18em] text-blue-700">
                   Meal Type
                 </div>
-                <div className="mt-3 text-lg font-bold text-slate-900">
+                <div className="mt-3 text-[18px] font-bold text-blue-950">
                   {delayedSelectedMenuPackage.mealLabel}
                 </div>
-                <div className="mt-6 text-sm font-bold uppercase tracking-[0.18em] text-cyan-700">
+                <div className="mt-6 text-[16px] font-bold uppercase tracking-[0.18em] text-blue-700">
                   Available Sections
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {mealSections.map((section) => (
                     <span
                       key={section}
-                      className="rounded-full bg-white px-3 py-1.5 text-sm font-semibold text-slate-700"
+                      className="rounded-full bg-white px-3 py-1.5 text-[16px] font-semibold text-slate-700"
                     >
                       {section}
                     </span>
@@ -4165,4 +4289,3 @@ const Banquet = () => {
 };
 
 export default Banquet;
-

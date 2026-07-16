@@ -295,7 +295,7 @@ const Profile = () => {
             <FaShieldAlt />
             <span>My Account</span>
           </div>
-          <h1 className="relative mt-3 text-3xl font-black text-white sm:text-4xl lg:mt-4 lg:text-5xl 2xl:text-6xl">
+          <h1 className="relative mt-3 text-3xl font-black text-white sm:text-4xl lg:mt-4 lg:text-5xl ">
             Personal Information
           </h1>
           <p className="relative mt-2 max-w-xl text-sm font-medium text-white/90 sm:text-base lg:mt-3 lg:max-w-2xl lg:text-lg 2xl:max-w-3xl 2xl:text-xl">
