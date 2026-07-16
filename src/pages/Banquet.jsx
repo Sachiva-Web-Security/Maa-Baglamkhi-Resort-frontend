@@ -45,38 +45,57 @@ import {
   normalizeBooking,
 } from "./banquetUtils";
 
-const quickSections = [
+const BANQUET_NAV_GROUPS = [
   {
-    id: "halls",
-    label: "Banquet Halls",
-    icon: FaGlassCheers,
-    desc: "Capacity and venue overview",
+    id: "venue",
+    label: "Venue",
+    items: [
+      { id: "halls", label: "Banquet Halls", icon: FaGlassCheers, desc: "Capacity and venue overview" },
+      { id: "reservations", label: "Reservations", icon: FaCalendarAlt, desc: "Create and manage bookings" },
+    ],
   },
   {
-    id: "addons",
-    label: "Banquet Addons",
-    icon: FaLightbulb,
-    desc: "Decor, AV and event support",
+    id: "planning",
+    label: "Planning",
+    items: [
+      { id: "meals", label: "Meal Menus", icon: FaUtensils, desc: "Event meal planning" },
+      { id: "addons", label: "Banquet Addons", icon: FaLightbulb, desc: "Decor, AV and event support" },
+    ],
   },
   {
-    id: "meals",
-    label: "Meal Menus",
-    icon: FaUtensils,
-    desc: "Event meal planning",
-  },
-  {
-    id: "reservations",
-    label: "Reservations",
-    icon: FaCalendarAlt,
-    desc: "Create and manage bookings",
-  },
-  {
-    id: "settlement",
-    label: "Settlement Report",
-    icon: FaMoneyCheckAlt,
-    desc: "Revenue snapshot and bill actions",
+    id: "finance",
+    label: "Finance",
+    items: [
+      { id: "settlement", label: "Settlement Report", icon: FaMoneyCheckAlt, desc: "Revenue snapshot and bill actions" },
+    ],
   },
 ];
+
+const BANQUET_SECTIONS = BANQUET_NAV_GROUPS.flatMap((group) =>
+  group.items.map((item) => ({ ...item, groupId: group.id, groupLabel: group.label }))
+);
+
+const c = {
+  paper: "#F6F5F1",
+  line: "#E4E1D8",
+  tealDeep: "#0B4F48",
+  teal: "#0F6E64",
+  muted: "#6B6F66",
+  text: "#1C231F",
+  amber: "#C8791A",
+  rose: "#B5442E",
+};
+
+const banquteFieldCls =
+  "w-full rounded-[9px] border border-[#E4E1D8] bg-white px-3 py-2.5 text-[13.5px] font-medium text-[#1C231F] shadow-sm focus:border-[#0F6E64] focus:outline-none";
+const banquteLabelCls =
+  "mb-1.5 block text-[11.5px] font-semibold uppercase tracking-[0.04em] text-[#6B6F66]";
+const banqutePrimaryBtn =
+  "inline-flex items-center justify-center gap-1.5 rounded-[9px] px-4 py-2.5 text-[13.5px] font-semibold bg-[#0B4F48] text-white hover:bg-[#0F6E64] transition-all";
+const banquteGhostBtn =
+  "inline-flex items-center justify-center gap-1.5 rounded-[9px] px-4 py-2.5 text-[13.5px] font-semibold border border-[#E4E1D8] text-[#1C231F] hover:bg-[#F6F5F1] transition-all";
+const banquteDangerBtn =
+  "inline-flex items-center justify-center gap-1 rounded-[9px] px-2.5 py-1.5 text-[12px] font-semibold border border-[#E4E1D8] bg-[#F5DFDA] text-[#B5442E] hover:bg-[#F3D0C9] transition-all";
 
 const defaultWizard = {
   hallId: "",
@@ -366,6 +385,7 @@ const Banquet = () => {
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [selectedMenuPackage, setSelectedMenuPackage] = useState(null);
   const [activeQuickSection, setActiveQuickSection] = useState("halls");
+  const [openNavGroup, setOpenNavGroup] = useState("venue");
   const [pricingConfig, setPricingConfig] = useState(getStoredPricingConfig);
   const [menuCatalog, setMenuCatalog] = useState([]);
   const [hallFormError, setHallFormError] = useState("");
@@ -2357,361 +2377,191 @@ const Banquet = () => {
     );
   };
 
+  const activeGroupLabel = useMemo(
+    () => BANQUET_NAV_GROUPS.find((g) => g.id === openNavGroup)?.label || "Overview",
+    [openNavGroup]
+  );
+
+  const banqOverviewCards = [
+    {
+      label: "Total Events",
+      value: String(bookings.length),
+      icon: FaCalendarAlt,
+      iconTone: "bg-[#0B4F48] text-white",
+      valueTone: "text-[#0B4F48]",
+      meta: "",
+    },
+    {
+      label: "Confirmed",
+      value: String(bookings.filter((b) => b.status === "Confirmed").length),
+      icon: FaCheckCircle,
+      iconTone: "bg-[#0F6E64] text-white",
+      valueTone: "text-[#0F6E64]",
+      meta: "",
+    },
+    {
+      label: "Billed",
+      value: String(bookings.filter((b) => b.invoiceNo).length),
+      icon: FaReceipt,
+      iconTone: "bg-[#C8791A] text-white",
+      valueTone: "text-[#C8791A]",
+      meta: "",
+    },
+    {
+      label: "Available Halls",
+      value: `${halls.filter((h) => h.status === "Available").length}/${halls.length || 0}`,
+      icon: FaUsers,
+      iconTone: "bg-[#1E7A6E] text-white",
+      valueTone: "text-[#1E7A6E]",
+      meta: "Venue ready",
+    },
+  ];
+
   return (
-    <div className="relative min-h-screen w-full overflow-x-hidden bg-[linear-gradient(180deg,#f6f9ff_0%,#eef5ff_32%,#f8fbff_100%)] p-3 sm:p-6 lg:p-8">
-      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute left-[-10%] top-[-8%] h-72 w-72 rounded-full bg-sky-200/35 blur-3xl sm:h-[28rem] sm:w-[28rem]" />
-        <div className="absolute right-[-12%] top-[6%] h-72 w-72 rounded-full bg-blue-300/30 blur-3xl sm:h-[30rem] sm:w-[30rem]" />
-        <div className="absolute bottom-[12%] left-[20%] h-56 w-56 rounded-full bg-blue-100/50 blur-3xl sm:h-80 sm:w-80" />
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.7)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.7)_1px,transparent_1px)] bg-[size:72px_72px] opacity-20" />
-      </div>
-
-      <div className="w-full space-y-4 sm:space-y-6">
-        <section className="relative overflow-hidden rounded-[24px] border border-white/15 bg-gradient-to-br from-blue-950 via-blue-800 to-sky-500 px-4 py-6 shadow-[0_28px_70px_rgba(15,40,90,0.32)] sm:rounded-[32px] sm:px-8 sm:py-9">
-          <div className="pointer-events-none absolute inset-0 opacity-[0.14]">
-            <div className="absolute -right-16 -top-24 h-72 w-72 rounded-full border border-white/40" />
-            <div className="absolute -right-4 top-10 h-56 w-56 rounded-full border border-white/30" />
-            <div className="absolute bottom-[-4rem] left-[8%] h-64 w-64 rounded-full border border-white/20" />
-            <div className="absolute inset-0 bg-[linear-gradient(120deg,transparent_0%,rgba(255,255,255,0.06)_45%,transparent_60%)]" />
-          </div>
-          <div className="relative grid gap-6 sm:gap-7 xl:grid-cols-[minmax(0,1.35fr)_minmax(340px,1fr)] xl:items-start">
-            <div className="space-y-4">
-              <p className="text-[13px] font-bold uppercase tracking-[0.32em] text-sky-200 sm:text-[15px]">
-                Dashboard
-              </p>
-              <div className="space-y-2">
-                <h1 className="text-[28px] font-black leading-tight text-white sm:text-[38px]">
-                  Banquet operations dashboard
-                </h1>
-                {/* <p className="max-w-3xl text-[18px] font-medium leading-7 text-blue-50 sm:text-[20px]">
-                  Reservation activity, hall readiness, menu pricing, and billing actions are
-                  shown in a clean workspace so the team can scan information faster.
-                </p> */}
+    <div className="relative min-h-screen w-full overflow-x-hidden bg-[linear-gradient(135deg,#f4f8ff_0%,#eef6f8_30%,#fff9f0_66%,#f8fafc_100%)] p-3 sm:p-5">
+      <div className="space-y-4 sm:space-y-5">
+        {/* Header Strip */}
+        <section className="overflow-hidden rounded-[28px] border border-[#c7cbff] bg-white p-2 shadow-[0_22px_50px_rgba(15,23,42,0.1)]">
+          <div className="rounded-[22px] bg-[linear-gradient(90deg,#17315c_0%,#224f94_60%,#2d67cb_100%)] px-4 py-4 text-white">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex min-w-0 items-center gap-3">
+                <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/10">
+                  <FaGlassCheers size={18} />
+                </span>
+                <div className="min-w-0">
+                  <div className="font-bold text-white text-[22px] leading-[1.15] sm:text-[34px]">Banquet Management</div>
+                  <div className="text-[14px] text-blue-100/85 sm:text-[16px]">{activeGroupLabel} workspace with live overview</div>
+                </div>
               </div>
-              <div className="flex flex-wrap items-center gap-2 pt-1">
-                <button
-                  type="button"
-                  onClick={() => window.location.reload()}
-                  className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 text-[15px] font-bold text-blue-900 shadow-[0_12px_28px_rgba(15,23,42,0.2)] transition duration-300 hover:-translate-y-0.5 hover:bg-sky-400 hover:text-white hover:shadow-[0_16px_34px_rgba(56,189,248,0.35)] sm:px-4 sm:py-2.5 sm:text-[17px]"
-                >
-                  <FaSyncAlt />
-                  Refresh
-                </button>
-                <button
-                  type="button"
-                  onClick={openAddHallForm}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-2 text-[15px] font-bold text-white backdrop-blur-sm transition duration-300 hover:-translate-y-0.5 hover:border-sky-200 hover:bg-white hover:text-blue-800 hover:shadow-[0_16px_34px_rgba(56,189,248,0.3)] sm:px-4 sm:py-2.5 sm:text-[17px]"
-                >
-                  <FaPlus />
-                  Add hall
-                </button>
-                <button
-                  type="button"
-                  onClick={openCreateReservationForm}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-2 text-[15px] font-bold text-white backdrop-blur-sm transition duration-300 hover:-translate-y-0.5 hover:border-sky-200 hover:bg-white hover:text-blue-800 hover:shadow-[0_16px_34px_rgba(56,189,248,0.3)] sm:px-4 sm:py-2.5 sm:text-[17px]"
-                >
-                  <FaPlus />
-                  New reservation
-                </button>
-                {quickSections.map((section) => {
-                  const Icon = section.icon;
-
+              <div className="flex flex-wrap items-center gap-2">
+                {BANQUET_NAV_GROUPS.map((group) => {
+                  const active = group.id === openNavGroup;
                   return (
                     <button
-                      key={section.id}
+                      key={group.id}
                       type="button"
-                      onClick={() => setActiveQuickSection(section.id)}
-                      className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-2 text-[15px] font-bold text-white backdrop-blur-sm transition duration-300 hover:-translate-y-0.5 hover:border-sky-200 hover:bg-white hover:text-blue-800 hover:shadow-[0_16px_34px_rgba(56,189,248,0.3)] sm:px-4 sm:py-2.5 sm:text-[17px]"
+                      onClick={() => setOpenNavGroup(group.id)}
+                      className={`rounded-full px-4 py-2 text-[13px] font-medium transition sm:text-[15px] ${active ? "bg-white text-slate-950 shadow-[0_10px_30px_rgba(15,23,42,0.2)]" : "bg-white/8 text-blue-100 hover:bg-white/14"}`}
                     >
-                      <Icon />
-                      {section.label}
+                      {group.label}
                     </button>
                   );
                 })}
               </div>
             </div>
-
-            <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-              {stats.map((item, index) => {
-                const Icon = statIcons[index] || FaReceipt;
-                return (
-                <div
-                  key={item.label}
-                  className="group rounded-[20px] border border-white/20 bg-white/10 p-3 shadow-[0_12px_28px_rgba(15,40,90,0.18)] backdrop-blur-md transition duration-300 hover:-translate-y-1 hover:border-sky-200/60 hover:bg-white/15 sm:rounded-[24px] sm:p-4"
-                >
-                  <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-white/15 text-[18px] text-white transition duration-300 group-hover:bg-sky-400 group-hover:text-white sm:h-11 sm:w-11 sm:text-[20px]">
-                    <Icon />
-                  </div>
-                  <div className="mt-3 text-[13px] font-bold uppercase tracking-[0.16em] text-blue-100 sm:text-[16px]">
-                    {item.label}
-                  </div>
-                  <div className="mt-2 text-[28px] font-black leading-none text-white sm:text-[38px] xl:text-[42px]">
-                    {item.value}
-                  </div>
-                  <div className="mt-2 h-1.5 w-12 rounded-full bg-sky-300" />
-                </div>
-              );})}
-            </div>
-          </div>
-        </section>
-
-        <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px]">
-          <form
-            onSubmit={(event) => {
-              event.preventDefault();
-              setBookingFilters({ ...bookingFiltersDraft });
-              setBookingPage(1);
-            }}
-            className="rounded-[22px] border border-white/70 bg-white/95 p-4 shadow-[0_20px_50px_rgba(30,64,175,0.1)] backdrop-blur-xl sm:rounded-[28px] sm:p-6"
-          >
-            <div className="flex flex-col gap-4">
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <div>
-                  <p className="text-[15px] font-bold uppercase tracking-[0.24em] text-sky-500">
-                    Filters
-                  </p>
-                  <h2 className="mt-1 text-[26px] font-black text-blue-950 sm:text-[30px] lg:text-[32px]">
-                    Search banquet reservations
-                  </h2>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setBookingFiltersDraft({ ...bookingFilterDefaults });
-                      setBookingFilters({ ...bookingFilterDefaults });
-                      setBookingPage(1);
-                    }}
-                    className="rounded-full border border-blue-100 bg-white px-4 py-2 text-[15px] font-bold text-slate-600 transition hover:border-blue-300 sm:text-[17px]"
-                  >
-                    Clear
-                  </button>
-                  <button
-                    type="submit"
-                    className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-blue-800 to-sky-500 px-4 py-2 text-[15px] font-bold text-white shadow-[0_12px_30px_rgba(37,99,235,0.28)] transition hover:-translate-y-0.5 sm:text-[17px]"
-                  >
-                    <FaFilter />
-                    Apply Filters
-                  </button>
-                </div>
-              </div>
-
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                <label className="relative block sm:col-span-2 lg:col-span-1">
-                  <FaSearch className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[15px] text-sky-500" />
-                  <input
-                    value={bookingFiltersDraft.search}
-                    onChange={(event) =>
-                      setBookingFiltersDraft((prev) => ({
-                        ...prev,
-                        search: event.target.value,
-                      }))
-                    }
-                    placeholder="Search guest, hall, email, invoice"
-                    className={`${inputCls} pl-11`}
-                  />
-                </label>
-
-                <select
-                  value={bookingFiltersDraft.eventType}
-                  onChange={(event) =>
-                    setBookingFiltersDraft((prev) => ({
-                      ...prev,
-                      eventType: event.target.value,
-                    }))
-                  }
-                  className={inputCls}
-                >
-                  <option value="all">All event types</option>
-                  {eventTypeOptions.map((eventType) => (
-                    <option key={eventType} value={eventType}>
-                      {eventType}
-                    </option>
-                  ))}
-                </select>
-
-                <select
-                  value={bookingFiltersDraft.status}
-                  onChange={(event) =>
-                    setBookingFiltersDraft((prev) => ({
-                      ...prev,
-                      status: event.target.value,
-                    }))
-                  }
-                  className={inputCls}
-                >
-                  <option value="all">All statuses</option>
-                  {["Confirmed", "Completed", "Billed", "Cancelled", "Refunded"].map(
-                    (status) => (
-                      <option key={status} value={status}>
-                        {status}
-                      </option>
-                    )
-                  )}
-                </select>
-
-                <label className="relative block">
-                  <FaCalendarAlt className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[15px] text-sky-500" />
-                  <input
-                    type="date"
-                    value={bookingFiltersDraft.dateFrom}
-                    onChange={(event) =>
-                      setBookingFiltersDraft((prev) => ({
-                        ...prev,
-                        dateFrom: event.target.value,
-                      }))
-                    }
-                    className={`${inputCls} pl-11`}
-                  />
-                </label>
-
-                <label className="relative block">
-                  <FaCalendarAlt className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[15px] text-sky-500" />
-                  <input
-                    type="date"
-                    value={bookingFiltersDraft.dateTo}
-                    onChange={(event) =>
-                      setBookingFiltersDraft((prev) => ({
-                        ...prev,
-                        dateTo: event.target.value,
-                      }))
-                    }
-                    className={`${inputCls} pl-11`}
-                  />
-                </label>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                <div className="rounded-[18px] border border-blue-100 bg-blue-50/50 px-3 py-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:rounded-[20px] sm:px-4 sm:py-4">
-                  <div className="flex items-center gap-2 text-[13px] font-bold uppercase tracking-[0.14em] text-slate-500 sm:text-[16px]">
-                    <FaSearch className="text-blue-500" />
-                    Visible Results
-                  </div>
-                  <div className="mt-2 text-[22px] font-black text-blue-950 sm:text-[30px]">
-                    {filteredBookings.length}
-                  </div>
-                </div>
-                <div className="rounded-[18px] border border-blue-100 bg-emerald-50/50 px-3 py-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:rounded-[20px] sm:px-4 sm:py-4">
-                  <div className="flex items-center gap-2 text-[13px] font-bold uppercase tracking-[0.14em] text-slate-500 sm:text-[16px]">
-                    <FaGlassCheers className="text-emerald-600" />
-                    Available Halls
-                  </div>
-                  <div className="mt-2 text-[22px] font-black text-blue-950 sm:text-[30px]">
-                    {halls.filter((hall) => hall.status === "Available").length}
-                  </div>
-                </div>
-                <div className="rounded-[18px] border border-blue-100 bg-violet-50/50 px-3 py-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:rounded-[20px] sm:px-4 sm:py-4 col-span-2 sm:col-span-1">
-                  <div className="flex items-center gap-2 text-[13px] font-bold uppercase tracking-[0.14em] text-slate-500 sm:text-[16px]">
-                    <FaReceipt className="text-violet-600" />
-                    Draft Estimate
-                  </div>
-                  <div className="mt-2 text-[22px] font-black text-blue-950 sm:text-[30px]">
-                    {formatINR(wizardTotals.grandTotal)}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </form>
-
-          <aside className="rounded-[22px] border border-white/70 bg-white/95 p-4 shadow-[0_20px_50px_rgba(30,64,175,0.1)] backdrop-blur-xl sm:rounded-[28px] sm:p-6">
-            <div className="mb-4">
-              <p className="text-[15px] font-bold uppercase tracking-[0.24em] text-amber-500">
-                Snapshot
-              </p>
-              <h2 className="mt-1 text-[26px] font-black text-blue-950 sm:text-[30px] xl:text-[32px]">
-                Live banquet health
-              </h2>
-            </div>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-1">
-              {healthSnapshot.map((card) => {
+            <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+              {banqOverviewCards.map((card) => {
                 const Icon = card.icon;
-
                 return (
-                  <div
-                    key={card.label}
-                    className={`rounded-[18px] border px-4 py-4 shadow-sm transition duration-300 hover:-translate-y-0.5 hover:shadow-md sm:rounded-[20px] ${card.tone}`}
-                  >
-                    <div className={`inline-flex items-center gap-2 text-[15px] font-bold sm:text-[16px] ${card.iconTone}`}>
-                      <Icon />
-                      {card.label}
+                  <div key={card.label} className={`rounded-[22px] border border-white/10 bg-white/95 p-3 shadow-[0_14px_26px_rgba(15,23,42,0.10)]`}>
+                    <div className="flex items-start justify-between gap-3">
+                      <span className={`inline-flex h-[56px] w-[56px] items-center justify-center rounded-[18px] ${card.iconTone}`}>
+                        <Icon size={24} />
+                      </span>
+                      {card.meta ? (
+                        <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-emerald-600">{card.meta}</span>
+                      ) : null}
                     </div>
-                    <div className="mt-3 text-[26px] font-black leading-none sm:text-[30px]">
-                      {card.value}
-                    </div>
-                    <div className="mt-2 text-[15px] font-medium leading-6 opacity-80 sm:text-[17px]">
-                      {card.note}
-                    </div>
+                    <div className="mt-3 text-[13px] text-[#6B6F66] sm:text-[15px]">{card.label}</div>
+                    <div className={`mt-2 font-bold leading-none text-[28px] sm:text-[34px] ${card.valueTone}`}>{card.value}</div>
                   </div>
                 );
               })}
             </div>
-          </aside>
+          </div>
         </section>
 
-        {activeQuickSection ? (
-          <section className="rounded-[22px] border border-white/70 bg-white/95 p-4 shadow-[0_20px_50px_rgba(30,64,175,0.1)] backdrop-blur-xl sm:rounded-[28px] sm:p-6">
-            <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-[15px] font-bold uppercase tracking-[0.24em] text-sky-500">
-                  Section Preview
-                </p>
-                <h2 className="mt-1 text-[26px] font-black text-blue-950 sm:text-[32px] lg:text-[34px]">
-                  Banquet Quick View
-                </h2>
-              </div>
-              <button
-                type="button"
-                onClick={() => setActiveQuickSection(null)}
-                className={modalCloseBtnCls}
-              >
-                Close
-              </button>
-            </div>
-            {renderQuickSectionModal()}
-          </section>
+        {/* Dropdown navigation */}
+        {openNavGroup ? (
+          <div className="flex flex-wrap items-center gap-2 px-1">
+            {(() => {
+              const group = BANQUET_NAV_GROUPS.find((entry) => entry.id === openNavGroup);
+              if (!group) return null;
+              return group.items.map((item) => {
+                const active = activeQuickSection === item.id;
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setActiveQuickSection(item.id)}
+                    className={`inline-flex min-h-[50px] cursor-pointer items-center gap-2.5 rounded-full border px-5 py-2.5 text-left text-[15px] font-semibold transition ${
+                      active
+                        ? "border-transparent bg-[linear-gradient(135deg,#0B4F48_0%,#0F6E64_100%)] text-white shadow-[0_12px_24px_rgba(11,79,72,0.18)]"
+                        : "border-[#E4E1D8] bg-white text-[#1C231F] hover:border-[#0F6E64] hover:bg-[#F6F5F1]"
+                    }`}
+                  >
+                    <span className={`inline-flex h-8 w-8 items-center justify-center rounded-full ${active ? "bg-white/18 text-white" : "bg-[#F6F5F1] text-[#6B6F66]"}`}>
+                      <Icon size={14} />
+                    </span>
+                    <span className="truncate whitespace-nowrap">{item.label}</span>
+                  </button>
+                );
+              });
+            })()}
+          </div>
         ) : null}
+
+        {/* Section content */}
+        <main className="min-w-0">
+          <div className="rounded-[22px] border border-white/70 bg-white/95 p-4 shadow-[0_20px_50px_rgba(30,64,175,0.1)] backdrop-blur-xl sm:rounded-[28px] sm:p-6">
+            {activeQuickSection ? (
+              <div>
+                <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-[13px] font-bold uppercase tracking-[0.12em] text-[#6B6F66]">Section Preview</p>
+                    <h2 className="mt-1 text-[22px] font-bold text-[#1C231F] sm:text-[26px]">
+                      {BANQUET_SECTIONS.find((s) => s.id === activeQuickSection)?.label || "Quick View"}
+                    </h2>
+                  </div>
+                  <button type="button" onClick={() => setActiveQuickSection(null)} className={banquteGhostBtn}>Close</button>
+                </div>
+                {renderQuickSectionModal()}
+              </div>
+            ) : (
+              <div>
+                <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+                  <div>
+                    <p className="text-[13px] font-bold uppercase tracking-[0.12em] text-[#0B4F48]">Reservation Ledger</p>
+                    <h2 className="mt-1 text-[22px] font-bold text-[#1C231F] sm:text-[28px] lg:text-[30px]">
+                      Manage banquet reservations
+                    </h2>
+                    <p className="mt-1 text-[13px] text-[#6B6F66] sm:text-[15px]">
+                      Showing {paginatedBookings.length} of {filteredBookings.length} reservations{hasAppliedBookingFilters ? " (filtered)" : ""}.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={openCreateReservationForm}
+                    className={banqutePrimaryBtn}
+                  >
+                    <FaPlus className="text-sm" />
+                    Add New
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </main>
 
         <section
           id="reservation-section"
           className="rounded-[22px] border border-white/70 bg-white/95 p-4 shadow-[0_20px_50px_rgba(30,64,175,0.1)] backdrop-blur-xl sm:rounded-[28px] sm:p-6"
         >
-          <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <p className="text-[15px] font-bold uppercase tracking-[0.24em] text-sky-500">
-                Reservation Ledger
-              </p>
-              <h2 className="mt-1 text-[26px] font-black text-blue-950 sm:text-[30px] lg:text-[32px]">
-                Manage banquet reservations
-              </h2>
-              <p className="mt-2 text-[15px] font-medium text-slate-600 sm:text-[17px]">
-                Showing {paginatedBookings.length} of {filteredBookings.length} filtered
-                reservations{hasAppliedBookingFilters ? " with active filters." : "."}
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={openCreateReservationForm}
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-blue-800 to-sky-500 px-4 py-2.5 text-[16px] font-bold text-white shadow-[0_12px_30px_rgba(37,99,235,0.28)] transition hover:-translate-y-0.5 sm:text-[17px]"
-            >
-              <FaPlus />
-              Add New
-            </button>
-          </div>
-
           <div className="hidden overflow-x-auto lg:block">
             {filteredBookings.length ? (
-              <table className="min-w-full overflow-hidden rounded-[22px] border border-blue-100 bg-white">
-                <thead className="bg-[linear-gradient(180deg,#f4f9ff_0%,#e8f1ff_100%)] text-left text-[16px] uppercase tracking-[0.16em] text-slate-500">
+              <table className="min-w-full overflow-hidden rounded-[22px] border border-[#E4E1D8] bg-white">
+                <thead className="bg-[linear-gradient(180deg,#f4f9ff_0%,#e8f1ff_100%)] text-left text-[14px] uppercase tracking-[0.1em] text-[#6B6F66]">
                   <tr>
-                    <th className="px-4 py-4">Guest</th>
-                    <th className="px-4 py-4">Event</th>
-                    <th className="px-4 py-4">Hall</th>
-                    <th className="px-4 py-4">Slot</th>
-                    <th className="px-4 py-4">Payment</th>
-                    <th className="px-4 py-4">Status</th>
-                    <th className="px-4 py-4">Menu</th>
-                    <th className="px-4 py-4">Invoice</th>
-                    <th className="px-4 py-4">Actions</th>
+                    <th className="px-3 py-3 text-[#6B6F66]">Guest</th>
+                    <th className="px-3 py-3 text-[#6B6F66]">Event</th>
+                    <th className="px-3 py-3 text-[#6B6F66]">Hall</th>
+                    <th className="px-3 py-3 text-[#6B6F66]">Slot</th>
+                    <th className="px-3 py-3 text-[#6B6F66]">Payment</th>
+                    <th className="px-3 py-3 text-[#6B6F66]">Status</th>
+                    <th className="px-3 py-3 text-[#6B6F66]">Menu</th>
+                    <th className="px-3 py-3 text-[#6B6F66]">Invoice</th>
+                    <th className="px-3 py-3 text-[#6B6F66]">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
