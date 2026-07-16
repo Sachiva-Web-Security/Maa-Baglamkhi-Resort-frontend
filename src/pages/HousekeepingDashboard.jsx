@@ -5,6 +5,7 @@ import {
   FaClipboardList,
   FaTasks,
   FaUserClock,
+  FaArrowRight,
 } from "react-icons/fa";
 
 import useDashboardAutoRefresh from "../hooks/useDashboardAutoRefresh";
@@ -187,84 +188,107 @@ const HousekeepingDashboard = () => {
       .sort((a, b) => String(a.roomNo).localeCompare(String(b.roomNo), undefined, { numeric: true }));
   }, [rooms]);
 
-  // -- render helpers --
+  // ─── Premium Inner Components ───
 
-  const StatCard = ({ label, value, note, icon: Icon, tone }) => (
-    <div className="rounded-[24px] border border-white/60 bg-white/88 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{label}</div>
-          <div className="mt-3 text-3xl font-black text-slate-900">{value ?? fallback}</div>
-          <div className="mt-2 text-sm text-slate-500">{note}</div>
-        </div>
-        <span className={`rounded-2xl border p-3 ${
-          tone === "emerald" ? "border-emerald-200 bg-emerald-50 text-emerald-700" :
-          tone === "rose" ? "border-rose-200 bg-rose-50 text-rose-700" :
-          tone === "amber" ? "border-amber-200 bg-amber-50 text-amber-700" :
-          tone === "cyan" ? "border-cyan-200 bg-cyan-50 text-cyan-700" :
-          "border-slate-200 bg-slate-50 text-slate-600"
-        }`}>
-          {Icon ? <Icon /> : null}
-        </span>
-      </div>
+  const GlassStatCard = ({ label, value }) => (
+    <div className="rounded-2xl bg-white/[0.08] backdrop-blur-xl border border-white/20 p-4 shadow-lg">
+      <span className="text-[11px] font-semibold text-white/70">{label}</span>
+      <div className="mt-2 text-[28px] font-bold text-white leading-none">{value ?? "--"}</div>
     </div>
   );
 
-  const InsightCard = ({ label, value, note }) => (
-    <div className="rounded-[22px] border border-slate-200/80 bg-slate-50 px-4 py-4">
-      <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-        {label}
+  const StatCard = ({ label, value, note, icon: Icon, tone }) => {
+    const toneConfig = {
+      emerald: { border: "border-l-emerald-500", bg: "bg-emerald-50", text: "text-emerald-600", shadow: "hover:shadow-emerald-500/10" },
+      rose: { border: "border-l-rose-500", bg: "bg-rose-50", text: "text-rose-600", shadow: "hover:shadow-rose-500/10" },
+      amber: { border: "border-l-amber-500", bg: "bg-amber-50", text: "text-amber-600", shadow: "hover:shadow-amber-500/10" },
+      cyan: { border: "border-l-cyan-500", bg: "bg-cyan-50", text: "text-cyan-600", shadow: "hover:shadow-cyan-500/10" },
+      violet: { border: "border-l-violet-500", bg: "bg-violet-50", text: "text-violet-600", shadow: "hover:shadow-violet-500/10" },
+    };
+    const t = toneConfig[tone] || toneConfig.emerald;
+    return (
+      <div className={`rounded-[24px] bg-white border-l-[4px] ${t.border} border border-slate-100 p-6 shadow-lg ${t.shadow} hover:-translate-y-1 hover:shadow-xl transition-all duration-300`}>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">{label}</p>
+            <p className="mt-3 text-[40px] sm:text-[42px] font-black text-slate-900 leading-none">{value ?? "--"}</p>
+            <p className="mt-2 text-[17px] text-slate-500">{note}</p>
+          </div>
+          <div className={`w-12 h-12 rounded-2xl ${t.bg} flex items-center justify-center ${t.text} flex-shrink-0`}>
+            <Icon className="w-5 h-5" />
+          </div>
+        </div>
       </div>
-      <div className="mt-2 text-2xl font-black text-slate-900">{value ?? fallback}</div>
-      <div className="mt-2 text-sm text-slate-500">{note}</div>
+    );
+  };
+
+  const InsightCard = ({ label, value, note }) => (
+    <div className="rounded-[22px] bg-slate-50 border border-slate-100 p-5 hover:shadow-md transition-shadow">
+      <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">{label}</p>
+      <p className="mt-3 text-[34px] sm:text-[38px] font-black text-slate-900 leading-none">{value ?? "--"}</p>
+      <p className="mt-2 text-[17px] text-slate-500">{note}</p>
+    </div>
+  );
+
+  const PremiumTableWrapper = ({ sectionLabel, sectionLabelColor, title, description, countLabel, count, accentColor, children }) => (
+    <div className="rounded-[24px] bg-white shadow-lg border border-slate-100 overflow-hidden">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 px-5 sm:px-6 py-5">
+        <div>
+          <div className={`text-[10px] font-bold uppercase tracking-[0.24em] ${sectionLabelColor}`}>{sectionLabel}</div>
+          <h2 className="mt-1.5 text-[22px] sm:text-[24px] font-bold text-slate-900">{title}</h2>
+          <p className="mt-1 text-[17px] text-slate-500">{description}</p>
+        </div>
+        <div className={`rounded-full px-4 py-2 text-[15px] font-bold whitespace-nowrap self-start sm:self-auto ${
+          accentColor === "emerald"
+            ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
+            : "bg-slate-100 text-slate-600"
+        }`}>
+          {count} {countLabel}
+        </div>
+      </div>
+      {children}
     </div>
   );
 
   const AssignmentTable = () => (
-    <div className="rounded-[26px] border border-white/60 bg-white/88 shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-slate-200/80 px-5 py-4">
-        <div>
-          <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
-            Room Assignments
-          </div>
-          <h2 className="mt-1 text-xl font-bold text-slate-900">Full Assignment List</h2>
-          <p className="mt-1 text-sm text-slate-500">
-            Kisko room assign hua, room type, duration, assigned by, aur real status.
-          </p>
-        </div>
-        <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-600 whitespace-nowrap">
-          {assignmentEntries.length} rooms
-        </div>
-      </div>
+    <PremiumTableWrapper
+      sectionLabel="Room Assignments"
+      sectionLabelColor="text-blue-500"
+      title="Full Assignment List"
+      description="Kisko room assign hua, room type, duration, assigned by, aur real status."
+      countLabel="rooms"
+      count={assignmentEntries.length}
+      accentColor="slate"
+    >
       <div className="overflow-x-auto">
-        <table className="min-w-full text-left">
-          <thead className="bg-slate-50 text-xs uppercase tracking-[0.18em] text-slate-500">
-            <tr>
-              <th className="px-4 py-3.5 font-semibold whitespace-nowrap">Room No</th>
-              <th className="px-4 py-3.5 font-semibold whitespace-nowrap">Room Type</th>
-              <th className="px-4 py-3.5 font-semibold whitespace-nowrap">Assigned To (Housekeeper)</th>
-              <th className="px-4 py-3.5 font-semibold whitespace-nowrap">Assigned By</th>
-              <th className="px-4 py-3.5 font-semibold whitespace-nowrap">Task</th>
-              <th className="px-4 py-3.5 font-semibold whitespace-nowrap">Duration Given</th>
-              <th className="px-4 py-3.5 font-semibold whitespace-nowrap">Time Remaining</th>
-              <th className="px-4 py-3.5 font-semibold whitespace-nowrap">Real Status</th>
+        <table className="w-full min-w-[900px]">
+          <thead>
+            <tr className="bg-slate-50/80">
+              <th className="px-5 py-4 text-left text-[15px] sm:text-[16px] font-semibold uppercase tracking-[0.15em] text-slate-500">Room No</th>
+              <th className="px-5 py-4 text-left text-[15px] sm:text-[16px] font-semibold uppercase tracking-[0.15em] text-slate-500">Room Type</th>
+              <th className="px-5 py-4 text-left text-[15px] sm:text-[16px] font-semibold uppercase tracking-[0.15em] text-slate-500">Assigned To (Housekeeper)</th>
+              <th className="px-5 py-4 text-left text-[15px] sm:text-[16px] font-semibold uppercase tracking-[0.15em] text-slate-500">Assigned By</th>
+              <th className="px-5 py-4 text-left text-[15px] sm:text-[16px] font-semibold uppercase tracking-[0.15em] text-slate-500">Task</th>
+              <th className="px-5 py-4 text-left text-[15px] sm:text-[16px] font-semibold uppercase tracking-[0.15em] text-slate-500">Duration Given</th>
+              <th className="px-5 py-4 text-left text-[15px] sm:text-[16px] font-semibold uppercase tracking-[0.15em] text-slate-500">Time Remaining</th>
+              <th className="px-5 py-4 text-left text-[15px] sm:text-[16px] font-semibold uppercase tracking-[0.15em] text-slate-500">Real Status</th>
             </tr>
           </thead>
           <tbody>
             {assignmentEntries.length ? (
               assignmentEntries.map((row, index) => (
-                <tr key={row.id || index} className="border-t border-slate-200/80 hover:bg-slate-50/80 transition">
-                  <td className="px-4 py-3.5 text-sm font-bold text-slate-900 whitespace-nowrap">{row.roomNo}</td>
-                  <td className="px-4 py-3.5 text-sm text-slate-700 whitespace-nowrap">{row.roomType}</td>
-                  <td className="px-4 py-3.5 text-sm text-slate-700 whitespace-nowrap">{row.assignedTo}</td>
-                  <td className="px-4 py-3.5 text-sm text-slate-700 whitespace-nowrap">{row.assignedBy}</td>
-                  <td className="px-4 py-3.5 text-sm text-slate-700 whitespace-nowrap">{row.taskLabel}</td>
-                  <td className="px-4 py-3.5 text-sm text-slate-700 whitespace-nowrap">{row.duration}</td>
-                  <td className="px-4 py-3.5 text-sm whitespace-nowrap">
+                <tr key={row.id || index} className="border-t border-slate-100 hover:bg-blue-50/60 transition-colors">
+                  <td className="px-5 py-4 text-[17px] font-bold text-slate-900 whitespace-nowrap">{row.roomNo}</td>
+                  <td className="px-5 py-4 text-[17px] text-slate-700 whitespace-nowrap">{row.roomType}</td>
+                  <td className="px-5 py-4 text-[17px] text-slate-700 whitespace-nowrap">{row.assignedTo}</td>
+                  <td className="px-5 py-4 text-[17px] text-slate-700 whitespace-nowrap">{row.assignedBy}</td>
+                  <td className="px-5 py-4 text-[17px] text-slate-700 whitespace-nowrap">{row.taskLabel}</td>
+                  <td className="px-5 py-4 text-[17px] text-slate-700 whitespace-nowrap">{row.duration}</td>
+                  <td className="px-5 py-4 text-[17px] whitespace-nowrap">
                     {row.timeLeft ? <span className={row.timeLeft.cls}>{row.timeLeft.text}</span> : fallback}
                   </td>
-                  <td className="px-4 py-3.5 whitespace-nowrap">
-                    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${row.statusPill.cls}`}>
+                  <td className="px-5 py-4 whitespace-nowrap">
+                    <span className={`inline-flex items-center rounded-full px-3 py-1.5 text-[15px] font-medium ${row.statusPill.cls}`}>
                       {row.statusPill.label}
                     </span>
                   </td>
@@ -272,189 +296,226 @@ const HousekeepingDashboard = () => {
               ))
             ) : (
               <tr>
-                <td colSpan={8} className="px-5 py-12 text-center text-sm font-semibold text-slate-500">
-                  No room assignments found.
+                <td colSpan={8} className="px-5 py-16 text-center">
+                  <div className="flex flex-col items-center gap-3">
+                    <FaClipboardList className="w-12 h-12 text-slate-300" />
+                    <p className="text-[20px] sm:text-[22px] font-bold text-slate-500">No room assignments found.</p>
+                    <p className="text-[17px] text-slate-400">Assignments will appear here once rooms are mapped to housekeepers.</p>
+                  </div>
                 </td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
-    </div>
+    </PremiumTableWrapper>
   );
 
   const CheckoutTable = () => (
-    <div className="rounded-[26px] border border-white/60 bg-white/88 shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-slate-200/80 px-5 py-4">
-        <div>
-          <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-400">
-            Checkout Availability
-          </div>
-          <h2 className="mt-1 text-xl font-bold text-slate-900">
-            Rooms Ready for New Booking
-          </h2>
-          <p className="mt-1 text-sm text-slate-500">
-            Cleaned rooms jo abhi book nahi hue — checkout ke baad naye guest ke liye taiyaar.
-          </p>
-        </div>
-        <div className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 whitespace-nowrap">
-          {checkoutReadyRooms.length} rooms
-        </div>
-      </div>
+    <PremiumTableWrapper
+      sectionLabel="Checkout Availability"
+      sectionLabelColor="text-emerald-500"
+      title="Rooms Ready for New Booking"
+      description="Cleaned rooms jo abhi book nahi hue — checkout ke baad naye guest ke liye taiyaar."
+      countLabel="rooms"
+      count={checkoutReadyRooms.length}
+      accentColor="emerald"
+    >
       <div className="overflow-x-auto">
-        <table className="min-w-full text-left">
-          <thead className="bg-slate-50 text-xs uppercase tracking-[0.18em] text-slate-500">
-            <tr>
-              <th className="px-4 py-3.5 font-semibold">Room No</th>
-              <th className="px-4 py-3.5 font-semibold">Room Type</th>
-              <th className="px-4 py-3.5 font-semibold">Floor</th>
-              <th className="px-4 py-3.5 font-semibold">Status</th>
-              <th className="px-4 py-3.5 font-semibold">Last Assignee</th>
+        <table className="w-full min-w-[640px]">
+          <thead>
+            <tr className="bg-slate-50/80">
+              <th className="px-5 py-4 text-left text-[15px] sm:text-[16px] font-semibold uppercase tracking-[0.15em] text-slate-500">Room No</th>
+              <th className="px-5 py-4 text-left text-[15px] sm:text-[16px] font-semibold uppercase tracking-[0.15em] text-slate-500">Room Type</th>
+              <th className="px-5 py-4 text-left text-[15px] sm:text-[16px] font-semibold uppercase tracking-[0.15em] text-slate-500">Floor</th>
+              <th className="px-5 py-4 text-left text-[15px] sm:text-[16px] font-semibold uppercase tracking-[0.15em] text-slate-500">Status</th>
+              <th className="px-5 py-4 text-left text-[15px] sm:text-[16px] font-semibold uppercase tracking-[0.15em] text-slate-500">Last Assignee</th>
             </tr>
           </thead>
           <tbody>
             {checkoutReadyRooms.length ? (
               checkoutReadyRooms.map((row, index) => (
-                <tr key={row.id || index} className="border-t border-slate-200/80 hover:bg-emerald-50/40 transition">
-                  <td className="px-4 py-3.5 text-sm font-bold text-slate-900">{row.roomNo}</td>
-                  <td className="px-4 py-3.5 text-sm text-slate-700">{row.roomType}</td>
-                  <td className="px-4 py-3.5 text-sm text-slate-700">{row.floor}</td>
-                  <td className="px-4 py-3.5">
-                    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${row.statusPill.cls}`}>
+                <tr key={row.id || index} className="border-t border-slate-100 hover:bg-emerald-50/40 transition-colors">
+                  <td className="px-5 py-4 text-[17px] font-bold text-slate-900">{row.roomNo}</td>
+                  <td className="px-5 py-4 text-[17px] text-slate-700">{row.roomType}</td>
+                  <td className="px-5 py-4 text-[17px] text-slate-700">{row.floor}</td>
+                  <td className="px-5 py-4">
+                    <span className={`inline-flex items-center rounded-full px-3 py-1.5 text-[15px] font-medium ${row.statusPill.cls}`}>
                       {row.statusPill.label}
                     </span>
                   </td>
-                  <td className="px-4 py-3.5 text-sm text-slate-700">{row.assignee}</td>
+                  <td className="px-5 py-4 text-[17px] text-slate-700">{row.assignee}</td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={5} className="px-5 py-12 text-center text-sm font-semibold text-slate-500">
-                  No rooms currently available for checkout.
+                <td colSpan={5} className="px-5 py-16 text-center">
+                  <div className="flex flex-col items-center gap-3">
+                    <FaCheckCircle className="w-12 h-12 text-slate-300" />
+                    <p className="text-[20px] sm:text-[22px] font-bold text-slate-500">No rooms currently available for checkout.</p>
+                    <p className="text-[17px] text-slate-400">Clean rooms ready for new bookings will appear here.</p>
+                  </div>
                 </td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
-    </div>
+    </PremiumTableWrapper>
   );
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-[linear-gradient(135deg,#f5fbff_0%,#f3f8f4_28%,#fff8f1_58%,#f8fafc_100%)] p-4 sm:p-6 lg:p-8">
-      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute left-[-8%] top-[-6%] h-72 w-72 rounded-full bg-cyan-200/45 blur-3xl sm:h-96 sm:w-96" />
-        <div className="absolute right-[-10%] top-[8%] h-72 w-72 rounded-full bg-amber-200/45 blur-3xl sm:h-[28rem] sm:w-[28rem]" />
-        <div className="absolute bottom-[18%] left-[18%] h-56 w-56 rounded-full bg-emerald-200/30 blur-3xl sm:h-80 sm:w-80" />
+    <>
+      <style>{`
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(14px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-up {
+          opacity: 0;
+          animation: fadeInUp 0.6s ease-out forwards;
+        }
+        .delay-100 { animation-delay: 0.1s; }
+        .delay-200 { animation-delay: 0.2s; }
+        .delay-300 { animation-delay: 0.3s; }
+        .delay-400 { animation-delay: 0.4s; }
+      `}</style>
+
+      <div className="min-h-screen bg-white relative">
+        {/* Soft background decoration */}
+        <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none" aria-hidden="true">
+          <div className="absolute -top-40 -right-40 w-[500px] h-[500px] rounded-full bg-blue-100/60 blur-[120px]" />
+          <div className="absolute top-1/3 -left-32 w-[400px] h-[400px] rounded-full bg-sky-100/50 blur-[100px]" />
+          <div className="absolute bottom-1/4 right-1/4 w-[300px] h-[300px] rounded-full bg-cyan-100/40 blur-[80px]" />
+        </div>
+
+        <div className="w-full px-4 sm:px-6 lg:px-8 py-6 lg:py-8 space-y-8">
+
+          {/* ═══════════ HERO SECTION ═══════════ */}
+          <section className="animate-fade-in-up relative rounded-[28px] overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-sky-600 shadow-2xl shadow-blue-900/20">
+            {/* Abstract decorative circles */}
+            <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-white/[0.04] -translate-y-1/2 translate-x-1/4" />
+            <div className="absolute bottom-0 left-10 w-48 h-48 rounded-full bg-white/[0.04] translate-y-1/2" />
+            <div className="absolute top-1/2 right-1/4 w-32 h-32 rounded-full bg-sky-400/10" />
+
+            {/* Wave overlays */}
+            <svg className="absolute bottom-0 left-0 right-0 w-full" viewBox="0 0 1440 60" preserveAspectRatio="none" style={{ height: "40px" }} aria-hidden="true">
+              <path d="M0,30 C360,60 720,0 1080,30 C1260,45 1380,15 1440,25 L1440,60 L0,60 Z" fill="rgba(255,255,255,0.07)" />
+              <path d="M0,45 C480,70 960,20 1440,45 L1440,60 L0,60 Z" fill="rgba(255,255,255,0.04)" />
+            </svg>
+
+            <div className="relative px-5 sm:px-8 lg:px-10 pt-8 pb-16">
+              <div className="grid gap-8 lg:grid-cols-[minmax(0,1.5fr)_minmax(300px,0.5fr)] lg:items-center">
+                {/* Left — Title & Subtitle */}
+                <div>
+                  <span className="inline-flex items-center rounded-full bg-white/10 border border-white/20 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-cyan-200 backdrop-blur-sm">
+                    Housekeeping Control
+                  </span>
+                  <h1 className="mt-5 text-[42px] sm:text-[46px] font-bold leading-[1.1] text-white">
+                    Room Assignment & Status Tracker
+                  </h1>
+                  <p className="mt-4 max-w-2xl text-[17px] sm:text-[18px] leading-relaxed text-slate-200/90">
+                    Har room ka assignment status, housekeeper detail, duration, assigned by, aur real status — sab list format mein. Checkout ke liye available rooms bhi yahan dikhti hain.
+                  </p>
+                </div>
+
+                {/* Right — Glass stat cards */}
+                <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                  <GlassStatCard label="Dirty" value={dirtyCount} />
+                  <GlassStatCard label="Ready" value={cleanCount} />
+                  <GlassStatCard label="In Progress" value={inProgressCount} />
+                  <GlassStatCard label="Assigned" value={assignedCount} />
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* ═══════════ ERROR STATE ═══════════ */}
+          {error ? (
+            <div className="animate-fade-in-up rounded-[22px] border border-rose-200 bg-rose-50 px-5 py-4 text-[17px] font-semibold text-rose-700">{error}</div>
+          ) : null}
+
+          {/* ═══════════ LOADING STATE ═══════════ */}
+          {loading ? (
+            <div className="animate-fade-in-up rounded-[22px] border border-blue-200 bg-blue-50 px-5 py-4 text-[17px] font-semibold text-blue-700">
+              Dashboard data loading...
+            </div>
+          ) : null}
+
+          {/* ═══════════ STATISTICS CARDS ═══════════ */}
+          <section className="animate-fade-in-up delay-100 grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
+            <StatCard label="Dirty Rooms" value={dirtyCount} note="Cleaning attention needed." icon={FaBroom} tone="rose" />
+            <StatCard label="Cleaned / Ready" value={cleanCount} note="Ready to check out or rebook." icon={FaCheckCircle} tone="emerald" />
+            <StatCard label="In Progress" value={inProgressCount} note="Currently being cleaned." icon={FaTasks} tone="amber" />
+            <StatCard label="Assigned" value={assignedCount} note="Rooms mapped to a housekeeper." icon={FaUserClock} tone="cyan" />
+          </section>
+
+          {/* ═══════════ QUICK ACTIONS + SNAPSHOT ═══════════ */}
+          <section className="animate-fade-in-up delay-200 grid gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(300px,0.7fr)]">
+            {/* Quick Actions */}
+            <div className="rounded-[24px] bg-white shadow-lg border border-slate-100 p-6 sm:p-8">
+              <div className="mb-6">
+                <div className="text-[10px] font-bold uppercase tracking-[0.24em] text-blue-500">Quick Actions</div>
+                <h2 className="mt-1.5 text-[30px] sm:text-[34px] font-bold text-slate-900">Jump to active workflow</h2>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {[
+                  { label: "Open Housekeeping", helper: "Full cleaning workflow aur room updates manage karein.", route: "/housekeeping", icon: FaBroom, tone: "cyan" },
+                  { label: "Open Assignments", helper: "Assigned tasks aur completion status review karein.", route: "/assignments", icon: FaTasks, tone: "emerald" },
+                  { label: "Stay Overview", helper: "Room booking status aur cleaning assign karein.", route: "/stayover", icon: FaClipboardList, tone: "amber" },
+                  { label: "My Profile", helper: "User profile aur session details dekhein.", route: "/profile", icon: FaCheckCircle, tone: "violet" },
+                ].map((action) => {
+                  const Icon = action.icon;
+                  const toneGradient =
+                    action.tone === "cyan" ? "from-cyan-500 to-sky-500" :
+                    action.tone === "emerald" ? "from-emerald-500 to-teal-500" :
+                    action.tone === "amber" ? "from-amber-500 to-orange-500" :
+                    "from-violet-500 to-fuchsia-500";
+                  return (
+                    <a key={action.label} href={action.route} className="group block rounded-[22px] border border-slate-100 bg-white p-5 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+                      <div className={`inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br ${toneGradient} shadow-lg text-white`}>
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <h3 className="mt-4 text-[22px] font-bold text-slate-900">{action.label}</h3>
+                      <p className="mt-1.5 text-[17px] text-slate-500 leading-relaxed">{action.helper}</p>
+                      <div className="mt-4 flex items-center text-slate-400 group-hover:text-blue-600 transition-colors">
+                        <span className="text-[15px] font-medium">Open</span>
+                        <FaArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                      </div>
+                    </a>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Snapshot / Operational Highlights */}
+            <div className="rounded-[24px] bg-white shadow-lg border border-slate-100 p-6 sm:p-8">
+              <div className="mb-6">
+                <div className="text-[10px] font-bold uppercase tracking-[0.24em] text-emerald-500">Snapshot</div>
+                <h2 className="mt-1.5 text-[30px] sm:text-[34px] font-bold text-slate-900">Operational highlights</h2>
+              </div>
+              <div className="space-y-3">
+                <InsightCard label="Ready for Checkout" value={cleanCount} note="Vacant clean rooms ready for new booking." />
+                {Array.from(floorMap.entries()).slice(0, 3).map(([label, value]) => (
+                  <InsightCard key={label} label={label} value={value} note="Rooms currently mapped on this floor." />
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* ═══════════ FULL ASSIGNMENT LIST ═══════════ */}
+          <section className="animate-fade-in-up delay-300">
+            <AssignmentTable />
+          </section>
+
+          {/* ═══════════ CHECKOUT AVAILABILITY ═══════════ */}
+          <section className="animate-fade-in-up delay-400">
+            <CheckoutTable />
+          </section>
+
+        </div>
       </div>
-
-      <div className="w-full space-y-7">
-        {/* Header */}
-        <section className="overflow-hidden rounded-[28px] border border-slate-900/10 bg-[linear-gradient(120deg,#071b34_0%,#0d4a53_52%,#162d45_100%)] px-5 py-6 shadow-[0_22px_55px_rgba(15,23,42,0.12)] sm:px-7 sm:py-8">
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.9fr)] lg:items-center">
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-cyan-200">Housekeeping Control</p>
-              <h1 className="mt-3 text-3xl font-black leading-tight text-white sm:text-4xl">
-                Room Assignment & Status Tracker
-              </h1>
-              <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-100/85 sm:text-base">
-                Har room ka assignment status, housekeeper detail, duration, assigned by, aur real status — sab list format mein.
-                Checkout ke liye available rooms bhi yahan dikhti hain.
-              </p>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-2">
-              <div className="rounded-[22px] border border-white/12 bg-white/10 px-4 py-4 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md">
-                <span className="text-[11px] text-slate-100/75">Dirty</span>
-                <div className="mt-3 text-2xl font-bold leading-none">{dirtyCount}</div>
-              </div>
-              <div className="rounded-[22px] border border-white/12 bg-white/10 px-4 py-4 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md">
-                <span className="text-[11px] text-slate-100/75">Ready</span>
-                <div className="mt-3 text-2xl font-bold leading-none">{cleanCount}</div>
-              </div>
-              <div className="rounded-[22px] border border-white/12 bg-white/10 px-4 py-4 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md">
-                <span className="text-[11px] text-slate-100/75">In Progress</span>
-                <div className="mt-3 text-2xl font-bold leading-none">{inProgressCount}</div>
-              </div>
-              <div className="rounded-[22px] border border-white/12 bg-white/10 px-4 py-4 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md">
-                <span className="text-[11px] text-slate-100/75">Assigned</span>
-                <div className="mt-3 text-2xl font-bold leading-none">{assignedCount}</div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {error ? (
-          <div className="rounded-[22px] border border-rose-200 bg-rose-50 px-4 py-4 text-sm font-semibold text-rose-700">{error}</div>
-        ) : null}
-
-        {loading ? (
-          <div className="rounded-[22px] border border-cyan-200 bg-cyan-50 px-4 py-4 text-sm font-semibold text-cyan-700">
-            Dashboard data loading...
-          </div>
-        ) : null}
-
-        {/* Stat cards */}
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <StatCard label="Dirty Rooms" value={dirtyCount} note="Cleaning attention needed." icon={FaBroom} tone="rose" />
-          <StatCard label="Cleaned / Ready" value={cleanCount} note="Ready to check out or rebook." icon={FaCheckCircle} tone="emerald" />
-          <StatCard label="In Progress" value={inProgressCount} note="Currently being cleaned." icon={FaTasks} tone="amber" />
-          <StatCard label="Assigned" value={assignedCount} note="Rooms mapped to a housekeeper." icon={FaUserClock} tone="cyan" />
-        </section>
-
-        {/* Insights */}
-        <section className="grid gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
-          <div className="rounded-[26px] border border-white/60 bg-white/88 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
-            <div className="mb-4">
-              <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-400">Quick Actions</div>
-              <h2 className="mt-1 text-xl font-bold text-slate-900">Jump to active workflow</h2>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              {[
-                { label: "Open Housekeeping", helper: "Full cleaning workflow aur room updates manage karein.", route: "/housekeeping", icon: FaBroom, tone: "cyan" },
-                { label: "Open Assignments", helper: "Assigned tasks aur completion status review karein.", route: "/assignments", icon: FaTasks, tone: "emerald" },
-                { label: "Stay Overview", helper: "Room booking status aur cleaning assign karein.", route: "/stayover", icon: FaClipboardList, tone: "amber" },
-                { label: "My Profile", helper: "User profile aur session details dekhein.", route: "/profile", icon: FaCheckCircle, tone: "violet" },
-              ].map((action) => {
-                const Icon = action.icon;
-                const toneGradient =
-                  action.tone === "cyan" ? "from-cyan-500 to-sky-500" :
-                  action.tone === "emerald" ? "from-emerald-500 to-teal-500" :
-                  action.tone === "amber" ? "from-amber-500 to-orange-500" :
-                  "from-violet-500 to-fuchsia-500";
-                return (
-                  <a key={action.label} href={action.route} className="group rounded-[24px] border border-white/70 bg-white/88 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)] transition hover:-translate-y-1">
-                    <div className={`inline-flex rounded-2xl bg-gradient-to-r ${toneGradient} p-3 text-white shadow-lg`}>
-                      <Icon />
-                    </div>
-                    <div className="mt-4 text-lg font-bold text-slate-900">{action.label}</div>
-                    <div className="mt-2 text-sm leading-6 text-slate-500">{action.helper}</div>
-                  </a>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="rounded-[26px] border border-white/60 bg-white/88 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
-            <div className="mb-4">
-              <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-400">Snapshot</div>
-              <h2 className="mt-1 text-xl font-bold text-slate-900">Operational highlights</h2>
-            </div>
-            <div className="space-y-3">
-              <InsightCard label="Ready for Checkout" value={cleanCount} note="Vacant clean rooms ready for new booking." />
-              {Array.from(floorMap.entries()).slice(0, 3).map(([label, value]) => (
-                <InsightCard key={label} label={label} value={value} note="Rooms currently mapped on this floor." />
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Full Assignment List Table */}
-        <AssignmentTable />
-
-        {/* Checkout Available Rooms Table */}
-        <CheckoutTable />
-      </div>
-    </div>
+    </>
   );
 };
 

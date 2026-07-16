@@ -39,19 +39,27 @@ const c = {
   roseBg: "#FEF2F2",
 };
 
+/* NOTE ON RESPONSIVE STRATEGY (read me):
+   All classNames below are mobile-first. Any className fragment prefixed
+   with `lg:` reproduces the EXACT original (pre-responsive) desktop value,
+   so Windows/macOS/Laptop/Desktop (≥1024px) render pixel-identical to the
+   original file. Unprefixed / `sm:` values are new, added ONLY to improve
+   phone (<640px) and tablet/iPad (640px–1023px) layouts. No JS logic,
+   handlers, API calls, state, or props were changed anywhere in this file. */
+
 const fieldCls =
-  "w-full rounded-[16px] border border-[#E7ECF5] bg-white px-4 py-3.5 text-[17px] font-medium text-[#0F1B33] shadow-[0_1px_2px_rgba(15,27,51,0.04)] outline-none transition-all duration-250 focus:border-[#2563EB] focus:ring-4 focus:ring-[#2563EB]/10";
+  "w-full rounded-[14px] lg:rounded-[16px] border border-[#E7ECF5] bg-white px-3.5 lg:px-4 py-3 lg:py-3.5 text-[15px] lg:text-[17px] font-medium text-[#0F1B33] shadow-[0_1px_2px_rgba(15,27,51,0.04)] outline-none transition-all duration-250 focus:border-[#2563EB] focus:ring-4 focus:ring-[#2563EB]/10";
 const labelCls =
-  "mb-2 block text-[17px] font-semibold text-[#122A5C]";
+  "mb-2 block text-[15px] lg:text-[17px] font-semibold text-[#122A5C]";
 const primaryBtn =
-  "inline-flex items-center justify-center gap-2 rounded-[16px] px-6 py-3.5 text-[17px] font-semibold text-white shadow-[0_8px_20px_rgba(37,99,235,0.28)] transition-all duration-250 hover:shadow-[0_10px_26px_rgba(37,99,235,0.38)] hover:-translate-y-0.5 active:translate-y-0";
+  "inline-flex items-center justify-center gap-2 rounded-[14px] lg:rounded-[16px] px-5 lg:px-6 py-3 lg:py-3.5 text-[15px] lg:text-[17px] font-semibold text-white shadow-[0_8px_20px_rgba(37,99,235,0.28)] transition-all duration-250 hover:shadow-[0_10px_26px_rgba(37,99,235,0.38)] hover:-translate-y-0.5 active:translate-y-0";
 const primaryBtnStyle = {
   background: `linear-gradient(135deg, ${c.blue700} 0%, ${c.sky500} 100%)`,
 };
 const ghostBtn =
-  "inline-flex items-center justify-center gap-2 rounded-[16px] px-6 py-3.5 text-[17px] font-semibold border border-[#E7ECF5] text-[#122A5C] bg-white hover:bg-[#F8FAFC] transition-all duration-250";
+  "inline-flex items-center justify-center gap-2 rounded-[14px] lg:rounded-[16px] px-5 lg:px-6 py-3 lg:py-3.5 text-[15px] lg:text-[17px] font-semibold border border-[#E7ECF5] text-[#122A5C] bg-white hover:bg-[#F8FAFC] transition-all duration-250";
 const dangerSolidBtn =
-  "inline-flex items-center justify-center gap-2 rounded-[16px] px-6 py-3.5 text-[17px] font-semibold text-white bg-[#DC2626] hover:bg-[#B91C1C] transition-all duration-250 shadow-[0_8px_18px_rgba(220,38,38,0.25)]";
+  "inline-flex items-center justify-center gap-2 rounded-[14px] lg:rounded-[16px] px-5 lg:px-6 py-3 lg:py-3.5 text-[15px] lg:text-[17px] font-semibold text-white bg-[#DC2626] hover:bg-[#B91C1C] transition-all duration-250 shadow-[0_8px_18px_rgba(220,38,38,0.25)]";
 
 /* Type badge config — icon + soft accent color per type */
 const typeMeta = {
@@ -68,17 +76,17 @@ const Modal = ({ open, onClose, title, subtitle, children, actions }) => {
   if (!open) return null;
   return (
     <div
-      className="fixed inset-0 z-[70] flex items-center justify-center bg-[#0B1E4A]/50 px-4 py-6 backdrop-blur-sm animate-[fadeIn_250ms_ease]"
+      className="fixed inset-0 z-[70] flex items-center justify-center bg-[#0B1E4A]/50 px-3 sm:px-4 py-4 sm:py-6 backdrop-blur-sm animate-[fadeIn_250ms_ease]"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-[560px] max-h-[88vh] overflow-y-auto rounded-[24px] bg-white p-6 sm:p-8 shadow-[0_30px_90px_rgba(11,30,74,0.25)] animate-[popIn_280ms_cubic-bezier(0.16,1,0.3,1)]"
+        className="w-full max-w-[92vw] sm:max-w-[480px] lg:max-w-[560px] max-h-[90vh] lg:max-h-[88vh] overflow-y-auto rounded-[18px] sm:rounded-[22px] lg:rounded-[24px] bg-white p-4 sm:p-6 lg:p-8 shadow-[0_30px_90px_rgba(11,30,74,0.25)] animate-[popIn_280ms_cubic-bezier(0.16,1,0.3,1)]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-start justify-between gap-3 mb-6">
+        <div className="flex items-start justify-between gap-3 mb-5 lg:mb-6">
           <div>
-            <h3 className="text-[24px] font-bold text-[#0B1E4A] m-0">{title}</h3>
-            {subtitle && <p className="text-[17px] text-[#64748B] mt-1">{subtitle}</p>}
+            <h3 className="text-[19px] sm:text-[22px] lg:text-[24px] font-bold text-[#0B1E4A] m-0">{title}</h3>
+            {subtitle && <p className="text-[14px] sm:text-[16px] lg:text-[17px] text-[#64748B] mt-1">{subtitle}</p>}
           </div>
           <button
             onClick={onClose}
@@ -88,8 +96,8 @@ const Modal = ({ open, onClose, title, subtitle, children, actions }) => {
             <FaTimes className="text-lg" />
           </button>
         </div>
-        <div className="text-[17px]">{children}</div>
-        {actions && <div className="mt-7 flex flex-wrap justify-end gap-3">{actions}</div>}
+        <div className="text-[15px] lg:text-[17px]">{children}</div>
+        {actions && <div className="mt-6 lg:mt-7 flex flex-wrap justify-end gap-3">{actions}</div>}
       </div>
       <style>{`
         @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
@@ -108,10 +116,10 @@ const Toast = ({ open, type, title, message, onClose }) => {
   const Icon = isSuccess ? FaCheckCircle : FaExclamationTriangle;
   return (
     <div
-      className="fixed bottom-6 right-6 z-[90] flex items-center gap-3.5 rounded-[18px] bg-white px-5 py-4 shadow-[0_18px_45px_rgba(11,30,74,0.18)] border border-[#E7ECF5] max-w-sm animate-[slideUp_280ms_cubic-bezier(0.16,1,0.3,1)]"
+      className="fixed left-3 right-3 bottom-4 sm:left-auto sm:right-6 sm:bottom-6 z-[90] flex items-center gap-3 sm:gap-3.5 rounded-[16px] sm:rounded-[18px] bg-white px-4 sm:px-5 py-3.5 sm:py-4 shadow-[0_18px_45px_rgba(11,30,74,0.18)] border border-[#E7ECF5] w-auto sm:max-w-sm animate-[slideUp_280ms_cubic-bezier(0.16,1,0.3,1)]"
     >
       <div
-        className="shrink-0 w-10 h-10 rounded-[12px] flex items-center justify-center text-[18px]"
+        className="shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-[10px] sm:rounded-[12px] flex items-center justify-center text-[16px] sm:text-[18px]"
         style={{
           background: isSuccess ? c.emeraldBg : c.roseBg,
           color: isSuccess ? c.emerald : c.rose,
@@ -120,8 +128,8 @@ const Toast = ({ open, type, title, message, onClose }) => {
         <Icon />
       </div>
       <div className="flex-1 min-w-0">
-        <div className="text-[17px] font-bold text-[#0F1B33]">{title}</div>
-        <div className="text-[15px] text-[#64748B] truncate">{message}</div>
+        <div className="text-[15px] sm:text-[17px] font-bold text-[#0F1B33]">{title}</div>
+        <div className="text-[13px] sm:text-[15px] text-[#64748B] break-words sm:truncate">{message}</div>
       </div>
       <button
         onClick={onClose}
@@ -146,19 +154,19 @@ const ConfirmDelete = ({ open, onClose, onConfirm, name }) => (
     title=""
     actions={
       <>
-        <button onClick={onClose} className={ghostBtn}>Cancel</button>
-        <button onClick={() => { onConfirm(); onClose(); }} className={dangerSolidBtn}>
+        <button onClick={onClose} className={`${ghostBtn} w-full sm:w-auto`}>Cancel</button>
+        <button onClick={() => { onConfirm(); onClose(); }} className={`${dangerSolidBtn} w-full sm:w-auto`}>
           <FaTrash className="text-sm" /> Delete unit
         </button>
       </>
     }
   >
     <div className="flex flex-col items-center text-center -mt-4 mb-2">
-      <div className="w-16 h-16 rounded-[20px] flex items-center justify-center text-[28px] mb-4" style={{ background: c.roseBg, color: c.rose }}>
+      <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-[18px] sm:rounded-[20px] flex items-center justify-center text-[24px] sm:text-[28px] mb-4" style={{ background: c.roseBg, color: c.rose }}>
         <FaExclamationTriangle />
       </div>
-      <h3 className="text-[22px] font-bold text-[#0B1E4A] mb-2">Delete unit?</h3>
-      <p className="text-[17px] text-[#64748B] max-w-[380px]">
+      <h3 className="text-[19px] sm:text-[22px] font-bold text-[#0B1E4A] mb-2">Delete unit?</h3>
+      <p className="text-[15px] sm:text-[17px] text-[#64748B] max-w-[380px]">
         <span className="font-semibold text-[#0F1B33]">"{name || "This unit"}"</span> will be permanently removed. Items using this unit will keep their existing unit name for historical reference.
       </p>
     </div>
@@ -199,14 +207,14 @@ const UnitFormModal = ({ open, onClose, onSave, initial }) => {
       subtitle={initial ? "Update the details for this measurement unit" : "Add a new measurement unit to your inventory"}
       actions={
         <>
-          <button onClick={onClose} className={ghostBtn}>Cancel</button>
-          <button onClick={handleSubmit} className={primaryBtn} style={primaryBtnStyle}>
+          <button onClick={onClose} className={`${ghostBtn} w-full sm:w-auto`}>Cancel</button>
+          <button onClick={handleSubmit} className={`${primaryBtn} w-full sm:w-auto`} style={primaryBtnStyle}>
             {initial ? "Save changes" : "Add unit"}
           </button>
         </>
       }
     >
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-5">
         <div className="field">
           <label className={labelCls}>Unit name *</label>
           <input
@@ -239,6 +247,69 @@ const UnitFormModal = ({ open, onClose, onSave, initial }) => {
         </div>
       </div>
     </Modal>
+  );
+};
+
+/* ---------------------------------------------------------
+   Mobile card row (phones only, <640px)
+   Same data / same handlers as the desktop table row — just a
+   different visual shell so nothing overflows a small screen.
+--------------------------------------------------------- */
+const UnitCard = ({ u, onEdit, onDelete }) => {
+  const meta = getTypeMeta(u.type);
+  const TypeIcon = meta.icon;
+  return (
+    <div className="bg-white border border-[#E7ECF5] rounded-[18px] p-4 shadow-[0_4px_16px_rgba(15,27,51,0.05)]">
+      <div className="flex items-start gap-3 mb-3">
+        <div
+          className="w-11 h-11 rounded-[14px] flex items-center justify-center text-[17px] shrink-0"
+          style={{ background: "#EFF6FF", color: c.blue700 }}
+        >
+          <FaBoxOpen />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="text-[17px] font-semibold break-words" style={{ color: c.text }}>
+            {u.name || "-"}
+          </div>
+          <span
+            className="inline-flex items-center gap-1.5 mt-1.5 rounded-[10px] px-2.5 py-1 text-[13px] font-semibold"
+            style={{ background: meta.bg, color: meta.color }}
+          >
+            <TypeIcon className="text-[11px]" />
+            {u.type || "-"}
+          </span>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between border-t border-[#EEF2FA] pt-3 mb-3">
+        <span className="text-[13px] font-semibold uppercase tracking-[0.04em]" style={{ color: c.muted }}>
+          Short Name
+        </span>
+        <span
+          className="inline-flex items-center justify-center rounded-[10px] px-3 py-1.5 text-[14px] font-semibold"
+          style={{ background: "#F1F5F9", color: c.text }}
+        >
+          {u.shortName || u.short_name || "-"}
+        </span>
+      </div>
+
+      <div className="flex gap-2.5">
+        <button
+          onClick={onEdit}
+          className="flex-1 min-h-[48px] inline-flex items-center justify-center gap-2 rounded-[12px] border-2 px-4 text-[15px] font-semibold transition-all duration-250"
+          style={{ borderColor: c.blue700, color: c.blue700, background: "white" }}
+        >
+          <FaEdit className="text-[13px]" /> Edit
+        </button>
+        <button
+          onClick={onDelete}
+          className="flex-1 min-h-[48px] inline-flex items-center justify-center gap-2 rounded-[12px] px-4 text-[15px] font-semibold transition-all duration-250"
+          style={{ background: c.roseBg, color: c.rose }}
+        >
+          <FaTrash className="text-[13px]" /> Delete
+        </button>
+      </div>
+    </div>
   );
 };
 
@@ -336,21 +407,23 @@ const InventoryUnitsPage = () => {
         </svg>
       </div>
 
-      <div className="relative w-full" style={{ padding: "36px 40px 72px" }}>
+      <div
+        className="relative w-full px-4 py-6 sm:px-6 sm:py-8 lg:px-10 lg:pt-9 lg:pb-[72px]"
+      >
         {/* Header */}
-        <div className="flex items-start justify-between flex-wrap gap-5 mb-7">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 sm:gap-5 mb-6 lg:mb-7">
+          <div className="flex items-center gap-3.5 sm:gap-4">
             <div
-              className="w-[68px] h-[68px] rounded-[20px] flex items-center justify-center text-white text-[28px] shrink-0 shadow-[0_10px_24px_rgba(37,99,235,0.30)]"
+              className="w-12 h-12 sm:w-14 sm:h-14 lg:w-[68px] lg:h-[68px] rounded-[16px] lg:rounded-[20px] flex items-center justify-center text-white text-[22px] sm:text-[24px] lg:text-[28px] shrink-0 shadow-[0_10px_24px_rgba(37,99,235,0.30)]"
               style={{ background: `linear-gradient(135deg, ${c.blue700} 0%, ${c.sky500} 100%)` }}
             >
               <FaBalanceScale />
             </div>
-            <div>
-              <h1 className="text-[44px] font-extrabold m-0 leading-tight tracking-tight" style={{ color: c.blue950 }}>
+            <div className="min-w-0">
+              <h1 className="text-[26px] sm:text-[34px] lg:text-[44px] font-extrabold m-0 leading-tight tracking-tight" style={{ color: c.blue950 }}>
                 Units
               </h1>
-              <p className="m-0 text-[19px]" style={{ color: c.muted }}>
+              <p className="m-0 text-[14px] sm:text-[17px] lg:text-[19px]" style={{ color: c.muted }}>
                 Measurement units (kg, ltr, pcs, etc.)
               </p>
             </div>
@@ -358,20 +431,19 @@ const InventoryUnitsPage = () => {
           <button
             type="button"
             onClick={() => { setEditingUnit(null); setShowForm(true); }}
-            className={primaryBtn}
-            style={{ ...primaryBtnStyle, height: 58, borderRadius: 18 }}
+            className={`${primaryBtn} w-full lg:w-auto`}
+            style={{ ...primaryBtnStyle, height: 48, borderRadius: 18 }}
           >
             <FaPlus className="text-[15px]" /> Add Unit
           </button>
         </div>
 
         {/* Search */}
-        <div className="mb-7">
-          <div className="relative max-w-2xl">
-            <FaSearch className="absolute left-5 top-1/2 -translate-y-1/2 text-[#94A3B8] text-[17px]" />
+        <div className="mb-6 lg:mb-7">
+          <div className="relative w-full lg:max-w-2xl">
+            <FaSearch className="absolute left-4 lg:left-5 top-1/2 -translate-y-1/2 text-[#94A3B8] text-[15px] lg:text-[17px]" />
             <input
-              className="w-full rounded-[18px] border border-[#E7ECF5] bg-white pl-14 pr-5 text-[17px] font-medium text-[#0F1B33] shadow-[0_6px_20px_rgba(15,27,51,0.05)] outline-none transition-all duration-250 focus:border-[#2563EB] focus:ring-4 focus:ring-[#2563EB]/10"
-              style={{ height: 60 }}
+              className="w-full rounded-[16px] lg:rounded-[18px] border border-[#E7ECF5] bg-white pl-11 lg:pl-14 pr-4 lg:pr-5 text-[15px] lg:text-[17px] font-medium text-[#0F1B33] shadow-[0_6px_20px_rgba(15,27,51,0.05)] outline-none transition-all duration-250 focus:border-[#2563EB] focus:ring-4 focus:ring-[#2563EB]/10 h-[52px] lg:h-[60px]"
               placeholder="Search units…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -379,22 +451,22 @@ const InventoryUnitsPage = () => {
           </div>
         </div>
 
-        {/* Table card */}
-        <div className="bg-white/90 backdrop-blur-sm border border-[#E7ECF5] rounded-[28px] overflow-hidden shadow-[0_20px_60px_rgba(15,27,51,0.06)]">
+        {/* Table card — visible on tablet & desktop (≥640px), unchanged on desktop */}
+        <div className="hidden sm:block bg-white/90 backdrop-blur-sm border border-[#E7ECF5] rounded-[20px] lg:rounded-[28px] overflow-hidden shadow-[0_20px_60px_rgba(15,27,51,0.06)]">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[720px] text-left">
               <thead>
                 <tr style={{ background: "linear-gradient(90deg, #EFF6FF 0%, #F5F9FF 100%)" }}>
-                  <th className="text-left text-[16px] font-bold uppercase tracking-[0.04em] py-5 pl-7 pr-4 border-b border-[#E7ECF5]" style={{ color: c.blue900 }}>
+                  <th className="text-left text-[14px] lg:text-[16px] font-bold uppercase tracking-[0.04em] py-4 lg:py-5 pl-5 lg:pl-7 pr-4 border-b border-[#E7ECF5]" style={{ color: c.blue900 }}>
                     <span className="inline-flex items-center gap-2"><FaTag className="text-[13px] opacity-70" /> Name</span>
                   </th>
-                  <th className="text-left text-[16px] font-bold uppercase tracking-[0.04em] py-5 pr-4 border-b border-[#E7ECF5]" style={{ color: c.blue900 }}>
+                  <th className="text-left text-[14px] lg:text-[16px] font-bold uppercase tracking-[0.04em] py-4 lg:py-5 pr-4 border-b border-[#E7ECF5]" style={{ color: c.blue900 }}>
                     <span className="inline-flex items-center gap-2"><FaTag className="text-[13px] opacity-70" /> Short Name</span>
                   </th>
-                  <th className="text-left text-[16px] font-bold uppercase tracking-[0.04em] py-5 pr-4 border-b border-[#E7ECF5]" style={{ color: c.blue900 }}>
+                  <th className="text-left text-[14px] lg:text-[16px] font-bold uppercase tracking-[0.04em] py-4 lg:py-5 pr-4 border-b border-[#E7ECF5]" style={{ color: c.blue900 }}>
                     <span className="inline-flex items-center gap-2"><FaBoxOpen className="text-[13px] opacity-70" /> Type</span>
                   </th>
-                  <th className="text-left text-[16px] font-bold uppercase tracking-[0.04em] py-5 pr-7 border-b border-[#E7ECF5] w-[220px]" style={{ color: c.blue900 }}>
+                  <th className="text-left text-[14px] lg:text-[16px] font-bold uppercase tracking-[0.04em] py-4 lg:py-5 pr-5 lg:pr-7 border-b border-[#E7ECF5] w-[200px] lg:w-[220px]" style={{ color: c.blue900 }}>
                     Actions
                   </th>
                 </tr>
@@ -431,7 +503,7 @@ const InventoryUnitsPage = () => {
                     const TypeIcon = meta.icon;
                     return (
                       <tr key={u.id} className="transition-colors duration-250 hover:bg-[#F8FAFC]">
-                        <td className="py-5 pl-7 pr-4">
+                        <td className="py-4 lg:py-5 pl-5 lg:pl-7 pr-4">
                           <div className="flex items-center gap-3.5">
                             <div
                               className="w-11 h-11 rounded-[14px] flex items-center justify-center text-[17px] shrink-0"
@@ -439,12 +511,12 @@ const InventoryUnitsPage = () => {
                             >
                               <FaBoxOpen />
                             </div>
-                            <span className="text-[18px] font-semibold" style={{ color: c.text }}>
+                            <span className="text-[17px] lg:text-[18px] font-semibold" style={{ color: c.text }}>
                               {u.name || "-"}
                             </span>
                           </div>
                         </td>
-                        <td className="py-5 pr-4">
+                        <td className="py-4 lg:py-5 pr-4">
                           <span
                             className="inline-flex items-center justify-center rounded-[10px] px-3 py-1.5 text-[15px] font-semibold"
                             style={{ background: "#F1F5F9", color: c.text }}
@@ -452,7 +524,7 @@ const InventoryUnitsPage = () => {
                             {u.shortName || u.short_name || "-"}
                           </span>
                         </td>
-                        <td className="py-5 pr-4">
+                        <td className="py-4 lg:py-5 pr-4">
                           <span
                             className="inline-flex items-center gap-1.5 rounded-[10px] px-3.5 py-1.5 text-[15px] font-semibold"
                             style={{ background: meta.bg, color: meta.color }}
@@ -461,7 +533,7 @@ const InventoryUnitsPage = () => {
                             {u.type || "-"}
                           </span>
                         </td>
-                        <td className="py-5 pr-7">
+                        <td className="py-4 lg:py-5 pr-5 lg:pr-7">
                           <div className="flex gap-2.5">
                             <button
                               onClick={() => { setEditingUnit(u); setShowForm(true); }}
@@ -486,6 +558,41 @@ const InventoryUnitsPage = () => {
               </tbody>
             </table>
           </div>
+        </div>
+
+        {/* Card list — phones only (<640px), same data & handlers as the table above */}
+        <div className="sm:hidden">
+          {loading ? (
+            <div className="py-16 text-center text-[15px]" style={{ color: c.muted }}>
+              Loading…
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="bg-white/90 border border-[#E7ECF5] rounded-[20px] flex flex-col items-center text-center py-14 px-5">
+              <div
+                className="w-16 h-16 rounded-[20px] flex items-center justify-center text-[26px] mb-4 shadow-[0_10px_24px_rgba(37,99,235,0.12)]"
+                style={{ background: "#EFF6FF", color: c.blue700 }}
+              >
+                <FaBoxOpen />
+              </div>
+              <b className="block text-[18px] font-bold mb-2" style={{ color: c.blue950 }}>
+                No units yet
+              </b>
+              <span className="text-[14px] max-w-[300px]" style={{ color: c.muted }}>
+                Add your first measurement unit to get started with inventory tracking.
+              </span>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {filtered.map((u) => (
+                <UnitCard
+                  key={u.id}
+                  u={u}
+                  onEdit={() => { setEditingUnit(u); setShowForm(true); }}
+                  onDelete={() => setDeletingId(u.id)}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

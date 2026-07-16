@@ -8,6 +8,8 @@ import {
   FaReceipt,
   FaTasks,
   FaUtensils,
+  FaChartLine,
+  FaFileAlt,
 } from "react-icons/fa";
 
 import API from "../api";
@@ -165,26 +167,36 @@ const AccountsDashboard = () => {
       label: "Net Position",
       value: formatINR(summary.net),
       note: "Income minus expense from the current finance summary.",
+      icon: FaChartLine,
+      tone: "emerald",
     },
     {
       label: "GST Payable",
       value: formatINR(summary.gstPayable),
       note: "Tax payable snapshot for current financial entries.",
+      icon: FaFileAlt,
+      tone: "amber",
     },
     {
       label: "Expense Load",
       value: formatINR(summary.expense),
       note: "Total expense values posted in the accounts module.",
+      icon: FaReceipt,
+      tone: "rose",
     },
     {
       label: "Pending Tasks",
       value: pendingAssignments,
       note: "Assignments still waiting for action on this accountant login.",
+      icon: FaClipboardCheck,
+      tone: "slate",
     },
     {
       label: "Completed Tasks",
       value: completedAssignments,
       note: "Assignments already closed from this accounts workflow.",
+      icon: FaClipboardCheck,
+      tone: "cyan",
     },
   ], [completedAssignments, pendingAssignments, summary]);
 
@@ -226,7 +238,7 @@ const AccountsDashboard = () => {
     <RoleDashboardShell
       badge="Accounts Overview"
       title="Accounts dashboard for billing and collections"
-      description="Payments, guest balances, banquet billing, restaurant collections aur transaction history ko ek finance-first screen par rakha gaya hai."
+      description="Access payments, guest balances, banquet invoices, restaurant collections, and transaction history—all organized in one centralized finance dashboard."
       stats={stats}
       quickActions={[
         { label: "Open Accounts", helper: "Income, expense aur invoices manage karein.", route: "/accounts", icon: FaMoneyBillWave, tone: "emerald" },
