@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { HiOutlineEnvelope, HiOutlinePhone } from "react-icons/hi2";
 import {
   HiOutlineUserCircle,
@@ -72,6 +72,7 @@ const GuestProfile = ({ isModal = false, onClose }) => {
     const q = searchQuery.trim();
     if (!q) return;
 
+    lastQueryRef.current = q;
     setSearching(true);
     setProfile(null);
     setError("");
@@ -90,6 +91,25 @@ const GuestProfile = ({ isModal = false, onClose }) => {
       setSearching(false);
     }
   }, [searchQuery]);
+
+  const lastQueryRef = useRef("");
+
+  useEffect(() => {
+    const reload = async () => {
+      const q = lastQueryRef.current.trim();
+      if (!q) return;
+      try {
+        const res = await API.get(`/hotel/guest-profile?q=${encodeURIComponent(q)}`);
+        if (res.data && (res.data.guest || res.data.bookings?.length)) {
+          setProfile(res.data);
+        }
+      } catch {
+        // silent — user can retry
+      }
+    };
+    window.addEventListener("documentsUpdated", reload);
+    return () => window.removeEventListener("documentsUpdated", reload);
+  }, []);
 
   const totalStats = React.useMemo(() => {
     if (!profile?.bookings?.length) {
