@@ -81,9 +81,12 @@ const Login = ({ setIsAuthenticated }) => {
 
       const data = res.data;
 
-      // Backend now sets httpOnly cookie for auth.
-      // We only keep minimal non-sensitive state.
+      // Save auth state for RoleHomeRedirect and ProtectedRoute
       if (setIsAuthenticated) setIsAuthenticated(true);
+      if (data.token) localStorage.setItem("token", data.token);
+      if (data.role) localStorage.setItem("role", data.role);
+      if (data.name) localStorage.setItem("name", data.name);
+      if (data.email) localStorage.setItem("email", data.email);
       navigate(getRoleHome(data.role), { replace: true });
     } catch (err) {
       const base =

@@ -17,6 +17,11 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
           secure: false,
         },
+        '/uploads': {
+          target: env.VITE_BACKEND_URL || 'http://localhost:5002',
+          changeOrigin: true,
+          secure: false,
+        },
       },
     },
   }

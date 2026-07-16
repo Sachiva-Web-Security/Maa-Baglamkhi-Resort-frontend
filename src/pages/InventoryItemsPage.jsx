@@ -137,7 +137,7 @@ const InventoryItemsPage = () => {
   const fetchMasters = async () => {
     try {
       const [catRes, unitRes, storeRes] = await Promise.all([
-        API.get("/inventory-masters/item-groups").catch(() => ({ data: [] })),
+        API.get("/inventory-masters/stock-categories").catch(() => ({ data: [] })),
         API.get("/inventory-masters/units").catch(() => ({ data: [] })),
         API.get("/inventory-masters/locations").catch(() => ({ data: [] })),
       ]);
@@ -265,6 +265,7 @@ const InventoryItemsPage = () => {
               <tr>
                 <th className="text-left text-[10.5px] font-semibold uppercase tracking-[0.05em] text-[#6B6F66] py-2.5 pr-4 border-b border-[#E4E1D8]">Item Name</th>
                 <th className="text-left text-[10.5px] font-semibold uppercase tracking-[0.05em] text-[#6B6F66] py-2.5 pr-4 border-b border-[#E4E1D8]">Category</th>
+                <th className="text-left text-[10.5px] font-semibold uppercase tracking-[0.05em] text-[#6B6F66] py-2.5 pr-4 border-b border-[#E4E1D8]">Subcategory</th>
                 <th className="text-left text-[10.5px] font-semibold uppercase tracking-[0.05em] text-[#6B6F66] py-2.5 pr-4 border-b border-[#E4E1D8]">Stock</th>
                 <th className="text-left text-[10.5px] font-semibold uppercase tracking-[0.05em] text-[#6B6F66] py-2.5 pr-4 border-b border-[#E4E1D8]">Reorder Level</th>
                 <th className="text-left text-[10.5px] font-semibold uppercase tracking-[0.05em] text-[#6B6F66] py-2.5 pr-4 border-b border-[#E4E1D8]">Unit</th>
@@ -276,10 +277,10 @@ const InventoryItemsPage = () => {
             </thead>
             <tbody className="divide-y divide-[#E4E1D8]">
               {loading ? (
-                <tr><td colSpan={9} className="py-10 text-center text-[#6B6F66]">Loading items…</td></tr>
+                <tr><td colSpan={10} className="py-10 text-center text-[#6B6F66]">Loading items…</td></tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={9}>
+                  <td colSpan={10}>
                     <div className="text-center py-9 text-[#6B6F66]">
                       <b className="block text-[14.5px] text-[#1C231F] mb-1">No items in stock</b>
                       <span className="text-[13px]">Add your first item to start tracking inventory.</span>
@@ -291,6 +292,7 @@ const InventoryItemsPage = () => {
                   <tr key={item.id} className="hover:bg-[#F6F5F1]/50 transition-colors">
                     <td className="py-2.5 pr-3 font-semibold text-[#1C231F]">{item.name || "-"}</td>
                     <td className="py-2.5 pr-3 text-[#1C231F]">{item.category || "-"}</td>
+                    <td className="py-2.5 pr-3 text-[#1C231F]">{item.subcategory || <span style={{ color: c.muted }}>—</span>}</td>
                     <td className="py-2.5 pr-3">
                       <span className={stockLow(item) ? "text-[#C8791A] font-semibold" : "text-[#1C231F]"}>
                         {Number(item.stock || 0)}
@@ -337,6 +339,7 @@ const ItemFormModal = ({ open, onClose, onSave, initial, categories, units, stor
   const [form, setForm] = useState({
     name: "",
     category: "",
+    subcategory: "",
     stock: "",
     unit: "",
     price: "",
@@ -351,6 +354,7 @@ const ItemFormModal = ({ open, onClose, onSave, initial, categories, units, stor
         setForm({
           name: initial.name || "",
           category: initial.category || "",
+          subcategory: initial.subcategory || "",
           stock: String(initial.stock ?? 0),
           unit: initial.unit || "",
           price: String(initial.price ?? 0),
@@ -359,7 +363,7 @@ const ItemFormModal = ({ open, onClose, onSave, initial, categories, units, stor
           branch: initial.branch || "",
         });
       } else {
-        setForm({ name: "", category: "", stock: "", unit: "", price: "", reorder_point: "5", expiry: "", branch: "" });
+        setForm({ name: "", category: "", subcategory: "", stock: "", unit: "", price: "", reorder_point: "5", expiry: "", branch: "" });
       }
     }
   }, [open, initial]);
@@ -397,14 +401,32 @@ const ItemFormModal = ({ open, onClose, onSave, initial, categories, units, stor
           <input className={fieldCls} placeholder="e.g. Onion" value={form.name} onChange={(e) => setField("name", e.target.value)} />
         </div>
         <div className="field">
-          <label className={labelCls}>Category</label>
-          <select className={fieldCls} value={form.category} onChange={(e) => setField("category", e.target.value)}>
+          <label className={labelCls}>Category *</label>
+          <select className={fieldCls} value={form.category} onChange={(e) => { setField("category", e.target.value); setField("subcategory", ""); }}>
             <option value="">Select category</option>
             {categories.map((cat) => (
               <option key={cat.id} value={cat.name}>{cat.name}</option>
             ))}
           </select>
         </div>
+        {form.category && (() => {
+          const subCats = categories
+            .filter((c) => c.name === form.category && c.subcategory)
+            .map((c) => c.subcategory);
+          const uniqueSubs = [...new Set(subCats)];
+          if (uniqueSubs.length === 0) return null;
+          return (
+            <div className="field">
+              <label className={labelCls}>Subcategory</label>
+              <select className={fieldCls} value={form.subcategory} onChange={(e) => setField("subcategory", e.target.value)}>
+                <option value="">Select subcategory</option>
+                {uniqueSubs.map((sc) => (
+                  <option key={sc} value={sc}>{sc}</option>
+                ))}
+              </select>
+            </div>
+          );
+        })()}
         <div className="field">
           <label className={labelCls}>Unit</label>
           <select className={fieldCls} value={form.unit} onChange={(e) => setField("unit", e.target.value)}>

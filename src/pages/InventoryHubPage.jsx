@@ -20,6 +20,7 @@ const c = {
 
 const sectionCards = [
   { name: "Categories", path: "/inventory/categories", icon: FaListAlt, color: "#0B4F48", desc: "Organize items into groups" },
+  { name: "Item Categories & Sub", path: "/inventory/stock-categories", icon: FaListAlt, color: "#0F6E64", desc: "Categories + subcategories for items" },
   { name: "Vendors", path: "/inventory/vendors", icon: FaTruck, color: "#0F6E64", desc: "Manage supplier contacts" },
   { name: "Units", path: "/inventory/units", icon: FaBalanceScale, color: "#1E7A6E", desc: "kg, ltr, pcs, metres" },
   { name: "Items / Stock", path: "/inventory/items", icon: FaWarehouse, color: "#0B4F48", desc: "Track stock levels" },

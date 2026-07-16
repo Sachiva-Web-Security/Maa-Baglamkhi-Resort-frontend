@@ -13,7 +13,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 
     const verify = async () => {
       try {
-        const res = await API.get("/auth/me", { skipRetry: true });
+        const res = await API.get("/auth/me", { skipRetry: true, skipAuthRedirect: true });
         if (!cancelled) {
           setSession(res.data);
         }
