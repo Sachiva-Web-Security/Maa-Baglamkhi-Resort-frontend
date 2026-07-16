@@ -24,6 +24,9 @@ import {
   FaUtensils,
   FaUsers,
   FaWhatsapp,
+  FaArrowLeft,
+  FaChevronRight,
+  FaRegClock,
 } from "react-icons/fa";
 
 import BanquetBill from "../components/Banquet/BanquetBill";
@@ -384,7 +387,7 @@ const Banquet = () => {
   const [showBill, setShowBill] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [selectedMenuPackage, setSelectedMenuPackage] = useState(null);
-  const [activeQuickSection, setActiveQuickSection] = useState("halls");
+  const [activeQuickSection, setActiveQuickSection] = useState(null);
   const [openNavGroup, setOpenNavGroup] = useState("venue");
   const [pricingConfig, setPricingConfig] = useState(getStoredPricingConfig);
   const [menuCatalog, setMenuCatalog] = useState([]);
@@ -398,6 +401,7 @@ const Banquet = () => {
   const [reservationSuccess, setReservationSuccess] = useState(null);
   const [receiptInputKey, setReceiptInputKey] = useState(0);
   const [receiptPreviewUrl, setReceiptPreviewUrl] = useState("");
+  const [dashboardSearch, setDashboardSearch] = useState("");
   const [bookingFiltersDraft, setBookingFiltersDraft] = useState(() => ({
     ...bookingFilterDefaults,
   }));
@@ -737,6 +741,111 @@ const Banquet = () => {
       ),
     [bookingFilters]
   );
+
+  const todayStr = useMemo(() => {
+    const now = new Date();
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+  }, []);
+
+  const todaysBookings = useMemo(
+    () =>
+      bookings
+        .filter((booking) => String(booking.date || "").slice(0, 10) === todayStr)
+        .sort((a, b) => String(a.startTime || "").localeCompare(String(b.startTime || ""))),
+    [bookings, todayStr]
+  );
+
+  const upcomingBookings = useMemo(
+    () =>
+      bookings.filter((booking) => {
+        const bookingDate = String(booking.date || "").slice(0, 10);
+        return (
+          bookingDate > todayStr && !["Cancelled", "Refunded"].includes(booking.status)
+        );
+      }),
+    [bookings, todayStr]
+  );
+
+  const recentBookings = useMemo(
+    () =>
+      [...bookings]
+        .sort((a, b) => Number(b.id) - Number(a.id))
+        .slice(0, 3),
+    [bookings]
+  );
+
+  const dashboardRevenue = useMemo(() => {
+    const totalRevenue = bookings.reduce(
+      (sum, booking) => sum + (Number(booking.grandTotal) || 0),
+      0
+    );
+    const advanceReceived = bookings.reduce(
+      (sum, booking) => sum + (Number(booking.advance) || 0),
+      0
+    );
+    const pendingAmount = bookings.reduce(
+      (sum, booking) => sum + (Number(booking.balanceDue) || 0),
+      0
+    );
+    return { totalRevenue, advanceReceived, pendingAmount };
+  }, [bookings]);
+
+  const dashboardStatCards = useMemo(
+    () => [
+      {
+        label: "Total Halls",
+        value: String(halls.length),
+        icon: FaGlassCheers,
+        iconTone: "bg-[#0B4F48]",
+        sectionId: "halls",
+      },
+      {
+        label: "Total Reservations",
+        value: String(bookings.length),
+        icon: FaCalendarAlt,
+        iconTone: "bg-[#2F6FE4]",
+        sectionId: "reservations",
+      },
+      {
+        label: "Today's Events",
+        value: String(todaysBookings.length),
+        icon: FaCalendarAlt,
+        iconTone: "bg-[#C8791A]",
+        sectionId: "reservations",
+      },
+      {
+        label: "Upcoming Events",
+        value: String(upcomingBookings.length),
+        icon: FaCalendarAlt,
+        iconTone: "bg-[#7C5CD6]",
+        sectionId: "reservations",
+      },
+      {
+        label: "Total Revenue",
+        value: formatINR(dashboardRevenue.totalRevenue),
+        icon: FaMoneyCheckAlt,
+        iconTone: "bg-[#0F6E64]",
+        sectionId: "settlement",
+      },
+      {
+        label: "Pending Payments",
+        value: formatINR(dashboardRevenue.pendingAmount),
+        icon: FaReceipt,
+        iconTone: "bg-[#B5442E]",
+        sectionId: "settlement",
+      },
+    ],
+    [halls.length, bookings.length, todaysBookings.length, upcomingBookings.length, dashboardRevenue]
+  );
+
+  const sectionIconTones = {
+    halls: "bg-[#0B4F48]",
+    reservations: "bg-[#2F6FE4]",
+    meals: "bg-[#C8791A]",
+    addons: "bg-[#7C5CD6]",
+    settlement: "bg-[#0F6E64]",
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -2417,137 +2526,396 @@ const Banquet = () => {
     },
   ];
 
+  const todayLabel = useMemo(
+    () =>
+      new Intl.DateTimeFormat("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        weekday: "long",
+      }).format(new Date()),
+    []
+  );
+
+  const hallAvailabilityList = useMemo(() => halls.slice(0, 4), [halls]);
+
+  const getScheduleStatusLabel = (booking) => {
+    if (booking.status === "Completed") return "Completed";
+    if (booking.status === "Cancelled") return "Cancelled";
+    const now = new Date();
+    const nowMinutes = now.getHours() * 60 + now.getMinutes();
+    const [startH, startM] = String(booking.startTime || "0:0").split(":").map(Number);
+    const [endH, endM] = String(booking.endTime || "0:0").split(":").map(Number);
+    const startMinutes = (startH || 0) * 60 + (startM || 0);
+    const endMinutes = (endH || 0) * 60 + (endM || 0);
+    if (nowMinutes >= startMinutes && nowMinutes <= endMinutes) return "In Progress";
+    if (nowMinutes > endMinutes) return "Wrapping Up";
+    return "Upcoming";
+  };
+
+  const getScheduleStatusTone = (label) => {
+    switch (label) {
+      case "In Progress":
+        return "border-emerald-200 bg-emerald-50 text-emerald-700";
+      case "Completed":
+        return "border-purple-200 bg-purple-50 text-purple-700";
+      case "Cancelled":
+        return "border-rose-200 bg-rose-50 text-rose-700";
+      default:
+        return "border-blue-200 bg-blue-50 text-blue-700";
+    }
+  };
+
   return (
-    <div className="relative min-h-screen w-full overflow-x-hidden bg-[linear-gradient(135deg,#f4f8ff_0%,#eef6f8_30%,#fff9f0_66%,#f8fafc_100%)] p-3 sm:p-5">
-      <div className="space-y-4 sm:space-y-5">
-        {/* Header Strip */}
-        <section className="overflow-hidden rounded-[28px] border border-[#c7cbff] bg-white p-2 shadow-[0_22px_50px_rgba(15,23,42,0.1)]">
-          <div className="rounded-[22px] bg-[linear-gradient(90deg,#17315c_0%,#224f94_60%,#2d67cb_100%)] px-4 py-4 text-white">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-              <div className="flex min-w-0 items-center gap-3">
-                <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/10">
-                  <FaGlassCheers size={18} />
-                </span>
-                <div className="min-w-0">
-                  <div className="font-bold text-white text-[22px] leading-[1.15] sm:text-[34px]">Banquet Management</div>
-                  <div className="text-[14px] text-blue-100/85 sm:text-[16px]">{activeGroupLabel} workspace with live overview</div>
-                </div>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                {BANQUET_NAV_GROUPS.map((group) => {
-                  const active = group.id === openNavGroup;
-                  return (
-                    <button
-                      key={group.id}
-                      type="button"
-                      onClick={() => setOpenNavGroup(group.id)}
-                      className={`rounded-full px-4 py-2 text-[13px] font-medium transition sm:text-[15px] ${active ? "bg-white text-slate-950 shadow-[0_10px_30px_rgba(15,23,42,0.2)]" : "bg-white/8 text-blue-100 hover:bg-white/14"}`}
-                    >
-                      {group.label}
-                    </button>
-                  );
-                })}
-              </div>
+    <div className="relative min-h-screen w-full overflow-x-hidden bg-[#F7F5F0] p-3 sm:p-6">
+      <div className="space-y-5">
+        {/* Header */}
+        <section className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h1 className="text-[24px] font-bold text-[#1C231F] sm:text-[28px]">Banquet Dashboard</h1>
+            <p className="mt-1 text-[14px] text-[#6B6F66] sm:text-[15px]">
+              Manage banquet halls, events, reservations and more
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex min-w-[220px] items-center gap-2 rounded-full border border-[#E4E1D8] bg-white px-4 py-2.5 shadow-sm">
+              <FaSearch className="text-[#9A9E92]" size={14} />
+              <input
+                value={dashboardSearch}
+                onChange={(e) => setDashboardSearch(e.target.value)}
+                placeholder="Quick search reservations, halls..."
+                className="w-full bg-transparent text-[14px] font-medium text-[#1C231F] outline-none placeholder:text-[#9A9E92]"
+              />
             </div>
-            <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-              {banqOverviewCards.map((card) => {
-                const Icon = card.icon;
-                return (
-                  <div key={card.label} className={`rounded-[22px] border border-white/10 bg-white/95 p-3 shadow-[0_14px_26px_rgba(15,23,42,0.10)]`}>
-                    <div className="flex items-start justify-between gap-3">
-                      <span className={`inline-flex h-[56px] w-[56px] items-center justify-center rounded-[18px] ${card.iconTone}`}>
-                        <Icon size={24} />
-                      </span>
-                      {card.meta ? (
-                        <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-emerald-600">{card.meta}</span>
-                      ) : null}
-                    </div>
-                    <div className="mt-3 text-[13px] text-[#6B6F66] sm:text-[15px]">{card.label}</div>
-                    <div className={`mt-2 font-bold leading-none text-[28px] sm:text-[34px] ${card.valueTone}`}>{card.value}</div>
-                  </div>
-                );
-              })}
+            <div className="flex items-center gap-2 rounded-full border border-[#E4E1D8] bg-white px-4 py-2.5 shadow-sm">
+              <FaCalendarAlt className="text-[#0F6E64]" size={14} />
+              <span className="text-[13px] font-semibold text-[#1C231F]">{todayLabel}</span>
             </div>
           </div>
         </section>
 
-        {/* Dropdown navigation */}
-        {openNavGroup ? (
-          <div className="flex flex-wrap items-center gap-2 px-1">
-            {(() => {
-              const group = BANQUET_NAV_GROUPS.find((entry) => entry.id === openNavGroup);
-              if (!group) return null;
-              return group.items.map((item) => {
-                const active = activeQuickSection === item.id;
-                const Icon = item.icon;
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => setActiveQuickSection(item.id)}
-                    className={`inline-flex min-h-[50px] cursor-pointer items-center gap-2.5 rounded-full border px-5 py-2.5 text-left text-[15px] font-semibold transition ${
-                      active
-                        ? "border-transparent bg-[linear-gradient(135deg,#0B4F48_0%,#0F6E64_100%)] text-white shadow-[0_12px_24px_rgba(11,79,72,0.18)]"
-                        : "border-[#E4E1D8] bg-white text-[#1C231F] hover:border-[#0F6E64] hover:bg-[#F6F5F1]"
-                    }`}
-                  >
-                    <span className={`inline-flex h-8 w-8 items-center justify-center rounded-full ${active ? "bg-white/18 text-white" : "bg-[#F6F5F1] text-[#6B6F66]"}`}>
-                      <Icon size={14} />
-                    </span>
-                    <span className="truncate whitespace-nowrap">{item.label}</span>
-                  </button>
-                );
-              });
-            })()}
-          </div>
-        ) : null}
+        {/* Stat cards */}
+        <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          {dashboardStatCards.map((card) => {
+            const Icon = card.icon;
+            return (
+              <div
+                key={card.label}
+                className="rounded-[18px] border border-[#E4E1D8] bg-white p-4 shadow-[0_6px_16px_rgba(28,35,31,0.04)]"
+              >
+                <span className={`inline-flex h-9 w-9 items-center justify-center rounded-[10px] text-white ${card.iconTone}`}>
+                  <Icon size={15} />
+                </span>
+                <div className="mt-3 text-[13px] font-medium text-[#6B6F66]">{card.label}</div>
+                <div className="mt-1 text-[22px] font-bold text-[#1C231F] leading-tight sm:text-[26px]">
+                  {card.value}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveQuickSection(card.sectionId)}
+                  className="mt-2 inline-flex items-center gap-1 text-[12.5px] font-semibold text-[#0F6E64] hover:text-[#0B4F48]"
+                >
+                  View <FaChevronRight size={9} />
+                </button>
+              </div>
+            );
+          })}
+        </section>
 
-        {/* Section content */}
-        <main className="min-w-0">
-          <div className="rounded-[22px] border border-white/70 bg-white/95 p-4 shadow-[0_20px_50px_rgba(30,64,175,0.1)] backdrop-blur-xl sm:rounded-[28px] sm:p-6">
-            {activeQuickSection ? (
-              <div>
-                <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <p className="text-[13px] font-bold uppercase tracking-[0.12em] text-[#6B6F66]">Section Preview</p>
-                    <h2 className="mt-1 text-[22px] font-bold text-[#1C231F] sm:text-[26px]">
-                      {BANQUET_SECTIONS.find((s) => s.id === activeQuickSection)?.label || "Quick View"}
-                    </h2>
-                  </div>
-                  <button type="button" onClick={() => setActiveQuickSection(null)} className={banquteGhostBtn}>Close</button>
+        {activeQuickSection ? (
+          <section className="rounded-[20px] border border-[#E4E1D8] bg-white p-4 shadow-[0_6px_16px_rgba(28,35,31,0.04)] sm:p-6">
+            <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setActiveQuickSection(null)}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#E4E1D8] text-[#1C231F] hover:bg-[#F6F5F1]"
+                >
+                  <FaArrowLeft size={13} />
+                </button>
+                <div>
+                  <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-[#6B6F66]">Section</p>
+                  <h2 className="mt-0.5 text-[20px] font-bold text-[#1C231F] sm:text-[24px]">
+                    {BANQUET_SECTIONS.find((s) => s.id === activeQuickSection)?.label || "Quick View"}
+                  </h2>
                 </div>
-                {renderQuickSectionModal()}
               </div>
-            ) : (
-              <div>
-                <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-                  <div>
-                    <p className="text-[13px] font-bold uppercase tracking-[0.12em] text-[#0B4F48]">Reservation Ledger</p>
-                    <h2 className="mt-1 text-[22px] font-bold text-[#1C231F] sm:text-[28px] lg:text-[30px]">
-                      Manage banquet reservations
-                    </h2>
-                    <p className="mt-1 text-[13px] text-[#6B6F66] sm:text-[15px]">
-                      Showing {paginatedBookings.length} of {filteredBookings.length} reservations{hasAppliedBookingFilters ? " (filtered)" : ""}.
-                    </p>
-                  </div>
+              <button type="button" onClick={() => setActiveQuickSection(null)} className={banquteGhostBtn}>
+                Close
+              </button>
+            </div>
+            {renderQuickSectionModal()}
+          </section>
+        ) : (
+          <>
+            {/* All sections */}
+            <section>
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-[13px] font-bold uppercase tracking-[0.1em] text-[#6B6F66]">All Sections</h2>
+                <button
+                  type="button"
+                  onClick={openCreateReservationForm}
+                  className={banqutePrimaryBtn}
+                >
+                  <FaPlus className="text-sm" />
+                  Add New
+                </button>
+              </div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                {BANQUET_SECTIONS.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => setActiveQuickSection(item.id)}
+                      className="flex items-start gap-3 rounded-[18px] border border-[#E4E1D8] bg-white p-4 text-left shadow-[0_6px_16px_rgba(28,35,31,0.04)] transition hover:-translate-y-0.5 hover:border-[#0F6E64] hover:shadow-[0_12px_24px_rgba(28,35,31,0.08)]"
+                    >
+                      <span className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] text-white ${sectionIconTones[item.id] || "bg-[#0F6E64]"}`}>
+                        <Icon size={16} />
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block text-[14.5px] font-bold text-[#1C231F]">{item.label}</span>
+                        <span className="mt-0.5 block truncate text-[12.5px] text-[#6B6F66]">{item.desc}</span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+
+            {/* Schedule + recent reservations */}
+            <section className="grid gap-4 lg:grid-cols-2">
+              <div className="rounded-[20px] border border-[#E4E1D8] bg-white p-4 shadow-[0_6px_16px_rgba(28,35,31,0.04)] sm:p-5">
+                <div className="mb-3 flex items-center justify-between">
+                  <h3 className="flex items-center gap-2 text-[14.5px] font-bold text-[#1C231F]">
+                    <FaCalendarAlt className="text-[#0F6E64]" size={13} />
+                    Today's Schedule
+                  </h3>
                   <button
                     type="button"
-                    onClick={openCreateReservationForm}
-                    className={banqutePrimaryBtn}
+                    onClick={() => setActiveQuickSection("reservations")}
+                    className="text-[12.5px] font-semibold text-[#0F6E64] hover:text-[#0B4F48]"
                   >
-                    <FaPlus className="text-sm" />
-                    Add New
+                    View All
                   </button>
                 </div>
+                <div className="space-y-2.5">
+                  {todaysBookings.length ? (
+                    todaysBookings.map((booking) => {
+                      const statusLabel = getScheduleStatusLabel(booking);
+                      return (
+                        <div
+                          key={booking.id}
+                          className="flex items-center gap-3 rounded-[14px] border border-[#EFEDE5] bg-[#FAF9F6] px-3 py-2.5"
+                        >
+                          <span className="flex h-9 w-16 shrink-0 items-center justify-center gap-1 rounded-[10px] bg-white text-[11.5px] font-bold text-[#1C231F] shadow-sm">
+                            <FaRegClock size={10} className="text-[#6B6F66]" />
+                            {booking.startTime || "--:--"}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-[13.5px] font-bold text-[#1C231F]">
+                              {booking.hallName || "Hall"}
+                            </div>
+                            <div className="truncate text-[12px] text-[#6B6F66]">
+                              {booking.eventTitle || booking.eventType}
+                            </div>
+                          </div>
+                          <span
+                            className={`shrink-0 rounded-full border px-2.5 py-1 text-[10.5px] font-bold uppercase tracking-wide ${getScheduleStatusTone(statusLabel)}`}
+                          >
+                            {statusLabel}
+                          </span>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="rounded-[14px] border border-dashed border-[#E4E1D8] bg-[#FAF9F6] px-4 py-6 text-center text-[13px] text-[#6B6F66]">
+                      No events scheduled for today.
+                    </div>
+                  )}
+                </div>
+                <div className="mt-3 border-t border-[#EFEDE5] pt-3 text-[12.5px] font-semibold text-[#6B6F66]">
+                  Total Events Today: {todaysBookings.length}
+                </div>
               </div>
-            )}
-          </div>
-        </main>
+
+              <div className="rounded-[20px] border border-[#E4E1D8] bg-white p-4 shadow-[0_6px_16px_rgba(28,35,31,0.04)] sm:p-5">
+                <div className="mb-3 flex items-center justify-between">
+                  <h3 className="flex items-center gap-2 text-[14.5px] font-bold text-[#1C231F]">
+                    <FaReceipt className="text-[#2F6FE4]" size={13} />
+                    Recent Reservations
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setActiveQuickSection("reservations")}
+                    className="text-[12.5px] font-semibold text-[#0F6E64] hover:text-[#0B4F48]"
+                  >
+                    View All
+                  </button>
+                </div>
+                <div className="space-y-2.5">
+                  {recentBookings.length ? (
+                    recentBookings.map((booking) => (
+                      <div
+                        key={booking.id}
+                        className="flex items-center gap-3 rounded-[14px] border border-[#EFEDE5] bg-[#FAF9F6] px-3 py-2.5"
+                      >
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-[#2F6FE4]/10 text-[#2F6FE4]">
+                          <FaCalendarAlt size={13} />
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-[13.5px] font-bold text-[#1C231F]">
+                            {booking.customerName}
+                          </div>
+                          <div className="truncate text-[12px] text-[#6B6F66]">
+                            {booking.hallName || "Hall"} • {booking.guests || 0} Guests
+                          </div>
+                        </div>
+                        <div className="shrink-0 text-right">
+                          <div className="text-[12px] text-[#6B6F66]">{formatBookingDate(booking.date)}</div>
+                          <div className="text-[13.5px] font-bold text-[#1C231F]">
+                            {formatINR(booking.grandTotal || 0)}
+                          </div>
+                          <span
+                            className={`inline-block text-[10.5px] font-bold ${
+                              booking.status === "Confirmed"
+                                ? "text-emerald-600"
+                                : booking.status === "Cancelled"
+                                ? "text-rose-600"
+                                : "text-amber-600"
+                            }`}
+                          >
+                            {booking.status}
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="rounded-[14px] border border-dashed border-[#E4E1D8] bg-[#FAF9F6] px-4 py-6 text-center text-[13px] text-[#6B6F66]">
+                      No reservations yet.
+                    </div>
+                  )}
+                </div>
+                <div className="mt-3 border-t border-[#EFEDE5] pt-3 text-[12.5px] font-semibold text-[#6B6F66]">
+                  Total Reservations: {bookings.length}
+                </div>
+              </div>
+            </section>
+
+            {/* Hall availability + revenue overview */}
+            <section className="grid gap-4 lg:grid-cols-2">
+              <div className="rounded-[20px] border border-[#E4E1D8] bg-white p-4 shadow-[0_6px_16px_rgba(28,35,31,0.04)] sm:p-5">
+                <div className="mb-3 flex items-center justify-between">
+                  <h3 className="flex items-center gap-2 text-[14.5px] font-bold text-[#1C231F]">
+                    <FaGlassCheers className="text-[#0B4F48]" size={13} />
+                    Hall Availability Overview
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setActiveQuickSection("halls")}
+                    className="text-[12.5px] font-semibold text-[#0F6E64] hover:text-[#0B4F48]"
+                  >
+                    View Calendar
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+                  {hallAvailabilityList.length ? (
+                    hallAvailabilityList.map((hall) => (
+                      <div
+                        key={hall.id}
+                        className="rounded-[14px] border border-[#EFEDE5] bg-[#FAF9F6] p-3"
+                      >
+                        <div className="truncate text-[13px] font-bold text-[#1C231F]">{hall.name}</div>
+                        <div
+                          className={`mt-1 text-[12px] font-bold ${
+                            hall.status === "Available"
+                              ? "text-emerald-600"
+                              : hall.status === "Maintenance"
+                              ? "text-rose-600"
+                              : "text-amber-600"
+                          }`}
+                        >
+                          {hall.status || "Available"}
+                        </div>
+                        <div className="mt-1 text-[11.5px] text-[#6B6F66]">
+                          {hall.capacity || 0} Capacity
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="col-span-full rounded-[14px] border border-dashed border-[#E4E1D8] bg-[#FAF9F6] px-4 py-6 text-center text-[13px] text-[#6B6F66]">
+                      No halls added yet.
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="rounded-[20px] border border-[#E4E1D8] bg-white p-4 shadow-[0_6px_16px_rgba(28,35,31,0.04)] sm:p-5">
+                <div className="mb-3 flex items-center justify-between">
+                  <h3 className="flex items-center gap-2 text-[14.5px] font-bold text-[#1C231F]">
+                    <FaMoneyCheckAlt className="text-[#0F6E64]" size={13} />
+                    Revenue Overview
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setActiveQuickSection("settlement")}
+                    className="text-[12.5px] font-semibold text-[#0F6E64] hover:text-[#0B4F48]"
+                  >
+                    This Month
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+                  <div className="rounded-[14px] border border-[#EFEDE5] bg-[#FAF9F6] p-3">
+                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-[9px] bg-emerald-100 text-emerald-700">
+                      <FaMoneyCheckAlt size={13} />
+                    </span>
+                    <div className="mt-2 text-[12px] text-[#6B6F66]">Total Revenue</div>
+                    <div className="text-[15px] font-bold text-[#1C231F]">
+                      {formatINR(dashboardRevenue.totalRevenue)}
+                    </div>
+                  </div>
+                  <div className="rounded-[14px] border border-[#EFEDE5] bg-[#FAF9F6] p-3">
+                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-[9px] bg-blue-100 text-blue-700">
+                      <FaReceipt size={13} />
+                    </span>
+                    <div className="mt-2 text-[12px] text-[#6B6F66]">Advance Received</div>
+                    <div className="text-[15px] font-bold text-[#1C231F]">
+                      {formatINR(dashboardRevenue.advanceReceived)}
+                    </div>
+                  </div>
+                  <div className="rounded-[14px] border border-[#EFEDE5] bg-[#FAF9F6] p-3">
+                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-[9px] bg-rose-100 text-rose-700">
+                      <FaExclamationTriangle size={13} />
+                    </span>
+                    <div className="mt-2 text-[12px] text-[#6B6F66]">Pending Amount</div>
+                    <div className="text-[15px] font-bold text-[#1C231F]">
+                      {formatINR(dashboardRevenue.pendingAmount)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </>
+        )}
 
         <section
           id="reservation-section"
-          className="rounded-[22px] border border-white/70 bg-white/95 p-4 shadow-[0_20px_50px_rgba(30,64,175,0.1)] backdrop-blur-xl sm:rounded-[28px] sm:p-6"
+          className="rounded-[20px] border border-[#E4E1D8] bg-white p-4 shadow-[0_6px_16px_rgba(28,35,31,0.04)] sm:rounded-[24px] sm:p-6"
         >
+          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-[13px] font-bold uppercase tracking-[0.1em] text-[#6B6F66]">All Reservations</h2>
+              <p className="mt-1 text-[13px] text-[#9A9E92]">
+                Showing {paginatedBookings.length} of {filteredBookings.length} reservations
+                {hasAppliedBookingFilters ? " (filtered)" : ""}.
+              </p>
+            </div>
+            <button type="button" onClick={openCreateReservationForm} className={banqutePrimaryBtn}>
+              <FaPlus className="text-sm" />
+              Add New
+            </button>
+          </div>
           <div className="hidden overflow-x-auto lg:block">
             {filteredBookings.length ? (
               <table className="min-w-full overflow-hidden rounded-[22px] border border-[#E4E1D8] bg-white">

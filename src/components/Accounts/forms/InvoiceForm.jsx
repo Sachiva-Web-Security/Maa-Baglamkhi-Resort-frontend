@@ -156,33 +156,33 @@ const InvoiceForm = ({
   return (
     <div className="bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] px-4 py-4 sm:px-5 sm:py-5">
       <form onSubmit={handleSubmit}>
-        <div className="mb-4 rounded-[24px] border border-slate-200 bg-white/90 px-4 py-3 shadow-[0_16px_40px_rgba(15,23,42,0.06)] sm:px-5">
+        <div className="mb-4 rounded-[24px] border border-[#E4E1D8] bg-white px-4 py-3 shadow-[0_16px_40px_rgba(15,23,42,0.06)] sm:px-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <p className="text-[16px] font-semibold uppercase tracking-[0.24em] text-cyan-800">
+              <p className="text-[16px] font-semibold uppercase tracking-[0.24em] text-[#0B4F48]">
                 Invoice Form
               </p>
-              <h2 className="mt-1 text-[2.25rem] font-black text-slate-950 sm:text-[2.45rem]">
+              <h2 className="mt-1 text-[2.25rem] font-black text-[#1C231F] sm:text-[2.45rem]">
                 {invoiceId ? "Edit Invoice" : "Generate Invoice"}
               </h2>
-              <p className="mt-1 text-[18px] font-semibold text-slate-800">
+              <p className="mt-1 text-[18px] font-semibold text-[#6B6F66]">
                 Fill guest, stay, and billing details. Final total updates automatically.
               </p>
             </div>
 
-            <div className="rounded-[18px] border border-cyan-100 bg-cyan-50/80 px-4 py-2.5 sm:min-w-[220px]">
-              <div className="text-[16px] font-semibold uppercase tracking-[0.2em] text-cyan-800">
+            <div className="rounded-[18px] border border-[#CFE7E2] bg-[#E4F0EE]/80 px-4 py-2.5 sm:min-w-[220px]">
+              <div className="text-[16px] font-semibold uppercase tracking-[0.2em] text-[#0B4F48]">
                 Invoice No
               </div>
-              <div className="mt-2 text-[18px] font-semibold text-slate-950">{form.invoiceNo}</div>
+              <div className="mt-2 text-[18px] font-semibold text-[#1C231F]">{form.invoiceNo}</div>
             </div>
           </div>
         </div>
 
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1.7fr)_minmax(320px,0.9fr)]">
           <div className="space-y-4">
-            <section className="rounded-[22px] border border-slate-200 bg-white/90 p-4 shadow-[0_14px_36px_rgba(15,23,42,0.05)]">
-              <div className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+            <section className="rounded-[22px] border border-[#E4E1D8] bg-white p-4 shadow-[0_14px_36px_rgba(15,23,42,0.05)]">
+              <div className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-[#6B6F66]">
                 Basic Details
               </div>
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -233,8 +233,8 @@ const InvoiceForm = ({
               </div>
             </section>
 
-            <section className="rounded-[22px] border border-slate-200 bg-white/90 p-4 shadow-[0_14px_36px_rgba(15,23,42,0.05)]">
-              <div className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+            <section className="rounded-[22px] border border-[#E4E1D8] bg-white p-4 shadow-[0_14px_36px_rgba(15,23,42,0.05)]">
+              <div className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-[#6B6F66]">
                 Stay And Charges
               </div>
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -288,8 +288,8 @@ const InvoiceForm = ({
               </div>
             </section>
 
-            <section className="rounded-[22px] border border-slate-200 bg-white/90 p-4 shadow-[0_14px_36px_rgba(15,23,42,0.05)]">
-              <div className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+            <section className="rounded-[22px] border border-[#E4E1D8] bg-white p-4 shadow-[0_14px_36px_rgba(15,23,42,0.05)]">
+              <div className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-[#6B6F66]">
                 Payment And Notes
               </div>
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -311,11 +311,11 @@ const InvoiceForm = ({
               </div>
 
               <div className="mt-3">
-                <label className="mb-1 block text-[16px] font-semibold text-slate-700">
+                <label className="mb-1 block text-[16px] font-semibold text-[#1C231F]">
                   Notes
                 </label>
                 <textarea
-                  className="min-h-[84px] w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[16px] font-semibold text-slate-800 outline-none transition focus:border-cyan-300 focus:ring-4 focus:ring-cyan-100"
+                  className="min-h-[84px] w-full rounded-xl border border-[#E4E1D8] bg-white px-4 py-2.5 text-[16px] font-semibold text-[#1C231F] outline-none transition focus:border-[#0B4F48] focus:ring-4 focus:ring-[#CFE7E2]"
                   name="notes"
                   value={form.notes}
                   onChange={handleChange}
@@ -327,8 +327,8 @@ const InvoiceForm = ({
           </div>
 
           <div className="space-y-4">
-            <section className="rounded-[22px] border border-slate-200 bg-[linear-gradient(180deg,#f5f9ff_0%,#eef6ff_100%)] p-4 shadow-[0_16px_40px_rgba(15,23,42,0.06)]">
-              <div className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-700">
+            <section className="rounded-[22px] border border-[#E4E1D8] bg-[linear-gradient(180deg,#f5f9ff_0%,#eef6ff_100%)] p-4 shadow-[0_16px_40px_rgba(15,23,42,0.06)]">
+              <div className="text-xs font-semibold uppercase tracking-[0.2em] text-[#0B4F48]">
                 Invoice Summary
               </div>
               <div className="mt-3 space-y-2.5">
@@ -340,47 +340,47 @@ const InvoiceForm = ({
                   <SummaryRow
                     label="Discount"
                     value={`- Rs. ${Number(form.discount).toFixed(2)}`}
-                    valueClassName="text-emerald-600"
+                    valueClassName="text-[#0F6E64]"
                   />
                 ) : null}
               </div>
 
-              <div className="mt-4 rounded-[18px] border border-cyan-100 bg-white px-4 py-3.5">
+              <div className="mt-4 rounded-[18px] border border-[#CFE7E2] bg-white px-4 py-3.5">
                 <div className="flex items-center justify-between gap-4">
-                  <span className="text-[16px] font-semibold text-slate-700">Final Total</span>
-                  <span className="text-[1.8rem] font-black text-cyan-700">
+                  <span className="text-[16px] font-semibold text-[#1C231F]">Final Total</span>
+                  <span className="text-[1.8rem] font-black text-[#0B4F48]">
                     Rs. {calculated.finalTotal.toFixed(2)}
                   </span>
                 </div>
               </div>
             </section>
 
-            <section className="rounded-[22px] border border-slate-200 bg-white/90 p-4 shadow-[0_14px_36px_rgba(15,23,42,0.05)]">
-              <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+            <section className="rounded-[22px] border border-[#E4E1D8] bg-white/90 p-4 shadow-[0_14px_36px_rgba(15,23,42,0.05)]">
+              <div className="text-xs font-semibold uppercase tracking-[0.2em] text-[#6B6F66]">
                 Quick Info
               </div>
-              <div className="mt-3 space-y-2.5 text-[16px] font-semibold text-slate-600">
+              <div className="mt-3 space-y-2.5 text-[16px] font-semibold text-[#6B6F66]">
                 <div className="flex items-center justify-between gap-4">
                   <span>Payment Mode</span>
-                  <span className="font-semibold text-slate-900">{form.paymentMode}</span>
+                  <span className="font-semibold text-[#1C231F]">{form.paymentMode}</span>
                 </div>
                 <div className="flex items-center justify-between gap-4">
                   <span>Status</span>
-                  <span className="font-semibold text-slate-900">{form.status}</span>
+                  <span className="font-semibold text-[#1C231F]">{form.status}</span>
                 </div>
                 <div className="flex items-center justify-between gap-4">
                   <span>Customer</span>
-                  <span className="font-semibold text-slate-900">{form.customerName || "--"}</span>
+                  <span className="font-semibold text-[#1C231F]">{form.customerName || "--"}</span>
                 </div>
               </div>
             </section>
           </div>
         </div>
 
-        <div className="mt-4 flex justify-end gap-3 border-t border-slate-200 pt-4">
+        <div className="mt-4 flex justify-end gap-3 border-t border-[#E4E1D8] pt-4">
           <button
             type="button"
-            className="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-[16px] font-semibold text-slate-700 transition hover:bg-slate-50"
+            className="rounded-xl border border-[#E4E1D8] bg-white px-5 py-2.5 text-[16px] font-semibold text-[#1C231F] transition hover:bg-[#F6F5F1]"
             onClick={onCancel}
           >
             Cancel
@@ -401,11 +401,11 @@ const InvoiceForm = ({
 
 const Input = ({ label, required, ...props }) => (
   <div>
-    <label className="mb-1 block text-[16px] font-semibold text-slate-700">
+    <label className="mb-1 block text-[16px] font-semibold text-[#1C231F]">
       {label}
     </label>
     <input
-      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[16px] font-semibold text-slate-800 outline-none transition focus:border-cyan-300 focus:ring-4 focus:ring-cyan-100"
+      className="w-full rounded-xl border border-[#E4E1D8] bg-white px-4 py-2.5 text-[16px] font-semibold text-[#1C231F] outline-none transition focus:border-[#0B4F48] focus:ring-4 focus:ring-[#CFE7E2]"
       required={required}
       {...props}
     />
@@ -414,11 +414,11 @@ const Input = ({ label, required, ...props }) => (
 
 const Select = ({ label, options, ...props }) => (
   <div>
-    <label className="mb-1 block text-[16px] font-semibold text-slate-700">
+    <label className="mb-1 block text-[16px] font-semibold text-[#1C231F]">
       {label}
     </label>
     <select
-      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[16px] font-semibold text-slate-800 outline-none transition focus:border-cyan-300 focus:ring-4 focus:ring-cyan-100"
+      className="w-full rounded-xl border border-[#E4E1D8] bg-white px-4 py-2.5 text-[16px] font-semibold text-[#1C231F] outline-none transition focus:border-[#0B4F48] focus:ring-4 focus:ring-[#CFE7E2]"
       {...props}
     >
       {options.map((opt) => (
@@ -430,9 +430,9 @@ const Select = ({ label, options, ...props }) => (
   </div>
 );
 
-const SummaryRow = ({ label, value, valueClassName = "text-slate-900" }) => (
+const SummaryRow = ({ label, value, valueClassName = "text-[#1C231F]" }) => (
   <div className="flex items-center justify-between gap-4 rounded-[14px] bg-white/70 px-3 py-2.5">
-    <span className="text-[16px] font-semibold text-slate-500">{label}</span>
+    <span className="text-[16px] font-semibold text-[#6B6F66]">{label}</span>
     <span className={`text-[16px] font-semibold ${valueClassName}`}>{value}</span>
   </div>
 );

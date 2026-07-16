@@ -1,11 +1,11 @@
 .accounts-row {
-  border-top: 1px solid rgba(255,255,255,0.03);
+  border-top: 1px solid #E4E1D8;
 }
 
 .accounts-td {
   padding: 12px;
   font-size: 14px;
-  color: #e6eef8;
+  color: #1C231F;
   vertical-align: middle;
 }
 
@@ -22,17 +22,17 @@
 }
 
 .accounts-badge--income {
-  background: #dcfce7;
-  color: #166534;
+  background: #E4F0EE;
+  color: #0F6E64;
 }
 
 .accounts-badge--expense {
-  background: #fee2e2;
-  color: #991b1b;
+  background: #FDEBEB;
+  color: #B33A3A;
 }
 
 .accounts-view-btn {
-  background: #2563eb;
+  background: #0B4F48;
   color: #ffffff;
   border: none;
   border-radius: 8px;
@@ -44,6 +44,5 @@
 }
 
 .accounts-view-btn:hover {
-  opacity: 0.9;
+  opacity: 0.85;
 }
-

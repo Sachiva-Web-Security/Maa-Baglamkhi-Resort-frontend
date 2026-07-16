@@ -125,22 +125,11 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
       { id: 108, name: "Assign Notifications", icon: FaBell, path: "/assignment-notification", section: "operations" },
       { id: 109, name: "Banquet", icon: FaGlassCheers, path: "/banquet", section: "operations" },
       { id: 109, name: "Accounts", icon: FaWallet, path: "/accounts", section: "records" },
-      { id: 110, name: "Inventory", icon: FaBoxes, path: "/inventory", section: "records",
-        children: [
-          { id: 1100, name: "Categories", path: "/inventory/categories", icon: FaListAlt },
-          { id: 1101, name: "Vendors", path: "/inventory/vendors", icon: FaTruck },
-          { id: 1102, name: "Units", path: "/inventory/units", icon: FaBalanceScale },
-          { id: 1103, name: "Items / Stock", path: "/inventory/items", icon: FaWarehouse },
-          { id: 1104, name: "Menu Items", path: "/inventory/menu-items", icon: FaUtensils },
-          { id: 1105, name: "Menu List", path: "/inventory/menu-list", icon: FaClipboardList },
-          { id: 1106, name: "Purchase Invoices", path: "/inventory/purchases", icon: FaShoppingCart },
-          { id: 1107, name: "Reports", path: "/inventory/reports", icon: FaChartBar },
-        ]
-      },
+      { id: 110, name: "Inventory", icon: FaBoxes, path: "/inventory", section: "records" },
       { id: 111, name: "Reports", icon: FaChartBar, path: "/reports", section: "records" },
       { id: 112, name: "Audit Logs", icon: FaHistory, path: "/reports/audit", section: "records" },
       { id: 113, name: "User Management", icon: FaUserCheck, path: "/user", section: "records" },
-      { id: 115, name: "WhatsApp Settings", icon: FaWhatsapp, path: "/whatsapp-settings", section: "records" },
+   
       { id: 114, name: "Salary", icon: FaMoneyBillWave, path: "/salary", section: "records" },
     ],
     manager: [
