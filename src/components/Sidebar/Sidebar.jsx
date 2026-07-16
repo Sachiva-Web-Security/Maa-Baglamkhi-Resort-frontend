@@ -125,26 +125,16 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
       { id: 108, name: "Assign Notifications", icon: FaBell, path: "/assignment-notification", section: "operations" },
       { id: 109, name: "Banquet", icon: FaGlassCheers, path: "/banquet", section: "operations" },
       { id: 109, name: "Accounts", icon: FaWallet, path: "/accounts", section: "records" },
-      { id: 110, name: "Inventory", icon: FaBoxes, path: "/inventory", section: "records",
-        children: [
-          { id: 1100, name: "Categories", path: "/inventory/categories", icon: FaListAlt },
-          { id: 1101, name: "Vendors", path: "/inventory/vendors", icon: FaTruck },
-          { id: 1102, name: "Units", path: "/inventory/units", icon: FaBalanceScale },
-          { id: 1103, name: "Items / Stock", path: "/inventory/items", icon: FaWarehouse },
-          { id: 1104, name: "Menu Items", path: "/inventory/menu-items", icon: FaUtensils },
-          { id: 1105, name: "Menu List", path: "/inventory/menu-list", icon: FaClipboardList },
-          { id: 1106, name: "Purchase Invoices", path: "/inventory/purchases", icon: FaShoppingCart },
-          { id: 1107, name: "Reports", path: "/inventory/reports", icon: FaChartBar },
-        ]
-      },
+      { id: 110, name: "Inventory", icon: FaBoxes, path: "/inventory", section: "records" },
       { id: 111, name: "Reports", icon: FaChartBar, path: "/reports", section: "records" },
       { id: 112, name: "Audit Logs", icon: FaHistory, path: "/reports/audit", section: "records" },
       { id: 113, name: "User Management", icon: FaUserCheck, path: "/user", section: "records" },
-      { id: 115, name: "WhatsApp Settings", icon: FaWhatsapp, path: "/whatsapp-settings", section: "records" },
+   
       { id: 114, name: "Salary", icon: FaMoneyBillWave, path: "/salary", section: "records" },
     ],
     manager: [
       { id: 201, name: "All Bookings", icon: FaHotel, path: "/hotel/all-bookings", section: "operations" },
+       { id: 101, name: "Attendance", icon: FaUserCheck, path: "/attendance" },
       { id: 202, name: "Housekeeping", icon: FaBroom, path: "/housekeeping", section: "operations" },
       { id: 203, name: "HK Notifications", icon: FaBell, path: "/housekeeping/notifications", section: "operations" },
       { id: 204, name: "Assignments", icon: FaTasks, path: "/assignments", section: "operations" },
@@ -153,20 +143,9 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
       { id: 207, name: "Restaurant POS", icon: FaUtensils, path: "/restaurant", section: "operations" },
       { id: 208, name: "Accounts", icon: FaWallet, path: "/accounts", section: "records" },
       { id: 209, name: "Reports", icon: FaChartBar, path: "/reports", section: "records" },
-      { id: 210, name: "Inventory", icon: FaBoxes, path: "/inventory", section: "records",
-        children: [
-          { id: 2100, name: "Categories", path: "/inventory/categories", icon: FaListAlt },
-          { id: 2101, name: "Vendors", path: "/inventory/vendors", icon: FaTruck },
-          { id: 2102, name: "Units", path: "/inventory/units", icon: FaBalanceScale },
-          { id: 2103, name: "Items / Stock", path: "/inventory/items", icon: FaWarehouse },
-          { id: 2104, name: "Menu Items", path: "/inventory/menu-items", icon: FaUtensils },
-          { id: 2105, name: "Menu List", path: "/inventory/menu-list", icon: FaClipboardList },
-          { id: 2106, name: "Purchase Invoices", path: "/inventory/purchases", icon: FaShoppingCart },
-          { id: 2107, name: "Reports", path: "/inventory/reports", icon: FaChartBar },
-        ]
-      },
+      { id: 210, name: "Inventory", icon: FaBoxes, path: "/inventory", section: "records"},
       { id: 211, name: "Audit Logs", icon: FaHistory, path: "/reports/audit", section: "records" },
-      { id: 212, name: "My Attendance", icon: FaUserCheck, path: "/my-attendance", section: "operations" },
+    
     ],
     receptionist: [
       { id: 301, name: "Guest Booking", icon: FaHotel, path: "/hotel/guest", section: "operations" },

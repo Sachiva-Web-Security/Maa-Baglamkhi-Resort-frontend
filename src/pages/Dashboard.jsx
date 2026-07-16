@@ -41,7 +41,7 @@ import {
   todayISO,
 } from "../components/Dashboard/stayoverUtils";
 
-const boardOrder = ["available", "confirmed", "blocked", "checked_in"];
+const boardOrder = ["available", "confirmed", "blocked", "checked_in", "checkout"];
 const CLEANING_TIME_OPTIONS = [15, 30, 45, 60, 90, 120];
 const METRIC_PANEL_PAGE_SIZE = 6;
 const AVAILABLE_ROOM_TYPE_ORDER = [
@@ -354,6 +354,7 @@ const Dashboard = () => {
     pencil: [],
     blocked: [],
     checked_in: [],
+    checkout: [],
   };
 
   const availableRoomGroups = useMemo(() => groupRoomsByType(selectedDaySnapshot.available), [selectedDaySnapshot.available]);
@@ -362,6 +363,7 @@ const Dashboard = () => {
   const pencilRoomGroups = useMemo(() => groupRoomsByType(selectedDaySnapshot.pencil), [selectedDaySnapshot.pencil]);
   const blockedRoomGroups = useMemo(() => groupRoomsByType(selectedDaySnapshot.blocked), [selectedDaySnapshot.blocked]);
   const checkedInRoomGroups = useMemo(() => groupRoomsByType(selectedDaySnapshot.checked_in), [selectedDaySnapshot.checked_in]);
+  const checkoutRoomGroups = useMemo(() => groupRoomsByType(selectedDaySnapshot.checkout), [selectedDaySnapshot.checkout]);
 
   const attentionCount = useMemo(
     () =>
@@ -809,7 +811,7 @@ const Dashboard = () => {
       key === "cleaning" ? cleaningInventory : availableInventory,
     );
 
-    if (["available", "confirmed", "cleaning", "blocked", "checked_in"].includes(key)) {
+    if (["available", "confirmed", "cleaning", "blocked", "checked_in", "checkout"].includes(key)) {
       const toneMap = {
         available: {
           border: "border-emerald-400",
@@ -866,6 +868,17 @@ const Dashboard = () => {
           empty: "border-dashed border-sky-400 bg-[linear-gradient(135deg,rgba(255,255,255,0.65)_0%,rgba(240,249,255,0.78)_100%)] text-sky-500",
           pill: "border-sky-200 bg-[linear-gradient(135deg,#f0f9ff_0%,#bae6fd_100%)] text-sky-700",
         },
+        checkout: {
+          border: "border-rose-400",
+          soft: "bg-[linear-gradient(135deg,rgba(255,241,242,0.92)_0%,rgba(254,205,211,0.55)_100%)]",
+          badge: "border-rose-200 bg-[linear-gradient(135deg,#fff1f2_0%,#fecdd3_100%)] text-rose-700 shadow-[0_10px_24px_rgba(244,63,94,0.18)]",
+          title: "text-rose-900",
+          sub: "text-rose-700",
+          button: "border-rose-300 bg-[linear-gradient(135deg,rgba(255,255,255,0.7)_0%,rgba(255,241,242,0.95)_100%)]",
+          dot: "border-rose-200 bg-[linear-gradient(135deg,#fff1f2_0%,#fecdd3_100%)] text-rose-600",
+          empty: "border-dashed border-rose-400 bg-[linear-gradient(135deg,rgba(255,255,255,0.65)_0%,rgba(255,241,242,0.78)_100%)] text-rose-500",
+          pill: "border-rose-200 bg-[linear-gradient(135deg,#fff1f2_0%,#fecdd3_100%)] text-rose-700",
+        },
       };
 
       const subtitleMap = {
@@ -873,6 +886,7 @@ const Dashboard = () => {
         confirmed: "confirmed",
         blocked: "blocked",
         checked_in: "checked in",
+        checkout: "due for check-out",
       };
 
       const tone = toneMap[key];
@@ -983,6 +997,18 @@ const Dashboard = () => {
                                     className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.12em] text-white shadow-sm transition hover:from-blue-700 hover:to-blue-800"
                                   >
                                     Book Now
+                                  </button>
+                                </div>
+                              ) : null}
+
+                              {key === "checkout" && item.booking ? (
+                                <div className="flex items-center justify-end gap-2 border-t border-white/40 px-3.5 pb-3 pt-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleManageBooking(item)}
+                                    className={`inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-rose-600 to-rose-700 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.12em] text-white shadow-sm transition hover:from-rose-700 hover:to-rose-800`}
+                                  >
+                                    Manage Booking
                                   </button>
                                 </div>
                               ) : null}
@@ -1237,6 +1263,21 @@ const Dashboard = () => {
 
   const toggleAvailableType = (typeKey) => {
     setAvailableTypeOpen((prev) => (prev === typeKey ? "" : typeKey));
+  };
+
+  const handleManageBooking = (item) => {
+    const bookingId = item?.booking?.bookingId;
+    const isRoomDerived = !bookingId || String(bookingId).startsWith("room-");
+
+    navigate("/hotel/edit-booking", {
+      state: {
+        bookingId: isRoomDerived ? null : bookingId,
+        bookingCode: isRoomDerived ? null : item.booking.bookingCode,
+        focusRoomNo: item.roomNumber,
+        guestName: isRoomDerived ? (item.booking?.guestName || item.title) : undefined,
+        autoManage: true,
+      },
+    });
   };
 
   const handleBookingLifecycle = async (action) => {

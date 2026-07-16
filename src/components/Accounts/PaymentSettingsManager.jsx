@@ -14,7 +14,7 @@ const emptyForm = {
 };
 
 const inputClass =
-  "w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[15px] text-slate-950 outline-none placeholder:text-slate-700 focus:ring-2 focus:ring-cyan-200";
+  "w-full rounded-xl border border-[#E4E1D8] bg-white px-3 py-2 text-[15px] text-[#1C231F] outline-none placeholder:text-[#6B6F66] focus:ring-2 focus:ring-[#CFE7E2]";
 
 const PaymentSettingsManager = ({ rows, onSubmit, onUpdate, onDelete }) => {
   const [form, setForm] = useState(emptyForm);
@@ -89,26 +89,26 @@ const PaymentSettingsManager = ({ rows, onSubmit, onUpdate, onDelete }) => {
   };
 
   return (
-    <div className="space-y-5 rounded-[24px] border border-white/60 bg-white/82 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
+    <div className="space-y-5 rounded-[22px] border border-[#E4E1D8] bg-white/95 p-5 shadow-[0_20px_50px_rgba(30,64,175,0.1)]">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <div className="text-[15px] font-semibold uppercase tracking-[0.18em] text-slate-950">
+          <div className="text-[15px] font-semibold uppercase tracking-[0.18em] text-[#0B4F48]">
             Payment Settings
           </div>
-          <h3 className="mt-2 text-[15px] font-black text-slate-900">UPI and scanner setup</h3>
-          <p className="mt-2 max-w-3xl text-[15px] text-slate-800">
+          <h3 className="mt-2 text-[15px] font-black text-[#1C231F]">UPI and scanner setup</h3>
+          <p className="mt-2 max-w-3xl text-[15px] text-[#6B6F66]">
             Save the client&apos;s UPI ID, provider details, bank name, and QR scanner so staff can
             show the correct payment setup for hotel, restaurant, or banquet payments.
           </p>
         </div>
-        <div className="rounded-[20px] border border-cyan-100 bg-cyan-50 px-4 py-3 text-[15px] text-slate-950">
+        <div className="rounded-[20px] border border-[#CFE7E2] bg-[#E4F0EE] px-4 py-3 text-[15px] text-[#0B4F48]">
           Active setups: <span className="font-bold">{activeRows.length}</span>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-2">
         <label className="block">
-          <span className="mb-1 block text-[15px] font-semibold uppercase tracking-[0.14em] text-slate-950">
+          <span className="mb-1 block text-[15px] font-semibold uppercase tracking-[0.14em] text-[#1C231F]">
             Payment Mode
           </span>
           <select
@@ -125,7 +125,7 @@ const PaymentSettingsManager = ({ rows, onSubmit, onUpdate, onDelete }) => {
         </label>
 
         <label className="block">
-          <span className="mb-1 block text-[15px] font-semibold uppercase tracking-[0.14em] text-slate-950">
+          <span className="mb-1 block text-[15px] font-semibold uppercase tracking-[0.14em] text-[#1C231F]">
             Department
           </span>
           <select
@@ -142,7 +142,7 @@ const PaymentSettingsManager = ({ rows, onSubmit, onUpdate, onDelete }) => {
         </label>
 
         <label className="block">
-          <span className="mb-1 block text-[15px] font-semibold uppercase tracking-[0.14em] text-slate-950">
+          <span className="mb-1 block text-[15px] font-semibold uppercase tracking-[0.14em] text-[#1C231F]">
             Provider Name
           </span>
           <input
@@ -155,7 +155,7 @@ const PaymentSettingsManager = ({ rows, onSubmit, onUpdate, onDelete }) => {
         </label>
 
         <label className="block">
-          <span className="mb-1 block text-[15px] font-semibold uppercase tracking-[0.14em] text-slate-950">
+          <span className="mb-1 block text-[15px] font-semibold uppercase tracking-[0.14em] text-[#1C231F]">
             UPI ID
           </span>
           <input
@@ -168,7 +168,7 @@ const PaymentSettingsManager = ({ rows, onSubmit, onUpdate, onDelete }) => {
         </label>
 
         <label className="block">
-          <span className="mb-1 block text-[15px] font-semibold uppercase tracking-[0.14em] text-slate-950">
+          <span className="mb-1 block text-[15px] font-semibold uppercase tracking-[0.14em] text-[#1C231F]">
             Account Holder
           </span>
           <input
@@ -181,7 +181,7 @@ const PaymentSettingsManager = ({ rows, onSubmit, onUpdate, onDelete }) => {
         </label>
 
         <label className="block">
-          <span className="mb-1 block text-[15px] font-semibold uppercase tracking-[0.14em] text-slate-950">
+          <span className="mb-1 block text-[15px] font-semibold uppercase tracking-[0.14em] text-[#1C231F]">
             Bank Name
           </span>
           <input
@@ -194,7 +194,7 @@ const PaymentSettingsManager = ({ rows, onSubmit, onUpdate, onDelete }) => {
         </label>
 
         <label className="block">
-          <span className="mb-1 block text-[15px] font-semibold uppercase tracking-[0.14em] text-slate-950">
+          <span className="mb-1 block text-[15px] font-semibold uppercase tracking-[0.14em] text-[#1C231F]">
             QR Image URL
           </span>
           <input
@@ -207,7 +207,7 @@ const PaymentSettingsManager = ({ rows, onSubmit, onUpdate, onDelete }) => {
         </label>
 
         <label className="block">
-          <span className="mb-1 block text-[15px] font-semibold uppercase tracking-[0.14em] text-slate-950">
+          <span className="mb-1 block text-[15px] font-semibold uppercase tracking-[0.14em] text-[#1C231F]">
             Upload QR Image
           </span>
           <input
@@ -220,7 +220,7 @@ const PaymentSettingsManager = ({ rows, onSubmit, onUpdate, onDelete }) => {
         </label>
 
         <label className="block md:col-span-2">
-          <span className="mb-1 block text-[15px] font-semibold uppercase tracking-[0.14em] text-slate-950">
+          <span className="mb-1 block text-[15px] font-semibold uppercase tracking-[0.14em] text-[#1C231F]">
             Notes
           </span>
           <textarea
@@ -233,13 +233,13 @@ const PaymentSettingsManager = ({ rows, onSubmit, onUpdate, onDelete }) => {
           />
         </label>
 
-        <label className="flex items-center gap-3 text-[15px] font-semibold text-slate-950">
+        <label className="flex items-center gap-3 text-[15px] font-semibold text-[#1C231F]">
           <input
             type="checkbox"
             name="isActive"
             checked={form.isActive}
             onChange={handleChange}
-            className="h-4 w-4 rounded border-slate-300"
+            className="h-4 w-4 rounded border-[#E4E1D8]"
           />
           Keep this payment setup active
         </label>
@@ -259,7 +259,7 @@ const PaymentSettingsManager = ({ rows, onSubmit, onUpdate, onDelete }) => {
                 setEditingId(null);
                 setForm(emptyForm);
               }}
-              className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-[15px] font-semibold text-slate-700"
+              className="rounded-xl border border-[#E4E1D8] bg-white px-4 py-2 text-[15px] font-semibold text-slate-700"
             >
               Cancel Edit
             </button>
@@ -271,20 +271,20 @@ const PaymentSettingsManager = ({ rows, onSubmit, onUpdate, onDelete }) => {
         {activeRows.map((row) => (
           <div
             key={row.id}
-            className="rounded-[22px] border border-slate-200 bg-slate-50/90 p-4"
+            className="rounded-[22px] border border-[#E4E1D8] bg-slate-50/90 p-4"
           >
             <div className="flex items-start justify-between gap-4">
               <div>
-                <div className="text-[15px] font-semibold uppercase tracking-[0.16em] text-slate-950">
+                <div className="text-[15px] font-semibold uppercase tracking-[0.16em] text-[#1C231F]">
                   {row.department} {row.payment_mode}
                 </div>
-                <div className="mt-2 text-[15px] font-black text-slate-900">
+                <div className="mt-2 text-[15px] font-black text-[#1C231F]">
                   {row.provider_name || row.account_holder_name || "Payment Setup"}
                 </div>
-                <div className="mt-2 text-[15px] text-slate-900">
+                <div className="mt-2 text-[15px] text-[#1C231F]">
                   UPI: {row.upi_id || "-"}
                 </div>
-                <div className="text-[15px] text-slate-900">Bank: {row.bank_name || "-"}</div>
+                <div className="text-[15px] text-[#1C231F]">Bank: {row.bank_name || "-"}</div>
               </div>
               <div className="flex gap-2">
                 <button
@@ -305,7 +305,7 @@ const PaymentSettingsManager = ({ rows, onSubmit, onUpdate, onDelete }) => {
             </div>
 
             {row.qr_image_url ? (
-              <div className="mt-4 rounded-[18px] border border-slate-200 bg-white p-3">
+              <div className="mt-4 rounded-[18px] border border-[#E4E1D8] bg-white p-3">
                 <img
                   src={row.qr_image_url}
                   alt={`${row.department} ${row.payment_mode} QR`}
@@ -313,18 +313,18 @@ const PaymentSettingsManager = ({ rows, onSubmit, onUpdate, onDelete }) => {
                 />
               </div>
             ) : (
-              <div className="mt-4 rounded-[18px] border border-dashed border-slate-300 bg-white p-5 text-center text-[15px] text-slate-800">
+              <div className="mt-4 rounded-[18px] border border-dashed border-[#E4E1D8] bg-white p-5 text-center text-[15px] text-[#6B6F66]">
                 No QR image uploaded yet.
               </div>
             )}
 
             {row.notes ? (
-              <div className="mt-3 text-[15px] text-slate-900">{row.notes}</div>
+              <div className="mt-3 text-[15px] text-[#1C231F]">{row.notes}</div>
             ) : null}
           </div>
         ))}
         {!activeRows.length ? (
-          <div className="rounded-[22px] border border-dashed border-slate-300 bg-slate-50 p-5 text-[15px] text-slate-800 lg:col-span-2">
+          <div className="rounded-[22px] border border-dashed border-[#E4E1D8] bg-slate-50 p-5 text-[15px] text-[#6B6F66] lg:col-span-2">
             No active UPI or scanner setup saved yet.
           </div>
         ) : null}

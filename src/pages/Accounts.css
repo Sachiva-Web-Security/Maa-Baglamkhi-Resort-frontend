@@ -1,7 +1,7 @@
-/* Dark theme for Accounts page - Responsive with Tailwind */
+/* Accounts page custom styles - Warm stone palette */
+
 .accounts-page {
   padding: 20px 30px;
-  background: linear-gradient(180deg, #061226 0%, #071226 40%, #041019 100%);
   min-height: 100vh;
 }
 
@@ -9,7 +9,7 @@
   font-size: 24px;
   font-weight: 800;
   margin: 0 0 24px 0;
-  color: #e6eef8;
+  color: #1C231F;
 }
 
 .accounts-actions {
@@ -39,19 +39,19 @@
 }
 
 .accounts-action-btn--green {
-  background: #16a34a;
+  background: #0F6E64;
 }
 
 .accounts-action-btn--red {
-  background: #dc2626;
+  background: #B33A3A;
 }
 
 .accounts-action-btn--blue {
-  background: #2563eb;
+  background: #17315c;
 }
 
 .accounts-action-btn--purple {
-  background: #7c3aed;
+  background: #5B3A8A;
 }
 
 .accounts-summary-grid {
@@ -62,24 +62,24 @@
 }
 
 .accounts-table-card {
-  background: rgba(255, 255, 255, 0.02);
+  background: #ffffff;
   border-radius: 12px;
-  box-shadow: 0 6px 18px rgba(2, 6, 23, 0.6);
+  box-shadow: 0 6px 18px rgba(30, 64, 175, 0.08);
   overflow: hidden;
   margin-bottom: 22px;
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  border: 1px solid #E4E1D8;
 }
 
 .accounts-table-card__header {
   padding: 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid #E4E1D8;
 }
 
 .accounts-table-card__title {
   margin: 0;
   font-size: 16px;
   font-weight: 800;
-  color: #e6eef8;
+  color: #1C231F;
 }
 
 .accounts-table-wrap {
@@ -94,14 +94,14 @@
 }
 
 .accounts-thead {
-  background: rgba(255, 255, 255, 0.03);
+  background: #F6F5F1;
 }
 
 .accounts-th {
   padding: 12px;
   font-size: 13px;
   font-weight: 800;
-  color: #cbd5e1;
+  color: #6B6F66;
 }
 
 .accounts-reports-grid {
@@ -115,17 +115,17 @@
   justify-content: space-between;
   gap: 12px;
   padding: 10px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid #E4E1D8;
 }
 
 .accounts-view__label {
-  color: #9ca3af;
+  color: #6B6F66;
   font-weight: 800;
   font-size: 13px;
 }
 
 .accounts-view__value {
-  color: #e6eef8;
+  color: #1C231F;
   font-weight: 700;
   font-size: 13px;
   text-align: right;
@@ -139,14 +139,14 @@
 
 .accounts-audit__text {
   margin: 0 0 10px 0;
-  color: #cbd5e1;
+  color: #6B6F66;
   font-size: 14px;
 }
 
 .accounts-audit__list {
   margin: 0;
   padding-left: 18px;
-  color: #e6eef8;
+  color: #1C231F;
   font-size: 14px;
 }
 
@@ -159,7 +159,6 @@
 
 /* Responsive design for Accounts */
 
-/* Large screens (lg and above) - 1024px+ */
 @media (min-width: 1024px) {
   .accounts-page {
     padding: 20px 30px;
@@ -174,7 +173,6 @@
   }
 }
 
-/* Tablets (md) - 768px to 1023px */
 @media (max-width: 1023px) {
   .accounts-page {
     padding: 20px 20px;
@@ -198,7 +196,6 @@
   }
 }
 
-/* Mobile (sm) - 640px to 767px */
 @media (max-width: 767px) {
   .accounts-page {
     padding: 15px 15px;
@@ -274,7 +271,6 @@
   }
 }
 
-/* Extra small screens (xs) - Below 640px */
 @media (max-width: 639px) {
   .accounts-page {
     padding: 10px 10px;
@@ -358,4 +354,3 @@
     font-size: 11px;
   }
 }
-

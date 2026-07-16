@@ -82,6 +82,12 @@ export const BOARD_BUCKET_META = {
     bar: "bg-sky-500",
     soft: "bg-sky-50 text-sky-700",
   },
+  checkout: {
+    label: "Check Out",
+    tone: "border-rose-300",
+    bar: "bg-rose-500",
+    soft: "bg-rose-50 text-rose-700",
+  },
 };
 
 export const formatDateKey = (value) => {
@@ -433,6 +439,7 @@ export const buildDailyBoard = (rooms, mergedBookings, date, today) => {
     pencil: [],
     blocked: [],
     checked_in: [],
+    checkout: [],
   };
 
   const blockedRooms = rooms.filter((room) => isRoomBlockedOnDate(room, date, today));
@@ -463,6 +470,33 @@ export const buildDailyBoard = (rooms, mergedBookings, date, today) => {
     const booking = getRoomBookingForDate(room.roomNumber, date, mergedBookings, !isHistoricalDate);
     if (booking) {
       if (roomStatus === "occupied" && room.guest && !isHistoricalDate) {
+        const isCheckoutDue =
+          date === today &&
+          roomStayCheckOut === today &&
+          roomStayCheckIn &&
+          roomStayCheckIn <= today;
+
+        if (isCheckoutDue) {
+          buckets.checkout.push({
+            id: `checkout-booking-${booking.bookingId || "room"}-${room.roomNumber}-${date}`,
+            roomId: room.roomId,
+            roomNumber: room.roomNumber,
+            room: room.roomNumber,
+            roomType: room.categoryName,
+            title: room.guest || booking.guestName,
+            subtitle: `${booking.mobile || "-"} | ${booking.company || "Direct"}`,
+            booking: {
+              ...booking,
+              bookingStatus: "Checked In",
+              checkIn: formatDateKey(room.checkIn) || booking.checkIn,
+              checkOut: formatDateKey(room.checkOut) || booking.checkOut,
+            },
+            roomData: room,
+            statusLabel: "Due to Check-Out",
+          });
+          return;
+        }
+
         buckets.checked_in.push({
           id: `checked-in-booking-${booking.bookingId || "room"}-${room.roomNumber}-${date}`,
           roomId: room.roomId,
@@ -523,6 +557,38 @@ export const buildDailyBoard = (rooms, mergedBookings, date, today) => {
     }
 
     if (roomStatus === "occupied" && room.guest && !isHistoricalDate && roomStayActiveOnDate) {
+      const isCheckoutDue =
+        date === today && roomStayCheckOut === today && roomStayCheckIn && roomStayCheckIn <= today;
+
+      const checkoutPayload = {
+        bookingId: `room-${room.roomId || room.roomNumber}`,
+        guestName: room.guest,
+        roomNumber: room.roomNumber,
+        roomNo: room.roomNumber,
+        rooms: room.roomNumber,
+        bookingStatus: room.hotelStatus || "Checked In",
+        checkIn: formatDateKey(room.checkIn),
+        checkOut: formatDateKey(room.checkOut),
+        mobile: getBookingContact(room) || "-",
+        company: room.categoryName || "Direct",
+      };
+
+      if (isCheckoutDue) {
+        buckets.checkout.push({
+          id: `checkout-room-${room.roomNumber}-${date}`,
+          roomId: room.roomId,
+          roomNumber: room.roomNumber,
+          room: room.roomNumber,
+          roomType: room.categoryName,
+          title: room.guest,
+          subtitle: `${room.categoryName} | Due to Check-Out`,
+          booking: checkoutPayload,
+          roomData: room,
+          statusLabel: "Due to Check-Out",
+        });
+        return;
+      }
+
       buckets.checked_in.push({
         id: `checked-in-room-${room.roomNumber}-${date}`,
         roomId: room.roomId,
@@ -531,18 +597,7 @@ export const buildDailyBoard = (rooms, mergedBookings, date, today) => {
         roomType: room.categoryName,
         title: room.guest,
         subtitle: `${room.categoryName} | In-house`,
-        booking: {
-          bookingId: `room-${room.roomId || room.roomNumber}`,
-          guestName: room.guest,
-          roomNumber: room.roomNumber,
-          roomNo: room.roomNumber,
-          rooms: room.roomNumber,
-          bookingStatus: room.hotelStatus || "Checked In",
-          checkIn: formatDateKey(room.checkIn),
-          checkOut: formatDateKey(room.checkOut),
-          mobile: getBookingContact(room) || "-",
-          company: room.categoryName || "Direct",
-        },
+        booking: checkoutPayload,
         roomData: room,
       });
       return;
@@ -598,6 +653,7 @@ export const buildStaySummary = (rooms, mergedBookings, startDate, dayCount = DA
       pencilCount: board.pencil.length,
       blockedCount: board.blocked.length,
       checkedInCount: board.checked_in.length,
+      checkoutCount: board.checkout.length,
       board,
       arrivals: mergedBookings.filter((booking) => booking.checkIn === date),
       departures: mergedBookings.filter((booking) => booking.checkOut === date),

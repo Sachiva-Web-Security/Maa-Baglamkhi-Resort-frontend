@@ -48,6 +48,10 @@ import {
   FaExclamationTriangle,
   FaPrint,
   FaEnvelope,
+  FaWhatsapp,
+  FaPaperPlane,
+  FaUser,
+  FaPhone,
   FaCommentDots,
   FaListUl,
   FaUserPlus,
@@ -835,6 +839,7 @@ const DocumentUploadModal = ({ booking, onClose }) => {
       setFile(null);
       setForm((prev) => ({ ...prev, notes: "" }));
       await loadDocuments();
+      window.dispatchEvent(new Event("documentsUpdated"));
     } catch (err) {
       alert(err.response?.data?.message || "Document upload failed");
     } finally {
@@ -846,6 +851,7 @@ const DocumentUploadModal = ({ booking, onClose }) => {
     if (!window.confirm("Delete this document?")) return;
     await API.delete(`/hotel/guest-documents/${bookingId}/${documentId}`);
     await loadDocuments();
+    window.dispatchEvent(new Event("documentsUpdated"));
   };
 
   return (
@@ -978,30 +984,51 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
   // response doesn't already carry a computed total.
   const fallbackTotal = roomChargesTotal + folioChargesTotal;
 
-  // Prefer real, itemized data from the backend invoice. If the backend hasn't
-  // itemized folio charges yet, fall back to the live room + folio breakdown we
-  // already fetched from /hotel/full-booking and /hotel/folio, so the invoice
-  // always shows full detail instead of a single lump-sum line.
-  const items = Array.isArray(invoice?.items) && invoice.items.length > 0
-    ? invoice.items
-    : [
-        { name: "Room Charges", description: "Total room / tariff charges", quantity: 1, price: roomChargesTotal, total: roomChargesTotal },
-        ...folioCharges.map((e) => ({
-          name: e.category || "Extra Charge",
-          description: e.description || "-",
-          quantity: 1,
-          price: e.amount,
-          total: e.amount,
-        })),
-      ];
+  // Build folio extra-charge items from the live /hotel/folio data.
+  const folioItems = (Array.isArray(folioCharges) ? folioCharges : []).map((e) => ({
+    name: e.category || "Extra Charge",
+    description: e.description || "Folio entry",
+    quantity: 1,
+    price: Number(e.amount) || 0,
+    total: Number(e.amount) || 0,
+    isFolio: true,
+  }));
+
+  // Prefer real, itemized data from the backend invoice, but ALWAYS merge live
+  // folio charges in — the stored invoice may pre-date the latest extra-charge
+  // entry, so we append folio items so the printed/downloaded invoice matches
+  // what the booking detail view shows.
+  const backendItems = Array.isArray(invoice?.items) && invoice.items.length > 0 ? invoice.items : [
+    { name: "Room Charges", description: "Total room / tariff charges", quantity: 1, price: roomChargesTotal, total: roomChargesTotal },
+  ];
+
+  // De-dupe: if a folio line already exists in backendItems (matched by name + amount),
+  // don't append a duplicate row.
+  const seenFolioKeys = new Set();
+  const items = [
+    ...backendItems.filter((it) => {
+      if (!it) return false;
+      const key = `${it.name || ""}|${Number(it.total ?? it.price ?? 0)}`;
+      seenFolioKeys.add(key);
+      return true;
+    }),
+    ...folioItems.filter((it) => {
+      const key = `${it.name}|${it.total}`;
+      if (seenFolioKeys.has(key)) return false;
+      seenFolioKeys.add(key);
+      return true;
+    }),
+  ];
+
+  // Recompute the total from the merged items list so Print + PDF always reflect
+  // Room + ALL Folio charges, even when the backend's stored invoice.totalAmount is stale.
+  const itemsTotal = items.reduce((sum, it) => sum + (Number(it.total ?? it.price ?? 0) || 0), 0);
 
   const invoiceNo = invoice?.invoiceNo || invoice?.invoice_no || `INV-${bookingId}`;
   const guestName = invoice?.customerName || invoice?.customer_name || booking?.guest_name || "Guest";
-  // IMPORTANT: prioritize the live Room + Folio total (fallbackTotal) over the backend's
-  // stored invoice.totalAmount, because the stored value can be stale if folio charges
-  // were added AFTER the invoice was last generated. Only fall back to the backend value
-  // when we have no live breakdown to compute from at all.
-  const invoiceTotal = fallbackTotal > 0 ? fallbackTotal : (invoice?.totalAmount || invoice?.final_total || booking?.totalAmount || 0);
+  // Use the merged items total so folio charges are always included.
+  // Fall back to the backend stored total only if we have no items to sum.
+  const invoiceTotal = itemsTotal > 0 ? itemsTotal : (invoice?.totalAmount || invoice?.final_total || booking?.totalAmount || 0);
   const paid = Number(paidAmount || invoice?.paidAmount || invoice?.paid_amount) || 0;
   // Remaining logic: if an advance has been paid, show Total - Paid (folio included);
   // if nothing has been paid yet, show the full actual Total (folio included).
@@ -1585,42 +1612,36 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
       console.log("[Invoice] Final adminNumber to send:", adminNumber || "(empty — backend will DB-fallback)");
 
       // Step 1: send to both customer and admin
+      // Clean phone numbers: digits only, prepend 91 if only 10 digits
+      const cleanNumber = (num) => {
+        const digits = String(num || "").replace(/\D/g, "");
+        if (!digits) return "";
+        return digits.length > 10 ? digits : `91${digits}`;
+      };
+
       const payload = {
-        adminNumber,
-        customerNumber: invoice?.phone || booking?.mobile || "",
+        adminNumber: cleanNumber(adminNumber),
+        customerNumber: cleanNumber(invoice?.phone || booking?.mobile || ""),
       };
       console.log("[Invoice] POST payload:", payload);
 
       const pdfRes = await API.post(`/hotel/invoice/send-whatsapp/${bookingId}`, payload);
-      console.log("[Invoice] API response status:", pdfRes.status);
       const data = pdfRes.data || {};
-      console.log("[Invoice] API response data:", JSON.stringify(data, null, 2));
+      console.log("[WhatsApp] full response:", JSON.stringify(data, null, 2));
+      console.log("[WhatsApp] customer.whatsapp:", data?.customer?.whatsapp);
+      console.log("[WhatsApp] admin.whatsapp:", data?.admin?.whatsapp);
 
-      const customerWa  = data?.customer?.whatsapp;
-      const customerSms = data?.customer?.sms;
-      const adminWa     = data?.admin?.whatsapp;
-      const adminSms    = data?.admin?.sms;
-
-      console.log("[Invoice] customer.wa:", customerWa);
-      console.log("[Invoice] customer.sms:", customerSms);
-      console.log("[Invoice] admin.wa:", adminWa);
-      console.log("[Invoice] admin.sms:", adminSms);
+      // Backend returns: { customer: { whatsapp: { ok, skipped, reason } }, admin: { whatsapp: {...} } }
+      const customerWa = data?.customer?.whatsapp || {};
+      const adminWa = data?.admin?.whatsapp || {};
 
       const channels = [];
-      if (customerWa?.ok)  channels.push("customer WhatsApp");
-      if (customerSms?.ok) channels.push("customer SMS");
-      if (adminWa?.ok)     channels.push("admin WhatsApp");
-      if (adminSms?.ok)    channels.push("admin SMS");
+      if (customerWa?.ok) channels.push("customer WhatsApp");
+      if (adminWa?.ok) channels.push("admin WhatsApp");
 
       const skipped = [];
-      if (customerWa?.skipped)  skipped.push(`customer WhatsApp (${customerWa.reason || "no number"})`);
-      if (customerSms?.skipped) skipped.push(`customer SMS (${customerSms.reason || "no number"})`);
-      if (adminWa?.skipped)     skipped.push(`admin WhatsApp (${adminWa.reason || "no number"})`);
-      if (adminSms?.skipped)    skipped.push(`admin SMS (${adminSms.reason || "no number"})`);
-
-      console.log("[Invoice] Channels succeeded:", channels);
-      console.log("[Invoice] Channels skipped:", skipped);
-      console.groupEnd();
+      if (customerWa?.skipped) skipped.push(`customer WhatsApp (${customerWa.reason || "no number"})`);
+      if (adminWa?.skipped) skipped.push(`admin WhatsApp (${adminWa.reason || "no number"})`);
 
       if (channels.length > 0) {
         setSendStatus({
@@ -1628,18 +1649,10 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
           message: `Invoice sent via: ${channels.join(", ")}${skipped.length ? ". Skipped: " + skipped.join(", ") : ""}`,
         });
       } else {
-        const adminSkip = skipped.find((s) => s.startsWith("admin"));
-        if (adminSkip) {
-          setSendStatus({
-            type: "error",
-            message: `Could not send. ${adminSkip}. Go to Profile and set your phone number.`,
-          });
-        } else {
-          setSendStatus({
-            type: "error",
-            message: `Could not send. Skipped: ${skipped.join(", ")}`,
-          });
-        }
+        setSendStatus({
+          type: "error",
+          message: `Could not send. Skipped: ${skipped.join(", ") || "Unknown error"}`,
+        });
       }
     } catch (err) {
       console.error("[Invoice] Send failed:", err);
@@ -1732,6 +1745,121 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
   );
 };
 
+/* ────────────────── WhatsApp Send Modal Component ─────────────────────────── */
+
+const WhatsAppSendModal = ({ booking, detail, sending, result, onSend, onClose }) => {
+  const b = booking || {};
+  const guestName = detail?.guest_name || b.guest_name || "Guest";
+  const customerPhone = detail?.mobile || b.mobile || "—";
+  const invoiceNo = detail?.invoice?.invoiceNo || detail?.invoice_no || `BK-${b.bookingId}`;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={sending ? undefined : onClose} />
+      <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+        {/* Header */}
+        <div className="bg-[#25D366] px-6 py-5 flex items-center gap-3">
+          <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
+            <FaWhatsapp className="text-[#25D366] text-2xl" />
+          </div>
+          <div>
+            <h3 className="text-white font-bold text-lg">Send Invoice via WhatsApp</h3>
+            <p className="text-white/80 text-xs">Invoice will be sent with PDF attachment</p>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="px-6 py-5 space-y-4">
+          {/* Guest Info */}
+          <div className="bg-slate-50 rounded-xl p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <FaUser className="text-slate-400 text-sm" />
+              <span className="text-slate-500 text-sm font-medium">Guest</span>
+              <span className="text-slate-800 font-bold ml-auto">{guestName}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <FaPhone className="text-slate-400 text-sm" />
+              <span className="text-slate-500 text-sm font-medium">Mobile</span>
+              <span className="text-slate-800 font-bold ml-auto">{customerPhone}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <FaFileAlt className="text-slate-400 text-sm" />
+              <span className="text-slate-500 text-sm font-medium">Invoice</span>
+              <span className="text-slate-800 font-bold ml-auto">{invoiceNo}</span>
+            </div>
+          </div>
+
+          {/* Admin Info */}
+          <div className="bg-blue-50 rounded-xl p-4">
+            <p className="text-blue-700 text-sm font-medium">Admin (Resort) will also receive a notification</p>
+          </div>
+
+          {/* Result / Status */}
+          {result && (
+            <div className={`rounded-xl p-4 flex items-start gap-3 ${
+              result.type === "success"
+                ? "bg-green-50 border border-green-200"
+                : result.type === "partial"
+                ? "bg-amber-50 border border-amber-200"
+                : "bg-red-50 border border-red-200"
+            }`}>
+              {result.type === "success" && <FaCheckCircle className="text-green-600 text-xl mt-0.5" />}
+              {result.type === "partial" && <FaExclamationTriangle className="text-amber-600 text-xl mt-0.5" />}
+              {result.type === "error" && <FaTimes className="text-red-600 text-xl mt-0.5" />}
+              <div>
+                <p className={`font-semibold text-sm ${
+                  result.type === "success" ? "text-green-800"
+                  : result.type === "partial" ? "text-amber-800"
+                  : "text-red-800"
+                }`}>
+                  {result.type === "success" ? "Sent Successfully"
+                  : result.type === "partial" ? "Partially Sent"
+                  : "Failed to Send"}
+                </p>
+                <p className={`text-sm mt-1 ${
+                  result.type === "success" ? "text-green-600"
+                  : result.type === "partial" ? "text-amber-600"
+                  : "text-red-600"
+                }`}>
+                  {result.message}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 pb-5 flex gap-3">
+          {!sending && !result && (
+            <>
+              <button onClick={onClose} className="flex-1 px-4 py-2.5 border border-slate-200 text-slate-600 font-medium rounded-lg hover:bg-slate-50 transition-colors text-sm">
+                Cancel
+              </button>
+              <button onClick={onSend} className="flex-1 px-4 py-2.5 bg-[#25D366] hover:bg-[#1da851] text-white font-semibold rounded-lg transition-colors text-sm flex items-center justify-center gap-2">
+                <FaPaperPlane className="text-sm" /> Send Now
+              </button>
+            </>
+          )}
+          {sending && (
+            <div className="flex-1 flex items-center justify-center gap-2 py-2.5">
+              <svg className="animate-spin h-5 w-5 text-[#25D366]" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              <span className="text-slate-500 text-sm font-medium">Sending...</span>
+            </div>
+          )}
+          {result && !sending && (
+            <button onClick={onClose} className="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg transition-colors text-sm">
+              Close
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const BookingFlow = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -1782,6 +1910,9 @@ const BookingFlow = () => {
   const [folioCharges, setFolioCharges] = useState([]); // admin-added folio (extra) charges for the details page
   const [folioLoading, setFolioLoading] = useState(false);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+  const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
+  const [waSending, setWaSending] = useState(false);
+  const [waResult, setWaResult] = useState(null);
 
   const [toast, setToast] = useState({ open: false, type: "success", title: "", message: "" });
   const [cancelModal, setCancelModal] = useState({ open: false, reason: "", submitting: false });
@@ -1819,6 +1950,25 @@ const BookingFlow = () => {
       .catch((err) => console.error("Failed to load room categories:", err));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Keep folio charges in sync when FolioView dispatches a "folioUpdated" event.
+  useEffect(() => {
+    const syncFolio = async () => {
+      const bookingId = selectedBooking?.bookingId;
+      if (!bookingId) return;
+      try {
+        const folioRes = await API.get(`/hotel/folio/${bookingId}`);
+        const allEntries = Array.isArray(folioRes.data) ? folioRes.data : [];
+        setFolioCharges(allEntries.filter((e) => e.entry_type === "Extra Charge"));
+      } catch (err) {
+        console.error("Failed to reload folio charges after update:", err);
+        setFolioCharges([]);
+      }
+    };
+
+    window.addEventListener("folioUpdated", syncFolio);
+    return () => window.removeEventListener("folioUpdated", syncFolio);
+  }, [selectedBooking]);
 
   // Auto-fill from dashboard deep link (?roomNo=&roomType=) or location.state.
   // Runs after categorySetup so we can map the incoming room type string to a
@@ -1908,6 +2058,75 @@ const BookingFlow = () => {
   // `rooms` array. It's been removed — each row now snapshots its own
   // `categoryId` at the moment it's added/edited (see addRoomRow / updateRoomRow
   // below), so rows are fully isolated from each other and from this field.
+
+  // Auto-open Manage Booking when the Dashboard's checkout section sends us
+  // here via `state.autoManage = true`. We try to locate the booking from
+  // the already-loaded list, then jump straight to the "manage" view. We
+  // also accept `focusRoomNo` + `guestName` for bookings whose ID is
+  // synthetic (e.g. "room-101" from room-derived stays).
+  useEffect(() => {
+    if (!location.state?.autoManage) return;
+
+    const bookingId = location.state.bookingId || null;
+    const focusRoomNo = location.state.focusRoomNo || null;
+    const guestName = location.state.guestName || "";
+
+    const resolveBooking = () => {
+      if (bookingId) {
+        const byId = bookings.find(
+          (b) =>
+            String(b.bookingId) === String(bookingId) ||
+            String(b.booking_code) === String(bookingId) ||
+            String(b.bookingCode) === String(bookingId),
+        );
+        if (byId) return byId;
+      }
+
+      if (focusRoomNo) {
+        const byRoom = bookings.find((b) => {
+          const roomTokens = [
+            b.rooms,
+            b.roomNumber,
+            b.roomNo,
+          ]
+            .filter(Boolean)
+            .flatMap((v) =>
+              typeof v === "string" ? v.split(",").map((s) => s.trim()) : [String(v)],
+            )
+            .filter(Boolean);
+          return roomTokens.includes(String(focusRoomNo));
+        });
+        if (byRoom) return byRoom;
+      }
+
+      if (guestName) {
+        return (
+          bookings.find(
+            (b) =>
+              String(b.guest_name || b.guestName || "")
+                .toLowerCase()
+                .includes(guestName.toLowerCase()),
+          ) || null
+        );
+      }
+
+      return null;
+    };
+
+    const matched = resolveBooking();
+    if (matched) {
+      openManage(matched);
+      navigate(location.pathname, { replace: true, state: null });
+      return;
+    }
+
+    // Booking not in the loaded list — navigate to the list and pre-fill
+    // the search box so the user can find it immediately.
+    setSearch(focusRoomNo || guestName || "");
+    setView("list");
+    navigate(location.pathname, { replace: true, state: null });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bookings, location.state?.autoManage, location.state?.bookingId, location.state?.focusRoomNo, location.state?.guestName]);
 
 
   /* ---------- derived ---------- */
@@ -2015,7 +2234,12 @@ const [selectedBookingId, setSelectedBookingId] = useState(null);
     setFolioLoading(true);
     try {
       const res = await API.get(`/hotel/full-booking/${booking.bookingId}`);
-      setBookingDetail(res.data || null);
+      const data = res.data || {};
+      setBookingDetail(data);
+      // Make sure selectedBooking has the full mobile from full-booking
+      if (data.mobile) {
+        setSelectedBooking((prev) => ({ ...(prev || {}), mobile: data.mobile }));
+      }
     } catch (err) {
       console.error(err);
       setBookingDetail(null);
@@ -2035,10 +2259,18 @@ const [selectedBookingId, setSelectedBookingId] = useState(null);
     }
   };
 
-  const openManage = (booking) => {
+  const openManage = async (booking) => {
     setSelectedBooking(booking);
     setManageStatus(booking.booking_status || "");
     setView("manage");
+    // Ensure we have the customer's mobile for WhatsApp
+    try {
+      const res = await API.get(`/hotel/full-booking/${booking.bookingId}`);
+      const data = res.data || {};
+      if (data.mobile) {
+        setSelectedBooking((prev) => ({ ...(prev || {}), mobile: data.mobile }));
+      }
+    } catch { /* best-effort */ }
   };
 const handleJumpStep = (stepView) => {
 
@@ -2564,10 +2796,65 @@ const handleJumpStep = (stepView) => {
     setPaymentHistory([]);
   };
 
+  const handleCloseDocumentUpload = () => {
+    setShowDocumentUpload(false);
+    window.dispatchEvent(new Event("folioUpdated"));
+  };
+
   const handleOpenGroupBooking = (booking) => {
     if (!booking?.bookingId) return;
     setSelectedBookingId(booking.bookingId);
     setShowGroupBooking(true);
+  };
+
+  // Send invoice to customer WhatsApp + admin WhatsApp directly from booking details
+  const handleSendWhatsAppFromDetails = async () => {
+    const bid = selectedBooking?.bookingId;
+    if (!bid) return;
+    setWaSending(true);
+    setWaResult(null);
+    try {
+      // Ensure invoice exists (generate if needed)
+      let invoiceId = null;
+      try {
+        const existing = await API.get(`/invoice/by-booking/${bid}`);
+        if (existing.data?.id) invoiceId = existing.data.id;
+      } catch { /* not found, will generate */ }
+
+      if (!invoiceId) {
+        const generated = await API.get(`/invoice/${bid}`);
+        if (!generated.data) {
+          setWaResult({ type: "error", message: "Could not generate invoice." });
+          setWaSending(false);
+          return;
+        }
+      }
+
+      // Send customer phone so backend knows who to send to
+      const customerMobile = selectedBooking?.mobile || "";
+      const res = await API.post(`/hotel/invoice/send-whatsapp/${bid}`, {
+        customerNumber: customerMobile,
+      });
+      const data = res.data || {};
+      console.log("[WhatsApp-details] full response:", JSON.stringify(data, null, 2));
+
+      const customerWa = data?.customer?.whatsapp || {};
+      const adminWa = data?.admin?.whatsapp || {};
+
+      if (customerWa?.ok && adminWa?.ok) {
+        setWaResult({ type: "success", message: "Invoice PDF sent to customer WhatsApp and admin WhatsApp." });
+      } else if (customerWa?.ok) {
+        setWaResult({ type: "partial", message: "Sent to customer WhatsApp. Admin WhatsApp skipped." });
+      } else {
+        const waError = customerWa?.error || adminWa?.error || "Unknown error";
+        const shortError = waError.length > 80 ? waError.substring(0, 80) + "..." : waError;
+        setWaResult({ type: "error", message: shortError });
+      }
+    } catch (err) {
+      setWaResult({ type: "error", message: err.response?.data?.error || err.message || "Send failed." });
+    } finally {
+      setWaSending(false);
+    }
   };
 
   const handleCloseGroupBooking = () => {
@@ -3391,6 +3678,9 @@ const handleJumpStep = (stepView) => {
             <button onClick={() => setShowInvoiceModal(true)} className={primaryBtn}>
               <FaFileAlt className="text-sm" /> Generate Invoice
             </button>
+            <button onClick={() => { setWaResult(null); setShowWhatsAppModal(true); }} className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#25D366] hover:bg-[#1da851] text-white font-semibold rounded-lg shadow-md transition-all duration-200 hover:shadow-lg text-sm">
+              <FaWhatsapp className="text-lg" /> Send Invoice via WhatsApp
+            </button>
           </div>
         </div>
 
@@ -3515,6 +3805,17 @@ const handleJumpStep = (stepView) => {
             folioCharges={folioCharges}
             paidAmount={advancePaid}
             onClose={() => setShowInvoiceModal(false)}
+          />
+        )}
+
+        {showWhatsAppModal && (
+          <WhatsAppSendModal
+            booking={b}
+            detail={d}
+            sending={waSending}
+            result={waResult}
+            onSend={handleSendWhatsAppFromDetails}
+            onClose={() => { if (!waSending) setShowWhatsAppModal(false); }}
           />
         )}
 
@@ -3680,6 +3981,14 @@ const handleJumpStep = (stepView) => {
         <PaymentHistoryModal
           booking={selectedBooking}
           onClose={handleClosePaymentHistory}
+        />
+      )}
+
+      {/* document upload popup */}
+      {showDocumentUpload && (
+        <DocumentUploadModal
+          booking={selectedBooking}
+          onClose={handleCloseDocumentUpload}
         />
       )}
 

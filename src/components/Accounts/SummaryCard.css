@@ -1,8 +1,9 @@
 .accounts-summary-card {
   background: #ffffff;
+  border: 1px solid #E4E1D8;
   border-radius: 12px;
   padding: 16px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(30, 64, 175, 0.08);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
   user-select: none;
 }
@@ -13,7 +14,7 @@
 
 .accounts-summary-card--clickable:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 4px 10px rgba(30, 64, 175, 0.12);
 }
 
 .accounts-summary-card--default {
@@ -21,24 +22,24 @@
 }
 
 .accounts-summary-card--green {
-  background: #dcfce7;
+  background: #E4F0EE;
 }
 
 .accounts-summary-card--red {
-  background: #fee2e2;
+  background: #FDEBEB;
 }
 
 .accounts-summary-card--blue {
-  background: #dbeafe;
+  background: #E4F0EE;
 }
 
 .accounts-summary-card--purple {
-  background: #ede9fe;
+  background: #EDE8F5;
 }
 
 .accounts-summary-card__label {
   margin: 0 0 8px 0;
-  color: #6b7280;
+  color: #6B6F66;
   font-size: 14px;
 }
 
@@ -46,22 +47,21 @@
   margin: 0;
   font-size: 20px;
   font-weight: 800;
-  color: #111827;
+  color: #1C231F;
 }
 
 .accounts-summary-card__value--default {
-  color: #111827;
+  color: #1C231F;
 }
 .accounts-summary-card__value--green {
-  color: #16a34a;
+  color: #0F6E64;
 }
 .accounts-summary-card__value--red {
-  color: #dc2626;
+  color: #B33A3A;
 }
 .accounts-summary-card__value--blue {
-  color: #2563eb;
+  color: #17315c;
 }
 .accounts-summary-card__value--purple {
-  color: #7c3aed;
+  color: #5B3A8A;
 }
-
