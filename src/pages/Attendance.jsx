@@ -156,7 +156,7 @@ const Attendance = () => {
       />
 
       {/* Summary cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         <SummaryCard label="Total" value={totalStaff} icon={FaUsers} />
         <SummaryCard label="Present" value={presentStaff} color="green" icon={FaUserCheck} />
         <SummaryCard label="Absent" value={absentStaff} color="red" icon={FaClipboardCheck} />
@@ -168,20 +168,21 @@ const Attendance = () => {
           color="emerald"
           icon={FaUsers}
         />
-      </div>
+      </section>
 
       {/* TABLE */}
-      <div className="bg-white rounded-xl shadow overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-100">
+      <div className="rounded-[24px] border border-blue-100 bg-white shadow-[0_6px_16px_rgba(30,64,175,0.04)] overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-[17px]">
+            <thead className="bg-[linear-gradient(180deg,#f4f9ff_0%,#e8f2ff_100%)] text-[16px] font-bold uppercase tracking-[0.16em] text-slate-500">
             <tr>
-              <th className="p-3 text-left">Employee</th>
-              <th>Check In</th>
-              <th>Check Out</th>
-              <th>Status</th>
-              <th>Method</th>
-              <th>Daily Salary</th>
-              {isAdmin && <th>Action</th>}
+              <th className="px-4 py-4 text-left">Employee</th>
+              <th className="px-4 py-4">Check In</th>
+              <th className="px-4 py-4">Check Out</th>
+              <th className="px-4 py-4">Status</th>
+              <th className="px-4 py-4">Method</th>
+              <th className="px-4 py-4">Daily Salary</th>
+              {isAdmin && <th className="px-4 py-4">Action</th>}
             </tr>
           </thead>
 
@@ -209,49 +210,57 @@ const Attendance = () => {
 
         {/* PAGINATION */}
         {totalPages > 1 && (
-          <div className="flex justify-center gap-2 p-4">
-            <button
-              onClick={() => setCurrentPage((prev) => prev - 1)}
-              disabled={currentPage === 1}
-              className="px-3 py-1 bg-red-600 text-white rounded disabled:opacity-50"
-            >
-              Prev
-            </button>
-
-            {[...Array(totalPages)].map((_, i) => (
+          <div className="flex flex-col gap-3 rounded-[22px] border border-blue-100 bg-white px-4 py-4 shadow-sm lg:flex-row lg:items-center lg:justify-between">
+            <div className="text-[17px] font-bold text-slate-600">
+              Page {currentPage} of {totalPages} • Showing {(currentPage - 1) * recordsPerPage + 1}-{Math.min(currentPage * recordsPerPage, filteredEmployees.length)} of {filteredEmployees.length}
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
               <button
-                key={i}
-                onClick={() => setCurrentPage(i + 1)}
-                className={`px-3 py-1 rounded ${
-                  currentPage === i + 1
-                    ? "bg-blue-900 text-white"
-                    : "bg-gray-200"
-                }`}
+                onClick={() => setCurrentPage((prev) => prev - 1)}
+                disabled={currentPage === 1}
+                className="rounded-full border border-blue-100 px-4 py-2.5 text-[17px] font-bold text-slate-700 transition hover:border-blue-300 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {i + 1}
+                Previous
               </button>
-            ))}
 
-            <button
-              onClick={() => setCurrentPage((prev) => prev + 1)}
-              disabled={currentPage >= totalPages}
-              className="px-3 py-1 bg-green-500 text-white rounded disabled:opacity-50"
-            >
-              Next
-            </button>
+              {[...Array(totalPages)].map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentPage(i + 1)}
+                  className={`h-10 min-w-[40px] rounded-full px-3 text-[17px] font-bold transition ${
+                    currentPage === i + 1
+                      ? "bg-gradient-to-r from-blue-800 to-sky-500 text-white shadow-[0_10px_25px_rgba(37,99,235,0.28)]"
+                      : "border border-blue-100 bg-white text-slate-700 hover:border-blue-300 hover:text-blue-700"
+                  }`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+
+              <button
+                onClick={() => setCurrentPage((prev) => prev + 1)}
+                disabled={currentPage >= totalPages}
+                className="rounded-full border border-blue-100 px-4 py-2.5 text-[17px] font-bold text-slate-700 transition hover:border-blue-300 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
           </div>
         )}
+      </div>
       </div>
 
       {/* MODAL - admin only */}
       {isAdmin && showManualEntry && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
-          <div className="bg-white p-6 rounded-xl w-full max-w-lg">
-            <AttendanceForm
-              onSubmit={handleManualSubmit}
-              onCancel={() => setShowManualEntry(false)}
-              initialData={{ date }}
-            />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-blue-950/50 p-3 backdrop-blur-sm sm:p-4">
+          <div className="w-full max-w-[760px]">
+            <div className="mx-auto flex w-full flex-col overflow-hidden rounded-[32px] border border-white/60 bg-[linear-gradient(180deg,#ffffff_0%,#f5f9ff_100%)] p-6 shadow-[0_30px_90px_rgba(15,40,90,0.28)] sm:p-7">
+              <AttendanceForm
+                onSubmit={handleManualSubmit}
+                onCancel={() => setShowManualEntry(false)}
+                initialData={{ date }}
+              />
+            </div>
           </div>
         </div>
       )}

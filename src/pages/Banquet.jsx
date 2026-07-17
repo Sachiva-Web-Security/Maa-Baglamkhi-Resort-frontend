@@ -90,15 +90,15 @@ const c = {
 };
 
 const banquteFieldCls =
-  "w-full rounded-[9px] border border-[#E4E1D8] bg-white px-3 py-2.5 text-[13.5px] font-medium text-[#1C231F] shadow-sm focus:border-[#0F6E64] focus:outline-none";
+  "w-full h-14 rounded-[18px] border border-[#E1E7F5] bg-white px-4 py-2.5 text-[13.5px] font-medium text-[#0B1B33] shadow-[0_2px_10px_rgba(15,40,90,0.05)] transition-all duration-300 focus:border-[#2F6FE4] focus:outline-none focus:ring-4 focus:ring-blue-100";
 const banquteLabelCls =
-  "mb-1.5 block text-[11.5px] font-semibold uppercase tracking-[0.04em] text-[#6B6F66]";
+  "mb-1.5 block text-[11.5px] font-semibold uppercase tracking-[0.08em] text-[#64748B]";
 const banqutePrimaryBtn =
-  "inline-flex items-center justify-center gap-1.5 rounded-[9px] px-4 py-2.5 text-[13.5px] font-semibold bg-[#0B4F48] text-white hover:bg-[#0F6E64] transition-all";
+  "inline-flex items-center justify-center gap-1.5 rounded-[20px] px-4 py-2.5 text-[13.5px] font-bold bg-gradient-to-r from-blue-800 via-blue-700 to-sky-500 text-white shadow-[0_10px_26px_rgba(37,99,235,0.3)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_34px_rgba(37,99,235,0.38)] active:translate-y-0";
 const banquteGhostBtn =
-  "inline-flex items-center justify-center gap-1.5 rounded-[9px] px-4 py-2.5 text-[13.5px] font-semibold border border-[#E4E1D8] text-[#1C231F] hover:bg-[#F6F5F1] transition-all";
+  "inline-flex items-center justify-center gap-1.5 rounded-[20px] px-4 py-2.5 text-[13.5px] font-bold border border-[#E1E7F5] text-[#0B1B33] bg-white hover:border-blue-300 hover:bg-blue-50/60 transition-all duration-300";
 const banquteDangerBtn =
-  "inline-flex items-center justify-center gap-1 rounded-[9px] px-2.5 py-1.5 text-[12px] font-semibold border border-[#E4E1D8] bg-[#F5DFDA] text-[#B5442E] hover:bg-[#F3D0C9] transition-all";
+  "inline-flex items-center justify-center gap-1 rounded-[18px] px-2.5 py-1.5 text-[12px] font-bold border border-rose-100 bg-rose-50 text-rose-700 hover:bg-rose-100 hover:shadow-sm transition-all duration-300";
 
 const defaultWizard = {
   hallId: "",
@@ -149,13 +149,13 @@ const bookingFilterDefaults = {
 };
 
 const inputCls =
-  "w-full rounded-2xl border border-blue-100 bg-white px-4 py-3 text-[17px] font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-100 sm:text-lg";
+  "w-full h-14 rounded-[18px] border border-[#E1E7F5] bg-white px-4 py-3 text-[17px] font-semibold text-slate-900 shadow-[0_2px_10px_rgba(15,40,90,0.05)] outline-none transition-all duration-300 placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 sm:text-lg";
 
 const labelCls =
-  "mb-2 block text-[17px] font-bold uppercase tracking-[0.16em] text-slate-600";
+  "mb-2 block text-[17px] font-bold uppercase tracking-[0.16em] text-slate-500";
 
 const modalCloseBtnCls =
-  "rounded-full border border-blue-100 bg-white px-4 py-2 text-[17px] font-bold text-slate-700 transition hover:border-blue-300 hover:text-blue-700";
+  "rounded-full border border-blue-100 bg-white px-4 py-2 text-[17px] font-bold text-slate-700 transition-all duration-300 hover:border-blue-300 hover:text-blue-700 hover:shadow-sm";
 
 const statIcons = [FaCalendarAlt, FaCheckCircle, FaReceipt, FaUsers];
 
@@ -168,10 +168,10 @@ function ModalShell({
   heightClass = "h-[min(88vh,760px)]",
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-blue-950/50 p-3 backdrop-blur-sm sm:p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-blue-950/55 p-3 backdrop-blur-md sm:p-4">
       <div className={`w-full ${widthClass}`}>
         <div
-          className={`mx-auto flex w-full flex-col overflow-hidden rounded-[30px] border border-white/60 bg-[linear-gradient(180deg,#ffffff_0%,#f5f9ff_100%)] p-5 shadow-[0_30px_90px_rgba(15,40,90,0.28)] sm:p-7 ${heightClass}`}
+          className={`mx-auto flex w-full flex-col overflow-hidden rounded-[32px] border border-white/60 bg-[linear-gradient(180deg,#ffffff_0%,#f5f9ff_100%)] p-5 shadow-[0_40px_110px_rgba(15,40,90,0.32)] sm:p-8 ${heightClass}`}
         >
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -240,7 +240,7 @@ function PaginationControls({
     });
 
   return (
-    <div className="flex flex-col gap-3 rounded-[22px] border border-blue-100 bg-white px-4 py-4 shadow-sm lg:flex-row lg:items-center lg:justify-between">
+    <div className="flex flex-col gap-3 rounded-[22px] border border-[#E1E7F5] bg-white px-4 py-4 shadow-[0_8px_24px_rgba(15,40,90,0.06)] lg:flex-row lg:items-center lg:justify-between">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
         <div className="text-[17px] font-bold text-slate-600">
           {label} Page {page} of {totalPages}
@@ -252,7 +252,7 @@ function PaginationControls({
             <select
               value={pageSize}
               onChange={(event) => onPageSizeChange(Number(event.target.value))}
-              className="rounded-full border border-blue-100 bg-white px-3 py-2 text-[16px] font-bold text-slate-700 outline-none transition focus:border-blue-300"
+              className="rounded-full border border-blue-100 bg-white px-3 py-2 text-[16px] font-bold text-slate-700 outline-none transition-all duration-300 focus:border-blue-300"
             >
               {pageSizeOptions.map((option) => (
                 <option key={option} value={option}>
@@ -268,7 +268,7 @@ function PaginationControls({
           type="button"
           onClick={() => onChange(Math.max(1, page - 1))}
           disabled={page === 1}
-          className="rounded-full border border-blue-100 px-4 py-2.5 text-[17px] font-bold text-slate-700 transition hover:border-blue-300 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-full border border-blue-100 px-4 py-2.5 text-[17px] font-bold text-slate-700 transition-all duration-300 hover:border-blue-300 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Previous
         </button>
@@ -284,9 +284,9 @@ function PaginationControls({
               <button
                 type="button"
                 onClick={() => onChange(pageNumber)}
-                className={`h-10 min-w-[40px] rounded-full px-3 text-[17px] font-bold transition ${
+                className={`h-10 min-w-[40px] rounded-full px-3 text-[17px] font-bold transition-all duration-300 ${
                   pageNumber === page
-                    ? "bg-gradient-to-r from-blue-800 to-sky-500 text-white shadow-[0_10px_25px_rgba(37,99,235,0.28)]"
+                    ? "bg-gradient-to-r from-blue-800 to-sky-500 text-white shadow-[0_10px_25px_rgba(37,99,235,0.3)]"
                     : "border border-blue-100 bg-white text-slate-700 hover:border-blue-300 hover:text-blue-700"
                 }`}
               >
@@ -299,7 +299,7 @@ function PaginationControls({
           type="button"
           onClick={() => onChange(Math.min(totalPages, page + 1))}
           disabled={page === totalPages}
-          className="rounded-full border border-blue-100 px-4 py-2.5 text-[17px] font-bold text-slate-700 transition hover:border-blue-300 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-full border border-blue-100 px-4 py-2.5 text-[17px] font-bold text-slate-700 transition-all duration-300 hover:border-blue-300 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Next
         </button>
@@ -332,19 +332,19 @@ function resolveBanquetHallImage(image) {
 
 function getReservationStatusBadgeClass(status) {
   const baseClass =
-    "inline-flex items-center rounded-full border px-3 py-1 text-[15px] font-bold uppercase tracking-[0.14em] sm:text-[16px]";
+    "inline-flex items-center rounded-full border px-3 py-1 text-[15px] font-bold uppercase tracking-[0.1em] shadow-[0_2px_8px_rgba(15,40,90,0.05)] sm:text-[16px]";
 
   switch (status) {
     case "Confirmed":
       return `${baseClass} border-emerald-200 bg-emerald-50 text-emerald-700`;
     case "Completed":
-      return `${baseClass} border-purple-200 bg-purple-50 text-purple-700`;
-    case "Billed":
       return `${baseClass} border-blue-200 bg-blue-50 text-blue-700`;
+    case "Billed":
+      return `${baseClass} border-sky-200 bg-sky-50 text-sky-700`;
     case "Cancelled":
       return `${baseClass} border-rose-200 bg-rose-50 text-rose-700`;
     case "Refunded":
-      return `${baseClass} border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700`;
+      return `${baseClass} border-purple-200 bg-purple-50 text-purple-700`;
     default:
       return `${baseClass} border-amber-200 bg-amber-50 text-amber-700`;
   }
@@ -352,15 +352,15 @@ function getReservationStatusBadgeClass(status) {
 
 function getPaymentStatusBadgeClass(status) {
   const baseClass =
-    "inline-flex items-center rounded-full border px-3 py-1 text-[15px] font-bold sm:text-[16px]";
+    "inline-flex items-center rounded-full border px-3 py-1 text-[15px] font-bold shadow-[0_2px_8px_rgba(15,40,90,0.05)] sm:text-[16px]";
 
   switch (status) {
     case "Paid":
       return `${baseClass} border-emerald-200 bg-emerald-50 text-emerald-700`;
     case "Partial":
-      return `${baseClass} border-amber-200 bg-amber-50 text-amber-700`;
+      return `${baseClass} border-orange-200 bg-orange-50 text-orange-700`;
     case "Refunded":
-      return `${baseClass} border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700`;
+      return `${baseClass} border-purple-200 bg-purple-50 text-purple-700`;
     default:
       return `${baseClass} border-amber-200 bg-amber-50 text-amber-700`;
   }
@@ -797,42 +797,42 @@ const Banquet = () => {
         label: "Total Halls",
         value: String(halls.length),
         icon: FaGlassCheers,
-        iconTone: "bg-[#0B4F48]",
+        iconTone: "bg-gradient-to-br from-blue-700 to-blue-500",
         sectionId: "halls",
       },
       {
         label: "Total Reservations",
         value: String(bookings.length),
         icon: FaCalendarAlt,
-        iconTone: "bg-[#2F6FE4]",
+        iconTone: "bg-gradient-to-br from-sky-600 to-sky-400",
         sectionId: "reservations",
       },
       {
         label: "Today's Events",
         value: String(todaysBookings.length),
         icon: FaCalendarAlt,
-        iconTone: "bg-[#C8791A]",
+        iconTone: "bg-gradient-to-br from-orange-500 to-amber-400",
         sectionId: "reservations",
       },
       {
         label: "Upcoming Events",
         value: String(upcomingBookings.length),
         icon: FaCalendarAlt,
-        iconTone: "bg-[#7C5CD6]",
+        iconTone: "bg-gradient-to-br from-violet-600 to-purple-400",
         sectionId: "reservations",
       },
       {
         label: "Total Revenue",
         value: formatINR(dashboardRevenue.totalRevenue),
         icon: FaMoneyCheckAlt,
-        iconTone: "bg-[#0F6E64]",
+        iconTone: "bg-gradient-to-br from-emerald-600 to-emerald-400",
         sectionId: "settlement",
       },
       {
         label: "Pending Payments",
         value: formatINR(dashboardRevenue.pendingAmount),
         icon: FaReceipt,
-        iconTone: "bg-[#B5442E]",
+        iconTone: "bg-gradient-to-br from-rose-600 to-rose-400",
         sectionId: "settlement",
       },
     ],
@@ -840,11 +840,11 @@ const Banquet = () => {
   );
 
   const sectionIconTones = {
-    halls: "bg-[#0B4F48]",
-    reservations: "bg-[#2F6FE4]",
-    meals: "bg-[#C8791A]",
-    addons: "bg-[#7C5CD6]",
-    settlement: "bg-[#0F6E64]",
+    halls: "bg-gradient-to-br from-blue-700 to-blue-500",
+    reservations: "bg-gradient-to-br from-sky-600 to-sky-400",
+    meals: "bg-gradient-to-br from-orange-500 to-amber-400",
+    addons: "bg-gradient-to-br from-violet-600 to-purple-400",
+    settlement: "bg-gradient-to-br from-emerald-600 to-emerald-400",
   };
 
   useEffect(() => {
@@ -1850,25 +1850,25 @@ const Banquet = () => {
               <p className="text-[15px] font-black uppercase tracking-[0.24em] text-sky-500">
                 Venue Options
               </p>
-              <h3 className="mt-1 text-[30px] font-black text-blue-950">
+              <h3 className="mt-1 text-[32px] font-black text-blue-950 sm:text-[34px]">
                 Banquet halls
               </h3>
             </div>
             <button
               type="button"
               onClick={openAddHallForm}
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-blue-800 to-sky-500 px-4 py-2.5 text-[17px] font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.28)] transition hover:-translate-y-0.5"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-blue-800 to-sky-500 px-4 py-2.5 text-[17px] font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.3)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_34px_rgba(37,99,235,0.38)]"
             >
               <FaPlus />
               Add Hall
             </button>
           </div>
-          <div className="overflow-hidden rounded-[24px] border border-blue-100 bg-white shadow-[0_18px_60px_rgba(30,64,175,0.1)]">
+          <div className="overflow-hidden rounded-[28px] border border-[#E1E7F5] bg-white shadow-[0_20px_60px_rgba(15,40,90,0.08)]">
             {halls.length ? (
               <>
               <div className="hidden overflow-x-auto lg:block">
                 <table className="min-w-full text-left text-[17px]">
-                <thead className="bg-[linear-gradient(180deg,#f4f9ff_0%,#e8f2ff_100%)] text-[16px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                <thead className="sticky top-0 z-10 bg-[linear-gradient(180deg,#f4f9ff_0%,#e8f2ff_100%)] text-[16px] font-bold uppercase tracking-[0.16em] text-slate-500">
                     <tr>
                       <th className="px-4 py-4">Image</th>
                       <th className="px-4 py-4">Hall Name</th>
@@ -1888,7 +1888,7 @@ const Banquet = () => {
                       return (
                         <tr
                           key={hall.id}
-                          className={`border-t border-blue-50 transition ${
+                          className={`border-t border-blue-50 transition-all duration-300 ${
                             isSelected ? "bg-blue-50/70" : "bg-white"
                           } hover:bg-blue-50/40`}
                         >
@@ -1901,7 +1901,7 @@ const Banquet = () => {
                                   hallId: hall.id,
                                 }))
                               }
-                              className="flex h-[76px] w-[76px] items-center justify-center overflow-hidden rounded-[20px] border border-blue-100 bg-slate-50 shadow-sm transition hover:border-blue-300 hover:shadow-[0_12px_30px_rgba(37,99,235,0.18)]"
+                              className="flex h-[76px] w-[76px] items-center justify-center overflow-hidden rounded-[20px] border border-blue-100 bg-slate-50 shadow-sm transition-all duration-300 hover:border-blue-300 hover:shadow-[0_12px_30px_rgba(37,99,235,0.18)]"
                             >
                               {hallImage ? (
                                 <img
@@ -1927,7 +1927,7 @@ const Banquet = () => {
                               }
                               className="text-left"
                             >
-                              <div className="text-lg font-black text-blue-950 transition hover:text-blue-700">
+                              <div className="text-lg font-black text-blue-950 transition-all duration-300 hover:text-blue-700">
                                 {hall.name || "Unnamed Hall"}
                               </div>
                             </button>
@@ -1943,13 +1943,13 @@ const Banquet = () => {
                             {formatINR(hall.ratePerHour)}
                           </td>
                           <td className="px-4 py-4 align-top">
-                            <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-[15px] font-bold text-blue-700">
+                            <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-[15px] font-bold text-blue-700 shadow-[0_2px_8px_rgba(15,40,90,0.05)]">
                               {hall.is_ac ? "AC Hall" : "Non-AC Hall"}
                             </span>
                           </td>
                           <td className="px-4 py-4 align-top">
                             <span
-                              className={`inline-flex rounded-full px-3 py-1 text-[15px] font-bold ${
+                              className={`inline-flex rounded-full px-3 py-1 text-[15px] font-bold shadow-[0_2px_8px_rgba(15,40,90,0.05)] ${
                                 hall.status === "Available"
                                   ? "bg-emerald-50 text-emerald-700"
                                   : hall.status === "Maintenance"
@@ -1965,14 +1965,14 @@ const Banquet = () => {
                               <button
                                 type="button"
                                 onClick={() => setDetailHall(hall)}
-                                className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-[15px] font-bold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100"
+                                className="rounded-[18px] border border-blue-200 bg-blue-50 px-3 py-1.5 text-[15px] font-bold text-blue-700 transition-all duration-300 hover:border-blue-300 hover:bg-blue-100 hover:shadow-sm"
                               >
                                 View
                               </button>
                               <button
                                 type="button"
                                 onClick={() => handleEditHall(hall)}
-                                className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-[15px] font-bold text-amber-700 transition hover:border-amber-300 hover:bg-amber-100"
+                                className="inline-flex items-center gap-1 rounded-[18px] border border-amber-200 bg-amber-50 px-3 py-1.5 text-[15px] font-bold text-amber-700 transition-all duration-300 hover:border-amber-300 hover:bg-amber-100 hover:shadow-sm"
                               >
                                 <FaEdit />
                                 Edit
@@ -1980,7 +1980,7 @@ const Banquet = () => {
                               <button
                                 type="button"
                                 onClick={() => handleDeleteHall(hall)}
-                                className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-[15px] font-bold text-rose-700 transition hover:border-rose-300 hover:bg-rose-100"
+                                className="inline-flex items-center gap-1 rounded-[18px] border border-rose-200 bg-rose-50 px-3 py-1.5 text-[15px] font-bold text-rose-700 transition-all duration-300 hover:border-rose-300 hover:bg-rose-100 hover:shadow-sm"
                               >
                                 <FaTrash />
                                 Delete
@@ -2001,19 +2001,19 @@ const Banquet = () => {
                   return (
                     <div
                       key={hall.id}
-                      className={`rounded-[20px] border p-4 shadow-sm transition ${
+                      className={`rounded-[22px] border p-3 shadow-[0_8px_24px_rgba(15,40,90,0.06)] transition-all duration-300 ${
                         isSelected
                           ? "border-blue-300 bg-blue-50/70"
-                          : "border-blue-100 bg-white"
+                          : "border-[#E1E7F5] bg-white"
                       }`}
                     >
-                      <div className="flex items-start gap-3">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
                         <button
                           type="button"
                           onClick={() =>
                             setWizard((prev) => ({ ...prev, hallId: hall.id }))
                           }
-                          className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[16px] border border-blue-100 bg-slate-50 shadow-sm"
+                          className="mx-auto flex h-40 w-full max-w-[280px] shrink-0 items-center justify-center overflow-hidden rounded-[20px] border border-blue-100 bg-slate-50 shadow-sm sm:mx-0 sm:h-20 sm:w-20 sm:max-w-none"
                         >
                           {hallImage ? (
                             <img
@@ -2023,7 +2023,7 @@ const Banquet = () => {
                             />
                           ) : (
                             <div className="flex h-full w-full items-center justify-center bg-[linear-gradient(135deg,#e3f0ff_0%,#eef6ff_50%,#dceeff_100%)] text-blue-700">
-                              <FaGlassCheers className="text-xl" />
+                              <FaGlassCheers className="text-3xl sm:text-xl" />
                             </div>
                           )}
                         </button>
@@ -2035,11 +2035,11 @@ const Banquet = () => {
                             }
                             className="text-left"
                           >
-                            <div className="truncate text-[17px] font-black text-blue-950">
+                            <div className="text-center text-[18px] font-black text-blue-950 sm:text-left sm:text-[17px]">
                               {hall.name || "Unnamed Hall"}
                             </div>
                           </button>
-                          <div className="mt-1 flex flex-wrap items-center gap-2">
+                          <div className="mt-2 flex flex-wrap items-center justify-center gap-2 sm:justify-start">
                             <span className="inline-flex rounded-full bg-blue-50 px-2.5 py-1 text-[13px] font-bold text-blue-700">
                               {hall.is_ac ? "AC Hall" : "Non-AC Hall"}
                             </span>
@@ -2057,7 +2057,7 @@ const Banquet = () => {
                           </div>
                         </div>
                       </div>
-                      <div className="mt-3 grid grid-cols-2 gap-2 text-[15px] text-slate-600">
+                      <div className="mt-3 grid grid-cols-2 gap-2 text-[16px] text-slate-600 sm:text-[15px]">
                         <div>Capacity: <span className="font-bold text-slate-900">{hall.capacity || 0}</span></div>
                         <div>Rate: <span className="font-bold text-slate-900">{formatINR(hall.ratePerHour)}</span></div>
                       </div>
@@ -2065,14 +2065,14 @@ const Banquet = () => {
                         <button
                           type="button"
                           onClick={() => setDetailHall(hall)}
-                          className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-[14px] font-bold text-blue-700"
+                          className="min-h-[44px] flex-1 rounded-[18px] border border-blue-200 bg-blue-50 px-3 py-2.5 text-[16px] font-bold text-blue-700 sm:flex-none sm:text-[14px]"
                         >
                           View
                         </button>
                         <button
                           type="button"
                           onClick={() => handleEditHall(hall)}
-                          className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-[14px] font-bold text-amber-700"
+                          className="min-h-[44px] flex-1 inline-flex items-center justify-center gap-1 rounded-[18px] border border-amber-200 bg-amber-50 px-3 py-2.5 text-[16px] font-bold text-amber-700 sm:flex-none sm:text-[14px]"
                         >
                           <FaEdit />
                           Edit
@@ -2080,7 +2080,7 @@ const Banquet = () => {
                         <button
                           type="button"
                           onClick={() => handleDeleteHall(hall)}
-                          className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-[14px] font-bold text-rose-700"
+                          className="min-h-[44px] flex-1 inline-flex items-center justify-center gap-1 rounded-[18px] border border-rose-200 bg-rose-50 px-3 py-2.5 text-[16px] font-bold text-rose-700 sm:flex-none sm:text-[14px]"
                         >
                           <FaTrash />
                           Delete
@@ -2092,9 +2092,14 @@ const Banquet = () => {
               </div>
               </>
             ) : (
-              <div className="p-6 text-[17px] font-medium text-slate-500">
-                No banquet hall has been added yet. Create a new hall using Add
-                Hall.
+              <div className="flex flex-col items-center gap-3 p-10 text-center">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-50 text-blue-500">
+                  <FaGlassCheers className="text-2xl" />
+                </div>
+                <div className="text-[17px] font-bold text-blue-950">No banquet hall yet</div>
+                <div className="text-[15px] font-medium text-slate-500">
+                  No banquet hall has been added yet. Create a new hall using Add Hall.
+                </div>
               </div>
             )}
           </div>
@@ -2130,7 +2135,7 @@ const Banquet = () => {
             {pricingConfig.lightingOptions.map((option) => (
               <div
                 key={option.id}
-                className="rounded-[22px] border border-blue-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                className="rounded-[26px] border border-[#E1E7F5] bg-white p-5 shadow-[0_8px_24px_rgba(15,40,90,0.06)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_34px_rgba(15,40,90,0.1)]"
               >
                 <div className="text-[18px] font-black text-blue-950">
                   {option.label}
@@ -2151,7 +2156,7 @@ const Banquet = () => {
             ))}
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="rounded-[22px] border border-blue-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+            <div className="rounded-[26px] border border-[#E1E7F5] bg-white p-5 shadow-[0_8px_24px_rgba(15,40,90,0.06)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_34px_rgba(15,40,90,0.1)]">
               <div className="text-[18px] font-black text-blue-950">
                 Event support
               </div>
@@ -2169,7 +2174,7 @@ const Banquet = () => {
                 className={inputCls}
               />
             </div>
-            <div className="rounded-[22px] border border-blue-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+            <div className="rounded-[26px] border border-[#E1E7F5] bg-white p-5 shadow-[0_8px_24px_rgba(15,40,90,0.06)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_34px_rgba(15,40,90,0.1)]">
               <div className="text-[18px] font-black text-blue-950">
                 Decor and service
               </div>
@@ -2207,7 +2212,7 @@ const Banquet = () => {
             {pricingConfig.menuPackages.map((menu) => (
               <div
                 key={menu.id}
-                className="rounded-[22px] border border-blue-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                className="rounded-[26px] border border-[#E1E7F5] bg-white p-5 shadow-[0_8px_24px_rgba(15,40,90,0.06)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_34px_rgba(15,40,90,0.1)]"
               >
                 <div className="text-[17px] font-black uppercase tracking-[0.14em] text-blue-700">
                   {menu.name}
@@ -2226,13 +2231,13 @@ const Banquet = () => {
               </div>
             ))}
           </div>
-          <div className="rounded-[24px] border border-blue-100 bg-blue-50/40 p-5">
+          <div className="rounded-[28px] border border-[#E1E7F5] bg-blue-50/40 p-5">
             <div className="text-[18px] font-black text-blue-950">
               Meal section prices
             </div>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               {mealSections.map((section) => (
-                <div key={section} className="rounded-2xl bg-white p-4 shadow-sm">
+                <div key={section} className="rounded-2xl bg-white p-4 shadow-[0_6px_18px_rgba(15,40,90,0.05)]">
                   <div className="text-[17px] font-bold text-slate-800">
                     {section}
                   </div>
@@ -2272,7 +2277,7 @@ const Banquet = () => {
                 setActiveQuickSection(null);
                 openCreateReservationForm();
               }}
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-blue-800 to-sky-500 px-4 py-2.5 text-[17px] font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.28)] transition hover:-translate-y-0.5"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-blue-800 to-sky-500 px-4 py-2.5 text-[17px] font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.3)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_34px_rgba(37,99,235,0.38)]"
             >
               <FaPlus />
               Add New
@@ -2283,7 +2288,7 @@ const Banquet = () => {
               paginatedBookings.map((booking) => (
                 <div
                   key={booking.id}
-                  className="rounded-[22px] border border-blue-100 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                  className="rounded-[26px] border border-[#E1E7F5] bg-white p-4 shadow-[0_8px_24px_rgba(15,40,90,0.06)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_34px_rgba(15,40,90,0.1)]"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
@@ -2314,7 +2319,7 @@ const Banquet = () => {
                     <button
                       type="button"
                       onClick={() => handleEditBooking(booking)}
-                      className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white px-3 py-2 text-[15px] font-bold text-slate-700 transition hover:border-blue-300"
+                      className="inline-flex items-center gap-2 rounded-[18px] border border-blue-100 bg-white px-3 py-2 text-[15px] font-bold text-slate-700 transition-all duration-300 hover:border-blue-300"
                     >
                       <FaEdit />
                       Edit
@@ -2323,7 +2328,7 @@ const Banquet = () => {
                       <button
                         type="button"
                         onClick={() => handleCancelBooking(booking)}
-                        className="rounded-full bg-rose-500 px-3 py-2 text-[15px] font-bold text-white transition hover:bg-rose-600"
+                        className="rounded-[18px] bg-rose-500 px-3 py-2 text-[15px] font-bold text-white transition-all duration-300 hover:bg-rose-600"
                       >
                         Cancel
                       </button>
@@ -2334,7 +2339,7 @@ const Banquet = () => {
                       <button
                         type="button"
                         onClick={() => handleRefundBooking(booking)}
-                        className="rounded-full bg-violet-600 px-3 py-2 text-[15px] font-bold text-white transition hover:bg-violet-700"
+                        className="rounded-[18px] bg-violet-600 px-3 py-2 text-[15px] font-bold text-white transition-all duration-300 hover:bg-violet-700"
                       >
                         Refund
                       </button>
@@ -2343,7 +2348,7 @@ const Banquet = () => {
                       <button
                         type="button"
                         onClick={() => handleDeleteBooking(booking)}
-                        className="rounded-full border border-rose-200 px-3 py-2 text-[15px] font-bold text-rose-600 transition hover:bg-rose-50"
+                        className="rounded-[18px] border border-rose-200 px-3 py-2 text-[15px] font-bold text-rose-600 transition-all duration-300 hover:bg-rose-50"
                       >
                         Delete
                       </button>
@@ -2352,7 +2357,7 @@ const Banquet = () => {
                 </div>
               ))
             ) : (
-              <div className="rounded-[22px] border border-dashed border-blue-200 bg-blue-50/40 p-6 text-[17px] font-medium text-slate-500">
+              <div className="rounded-[26px] border border-dashed border-blue-200 bg-blue-50/40 p-6 text-[17px] font-medium text-slate-500">
       No reservations are available. Create your first booking using 'Add New'.
               </div>
             )}
@@ -2408,7 +2413,7 @@ const Banquet = () => {
             return (
             <div
               key={item.label}
-              className="rounded-[22px] border border-blue-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+              className="rounded-[26px] border border-[#E1E7F5] bg-white p-5 shadow-[0_8px_24px_rgba(15,40,90,0.06)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_34px_rgba(15,40,90,0.1)]"
             >
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
                 <Icon />
@@ -2423,7 +2428,7 @@ const Banquet = () => {
           );})}
         </div>
         <div className="grid gap-4 md:grid-cols-2">
-          <div className="rounded-[22px] border border-blue-100 bg-white p-5 shadow-sm">
+          <div className="rounded-[26px] border border-[#E1E7F5] bg-white p-5 shadow-[0_8px_24px_rgba(15,40,90,0.06)]">
             <div className="text-[18px] font-black text-blue-950">
               Global addon pricing
             </div>
@@ -2460,7 +2465,7 @@ const Banquet = () => {
               </div>
             </div>
           </div>
-          <div className="rounded-[22px] border border-blue-100 bg-white p-5 shadow-sm">
+          <div className="rounded-[26px] border border-[#E1E7F5] bg-white p-5 shadow-[0_8px_24px_rgba(15,40,90,0.06)]">
             <div className="text-[18px] font-black text-blue-950">
               Menu package pricing
             </div>
@@ -2558,7 +2563,7 @@ const Banquet = () => {
       case "In Progress":
         return "border-emerald-200 bg-emerald-50 text-emerald-700";
       case "Completed":
-        return "border-purple-200 bg-purple-50 text-purple-700";
+        return "border-blue-200 bg-blue-50 text-blue-700";
       case "Cancelled":
         return "border-rose-200 bg-rose-50 text-rose-700";
       default:
@@ -2567,55 +2572,58 @@ const Banquet = () => {
   };
 
   return (
-    <div className="relative min-h-screen w-full overflow-x-hidden bg-[#F7F5F0] p-3 sm:p-6">
-      <div className="space-y-5">
-        {/* Header */}
-        <section className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <h1 className="text-[24px] font-bold text-[#1C231F] sm:text-[28px]">Banquet Dashboard</h1>
-            <p className="mt-1 text-[14px] text-[#6B6F66] sm:text-[15px]">
-              Manage banquet halls, events, reservations and more
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex min-w-[220px] items-center gap-2 rounded-full border border-[#E4E1D8] bg-white px-4 py-2.5 shadow-sm">
-              <FaSearch className="text-[#9A9E92]" size={14} />
-              <input
-                value={dashboardSearch}
-                onChange={(e) => setDashboardSearch(e.target.value)}
-                placeholder="Quick search reservations, halls..."
-                className="w-full bg-transparent text-[14px] font-medium text-[#1C231F] outline-none placeholder:text-[#9A9E92]"
-              />
+    <div className="relative min-h-screen w-full overflow-x-hidden bg-[linear-gradient(180deg,#F2F6FF_0%,#F7F9FE_40%,#FFFFFF_100%)] p-3 sm:p-6">
+      <div className="space-y-6">
+        {/* Header / Hero */}
+        <section className="relative overflow-hidden rounded-[32px] bg-gradient-to-b from-blue-950 via-blue-800 to-sky-500 p-5 shadow-[0_20px_60px_rgba(15,40,90,0.25)] sm:p-7">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h1 className="text-[24px] font-bold text-white sm:text-[36px]">Banquet Dashboard</h1>
+              <p className="mt-1 text-[18px] sm:text-[20px] text-white/80">
+                Manage banquet halls, events, reservations and more
+              </p>
             </div>
-            <div className="flex items-center gap-2 rounded-full border border-[#E4E1D8] bg-white px-4 py-2.5 shadow-sm">
-              <FaCalendarAlt className="text-[#0F6E64]" size={14} />
-              <span className="text-[13px] font-semibold text-[#1C231F]">{todayLabel}</span>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <div className="flex h-14 w-full min-w-0 items-center gap-2 rounded-[20px] border border-white/30 bg-white px-4 shadow-[0_8px_20px_rgba(15,40,90,0.15)] transition-all duration-300 focus-within:border-sky-300 focus-within:shadow-[0_8px_24px_rgba(37,99,235,0.2)] hover:shadow-[0_10px_26px_rgba(15,40,90,0.2)] sm:w-auto sm:min-w-[220px]">
+                <FaSearch className="text-blue-300" size={14} />
+                <input
+                  value={dashboardSearch}
+                  onChange={(e) => setDashboardSearch(e.target.value)}
+                  placeholder="Quick search reservations, halls..."
+                  className="w-full bg-transparent text-[16px] font-medium text-[#0B1B33] outline-none placeholder:text-slate-400"
+                />
+              </div>
+              <div className="flex h-14 items-center gap-2 rounded-[18px] border border-white/30 bg-white px-4 shadow-[0_8px_20px_rgba(15,40,90,0.15)] sm:w-auto">
+                <FaCalendarAlt className="text-blue-600" size={14} />
+                <span className="text-[15px] font-semibold text-[#0B1B33]">{todayLabel}</span>
+              </div>
             </div>
           </div>
         </section>
 
         {/* Stat cards */}
-        <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        <section className="grid grid-cols-2 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
           {dashboardStatCards.map((card) => {
             const Icon = card.icon;
             return (
               <div
                 key={card.label}
-                className="rounded-[18px] border border-[#E4E1D8] bg-white p-4 shadow-[0_6px_16px_rgba(28,35,31,0.04)]"
+                className="group relative overflow-hidden rounded-[26px] border border-[#E1E7F5] bg-white p-4 shadow-[0_10px_28px_rgba(15,40,90,0.06)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_38px_rgba(15,40,90,0.12)]"
               >
-                <span className={`inline-flex h-9 w-9 items-center justify-center rounded-[10px] text-white ${card.iconTone}`}>
-                  <Icon size={15} />
+                <span className="pointer-events-none absolute -right-6 -top-6 h-20 w-20 rounded-full bg-blue-50/70 transition-all duration-300 group-hover:scale-125" />
+                <span className={`relative inline-flex h-11 w-11 items-center justify-center rounded-[14px] text-white shadow-[0_8px_18px_rgba(15,40,90,0.18)] ${card.iconTone}`}>
+                  <Icon size={16} />
                 </span>
-                <div className="mt-3 text-[13px] font-medium text-[#6B6F66]">{card.label}</div>
-                <div className="mt-1 text-[22px] font-bold text-[#1C231F] leading-tight sm:text-[26px]">
+                <div className="relative mt-3 text-[16px] font-medium text-[#64748B] sm:text-[17px]">{card.label}</div>
+                <div className="relative mt-1 text-[20px] font-bold text-[#0B1B33] leading-tight sm:text-[22px] lg:text-[24px]">
                   {card.value}
                 </div>
                 <button
                   type="button"
                   onClick={() => setActiveQuickSection(card.sectionId)}
-                  className="mt-2 inline-flex items-center gap-1 text-[12.5px] font-semibold text-[#0F6E64] hover:text-[#0B4F48]"
+                  className="relative mt-2 inline-flex items-center gap-1 text-[15px] font-semibold text-[#2F6FE4] transition-all duration-300 hover:text-[#0B4F9C]"
                 >
-                  View <FaChevronRight size={9} />
+                  View Details <FaChevronRight size={9} />
                 </button>
               </div>
             );
@@ -2623,19 +2631,19 @@ const Banquet = () => {
         </section>
 
         {activeQuickSection ? (
-          <section className="rounded-[20px] border border-[#E4E1D8] bg-white p-4 shadow-[0_6px_16px_rgba(28,35,31,0.04)] sm:p-6">
+          <section className="rounded-[30px] border border-[#E1E7F5] bg-white p-4 shadow-[0_16px_44px_rgba(15,40,90,0.08)] sm:p-6">
             <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-3">
                 <button
                   type="button"
                   onClick={() => setActiveQuickSection(null)}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#E4E1D8] text-[#1C231F] hover:bg-[#F6F5F1]"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#E1E7F5] text-[#0B1B33] transition-all duration-300 hover:bg-blue-50 hover:border-blue-200"
                 >
                   <FaArrowLeft size={13} />
                 </button>
                 <div>
-                  <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-[#6B6F66]">Section</p>
-                  <h2 className="mt-0.5 text-[20px] font-bold text-[#1C231F] sm:text-[24px]">
+                  <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-[#64748B]">Section</p>
+                  <h2 className="mt-0.5 text-[30px] font-bold text-[#0B1B33] sm:text-[32px] md:text-[34px]">
                     {BANQUET_SECTIONS.find((s) => s.id === activeQuickSection)?.label || "Quick View"}
                   </h2>
                 </div>
@@ -2650,15 +2658,15 @@ const Banquet = () => {
           <>
             {/* All sections */}
             <section>
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-[13px] font-bold uppercase tracking-[0.1em] text-[#6B6F66]">All Sections</h2>
+              <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <h2 className="text-[30px] font-bold text-[#0B1B33]">All Sections</h2>
                 <button
                   type="button"
                   onClick={openCreateReservationForm}
                   className={banqutePrimaryBtn}
                 >
                   <FaPlus className="text-sm" />
-                  Add New
+                  Book Now
                 </button>
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -2669,15 +2677,16 @@ const Banquet = () => {
                       key={item.id}
                       type="button"
                       onClick={() => setActiveQuickSection(item.id)}
-                      className="flex items-start gap-3 rounded-[18px] border border-[#E4E1D8] bg-white p-4 text-left shadow-[0_6px_16px_rgba(28,35,31,0.04)] transition hover:-translate-y-0.5 hover:border-[#0F6E64] hover:shadow-[0_12px_24px_rgba(28,35,31,0.08)]"
+                      className="group flex items-start gap-3 rounded-[24px] border border-[#E1E7F5] bg-white p-4 text-left shadow-[0_8px_24px_rgba(15,40,90,0.06)] transition-all duration-300 hover:-translate-y-1 hover:border-[#2F6FE4] hover:shadow-[0_16px_34px_rgba(37,99,235,0.14)]"
                     >
-                      <span className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] text-white ${sectionIconTones[item.id] || "bg-[#0F6E64]"}`}>
-                        <Icon size={16} />
+                      <span className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] text-white shadow-[0_8px_18px_rgba(15,40,90,0.16)] ${sectionIconTones[item.id] || "bg-[#0F6E64]"}`}>
+                        <Icon size={17} />
                       </span>
-                      <span className="min-w-0">
-                        <span className="block text-[14.5px] font-bold text-[#1C231F]">{item.label}</span>
-                        <span className="mt-0.5 block truncate text-[12.5px] text-[#6B6F66]">{item.desc}</span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-[22px] font-bold text-[#0B1B33]">{item.label}</span>
+                        <span className="mt-0.5 block truncate text-[17px] text-[#64748B]">{item.desc}</span>
                       </span>
+                      <FaChevronRight size={12} className="mt-1.5 shrink-0 text-[#CBD5F0] transition-all duration-300 group-hover:translate-x-1 group-hover:text-blue-400" />
                     </button>
                   );
                 })}
@@ -2686,16 +2695,18 @@ const Banquet = () => {
 
             {/* Schedule + recent reservations */}
             <section className="grid gap-4 lg:grid-cols-2">
-              <div className="rounded-[20px] border border-[#E4E1D8] bg-white p-4 shadow-[0_6px_16px_rgba(28,35,31,0.04)] sm:p-5">
+              <div className="rounded-[28px] border border-[#E1E7F5] bg-white p-4 shadow-[0_10px_30px_rgba(15,40,90,0.06)] sm:p-5">
                 <div className="mb-3 flex items-center justify-between">
-                  <h3 className="flex items-center gap-2 text-[14.5px] font-bold text-[#1C231F]">
-                    <FaCalendarAlt className="text-[#0F6E64]" size={13} />
+                  <h3 className="flex items-center gap-2 text-[17px] font-bold text-[#0B1B33]">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-blue-50 text-[#2F6FE4]">
+                      <FaCalendarAlt size={13} />
+                    </span>
                     Today's Schedule
                   </h3>
                   <button
                     type="button"
                     onClick={() => setActiveQuickSection("reservations")}
-                    className="text-[12.5px] font-semibold text-[#0F6E64] hover:text-[#0B4F48]"
+                    className="text-[15px] font-semibold text-[#2F6FE4] transition-all duration-300 hover:text-[#0B4F9C]"
                   >
                     View All
                   </button>
@@ -2707,22 +2718,22 @@ const Banquet = () => {
                       return (
                         <div
                           key={booking.id}
-                          className="flex items-center gap-3 rounded-[14px] border border-[#EFEDE5] bg-[#FAF9F6] px-3 py-2.5"
+                          className="flex items-center gap-3 rounded-[18px] border border-[#EEF2FB] bg-[#F8FAFF] px-3 py-2.5 transition-all duration-300 hover:bg-blue-50/60"
                         >
-                          <span className="flex h-9 w-16 shrink-0 items-center justify-center gap-1 rounded-[10px] bg-white text-[11.5px] font-bold text-[#1C231F] shadow-sm">
-                            <FaRegClock size={10} className="text-[#6B6F66]" />
+                          <span className="flex h-9 w-16 shrink-0 items-center justify-center gap-1 rounded-[12px] bg-white text-[14px] font-bold text-[#0B1B33] shadow-sm">
+                            <FaRegClock size={10} className="text-[#64748B]" />
                             {booking.startTime || "--:--"}
                           </span>
                           <div className="min-w-0 flex-1">
-                            <div className="truncate text-[13.5px] font-bold text-[#1C231F]">
+                            <div className="truncate text-[16px] font-bold text-[#0B1B33]">
                               {booking.hallName || "Hall"}
                             </div>
-                            <div className="truncate text-[12px] text-[#6B6F66]">
+                            <div className="truncate text-[16px] text-[#64748B]">
                               {booking.eventTitle || booking.eventType}
                             </div>
                           </div>
                           <span
-                            className={`shrink-0 rounded-full border px-2.5 py-1 text-[10.5px] font-bold uppercase tracking-wide ${getScheduleStatusTone(statusLabel)}`}
+                            className={`shrink-0 rounded-full border px-2.5 py-1 text-[14px] font-bold uppercase tracking-wide ${getScheduleStatusTone(statusLabel)}`}
                           >
                             {statusLabel}
                           </span>
@@ -2730,26 +2741,31 @@ const Banquet = () => {
                       );
                     })
                   ) : (
-                    <div className="rounded-[14px] border border-dashed border-[#E4E1D8] bg-[#FAF9F6] px-4 py-6 text-center text-[13px] text-[#6B6F66]">
-                      No events scheduled for today.
+                    <div className="flex flex-col items-center gap-2 rounded-[18px] border border-dashed border-[#DCE4F7] bg-[#F8FAFF] px-4 py-7 text-center">
+                      <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-blue-400 shadow-sm">
+                        <FaCalendarAlt size={16} />
+                      </span>
+                      <span className="text-[13px] font-medium text-[#64748B]">No events scheduled for today.</span>
                     </div>
                   )}
                 </div>
-                <div className="mt-3 border-t border-[#EFEDE5] pt-3 text-[12.5px] font-semibold text-[#6B6F66]">
+                <div className="mt-3 border-t border-[#EEF2FB] pt-3 text-[12.5px] font-semibold text-[#64748B]">
                   Total Events Today: {todaysBookings.length}
                 </div>
               </div>
 
-              <div className="rounded-[20px] border border-[#E4E1D8] bg-white p-4 shadow-[0_6px_16px_rgba(28,35,31,0.04)] sm:p-5">
+              <div className="rounded-[28px] border border-[#E1E7F5] bg-white p-4 shadow-[0_10px_30px_rgba(15,40,90,0.06)] sm:p-5">
                 <div className="mb-3 flex items-center justify-between">
-                  <h3 className="flex items-center gap-2 text-[14.5px] font-bold text-[#1C231F]">
-                    <FaReceipt className="text-[#2F6FE4]" size={13} />
+                  <h3 className="flex items-center gap-2 text-[17px] font-bold text-[#0B1B33]">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-sky-50 text-[#2F6FE4]">
+                      <FaReceipt size={13} />
+                    </span>
                     Recent Reservations
                   </h3>
                   <button
                     type="button"
                     onClick={() => setActiveQuickSection("reservations")}
-                    className="text-[12.5px] font-semibold text-[#0F6E64] hover:text-[#0B4F48]"
+                    className="text-[15px] font-semibold text-[#2F6FE4] transition-all duration-300 hover:text-[#0B4F9C]"
                   >
                     View All
                   </button>
@@ -2759,22 +2775,22 @@ const Banquet = () => {
                     recentBookings.map((booking) => (
                       <div
                         key={booking.id}
-                        className="flex items-center gap-3 rounded-[14px] border border-[#EFEDE5] bg-[#FAF9F6] px-3 py-2.5"
+                        className="flex items-center gap-3 rounded-[18px] border border-[#EEF2FB] bg-[#F8FAFF] px-3 py-2.5 transition-all duration-300 hover:bg-blue-50/60"
                       >
-                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-[#2F6FE4]/10 text-[#2F6FE4]">
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[12px] bg-[#2F6FE4]/10 text-[#2F6FE4]">
                           <FaCalendarAlt size={13} />
                         </span>
                         <div className="min-w-0 flex-1">
-                          <div className="truncate text-[13.5px] font-bold text-[#1C231F]">
+                          <div className="truncate text-[16px] font-bold text-[#0B1B33]">
                             {booking.customerName}
                           </div>
-                          <div className="truncate text-[12px] text-[#6B6F66]">
+                          <div className="truncate text-[16px] text-[#64748B]">
                             {booking.hallName || "Hall"} • {booking.guests || 0} Guests
                           </div>
                         </div>
                         <div className="shrink-0 text-right">
-                          <div className="text-[12px] text-[#6B6F66]">{formatBookingDate(booking.date)}</div>
-                          <div className="text-[13.5px] font-bold text-[#1C231F]">
+                          <div className="text-[12px] text-[#64748B]">{formatBookingDate(booking.date)}</div>
+                          <div className="text-[13.5px] font-bold text-[#0B1B33]">
                             {formatINR(booking.grandTotal || 0)}
                           </div>
                           <span
@@ -2792,12 +2808,15 @@ const Banquet = () => {
                       </div>
                     ))
                   ) : (
-                    <div className="rounded-[14px] border border-dashed border-[#E4E1D8] bg-[#FAF9F6] px-4 py-6 text-center text-[13px] text-[#6B6F66]">
-                      No reservations yet.
+                    <div className="flex flex-col items-center gap-2 rounded-[18px] border border-dashed border-[#DCE4F7] bg-[#F8FAFF] px-4 py-7 text-center">
+                      <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-blue-400 shadow-sm">
+                        <FaReceipt size={16} />
+                      </span>
+                      <span className="text-[13px] font-medium text-[#64748B]">No reservations yet.</span>
                     </div>
                   )}
                 </div>
-                <div className="mt-3 border-t border-[#EFEDE5] pt-3 text-[12.5px] font-semibold text-[#6B6F66]">
+                <div className="mt-3 border-t border-[#EEF2FB] pt-3 text-[12.5px] font-semibold text-[#64748B]">
                   Total Reservations: {bookings.length}
                 </div>
               </div>
@@ -2805,16 +2824,18 @@ const Banquet = () => {
 
             {/* Hall availability + revenue overview */}
             <section className="grid gap-4 lg:grid-cols-2">
-              <div className="rounded-[20px] border border-[#E4E1D8] bg-white p-4 shadow-[0_6px_16px_rgba(28,35,31,0.04)] sm:p-5">
+              <div className="rounded-[28px] border border-[#E1E7F5] bg-white p-4 shadow-[0_10px_30px_rgba(15,40,90,0.06)] sm:p-5">
                 <div className="mb-3 flex items-center justify-between">
-                  <h3 className="flex items-center gap-2 text-[14.5px] font-bold text-[#1C231F]">
-                    <FaGlassCheers className="text-[#0B4F48]" size={13} />
+                  <h3 className="flex items-center gap-2 text-[17px] font-bold text-[#0B1B33]">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-blue-50 text-blue-700">
+                      <FaGlassCheers size={13} />
+                    </span>
                     Hall Availability Overview
                   </h3>
                   <button
                     type="button"
                     onClick={() => setActiveQuickSection("halls")}
-                    className="text-[12.5px] font-semibold text-[#0F6E64] hover:text-[#0B4F48]"
+                    className="text-[15px] font-semibold text-[#2F6FE4] transition-all duration-300 hover:text-[#0B4F9C]"
                   >
                     View Calendar
                   </button>
@@ -2824,72 +2845,74 @@ const Banquet = () => {
                     hallAvailabilityList.map((hall) => (
                       <div
                         key={hall.id}
-                        className="rounded-[14px] border border-[#EFEDE5] bg-[#FAF9F6] p-3"
+                        className="rounded-[18px] border border-[#EEF2FB] bg-[#F8FAFF] p-3 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(15,40,90,0.08)]"
                       >
-                        <div className="truncate text-[13px] font-bold text-[#1C231F]">{hall.name}</div>
+                        <div className="truncate text-[13px] font-bold text-[#0B1B33]">{hall.name}</div>
                         <div
-                          className={`mt-1 text-[12px] font-bold ${
+                          className={`mt-1 inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-bold ${
                             hall.status === "Available"
-                              ? "text-emerald-600"
+                              ? "bg-emerald-50 text-emerald-600"
                               : hall.status === "Maintenance"
-                              ? "text-rose-600"
-                              : "text-amber-600"
+                              ? "bg-rose-50 text-rose-600"
+                              : "bg-amber-50 text-amber-600"
                           }`}
                         >
                           {hall.status || "Available"}
                         </div>
-                        <div className="mt-1 text-[11.5px] text-[#6B6F66]">
+                        <div className="mt-1.5 text-[11.5px] text-[#64748B]">
                           {hall.capacity || 0} Capacity
                         </div>
                       </div>
                     ))
                   ) : (
-                    <div className="col-span-full rounded-[14px] border border-dashed border-[#E4E1D8] bg-[#FAF9F6] px-4 py-6 text-center text-[13px] text-[#6B6F66]">
+                    <div className="col-span-full rounded-[18px] border border-dashed border-[#DCE4F7] bg-[#F8FAFF] px-4 py-6 text-center text-[13px] text-[#64748B]">
                       No halls added yet.
                     </div>
                   )}
                 </div>
               </div>
 
-              <div className="rounded-[20px] border border-[#E4E1D8] bg-white p-4 shadow-[0_6px_16px_rgba(28,35,31,0.04)] sm:p-5">
+              <div className="rounded-[28px] border border-[#E1E7F5] bg-white p-4 shadow-[0_10px_30px_rgba(15,40,90,0.06)] sm:p-5">
                 <div className="mb-3 flex items-center justify-between">
-                  <h3 className="flex items-center gap-2 text-[14.5px] font-bold text-[#1C231F]">
-                    <FaMoneyCheckAlt className="text-[#0F6E64]" size={13} />
+                  <h3 className="flex items-center gap-2 text-[17px] font-bold text-[#0B1B33]">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-emerald-50 text-emerald-700">
+                      <FaMoneyCheckAlt size={13} />
+                    </span>
                     Revenue Overview
                   </h3>
                   <button
                     type="button"
                     onClick={() => setActiveQuickSection("settlement")}
-                    className="text-[12.5px] font-semibold text-[#0F6E64] hover:text-[#0B4F48]"
+                    className="text-[15px] font-semibold text-[#2F6FE4] transition-all duration-300 hover:text-[#0B4F9C]"
                   >
                     This Month
                   </button>
                 </div>
                 <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
-                  <div className="rounded-[14px] border border-[#EFEDE5] bg-[#FAF9F6] p-3">
-                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-[9px] bg-emerald-100 text-emerald-700">
+                  <div className="rounded-[18px] border border-[#EEF2FB] bg-[#F8FAFF] p-3 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(15,40,90,0.08)]">
+                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-[10px] bg-emerald-100 text-emerald-700">
                       <FaMoneyCheckAlt size={13} />
                     </span>
-                    <div className="mt-2 text-[12px] text-[#6B6F66]">Total Revenue</div>
-                    <div className="text-[15px] font-bold text-[#1C231F]">
+                    <div className="mt-2 text-[15px] text-[#64748B]">Total Revenue</div>
+                    <div className="text-[17px] font-bold text-[#0B1B33]">
                       {formatINR(dashboardRevenue.totalRevenue)}
                     </div>
                   </div>
-                  <div className="rounded-[14px] border border-[#EFEDE5] bg-[#FAF9F6] p-3">
-                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-[9px] bg-blue-100 text-blue-700">
+                  <div className="rounded-[18px] border border-[#EEF2FB] bg-[#F8FAFF] p-3 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(15,40,90,0.08)]">
+                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-[10px] bg-blue-100 text-blue-700">
                       <FaReceipt size={13} />
                     </span>
-                    <div className="mt-2 text-[12px] text-[#6B6F66]">Advance Received</div>
-                    <div className="text-[15px] font-bold text-[#1C231F]">
+                    <div className="mt-2 text-[12px] text-[#64748B]">Advance Received</div>
+                    <div className="text-[15px] font-bold text-[#0B1B33]">
                       {formatINR(dashboardRevenue.advanceReceived)}
                     </div>
                   </div>
-                  <div className="rounded-[14px] border border-[#EFEDE5] bg-[#FAF9F6] p-3">
-                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-[9px] bg-rose-100 text-rose-700">
+                  <div className="rounded-[18px] border border-[#EEF2FB] bg-[#F8FAFF] p-3 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(15,40,90,0.08)]">
+                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-[10px] bg-rose-100 text-rose-700">
                       <FaExclamationTriangle size={13} />
                     </span>
-                    <div className="mt-2 text-[12px] text-[#6B6F66]">Pending Amount</div>
-                    <div className="text-[15px] font-bold text-[#1C231F]">
+                    <div className="mt-2 text-[12px] text-[#64748B]">Pending Amount</div>
+                    <div className="text-[15px] font-bold text-[#0B1B33]">
                       {formatINR(dashboardRevenue.pendingAmount)}
                     </div>
                   </div>
@@ -2901,12 +2924,12 @@ const Banquet = () => {
 
         <section
           id="reservation-section"
-          className="rounded-[20px] border border-[#E4E1D8] bg-white p-4 shadow-[0_6px_16px_rgba(28,35,31,0.04)] sm:rounded-[24px] sm:p-6"
+          className="rounded-[30px] border border-[#E1E7F5] bg-white p-4 shadow-[0_16px_44px_rgba(15,40,90,0.08)] sm:p-6"
         >
-          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="text-[13px] font-bold uppercase tracking-[0.1em] text-[#6B6F66]">All Reservations</h2>
-              <p className="mt-1 text-[13px] text-[#9A9E92]">
+              <h2 className="text-[30px] font-bold text-[#0B1B33] sm:text-[32px] md:text-[34px]">All Reservations</h2>
+              <p className="mt-1 text-[17px] sm:text-[18px] text-[#94A3C4]">
                 Showing {paginatedBookings.length} of {filteredBookings.length} reservations
                 {hasAppliedBookingFilters ? " (filtered)" : ""}.
               </p>
@@ -2916,20 +2939,20 @@ const Banquet = () => {
               Add New
             </button>
           </div>
-          <div className="hidden overflow-x-auto lg:block">
+          <div className="hidden overflow-x-auto rounded-[28px] border border-[#E1E7F5] md:block">
             {filteredBookings.length ? (
-              <table className="min-w-full overflow-hidden rounded-[22px] border border-[#E4E1D8] bg-white">
-                <thead className="bg-[linear-gradient(180deg,#f4f9ff_0%,#e8f1ff_100%)] text-left text-[14px] uppercase tracking-[0.1em] text-[#6B6F66]">
+              <table className="min-w-full overflow-hidden bg-white">
+                <thead className="sticky top-0 z-10 bg-[linear-gradient(180deg,#f4f9ff_0%,#e8f1ff_100%)] text-left text-[16px] uppercase tracking-[0.12em] text-[#64748B]">
                   <tr>
-                    <th className="px-3 py-3 text-[#6B6F66]">Guest</th>
-                    <th className="px-3 py-3 text-[#6B6F66]">Event</th>
-                    <th className="px-3 py-3 text-[#6B6F66]">Hall</th>
-                    <th className="px-3 py-3 text-[#6B6F66]">Slot</th>
-                    <th className="px-3 py-3 text-[#6B6F66]">Payment</th>
-                    <th className="px-3 py-3 text-[#6B6F66]">Status</th>
-                    <th className="px-3 py-3 text-[#6B6F66]">Menu</th>
-                    <th className="px-3 py-3 text-[#6B6F66]">Invoice</th>
-                    <th className="px-3 py-3 text-[#6B6F66]">Actions</th>
+                    <th className="px-3 py-4 text-[#64748B]">Guest</th>
+                    <th className="px-3 py-4 text-[#64748B]">Event</th>
+                    <th className="px-3 py-4 text-[#64748B]">Hall</th>
+                    <th className="px-3 py-4 text-[#64748B]">Slot</th>
+                    <th className="px-3 py-4 text-[#64748B]">Payment</th>
+                    <th className="px-3 py-4 text-[#64748B]">Status</th>
+                    <th className="px-3 py-4 text-[#64748B]">Menu</th>
+                    <th className="px-3 py-4 text-[#64748B]">Invoice</th>
+                    <th className="px-3 py-4 text-[#64748B]">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -2942,7 +2965,7 @@ const Banquet = () => {
                     return (
                       <tr
                         key={booking.id}
-                        className="border-t border-blue-50 align-top transition hover:bg-blue-50/50"
+                        className="border-t border-blue-50 align-top transition-all duration-300 hover:bg-blue-50/50"
                       >
                         <td className="px-4 py-4 text-[17px] text-slate-700">
                           <div className="font-bold text-blue-950">
@@ -3030,7 +3053,7 @@ const Banquet = () => {
                             <button
                               type="button"
                               onClick={() => handleEditBooking(booking)}
-                              className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white px-3 py-2 text-[15px] font-bold text-slate-700 transition hover:border-blue-300 hover:text-blue-700"
+                              className="inline-flex min-h-[44px] items-center gap-2 rounded-[18px] border border-blue-100 bg-white px-3 py-2 text-[17px] font-bold text-slate-700 transition-all duration-300 hover:border-blue-300 hover:text-blue-700 hover:shadow-sm"
                             >
                               <FaEdit />
                               Edit
@@ -3039,7 +3062,7 @@ const Banquet = () => {
                               <button
                                 type="button"
                                 onClick={() => handleCancelBooking(booking)}
-                                className="rounded-full bg-rose-500 px-3 py-2 text-[15px] font-bold text-white transition hover:bg-rose-600"
+                                className="min-h-[44px] rounded-[18px] bg-rose-500 px-3 py-2 text-[17px] font-bold text-white transition-all duration-300 hover:bg-rose-600 hover:shadow-sm"
                               >
                                 Cancel
                               </button>
@@ -3048,7 +3071,7 @@ const Banquet = () => {
                               <button
                                 type="button"
                                 onClick={() => handleCompleteBooking(booking.id)}
-                                className="rounded-full bg-amber-500 px-3 py-2 text-[15px] font-bold text-white transition hover:bg-amber-600"
+                                className="min-h-[44px] rounded-[18px] bg-amber-500 px-3 py-2 text-[17px] font-bold text-white transition-all duration-300 hover:bg-amber-600 hover:shadow-sm"
                               >
                                 Complete
                               </button>
@@ -3057,7 +3080,7 @@ const Banquet = () => {
                               <button
                                 type="button"
                                 onClick={() => handleGenerateBill(booking)}
-                                className="rounded-full bg-emerald-600 px-3 py-2 text-[15px] font-bold text-white transition hover:bg-emerald-700"
+                                className="min-h-[44px] rounded-[18px] bg-emerald-600 px-3 py-2 text-[17px] font-bold text-white transition-all duration-300 hover:bg-emerald-700 hover:shadow-sm"
                               >
                                 Bill
                               </button>
@@ -3069,7 +3092,7 @@ const Banquet = () => {
                                   setSelectedBooking(booking);
                                   setShowBill(true);
                                 }}
-                                className="rounded-full border border-blue-100 bg-white px-3 py-2 text-[15px] font-bold text-slate-700 transition hover:border-sky-300 hover:text-sky-700"
+                                className="min-h-[44px] rounded-[18px] border border-blue-100 bg-white px-3 py-2 text-[17px] font-bold text-slate-700 transition-all duration-300 hover:border-sky-300 hover:text-sky-700 hover:shadow-sm"
                               >
                                 View
                               </button>
@@ -3080,7 +3103,7 @@ const Banquet = () => {
                               <button
                                 type="button"
                                 onClick={() => handleRefundBooking(booking)}
-                                className="rounded-full bg-violet-600 px-3 py-2 text-[15px] font-bold text-white transition hover:bg-violet-700"
+                                className="min-h-[44px] rounded-[18px] bg-violet-600 px-3 py-2 text-[17px] font-bold text-white transition-all duration-300 hover:bg-violet-700 hover:shadow-sm"
                               >
                                 Refund
                               </button>
@@ -3088,7 +3111,7 @@ const Banquet = () => {
                             <button
                               type="button"
                               onClick={() => handleSendQuotation(booking, "email")}
-                              className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white px-3 py-2 text-[15px] font-bold text-slate-700 transition hover:border-sky-300 hover:text-sky-700"
+                              className="inline-flex min-h-[44px] items-center gap-2 rounded-[18px] border border-blue-100 bg-white px-3 py-2 text-[17px] font-bold text-slate-700 transition-all duration-300 hover:border-sky-300 hover:text-sky-700 hover:shadow-sm"
                             >
                               <FaEnvelope />
                               Email
@@ -3096,7 +3119,7 @@ const Banquet = () => {
                             <button
                               type="button"
                               onClick={() => handleSendQuotation(booking, "whatsapp")}
-                              className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white px-3 py-2 text-[15px] font-bold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-700"
+                              className="inline-flex min-h-[44px] items-center gap-2 rounded-[18px] border border-blue-100 bg-white px-3 py-2 text-[17px] font-bold text-slate-700 transition-all duration-300 hover:border-emerald-300 hover:text-emerald-700 hover:shadow-sm"
                             >
                               <FaWhatsapp />
                               WhatsApp
@@ -3105,7 +3128,7 @@ const Banquet = () => {
                               <button
                                 type="button"
                                 onClick={() => handleDeleteBooking(booking)}
-                      className="rounded-full border border-rose-200 bg-white px-3 py-2 text-[15px] font-bold text-rose-600 transition hover:bg-rose-50"
+                      className="min-h-[44px] rounded-[18px] border border-rose-200 bg-white px-3 py-2 text-[17px] font-bold text-rose-600 transition-all duration-300 hover:bg-rose-50 hover:shadow-sm"
                               >
                                 Delete
                               </button>
@@ -3118,7 +3141,7 @@ const Banquet = () => {
                 </tbody>
               </table>
             ) : (
-              <div className="rounded-[22px] border border-dashed border-blue-200 bg-blue-50/30 p-6 text-[17px] text-slate-500">
+              <div className="rounded-[28px] border border-dashed border-blue-200 bg-blue-50/30 p-6 text-[17px] text-slate-500">
                 {hasAppliedBookingFilters
                   ? "Current filters ke saath koi reservation match nahi hua."
                   : "No reservations are available. Create your first booking using ‘Add New."}
@@ -3127,17 +3150,19 @@ const Banquet = () => {
           </div>
 
           {filteredBookings.length ? (
-            <PaginationControls
-              page={bookingPage}
-              totalPages={totalBookingPages}
-              onChange={setBookingPage}
-              label="Reservations"
-              totalItems={filteredBookings.length}
-              pageSize={bookingsPerPage}
-            />
+            <div className="mt-4">
+              <PaginationControls
+                page={bookingPage}
+                totalPages={totalBookingPages}
+                onChange={setBookingPage}
+                label="Reservations"
+                totalItems={filteredBookings.length}
+                pageSize={bookingsPerPage}
+              />
+            </div>
           ) : null}
 
-          <div className="grid gap-4 lg:hidden">
+          <div className="grid gap-4 md:hidden">
             {filteredBookings.length ? (
               paginatedBookings.map((booking) => {
                 const customItemsCount =
@@ -3148,14 +3173,14 @@ const Banquet = () => {
                 return (
                   <div
                     key={booking.id}
-                    className="rounded-[20px] border border-blue-100 bg-white p-4 shadow-sm sm:rounded-[22px]"
+                    className="rounded-[24px] border border-[#E1E7F5] bg-white p-4 shadow-[0_8px_24px_rgba(15,40,90,0.06)] sm:rounded-[26px]"
                   >
                     <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="truncate text-[16px] font-bold text-blue-950 sm:text-[17px]">
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-[20px] font-bold text-blue-950 sm:text-[22px]">
                           {booking.customerName}
                         </div>
-                        <div className="mt-1 text-[14px] text-slate-500 sm:text-[16px]">
+                        <div className="mt-1 text-[17px] text-slate-500">
                           {booking.eventTitle || booking.eventType} • {booking.hallName}
                         </div>
                       </div>
@@ -3164,26 +3189,66 @@ const Banquet = () => {
                       </span>
                     </div>
 
-                    <div className="mt-4 grid grid-cols-2 gap-2 text-[14px] text-slate-600 sm:text-[16px]">
-                      <div>Date: {formatBookingDate(booking.date)}</div>
-                      <div>
-                        Time: {booking.startTime || "--"} - {booking.endTime || "--"}
+                    <div className="mt-4 space-y-2.5">
+                      <div className="flex justify-between gap-2 text-[17px]">
+                        <span className="font-semibold text-slate-500">Event:</span>
+                        <span className="font-bold text-blue-950 text-right">{booking.eventTitle || booking.eventType || "N/A"}</span>
                       </div>
-                      <div>Guests: {booking.guests || 0}</div>
-                      <div>Payment: {booking.paymentStatus || "Pending"}</div>
-                      <div>Total: {formatINR(booking.grandTotal || 0)}</div>
-                      <div>Due: {formatINR(booking.balanceDue || 0)}</div>
-                      <div>
-                        Package: {menuPackageNameMap[booking.menuPackageId] || "Custom"}
+                      <div className="flex justify-between gap-2 text-[17px]">
+                        <span className="font-semibold text-slate-500">Hall:</span>
+                        <span className="font-bold text-blue-950 text-right">{booking.hallName || "N/A"}</span>
                       </div>
-                      <div>Custom items: {customItemsCount}</div>
+                      <div className="flex justify-between gap-2 text-[17px]">
+                        <span className="font-semibold text-slate-500">Date:</span>
+                        <span className="font-bold text-blue-950 text-right">{formatBookingDate(booking.date)}</span>
+                      </div>
+                      <div className="flex justify-between gap-2 text-[17px]">
+                        <span className="font-semibold text-slate-500">Slot:</span>
+                        <span className="font-bold text-blue-950 text-right">{booking.startTime || "--"} - {booking.endTime || "--"}</span>
+                      </div>
+                      <div className="flex justify-between gap-2 text-[17px]">
+                        <span className="font-semibold text-slate-500">Guests:</span>
+                        <span className="font-bold text-blue-950 text-right">{booking.guests || 0}</span>
+                      </div>
+                      <div className="flex justify-between gap-2 text-[17px]">
+                        <span className="font-semibold text-slate-500">Payment Status:</span>
+                        <span className="font-bold text-blue-950 text-right">{booking.paymentStatus || "Pending"}</span>
+                      </div>
+                      <div className="flex justify-between gap-2 text-[17px]">
+                        <span className="font-semibold text-slate-500">Total:</span>
+                        <span className="font-bold text-blue-950 text-right">{formatINR(booking.grandTotal || 0)}</span>
+                      </div>
+                      <div className="flex justify-between gap-2 text-[17px]">
+                        <span className="font-semibold text-slate-500">Received:</span>
+                        <span className="font-bold text-emerald-700 text-right">{formatINR(booking.netReceived || 0)}</span>
+                      </div>
+                      <div className="flex justify-between gap-2 text-[17px]">
+                        <span className="font-semibold text-slate-500">Balance Due:</span>
+                        <span className="font-bold text-rose-600 text-right">{formatINR(booking.balanceDue || 0)}</span>
+                      </div>
+                      <div className="flex justify-between gap-2 text-[17px]">
+                        <span className="font-semibold text-slate-500">Package:</span>
+                        <span className="font-bold text-blue-950 text-right">{menuPackageNameMap[booking.menuPackageId] || "Custom"}</span>
+                      </div>
+                      <div className="flex justify-between gap-2 text-[17px]">
+                        <span className="font-semibold text-slate-500">Custom Items:</span>
+                        <span className="font-bold text-blue-950 text-right">{customItemsCount}</span>
+                      </div>
+                      <div className="flex justify-between gap-2 text-[17px]">
+                        <span className="font-semibold text-slate-500">Invoice:</span>
+                        <span className="font-bold text-blue-950 text-right">{booking.invoiceNo || "Draft only"}</span>
+                      </div>
+                      <div className="flex justify-between gap-2 text-[17px]">
+                        <span className="font-semibold text-slate-500">Payment Mode:</span>
+                        <span className="font-bold text-blue-950 text-right">{booking.paymentMode || "Pending"}</span>
+                      </div>
                     </div>
 
-                    <div className="mt-4 flex flex-wrap gap-2">
+                    <div className="mt-5 flex flex-wrap gap-2">
                       <button
                         type="button"
                         onClick={() => handleEditBooking(booking)}
-                        className="inline-flex items-center gap-2 rounded-full border border-blue-100 px-3 py-2 text-[14px] font-bold text-slate-700 sm:text-[15px]"
+                        className="inline-flex min-h-[44px] items-center gap-2 rounded-[18px] border border-blue-100 px-4 py-2.5 text-[17px] font-bold text-slate-700 sm:text-[15px]"
                       >
                         <FaEdit />
                         Edit
@@ -3192,7 +3257,7 @@ const Banquet = () => {
                         <button
                           type="button"
                           onClick={() => handleCancelBooking(booking)}
-                          className="rounded-full bg-rose-500 px-3 py-2 text-[14px] font-bold text-white sm:text-[15px]"
+                          className="min-h-[44px] rounded-[18px] bg-rose-500 px-4 py-2.5 text-[17px] font-bold text-white sm:text-[15px]"
                         >
                           Cancel
                         </button>
@@ -3201,7 +3266,7 @@ const Banquet = () => {
                         <button
                           type="button"
                           onClick={() => handleCompleteBooking(booking.id)}
-                          className="rounded-full bg-amber-500 px-3 py-2 text-[14px] font-bold text-white sm:text-[15px]"
+                          className="min-h-[44px] rounded-[18px] bg-amber-500 px-4 py-2.5 text-[17px] font-bold text-white sm:text-[15px]"
                         >
                           Complete
                         </button>
@@ -3210,7 +3275,7 @@ const Banquet = () => {
                         <button
                           type="button"
                           onClick={() => handleGenerateBill(booking)}
-                          className="rounded-full bg-emerald-600 px-3 py-2 text-[14px] font-bold text-white sm:text-[15px]"
+                          className="min-h-[44px] rounded-[18px] bg-emerald-600 px-4 py-2.5 text-[17px] font-bold text-white sm:text-[15px]"
                         >
                           Bill
                         </button>
@@ -3222,7 +3287,7 @@ const Banquet = () => {
                             setSelectedBooking(booking);
                             setShowBill(true);
                           }}
-                          className="rounded-full border border-blue-100 px-3 py-2 text-[14px] font-bold text-slate-700 sm:text-[15px]"
+                          className="min-h-[44px] rounded-[18px] border border-blue-100 px-4 py-2.5 text-[17px] font-bold text-slate-700 sm:text-[15px]"
                         >
                           View
                         </button>
@@ -3233,7 +3298,7 @@ const Banquet = () => {
                         <button
                           type="button"
                           onClick={() => handleRefundBooking(booking)}
-                          className="rounded-full bg-violet-600 px-3 py-2 text-[14px] font-bold text-white sm:text-[15px]"
+                          className="min-h-[44px] rounded-[18px] bg-violet-600 px-4 py-2.5 text-[17px] font-bold text-white sm:text-[15px]"
                         >
                           Refund
                         </button>
@@ -3241,22 +3306,22 @@ const Banquet = () => {
                       <button
                         type="button"
                         onClick={() => handleSendQuotation(booking, "email")}
-                        className="rounded-full border border-blue-100 px-3 py-2 text-[14px] font-bold text-slate-700 sm:text-[15px]"
+                        className="min-h-[44px] rounded-[18px] border border-blue-100 px-4 py-2.5 text-[17px] font-bold text-slate-700 sm:text-[15px]"
                       >
-                        Email
+                        <FaEnvelope />
                       </button>
                       <button
                         type="button"
                         onClick={() => handleSendQuotation(booking, "whatsapp")}
-                        className="rounded-full border border-blue-100 px-3 py-2 text-[14px] font-bold text-slate-700 sm:text-[15px]"
+                        className="min-h-[44px] rounded-[18px] border border-blue-100 px-4 py-2.5 text-[17px] font-bold text-slate-700 sm:text-[15px]"
                       >
-                        WhatsApp
+                        <FaWhatsapp />
                       </button>
                       {["Cancelled", "Refunded"].includes(booking.status) ? (
                         <button
                           type="button"
                           onClick={() => handleDeleteBooking(booking)}
-                          className="rounded-full border border-rose-200 px-3 py-2 text-[14px] font-bold text-rose-600 sm:text-[15px]"
+                          className="min-h-[44px] rounded-[18px] border border-rose-200 px-4 py-2.5 text-[17px] font-bold text-rose-600 sm:text-[15px]"
                         >
                           Delete
                         </button>
@@ -3266,7 +3331,7 @@ const Banquet = () => {
                 );
               })
             ) : (
-              <div className="rounded-[22px] border border-dashed border-blue-200 bg-blue-50/30 p-6 text-[16px] text-slate-500">
+              <div className="rounded-[24px] border border-dashed border-blue-200 bg-blue-50/30 p-6 text-[16px] text-slate-500">
                 {hasAppliedBookingFilters
                   ? "Current filters ke saath koi reservation match nahi hua."
                   : "Koi reservation available nahi hai. `Add New` se pehli booking create kijiye."}
@@ -3624,7 +3689,7 @@ const Banquet = () => {
 
                 <div>
                   <label className={labelCls}>Payment Receipt</label>
-                  <div className="space-y-3 rounded-[24px] border border-blue-100 bg-white p-4">
+                  <div className="space-y-3 rounded-[24px] border border-blue-100 bg-white p-4 shadow-[0_6px_18px_rgba(15,40,90,0.05)]">
                     <input
                       key={receiptInputKey}
                       type="file"
@@ -3662,7 +3727,7 @@ const Banquet = () => {
 
                 <div>
                   <label className={labelCls}>Custom Menu Items</label>
-                  <div className="space-y-4 rounded-[24px] border border-blue-100 bg-white p-4">
+                  <div className="space-y-4 rounded-[24px] border border-blue-100 bg-white p-4 shadow-[0_6px_18px_rgba(15,40,90,0.05)]">
                     <div className="flex flex-col gap-3 rounded-2xl border border-blue-100 bg-blue-50/60 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
                       <div>
                         <div className="text-[16px] font-bold text-blue-950">
@@ -3676,7 +3741,7 @@ const Banquet = () => {
                       <button
                         type="button"
                         onClick={handleOpenRestaurantMenu}
-                        className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-blue-800 to-sky-500 px-4 py-2.5 text-[16px] font-bold text-white shadow-sm transition hover:-translate-y-0.5"
+                        className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-blue-800 to-sky-500 px-4 py-2.5 text-[16px] font-bold text-white shadow-[0_10px_24px_rgba(37,99,235,0.28)] transition-all duration-300 hover:-translate-y-0.5"
                       >
                         Open Restaurant Menu
                       </button>
@@ -3699,7 +3764,7 @@ const Banquet = () => {
                                       key={item.id || `${category}-${item.name}`}
                                       type="button"
                                       onClick={() => toggleCustomMenuSelection(item.name)}
-                                      className={`rounded-2xl border px-3 py-3 text-left text-[16px] font-semibold transition ${
+                                      className={`rounded-2xl border px-3 py-3 text-left text-[16px] font-semibold transition-all duration-300 ${
                                         isSelected
                                           ? "border-blue-300 bg-blue-50 text-blue-700"
                                           : "border-blue-50 bg-slate-50 text-slate-600 hover:border-blue-200 hover:text-blue-700"
@@ -3847,7 +3912,7 @@ const Banquet = () => {
               </div>
 
               <div className="space-y-4">
-                <div className="rounded-[24px] border border-blue-100 bg-white p-5 shadow-sm">
+                <div className="rounded-[24px] border border-blue-100 bg-white p-5 shadow-[0_8px_24px_rgba(15,40,90,0.06)]">
                   <div className="text-[17px] font-bold text-blue-950">
                     Reservation summary
                   </div>
@@ -3927,7 +3992,7 @@ const Banquet = () => {
                       </div>
                     ) : null}
                   </div>
-                  <div className="mt-5 rounded-[20px] bg-gradient-to-br from-blue-950 to-blue-800 px-4 py-4 text-white">
+                  <div className="mt-5 rounded-[20px] bg-gradient-to-br from-blue-950 to-blue-800 px-4 py-4 text-white shadow-[0_16px_34px_rgba(11,27,51,0.3)]">
               <div className="text-[16px] uppercase tracking-[0.2em] text-blue-200">
                       Estimated total
                     </div>
@@ -3940,7 +4005,7 @@ const Banquet = () => {
                   </div>
                 </div>
 
-                <div className="rounded-[24px] border border-blue-100 bg-white p-5 shadow-sm">
+                <div className="rounded-[24px] border border-blue-100 bg-white p-5 shadow-[0_8px_24px_rgba(15,40,90,0.06)]">
                   <div className="text-[17px] font-bold text-blue-950">
                     After booking
                   </div>
@@ -3963,7 +4028,7 @@ const Banquet = () => {
                   type="button"
                   onClick={() => handleConfirmBooking()}
                   disabled={isSavingReservation}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-[22px] bg-gradient-to-r from-blue-800 to-sky-500 px-5 py-4 text-[17px] font-bold text-white shadow-[0_16px_35px_rgba(37,99,235,0.28)] transition hover:-translate-y-0.5"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-[22px] bg-gradient-to-r from-blue-800 to-sky-500 px-5 py-4 text-[17px] font-bold text-white shadow-[0_16px_35px_rgba(37,99,235,0.3)] transition-all duration-300 hover:-translate-y-0.5"
                 >
                   <FaPaperPlane />
                   {isSavingReservation
@@ -3977,7 +4042,7 @@ const Banquet = () => {
                     type="button"
                     onClick={() => handleConfirmBooking({ cancelAfterSave: true })}
                     disabled={isSavingReservation}
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-[22px] bg-gradient-to-r from-rose-600 to-rose-500 px-5 py-4 text-[17px] font-bold text-white shadow-[0_16px_35px_rgba(244,63,94,0.24)] transition hover:-translate-y-0.5"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-[22px] bg-gradient-to-r from-rose-600 to-rose-500 px-5 py-4 text-[17px] font-bold text-white shadow-[0_16px_35px_rgba(244,63,94,0.26)] transition-all duration-300 hover:-translate-y-0.5"
                   >
                     Cancel Booking
                   </button>
@@ -4042,7 +4107,7 @@ const Banquet = () => {
                         setHallImageMode("upload");
                         setNewHall((prev) => ({ ...prev, image: "" }));
                       }}
-                      className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-[16px] font-bold transition ${
+                      className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-[16px] font-bold transition-all duration-300 ${
                         hallImageMode === "upload"
                           ? "bg-gradient-to-r from-blue-800 to-sky-500 text-white"
                           : "border border-blue-100 bg-white text-slate-600 hover:border-blue-300"
@@ -4061,7 +4126,7 @@ const Banquet = () => {
                         setHallImagePreview("");
                         setHallImageMode("url");
                       }}
-                      className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-[16px] font-bold transition ${
+                      className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-[16px] font-bold transition-all duration-300 ${
                         hallImageMode === "url"
                           ? "bg-gradient-to-r from-blue-800 to-sky-500 text-white"
                           : "border border-blue-100 bg-white text-slate-600 hover:border-blue-300"
@@ -4075,7 +4140,7 @@ const Banquet = () => {
                 {hallImageMode === "upload" ? (
                   <div>
                     <label className={labelCls}>Upload Image</label>
-                    <label className="flex cursor-pointer items-center gap-3 rounded-2xl border border-dashed border-blue-200 bg-blue-50/40 px-4 py-3 text-[16px] font-medium text-slate-600 transition hover:border-blue-300 hover:bg-blue-50">
+                    <label className="flex cursor-pointer items-center gap-3 rounded-2xl border border-dashed border-blue-200 bg-blue-50/40 px-4 py-3 text-[16px] font-medium text-slate-600 transition-all duration-300 hover:border-blue-300 hover:bg-blue-50">
                       <FaImage className="text-slate-500" />
                       <span className="min-w-0 flex-1 truncate">
                         {hallImageFile
@@ -4176,7 +4241,7 @@ const Banquet = () => {
                 type="button"
                 onClick={handleAddHall}
                 disabled={isAddingHall}
-                className="rounded-[22px] bg-gradient-to-r from-blue-800 to-sky-500 px-5 py-4 text-[17px] font-bold text-white shadow-[0_16px_35px_rgba(37,99,235,0.28)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-[22px] bg-gradient-to-r from-blue-800 to-sky-500 px-5 py-4 text-[17px] font-bold text-white shadow-[0_16px_35px_rgba(37,99,235,0.3)] transition-all duration-300 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isAddingHall
                   ? editingHallId
@@ -4240,7 +4305,7 @@ const Banquet = () => {
                 <button
                   type="button"
                   onClick={() => handleEditHall(delayedDetailHall)}
-                  className="inline-flex items-center gap-2 rounded-full bg-amber-500 px-4 py-2 text-[16px] font-bold text-white"
+                  className="inline-flex items-center gap-2 rounded-full bg-amber-500 px-4 py-2 text-[16px] font-bold text-white transition-all duration-300 hover:bg-amber-600"
                 >
                   <FaEdit />
                   Edit Hall
@@ -4249,7 +4314,7 @@ const Banquet = () => {
                   type="button"
                   onClick={() => handleDeleteHall(delayedDetailHall)}
                   disabled={isDeletingHall}
-                  className="inline-flex items-center gap-2 rounded-full bg-rose-600 px-4 py-2 text-[16px] font-bold text-white disabled:opacity-60"
+                  className="inline-flex items-center gap-2 rounded-full bg-rose-600 px-4 py-2 text-[16px] font-bold text-white transition-all duration-300 hover:bg-rose-700 disabled:opacity-60"
                 >
                   <FaTrash />
                   {isDeletingHall ? "Deleting..." : "Delete Hall"}
@@ -4335,7 +4400,7 @@ const Banquet = () => {
                 type="button"
                 onClick={confirmDeleteHall}
                 disabled={isDeletingHall}
-                className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-rose-600 to-rose-500 px-5 py-2.5 text-[16px] font-bold text-white shadow-[0_14px_30px_rgba(244,63,94,0.22)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-rose-600 to-rose-500 px-5 py-2.5 text-[16px] font-bold text-white shadow-[0_14px_30px_rgba(244,63,94,0.24)] transition-all duration-300 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isDeletingHall ? "Deleting..." : "Delete Hall"}
               </button>
@@ -4353,7 +4418,7 @@ const Banquet = () => {
           heightClass="h-auto"
         >
           <div className="space-y-5 text-center">
-            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-[radial-gradient(circle_at_top,_rgba(37,99,235,0.24),_rgba(56,189,248,0.12)_60%,_rgba(255,255,255,0.96)_100%)] shadow-[0_18px_45px_rgba(37,99,235,0.18)]">
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-[radial-gradient(circle_at_top,_rgba(37,99,235,0.26),_rgba(56,189,248,0.13)_60%,_rgba(255,255,255,0.96)_100%)] shadow-[0_18px_45px_rgba(37,99,235,0.2)]">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-blue-800 to-sky-500 text-[20px] font-black text-white">
                 OK
               </div>
@@ -4395,7 +4460,7 @@ const Banquet = () => {
             <button
               type="button"
               onClick={() => setReservationSuccess(null)}
-              className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-blue-800 to-sky-500 px-6 py-3 text-[16px] font-bold text-white shadow-[0_16px_35px_rgba(37,99,235,0.28)] transition hover:-translate-y-0.5"
+              className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-blue-800 to-sky-500 px-6 py-3 text-[16px] font-bold text-white shadow-[0_16px_35px_rgba(37,99,235,0.3)] transition-all duration-300 hover:-translate-y-0.5"
             >
               Continue
             </button>
@@ -4470,7 +4535,7 @@ const Banquet = () => {
                   {delayedSelectedMenuPackage.highlights.map((item) => (
                     <div
                       key={item}
-                      className="rounded-2xl bg-white px-4 py-3 text-[16px] font-medium text-slate-700"
+                      className="rounded-2xl bg-white px-4 py-3 text-[16px] font-medium text-slate-700 shadow-[0_4px_14px_rgba(15,40,90,0.05)]"
                     >
                       {item}
                     </div>
@@ -4492,7 +4557,7 @@ const Banquet = () => {
                   {mealSections.map((section) => (
                     <span
                       key={section}
-                      className="rounded-full bg-white px-3 py-1.5 text-[16px] font-semibold text-slate-700"
+                      className="rounded-full bg-white px-3 py-1.5 text-[16px] font-semibold text-slate-700 shadow-[0_4px_14px_rgba(15,40,90,0.05)]"
                     >
                       {section}
                     </span>

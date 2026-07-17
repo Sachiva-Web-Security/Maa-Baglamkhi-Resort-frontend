@@ -1,12 +1,51 @@
 import { useState } from "react";
 
-const fieldCls =
-  "w-full rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100";
+/* Premium input styles */
+const fieldCls = `
+w-full
+h-[56px]
 
-const labelCls =
-  "mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500";
+rounded-[20px]
 
+border
+border-slate-200/80
 
+bg-white
+
+px-5
+py-3
+
+text-[17px]
+font-medium
+text-slate-900
+
+shadow-[0_2px_12px_rgba(37,99,235,0.05)]
+
+outline-none
+
+transition-all
+duration-300
+
+placeholder:text-slate-400
+
+focus:border-blue-500
+focus:ring-[6px]
+focus:ring-blue-100/80
+focus:shadow-[0_4px_20px_rgba(37,99,235,0.10)]
+
+hover:border-blue-300
+hover:shadow-[0_4px_16px_rgba(37,99,235,0.08)]
+`;
+
+const labelCls = `
+mb-2.5
+block
+text-[14px]
+font-bold
+uppercase
+tracking-[0.12em]
+text-slate-600
+`;
 
 
 
@@ -31,16 +70,14 @@ const AttendanceForm = ({ onSubmit, onCancel, initialData = {} }) => {
     }));
   };
 
-
-  
-
   const handleSubmit = (e) => {
     e.preventDefault();
     onSubmit(formData);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-5">
+      {/* Employee Name */}
       <div>
         <label htmlFor="employeeName" className={labelCls}>
           Employee Name
@@ -57,7 +94,8 @@ const AttendanceForm = ({ onSubmit, onCancel, initialData = {} }) => {
         />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      {/* Role + Department */}
+      <div className="grid gap-5 md:grid-cols-2">
         <div>
           <label htmlFor="role" className={labelCls}>
             Role
@@ -101,7 +139,8 @@ const AttendanceForm = ({ onSubmit, onCancel, initialData = {} }) => {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      {/* Date + Status */}
+      <div className="grid gap-5 md:grid-cols-2">
         <div>
           <label htmlFor="date" className={labelCls}>
             Date
@@ -137,7 +176,8 @@ const AttendanceForm = ({ onSubmit, onCancel, initialData = {} }) => {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      {/* Check-In + Check-Out */}
+      <div className="grid gap-5 md:grid-cols-2">
         <div>
           <label htmlFor="checkIn" className={labelCls}>
             Check-In Time
@@ -167,6 +207,7 @@ const AttendanceForm = ({ onSubmit, onCancel, initialData = {} }) => {
         </div>
       </div>
 
+      {/* Method */}
       <div>
         <label htmlFor="method" className={labelCls}>
           Method
@@ -184,6 +225,7 @@ const AttendanceForm = ({ onSubmit, onCancel, initialData = {} }) => {
         </select>
       </div>
 
+      {/* Notes */}
       <div>
         <label htmlFor="notes" className={labelCls}>
           Notes
@@ -195,21 +237,67 @@ const AttendanceForm = ({ onSubmit, onCancel, initialData = {} }) => {
           onChange={handleChange}
           rows="3"
           placeholder="Any additional notes..."
-          className={fieldCls}
+          className={`
+            ${fieldCls}
+            h-auto
+            py-3
+            resize-none
+          `}
         />
       </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+      {/* Buttons */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:justify-end pt-2">
         <button
           type="button"
           onClick={onCancel}
-          className="rounded-[20px] border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 transition hover:border-cyan-200 hover:text-cyan-700"
+          className="
+          rounded-[20px]
+          border
+          border-slate-200
+          bg-white
+          px-7
+          h-[56px]
+
+          text-[17px]
+          font-bold
+          text-slate-700
+
+          transition-all
+          duration-300
+
+          hover:border-blue-300
+          hover:text-blue-700
+          hover:shadow-[0_4px_16px_rgba(37,99,235,0.08)]
+        "
         >
           Cancel
         </button>
         <button
           type="submit"
-          className="rounded-[20px] bg-gradient-to-r from-sky-600 to-cyan-500 px-5 py-3 text-sm font-bold text-white shadow-[0_16px_35px_rgba(14,165,233,0.24)] transition hover:-translate-y-0.5"
+          className="
+          rounded-[20px]
+
+          bg-gradient-to-r
+          from-blue-600
+          via-blue-500
+          to-sky-500
+
+          px-8
+          h-[56px]
+
+          text-[17px]
+          font-bold
+          text-white
+
+          shadow-[0_16px_40px_rgba(37,99,235,0.28)]
+
+          transition-all
+          duration-300
+
+          hover:-translate-y-0.5
+          hover:shadow-[0_22px_50px_rgba(37,99,235,0.38)]
+        "
         >
           Submit
         </button>
