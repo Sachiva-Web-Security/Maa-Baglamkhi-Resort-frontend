@@ -58,6 +58,9 @@ const RestaurantPOS = () => {
   const [tableSetupTarget, setTableSetupTarget] = useState(null);
   const [tableSetupPax, setTableSetupPax] = useState(null);
   const [invoiceTable, setInvoiceTable] = useState(null);
+  const [modifierItem, setModifierItem] = useState(null);
+  const [modifierText, setModifierText] = useState("");
+  const [paymentModeTable, setPaymentModeTable] = useState(null);
   const [occupiedTableData, setOccupiedTableData] = useState({});
   const [tableOrderData, setTableOrderData] = useState({});
   const [orderIdByTable, setOrderIdByTable] = useState({}); // tracks backend order IDs per table
@@ -614,6 +617,18 @@ const RestaurantPOS = () => {
 
   const handleRemoveItem = (itemId) => setCurrentOrderItems(getCurrentOrderItems().filter(i => i.id !== itemId));
 
+  const openModifier = (item) => {
+    setModifierItem(item);
+    setModifierText(item.modifier || "");
+  };
+
+  const saveModifier = () => {
+    if (!modifierItem) return;
+    setCurrentOrderItems(getCurrentOrderItems().map(item => item.id === modifierItem.id ? { ...item, modifier: modifierText.trim() } : item));
+    setModifierItem(null);
+    setModifierText("");
+  };
+
   const calculateTotal = () => {
     return getCurrentOrderItems().reduce((t, i) => t + i.price * i.quantity, 0);
   };
@@ -674,12 +689,12 @@ const RestaurantPOS = () => {
       return;
     }
 
-    proceedSaveBill();
+    proceedSaveBill({ forceSendWhatsApp: sendToWhatsApp });
   };
 
-  const proceedSaveBill = async () => {
-    const customerName = orderType === "DINE_IN" ? (getCurrentTableData().customerName || saveCustomerInfo.customerName) : (orderTypeData[orderType]?.customerName || saveCustomerInfo.customerName);
-    const phone = orderType === "DINE_IN" ? (getCurrentTableData().phone || saveCustomerInfo.phone) : (orderTypeData[orderType]?.phone || saveCustomerInfo.phone);
+  const proceedSaveBill = async ({ customerName: overrideCustomerName, phone: overridePhone, suppressBillModal = false, returnToTables = false, forceSendWhatsApp = false } = {}) => {
+    const customerName = overrideCustomerName || (orderType === "DINE_IN" ? (getCurrentTableData().customerName || saveCustomerInfo.customerName) : (orderTypeData[orderType]?.customerName || saveCustomerInfo.customerName));
+    const phone = overridePhone || (orderType === "DINE_IN" ? (getCurrentTableData().phone || saveCustomerInfo.phone) : (orderTypeData[orderType]?.phone || saveCustomerInfo.phone));
 
     if (!customerName.trim() || !phone.trim()) {
       alert("Customer name and phone are required.");
@@ -722,7 +737,7 @@ const RestaurantPOS = () => {
         waiter_name: "",
         created_at: new Date().toISOString(),
       };
-      setGeneratedBill(savedBill);
+      if (!suppressBillModal) setGeneratedBill(savedBill);
       setCurrentOrderItems([]);
       if (orderType === "DINE_IN") {
         const prevTable = selectedTable;
@@ -750,6 +765,10 @@ const RestaurantPOS = () => {
         setSelectedTable(null);
       }
       fetchBills();
+      if (returnToTables) {
+        setInvoiceTable(null);
+        setActiveTab("pos");
+      }
     } catch (err) {
       console.error("Error saving bill:", err);
       alert(err.response?.data?.message || "Error saving bill");
@@ -757,6 +776,13 @@ const RestaurantPOS = () => {
       setLoading(false);
     }
   };
+
+  const handleInvoiceSave = () => proceedSaveBill({
+    customerName: getCurrentTableData().customerName || "Walk In",
+    phone: getCurrentTableData().phone || "0000000000",
+    suppressBillModal: true,
+    returnToTables: true,
+  });
 
   const handleClearOrder = () => {
     if (orderType === "DINE_IN" && !selectedTable) { setCurrentOrderItems([]); return; }
@@ -1092,6 +1118,27 @@ const RestaurantPOS = () => {
     }
   };
 
+  const settleTableBill = async (payMethod) => {
+    if (!paymentModeTable) return;
+    const rawNum = String(paymentModeTable.number || paymentModeTable.tableNumber || "");
+    const normNum = rawNum.replace(/^[TGRP]/, "");
+    const paymentData = occupiedTableData[normNum] || occupiedTableData[rawNum] || {};
+    setLoading(true);
+    try {
+      await API.post(`/restaurant/bill/${rawNum}/pay`, { paymentMethod: payMethod, amount: Number(paymentData.amount || paymentData.bill?.total || 0) });
+      setOccupiedTableData(prev => { const next = { ...prev }; delete next[normNum]; delete next[rawNum]; return next; });
+      setKotHistory(prev => prev.filter(kot => String(kot.table || "").replace(/^[TGRP]/, "") !== normNum));
+      setTables(prev => prev.map(table => table.id === paymentModeTable.id ? { ...table, status: "Available" } : table));
+      setOrderIdByTable(prev => { const next = { ...prev }; delete next[rawNum]; return next; });
+      setPaymentModeTable(null);
+      fetchBills();
+    } catch (error) {
+      alert(error.response?.data?.message || "Payment failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   /** Charge the bill to a room */
   const handleChargeToRoom = async (roomNum) => {
     if (!roomNum) return;
@@ -1372,7 +1419,7 @@ const RestaurantPOS = () => {
                         <tr key={item.id}>
                           <td>{idx + 1}</td>
                           <td className="kot-item-name-cell"><button className="kot-row-delete" onClick={() => handleRemoveItem(item.id)} title="Remove item">▣</button><span>{item.name}</span></td>
-                          <td><button className="kot-modifier-btn" title="Add modifier">＋</button></td>
+                          <td className="kot-modifier-cell"><button className="kot-modifier-btn" title="Add modifier" onClick={() => openModifier(item)}>＋</button>{item.modifier && <span>{item.modifier}</span>}</td>
                           <td className="kot-row-qty">
                             <button className="qty-btn" onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}>−</button>
                             <input value={item.quantity} onChange={(e) => handleUpdateQuantity(item.id, Math.max(1, Number(e.target.value) || 1))} />
@@ -1591,7 +1638,7 @@ const RestaurantPOS = () => {
                             <span className="reception">{tableData.captain || 'RECEPTION'}</span>
                             <span className="amount">{formatAmount(tableData.amount)}</span>
                           </div>
-                          <span className="table-guest-pill">{tableData.guests || 1}</span>
+                          {!attention && <span className="table-guest-pill">{tableData.guests || 1}</span>}
                           {attention && <span className="table-alert-time">{tableTime}</span>}
                         </>
                       ) : null}
@@ -1612,8 +1659,9 @@ const RestaurantPOS = () => {
                         <>
                           <button
                             className="table-card-icon-btn"
-                            title="Invoice"
-                            onClick={(e) => { stop(e); setSelectedTable(table); setInvoiceTable(table); setActiveTab("tableInvoice"); }}
+                            title={attention ? "Invoice already generated" : "Invoice"}
+                            disabled={attention}
+                            onClick={(e) => { stop(e); if (attention) return; setSelectedTable(table); setInvoiceTable(table); setActiveTab("tableInvoice"); }}
                           >
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <path d="M6 2h12v20l-3-2-3 2-3-2-3 2z" />
@@ -1633,8 +1681,10 @@ const RestaurantPOS = () => {
                               <line x1="4" y1="17" x2="20" y2="17" />
                             </svg>
                           </button>
-                          {attention && <button className="table-card-icon-btn" title="Settlement" onClick={(e) => { stop(e); setGeneratedBill(tableData.bill || { id: tableData.orderId, billNo: tableData.orderId, tableNumber: tableLabel, total: tableData.amount, created_at: tableData.timestamp, paymentMethod: "Cash" }); }}>₹</button>}
-                          {attention && <button className="table-card-icon-btn" title="View Invoice" onClick={(e) => { stop(e); setKotDetailsTable(table); }}>▤</button>}
+                          {attention && <button className="table-card-icon-btn" title="Settlement" onClick={(e) => { stop(e); setPaymentModeTable(table); }}>₹</button>}
+                          {attention && <button className="table-card-icon-btn" title="View Invoice" onClick={(e) => { stop(e); setGeneratedBill(tableData.bill || { id: tableData.orderId, billNo: tableData.orderId, tableNumber: tableLabel, total: tableData.amount, created_at: tableData.timestamp, paymentMethod: "Cash" }); }}>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9V2h12v7"/><rect x="5" y="14" width="14" height="8"/><path d="M5 18H3V9h18v9h-2"/><circle cx="17" cy="12" r="1" fill="currentColor"/></svg>
+                          </button>}
                         </>
                       )}
                     </div>
@@ -2036,7 +2086,7 @@ const RestaurantPOS = () => {
               </div>
             </div>
           </div>
-          <div className="table-invoice-actions"><div><button>◆ Parcel</button><button>◆ NC</button><button>▣</button><label><input type="checkbox" /> No Ser. Charge?</label><label><input type="checkbox" /> Tax Exemption?</label></div><div><button onClick={handleSaveBill}>▣ Save</button><button onClick={handleSaveBillAndSendWhatsApp}>▣ Save &amp; Print</button><button>▣ Guest</button><button>◆ Discount</button></div></div>
+          <div className="table-invoice-actions"><div><button>◆ Parcel</button><button>◆ NC</button><button>▣</button><label><input type="checkbox" /> No Ser. Charge?</label><label><input type="checkbox" /> Tax Exemption?</label></div><div><button onClick={handleInvoiceSave}>▣ Save</button><button onClick={handleSaveBillAndSendWhatsApp}>▣ Save &amp; Print</button><button>▣ Guest</button><button>◆ Discount</button></div></div>
         </div>;
       })()}
 
@@ -2238,21 +2288,19 @@ const RestaurantPOS = () => {
             price: Number(it.price || menuPrices[it.name.toLowerCase()] || 0),
             amount: Number(it.quantity || 0) * Number(it.price || menuPrices[it.name.toLowerCase()] || 0),
           }));
-          const subtotal = items.reduce((s, it) => s + it.amount, 0);
-          const gst = subtotal * 0.05;
-          const total = subtotal + gst;
-          setGeneratedBill({
-            id: null, billNo: null,
-            tableNumber: rawTableNo,
-            customerName: "",
-            phone: "",
-            subtotal, gst, total,
-            items,
-            entityType: "DINE_IN",
-            paymentMethod: "Cash",
-            waiter_name: "",
-            created_at: new Date().toISOString(),
-          });
+          const tableKey = getTableKey(kotDetailsTable);
+          setTableOrderData(prev => ({
+            ...prev,
+            [tableKey]: {
+              ...(prev[tableKey] || {}),
+              items,
+              captain: prev[tableKey]?.captain || kotsForTable[0]?.captain || "RECEPTION",
+              pax: prev[tableKey]?.pax || occupiedTableData[normTableNo]?.guests || 1,
+            },
+          }));
+          setSelectedTable(kotDetailsTable);
+          setInvoiceTable(kotDetailsTable);
+          setActiveTab("tableInvoice");
           closeModal();
         };
         const handleNewKotFromModal = () => {
@@ -2345,6 +2393,35 @@ const RestaurantPOS = () => {
                 <button disabled={!tableSetupPax} onClick={() => finishTableSetup("RECEPTION")}>RECEPTION</button>
                 {captains.map((captain) => <button key={captain.id} disabled={!tableSetupPax} onClick={() => finishTableSetup(captain.name)}>{captain.name}</button>)}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {paymentModeTable && (
+        <div className="payment-mode-overlay">
+          <div className="payment-mode-modal">
+            <div className="payment-mode-head">Payment Mode</div>
+            <div className="payment-mode-grid">
+              <button className="cash" onClick={() => settleTableBill("Cash")}>Cash</button>
+              <button className="card" onClick={() => settleTableBill("Card")}>Card</button>
+              <button className="paytm" onClick={() => settleTableBill("PayTM")}>PayTM</button>
+              <button className="upi" onClick={() => settleTableBill("UPI")}>UPI</button>
+              <button className="multi" onClick={() => settleTableBill("Multi Payment")}>Multi Payment</button>
+              <button className="cancel" onClick={() => setPaymentModeTable(null)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {modifierItem && (
+        <div className="modifier-overlay">
+          <div className="modifier-modal">
+            <div className="modifier-head">Modifier <button onClick={() => setModifierItem(null)}>×</button></div>
+            <div className="modifier-body">
+              <button className="modifier-select">Select</button>
+              <input value={modifierText} onChange={(e) => setModifierText(e.target.value)} placeholder="New description" autoFocus />
+              <div><button className="modifier-save" onClick={saveModifier}>Save &amp; Select</button><button className="modifier-close" onClick={() => setModifierItem(null)}>Close</button></div>
             </div>
           </div>
         </div>

@@ -1135,6 +1135,7 @@
 .group-back { background: #359bb2; }
 .pos-screen .table-card { cursor: default; }
 .pos-screen .table-card-icon-btn { cursor: pointer; }
+.pos-screen .table-card-icon-btn:disabled { opacity: .35; cursor: not-allowed; pointer-events: auto; }
 .table-setup-overlay { position: fixed; z-index: 1000; inset: 0; display: flex; align-items: flex-start; justify-content: center; padding-top: 86px; background: rgba(0,0,0,.52); }
 .table-setup-modal { width: min(730px, calc(100vw - 40px)); background: #fff; border: 1px solid #333; box-shadow: 0 4px 10px rgba(0,0,0,.45); font: 10px Arial; }
 .table-setup-head { height: 31px; padding: 0 10px; display: flex; align-items: center; justify-content: space-between; background: #d9534f; color: #fff; }
@@ -1189,6 +1190,8 @@
 .kot-item-name-cell { display: flex; align-items: center; gap: 5px; padding: 0 !important; }
 .kot-row-delete { width: 20px; height: 22px; border: 0; background: #d93249; color: #fff; font-size: 9px; cursor: pointer; }
 .kot-modifier-btn { border: 0; background: transparent; font-size: 14px; cursor: pointer; }
+.kot-modifier-cell { display: flex; align-items: center; gap: 4px; }
+.kot-modifier-cell span { max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 8px; }
 .kot-row-qty { display: flex; align-items: center; justify-content: center; padding: 2px 3px !important; }
 .kot-row-qty .qty-btn { width: 19px; height: 20px; border: 0; border-radius: 0; background: #4775e9; color: #fff; }
 .kot-row-qty input { width: 35px; height: 20px; box-sizing: border-box; border: 1px solid #ddd; text-align: center; font: 9px Arial; }
@@ -1237,6 +1240,27 @@
 .kot-modal-card-foot { padding: 5px 7px; font-size: 8px; }
 .kot-modal-foot { gap: 4px; padding: 7px 8px; }
 .kot-modal-btn--newkot { background: #f0c400; color: #111; }
+.modifier-overlay { position: fixed; z-index: 3100; inset: 0; display: flex; align-items: flex-start; justify-content: center; padding-top: 85px; background: rgba(0,0,0,.55); }
+.modifier-modal { width: min(850px,calc(100vw - 40px)); background: #fff; box-shadow: 0 4px 10px rgba(0,0,0,.55); font: 9px Arial; }
+.modifier-head { height: 31px; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; background: #d9534f; color: #fff; }
+.modifier-head button { border: 0; background: transparent; color: #fff; }
+.modifier-body { padding: 18px 10px 9px; }
+.modifier-select { display: block; margin-bottom: 12px; border: 0; padding: 4px 7px; background: #3971ef; color: #fff; font-size: 8px; }
+.modifier-body input { display: block; width: 405px; max-width: 100%; height: 23px; box-sizing: border-box; margin-bottom: 13px; border: 1px solid #ccc; padding: 3px 7px; font: 9px Arial; }
+.modifier-body > div button { border: 0; margin-right: 5px; padding: 5px 8px; font-size: 8px; }
+.modifier-save { background: #3da24a; color: #fff; }
+.modifier-close { background: transparent; color: #222; }
+.payment-mode-overlay { position: fixed; z-index: 3200; inset: 0; display: flex; align-items: flex-start; justify-content: center; padding-top: 129px; background: rgba(0,0,0,.55); }
+.payment-mode-modal { width: 304px; background: #fff; box-shadow: 0 4px 9px rgba(0,0,0,.55); font: 9px Arial; }
+.payment-mode-head { height: 32px; display: flex; align-items: center; padding: 0 10px; background: #d9534f; color: #fff; }
+.payment-mode-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; padding: 12px 4px 24px; }
+.payment-mode-grid button { height: 64px; border: 0; background: #fff; font: 9px Arial; cursor: pointer; }
+.payment-mode-grid .cash { background: #31b33f; color: #fff; }
+.payment-mode-grid .card { background: #ffc414; }
+.payment-mode-grid .paytm { background: #3da3ba; color: #fff; }
+.payment-mode-grid .upi { background: #426ef0; color: #fff; }
+.payment-mode-grid .multi { border-bottom: 1px solid #ddd; }
+.payment-mode-grid .cancel { background: #df3043; color: #fff; }
 
 /* Transaction table */
 .trans-table {
