@@ -288,67 +288,67 @@ const Profile = () => {
       <div className="mx-auto w-full max-w-[2200px] space-y-6 lg:space-y-8 2xl:space-y-10">
 
         {/* ── Gradient header ──────────────────────────────────── */}
-        <div className="relative overflow-hidden rounded-[24px] bg-gradient-to-r from-blue-900 via-blue-500 to-cyan-400 px-6 py-8 shadow-[0_18px_45px_rgba(14,165,233,0.28)] sm:rounded-[28px] sm:px-10 sm:py-10 lg:px-14 lg:py-12 2xl:px-20 2xl:py-16">
-          <div className="pointer-events-none absolute -right-10 -top-16 h-56 w-56 rounded-full bg-white/10 lg:h-72 lg:w-72 2xl:h-96 2xl:w-96" />
-          <div className="pointer-events-none absolute -bottom-20 left-1/3 h-56 w-56 rounded-full bg-white/10 lg:h-72 lg:w-72 2xl:h-96 2xl:w-96" />
-          <div className="relative flex items-center gap-2 text-xs font-bold uppercase tracking-[0.3em] text-white/80 sm:text-sm lg:text-base 2xl:text-lg">
+        <div className="relative overflow-hidden rounded-[18px] bg-gradient-to-r from-blue-900 via-blue-500 to-cyan-400 px-5 py-6 shadow-[0_14px_35px_rgba(14,165,233,0.28)] sm:rounded-[22px] sm:px-8 sm:py-8 md:rounded-[24px] md:px-10 md:py-10 lg:rounded-[24px] lg:px-14 lg:py-12 2xl:px-20 2xl:py-16">
+          <div className="pointer-events-none absolute -right-8 -top-12 h-40 w-40 rounded-full bg-white/10 sm:h-48 sm:w-48 md:h-56 md:w-56 lg:h-72 lg:w-72 2xl:h-96 2xl:w-96" />
+          <div className="pointer-events-none absolute -bottom-16 left-1/3 h-40 w-40 rounded-full bg-white/10 sm:h-48 sm:w-48 md:h-56 md:w-56 lg:h-72 lg:w-72 2xl:h-96 2xl:w-96" />
+          <div className="relative flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-white/80 sm:text-xs md:text-sm lg:text-base 2xl:text-lg">
             <FaShieldAlt />
             <span>My Account</span>
           </div>
-          <h1 className="relative mt-3 text-3xl font-black text-white sm:text-4xl lg:mt-4 lg:text-5xl ">
+          <h1 className="relative mt-2.5 text-[22px] font-black text-white sm:text-3xl md:text-4xl lg:mt-4 lg:text-5xl">
             Personal Information
           </h1>
-          <p className="relative mt-2 max-w-xl text-sm font-medium text-white/90 sm:text-base lg:mt-3 lg:max-w-2xl lg:text-lg 2xl:max-w-3xl 2xl:text-xl">
-            Profile picture, contact details aur password ek jagah se manage karein.
+          <p className="relative mt-2 max-w-xl text-[13px] font-medium text-white/90 sm:text-sm md:text-base lg:mt-3 lg:max-w-2xl lg:text-lg 2xl:max-w-3xl 2xl:text-xl">
+            Manage your profile picture, contact details, and password from one place.
           </p>
         </div>
 
         {/* ── Alerts ───────────────────────────────────────────── */}
         {error ? (
-          <div className="flex items-center gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-semibold text-rose-700 lg:px-6 lg:py-5 lg:text-base 2xl:text-lg">
-            <FaExclamationCircle className="shrink-0 text-base lg:text-lg" />
+          <div className="flex items-center gap-2.5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-[13px] font-semibold text-rose-700 sm:gap-3 sm:rounded-2xl sm:px-5 sm:py-4 sm:text-sm lg:px-6 lg:py-5 lg:text-base 2xl:text-lg">
+            <FaExclamationCircle className="shrink-0 text-sm sm:text-base lg:text-lg" />
             <span>{error}</span>
           </div>
         ) : null}
 
         {message ? (
-          <div className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-semibold text-emerald-700 lg:px-6 lg:py-5 lg:text-base 2xl:text-lg">
-            <FaCheckCircle className="shrink-0 text-base lg:text-lg" />
+          <div className="flex items-center gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-[13px] font-semibold text-emerald-700 sm:gap-3 sm:rounded-2xl sm:px-5 sm:py-4 sm:text-sm lg:px-6 lg:py-5 lg:text-base 2xl:text-lg">
+            <FaCheckCircle className="shrink-0 text-sm sm:text-base lg:text-lg" />
             <span>{message}</span>
           </div>
         ) : null}
 
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] lg:gap-8 2xl:gap-10">
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] lg:gap-8 2xl:gap-10">
 
           {/* ── Avatar card ──────────────────────────────────── */}
-          <div className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-[0_10px_40px_rgba(15,23,42,0.06)] sm:rounded-[28px] sm:p-8 lg:p-10 2xl:p-12">
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-600 sm:text-sm lg:text-base 2xl:text-lg">
+          <div className="rounded-[20px] border border-slate-200 bg-white p-5 shadow-[0_10px_40px_rgba(15,23,42,0.06)] sm:rounded-[24px] sm:p-6 md:rounded-[28px] md:p-8 lg:p-10 2xl:p-12">
+            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-600 sm:text-xs md:text-sm lg:text-base 2xl:text-lg">
               Profile Photo
             </p>
 
-            <div className="mt-5 flex flex-col items-center text-center lg:mt-7">
+            <div className="mt-4 flex flex-col items-center text-center sm:mt-5 md:mt-6 lg:mt-7">
               <div className="relative">
-                <div className="flex h-32 w-32 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-blue-700 to-sky-400 text-4xl font-black text-white shadow-[0_14px_32px_rgba(14,165,233,0.32)] sm:h-40 sm:w-40 sm:text-5xl lg:h-48 lg:w-48 lg:text-6xl 2xl:h-56 2xl:w-56 2xl:text-7xl">
+                <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-blue-700 to-sky-400 text-3xl font-black text-white shadow-[0_12px_28px_rgba(14,165,233,0.32)] sm:h-32 sm:w-32 sm:text-4xl md:h-36 md:w-36 md:text-5xl lg:h-44 lg:w-44 lg:text-5xl xl:h-48 xl:w-48 xl:text-6xl 2xl:h-56 2xl:w-56 2xl:text-7xl">
                   {avatarUrl ? (
                     <img src={avatarUrl} alt="Profile" className="h-full w-full object-cover" />
                   ) : (
                     (name || "U").charAt(0).toUpperCase()
                   )}
                 </div>
-                <span className="absolute bottom-1 right-1 flex h-8 w-8 items-center justify-center rounded-full border-4 border-white bg-emerald-500 sm:h-9 sm:w-9 lg:h-11 lg:w-11">
-                  <FaCheckCircle className="text-xs text-white sm:text-sm lg:text-base" />
+                <span className="absolute bottom-0.5 right-0.5 flex h-7 w-7 items-center justify-center rounded-full border-[3px] border-white bg-emerald-500 sm:h-8 sm:w-8 md:h-9 md:w-9 lg:h-10 lg:w-10">
+                  <FaCheckCircle className="text-[10px] text-white sm:text-xs md:text-sm lg:text-base" />
                 </span>
               </div>
 
-              <h2 className="mt-4 text-lg font-black text-slate-900 sm:text-xl lg:mt-6 lg:text-2xl 2xl:text-3xl">
+              <h2 className="mt-3 text-base font-black text-slate-900 sm:text-lg md:text-xl lg:mt-5 lg:text-2xl 2xl:text-3xl">
                 {name || "User"}
               </h2>
-              <span className="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-sky-50 px-3 py-1 text-xs font-bold text-blue-600 sm:px-4 sm:py-1.5 sm:text-sm lg:mt-2 lg:px-5 lg:py-2 lg:text-base">
-                <FaUserCircle className="text-[10px] sm:text-xs lg:text-sm" />
+              <span className="mt-1 inline-flex items-center gap-1.5 rounded-full bg-sky-50 px-2.5 py-1 text-[11px] font-bold text-blue-600 sm:px-3 sm:py-1 sm:text-xs md:px-4 md:py-1.5 md:text-sm lg:mt-2 lg:px-5 lg:py-2 lg:text-base">
+                <FaUserCircle className="text-[10px] sm:text-xs md:text-sm lg:text-sm" />
                 {prettyRole}
               </span>
 
-              <div className="mt-6 flex w-full flex-col gap-3 lg:mt-8 lg:gap-4">
+              <div className="mt-5 flex w-full flex-col gap-2.5 sm:mt-6 sm:gap-3 md:mt-7 md:gap-3 lg:mt-8 lg:gap-4">
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -360,30 +360,30 @@ const Profile = () => {
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={loadingAvatar}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-blue-500 px-5 py-3 text-sm font-bold text-white shadow-[0_10px_24px_rgba(14,165,233,0.28)] transition hover:-translate-y-0.5 hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-60 sm:py-3.5 sm:text-base lg:py-4 lg:text-lg 2xl:py-5 2xl:text-xl"
+                  className="inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-blue-500 px-4 py-2.5 text-[13px] font-bold text-white shadow-[0_8px_20px_rgba(14,165,233,0.28)] transition hover:-translate-y-0.5 hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-60 sm:px-5 sm:py-3 sm:text-sm md:py-3.5 md:text-base lg:py-4 lg:text-lg 2xl:py-5 2xl:text-xl"
                 >
-                  <FaUpload className="text-xs sm:text-sm lg:text-base" />
+                  <FaUpload className="text-[10px] sm:text-xs md:text-sm lg:text-base" />
                   {loadingAvatar ? "Uploading..." : "Upload New Picture"}
                 </button>
                 <button
                   type="button"
                   onClick={handleStartCamera}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 transition hover:-translate-y-0.5 hover:border-sky-300 hover:text-sky-600 sm:py-3.5 sm:text-base lg:py-4 lg:text-lg 2xl:py-5 2xl:text-xl"
+                  className="inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-[13px] font-bold text-slate-700 transition hover:-translate-y-0.5 hover:border-sky-300 hover:text-sky-600 sm:px-5 sm:py-3 sm:text-sm md:py-3.5 md:text-base lg:py-4 lg:text-lg 2xl:py-5 2xl:text-xl"
                 >
-                  <FaCamera className="text-xs sm:text-sm lg:text-base" />
+                  <FaCamera className="text-[10px] sm:text-xs md:text-sm lg:text-base" />
                   Use Camera
                 </button>
               </div>
             </div>
 
             {showCamera ? (
-              <div className="mt-6 space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 lg:mt-8 lg:space-y-4 lg:p-6">
+              <div className="mt-5 space-y-2.5 rounded-xl border border-slate-200 bg-slate-50 p-3.5 sm:mt-6 sm:space-y-3 sm:rounded-2xl sm:p-4 md:mt-7 md:space-y-4 md:p-6 lg:mt-8 lg:space-y-4 lg:p-6">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-bold text-slate-700 sm:text-base lg:text-lg">Camera Preview</p>
+                  <p className="text-[13px] font-bold text-slate-700 sm:text-sm md:text-base lg:text-lg">Camera Preview</p>
                   <button
                     type="button"
                     onClick={handleCloseCamera}
-                    className="rounded-full p-1.5 text-slate-400 transition hover:bg-slate-200 hover:text-slate-700 lg:p-2 lg:text-lg"
+                    className="rounded-full p-1.5 text-slate-400 transition hover:bg-slate-200 hover:text-slate-700 md:p-2 lg:text-lg"
                     aria-label="Close camera"
                   >
                     <FaTimes />
@@ -391,21 +391,21 @@ const Profile = () => {
                 </div>
 
                 {cameraError ? (
-                  <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700 sm:text-base lg:px-5 lg:py-4 lg:text-lg">
+                  <div className="rounded-lg border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-[13px] font-semibold text-rose-700 sm:rounded-xl sm:px-4 sm:py-3 sm:text-sm md:px-5 md:py-4 md:text-base lg:text-lg">
                     {cameraError}
                   </div>
                 ) : (
                   <>
                     <video
                       id="profile-camera-video"
-                      className="w-full rounded-xl border border-slate-200 bg-slate-950/90"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-950/90 sm:rounded-xl md:rounded-xl lg:rounded-xl"
                       autoPlay
                       muted
                     />
                     <button
                       type="button"
                       onClick={handleCaptureFromCamera}
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-blue-600 px-4 py-3 text-sm font-bold text-white shadow-[0_10px_24px_rgba(14,165,233,0.28)] transition hover:bg-sky-600 sm:py-3.5 sm:text-base lg:py-4 lg:text-lg"
+                      className="inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-blue-600 px-4 py-2.5 text-[13px] font-bold text-white shadow-[0_8px_20px_rgba(14,165,233,0.28)] transition hover:bg-sky-600 sm:py-3 sm:text-sm md:py-3.5 md:text-base lg:py-4 lg:text-lg"
                     >
                       <FaCamera />
                       Capture Photo
@@ -415,39 +415,39 @@ const Profile = () => {
               </div>
             ) : null}
 
-            <div className="mt-7 space-y-3 border-t border-slate-100 pt-6 lg:mt-9 lg:space-y-4 lg:pt-8">
-              <div className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-5 py-4 lg:px-6 lg:py-5">
-                <div className="flex min-w-0 items-center gap-3 lg:gap-4">
-                  <FaUserCircle className="shrink-0 text-slate-400 lg:text-lg" />
-                  <span className="truncate text-sm font-semibold text-slate-800 sm:text-base lg:text-lg">
+            <div className="mt-5 space-y-2.5 border-t border-slate-100 pt-4 sm:mt-6 sm:space-y-3 sm:pt-5 md:mt-7 md:space-y-4 md:pt-6 lg:mt-8 lg:space-y-4 lg:pt-8">
+              <div className="flex items-center justify-between gap-2.5 rounded-xl bg-slate-50 px-4 py-3 sm:gap-3 sm:rounded-2xl sm:px-5 sm:py-4 md:px-6 md:py-5 lg:px-6 lg:py-5">
+                <div className="flex min-w-0 items-center gap-2.5 sm:gap-3 md:gap-4">
+                  <FaUserCircle className="shrink-0 text-base text-slate-400 sm:text-lg md:text-lg lg:text-lg" />
+                  <span className="truncate text-[13px] font-semibold text-slate-800 sm:text-sm md:text-base lg:text-lg">
                     {name || "Name not set"}
                   </span>
                 </div>
-                <FaPen className="shrink-0 text-xs text-slate-300 lg:text-sm" />
+                <FaPen className="shrink-0 text-[10px] text-slate-300 sm:text-xs md:text-sm lg:text-sm" />
               </div>
 
-              <div className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-5 py-4 lg:px-6 lg:py-5">
-                <div className="flex min-w-0 items-center gap-3 lg:gap-4">
-                  <FaEnvelope className="shrink-0 text-slate-400 lg:text-lg" />
-                  <span className="truncate text-sm font-semibold text-slate-800 sm:text-base lg:text-lg">
+              <div className="flex items-center justify-between gap-2.5 rounded-xl bg-slate-50 px-4 py-3 sm:gap-3 sm:rounded-2xl sm:px-5 sm:py-4 md:px-6 md:py-5 lg:px-6 lg:py-5">
+                <div className="flex min-w-0 items-center gap-2.5 sm:gap-3 md:gap-4">
+                  <FaEnvelope className="shrink-0 text-base text-slate-400 sm:text-lg md:text-lg lg:text-lg" />
+                  <span className="truncate text-[13px] font-semibold text-slate-800 sm:text-sm md:text-base lg:text-lg">
                     {email || "Email not set"}
                   </span>
                 </div>
-                <FaPen className="shrink-0 text-xs text-slate-300 lg:text-sm" />
+                <FaPen className="shrink-0 text-[10px] text-slate-300 sm:text-xs md:text-sm lg:text-sm" />
               </div>
 
-              <div className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-5 py-4 lg:px-6 lg:py-5">
-                <div className="flex min-w-0 items-center gap-3 lg:gap-4">
-                  <FaPhone className="shrink-0 text-slate-400 lg:text-lg" />
-                  <span className="truncate text-sm font-semibold text-slate-800 sm:text-base lg:text-lg">
+              <div className="flex items-center justify-between gap-2.5 rounded-xl bg-slate-50 px-4 py-3 sm:gap-3 sm:rounded-2xl sm:px-5 sm:py-4 md:px-6 md:py-5 lg:px-6 lg:py-5">
+                <div className="flex min-w-0 items-center gap-2.5 sm:gap-3 md:gap-4">
+                  <FaPhone className="shrink-0 text-base text-slate-400 sm:text-lg md:text-lg lg:text-lg" />
+                  <span className="truncate text-[13px] font-semibold text-slate-800 sm:text-sm md:text-base lg:text-lg">
                     {phone || "Phone not set"}
                   </span>
                 </div>
-                <FaWhatsapp className="shrink-0 text-xs text-emerald-400 lg:text-sm" />
+                <FaWhatsapp className="shrink-0 text-[10px] text-emerald-400 sm:text-xs md:text-sm lg:text-sm" />
               </div>
 
               {loadingProfile ? (
-                <p className="text-sm font-semibold text-slate-400 sm:text-base lg:text-lg">
+                <p className="text-[13px] font-semibold text-slate-400 sm:text-sm md:text-base lg:text-lg">
                   Profile details load ho rahe hain...
                 </p>
               ) : null}
@@ -455,52 +455,52 @@ const Profile = () => {
           </div>
 
           {/* ── WhatsApp Phone card ────────────────────────────── */}
-          <div className="rounded-[24px] border border-emerald-200 bg-white p-6 shadow-[0_10px_40px_rgba(15,23,42,0.06)] sm:rounded-[28px] sm:p-8 lg:p-10 2xl:p-12">
-            <div className="flex items-center gap-3 lg:gap-4">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 sm:h-12 sm:w-12 lg:h-14 lg:w-14 lg:text-xl 2xl:h-16 2xl:w-16 2xl:text-2xl">
+          <div className="rounded-[20px] border border-emerald-200 bg-white p-5 shadow-[0_10px_40px_rgba(15,23,42,0.06)] sm:rounded-[24px] sm:p-6 md:rounded-[28px] md:p-8 lg:p-10 2xl:p-12">
+            <div className="flex items-center gap-2.5 sm:gap-3 md:gap-4">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 sm:h-11 sm:w-11 md:h-12 md:w-12 lg:h-14 lg:w-14 lg:text-xl 2xl:h-16 2xl:w-16 2xl:text-2xl">
                 <FaWhatsapp />
               </span>
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-600 sm:text-sm lg:text-base">
+                <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-600 sm:text-xs md:text-sm lg:text-base">
                   WhatsApp Number
                 </p>
-                <h2 className="text-lg font-black text-slate-900 sm:text-xl lg:text-2xl 2xl:text-3xl">
+                <h2 className="text-base font-black text-slate-900 sm:text-lg md:text-xl lg:text-2xl 2xl:text-3xl">
                   Invoice Delivery
                 </h2>
               </div>
             </div>
 
-            <p className="mt-4 text-sm font-medium leading-relaxed text-slate-500 sm:text-base lg:mt-5 lg:text-lg 2xl:text-xl">
-              Apna WhatsApp number yahan daalein. Booking banne par ya payment update hone par invoice PDF is number par bheja jayega.
+            <p className="mt-3 text-[13px] font-medium leading-relaxed text-slate-500 sm:text-sm md:text-base lg:mt-4 lg:text-lg 2xl:text-xl">
+              Enter your WhatsApp number here. Invoice PDFs will be automatically sent to this number whenever a booking is created or a payment is updated.
             </p>
 
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center lg:mt-8">
+            <div className="mt-4 flex flex-col gap-2.5 sm:mt-5 sm:flex-row sm:items-center sm:gap-3 lg:mt-7">
               <input
                 type="tel"
                 inputMode="numeric"
                 placeholder="9876543210"
                 value={phoneDraft}
                 onChange={(e) => setPhoneDraft(e.target.value.replace(/\D+/g, "").slice(0, 15))}
-                className="flex-1 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-100 sm:text-base lg:py-4 lg:text-lg"
+                className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-[13px] font-semibold text-slate-900 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100 sm:px-5 sm:py-3 sm:text-sm md:py-3.5 md:text-base lg:px-6 lg:py-4 lg:text-lg"
               />
               <button
                 type="button"
                 onClick={handlePhoneSave}
                 disabled={loadingPhone || phoneDraft === phone}
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-emerald-500 px-6 py-3 text-sm font-bold text-white shadow-[0_10px_24px_rgba(16,185,129,0.28)] transition hover:-translate-y-0.5 hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-60 sm:py-3.5 sm:text-base lg:py-4 lg:text-lg"
+                className="inline-flex items-center justify-center gap-1.5 rounded-full bg-emerald-500 px-5 py-2.5 text-[13px] font-bold text-white shadow-[0_8px_20px_rgba(16,185,129,0.28)] transition hover:-translate-y-0.5 hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-60 sm:py-3 sm:text-sm md:py-3.5 md:text-base lg:py-4 lg:text-lg"
               >
-                <FaCheckCircle className="text-xs sm:text-sm lg:text-base" />
+                <FaCheckCircle className="text-[10px] sm:text-xs md:text-sm lg:text-base" />
                 {loadingPhone ? "Saving..." : phoneDraft === phone ? "Saved" : "Save Number"}
               </button>
             </div>
 
             {phone ? (
-              <p className="mt-3 text-xs font-medium text-slate-400 sm:text-sm lg:text-base">
+              <p className="mt-2.5 text-[11px] font-medium text-slate-400 sm:text-xs md:text-sm lg:text-base">
                 Current number: +{phone}
               </p>
             ) : (
-              <p className="mt-3 text-xs font-medium text-amber-600 sm:text-sm lg:text-base">
-                Abhi koi number set nahi hai. Invoice WhatsApp par nahi bheja jayega.
+              <p className="mt-2.5 text-[11px] font-medium text-amber-600 sm:text-xs md:text-sm lg:text-base">
+               No WhatsApp number is configured yet.
               </p>
             )}
           </div>
@@ -508,32 +508,31 @@ const Profile = () => {
           {/* ── Password card ────────────────────────────────── */}
           <div
             ref={securitySectionRef}
-            className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-[0_10px_40px_rgba(15,23,42,0.06)] sm:rounded-[28px] sm:p-8 lg:p-10 2xl:p-12"
+            className="rounded-[20px] border border-slate-200 bg-white p-5 shadow-[0_10px_40px_rgba(15,23,42,0.06)] sm:rounded-[24px] sm:p-6 md:rounded-[28px] md:p-8 lg:p-10 2xl:p-12"
           >
-            <div className="flex items-center gap-3 lg:gap-4">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 sm:h-12 sm:w-12 lg:h-14 lg:w-14 lg:text-xl 2xl:h-16 2xl:w-16 2xl:text-2xl">
+            <div className="flex items-center gap-2.5 sm:gap-3 md:gap-4">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 sm:h-11 sm:w-11 md:h-12 md:w-12 md:text-lg lg:h-14 lg:w-14 lg:text-xl 2xl:h-16 2xl:w-16 2xl:text-2xl">
                 <FaLock />
               </span>
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-600 sm:text-sm lg:text-base">
+                <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-600 sm:text-xs md:text-sm lg:text-base">
                   Security
                 </p>
-                <h2 className="text-lg font-black text-slate-900 sm:text-xl lg:text-2xl 2xl:text-3xl">
+                <h2 className="text-base font-black text-slate-900 sm:text-lg md:text-xl lg:text-2xl 2xl:text-3xl">
                   Change Password
                 </h2>
               </div>
             </div>
 
-            <p className="mt-4 text-sm font-medium leading-relaxed text-slate-500 sm:text-base lg:mt-5 lg:text-lg 2xl:text-xl">
-              Apna password yahan se safely update karein. Current credentials
-              kabhi bhi screen par expose nahi hote.
+            <p className="mt-3 text-[13px] font-medium leading-relaxed text-slate-500 sm:text-sm md:text-base lg:mt-4 lg:text-lg 2xl:text-xl">
+              Update your password securely from here.
             </p>
 
-            <form onSubmit={handlePasswordChange} className="mt-6 space-y-5 lg:mt-8 lg:space-y-7">
+            <form onSubmit={handlePasswordChange} className="mt-5 space-y-4 sm:mt-6 sm:space-y-5 md:mt-7 md:space-y-5 lg:mt-8 lg:space-y-7">
               <div>
                 <label
                   htmlFor="current-password"
-                  className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500 sm:text-sm lg:mb-2.5 lg:text-base"
+                  className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-slate-500 sm:text-xs md:text-sm lg:mb-2.5 lg:text-base"
                 >
                   Current Password
                 </label>
@@ -542,34 +541,34 @@ const Profile = () => {
                   type="password"
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-semibold text-slate-900 outline-none transition placeholder:font-normal placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-sky-100 sm:px-5 sm:py-4 sm:text-base lg:px-6 lg:py-4.5 lg:text-lg 2xl:py-5 2xl:text-xl"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-[13px] font-semibold text-slate-900 outline-none transition placeholder:font-normal placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-sky-100 sm:px-5 sm:py-3 sm:text-sm md:py-3.5 md:text-base lg:px-6 lg:py-4.5 lg:text-lg 2xl:py-5 2xl:text-xl"
                   placeholder="Enter current password"
                 />
               </div>
 
-              <div className="grid gap-5 sm:grid-cols-2 lg:gap-6">
+              <div className="grid gap-4 sm:grid-cols-2 sm:gap-5 md:gap-5 lg:gap-6">
                 <div>
-                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500 sm:text-sm lg:mb-2.5 lg:text-base">
+                  <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-slate-500 sm:text-xs md:text-sm lg:mb-2.5 lg:text-base">
                     New Password
                   </label>
                   <input
                     type="password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-semibold text-slate-900 outline-none transition placeholder:font-normal placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-sky-100 sm:px-5 sm:py-4 sm:text-base lg:px-6 lg:py-4.5 lg:text-lg 2xl:py-5 2xl:text-xl"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-[13px] font-semibold text-slate-900 outline-none transition placeholder:font-normal placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-sky-100 sm:px-5 sm:py-3 sm:text-sm md:py-3.5 md:text-base lg:px-6 lg:py-4.5 lg:text-lg 2xl:py-5 2xl:text-xl"
                     placeholder="Enter new password"
                   />
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500 sm:text-sm lg:mb-2.5 lg:text-base">
+                  <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-slate-500 sm:text-xs md:text-sm lg:mb-2.5 lg:text-base">
                     Confirm Password
                   </label>
                   <input
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-semibold text-slate-900 outline-none transition placeholder:font-normal placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-sky-100 sm:px-5 sm:py-4 sm:text-base lg:px-6 lg:py-4.5 lg:text-lg 2xl:py-5 2xl:text-xl"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-[13px] font-semibold text-slate-900 outline-none transition placeholder:font-normal placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-sky-100 sm:px-5 sm:py-3 sm:text-sm md:py-3.5 md:text-base lg:px-6 lg:py-4.5 lg:text-lg 2xl:py-5 2xl:text-xl"
                     placeholder="Re-enter new password"
                   />
                 </div>
@@ -579,7 +578,7 @@ const Profile = () => {
                 <button
                   type="submit"
                   disabled={loadingPassword}
-                  className="inline-flex items-center justify-center gap-2 rounded-full bg-blue-500 px-8 py-3 text-sm font-bold text-white shadow-[0_10px_24px_rgba(14,165,233,0.28)] transition hover:-translate-y-0.5 hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-60 sm:px-10 sm:py-3.5 sm:text-base lg:px-12 lg:py-4 lg:text-lg 2xl:px-14 2xl:py-5 2xl:text-xl"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-full bg-blue-500 px-6 py-2.5 text-[13px] font-bold text-white shadow-[0_8px_20px_rgba(14,165,233,0.28)] transition hover:-translate-y-0.5 hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-60 sm:px-8 sm:py-3 sm:text-sm md:py-3.5 md:text-base lg:px-12 lg:py-4 lg:text-lg 2xl:px-14 2xl:py-5 2xl:text-xl"
                 >
                   {loadingPassword ? "Updating..." : "Update Password"}
                 </button>
@@ -587,20 +586,20 @@ const Profile = () => {
             </form>
 
             {/* Account overview strip */}
-            <div className="mt-8 grid gap-3 border-t border-slate-100 pt-6 sm:grid-cols-2 lg:mt-10 lg:gap-4 lg:pt-8">
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 lg:p-6">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 sm:text-xs lg:text-sm">
+            <div className="mt-5 grid gap-2.5 border-t border-slate-100 pt-4 sm:mt-6 sm:grid-cols-2 sm:gap-3 md:mt-7 md:gap-4 md:pt-6 lg:mt-10 lg:gap-4 lg:pt-8">
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3.5 sm:p-4 md:p-5 lg:p-6">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 sm:text-xs md:text-sm lg:text-sm">
                   Role
                 </div>
-                <div className="mt-1.5 text-base font-black text-slate-900 sm:text-lg lg:mt-2 lg:text-xl 2xl:text-2xl">
+                <div className="mt-1 text-sm font-black text-slate-900 sm:text-base md:text-lg lg:mt-2 lg:text-xl 2xl:text-2xl">
                   {prettyRole}
                 </div>
               </div>
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 lg:p-6">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 sm:text-xs lg:text-sm">
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3.5 sm:p-4 md:p-5 lg:p-6">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 sm:text-xs md:text-sm lg:text-sm">
                   Email
                 </div>
-                <div className="mt-1.5 truncate text-base font-black text-slate-900 sm:text-lg lg:mt-2 lg:text-xl 2xl:text-2xl">
+                <div className="mt-1 truncate text-sm font-black text-slate-900 sm:text-base md:text-lg lg:mt-2 lg:text-xl 2xl:text-2xl">
                   {email || "Not set"}
                 </div>
               </div>

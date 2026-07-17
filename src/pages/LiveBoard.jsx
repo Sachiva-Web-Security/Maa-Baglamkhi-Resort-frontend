@@ -125,7 +125,7 @@ const LiveBoard = () => {
   const otherOrders = orders.filter((o) => !o.isOwnedByCurrentWaiter);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200 p-5">
         {/* Header */}
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <div>

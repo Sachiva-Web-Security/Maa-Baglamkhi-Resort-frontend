@@ -514,7 +514,7 @@ if (exists) {
             <div className="min-w-0">
               <div className="text-[12px] font-bold uppercase tracking-wider text-blue-700 sm:text-[15px]">Table Management</div>
               <h3 className="mt-1 text-lg font-extrabold tracking-tight text-slate-900 sm:text-[24px]">Restaurant tables in list view</h3>
-              <p className="mt-1.5 text-[13px] text-slate-500 sm:text-[17px]">Status, section, booking info, person count, and actions in one place.</p>
+              {/* <p className="mt-1.5 text-[13px] text-slate-500 sm:text-[17px]">Status, section, booking info, person count, and actions in one place.</p> */}
             </div>
           </div>
 

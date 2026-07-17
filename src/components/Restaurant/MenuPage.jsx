@@ -553,7 +553,7 @@ const MenuPage = () => {
                   return (
                     <div
   key={item.id}
-  className="group flex min-h-[150px] min-w-0 overflow-hidden rounded-[16px] border border-blue-100 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.05)] transition-all duration-200 sm:min-h-[180px] sm:rounded-[20px] lg:hover:-translate-y-1 lg:hover:border-blue-200 lg:hover:shadow-[0_20px_45px_rgba(15,23,42,0.12)]"
+  className="group flex min-h-[90px] min-w-0 overflow-hidden rounded-[16px] border border-blue-100 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.05)] transition-all duration-200 sm:min-h-[110px] sm:rounded-[20px] lg:hover:-translate-y-1 lg:hover:border-blue-200 lg:hover:shadow-[0_20px_45px_rgba(15,23,42,0.12)]"
 >
   {/* Image Section (2/5) */}
   <div className="relative w-2/5 shrink-0 overflow-hidden bg-slate-100">
@@ -778,7 +778,7 @@ const MenuPage = () => {
                   ))}
                 </select>
                 <div className="mt-2.5 text-sm text-slate-500">
-                  Ye time kitchen card par dikhega aur ready countdown isi se chalega.
+                  This time will be displayed on the kitchen card and will be used to drive the Ready countdown timer.
                 </div>
               </div>
 

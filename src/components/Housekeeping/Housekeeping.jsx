@@ -199,7 +199,7 @@ export default function Housekeeping() {
             </div>
             <div className="min-w-0">
               <h1 className="text-[26px] font-black leading-tight text-white xs:text-[28px] sm:text-[38px] lg:text-[32px]">Housekeeping</h1>
-              <p className="mt-0.5 break-words text-sm text-blue-50 sm:text-lg lg:text-xl">View and manage room assignments, room status, and checkout-ready rooms from one organized list.</p>
+              <p className="mt-0.5 break-words text-sm text-blue-50 sm:text-lg lg:text-xl">Manage room assignments, monitor room status, and track checkout-ready rooms from one organized dashboard.</p>
             </div>
           </div>
           <button
@@ -258,8 +258,7 @@ export default function Housekeeping() {
             <div className="min-w-0">
               <h2 className="text-[20px] font-black text-slate-900 sm:text-[30px] lg:text-[32px]">Room Assignment List</h2>
               <p className="mt-0.5 break-words text-xs text-slate-500 sm:text-base lg:text-lg">
-                Kisko room assign hua, room type, duration, kisne assign kiya h, aur real status — sab yahan.
-              </p>
+Access room assignment details, room type, duration of stay, assigned by information, and current room status in one organized list.              </p>
             </div>
           </div>
           <div className="overflow-x-auto [-webkit-overflow-scrolling:touch]">
@@ -312,7 +311,7 @@ export default function Housekeeping() {
                           <FaClipboardList className="text-xl sm:text-2xl" />
                         </div>
                         <p className="text-lg font-bold text-slate-800 sm:text-[21px]">No room Assignment found.</p>
-                        <p className="text-base text-slate-400 sm:text-lg">Jab bhi room assign hoga, yahan show hoga.</p>
+                        <p className="text-base text-slate-400 sm:text-lg">Whenever a room is assigned, it will appear here.</p>
                       </div>
                     </td>
                   </tr>
@@ -331,7 +330,7 @@ export default function Housekeeping() {
             <div className="min-w-0">
               <h2 className="text-[20px] font-black text-slate-900 sm:text-[30px] lg:text-[32px]">Rooms Available for Checkout / New Booking</h2>
               <p className="mt-0.5 break-words text-xs text-slate-500 sm:text-base lg:text-lg">
-                Total {checkoutReadyRooms.length} cleaned rooms jo abhi book nahi hue — checkout ke baad naye guest ke liye taiyaar.
+                {checkoutReadyRooms.length} rooms are currently cleaned and available for a new check-in.
               </p>
             </div>
           </div>
@@ -367,7 +366,7 @@ export default function Housekeeping() {
                           <FaBed className="text-xl sm:text-2xl" />
                         </div>
                         <p className="text-lg font-bold text-slate-800 sm:text-[21px]">No rooms currently available for checkout.</p>
-                        <p className="text-base text-slate-400 sm:text-lg">Jab bhi koi room checkout ke liye available hoga, yahan show hoga.</p>
+                        <p className="text-base text-slate-400 sm:text-lg">Whenever a room becomes available for checkout, it will appear here.</p>
                       </div>
                     </td>
                   </tr>

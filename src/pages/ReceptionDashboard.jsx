@@ -143,14 +143,14 @@ const ReceptionDashboard = () => {
     <RoleDashboardShell
       badge="Reception Hub"
       title="Reception dashboard for live guest movement"
-      description="Arrivals, departures, room readiness aur quick front-desk actions ko ek clean operating dashboard mein rakha gaya hai."
+      description="Monitor arrivals, departures, room readiness, and essential front-desk operations from one streamlined dashboard."
       stats={stats}
       quickActions={[
-        { label: "Guest Check-In", helper: "Nayi booking entry ya walk-in guest process karein.", route: "/hotel/guest", icon: FaDoorOpen, tone: "cyan" },
-        { label: "Guest Check-Out", helper: "Departing guest settlement aur follow-up open karein.", route: "/hotel/communication", icon: FaExchangeAlt, tone: "amber" },
-        { label: "All Bookings", helper: "Reservation queue ko desk se directly manage karein.", route: "/hotel/all-bookings", icon: FaCalendarCheck, tone: "emerald" },
-        { label: "Inventory", helper: "Stock items aur supply status ko directly review aur manage karein.", route: "/inventory", icon: FaBoxes, tone: "rose" },
-        { label: "Booking History", helper: "Past stays aur guest references review karein.", route: "/hotel/booking-history", icon: FaUserCheck, tone: "violet" },
+        { label: "Guest Check-In", helper: "Create a new booking or quickly check in a walk-in guest.", route: "/hotel/guest", icon: FaDoorOpen, tone: "cyan" },
+        { label: "Guest Check-Out", helper: "Manage departing guest settlements and follow-up actions.", route: "/hotel/communication", icon: FaExchangeAlt, tone: "amber" },
+        { label: "All Bookings", helper: "Manage the reservation queue directly from the front desk.", route: "/hotel/all-bookings", icon: FaCalendarCheck, tone: "emerald" },
+        { label: "Inventory", helper: "Review and manage inventory items and supply status from one place.", route: "/inventory", icon: FaBoxes, tone: "rose" },
+        { label: "Booking History", helper: "Review guest stay history and reference details.", route: "/hotel/booking-history", icon: FaUserCheck, tone: "violet" },
       ]}
       insights={insights}
       table={table}
