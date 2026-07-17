@@ -1075,7 +1075,7 @@ const Dashboard = () => {
   };
 
   const renderExpandedBoard = (day) => (
-    <div className="grid grid-cols-[150px_minmax(230px,1.25fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)] border-t border-sky-400 bg-[linear-gradient(180deg,rgba(255,255,255,0.32)_0%,rgba(255,255,255,0.16)_100%)]">
+    <div className="grid grid-cols-[150px_repeat(5,1fr)] border-t border-sky-400 bg-[linear-gradient(180deg,rgba(255,255,255,0.32)_0%,rgba(255,255,255,0.16)_100%)]">
       <div className="border-r border-sky-400 bg-[linear-gradient(180deg,rgba(224,242,254,0.55)_0%,rgba(240,249,255,0.2)_100%)]" />
       {boardOrder.map((key) => {
         const meta = BOARD_BUCKET_META[key];
@@ -1322,7 +1322,7 @@ const Dashboard = () => {
       ) : null}
 
       <div
-        className={`dashboard-typography dashboard-shell relative isolate min-h-fit w-full overflow-x-hidden p-4 transition-all duration-300 sm:p-6 lg:p-8 ${
+        className={`dashboard-typography dashboard-shell relative isolate min-h-fit w-full overflow-x-hidden transition-all duration-300 ${
           blurBg ? "blur-[6px]" : ""
         }`}
       >

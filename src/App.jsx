@@ -90,7 +90,7 @@ const ROLES = {
 const HEADER_HEIGHT = 92;
 const HEADER_CONTENT_GAP = 18;
 
-function Layout({ children, setIsAuthenticated }) {
+function Layout({ children, setIsAuthenticated, fullWidth }) {
   const location = useLocation();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -176,7 +176,7 @@ function Layout({ children, setIsAuthenticated }) {
           className="flex-1 overflow-y-auto"
           style={{ paddingTop: `${HEADER_HEIGHT + HEADER_CONTENT_GAP}px` }}
         >
-          <div className="p-3 sm:p-4 lg:p-5">{children}</div>
+          <div className={fullWidth ? "" : "p-3 sm:p-4 lg:p-5"}>{children}</div>
         </div>
       </div>
       {showDashboardFooter ? (
@@ -220,7 +220,7 @@ function AppRoutes({ isAuthenticated, setIsAuthenticated, protect }) {
           />
           <Route path="/" element={<RoleHomeRedirect />} />
 
-          <Route path="/dashboard" element={protect(<Dashboard />, ["admin"])} />
+          <Route path="/dashboard" element={protect(<Dashboard />, ["admin"], { fullWidth: true })} />
           <Route path="/manager-dashboard" element={protect(<ManagerDashboard />, ["manager"])} />
           <Route
             path="/reception-dashboard"
@@ -356,9 +356,11 @@ function App() {
     };
   }, []);
 
-  const protect = (element, roles) => (
+  const protect = (element, roles, options = {}) => (
     <ProtectedRoute allowedRoles={roles}>
-      <Layout setIsAuthenticated={setIsAuthenticated}>{element}</Layout>
+      <Layout setIsAuthenticated={setIsAuthenticated} fullWidth={options.fullWidth}>
+        {element}
+      </Layout>
     </ProtectedRoute>
   );
 

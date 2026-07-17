@@ -1,21 +1,31 @@
 import { useState } from "react";
 
-/* Premium input styles */
+/* Premium input styles
+   Mobile-first sizing, scaling up through tablet/iPad, landing on the
+   EXACT original values at xl (≥1280px = Desktop) */
 const fieldCls = `
 w-full
-h-[56px]
+h-[48px]
+md:h-[52px]
+xl:h-[56px]
 
-rounded-[20px]
+rounded-[16px]
+md:rounded-[18px]
+xl:rounded-[20px]
 
 border
 border-slate-200/80
 
 bg-white
 
-px-5
-py-3
+px-4
+py-2.5
+md:px-5
+md:py-3
 
-text-[17px]
+text-[15px]
+md:text-[16px]
+xl:text-[17px]
 font-medium
 text-slate-900
 
@@ -38,12 +48,16 @@ hover:shadow-[0_4px_16px_rgba(37,99,235,0.08)]
 `;
 
 const labelCls = `
-mb-2.5
+mb-2
+md:mb-2.5
 block
-text-[14px]
+text-[13px]
+md:text-[13.5px]
+xl:text-[14px]
 font-bold
 uppercase
-tracking-[0.12em]
+tracking-[0.08em]
+xl:tracking-[0.12em]
 text-slate-600
 `;
 
@@ -76,7 +90,7 @@ const AttendanceForm = ({ onSubmit, onCancel, initialData = {} }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5 min-w-0">
       {/* Employee Name */}
       <div>
         <label htmlFor="employeeName" className={labelCls}>
@@ -95,7 +109,7 @@ const AttendanceForm = ({ onSubmit, onCancel, initialData = {} }) => {
       </div>
 
       {/* Role + Department */}
-      <div className="grid gap-5 md:grid-cols-2">
+      <div className="grid gap-4 md:gap-5 grid-cols-1 md:grid-cols-2">
         <div>
           <label htmlFor="role" className={labelCls}>
             Role
@@ -140,7 +154,7 @@ const AttendanceForm = ({ onSubmit, onCancel, initialData = {} }) => {
       </div>
 
       {/* Date + Status */}
-      <div className="grid gap-5 md:grid-cols-2">
+      <div className="grid gap-4 md:gap-5 grid-cols-1 md:grid-cols-2">
         <div>
           <label htmlFor="date" className={labelCls}>
             Date
@@ -177,7 +191,7 @@ const AttendanceForm = ({ onSubmit, onCancel, initialData = {} }) => {
       </div>
 
       {/* Check-In + Check-Out */}
-      <div className="grid gap-5 md:grid-cols-2">
+      <div className="grid gap-4 md:gap-5 grid-cols-1 md:grid-cols-2">
         <div>
           <label htmlFor="checkIn" className={labelCls}>
             Check-In Time
@@ -240,7 +254,8 @@ const AttendanceForm = ({ onSubmit, onCancel, initialData = {} }) => {
           className={`
             ${fieldCls}
             h-auto
-            py-3
+            py-2.5
+            md:py-3
             resize-none
           `}
         />
@@ -252,14 +267,26 @@ const AttendanceForm = ({ onSubmit, onCancel, initialData = {} }) => {
           type="button"
           onClick={onCancel}
           className="
-          rounded-[20px]
+          w-full
+          sm:w-auto
+
+          rounded-[16px]
+          md:rounded-[18px]
+          xl:rounded-[20px]
+
           border
           border-slate-200
           bg-white
-          px-7
-          h-[56px]
+          px-6
+          md:px-7
 
-          text-[17px]
+          h-[48px]
+          md:h-[52px]
+          xl:h-[56px]
+
+          text-[14px]
+          md:text-[15.5px]
+          xl:text-[17px]
           font-bold
           text-slate-700
 
@@ -276,21 +303,33 @@ const AttendanceForm = ({ onSubmit, onCancel, initialData = {} }) => {
         <button
           type="submit"
           className="
-          rounded-[20px]
+          w-full
+          sm:w-auto
+
+          rounded-[16px]
+          md:rounded-[18px]
+          xl:rounded-[20px]
 
           bg-gradient-to-r
           from-blue-600
           via-blue-500
           to-sky-500
 
-          px-8
-          h-[56px]
+          px-6
+          md:px-8
 
-          text-[17px]
+          h-[48px]
+          md:h-[52px]
+          xl:h-[56px]
+
+          text-[14px]
+          md:text-[15.5px]
+          xl:text-[17px]
           font-bold
           text-white
 
-          shadow-[0_16px_40px_rgba(37,99,235,0.28)]
+          shadow-[0_10px_28px_rgba(37,99,235,0.24)]
+          xl:shadow-[0_16px_40px_rgba(37,99,235,0.28)]
 
           transition-all
           duration-300

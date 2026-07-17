@@ -28,11 +28,11 @@ const BILLING_PAGE_SIZE = 10;
 const ACCOUNTS_MODULE_PAGE_SIZE = 10;
 
 const SummaryRow = ({ label, value, tone }) => (
-  <div className="flex items-center justify-between rounded-xl border border-[#E4E1D8] bg-[#F6F5F1] px-4 py-3">
-    <span className="text-xs font-semibold uppercase tracking-[0.18em] text-[#6B6F66]">
+  <div className="flex items-center justify-between rounded-2xl border border-blue-100 bg-blue-50/60 px-5 py-4">
+    <span className="text-[15px] font-semibold uppercase tracking-[0.18em] text-slate-500">
       {label}
     </span>
-    <span className={`text-lg font-black ${tone || "text-[#1C231F]"}`}>{value}</span>
+    <span className={`text-xl font-black ${tone || "text-slate-900"}`}>{value}</span>
   </div>
 );
 
@@ -150,7 +150,7 @@ const splitInvoiceAmounts = (invoice) => {
 };
 
 const fieldClass =
-  "w-full rounded-xl border border-[#E4E1D8] bg-white px-4 py-3 text-lg font-semibold text-[#1C231F] outline-none focus:ring-2 focus:ring-[#0B4F48]/20";
+  "w-full rounded-2xl border border-blue-100 bg-white px-4 py-3 text-lg font-semibold text-slate-900 outline-none transition-all duration-200 focus:border-sky-400 focus:ring-4 focus:ring-sky-100";
 
 const moduleColumns = {
   bankLedger: [
@@ -294,20 +294,20 @@ const AccountsModuleCard = ({
   };
 
   return (
-    <div className="rounded-[20px] border border-[#E4E1D8] bg-white/95 p-5 shadow-[0_20px_50px_rgba(30,64,175,0.1)]">
+    <div className="rounded-[30px] border border-blue-100/70 bg-white p-6 shadow-[0_25px_60px_-15px_rgba(30,64,175,0.15)] transition-all duration-300 sm:p-7">
         <div>
-          <div className="text-base font-bold uppercase tracking-[0.18em] text-[#0B4F48]">{title}</div>
-          <div className="mt-2 text-lg font-medium leading-7 text-[#6B6F66]">{subtitle}</div>
+          <div className="text-base font-bold uppercase tracking-[0.18em] text-sky-600">{title}</div>
+          <div className="mt-2 text-lg font-medium leading-7 text-slate-500">{subtitle}</div>
         </div>
 
-      <form onSubmit={handleSubmit} className="mt-4 grid gap-4 md:grid-cols-2">
+      <form onSubmit={handleSubmit} className="mt-5 grid gap-4 md:grid-cols-2">
         {fields.map((field) => {
           const isWideField =
             field.type === "textarea" || field.name === "description" || field.name === "notes";
 
           return (
           <label key={field.name} className={isWideField ? "block md:col-span-2" : "block"}>
-            <span className="mb-2 block text-base font-bold uppercase tracking-[0.14em] text-[#6B6F66]">
+            <span className="mb-2 block text-[17px] font-bold uppercase tracking-[0.14em] text-slate-500">
               {field.label}
             </span>
             {field.type === "select" ? (
@@ -349,7 +349,7 @@ const AccountsModuleCard = ({
         <button
           type="submit"
           disabled={saving}
-          className="rounded-xl bg-gradient-to-r from-[#17315c] to-[#2d67cb] px-5 py-3 text-lg font-bold text-white disabled:opacity-60 md:col-span-2"
+          className="rounded-2xl bg-gradient-to-r from-blue-800 via-blue-700 to-sky-500 px-5 py-3.5 text-[17px] font-bold text-white shadow-lg shadow-blue-900/20 transition-all duration-200 hover:shadow-xl hover:shadow-blue-900/30 hover:-translate-y-0.5 disabled:opacity-60 disabled:translate-y-0 md:col-span-2"
         >
           {saving ? "Saving..." : editingId ? editLabel || "Update Entry" : submitLabel}
         </button>
@@ -360,7 +360,7 @@ const AccountsModuleCard = ({
               setEditingId(null);
               setForm(initialState);
             }}
-            className="rounded-xl border border-[#E4E1D8] bg-white px-5 py-3 text-lg font-bold text-[#1C231F] md:col-span-2"
+            className="rounded-2xl border border-blue-100 bg-white px-5 py-3.5 text-[17px] font-bold text-slate-700 transition-all duration-200 hover:bg-blue-50 md:col-span-2"
           >
             Cancel Edit
           </button>
@@ -368,13 +368,13 @@ const AccountsModuleCard = ({
       </form>
 
       {filterNote ? (
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#E9D2A1] bg-[#FBEFD8] px-4 py-3 text-lg font-medium text-[#9A6A1F]">
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-3.5 text-lg font-medium text-amber-700">
           <span>{filterNote}</span>
           {onClearFilter ? (
             <button
               type="button"
               onClick={onClearFilter}
-              className="rounded-full border border-[#E9D2A1] bg-white px-4 py-2 text-base font-bold text-[#9A6A1F]"
+              className="rounded-full border border-amber-200 bg-white px-4 py-2 text-base font-bold text-amber-700 transition-colors duration-200 hover:bg-amber-100"
             >
               Show All
             </button>
@@ -382,38 +382,37 @@ const AccountsModuleCard = ({
         </div>
       ) : null}
 
-      <div className="mt-5 overflow-x-auto rounded-[18px] border border-[#E4E1D8] hover:bg-[#F6F5F1] hover:bg-[#F6F5F1] bg-[#F6F5F1] hover:bg-[#F6F5F1]/60
-border-[#E4E1D8]">
+      <div className="mt-6 overflow-x-auto rounded-[24px] border border-blue-100/70 shadow-sm">
         <table className="min-w-full text-left text-lg">
-          <thead className="bg-[linear-gradient(180deg,#f4f9ff_0%,#e8f1ff_100%)] text-lg font-bold uppercase tracking-[0.14em] text-[#6B6F66]">
+          <thead className="bg-gradient-to-r from-blue-950 via-blue-800 to-sky-600 text-[16px] font-bold uppercase tracking-[0.14em] text-white">
             <tr>
               {columns.map((column) => (
-                <th key={column.key} className="px-3 py-4">{column.label}</th>
+                <th key={column.key} className="px-5 py-4">{column.label}</th>
               ))}
-              <th className="px-3 py-4">Actions</th>
+              <th className="px-5 py-4">Actions</th>
             </tr>
           </thead>
           <tbody>
             {paginatedRows.map((row) => (
-              <tr key={row.id} className="border-t border-[#E4E1D8] hover:bg-[#F6F5F1]/60">
+              <tr key={row.id} className="border-t border-blue-50 transition-colors duration-200 hover:bg-sky-50/60">
                 {columns.map((column) => (
-                  <td key={column.key} className="px-3 py-4 text-lg font-semibold text-[#1C231F]">
+                  <td key={column.key} className="px-5 py-4 text-[17px] font-semibold text-slate-800">
                     {renderModuleValue(row[column.key], column.key)}
                   </td>
                 ))}
-                <td className="px-3 py-4">
+                <td className="px-5 py-4">
                   <div className="flex flex-wrap gap-2">
                     <button
                       type="button"
                       onClick={() => handleEdit(row)}
-                      className="rounded-full border border-[#CFE7E2] bg-[#E4F0EE] px-5 py-2.5 text-lg font-bold text-[#0B4F48] transition hover:bg-[#CFE7E2]"
+                      className="rounded-full border border-sky-200 bg-sky-50 px-5 py-2.5 text-[15px] font-bold text-sky-700 transition-all duration-200 hover:bg-sky-100 hover:shadow-md"
                     >
                       Edit
                     </button>
                     <button
                       type="button"
                       onClick={() => handleDeleteClick(row)}
-                      className="rounded-full border border-[#F5C9C9] bg-[#FDEBEB] px-5 py-2.5 text-lg font-bold text-[#B33A3A]"
+                      className="rounded-full border border-rose-200 bg-rose-50 px-5 py-2.5 text-[15px] font-bold text-rose-600 transition-all duration-200 hover:bg-rose-100 hover:shadow-md"
                     >
                       Delete
                     </button>
@@ -423,7 +422,7 @@ border-[#E4E1D8]">
             ))}
             {!rows?.length ? (
               <tr>
-                <td colSpan={columns.length + 1} className="px-3 py-8 text-center text-xl font-medium text-[#6B6F66]">
+                <td colSpan={columns.length + 1} className="px-5 py-10 text-center text-[21px] font-medium text-slate-400">
                   No records yet.
                 </td>
               </tr>
@@ -433,19 +432,18 @@ border-[#E4E1D8]">
       </div>
 
       {(rows || []).length > ACCOUNTS_MODULE_PAGE_SIZE ? (
-        <div className="mt-4 flex flex-col gap-3 rounded-[18px] border border-[#E4E1D8] hover:bg-[#F6F5F1] hover:bg-[#F6F5F1] bg-[#F6F5F1] hover:bg-[#F6F5F1]/60
-border-[#E4E1D8] bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="text-lg font-medium text-[#6B6F66]">
+        <div className="mt-5 flex flex-col gap-3 rounded-[24px] border border-blue-100/70 bg-white px-5 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+          <div className="text-lg font-medium text-slate-500">
             Showing{" "}
-            <span className="font-semibold text-[#1C231F]">
+            <span className="font-semibold text-slate-900">
               {(page - 1) * ACCOUNTS_MODULE_PAGE_SIZE + 1}
             </span>{" "}
             to{" "}
-            <span className="font-semibold text-[#1C231F]">
+            <span className="font-semibold text-slate-900">
               {Math.min(page * ACCOUNTS_MODULE_PAGE_SIZE, (rows || []).length)}
             </span>{" "}
             of{" "}
-            <span className="font-semibold text-[#1C231F]">{(rows || []).length}</span>{" "}
+            <span className="font-semibold text-slate-900">{(rows || []).length}</span>{" "}
             records
           </div>
 
@@ -454,7 +452,7 @@ border-[#E4E1D8] bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-betwe
               type="button"
               onClick={() => setPage((current) => Math.max(1, current - 1))}
               disabled={page === 1}
-              className="rounded-full border-[#E4E1D8] bg-white px-5 py-3 text-lg font-bold text-[#6B6F66] transition hover:bg-[#F6F5F1] disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-full border border-blue-100 bg-white px-5 py-3 text-lg font-bold text-slate-500 transition-all duration-200 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Previous
             </button>
@@ -468,10 +466,10 @@ border-[#E4E1D8] bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-betwe
                   key={`${title}-page-${pageNumber}`}
                   type="button"
                   onClick={() => setPage(pageNumber)}
-                  className={`h-11 min-w-[44px] rounded-full border px-3 text-lg font-bold transition ${
+                  className={`h-11 min-w-[44px] rounded-full border px-3 text-lg font-bold transition-all duration-200 ${
                     isActive
-                      ? "border-[#0B4F48] bg-[#0B4F48] text-white shadow-[0_10px_24px_rgba(11,79,72,0.18)]"
-                      : "border-[#E4E1D8] bg-white text-[#6B6F66] hover:bg-[#F6F5F1]"
+                      ? "border-blue-800 bg-gradient-to-r from-blue-800 to-sky-500 text-white shadow-lg shadow-blue-900/25"
+                      : "border-blue-100 bg-white text-slate-500 hover:bg-blue-50"
                   }`}
                 >
                   {pageNumber}
@@ -483,7 +481,7 @@ border-[#E4E1D8] bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-betwe
               type="button"
               onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
               disabled={page === totalPages}
-              className="rounded-full border-[#E4E1D8] bg-white px-5 py-3 text-lg font-bold text-[#6B6F66] transition hover:bg-[#F6F5F1] disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-full border border-blue-100 bg-white px-5 py-3 text-lg font-bold text-slate-500 transition-all duration-200 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Next
             </button>
@@ -1559,20 +1557,20 @@ const Accounts = () => {
   };
 
   const accountsModulesSection = (
-    <section ref={accountsModuleSectionRef} className="space-y-5">
-      <div className="rounded-[22px] border border-[#E4E1D8] bg-white/95 p-5 shadow-[0_20px_50px_rgba(30,64,175,0.1)]">
-        <div className="text-[15px] font-semibold uppercase tracking-[0.18em] text-[#0B4F48]">
+    <section ref={accountsModuleSectionRef} className="space-y-6">
+      <div className="rounded-[30px] border border-blue-100/70 bg-white p-6 shadow-[0_25px_60px_-15px_rgba(30,64,175,0.15)] sm:p-7">
+        <div className="text-[15px] font-semibold uppercase tracking-[0.18em] text-sky-600">
           Accounts Tabs
         </div>
-        <h3 className="mt-2 text-[15px] font-black text-[#1C231F]">
+        <h3 className="mt-2 text-[22px] font-black text-slate-900">
           Open any finance module from one click
         </h3>
-        <p className="mt-3 max-w-3xl text-[15px] leading-7 text-[#6B6F66]">
+        <p className="mt-3 max-w-3xl text-[17px] leading-7 text-slate-500">
           Click any tab to open the related
           form and its latest saved records.
         </p>
 
-        <div className="mt-5 flex flex-wrap gap-3">
+        <div className="mt-6 flex flex-wrap gap-3">
           {accountsModuleConfigs.map((module) => {
             const isActive = module.key === activeModule?.key;
             return (
@@ -1580,10 +1578,10 @@ const Accounts = () => {
                 key={module.key}
                 type="button"
                 onClick={() => setActiveAccountsModule(module.key)}
-                className={`rounded-full px-5 py-3 text-[15px] font-bold transition ${
+                className={`rounded-full px-5 py-3 text-[16px] font-bold transition-all duration-200 ${
                   isActive
-                    ? "bg-gradient-to-r from-cyan-600 to-teal-500 text-white shadow-[0_14px_30px_rgba(8,145,178,0.2)]"
-                    : "border border-[#E4E1D8] bg-white text-[#1C231F] hover:border-[#0B4F48] hover:text-[#0B4F48]"
+                    ? "bg-gradient-to-r from-blue-800 to-sky-500 text-white shadow-lg shadow-blue-900/25 -translate-y-0.5"
+                    : "border border-blue-100 bg-white text-slate-700 hover:border-sky-300 hover:text-sky-700 hover:-translate-y-0.5"
                 }`}
               >
                 {module.submitLabel}
@@ -1623,30 +1621,39 @@ const Accounts = () => {
 
   if (isAccountsModulesPage) {
     return (
-      <div className="relative min-h-screen overflow-x-hidden bg-[#F7F5F0] p-4 sm:p-6 lg:p-8">
+      <div className="relative min-h-screen overflow-x-hidden bg-[#F5F8FF] p-3 sm:p-4 md:p-6 xl:p-8">
         <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-          <div className="absolute left-[-8%] top-[-6%] h-72 w-72 rounded-full bg-[#0B4F48]/15 blur-3xl sm:h-96 sm:w-96" />
-          <div className="absolute right-[-10%] top-[8%] h-72 w-72 rounded-full bg-[#C8791A]/15 blur-3xl sm:h-[28rem] sm:w-[28rem]" />
+          <div className="absolute left-[-8%] top-[-6%] h-72 w-72 rounded-full bg-blue-500/10 blur-3xl sm:h-96 sm:w-96" />
+          <div className="absolute right-[-10%] top-[8%] h-72 w-72 rounded-full bg-sky-400/10 blur-3xl sm:h-[28rem] sm:w-[28rem]" />
         </div>
 
-        <div className="w-full space-y-7">
-          <section className="overflow-hidden rounded-[28px] border border-sky-200/70 bg-[linear-gradient(90deg,#17315c_0%,#224f94_60%,#2d67cb_100%)] px-5 py-6 text-white shadow-[0_22px_55px_rgba(37,99,235,0.18)] sm:px-7 sm:py-8">
-            <div className="space-y-4">
+        <div className="w-full space-y-5 sm:space-y-6 xl:space-y-7">
+          <section className="relative overflow-hidden rounded-[20px] bg-gradient-to-br from-blue-950 via-blue-800 to-sky-500 px-4 py-5 text-white shadow-[0_30px_70px_-20px_rgba(2,32,71,0.45)] sm:rounded-[24px] sm:px-6 sm:py-7 md:rounded-[28px] md:px-8 md:py-9 xl:rounded-[32px] xl:py-10">
+            <div className="pointer-events-none absolute inset-0 overflow-hidden">
+              <div className="absolute -left-10 -top-24 h-72 w-72 rounded-full bg-sky-400/30 blur-3xl" />
+              <div className="absolute -right-16 top-1/3 h-80 w-80 rounded-full bg-white/10 blur-3xl" />
+              <div className="absolute bottom-[-6rem] left-1/3 h-64 w-64 rounded-full bg-blue-400/20 blur-3xl" />
+              <svg className="absolute right-0 top-0 h-full w-1/2 opacity-20" viewBox="0 0 400 400" fill="none">
+                <path d="M0 200 C 100 100, 300 300, 400 100" stroke="white" strokeWidth="1.5" />
+                <path d="M0 280 C 120 180, 280 380, 400 200" stroke="white" strokeWidth="1" />
+              </svg>
+            </div>
+            <div className="relative space-y-3 sm:space-y-4">
               <button
                 type="button"
                 onClick={() => navigate("/accounts")}
-                className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-bold text-white backdrop-blur-md transition hover:border-cyan-200 hover:text-cyan-100"
+                className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-2.5 text-[14px] font-bold text-white backdrop-blur-md transition-all duration-200 hover:border-sky-200 hover:bg-white/20 sm:text-[15px]"
               >
-                <FaArrowLeft className="text-cyan-200" />
+                <FaArrowLeft className="text-sky-200" />
                 Back to Accounts Workspace
               </button>
-              <p className="text-sm font-semibold uppercase tracking-[0.26em] text-cyan-200">
+              <p className="text-[13px] font-semibold uppercase tracking-[0.22em] text-sky-200 sm:text-[15px] sm:tracking-[0.26em]">
                 Finance Center
               </p>
-              <h1 className="text-4xl font-black leading-tight sm:text-5xl">
+              <h1 className="text-3xl font-black leading-tight sm:text-4xl xl:text-5xl">
                 Accounts tabs workspace
               </h1>
-              <p className="max-w-3xl text-lg leading-8 text-slate-100/85 sm:text-xl">
+              <p className="max-w-3xl text-[15px] leading-6 text-blue-50/85 sm:text-lg sm:leading-8 xl:text-xl">
                 Petty cash, GST, vendor payment, payroll aur scanner setup ko
                 yahan alag screen par open karke manage karein.
               </p>
@@ -1660,80 +1667,94 @@ const Accounts = () => {
   }
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-[#F7F5F0] p-4 sm:p-6 lg:p-8">
+    <div className="relative min-h-screen overflow-x-hidden bg-[#F5F8FF] p-3 sm:p-4 md:p-6 xl:p-8">
       <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute left-[-8%] top-[-6%] h-72 w-72 rounded-full bg-[#0B4F48]/15 blur-3xl sm:h-96 sm:w-96" />
-        <div className="absolute right-[-10%] top-[8%] h-72 w-72 rounded-full bg-[#C8791A]/15 blur-3xl sm:h-[28rem] sm:w-[28rem]" />
+        <div className="absolute left-[-8%] top-[-6%] h-72 w-72 rounded-full bg-blue-500/10 blur-3xl sm:h-96 sm:w-96" />
+        <div className="absolute right-[-10%] top-[8%] h-72 w-72 rounded-full bg-sky-400/10 blur-3xl sm:h-[28rem] sm:w-[28rem]" />
       </div>
 
-      <div className="w-full space-y-7">
-        <section className="overflow-hidden rounded-[28px] border border-[#17315c]/40 bg-[linear-gradient(90deg,#17315c_0%,#224f94_60%,#2d67cb_100%)] px-5 py-6 text-white shadow-[0_22px_55px_rgba(23,49,92,0.25)] sm:px-7 sm:py-8">
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.9fr)] lg:items-center">
-            <div className="space-y-4">
-              <p className="text-2xl font-semibold uppercase tracking-[0.26em] text-cyan-100">
+      <div className="w-full space-y-5 sm:space-y-6 xl:space-y-7">
+        <section className="relative overflow-hidden rounded-[20px] bg-gradient-to-br from-blue-950 via-blue-800 to-sky-500 px-4 py-6 text-white shadow-[0_30px_70px_-20px_rgba(2,32,71,0.45)] sm:rounded-[24px] sm:px-6 sm:py-7 md:rounded-[28px] md:px-8 md:py-9 xl:rounded-[32px] xl:py-10">
+          {/* Ambient glow + glass decoration layer (visual only) */}
+          <div className="pointer-events-none absolute inset-0 overflow-hidden">
+            <div className="absolute -left-16 -top-28 h-80 w-80 rounded-full bg-sky-400/30 blur-3xl" />
+            <div className="absolute -right-20 top-1/4 h-96 w-96 rounded-full bg-white/10 blur-3xl" />
+            <div className="absolute bottom-[-8rem] left-1/4 h-72 w-72 rounded-full bg-blue-400/20 blur-3xl" />
+            <div className="absolute right-8 top-8 h-24 w-24 rounded-full border border-white/10 bg-white/5 backdrop-blur-md" />
+            <svg className="absolute right-0 top-0 h-full w-1/2 opacity-20" viewBox="0 0 400 400" fill="none">
+              <path d="M0 200 C 100 100, 300 300, 400 100" stroke="white" strokeWidth="1.5" />
+              <path d="M0 280 C 120 180, 280 380, 400 200" stroke="white" strokeWidth="1" />
+              <circle cx="340" cy="80" r="3" fill="white" />
+              <circle cx="260" cy="180" r="2" fill="white" />
+            </svg>
+          </div>
+
+          <div className="relative grid gap-6 sm:gap-7 xl:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.9fr)] xl:items-center">
+            <div className="space-y-4 sm:space-y-5">
+              <p className="text-[13px] font-semibold uppercase tracking-[0.2em] text-sky-200 sm:text-[15px] sm:tracking-[0.26em]">
                 Finance Center
               </p>
-              <h1 className="text-5xl font-black leading-tight text-white sm:text-6xl">
-                Accounts workspace in dashboard style
+              <h1 className="text-[26px] font-black leading-tight text-white lg:text-[38px]">
+                Accounts workspace in dashboard 
               </h1>
-              <p className="max-w-3xl text-2xl leading-9 text-white/90 sm:text-2xl">
+              <p className="max-w-3xl text-[10px] leading-6 text-blue-50/90 sm:text-[14px] sm:leading-7 md:text-[19px] md:leading-8 xl:text-xl">
                 Manage income, expenses, invoices, and transaction records from
                 one attractive and responsive finance dashboard.
               </p>
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:gap-3">
                 <button
-                  className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-base font-bold text-[#17315c] shadow-md transition hover:bg-[#F6F5F1]"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-white px-5 py-3 text-[14px] font-bold text-blue-900 shadow-lg shadow-blue-950/20 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl sm:w-auto sm:justify-start sm:text-[17px]"
                   onClick={() => setShowIncome(true)}
                 >
                   <FaPlus />
                   Add Income
                 </button>
                 <button
-                  className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-base font-bold text-[#17315c] shadow-md transition hover:bg-[#F6F5F1]"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-white px-5 py-3 text-[14px] font-bold text-blue-900 shadow-lg shadow-blue-950/20 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl sm:w-auto sm:justify-start sm:text-[17px]"
                   onClick={() => setShowExpense(true)}
                 >
                   <FaMoneyBillWave />
                   Add Expense
                 </button>
                 <button
-                  className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-base font-bold text-[#17315c] shadow-md transition hover:bg-[#F6F5F1]"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-white px-5 py-3 text-[14px] font-bold text-blue-900 shadow-lg shadow-blue-950/20 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl sm:w-auto sm:justify-start sm:text-[17px]"
                   onClick={() => setShowInvoice(true)}
                 >
                   <FaReceipt />
                   Invoice
                 </button>
                 <button
-                  className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-base font-bold text-[#17315c] shadow-md transition hover:bg-[#F6F5F1]"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-white px-5 py-3 text-[14px] font-bold text-blue-900 shadow-lg shadow-blue-950/20 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl sm:w-auto sm:justify-start sm:text-[17px]"
                   onClick={openAccountsTabsPage}
                 >
                   <FaThLarge />
                   Accounts Tab
                 </button>
                 <button
-                  className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-base font-bold text-[#17315c] shadow-md transition hover:bg-[#F6F5F1]"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-sky-400 to-blue-500 px-5 py-3 text-[14px] font-bold text-white shadow-lg shadow-blue-950/30 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl sm:w-auto sm:justify-start sm:text-[17px]"
                   onClick={openBankReconciliationModule}
                 >
                   <FaChartLine />
                   Bank Reconciliation
                 </button>
                 <button
-                  className="inline-flex items-center gap-2 rounded-full border border-sky-100/40 bg-white/18 px-5 py-3 text-base font-bold text-[#1C231F] backdrop-blur-md transition hover:border-sky-100"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/30 bg-white/10 px-5 py-3 text-[14px] font-bold text-white backdrop-blur-md transition-all duration-200 hover:-translate-y-0.5 hover:border-sky-200 hover:bg-white/20 sm:w-auto sm:justify-start sm:text-[17px]"
                   onClick={openCustomerInvoicesPage}
                 >
-                  <FaFileInvoiceDollar className="text-[#1C231F]" />
+                  <FaFileInvoiceDollar className="text-white" />
                   Customer Invoices
                 </button>
-                <label className="min-w-[220px] rounded-[20px] border border-[#E4E1D8] bg-white/95 px-4 py-3 text-left">
-                  <span className="block text-base font-semibold uppercase tracking-[0.2em] text-[#1C231F]">
+                <label className="w-full rounded-2xl border border-white/25 bg-white/95 px-4 py-3 text-left shadow-lg shadow-blue-950/10 backdrop-blur-md transition-all duration-200 focus-within:border-sky-400 focus-within:ring-4 focus-within:ring-sky-100 sm:w-auto sm:min-w-[220px]">
+                  <span className="block text-[13px] font-semibold uppercase tracking-[0.16em] text-slate-500 sm:text-[15px] sm:tracking-[0.2em]">
                     Payment Filter
                   </span>
                   <select
                     value={selectedPaymentMode}
                     onChange={(event) => setSelectedPaymentMode(event.target.value)}
-                    className="mt-2 w-full bg-transparent text-lg font-semibold text-[#1C231F] outline-none"
+                    className="mt-2 w-full bg-transparent text-[15px] font-semibold text-slate-900 outline-none sm:text-lg"
                   >
                     {paymentModeOptions.map((mode) => (
-                      <option key={mode} value={mode} className="text-[#1C231F]">
+                      <option key={mode} value={mode} className="text-slate-900">
                         {mode === "all" ? "All Payment Modes" : mode}
                       </option>
                     ))}
@@ -1742,19 +1763,19 @@ const Accounts = () => {
               </div>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-2">
+            <div className="grid grid-cols-2 gap-2.5 sm:gap-3 xl:grid-cols-2">
               {[
                 { label: "Net Position", value: formatINR(totals.net) },
                 { label: "GST Payable", value: formatINR(totals.gstPayable) },
               ].map((item) => (
-                <div key={item.label} className="rounded-[22px] border border-[#E4E1D8] bg-white/95 px-4 py-4">
-                  <span className="text-base text-[#1C231F]">{item.label}</span>
-                  <div className="mt-3 text-4xl font-bold leading-none text-[#1C231F]">{item.value}</div>
+                <div key={item.label} className="rounded-[18px] border border-white/25 bg-white/95 px-3.5 py-3.5 shadow-lg shadow-blue-950/10 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 sm:rounded-[24px] sm:px-5 sm:py-5">
+                  <span className="text-[13px] text-slate-500 sm:text-[16px]">{item.label}</span>
+                  <div className="mt-2 text-2xl font-black leading-none text-slate-900 sm:mt-3 sm:text-4xl">{item.value}</div>
                 </div>
               ))}
             </div>
 
-            <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="mt-3 grid grid-cols-2 gap-2.5 sm:mt-4 sm:gap-3 xl:grid-cols-4">
               {[
                 {
                   label: "Today's Payments",
@@ -1762,7 +1783,7 @@ const Accounts = () => {
                   note: todayStats.count
                     ? `${todayStats.count} transaction${todayStats.count === 1 ? "" : "s"} logged today`
                     : "No transactions recorded today",
-                  tone: "text-[#0B4F48]",
+                  tone: "text-emerald-600",
                 },
                 {
                   label: "Today's Total Amount",
@@ -1770,76 +1791,95 @@ const Accounts = () => {
                   note: todayStats.count
                     ? "Sum of all income + expense entries today"
                     : "Awaiting first entry for the day",
-                  tone: "text-[#0F6E64]",
+                  tone: "text-sky-600",
                 },
                 {
                   label: "Today's Income",
                   value: formatINR(todayStats.income),
                   note: "Income entries posted today",
-                  tone: "text-[#0B4F48]",
+                  tone: "text-emerald-600",
                 },
                 {
                   label: "Today's Expense",
                   value: formatINR(todayStats.expense),
                   note: "Expense entries posted today",
-                  tone: "text-[#B33A3A]",
+                  tone: "text-rose-500",
                 },
               ].map((card) => (
                 <div
                   key={card.label}
-                  className="rounded-[20px] border border-[#E4E1D8] bg-white/95 px-4 py-4"
+                  className="rounded-[18px] border border-white/25 bg-white/95 px-3.5 py-3.5 shadow-lg shadow-blue-950/10 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 sm:rounded-[22px] sm:px-5 sm:py-4"
                 >
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1C231F]">
+                  <div className="text-[12px] font-semibold uppercase tracking-[0.14em] text-slate-500 sm:text-[13px] sm:tracking-[0.18em]">
                     {card.label}
                   </div>
                   <div className={`mt-2 text-2xl font-black leading-none ${card.tone}`}>
                     {card.value}
                   </div>
-                  <div className="mt-1 text-[11px] text-[#1C231F]">{card.note}</div>
+                  <div className="mt-1 text-[13px] text-slate-400">{card.note}</div>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 md:gap-5 xl:grid-cols-4">
           {[
             {
               label: "Selected Payment Mode",
               value: selectedPaymentMode === "all" ? "All Modes" : selectedPaymentMode,
               note: "Live filter applied across transaction and invoice sections.",
-              tone: "text-[#0B4F48]",
+              tone: "text-sky-700",
+              iconBg: "from-sky-100 to-blue-100 text-sky-600",
+              icon: FaChartLine,
             },
             {
               label: "Payment Entries",
               value: String(paymentModeSummary.recordsCount),
               note: `${formatINR(paymentModeSummary.recordsAmount)} recorded in accounts and hotel payment logs.`,
-              tone: "text-[#0F6E64]",
+              tone: "text-emerald-700",
+              iconBg: "from-emerald-100 to-teal-100 text-emerald-600",
+              icon: FaReceipt,
             },
             {
               label: "Billing Records",
               value: String(paymentModeSummary.invoiceCount),
               note: `${formatINR(paymentModeSummary.invoiceAmount)} linked to hotel, restaurant, and banquet billing.`,
-              tone: "text-[#0B4F48]",
+              tone: "text-blue-700",
+              iconBg: "from-blue-100 to-indigo-100 text-blue-700",
+              icon: FaFileInvoiceDollar,
             },
             {
               label: "Combined Payment Amount",
               value: formatINR(paymentModeSummary.combinedAmount),
               note: `${paymentModeSummary.combinedCount} payment rows for the current mode.`,
-              tone: "text-[#9A6A1F]",
+              tone: "text-amber-700",
+              iconBg: "from-amber-100 to-orange-100 text-amber-600",
+              icon: FaMoneyBillWave,
             },
-          ].map((item) => (
-            <div key={item.label} className="rounded-[20px] border border-[#E4E1D8] bg-white/95 p-5 shadow-[0_20px_50px_rgba(30,64,175,0.1)]">
-              <div className="text-base font-semibold uppercase tracking-[0.18em] text-[#6B6F66]">
-                {item.label}
+          ].map((item) => {
+            const Icon = item.icon;
+            return (
+              <div
+                key={item.label}
+                className="group rounded-[20px] border border-blue-100/70 bg-white p-4 shadow-[0_20px_50px_-15px_rgba(30,64,175,0.15)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_28px_60px_-15px_rgba(30,64,175,0.22)] sm:rounded-[24px] sm:p-5 xl:rounded-[30px] xl:p-6"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="text-[13px] font-semibold uppercase tracking-[0.1em] text-slate-400 sm:text-[15px] sm:tracking-[0.14em] xl:text-[17px] xl:tracking-[0.16em]">
+                    {item.label}
+                  </div>
+                  <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${item.iconBg} text-lg shadow-sm transition-transform duration-300 group-hover:scale-110 sm:h-11 sm:w-11 sm:rounded-2xl xl:h-12 xl:w-12 xl:text-xl`}>
+                    <Icon />
+                  </span>
+                </div>
+                <div className={`mt-3 text-xl font-black sm:text-2xl xl:mt-4 xl:text-3xl ${item.tone}`}>{item.value}</div>
+                <div className="mt-2 text-[13px] leading-5 text-slate-500 sm:text-[15px] xl:text-[17px] xl:leading-6">{item.note}</div>
               </div>
-              <div className={`mt-3 text-4xl font-black ${item.tone}`}>{item.value}</div>
-              <div className="mt-2 text-lg text-[#6B6F66]">{item.note}</div>
-            </div>
-          ))}
+            );
+          })}
         </section>
 
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 md:gap-5 xl:grid-cols-4">
           {[
             { label: "Total Income", value: formatINR(totals.income), icon: FaMoneyBillWave, tone: "emerald" },
             { label: "Total Expense", value: formatINR(totals.expense), icon: FaReceipt, tone: "rose" },
@@ -1849,20 +1889,23 @@ const Accounts = () => {
             const Icon = card.icon;
             const toneClass =
               card.tone === "emerald"
-                ? "bg-[#E4F0EE] text-[#0F6E64] border-[#CFE7E2]"
+                ? "bg-gradient-to-br from-emerald-100 to-teal-100 text-emerald-600"
                 : card.tone === "rose"
-                ? "bg-[#FDEBEB] text-[#B33A3A] border-[#F5C9C9]"
+                ? "bg-gradient-to-br from-rose-100 to-red-100 text-rose-600"
                 : card.tone === "amber"
-                ? "bg-[#FBEFD8] text-[#9A6A1F] border-[#E9D2A1]"
-                : "bg-[#E4F0EE] text-[#0B4F48] border-[#CFE7E2]";
+                ? "bg-gradient-to-br from-amber-100 to-orange-100 text-amber-600"
+                : "bg-gradient-to-br from-sky-100 to-blue-100 text-sky-600";
             return (
-              <div key={card.label} className="rounded-[20px] border border-[#E4E1D8] bg-white/95 p-5 shadow-[0_20px_50px_rgba(30,64,175,0.1)]">
+              <div
+                key={card.label}
+                className="group rounded-[20px] border border-blue-100/70 bg-white p-4 shadow-[0_20px_50px_-15px_rgba(30,64,175,0.15)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_28px_60px_-15px_rgba(30,64,175,0.22)] sm:rounded-[24px] sm:p-5 xl:rounded-[30px] xl:p-6"
+              >
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <div className="text-base font-semibold uppercase tracking-[0.18em] text-[#6B6F66]">{card.label}</div>
-                    <div className="mt-3 text-5xl font-black text-[#1C231F]">{card.value}</div>
+                    <div className="text-[13px] font-semibold uppercase tracking-[0.1em] text-slate-400 sm:text-[15px] sm:tracking-[0.14em] xl:text-[17px] xl:tracking-[0.16em]">{card.label}</div>
+                    <div className="mt-2 text-2xl font-black leading-none text-slate-900 sm:mt-3 sm:text-[32px] xl:mt-4 xl:text-[38px]">{card.value}</div>
                   </div>
-                  <span className={`rounded-2xl border p-3 ${toneClass}`}>
+                  <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-lg shadow-sm transition-transform duration-300 group-hover:scale-110 sm:h-12 sm:w-12 sm:rounded-2xl xl:h-14 xl:w-14 xl:text-2xl ${toneClass}`}>
                     <Icon />
                   </span>
                 </div>
@@ -1871,34 +1914,35 @@ const Accounts = () => {
           })}
         </section>
 
-        <section className="rounded-[22px] border border-[#E4E1D8] bg-white/95 shadow-[0_20px_50px_rgba(30,64,175,0.1)]">
-          <div className="overflow-x-auto">
+        <section className="rounded-[20px] border border-blue-100/70 bg-white shadow-[0_20px_50px_-15px_rgba(30,64,175,0.15)] sm:rounded-[24px] xl:rounded-[30px]">
+          {/* Desktop / tablet table (≥768px) — unchanged structure and data */}
+          <div className="hidden overflow-x-auto md:block">
             <table className="min-w-full text-left">
-              <thead className="bg-[linear-gradient(180deg,#f4f9ff_0%,#e8f1ff_100%)] text-base uppercase tracking-[0.18em] text-[#6B6F66]">
+              <thead className="bg-gradient-to-r from-blue-950 via-blue-800 to-sky-600 text-[16px] uppercase tracking-[0.18em] text-white">
                 <tr>
-                  <th className="px-5 py-4 font-semibold">Date</th>
-                  <th className="px-5 py-4 font-semibold">Type</th>
-                  <th className="px-5 py-4 font-semibold">Description</th>
-                  <th className="px-5 py-4 font-semibold">Amount</th>
-                  <th className="px-5 py-4 font-semibold">Payment Mode</th>
-                  <th className="px-5 py-4 font-semibold">Action</th>
+                  <th className="px-6 py-5 font-bold">Date</th>
+                  <th className="px-6 py-5 font-bold">Type</th>
+                  <th className="px-6 py-5 font-bold">Description</th>
+                  <th className="px-6 py-5 font-bold">Amount</th>
+                  <th className="px-6 py-5 font-bold">Payment Mode</th>
+                  <th className="px-6 py-5 font-bold">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {paginatedTransactionRecords.map((r) => (
-                  <tr key={r.id} className="border-t border-[#E4E1D8] hover:bg-[#F6F5F1]/60">
-                    <td className="px-5 py-4 text-lg text-[#6B6F66]">{r.date}</td>
-                    <td className="px-5 py-4">
-                      <span className={`inline-flex rounded-full border px-4 py-2 text-base font-bold ${r.type === "Income" ? "border-[#CFE7E2] bg-[#E4F0EE] text-[#0F6E64]" : "border-[#F5C9C9] bg-[#FDEBEB] text-[#B33A3A]"}`}>
+                  <tr key={r.id} className="border-t border-blue-50 transition-colors duration-200 hover:bg-sky-50/60">
+                    <td className="px-6 py-5 text-[17px] text-slate-500">{r.date}</td>
+                    <td className="px-6 py-5">
+                      <span className={`inline-flex rounded-full border px-4 py-2 text-[15px] font-bold ${r.type === "Income" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-rose-200 bg-rose-50 text-rose-600"}`}>
                         {r.type}
                       </span>
                     </td>
-                    <td className="px-5 py-4 text-lg text-[#6B6F66]">{r.description}</td>
-                    <td className="px-5 py-4 text-lg font-bold text-[#1C231F]">{formatINR(r.amount)}</td>
-                    <td className="px-5 py-4 text-lg text-[#6B6F66]">{r.paymentMode}</td>
-                    <td className="px-5 py-4">
+                    <td className="px-6 py-5 text-[17px] text-slate-600">{r.description}</td>
+                    <td className="px-6 py-5 text-[17px] font-bold text-slate-900">{formatINR(r.amount)}</td>
+                    <td className="px-6 py-5 text-[17px] text-slate-500">{r.paymentMode}</td>
+                    <td className="px-6 py-5">
                       <button
-                        className="rounded-full border border-[#E4E1D8] bg-[#E4F0EE] px-5 py-2.5 text-base font-bold text-[#0B4F48] transition hover:bg-[#CFE7E2]"
+                        className="rounded-full border border-sky-200 bg-sky-50 px-5 py-2.5 text-[15px] font-bold text-sky-700 transition-all duration-200 hover:bg-sky-100 hover:shadow-md"
                         onClick={() => {
                           setSelectedRecord(r);
                           setShowView(true);
@@ -1911,7 +1955,7 @@ const Accounts = () => {
                 ))}
                 {!filteredRecords.length ? (
                   <tr>
-                    <td colSpan={6} className="px-5 py-8 text-center text-sm text-[#6B6F66]">
+                    <td colSpan={6} className="px-6 py-10 text-center text-[21px] text-slate-400">
                       No transaction records match the selected payment mode.
                     </td>
                   </tr>
@@ -1920,28 +1964,73 @@ const Accounts = () => {
             </table>
           </div>
 
+          {/* Mobile card list (<768px) — same data, same handlers, card layout */}
+          <div className="block space-y-3 p-3 md:hidden">
+            {paginatedTransactionRecords.map((r) => (
+              <div
+                key={r.id}
+                className="rounded-[18px] border border-blue-100/70 bg-white p-3.5 shadow-[0_10px_30px_-12px_rgba(30,64,175,0.18)] transition-all duration-200"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="text-[14px] font-bold text-slate-900">{r.description}</div>
+                  <span className={`shrink-0 rounded-full border px-3 py-1 text-[12px] font-bold ${r.type === "Income" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-rose-200 bg-rose-50 text-rose-600"}`}>
+                    {r.type}
+                  </span>
+                </div>
+                <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2">
+                  <div>
+                    <div className="text-[13px] font-semibold uppercase tracking-wide text-slate-400">Date</div>
+                    <div className="text-[14px] text-slate-600">{r.date}</div>
+                  </div>
+                  <div>
+                    <div className="text-[13px] font-semibold uppercase tracking-wide text-slate-400">Payment Mode</div>
+                    <div className="text-[14px] text-slate-600">{r.paymentMode}</div>
+                  </div>
+                  <div className="col-span-2">
+                    <div className="text-[13px] font-semibold uppercase tracking-wide text-slate-400">Amount</div>
+                    <div className="text-[15px] font-bold text-slate-900">{formatINR(r.amount)}</div>
+                  </div>
+                </div>
+                <button
+                  className="mt-3.5 w-full rounded-full border border-sky-200 bg-sky-50 px-5 py-2.5 text-[14px] font-bold text-sky-700 transition-all duration-200 hover:bg-sky-100"
+                  onClick={() => {
+                    setSelectedRecord(r);
+                    setShowView(true);
+                  }}
+                >
+                  View
+                </button>
+              </div>
+            ))}
+            {!filteredRecords.length ? (
+              <div className="px-4 py-10 text-center text-[20px] text-slate-400">
+                No transaction records match the selected payment mode.
+              </div>
+            ) : null}
+          </div>
+
           {filteredRecords.length > TRANSACTION_PAGE_SIZE ? (
-            <div className="flex flex-col gap-3 border-t border-[#E4E1D8] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="text-sm text-[#6B6F66]">
+            <div className="flex flex-col items-center gap-3 border-t border-blue-50 px-4 py-4 sm:px-6 sm:py-5 md:flex-row md:items-center md:justify-between">
+              <div className="text-[14px] text-slate-500 sm:text-[15px]">
                 Showing{" "}
-                <span className="font-semibold text-[#1C231F]">
+                <span className="font-semibold text-slate-900">
                   {(transactionPage - 1) * TRANSACTION_PAGE_SIZE + 1}
                 </span>{" "}
                 to{" "}
-                <span className="font-semibold text-[#1C231F]">
+                <span className="font-semibold text-slate-900">
                   {Math.min(transactionPage * TRANSACTION_PAGE_SIZE, filteredRecords.length)}
                 </span>{" "}
                 of{" "}
-                <span className="font-semibold text-[#1C231F]">{filteredRecords.length}</span>{" "}
+                <span className="font-semibold text-slate-900">{filteredRecords.length}</span>{" "}
                 records
               </div>
 
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-center justify-center gap-2">
                 <button
                   type="button"
                   onClick={() => setTransactionPage((current) => Math.max(1, current - 1))}
                   disabled={transactionPage === 1}
-                  className="rounded-full border-[#E4E1D8] bg-white px-3 py-2 text-xs font-semibold text-[#6B6F66] transition hover:bg-[#F6F5F1] disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-full border border-blue-100 bg-white px-4 py-2.5 text-[14px] font-semibold text-slate-500 transition-all duration-200 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Previous
                 </button>
@@ -1955,10 +2044,10 @@ const Accounts = () => {
                       key={`transaction-page-${page}`}
                       type="button"
                       onClick={() => setTransactionPage(page)}
-                      className={`h-9 min-w-[36px] rounded-full border px-3 text-xs font-bold transition ${
+                      className={`h-9 min-w-[36px] rounded-full border px-3 text-[14px] font-bold transition-all duration-200 ${
                         isActive
-                          ? "border-[#0B4F48] bg-[#0B4F48] text-white shadow-[0_10px_24px_rgba(11,79,72,0.18)]"
-                          : "border-[#E4E1D8] bg-white text-[#6B6F66] hover:bg-[#F6F5F1]"
+                          ? "border-blue-800 bg-gradient-to-r from-blue-800 to-sky-500 text-white shadow-lg shadow-blue-900/25"
+                          : "border-blue-100 bg-white text-slate-500 hover:bg-blue-50"
                       }`}
                     >
                       {page}
@@ -1970,7 +2059,7 @@ const Accounts = () => {
                   type="button"
                   onClick={() => setTransactionPage((current) => Math.min(transactionTotalPages, current + 1))}
                   disabled={transactionPage === transactionTotalPages}
-                  className="rounded-full border-[#E4E1D8] bg-white px-3 py-2 text-xs font-semibold text-[#6B6F66] transition hover:bg-[#F6F5F1] disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-full border border-blue-100 bg-white px-4 py-2.5 text-[14px] font-semibold text-slate-500 transition-all duration-200 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Next
                 </button>
@@ -1980,21 +2069,21 @@ const Accounts = () => {
         </section>
 
         {false ? (
-        <section className="rounded-[26px] border border-white/60 bg-white/82 p-5 shadow-[0_20px_50px_rgba(30,64,175,0.1)]">
+        <section className="rounded-[30px] border border-blue-100/70 bg-white p-6 shadow-[0_20px_50px_-15px_rgba(30,64,175,0.15)]">
           <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <div className="text-base font-semibold uppercase tracking-[0.18em] text-[#0B4F48]">
+              <div className="text-base font-semibold uppercase tracking-[0.18em] text-sky-600">
                 Customer Invoices
               </div>
-              <h2 className="mt-2 text-5xl font-black text-[#1C231F]">
+              <h2 className="mt-2 text-5xl font-black text-slate-900">
                 Hotel + restaurant + banquet billing records
               </h2>
-              <p className="mt-2 text-xl text-[#6B6F66]">
+              <p className="mt-2 text-xl text-slate-500">
         “Hotel invoices, restaurant bills, and banquet invoices are displayed here together so the Accounts team can track source-wise billing, totals, and payment status.”
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              <div className="rounded-full bg-[#F6F5F1] px-5 py-2.5 text-base font-bold text-[#6B6F66]">
+              <div className="rounded-full bg-blue-50 px-5 py-2.5 text-base font-bold text-slate-500">
                 {combinedBillingRecords.length} billing records
               </div>
             </div>
@@ -2002,7 +2091,7 @@ const Accounts = () => {
 
           <div className="mb-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <label className="flex flex-col gap-1">
-                <span className="text-base font-semibold uppercase tracking-[0.16em] text-[#6B6F66]">
+                <span className="text-base font-semibold uppercase tracking-[0.16em] text-slate-500">
                 Billing Source
               </span>
               <select
@@ -2019,7 +2108,7 @@ const Accounts = () => {
             </label>
 
             <label className="flex flex-col gap-1">
-                <span className="text-base font-semibold uppercase tracking-[0.16em] text-[#6B6F66]">
+                <span className="text-base font-semibold uppercase tracking-[0.16em] text-slate-500">
                 Filter By Room
               </span>
               <select
@@ -2037,7 +2126,7 @@ const Accounts = () => {
             </label>
 
             <label className="flex flex-col gap-1">
-                <span className="text-base font-semibold uppercase tracking-[0.16em] text-[#6B6F66]">
+                <span className="text-base font-semibold uppercase tracking-[0.16em] text-slate-500">
                 Filter By Restaurant Table
               </span>
               <select
@@ -2055,7 +2144,7 @@ const Accounts = () => {
             </label>
 
             <label className="flex flex-col gap-1">
-                <span className="text-base font-semibold uppercase tracking-[0.16em] text-[#6B6F66]">
+                <span className="text-base font-semibold uppercase tracking-[0.16em] text-slate-500">
                 Filter By Banquet Hall
               </span>
               <select
@@ -2074,33 +2163,33 @@ const Accounts = () => {
           </div>
 
           <div className="mb-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <div className="rounded-[22px] border border-[#CFE7E2] bg-[#E4F0EE]/80 p-4">
-              <div className="text-sm font-semibold uppercase tracking-[0.16em] text-[#0F6E64]">
+            <div className="rounded-[24px] border border-emerald-100 bg-emerald-50/80 p-5">
+              <div className="text-sm font-semibold uppercase tracking-[0.16em] text-emerald-700">
                 Filtered Room Total
               </div>
-              <div className="mt-2 text-3xl font-black text-[#0F6E64]">
+              <div className="mt-2 text-3xl font-black text-emerald-700">
                 {formatINR(filteredBillingTotals.roomAmount)}
               </div>
-              <div className="mt-1 text-base text-[#0F6E64]/80">
+              <div className="mt-1 text-base text-emerald-700/80">
                 {selectedInvoiceRoom === "all"
                   ? "Room share across all invoice records."
                   : `Room share for Room ${selectedInvoiceRoom}.`}
               </div>
             </div>
 
-            <div className="rounded-[22px] border border-cyan-100 bg-cyan-50/80 p-4">
-              <div className="text-sm font-semibold uppercase tracking-[0.16em] text-[#0B4F48]">
+            <div className="rounded-[24px] border border-sky-100 bg-sky-50/80 p-5">
+              <div className="text-sm font-semibold uppercase tracking-[0.16em] text-sky-700">
                 Filtered Restaurant Total
               </div>
-              <div className="mt-2 text-3xl font-black text-cyan-800">
+              <div className="mt-2 text-3xl font-black text-sky-800">
                 {formatINR(filteredBillingTotals.restaurantAmount)}
               </div>
-              <div className="mt-1 text-base text-[#0B4F48]/80">
+              <div className="mt-1 text-base text-sky-700/80">
                 Restaurant bills plus room-service order totals.
               </div>
             </div>
 
-            <div className="rounded-[22px] border border-violet-100 bg-violet-50/80 p-4">
+            <div className="rounded-[24px] border border-violet-100 bg-violet-50/80 p-5">
               <div className="text-sm font-semibold uppercase tracking-[0.16em] text-violet-700">
                 Filtered Banquet Total
               </div>
@@ -2112,60 +2201,59 @@ const Accounts = () => {
               </div>
             </div>
 
-            <div className="rounded-[22px] border border-[#E4E1D8] bg-[#F6F5F1]/80 p-4">
-              <div className="text-sm font-semibold uppercase tracking-[0.16em] text-[#6B6F66]">
+            <div className="rounded-[24px] border border-blue-100 bg-blue-50/80 p-5">
+              <div className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">
                 Filtered Combined Total
               </div>
-              <div className="mt-2 text-3xl font-black text-[#1C231F]">
+              <div className="mt-2 text-3xl font-black text-slate-900">
                 {formatINR(filteredBillingTotals.finalAmount)}
               </div>
-              <div className="mt-1 text-base text-[#6B6F66]">
+              <div className="mt-1 text-base text-slate-500">
                 Combined billed amount for the current filter.
               </div>
             </div>
           </div>
 
-          <div className="overflow-x-auto rounded-[22px] border border-[#E4E1D8] hover:bg-[#F6F5F1] hover:bg-[#F6F5F1] bg-[#F6F5F1] hover:bg-[#F6F5F1]/60
-border-[#E4E1D8]">
+          <div className="overflow-x-auto rounded-[24px] border border-blue-100/70">
             <table className="min-w-full text-left text-base">
-              <thead className="bg-[linear-gradient(180deg,#f4f9ff_0%,#e8f1ff_100%)] text-sm uppercase tracking-[0.16em] text-[#6B6F66]">
+              <thead className="bg-gradient-to-r from-blue-950 via-blue-800 to-sky-600 text-sm uppercase tracking-[0.16em] text-white">
                 <tr>
-                  <th className="px-4 py-3">Source</th>
-                  <th className="px-4 py-3">Reference</th>
-                  <th className="px-4 py-3">Customer</th>
-                  <th className="px-4 py-3">Room / Table</th>
-                  <th className="px-4 py-3">Date</th>
-                  <th className="px-4 py-3">Total</th>
-                  <th className="px-4 py-3">Payment Mode</th>
-                  <th className="px-4 py-3">Payment Status</th>
-                  <th className="px-4 py-3">Actions</th>
+                  <th className="px-4 py-4">Source</th>
+                  <th className="px-4 py-4">Reference</th>
+                  <th className="px-4 py-4">Customer</th>
+                  <th className="px-4 py-4">Room / Table</th>
+                  <th className="px-4 py-4">Date</th>
+                  <th className="px-4 py-4">Total</th>
+                  <th className="px-4 py-4">Payment Mode</th>
+                  <th className="px-4 py-4">Payment Status</th>
+                  <th className="px-4 py-4">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {paginatedBillingRecords.map((record) => (
-                  <tr key={record.id} className="border-t border-[#E4E1D8] hover:bg-[#F6F5F1]/60">
+                  <tr key={record.id} className="border-t border-blue-50 transition-colors duration-200 hover:bg-sky-50/60">
                     <td className="px-4 py-4">
                       <span className={`inline-flex rounded-full border px-4 py-1.5 text-sm font-bold ${
                         record.source === "Restaurant"
-                          ? "border-cyan-200 bg-cyan-50 text-[#0B4F48]"
+                          ? "border-sky-200 bg-sky-50 text-sky-700"
                           : record.source === "Banquet"
                           ? "border-violet-200 bg-violet-50 text-violet-700"
-                          : "border-[#CFE7E2] bg-[#E4F0EE] text-[#0F6E64]"
+                          : "border-emerald-200 bg-emerald-50 text-emerald-700"
                       }`}>
                         {record.source}
                       </span>
                     </td>
-                    <td className="px-4 py-4 text-lg font-semibold text-[#1C231F]">{record.reference}</td>
-                    <td className="px-4 py-4 text-lg text-[#1C231F]">{record.customerName}</td>
-                    <td className="px-4 py-4 text-lg text-[#1C231F]">{record.locationLabel}</td>
-                    <td className="px-4 py-4 text-lg text-[#1C231F]">{record.date}</td>
-                    <td className="px-4 py-4 text-lg font-bold text-[#1C231F]">{formatINR(record.total)}</td>
-                    <td className="px-4 py-4 text-lg text-[#1C231F]">{record.paymentMode}</td>
+                    <td className="px-4 py-4 text-lg font-semibold text-slate-900">{record.reference}</td>
+                    <td className="px-4 py-4 text-lg text-slate-800">{record.customerName}</td>
+                    <td className="px-4 py-4 text-lg text-slate-800">{record.locationLabel}</td>
+                    <td className="px-4 py-4 text-lg text-slate-800">{record.date}</td>
+                    <td className="px-4 py-4 text-lg font-bold text-slate-900">{formatINR(record.total)}</td>
+                    <td className="px-4 py-4 text-lg text-slate-800">{record.paymentMode}</td>
                     <td className="px-4 py-4">
                       <span className={`inline-flex rounded-full border px-4 py-1.5 text-sm font-bold ${
                         String(record.paymentStatus).toLowerCase() === "paid"
-                          ? "border-[#CFE7E2] bg-[#E4F0EE] text-[#0F6E64]"
-                          : "border-[#E9D2A1] bg-[#FBEFD8] text-[#9A6A1F]"
+                          ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                          : "border-amber-200 bg-amber-50 text-amber-700"
                       }`}>
                         {record.paymentStatus}
                       </span>
@@ -2176,8 +2264,7 @@ border-[#E4E1D8]">
                           <button
                             type="button"
                             onClick={() => navigate(`/invoice/${record.actionId}`)}
-                            className="rounded-full border border-[#E4E1D8] hover:bg-[#F6F5F1] hover:bg-[#F6F5F1] bg-[#F6F5F1] hover:bg-[#F6F5F1]/60
-border-[#E4E1D8] bg-white px-4 py-2.5 text-sm font-bold text-[#1C231F]"
+                            className="rounded-full border border-blue-100 bg-white px-4 py-2.5 text-sm font-bold text-slate-800 transition-all duration-200 hover:bg-blue-50"
                           >
                             Open Invoice
                           </button>
@@ -2189,7 +2276,7 @@ border-[#E4E1D8] bg-white px-4 py-2.5 text-sm font-bold text-[#1C231F]"
                                 state: { bookingId: record.actionId },
                               })
                             }
-                            className="rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-bold text-[#0F6E64]"
+                            className="rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-bold text-emerald-700 transition-all duration-200 hover:bg-emerald-100"
                           >
                             Open Payment History
                           </button>
@@ -2204,13 +2291,12 @@ border-[#E4E1D8] bg-white px-4 py-2.5 text-sm font-bold text-[#1C231F]"
                                 },
                               })
                             }
-                            className="rounded-full border border-violet-200 bg-violet-50 px-4 py-2.5 text-sm font-bold text-violet-700"
+                            className="rounded-full border border-violet-200 bg-violet-50 px-4 py-2.5 text-sm font-bold text-violet-700 transition-all duration-200 hover:bg-violet-100"
                           >
                             Open Banquet
                           </button>
                         ) : (
-                          <span className="inline-flex items-center rounded-full border border-[#E4E1D8] hover:bg-[#F6F5F1] hover:bg-[#F6F5F1] bg-[#F6F5F1] hover:bg-[#F6F5F1]/60
-border-[#E4E1D8] bg-white px-4 py-2.5 text-sm font-semibold text-[#6B6F66]">
+                          <span className="inline-flex items-center rounded-full border border-blue-100 bg-white px-4 py-2.5 text-sm font-semibold text-slate-500">
                             Restaurant bill record
                           </span>
                         )}
@@ -2220,7 +2306,7 @@ border-[#E4E1D8] bg-white px-4 py-2.5 text-sm font-semibold text-[#6B6F66]">
                 ))}
                 {!combinedBillingRecords.length ? (
                   <tr>
-                    <td colSpan={9} className="px-4 py-8 text-center text-[#6B6F66]">
+                    <td colSpan={9} className="px-4 py-10 text-center text-slate-400">
                       No hotel, restaurant, or banquet billing records match the current filters.
                     </td>
                   </tr>
@@ -2230,18 +2316,18 @@ border-[#E4E1D8] bg-white px-4 py-2.5 text-sm font-semibold text-[#6B6F66]">
           </div>
 
           {combinedBillingRecords.length > BILLING_PAGE_SIZE ? (
-            <div className="flex flex-col gap-3 border-t border-[#E4E1D8] hover:bg-[#F6F5F1]/60 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="text-sm text-[#6B6F66]">
+            <div className="flex flex-col gap-3 border-t border-blue-50 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="text-sm text-slate-500">
                 Showing{" "}
-                <span className="font-semibold text-[#1C231F]">
+                <span className="font-semibold text-slate-900">
                   {(billingPage - 1) * BILLING_PAGE_SIZE + 1}
                 </span>{" "}
                 to{" "}
-                <span className="font-semibold text-[#1C231F]">
+                <span className="font-semibold text-slate-900">
                   {Math.min(billingPage * BILLING_PAGE_SIZE, combinedBillingRecords.length)}
                 </span>{" "}
                 of{" "}
-                <span className="font-semibold text-[#1C231F]">{combinedBillingRecords.length}</span>{" "}
+                <span className="font-semibold text-slate-900">{combinedBillingRecords.length}</span>{" "}
                 billing records
               </div>
 
@@ -2250,7 +2336,7 @@ border-[#E4E1D8] bg-white px-4 py-2.5 text-sm font-semibold text-[#6B6F66]">
                   type="button"
                   onClick={() => setBillingPage((current) => Math.max(1, current - 1))}
                   disabled={billingPage === 1}
-                  className="rounded-full border-[#E4E1D8] bg-white px-3 py-2 text-xs font-semibold text-[#6B6F66] transition hover:bg-[#F6F5F1] disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-full border border-blue-100 bg-white px-3 py-2 text-xs font-semibold text-slate-500 transition-all duration-200 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Previous
                 </button>
@@ -2264,10 +2350,10 @@ border-[#E4E1D8] bg-white px-4 py-2.5 text-sm font-semibold text-[#6B6F66]">
                       key={`billing-page-${page}`}
                       type="button"
                       onClick={() => setBillingPage(page)}
-                      className={`h-9 min-w-[36px] rounded-full border px-3 text-xs font-bold transition ${
+                      className={`h-9 min-w-[36px] rounded-full border px-3 text-xs font-bold transition-all duration-200 ${
                         isActive
-                          ? "border-[#0B4F48] bg-[#0B4F48] text-white shadow-[0_10px_24px_rgba(11,79,72,0.18)]"
-                          : "border-[#E4E1D8] bg-white text-[#6B6F66] hover:bg-[#F6F5F1]"
+                          ? "border-blue-800 bg-gradient-to-r from-blue-800 to-sky-500 text-white shadow-lg shadow-blue-900/25"
+                          : "border-blue-100 bg-white text-slate-500 hover:bg-blue-50"
                       }`}
                     >
                       {page}
@@ -2279,7 +2365,7 @@ border-[#E4E1D8] bg-white px-4 py-2.5 text-sm font-semibold text-[#6B6F66]">
                   type="button"
                   onClick={() => setBillingPage((current) => Math.min(billingTotalPages, current + 1))}
                   disabled={billingPage === billingTotalPages}
-                  className="rounded-full border-[#E4E1D8] bg-white px-3 py-2 text-xs font-semibold text-[#6B6F66] transition hover:bg-[#F6F5F1] disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-full border border-blue-100 bg-white px-3 py-2 text-xs font-semibold text-slate-500 transition-all duration-200 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Next
                 </button>
@@ -2289,28 +2375,27 @@ border-[#E4E1D8] bg-white px-4 py-2.5 text-sm font-semibold text-[#6B6F66]">
         </section>
         ) : null}
 
-        <section className="rounded-[26px] border border-white/60 bg-white/82 p-5 shadow-[0_20px_50px_rgba(30,64,175,0.1)]">
+        <section className="rounded-[30px] border border-blue-100/70 bg-white p-6 shadow-[0_20px_50px_-15px_rgba(30,64,175,0.15)] sm:p-7">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <div className="text-sm font-semibold uppercase tracking-[0.18em] text-[#0B4F48]">
+              <div className="text-[12px] lg:text-[15px] font-semibold uppercase tracking-[0.18em] text-sky-600">
                 Full Accounts Flow
               </div>
-              <h2 className="mt-2 text-4xl font-black text-[#1C231F]">Extended accounts controls</h2>
-              <p className="mt-3 max-w-3xl text-[15px] leading-7 text-[#6B6F66]">
+              <h2 className="mt-2 text-[22px] lg:text-[32px] font-black text-slate-900">Extended accounts controls</h2>
+              <p className="mt-3 max-w-3xl text-[12px] lg:text-[17px]  leading-7 text-slate-500">
           “Along with the existing transaction and invoice workflow, bank, petty cash, GST, vendor, purchase, payroll, and profit-center entries are also managed within this module.”
               </p>
             </div>
-            <div className="rounded-[22px] border border-[#E4E1D8] hover:bg-[#F6F5F1] hover:bg-[#F6F5F1] bg-[#F6F5F1] hover:bg-[#F6F5F1]/60
-border-[#E4E1D8] bg-[#F6F5F1] px-4 py-3">
-              <div className="text-sm font-semibold uppercase tracking-[0.18em] text-[#6B6F66]">
+            <div className="rounded-[24px] border border-blue-100/70 bg-blue-50/60 px-5 py-4">
+              <div className="text-[14px] font-semibold uppercase tracking-[0.18em] text-slate-500">
                 Profit Center Net
               </div>
-              <div className="mt-3 space-y-2 text-[15px] text-[#1C231F]">
+              <div className="mt-3 space-y-2 text-[12px] text-slate-800">
                 {(extendedSummary.profitCenters || []).length ? (
                   extendedSummary.profitCenters.map((center) => (
                     <div key={center.centerName} className="flex items-center justify-between gap-4">
                       <span>{center.centerName}</span>
-                      <span className="text-lg font-bold text-[#1C231F]">{formatINR(center.net)}</span>
+                      <span className="text-lg font-bold text-slate-900">{formatINR(center.net)}</span>
                     </div>
                   ))
                 ) : (
@@ -2322,41 +2407,40 @@ border-[#E4E1D8] bg-[#F6F5F1] px-4 py-3">
         </section>
 
         {showIncome && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm">
-            <div className="w-full max-w-3xl overflow-hidden rounded-[28px] bg-white shadow-[0_24px_80px_rgba(15,23,42,0.25)]">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
+            <div className="w-full max-w-3xl overflow-hidden rounded-[30px] bg-white shadow-[0_30px_90px_rgba(2,32,71,0.3)]">
               <TransactionForm type="Income" onSubmit={handleAddIncome} onCancel={() => setShowIncome(false)} />
             </div>
           </div>
         )}
 
         {showExpense && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm">
-            <div className="w-full max-w-3xl overflow-hidden rounded-[28px] bg-white shadow-[0_24px_80px_rgba(15,23,42,0.25)]">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
+            <div className="w-full max-w-3xl overflow-hidden rounded-[30px] bg-white shadow-[0_30px_90px_rgba(2,32,71,0.3)]">
               <TransactionForm type="Expense" onSubmit={handleAddExpense} onCancel={() => setShowExpense(false)} />
             </div>
           </div>
         )}
 
         {showInvoice && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-0 backdrop-blur-sm">
-            <div className="h-[100dvh] w-[100vw] max-w-none overflow-auto rounded-[18px] bg-white shadow-[0_24px_80px_rgba(15,23,42,0.25)]">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-0 backdrop-blur-sm">
+            <div className="h-[100dvh] w-[100vw] max-w-none overflow-auto rounded-[18px] bg-white shadow-[0_30px_90px_rgba(2,32,71,0.3)]">
               <InvoiceForm onSuccess={handleGenerateInvoice} onCancel={() => setShowInvoice(false)} />
             </div>
           </div>
         )}
 
         {showView && selectedRecord && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm">
-            <div className="w-full max-w-3xl overflow-hidden rounded-[28px] bg-white shadow-[0_24px_80px_rgba(15,23,42,0.25)]">
-              <div className="flex items-center justify-between border-b border-[#E4E1D8] hover:bg-[#F6F5F1] hover:bg-[#F6F5F1] bg-[#F6F5F1] hover:bg-[#F6F5F1]/60
-border-[#E4E1D8] px-6 py-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
+            <div className="w-full max-w-3xl overflow-hidden rounded-[30px] bg-white shadow-[0_30px_90px_rgba(2,32,71,0.3)]">
+              <div className="flex items-center justify-between border-b border-blue-50 bg-gradient-to-r from-blue-50 to-sky-50 px-6 py-5">
                 <div>
-                  <h3 className="text-xl font-black text-[#1C231F]">
+                  <h3 className="text-xl font-black text-slate-900">
                     {selectedBookingId
                       ? `Payments for Booking #${selectedBookingId}`
                       : "Record Details"}
                   </h3>
-                  <p className="mt-1 text-sm text-[#6B6F66]">
+                  <p className="mt-1 text-[15px] text-slate-500">
                     {selectedBookingId
                       ? `All transactions, invoices, and payments linked to this booking.`
                       : "No booking id found on this record."}
@@ -2367,13 +2451,12 @@ border-[#E4E1D8] px-6 py-4">
                     setShowView(false);
                     setSelectedRecord(null);
                   }}
-                  className="rounded-full border border-[#E4E1D8] hover:bg-[#F6F5F1] hover:bg-[#F6F5F1] bg-[#F6F5F1] hover:bg-[#F6F5F1]/60
-border-[#E4E1D8] px-4 py-2 text-sm font-bold text-[#1C231F] hover:bg-[#F6F5F1]"
+                  className="rounded-full border border-blue-100 bg-white px-4 py-2 text-[15px] font-bold text-slate-700 transition-all duration-200 hover:bg-blue-50"
                 >
                   Close
                 </button>
               </div>
-              <div className="max-h-[70vh] overflow-y-auto px-6 py-5 space-y-5">
+              <div className="max-h-[70vh] overflow-y-auto px-6 py-6 space-y-5">
                 {selectedBookingId && bookingPaymentGroups.map((group) => (
                   <div key={group.bookingId} className="space-y-4">
                     <SummaryRow
@@ -2381,21 +2464,21 @@ border-[#E4E1D8] px-4 py-2 text-sm font-bold text-[#1C231F] hover:bg-[#F6F5F1]"
                       value={formatINR(
                         group.transactions.reduce((sum, record) => sum + toNumber(record.amount), 0),
                       )}
-                      tone="text-[#0F6E64]"
+                      tone="text-sky-700"
                     />
                     <SummaryRow
                       label="Invoice Total"
                       value={formatINR(
                         group.invoices.reduce((sum, invoice) => sum + toNumber(invoice.totalAmount || invoice.total_amount || invoice.final_total || 0), 0),
                       )}
-                      tone="text-[#0B4F48]"
+                      tone="text-blue-700"
                     />
                     <SummaryRow
                       label="Booking Total"
                       value={formatINR(
                         group.hotelBookings.reduce((sum, booking) => sum + toNumber(booking.totalAmount || booking.total_amount || 0), 0),
                       )}
-                      tone="text-[#0B4F48]"
+                      tone="text-blue-700"
                     />
                     <SummaryRow
                       label="Restaurant Bills"
@@ -2413,12 +2496,11 @@ border-[#E4E1D8] px-4 py-2 text-sm font-bold text-[#1C231F] hover:bg-[#F6F5F1]"
                     />
                     {group.transactions.length > 0 && (
                       <div>
-                        <div className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#6B6F66]">
+                        <div className="mb-2 text-[13px] font-semibold uppercase tracking-[0.2em] text-slate-500">
                           Account Transactions
                         </div>
-                        <table className="min-w-full rounded-xl border border-[#E4E1D8] hover:bg-[#F6F5F1] hover:bg-[#F6F5F1] bg-[#F6F5F1] hover:bg-[#F6F5F1]/60
-border-[#E4E1D8] text-left text-sm">
-                          <thead className="bg-[linear-gradient(180deg,#f4f9ff_0%,#e8f1ff_100%)] text-xs uppercase text-[#6B6F66]">
+                        <table className="min-w-full rounded-xl border border-blue-100/70 text-left text-sm">
+                          <thead className="bg-gradient-to-r from-blue-950 via-blue-800 to-sky-600 text-xs uppercase text-white">
                             <tr>
                               <th className="px-3 py-2">Date</th>
                               <th className="px-3 py-2">Type</th>
@@ -2429,7 +2511,7 @@ border-[#E4E1D8] text-left text-sm">
                           </thead>
                           <tbody>
                             {group.transactions.map((record) => (
-                              <tr key={record.id} className="border-t border-[#E4E1D8]">
+                              <tr key={record.id} className="border-t border-blue-50">
                                 <td className="px-3 py-2">{record.date}</td>
                                 <td className="px-3 py-2">{record.type}</td>
                                 <td className="px-3 py-2">{record.description}</td>
@@ -2443,12 +2525,11 @@ border-[#E4E1D8] text-left text-sm">
                     )}
                     {group.invoices.length > 0 && (
                       <div>
-                        <div className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#6B6F66]">
+                        <div className="mb-2 text-[13px] font-semibold uppercase tracking-[0.2em] text-slate-500">
                           Linked Invoices
                         </div>
-                        <table className="min-w-full rounded-xl border border-[#E4E1D8] hover:bg-[#F6F5F1] hover:bg-[#F6F5F1] bg-[#F6F5F1] hover:bg-[#F6F5F1]/60
-border-[#E4E1D8] text-left text-sm">
-                          <thead className="bg-[linear-gradient(180deg,#f4f9ff_0%,#e8f1ff_100%)] text-xs uppercase text-[#6B6F66]">
+                        <table className="min-w-full rounded-xl border border-blue-100/70 text-left text-sm">
+                          <thead className="bg-gradient-to-r from-blue-950 via-blue-800 to-sky-600 text-xs uppercase text-white">
                             <tr>
                               <th className="px-3 py-2">Invoice</th>
                               <th className="px-3 py-2">Guest</th>
@@ -2459,7 +2540,7 @@ border-[#E4E1D8] text-left text-sm">
                           </thead>
                           <tbody>
                             {group.invoices.map((invoice) => (
-                              <tr key={invoice.id} className="border-t border-[#E4E1D8]">
+                              <tr key={invoice.id} className="border-t border-blue-50">
                                 <td className="px-3 py-2">{invoice.invoice_no || `#${invoice.id}`}</td>
                                 <td className="px-3 py-2">{invoice.customer_name || invoice.guest_name || "-"}</td>
                                 <td className="px-3 py-2">{invoice.room_no || "-"}</td>
@@ -2474,14 +2555,14 @@ border-[#E4E1D8] text-left text-sm">
                       </div>
                     )}
                     {group.transactions.length === 0 && group.invoices.length === 0 && (
-                      <div className="rounded-xl border border-dashed border-[#E4E1D8] bg-[#F6F5F1] px-4 py-6 text-center text-sm text-[#6B6F66]">
+                      <div className="rounded-xl border border-dashed border-blue-100 bg-blue-50/50 px-4 py-6 text-center text-sm text-slate-500">
                         No transactions or invoices found for Booking #{group.bookingId}.
                       </div>
                     )}
                   </div>
                 ))}
                 {!selectedBookingId && (
-                  <div className="rounded-xl border border-dashed border-[#E4E1D8] bg-[#F6F5F1] px-4 py-6 text-center text-sm text-[#6B6F66]">
+                  <div className="rounded-xl border border-dashed border-blue-100 bg-blue-50/50 px-4 py-6 text-center text-sm text-slate-500">
                     Could not extract a booking id from this record. Showing raw details only.
                     <div className="mt-3 space-y-1 text-left">
                       <p><strong>Date:</strong> {selectedRecord.date}</p>

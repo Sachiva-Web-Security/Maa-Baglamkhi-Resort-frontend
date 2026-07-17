@@ -24,12 +24,18 @@ const AttendanceRow = ({ employee, isAdmin = true }) => {
     return `₹ ${n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
+  const colCount = isAdmin ? 7 : 6;
+
   return (
     <tr
       className="
       group
 
-      border-b
+      block
+      md:table-row
+
+      border-b-0
+      md:border-b
       border-blue-50/80
 
       bg-white
@@ -37,31 +43,308 @@ const AttendanceRow = ({ employee, isAdmin = true }) => {
       transition-all
       duration-300
 
-      hover:bg-blue-50/30
-      hover:shadow-[0_4px_20px_rgba(37,99,235,0.06)]
+      md:hover:bg-blue-50/30
+      md:hover:shadow-[0_4px_20px_rgba(37,99,235,0.06)]
     "
     >
+      {/* ================= MOBILE CARD (≤767px) ================= */}
+      <td colSpan={colCount} className="block md:hidden px-0 py-0 align-top">
+        <div
+          className="
+          mx-1
+          my-2
+
+          rounded-[20px]
+
+          border
+          border-blue-100
+
+          bg-white
+
+          p-4
+
+          shadow-[0_4px_16px_rgba(30,64,175,0.06)]
+        "
+        >
+          {/* Top: avatar + name/role + status */}
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <div
+                className="
+                flex
+                h-14
+                w-14
+                shrink-0
+                items-center
+                justify-center
+
+                rounded-[14px]
+
+                bg-gradient-to-br
+                from-blue-600
+                via-sky-500
+                to-cyan-400
+
+                text-base
+                font-extrabold
+                text-white
+
+                shadow-[0_8px_24px_rgba(37,99,235,0.25)]
+                ring-4
+                ring-blue-50
+              "
+              >
+                {employee.name?.charAt(0).toUpperCase()}
+              </div>
+              <div className="min-w-0">
+                <h3 className="truncate text-[16px] font-bold leading-tight text-slate-900">
+                  {employee.name}
+                </h3>
+                <p className="mt-0.5 truncate text-[13px] font-medium text-slate-500">
+                  {employee.role || "--"}
+                </p>
+              </div>
+            </div>
+
+            <span
+              className={`
+                inline-flex
+                shrink-0
+                items-center
+
+                rounded-full
+
+                px-3
+                py-1.5
+
+                text-[12px]
+                font-bold
+
+                shadow-md
+
+                ${statusColors[employee.status] || "bg-slate-200 text-slate-700"}
+              `}
+            >
+              {employee.status}
+            </span>
+          </div>
+
+          {/* Two-column label/value grid */}
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            {/* Check In */}
+            <div className="min-w-0">
+              <div className="text-[13px] font-bold uppercase tracking-[0.06em] text-slate-500">
+                Check In
+              </div>
+              <div
+                className="
+                mt-1
+                inline-flex
+                items-center
+
+                rounded-full
+
+                border
+                border-blue-200
+                bg-blue-50
+
+                px-3
+                py-1.5
+
+                text-[14px]
+                font-semibold
+                text-blue-700
+              "
+              >
+                {employee.checkIn || "--"}
+              </div>
+            </div>
+
+            {/* Check Out */}
+            <div className="min-w-0">
+              <div className="text-[13px] font-bold uppercase tracking-[0.06em] text-slate-500">
+                Check Out
+              </div>
+              <div
+                className="
+                mt-1
+                inline-flex
+                items-center
+
+                rounded-full
+
+                border
+                border-slate-200
+                bg-slate-50
+
+                px-3
+                py-1.5
+
+                text-[14px]
+                font-semibold
+                text-slate-700
+              "
+              >
+                {employee.checkOut || "--"}
+              </div>
+            </div>
+
+            {/* Method */}
+            <div className="min-w-0">
+              <div className="text-[13px] font-bold uppercase tracking-[0.06em] text-slate-500">
+                Method
+              </div>
+              <span
+                className={`
+                  mt-1
+                  inline-flex
+                  items-center
+
+                  rounded-full
+
+                  px-3
+                  py-1.5
+
+                  text-[12px]
+                  font-bold
+
+                  shadow-sm
+
+                  ${methodColors[employee.method] || "bg-slate-200 text-slate-700"}
+                `}
+              >
+                {employee.method}
+              </span>
+            </div>
+
+            {/* Daily Salary */}
+            <div className="min-w-0">
+              <div className="text-[13px] font-bold uppercase tracking-[0.06em] text-slate-500">
+                Daily Salary
+              </div>
+              <div
+                className="
+                mt-1
+                inline-flex
+                items-center
+
+                rounded-full
+
+                border
+                border-emerald-200
+                bg-emerald-50
+
+                px-3
+                py-1.5
+
+                text-[14px]
+                font-bold
+                text-emerald-700
+              "
+              >
+                {formatCurrency(employee.salary_amount)}
+              </div>
+              {isAdmin && employee.user_salary > 0 && (
+                <div className="mt-1 text-[12px] font-semibold text-slate-500">
+                  /mo: {formatCurrency(employee.user_salary)}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Action Buttons — equal width, bottom of card */}
+          {isAdmin && (
+            <div className="mt-4 flex gap-2.5">
+              <button
+                type="button"
+                className="
+                flex-1
+
+                rounded-[14px]
+
+                bg-gradient-to-r
+                from-blue-600
+                via-blue-500
+                to-sky-500
+
+                px-4
+                py-2.5
+
+                text-[14px]
+                font-bold
+                text-white
+
+                shadow-[0_10px_28px_rgba(37,99,235,0.28)]
+
+                transition-all
+                duration-300
+
+                active:scale-95
+              "
+              >
+                Check In
+              </button>
+
+              <button
+                type="button"
+                className="
+                flex-1
+
+                rounded-[14px]
+
+                border
+                border-red-200
+                bg-white
+
+                px-4
+                py-2.5
+
+                text-[14px]
+                font-bold
+                text-red-600
+
+                shadow-md
+
+                transition-all
+                duration-300
+
+                active:scale-95
+              "
+              >
+                Check Out
+              </button>
+            </div>
+          )}
+        </div>
+      </td>
+
+      {/* ================= TABLET / DESKTOP TABLE ROW (≥768px) ================= */}
+
       {/* Employee */}
-      <td className="px-6 py-5">
-        <div className="flex items-center gap-4">
+      <td className="hidden md:table-cell px-4 py-4 xl:px-6 xl:py-5">
+        <div className="flex items-center gap-3 xl:gap-4">
           {/* Avatar */}
           <div
             className="
             flex
-            h-14
-            w-14
+            h-11
+            w-11
+            xl:h-14
+            xl:w-14
             shrink-0
             items-center
             justify-center
 
-            rounded-[14px]
+            rounded-[11px]
+            xl:rounded-[14px]
 
             bg-gradient-to-br
             from-blue-600
             via-sky-500
             to-cyan-400
 
-            text-lg
+            text-base
+            xl:text-lg
             font-extrabold
             text-white
 
@@ -80,11 +363,11 @@ const AttendanceRow = ({ employee, isAdmin = true }) => {
           </div>
           <div className="min-w-0">
             {/* Employee Name */}
-            <h3 className="text-[20px] font-bold text-slate-900 leading-tight">
+            <h3 className="text-[16px] xl:text-[20px] font-bold text-slate-900 leading-tight truncate">
               {employee.name}
             </h3>
             {/* Employee Role */}
-            <p className="mt-0.5 text-[15px] font-medium text-slate-500">
+            <p className="mt-0.5 text-[13px] xl:text-[15px] font-medium text-slate-500 truncate">
               {employee.role || "--"}
             </p>
           </div>
@@ -92,7 +375,7 @@ const AttendanceRow = ({ employee, isAdmin = true }) => {
       </td>
 
       {/* Check In */}
-      <td className="px-6 py-5">
+      <td className="hidden md:table-cell px-4 py-4 xl:px-6 xl:py-5">
         <div
           className="
           inline-flex
@@ -104,10 +387,13 @@ const AttendanceRow = ({ employee, isAdmin = true }) => {
           border-blue-200
           bg-blue-50
 
-          px-4
-          py-2
+          px-3
+          py-1.5
+          xl:px-4
+          xl:py-2
 
-          text-[16px]
+          text-[14px]
+          xl:text-[16px]
           font-semibold
           text-blue-700
 
@@ -119,7 +405,7 @@ const AttendanceRow = ({ employee, isAdmin = true }) => {
       </td>
 
       {/* Check Out */}
-      <td className="px-6 py-5">
+      <td className="hidden md:table-cell px-4 py-4 xl:px-6 xl:py-5">
         <div
           className="
           inline-flex
@@ -131,10 +417,13 @@ const AttendanceRow = ({ employee, isAdmin = true }) => {
           border-slate-200
           bg-slate-50
 
-          px-4
-          py-2
+          px-3
+          py-1.5
+          xl:px-4
+          xl:py-2
 
-          text-[16px]
+          text-[14px]
+          xl:text-[16px]
           font-semibold
           text-slate-700
 
@@ -146,7 +435,7 @@ const AttendanceRow = ({ employee, isAdmin = true }) => {
       </td>
 
       {/* Status */}
-      <td className="px-6 py-5">
+      <td className="hidden md:table-cell px-4 py-4 xl:px-6 xl:py-5">
         <span
           className={`
             inline-flex
@@ -154,10 +443,13 @@ const AttendanceRow = ({ employee, isAdmin = true }) => {
 
             rounded-full
 
-            px-4
-            py-2
+            px-3
+            py-1.5
+            xl:px-4
+            xl:py-2
 
-            text-[15px]
+            text-[13px]
+            xl:text-[15px]
             font-bold
 
             shadow-lg
@@ -173,7 +465,7 @@ const AttendanceRow = ({ employee, isAdmin = true }) => {
       </td>
 
       {/* Method */}
-      <td className="px-6 py-5">
+      <td className="hidden md:table-cell px-4 py-4 xl:px-6 xl:py-5">
         <span
           className={`
             inline-flex
@@ -181,10 +473,13 @@ const AttendanceRow = ({ employee, isAdmin = true }) => {
 
             rounded-full
 
-            px-4
-            py-2
+            px-3
+            py-1.5
+            xl:px-4
+            xl:py-2
 
-            text-[15px]
+            text-[13px]
+            xl:text-[15px]
             font-bold
 
             shadow-lg
@@ -200,7 +495,7 @@ const AttendanceRow = ({ employee, isAdmin = true }) => {
       </td>
 
       {/* Daily Salary */}
-      <td className="px-6 py-5">
+      <td className="hidden md:table-cell px-4 py-4 xl:px-6 xl:py-5">
         <div className="inline-flex flex-col items-start">
           <div
             className="
@@ -213,10 +508,13 @@ const AttendanceRow = ({ employee, isAdmin = true }) => {
             border-emerald-200
             bg-emerald-50
 
-            px-4
-            py-2
+            px-3
+            py-1.5
+            xl:px-4
+            xl:py-2
 
-            text-[15px]
+            text-[13px]
+            xl:text-[15px]
             font-bold
             text-emerald-700
 
@@ -226,7 +524,7 @@ const AttendanceRow = ({ employee, isAdmin = true }) => {
             {formatCurrency(employee.salary_amount)}
           </div>
           {isAdmin && employee.user_salary > 0 && (
-            <span className="mt-1.5 text-[13px] font-semibold text-slate-500">
+            <span className="mt-1.5 text-[12px] xl:text-[13px] font-semibold text-slate-500">
               /mo: {formatCurrency(employee.user_salary)}
             </span>
           )}
@@ -235,23 +533,27 @@ const AttendanceRow = ({ employee, isAdmin = true }) => {
 
       {/* Action Buttons (admin only) */}
       {isAdmin && (
-        <td className="px-6 py-5">
-          <div className="flex gap-3">
+        <td className="hidden md:table-cell px-4 py-4 xl:px-6 xl:py-5">
+          <div className="flex gap-2 xl:gap-3">
             {/* Check In */}
             <button
               type="button"
               className="
-              rounded-[14px]
+              rounded-[11px]
+              xl:rounded-[14px]
 
               bg-gradient-to-r
               from-blue-600
               via-blue-500
               to-sky-500
 
-              px-5
-              py-2.5
+              px-3
+              py-2
+              xl:px-5
+              xl:py-2.5
 
-              text-[16px]
+              text-[13px]
+              xl:text-[16px]
               font-bold
               text-white
 
@@ -272,16 +574,20 @@ const AttendanceRow = ({ employee, isAdmin = true }) => {
             <button
               type="button"
               className="
-              rounded-[14px]
+              rounded-[11px]
+              xl:rounded-[14px]
 
               border
               border-red-200
               bg-white
 
-              px-5
-              py-2.5
+              px-3
+              py-2
+              xl:px-5
+              xl:py-2.5
 
-              text-[16px]
+              text-[13px]
+              xl:text-[16px]
               font-bold
               text-red-600
 

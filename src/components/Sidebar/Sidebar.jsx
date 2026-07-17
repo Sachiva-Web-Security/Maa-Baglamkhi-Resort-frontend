@@ -159,16 +159,16 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
       { id: 309, name: "Banquet", icon: FaGlassCheers, path: "/banquet", section: "operations" },
       { id: 310, name: "Restaurant POS", icon: FaUtensils, path: "/restaurant", section: "operations" },
       { id: 311, name: "Inventory", icon: FaBoxes, path: "/inventory", section: "records",
-        children: [
-          { id: 3110, name: "Categories", path: "/inventory/categories", icon: FaListAlt },
-          { id: 3111, name: "Vendors", path: "/inventory/vendors", icon: FaTruck },
-          { id: 3112, name: "Units", path: "/inventory/units", icon: FaBalanceScale },
-          { id: 3113, name: "Items / Stock", path: "/inventory/items", icon: FaWarehouse },
-          { id: 3114, name: "Menu Items", path: "/inventory/menu-items", icon: FaUtensils },
-          { id: 3115, name: "Menu List", path: "/inventory/menu-list", icon: FaClipboardList },
-          { id: 3116, name: "Purchase Invoices", path: "/inventory/purchases", icon: FaShoppingCart },
-          { id: 3117, name: "Reports", path: "/inventory/reports", icon: FaChartBar },
-        ]
+        // children: [
+        //   { id: 3110, name: "Categories", path: "/inventory/categories", icon: FaListAlt },
+        //   { id: 3111, name: "Vendors", path: "/inventory/vendors", icon: FaTruck },
+        //   { id: 3112, name: "Units", path: "/inventory/units", icon: FaBalanceScale },
+        //   { id: 3113, name: "Items / Stock", path: "/inventory/items", icon: FaWarehouse },
+        //   { id: 3114, name: "Menu Items", path: "/inventory/menu-items", icon: FaUtensils },
+        //   { id: 3115, name: "Menu List", path: "/inventory/menu-list", icon: FaClipboardList },
+        //   { id: 3116, name: "Purchase Invoices", path: "/inventory/purchases", icon: FaShoppingCart },
+        //   { id: 3117, name: "Reports", path: "/inventory/reports", icon: FaChartBar },
+        // ]
       },
     ],
     housekeeping: [
@@ -201,16 +201,16 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
       { id: 601, name: "Kitchen Orders", icon: FaFire, path: "/kitchen", section: "operations" },
       { id: 602, name: "Restaurant POS", icon: FaUtensils, path: "/restaurant", section: "operations" },
       { id: 603, name: "Inventory", icon: FaBoxes, path: "/inventory", section: "records",
-        children: [
-          { id: 6031, name: "Categories", path: "/inventory/categories", icon: FaListAlt },
-          { id: 6032, name: "Vendors", path: "/inventory/vendors", icon: FaTruck },
-          { id: 6033, name: "Units", path: "/inventory/units", icon: FaBalanceScale },
-          { id: 6034, name: "Items / Stock", path: "/inventory/items", icon: FaWarehouse },
-          { id: 6035, name: "Menu Items", path: "/inventory/menu-items", icon: FaUtensils },
-          { id: 6036, name: "Menu List", path: "/inventory/menu-list", icon: FaClipboardList },
-          { id: 6037, name: "Purchase Invoices", path: "/inventory/purchases", icon: FaShoppingCart },
-          { id: 6038, name: "Reports", path: "/inventory/reports", icon: FaChartBar },
-        ]
+        // children: [
+        //   { id: 6031, name: "Categories", path: "/inventory/categories", icon: FaListAlt },
+        //   { id: 6032, name: "Vendors", path: "/inventory/vendors", icon: FaTruck },
+        //   { id: 6033, name: "Units", path: "/inventory/units", icon: FaBalanceScale },
+        //   { id: 6034, name: "Items / Stock", path: "/inventory/items", icon: FaWarehouse },
+        //   { id: 6035, name: "Menu Items", path: "/inventory/menu-items", icon: FaUtensils },
+        //   { id: 6036, name: "Menu List", path: "/inventory/menu-list", icon: FaClipboardList },
+        //   { id: 6037, name: "Purchase Invoices", path: "/inventory/purchases", icon: FaShoppingCart },
+        //   { id: 6038, name: "Reports", path: "/inventory/reports", icon: FaChartBar },
+        // ]
       },
     ],
     waiter: [

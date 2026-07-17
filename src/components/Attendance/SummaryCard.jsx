@@ -11,15 +11,20 @@ const SummaryCard = ({ label, value, color, icon: Icon }) => {
   return (
     <div
       className="
-      rounded-[18px]
+      rounded-[16px]
+      sm:rounded-[18px]
       border
       border-blue-100
 
       bg-white
 
-      p-4
+      p-3.5
+      sm:p-4
 
-      shadow-[0_6px_16px_rgba(30,64,175,0.04)]
+      shadow-[0_4px_12px_rgba(30,64,175,0.04)]
+      xl:shadow-[0_6px_16px_rgba(30,64,175,0.04)]
+
+      min-w-0
     "
     >
       {/* Colored Icon */}
@@ -27,29 +32,33 @@ const SummaryCard = ({ label, value, color, icon: Icon }) => {
         <div
           className={`
             inline-flex
-            h-9
-            w-9
+            h-8
+            w-8
+            md:h-9
+            md:w-9
             items-center
             justify-center
 
-            rounded-[10px]
+            rounded-[9px]
+            md:rounded-[10px]
 
             text-white
 
             ${colors[color] || "bg-blue-600"}
           `}
         >
-          <Icon size={15} />
+          <Icon size={14} className="md:hidden" />
+          <Icon size={15} className="hidden md:block" />
         </div>
       )}
 
       {/* Label */}
-      <div className="mt-3 text-[16px] font-bold uppercase tracking-[0.1em] text-slate-600">
+      <div className="mt-2.5 sm:mt-3 text-[13px] md:text-[14px] xl:text-[16px] font-bold uppercase tracking-[0.06em] xl:tracking-[0.1em] text-slate-600 truncate">
         {label}
       </div>
 
       {/* Large Value */}
-      <div className="mt-1 text-[42px] font-extrabold text-slate-900 leading-tight">
+      <div className="mt-1 text-[28px] sm:text-[32px] md:text-[36px] xl:text-[42px] font-extrabold text-slate-900 leading-tight truncate">
         {value}
       </div>
     </div>
