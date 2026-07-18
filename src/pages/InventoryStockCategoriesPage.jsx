@@ -23,6 +23,8 @@ import {
   updateInventoryMasterRecord,
 } from "../services/inventoryMastersService";
 
+import BackButton from "../components/Inventory/BackButton";
+
 /* ------------------------------------------------------------------ */
 /* Design tokens — premium blue & white theme                         */
 /* ------------------------------------------------------------------ */
@@ -352,8 +354,11 @@ const InventoryStockCategoriesPage = () => {
 
       <div className="relative z-10 px-5 sm:px-8 lg:px-12 py-8 sm:py-10 pb-16 w-full">
         {/* Header */}
+       <BackButton className="shrink-0" />
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 mb-7">
+          
           <div className="flex items-center gap-4">
+           
             <div
               className="w-[64px] h-[64px] rounded-[20px] flex items-center justify-center text-white text-[26px] shadow-[0_14px_30px_rgba(33,72,224,0.32)] shrink-0"
               style={{ background: `linear-gradient(135deg, ${c.blue}, ${c.blueDeep})` }}
@@ -395,8 +400,8 @@ const InventoryStockCategoriesPage = () => {
           </div>
         </div>
 
-        {/* Mobile card list (below sm) — desktop table is untouched and hidden here */}
-        <div className="sm:hidden">
+        {/* Mobile / tablet card list (below md) — desktop table is untouched and hidden here */}
+        <div className="md:hidden">
           {loading ? (
             <div className="bg-white border border-[#E7ECF8] rounded-[20px] py-14 text-center text-[#8790A6] text-[15px] shadow-[0_18px_50px_rgba(15,27,61,0.08)]">
               Loading…
@@ -469,8 +474,8 @@ const InventoryStockCategoriesPage = () => {
           )}
         </div>
 
-        {/* Table card — sm and up only; desktop layout unchanged */}
-        <div className="hidden sm:block bg-white border border-[#E7ECF8] rounded-[24px] overflow-hidden shadow-[0_18px_50px_rgba(15,27,61,0.08)]">
+        {/* Table card — md and up only; desktop layout unchanged */}
+        <div className="hidden md:block bg-white border border-[#E7ECF8] rounded-[24px] overflow-hidden shadow-[0_18px_50px_rgba(15,27,61,0.08)]">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[560px] text-left">
               <thead>

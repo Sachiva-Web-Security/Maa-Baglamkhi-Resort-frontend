@@ -21,6 +21,8 @@ import {
 import API from "../api";
 import { fetchInventoryMasterRecords } from "../services/inventoryMastersService";
 
+import BackButton from "../components/Inventory/BackButton";
+
 /* ── style tokens ── */
 const fieldCls =
   "w-full rounded-2xl border border-blue-100 bg-white px-4 py-3 text-[17px] font-medium text-slate-800 shadow-sm transition-all duration-200 placeholder:text-slate-400 placeholder:font-normal focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100";
@@ -209,8 +211,11 @@ const InventoryPurchasesPage = () => {
       }}
     >
       {/* ── top bar ── */}
+     <BackButton className="shrink-0" />
       <div className="bg-white/70 backdrop-blur-xl border border-blue-50 rounded-[22px] xl:rounded-[28px] shadow-[0_20px_60px_-30px_rgba(15,23,80,0.25)] px-4 py-4 sm:px-5 sm:py-5 xl:px-6 xl:py-6 mb-4 sm:mb-5 xl:mb-6 flex flex-col items-stretch gap-4 xl:flex-row xl:items-center xl:justify-between xl:flex-wrap">
+       
         <div className="flex items-center gap-3 sm:gap-4">
+          
           <div
             className="w-[44px] h-[44px] sm:w-[52px] sm:h-[52px] rounded-2xl flex items-center justify-center text-white text-[18px] sm:text-[22px] shrink-0 shadow-[0_10px_28px_-8px_rgba(30,64,175,0.65)]"
             style={{ background: "linear-gradient(135deg, #0B1D4D 0%, #1E3A8A 55%, #38BDF8 100%)" }}

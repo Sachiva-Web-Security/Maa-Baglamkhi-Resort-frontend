@@ -22,6 +22,8 @@ import {
 
 import API, { getBackendBaseURL } from "../api";
 
+import BackButton from "../components/Inventory/BackButton";
+
 const c = {
   pageBgFrom: "#EEF4FF",
   pageBgTo: "#F8FAFF",
@@ -387,8 +389,11 @@ const InventoryMenuItemsPage = () => {
     >
       <div className="w-full min-w-0 rounded-[24px] sm:rounded-[28px] xl:rounded-[32px] border border-white/60 bg-white/70 backdrop-blur-xl shadow-[0_30px_80px_rgba(30,64,175,0.10)] p-4 sm:p-5 md:p-6 xl:p-7">
         {/* Hero */}
+         <BackButton className="shrink-0" />
         <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 mb-5 xl:mb-6">
+        
           <div className="flex items-center gap-3.5 min-w-0">
+           
             <div
               className="w-[52px] h-[52px] rounded-2xl flex items-center justify-center text-white text-[22px] shrink-0 shadow-[0_10px_24px_rgba(11,31,82,0.35)]"
               style={{ background: `linear-gradient(135deg, ${c.blue950}, ${c.sky500})` }}

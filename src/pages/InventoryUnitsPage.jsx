@@ -15,6 +15,8 @@ import {
   updateInventoryMasterRecord,
 } from "../services/inventoryMastersService";
 
+import BackButton from "../components/Inventory/BackButton";
+
 /* ---------------------------------------------------------
    Design tokens — Modern Blue & White premium theme
 --------------------------------------------------------- */
@@ -41,11 +43,13 @@ const c = {
 
 /* NOTE ON RESPONSIVE STRATEGY (read me):
    All classNames below are mobile-first. Any className fragment prefixed
-   with `lg:` reproduces the EXACT original (pre-responsive) desktop value,
-   so Windows/macOS/Laptop/Desktop (≥1024px) render pixel-identical to the
-   original file. Unprefixed / `sm:` values are new, added ONLY to improve
-   phone (<640px) and tablet/iPad (640px–1023px) layouts. No JS logic,
-   handlers, API calls, state, or props were changed anywhere in this file. */
+   with `xl:` (or `lg:` that flows through to xl) reproduces the EXACT
+   original (pre-responsive) desktop value, so Desktop (≥1280px) renders
+   pixel-identical to the original file. `lg:` adds minor refinements for
+   small laptops (1024px–1279px). Unprefixed / `sm:` / `md:` values serve
+   phones and tablets (<1024px). Tables become card layouts below the md
+   (768px) breakpoint. No JS logic, handlers, API calls, state, or props
+   were changed anywhere in this file. */
 
 const fieldCls =
   "w-full rounded-[14px] lg:rounded-[16px] border border-[#E7ECF5] bg-white px-3.5 lg:px-4 py-3 lg:py-3.5 text-[15px] lg:text-[17px] font-medium text-[#0F1B33] shadow-[0_1px_2px_rgba(15,27,51,0.04)] outline-none transition-all duration-250 focus:border-[#2563EB] focus:ring-4 focus:ring-[#2563EB]/10";
@@ -251,7 +255,7 @@ const UnitFormModal = ({ open, onClose, onSave, initial }) => {
 };
 
 /* ---------------------------------------------------------
-   Mobile card row (phones only, <640px)
+   Mobile card row (phones & tablets, <768px)
    Same data / same handlers as the desktop table row — just a
    different visual shell so nothing overflows a small screen.
 --------------------------------------------------------- */
@@ -411,8 +415,11 @@ const InventoryUnitsPage = () => {
         className="relative w-full px-4 py-6 sm:px-6 sm:py-8 lg:px-10 lg:pt-9 lg:pb-[72px]"
       >
         {/* Header */}
+          <BackButton className="shrink-0" />
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 sm:gap-5 mb-6 lg:mb-7">
+         
           <div className="flex items-center gap-3.5 sm:gap-4">
+           
             <div
               className="w-12 h-12 sm:w-14 sm:h-14 lg:w-[68px] lg:h-[68px] rounded-[16px] lg:rounded-[20px] flex items-center justify-center text-white text-[22px] sm:text-[24px] lg:text-[28px] shrink-0 shadow-[0_10px_24px_rgba(37,99,235,0.30)]"
               style={{ background: `linear-gradient(135deg, ${c.blue700} 0%, ${c.sky500} 100%)` }}
@@ -451,22 +458,22 @@ const InventoryUnitsPage = () => {
           </div>
         </div>
 
-        {/* Table card — visible on tablet & desktop (≥640px), unchanged on desktop */}
-        <div className="hidden sm:block bg-white/90 backdrop-blur-sm border border-[#E7ECF5] rounded-[20px] lg:rounded-[28px] overflow-hidden shadow-[0_20px_60px_rgba(15,27,51,0.06)]">
+        {/* Table card — visible on tablet landscape & desktop (≥768px), unchanged on xl+ */}
+        <div className="hidden md:block bg-white/90 backdrop-blur-sm border border-[#E7ECF5] rounded-[20px] xl:rounded-[28px] overflow-hidden shadow-[0_20px_60px_rgba(15,27,51,0.06)]">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[720px] text-left">
               <thead>
                 <tr style={{ background: "linear-gradient(90deg, #EFF6FF 0%, #F5F9FF 100%)" }}>
-                  <th className="text-left text-[14px] lg:text-[16px] font-bold uppercase tracking-[0.04em] py-4 lg:py-5 pl-5 lg:pl-7 pr-4 border-b border-[#E7ECF5]" style={{ color: c.blue900 }}>
+                  <th className="text-left text-[14px] lg:text-[16px] font-bold uppercase tracking-[0.04em] py-4 xl:py-5 pl-5 lg:pl-7 pr-4 border-b border-[#E7ECF5]" style={{ color: c.blue900 }}>
                     <span className="inline-flex items-center gap-2"><FaTag className="text-[13px] opacity-70" /> Name</span>
                   </th>
-                  <th className="text-left text-[14px] lg:text-[16px] font-bold uppercase tracking-[0.04em] py-4 lg:py-5 pr-4 border-b border-[#E7ECF5]" style={{ color: c.blue900 }}>
+                  <th className="text-left text-[14px] lg:text-[16px] font-bold uppercase tracking-[0.04em] py-4 xl:py-5 pr-4 border-b border-[#E7ECF5]" style={{ color: c.blue900 }}>
                     <span className="inline-flex items-center gap-2"><FaTag className="text-[13px] opacity-70" /> Short Name</span>
                   </th>
-                  <th className="text-left text-[14px] lg:text-[16px] font-bold uppercase tracking-[0.04em] py-4 lg:py-5 pr-4 border-b border-[#E7ECF5]" style={{ color: c.blue900 }}>
+                  <th className="text-left text-[14px] lg:text-[16px] font-bold uppercase tracking-[0.04em] py-4 xl:py-5 pr-4 border-b border-[#E7ECF5]" style={{ color: c.blue900 }}>
                     <span className="inline-flex items-center gap-2"><FaBoxOpen className="text-[13px] opacity-70" /> Type</span>
                   </th>
-                  <th className="text-left text-[14px] lg:text-[16px] font-bold uppercase tracking-[0.04em] py-4 lg:py-5 pr-5 lg:pr-7 border-b border-[#E7ECF5] w-[200px] lg:w-[220px]" style={{ color: c.blue900 }}>
+                  <th className="text-left text-[14px] lg:text-[16px] font-bold uppercase tracking-[0.04em] py-4 xl:py-5 pr-5 lg:pr-7 border-b border-[#E7ECF5] w-[200px] lg:w-[220px]" style={{ color: c.blue900 }}>
                     Actions
                   </th>
                 </tr>
@@ -503,7 +510,7 @@ const InventoryUnitsPage = () => {
                     const TypeIcon = meta.icon;
                     return (
                       <tr key={u.id} className="transition-colors duration-250 hover:bg-[#F8FAFC]">
-                        <td className="py-4 lg:py-5 pl-5 lg:pl-7 pr-4">
+                        <td className="py-4 xl:py-5 pl-5 lg:pl-7 pr-4">
                           <div className="flex items-center gap-3.5">
                             <div
                               className="w-11 h-11 rounded-[14px] flex items-center justify-center text-[17px] shrink-0"
@@ -516,7 +523,7 @@ const InventoryUnitsPage = () => {
                             </span>
                           </div>
                         </td>
-                        <td className="py-4 lg:py-5 pr-4">
+                        <td className="py-4 xl:py-5 pr-4">
                           <span
                             className="inline-flex items-center justify-center rounded-[10px] px-3 py-1.5 text-[15px] font-semibold"
                             style={{ background: "#F1F5F9", color: c.text }}
@@ -524,7 +531,7 @@ const InventoryUnitsPage = () => {
                             {u.shortName || u.short_name || "-"}
                           </span>
                         </td>
-                        <td className="py-4 lg:py-5 pr-4">
+                        <td className="py-4 xl:py-5 pr-4">
                           <span
                             className="inline-flex items-center gap-1.5 rounded-[10px] px-3.5 py-1.5 text-[15px] font-semibold"
                             style={{ background: meta.bg, color: meta.color }}
@@ -533,7 +540,7 @@ const InventoryUnitsPage = () => {
                             {u.type || "-"}
                           </span>
                         </td>
-                        <td className="py-4 lg:py-5 pr-5 lg:pr-7">
+                        <td className="py-4 xl:py-5 pr-5 lg:pr-7">
                           <div className="flex gap-2.5">
                             <button
                               onClick={() => { setEditingUnit(u); setShowForm(true); }}
@@ -560,8 +567,8 @@ const InventoryUnitsPage = () => {
           </div>
         </div>
 
-        {/* Card list — phones only (<640px), same data & handlers as the table above */}
-        <div className="sm:hidden">
+        {/* Card list — phones & tablets (<768px), same data & handlers as the table above */}
+        <div className="md:hidden">
           {loading ? (
             <div className="py-16 text-center text-[15px]" style={{ color: c.muted }}>
               Loading…

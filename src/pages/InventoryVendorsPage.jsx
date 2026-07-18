@@ -522,11 +522,11 @@ const InventoryVendorsPage = () => {
 
       <div className="w-full max-w-full px-4 sm:px-8 lg:px-12 xl:px-16 py-6 sm:py-10">
         {/* ── header ── */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-5 mb-6 sm:mb-8">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-5 mb-6 sm:mb-8">
           <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
             <button
               type="button"
-              onClick={() => navigate("/inventory/items")}
+              onClick={() => navigate("/inventory")}
               className="flex items-center gap-2 rounded-2xl bg-white px-3.5 sm:px-4 py-2.5 text-[14px] sm:text-[14.5px] font-semibold text-[#334155] shadow-[0_4px_14px_rgba(15,23,42,0.06)] ring-1 ring-[#E7ECF6] hover:bg-[#F8FAFF] hover:text-[#1D4ED8] active:scale-[0.98] transition shrink-0"
               title="Back to Items"
             >
@@ -535,16 +535,16 @@ const InventoryVendorsPage = () => {
             </button>
             <div className="flex items-center gap-3 sm:gap-4 min-w-0">
               <div
-                className="w-[44px] h-[44px] sm:w-[52px] sm:h-[52px] rounded-2xl flex items-center justify-center text-white text-[18px] sm:text-[22px] shrink-0 shadow-[0_10px_24px_rgba(37,99,235,0.35)]"
+                className="w-[44px] h-[44px] sm:w-[48px] sm:h-[48px] md:w-[52px] md:h-[52px] rounded-2xl flex items-center justify-center text-white text-[18px] sm:text-[20px] md:text-[22px] shrink-0 shadow-[0_10px_24px_rgba(37,99,235,0.35)]"
                 style={{ background: `linear-gradient(135deg, ${c.blue}, ${c.blueDeep})` }}
               >
                 <FaTruck />
               </div>
               <div className="min-w-0">
-                <h1 className="text-[26px] sm:text-[32px] lg:text-[42px] font-bold m-0 leading-[1.1] tracking-tight text-[#0F172A]">
+                <h1 className="text-[26px] sm:text-[32px] md:text-[36px] lg:text-[42px] font-bold m-0 leading-[1.1] tracking-tight text-[#0F172A]">
                   Vendors
                 </h1>
-                <p className="m-0 text-[14px] sm:text-[15px] lg:text-[19px] mt-0.5 truncate" style={{ color: c.muted }}>
+                <p className="m-0 text-[14px] sm:text-[15px] md:text-[16px] lg:text-[19px] mt-0.5 truncate" style={{ color: c.muted }}>
                   Manage your suppliers and vendors
                 </p>
               </div>
@@ -553,7 +553,7 @@ const InventoryVendorsPage = () => {
           <button
             type="button"
             onClick={openAdd}
-            className={`${primaryBtn} w-full lg:w-auto`}
+            className={`${primaryBtn} w-full md:w-auto`}
             style={primaryBtnStyle}
           >
             <FaPlus className="text-sm" /> Add Vendor
@@ -575,8 +575,8 @@ const InventoryVendorsPage = () => {
 
         {/* ── table / cards ── */}
         <div className="bg-white border border-[#E7ECF6] rounded-[20px] sm:rounded-[24px] overflow-hidden shadow-[0_16px_50px_rgba(15,23,42,0.06)]">
-          {/* Desktop / tablet table (sm and up) */}
-          <div className="hidden sm:block overflow-x-auto">
+          {/* Desktop / tablet table (md and up) */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full min-w-[880px] text-left">
               <thead>
                 <tr className="bg-[#F8FAFF]">
@@ -675,8 +675,8 @@ const InventoryVendorsPage = () => {
             </table>
           </div>
 
-          {/* Mobile card list (below sm) */}
-          <div className="sm:hidden">
+          {/* Mobile / tablet card list (below md) */}
+          <div className="md:hidden">
             {loading ? (
               <div className="py-16 text-center text-[#64748B] text-[15px]">Loading vendors…</div>
             ) : paginated.length === 0 ? (

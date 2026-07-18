@@ -17,6 +17,8 @@ import {
 
 import API from "../api";
 
+import BackButton from "../components/Inventory/BackButton";
+
 /* ── style tokens ──
    Premium Blue & White theme.
    Blues: #2563EB (primary), #1D4ED8 (deep), #EFF4FF (wash), #DCE7FB (border-tint)
@@ -190,8 +192,11 @@ const InventoryReportsPage = () => {
 
       <div className="relative z-10 w-full">
         {/* ── premium page header ── */}
+        <BackButton className="shrink-0" />
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between mb-5 sm:mb-6 xl:mb-7">
+         
           <div className="flex items-center gap-3 sm:gap-4">
+            
             <div
               className="shrink-0 w-[46px] h-[46px] sm:w-[52px] sm:h-[52px] xl:w-[56px] xl:h-[56px] rounded-[16px] xl:rounded-[18px] flex items-center justify-center text-white text-[19px] sm:text-[22px] xl:text-[24px] shadow-[0_10px_24px_-8px_rgba(29,78,216,0.55)]"
               style={{ background: "linear-gradient(135deg, #3B7BFF 0%, #1D4ED8 100%)" }}

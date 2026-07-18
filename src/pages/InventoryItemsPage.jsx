@@ -2,8 +2,8 @@
 // Items & Stock list — fetches from /api/inventory
 // Add / Edit via modal; page is the default landing for /inventory.
 //
-// ⚠️ RESPONSIVE PASS ONLY — Desktop (≥1024px / "lg") layout is untouched.
-// Laptop (1024–1279px) uses the same desktop layout (no horizontal scroll).
+// ⚠️ RESPONSIVE PASS ONLY — Desktop (≥1280px / "xl") layout is untouched.
+// Laptop (1024–1279px) uses the tablet/mobile stacked layout.
 // Tablet (768–1023px) stacks the header, full-width search/filter, and
 // keeps the table with a sticky header + horizontal scroll.
 // Mobile (<768px) converts each row into a card.
@@ -29,6 +29,7 @@ import {
 } from "react-icons/fa";
 
 import API, { getBackendBaseURL } from "../api";
+import BackButton from "../components/Inventory/BackButton";
 
 /* ── style tokens (Blue & White premium theme) ── */
 const c = {
@@ -314,15 +315,17 @@ const InventoryItemsPage = () => {
     >
       {/* ── hero ── */}
       <div
-        className="relative overflow-hidden px-4 sm:px-6 md:px-8 pt-5 sm:pt-6 pb-8 sm:pb-10 lg:pb-12"
+        className="relative overflow-hidden px-4 sm:px-6 md:px-8 pt-5 sm:pt-6 pb-8 sm:pb-10 xl:pb-12"
         style={{ backgroundImage: "linear-gradient(120deg,#0B1E4D 0%,#123273 45%,#38BDF8 130%)" }}
       >
         {/* decorative glow */}
         <div className="pointer-events-none absolute -top-24 -right-24 w-72 h-72 rounded-full opacity-30 blur-3xl" style={{ background: "#38BDF8" }} />
         <div className="pointer-events-none absolute -bottom-28 -left-16 w-64 h-64 rounded-full opacity-20 blur-3xl" style={{ background: "#1D4ED8" }} />
-
-        <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <BackButton className="shrink-0" />
+        <div className="relative flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
+          
           <div className="flex items-center gap-3.5">
+           
             <div
               className="w-[52px] h-[52px] rounded-[16px] flex items-center justify-center text-white text-[22px] shadow-[0_10px_28px_rgba(0,0,0,0.25)] ring-1 ring-white/25 shrink-0"
               style={{ backgroundImage: "linear-gradient(135deg,#1D4ED8,#38BDF8)" }}
@@ -341,7 +344,7 @@ const InventoryItemsPage = () => {
           <button
             type="button"
             onClick={openAdd}
-            className={`${primaryBtn} w-full lg:w-auto`}
+            className={`${primaryBtn} w-full xl:w-auto`}
             style={primaryBtnStyle}
           >
             <FaPlus className="text-sm" /> Add Item
@@ -349,10 +352,10 @@ const InventoryItemsPage = () => {
         </div>
       </div>
 
-      <div className="px-4 sm:px-6 md:px-8 -mt-5 sm:-mt-6 lg:-mt-7 pb-16">
+      <div className="px-4 sm:px-6 md:px-8 -mt-5 sm:-mt-6 xl:-mt-7 pb-16">
         {/* ── search + filter card ── */}
-        <div className="bg-white border border-[#E7EEFC] rounded-[20px] lg:rounded-[24px] shadow-[0_18px_40px_-16px_rgba(11,30,77,0.18)] p-3 sm:p-3.5 lg:p-4 mb-4 lg:mb-5 flex flex-col lg:flex-row gap-2.5">
-          <div className="relative w-full lg:flex-1 lg:min-w-[220px]">
+        <div className="bg-white border border-[#E7EEFC] rounded-[20px] xl:rounded-[24px] shadow-[0_18px_40px_-16px_rgba(11,30,77,0.18)] p-3 sm:p-3.5 xl:p-4 mb-4 xl:mb-5 flex flex-col xl:flex-row gap-2.5">
+          <div className="relative w-full xl:flex-1 xl:min-w-[220px]">
             <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8B98B8] text-sm" />
             <input
               className={`${fieldCls} pl-11`}
@@ -361,7 +364,7 @@ const InventoryItemsPage = () => {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <div className="relative w-full lg:w-[220px]">
+          <div className="relative w-full xl:w-[220px]">
             <FaLayerGroup className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8B98B8] text-sm pointer-events-none" />
             <select
               className={`${fieldCls} pl-11 appearance-none cursor-pointer`}
@@ -377,8 +380,8 @@ const InventoryItemsPage = () => {
         </div>
 
         {/* ── table card (md and up: real table; below md: card list) ── */}
-        <div className="bg-white border border-[#E7EEFC] rounded-[20px] lg:rounded-[26px] overflow-hidden shadow-[0_20px_50px_-18px_rgba(11,30,77,0.2)]">
-          {/* Table view — visible from md (768px) upward, unchanged on lg+ */}
+        <div className="bg-white border border-[#E7EEFC] rounded-[20px] xl:rounded-[26px] overflow-hidden shadow-[0_20px_50px_-18px_rgba(11,30,77,0.2)]">
+          {/* Table view — visible from md (768px) upward */}
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full min-w-[820px] text-left">
               <thead>

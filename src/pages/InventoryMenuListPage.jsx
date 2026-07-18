@@ -13,6 +13,8 @@ import {
 
 import API from "../api";
 
+import BackButton from "../components/Inventory/BackButton";
+
 // Classic Indian veg/non-veg mark: square outline with a solid dot inside
 const VegMark = ({ size = 18 }) => (
   <svg width={size} height={size} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -189,8 +191,11 @@ const InventoryMenuListPage = () => {
 
       <div className="relative">
         {/* Header */}
+       <BackButton className="shrink-0" />
         <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 mb-6 xl:mb-7">
+          
           <div className="flex items-center gap-3 xl:gap-4">
+            
             <div
               className="w-[44px] h-[44px] xl:w-[52px] xl:h-[52px] rounded-2xl flex items-center justify-center text-white text-[18px] xl:text-[22px] shadow-lg shadow-blue-500/30 shrink-0"
               style={{ background: "linear-gradient(135deg,#2563EB,#0EA5E9)" }}
