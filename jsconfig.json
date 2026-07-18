@@ -1,11 +1,15 @@
 {
   "compilerOptions": {
+    "ignoreDeprecations": "6.0",
+
     "baseUrl": "",
     "paths": {
       "@/*": ["src/*"]
     },
+
     "jsx": "react-jsx",
-    "module": "esnext",
+    "module": "esnext", 
+    
     "target": "es2020",
     "checkJs": false,
     "resolveJsonModule": true,
@@ -14,4 +18,3 @@
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
 }
-
