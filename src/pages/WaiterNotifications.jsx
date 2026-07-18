@@ -249,29 +249,29 @@ const WaiterNotifications = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 sm:p-6">
-      <div className="mx-auto max-w-2xl">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 sm:p-6 lg:p-10">
+      <div className="w-full">
         {/* Header */}
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-8 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate("/restaurant")}
-              className="flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50"
+              className="flex h-11 w-11 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50"
             >
-              <FaArrowLeft className="text-slate-600" />
+              <FaArrowLeft className="text-[18px] text-slate-600" />
             </button>
             <div>
               <h1 className="text-2xl font-bold text-slate-800">Notifications</h1>
-              <p className="text-sm text-slate-500">
+              <p className="text-[19px] text-slate-500">
                 {unreadCount > 0 ? `${unreadCount} unread` : "All caught up"}
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllRead}
-                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+                className="rounded-lg bg-blue-600 px-5 py-2.5 text-[17px] font-semibold text-white transition hover:bg-blue-700"
               >
                 Mark all read
               </button>
@@ -279,16 +279,16 @@ const WaiterNotifications = () => {
             {notifications.length > 0 && (
               <button
                 onClick={handleClearAll}
-                className="flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-slate-200 transition hover:bg-rose-50 hover:text-rose-600"
+                className="flex h-11 w-11 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-slate-200 transition hover:bg-rose-50 hover:text-rose-600"
               >
-                <FaTrash className="text-sm" />
+                <FaTrash className="text-[16px]" />
               </button>
             )}
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="mb-4 flex gap-2 overflow-x-auto pb-2">
+        <div className="mb-6 flex gap-3 overflow-x-auto pb-2">
           {[
             { key: "all", label: "All", count: notifications.length },
             { key: "unread", label: "Unread", count: unreadCount },
@@ -297,24 +297,27 @@ const WaiterNotifications = () => {
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition ${
+              className={`shrink-0 rounded-full px-5 py-2.5 text-[16px] font-semibold transition ${
                 activeTab === tab.key
                   ? "bg-blue-600 text-white shadow-md"
                   : "bg-white text-slate-600 shadow-sm ring-1 ring-slate-200 hover:bg-slate-50"
               }`}
             >
-              {tab.label} {tab.count > 0 && `(${tab.count})`}
+              {tab.label}{" "}
+              {tab.count > 0 && (
+                <span className="text-[15px] font-semibold">({tab.count})</span>
+              )}
             </button>
           ))}
         </div>
 
         {/* Notification List */}
-        <div className="space-y-3">
+        <div className="space-y-4">
           {filteredNotifications.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-2xl bg-white py-16 shadow-sm ring-1 ring-slate-200">
+            <div className="flex flex-col items-center justify-center rounded-2xl bg-white py-20 shadow-sm ring-1 ring-slate-200">
               <FaBell className="mb-4 text-5xl text-slate-300" />
-              <p className="text-lg font-semibold text-slate-600">No notifications</p>
-              <p className="mt-1 text-sm text-slate-400">
+              <p className="text-[22px] font-semibold text-slate-600">No notifications</p>
+              <p className="mt-1 text-[18px] text-slate-400">
                 {activeTab === "ready"
                   ? "Ready orders will appear here"
                   : activeTab === "unread"
@@ -331,28 +334,34 @@ const WaiterNotifications = () => {
                 <div
                   key={notification.id}
                   onClick={() => handleNotificationClick(notification)}
-                  className={`cursor-pointer rounded-2xl border p-4 transition hover:shadow-md ${
+                  className={`cursor-pointer rounded-2xl border p-5 transition hover:shadow-md ${
                     !notification.read ? typeConfig.bg : "bg-white"
                   } ${!notification.read ? "" : "border-slate-200"}`}
                 >
                   <div className="flex gap-4">
                     <div
-                      className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${typeConfig.bg}`}
+                      className={`flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-xl ${typeConfig.bg}`}
                     >
-                      <TypeIcon className={`text-xl ${typeConfig.color}`} />
+                      <TypeIcon className={`text-2xl ${typeConfig.color}`} />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2">
-                        <p className={`font-semibold ${!notification.read ? "text-slate-800" : "text-slate-600"}`}>
+                        <p
+                          className={`text-[23px] font-semibold ${
+                            !notification.read ? "text-slate-800" : "text-slate-600"
+                          }`}
+                        >
                           {notification.title}
                         </p>
                         {!notification.read && (
-                          <span className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-blue-500" />
+                          <span className="mt-2 h-3 w-3 shrink-0 rounded-full bg-blue-500" />
                         )}
                       </div>
-                      <p className="mt-1 text-sm text-slate-500 line-clamp-2">{notification.message}</p>
-                      <div className="mt-2 flex items-center gap-1.5 text-xs text-slate-400">
-                        <FaClock className="text-[10px]" />
+                      <p className="mt-1.5 text-[17px] text-slate-500 line-clamp-2">
+                        {notification.message}
+                      </p>
+                      <div className="mt-2.5 flex items-center gap-1.5 text-[15px] text-slate-400">
+                        <FaClock className="text-[12px]" />
                         {formatTime(notification.createdAt)}
                       </div>
                     </div>
@@ -365,12 +374,14 @@ const WaiterNotifications = () => {
 
         {/* Quick Action */}
         {notifications.length > 0 && (
-          <div className="mt-6 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 p-4 text-white">
-            <p className="font-semibold">View Ready Orders</p>
-            <p className="mt-1 text-sm text-blue-100">Check which orders are ready for pickup</p>
+          <div className="mt-8 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 p-6 text-white">
+            <p className="text-[23px] font-semibold">View Ready Orders</p>
+            <p className="mt-1 text-[18px] text-blue-100">
+              Check which orders are ready for pickup
+            </p>
             <button
               onClick={() => navigate("/restaurant/room-items")}
-              className="mt-3 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-blue-700 transition hover:bg-blue-50"
+              className="mt-4 rounded-lg bg-white px-5 py-2.5 text-[17px] font-semibold text-blue-700 transition hover:bg-blue-50"
             >
               Go to Room Orders →
             </button>
