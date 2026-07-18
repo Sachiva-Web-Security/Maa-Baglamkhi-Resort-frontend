@@ -140,6 +140,14 @@ const Badge = ({ variant, children }) => (
   </span>
 );
 
+// Small labeled field used inside mobile cards (label above value).
+const CardField = ({ label, children }) => (
+  <div>
+    <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{label}</div>
+    <div className="mt-0.5 text-[14px] font-semibold text-slate-700">{children}</div>
+  </div>
+);
+
 const QuickActionCard = ({ icon: Icon, iconGradient, title, description, buttonLabel, onClick }) => (
   <div className="group relative flex w-full flex-col overflow-hidden rounded-[24px] border border-blue-100/50 bg-white p-6 sm:p-7 shadow-[0_4px_20px_rgba(15,23,42,0.06)] transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-[0_20px_45px_-12px_rgba(37,99,235,0.28)]">
     <div
@@ -706,52 +714,99 @@ const HotelDashboardHome = () => {
           ) : recentBookings.length === 0 ? (
             <div className="py-8 text-center text-slate-400">No bookings found.</div>
           ) : (
-            <div className="w-full overflow-hidden rounded-2xl border border-slate-100">
-              <div className="w-full overflow-x-auto">
-                <table className="w-full min-w-[820px] text-left">
-                  <thead className="sticky top-0 z-10 bg-gradient-to-r from-blue-50 to-sky-50/60 text-[15px] md:text-[16px] font-bold uppercase tracking-wide text-slate-500">
-                    <tr>
-                      <th className="py-4 pl-5 pr-6">Booking ID</th>
-                      <th className="py-4 pr-6">Guest Name</th>
-                      <th className="py-4 pr-6">Room No.</th>
-                      <th className="py-4 pr-6">Room Type</th>
-                      <th className="py-4 pr-6">Check-in</th>
-                      <th className="py-4 pr-6">Check-out</th>
-                      <th className="py-4 pr-6">Status</th>
-                      <th className="py-4 pr-6">Amount</th>
-                      <th className="py-4 pr-5">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 text-[16px] md:text-[17px]">
-                    {recentBookings.map((b) => (
-                      <tr key={b.bookingId} className="transition hover:bg-blue-50/40">
-                        <td className="py-4 pl-5 pr-6 font-bold text-slate-800">{b.bookingCode || `BK-${b.bookingId}`}</td>
-                        <td className="py-4 pr-6 text-slate-700">{b.guest_name || "Walk-in Guest"}</td>
-                        <td className="py-4 pr-6 text-slate-600">{b.rooms || "-"}</td>
-                        <td className="py-4 pr-6 text-slate-600">{getRoomType(b.rooms)}</td>
-                        <td className="py-4 pr-6 text-slate-600">{formatDate(b.check_in)}</td>
-                        <td className="py-4 pr-6 text-slate-600">{formatDate(b.check_out)}</td>
-                        <td className="py-4 pr-6">
-                          <span className={`inline-flex items-center rounded-full px-4 py-1.5 text-xs sm:text-[13px] font-bold tracking-wide ${statusPill(b.booking_status)}`}>
-                            {b.booking_status || "Pending"}
-                          </span>
-                        </td>
-                        <td className="py-4 pr-6 font-semibold text-slate-800">{formatCurrency(b.totalAmount)}</td>
-                        <td className="py-4 pr-5">
-                          <button
-                            type="button"
-                            onClick={() => onOpenBooking(b)}
-                            className="rounded-xl border border-blue-100 bg-blue-50/60 p-2.5 text-blue-600 shadow-sm transition hover:bg-gradient-to-br hover:from-blue-600 hover:to-sky-500 hover:text-white"
-                          >
-                            <FaEye className="text-[15px]" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            <>
+              {/* Mobile cards — phone view only */}
+              <div className="space-y-4 sm:hidden">
+                {recentBookings.map((b) => (
+                  <div
+                    key={b.bookingId}
+                    className="rounded-2xl border border-slate-100 bg-white p-4 shadow-[0_2px_10px_rgba(15,23,42,0.05)]"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="text-[15px] font-bold text-slate-800">
+                          {b.bookingCode || `BK-${b.bookingId}`}
+                        </div>
+                        <div className="mt-0.5 text-[14px] text-slate-600">{b.guest_name || "Walk-in Guest"}</div>
+                      </div>
+                      <span
+                        className={`inline-flex shrink-0 items-center rounded-full px-3 py-1 text-[11px] font-bold tracking-wide ${statusPill(
+                          b.booking_status,
+                        )}`}
+                      >
+                        {b.booking_status || "Pending"}
+                      </span>
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-3 border-t border-slate-100 pt-4">
+                      <CardField label="Room No.">{b.rooms || "-"}</CardField>
+                      <CardField label="Room Type">{getRoomType(b.rooms)}</CardField>
+                      <CardField label="Check-in">{formatDate(b.check_in)}</CardField>
+                      <CardField label="Check-out">{formatDate(b.check_out)}</CardField>
+                    </div>
+
+                    <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4">
+                      <CardField label="Amount">{formatCurrency(b.totalAmount)}</CardField>
+                      <button
+                        type="button"
+                        onClick={() => onOpenBooking(b)}
+                        className="rounded-xl border border-blue-100 bg-blue-50/60 p-2.5 text-blue-600 shadow-sm transition hover:bg-gradient-to-br hover:from-blue-600 hover:to-sky-500 hover:text-white"
+                      >
+                        <FaEye className="text-[15px]" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
-            </div>
+
+              {/* Desktop / tablet table */}
+              <div className="hidden w-full overflow-hidden rounded-2xl border border-slate-100 sm:block">
+                <div className="w-full overflow-x-auto">
+                  <table className="w-full min-w-[820px] text-left">
+                    <thead className="sticky top-0 z-10 bg-gradient-to-r from-blue-50 to-sky-50/60 text-[15px] md:text-[16px] font-bold uppercase tracking-wide text-slate-500">
+                      <tr>
+                        <th className="py-4 pl-5 pr-6">Booking ID</th>
+                        <th className="py-4 pr-6">Guest Name</th>
+                        <th className="py-4 pr-6">Room No.</th>
+                        <th className="py-4 pr-6">Room Type</th>
+                        <th className="py-4 pr-6">Check-in</th>
+                        <th className="py-4 pr-6">Check-out</th>
+                        <th className="py-4 pr-6">Status</th>
+                        <th className="py-4 pr-6">Amount</th>
+                        <th className="py-4 pr-5">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 text-[16px] md:text-[17px]">
+                      {recentBookings.map((b) => (
+                        <tr key={b.bookingId} className="transition hover:bg-blue-50/40">
+                          <td className="py-4 pl-5 pr-6 font-bold text-slate-800">{b.bookingCode || `BK-${b.bookingId}`}</td>
+                          <td className="py-4 pr-6 text-slate-700">{b.guest_name || "Walk-in Guest"}</td>
+                          <td className="py-4 pr-6 text-slate-600">{b.rooms || "-"}</td>
+                          <td className="py-4 pr-6 text-slate-600">{getRoomType(b.rooms)}</td>
+                          <td className="py-4 pr-6 text-slate-600">{formatDate(b.check_in)}</td>
+                          <td className="py-4 pr-6 text-slate-600">{formatDate(b.check_out)}</td>
+                          <td className="py-4 pr-6">
+                            <span className={`inline-flex items-center rounded-full px-4 py-1.5 text-xs sm:text-[13px] font-bold tracking-wide ${statusPill(b.booking_status)}`}>
+                              {b.booking_status || "Pending"}
+                            </span>
+                          </td>
+                          <td className="py-4 pr-6 font-semibold text-slate-800">{formatCurrency(b.totalAmount)}</td>
+                          <td className="py-4 pr-5">
+                            <button
+                              type="button"
+                              onClick={() => onOpenBooking(b)}
+                              className="rounded-xl border border-blue-100 bg-blue-50/60 p-2.5 text-blue-600 shadow-sm transition hover:bg-gradient-to-br hover:from-blue-600 hover:to-sky-500 hover:text-white"
+                            >
+                              <FaEye className="text-[15px]" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </>
           )}
         </div>
 
@@ -763,40 +818,72 @@ const HotelDashboardHome = () => {
           ) : recentHistory.length === 0 ? (
             <div className="py-8 text-center text-slate-400">No booking history yet.</div>
           ) : (
-            <div className="w-full overflow-hidden rounded-2xl border border-slate-100">
-              <div className="w-full overflow-x-auto">
-                <table className="w-full min-w-[760px] text-left">
-                  <thead className="sticky top-0 z-10 bg-gradient-to-r from-blue-50 to-sky-50/60 text-[15px] md:text-[16px] font-bold uppercase tracking-wide text-slate-500">
-                    <tr>
-                      <th className="py-4 pl-5 pr-6">Booking ID</th>
-                      <th className="py-4 pr-6">Guest Name</th>
-                      <th className="py-4 pr-6">Room Type</th>
-                      <th className="py-4 pr-6">Check-in</th>
-                      <th className="py-4 pr-6">Check-out</th>
-                      <th className="py-4 pr-6">Total Amount</th>
-                      <th className="py-4 pr-5">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 text-[16px] md:text-[17px]">
-                    {recentHistory.map((row) => (
-                      <tr key={row.bookingId} className="transition hover:bg-blue-50/40">
-                        <td className="py-4 pl-5 pr-6 font-bold text-slate-800">{row.bookingCode || `BK-${row.bookingId}`}</td>
-                        <td className="py-4 pr-6 text-slate-700">{row.guest_name || "Guest"}</td>
-                        <td className="py-4 pr-6 text-slate-600">{getRoomType(row.rooms || row.roomDetails)}</td>
-                        <td className="py-4 pr-6 text-slate-600">{formatDate(row.check_in)}</td>
-                        <td className="py-4 pr-6 text-slate-600">{formatDate(row.check_out)}</td>
-                        <td className="py-4 pr-6 font-semibold text-slate-800">{formatCurrency(row.totalAmount)}</td>
-                        <td className="py-4 pr-5">
-                          <Badge variant={Number(row.remainingAmount) > 0 ? "balance" : "completed"}>
-                            {Number(row.remainingAmount) > 0 ? "Balance Due" : "Completed"}
-                          </Badge>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            <>
+              {/* Mobile cards — phone view only */}
+              <div className="space-y-4 sm:hidden">
+                {recentHistory.map((row) => (
+                  <div
+                    key={row.bookingId}
+                    className="rounded-2xl border border-slate-100 bg-white p-4 shadow-[0_2px_10px_rgba(15,23,42,0.05)]"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="text-[15px] font-bold text-slate-800">
+                          {row.bookingCode || `BK-${row.bookingId}`}
+                        </div>
+                        <div className="mt-0.5 text-[14px] text-slate-600">{row.guest_name || "Guest"}</div>
+                      </div>
+                      <Badge variant={Number(row.remainingAmount) > 0 ? "balance" : "completed"}>
+                        {Number(row.remainingAmount) > 0 ? "Balance Due" : "Completed"}
+                      </Badge>
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-3 border-t border-slate-100 pt-4">
+                      <CardField label="Room Type">{getRoomType(row.rooms || row.roomDetails)}</CardField>
+                      <CardField label="Total Amount">{formatCurrency(row.totalAmount)}</CardField>
+                      <CardField label="Check-in">{formatDate(row.check_in)}</CardField>
+                      <CardField label="Check-out">{formatDate(row.check_out)}</CardField>
+                    </div>
+                  </div>
+                ))}
               </div>
-            </div>
+
+              {/* Desktop / tablet table */}
+              <div className="hidden w-full overflow-hidden rounded-2xl border border-slate-100 sm:block">
+                <div className="w-full overflow-x-auto">
+                  <table className="w-full min-w-[760px] text-left">
+                    <thead className="sticky top-0 z-10 bg-gradient-to-r from-blue-50 to-sky-50/60 text-[15px] md:text-[16px] font-bold uppercase tracking-wide text-slate-500">
+                      <tr>
+                        <th className="py-4 pl-5 pr-6">Booking ID</th>
+                        <th className="py-4 pr-6">Guest Name</th>
+                        <th className="py-4 pr-6">Room Type</th>
+                        <th className="py-4 pr-6">Check-in</th>
+                        <th className="py-4 pr-6">Check-out</th>
+                        <th className="py-4 pr-6">Total Amount</th>
+                        <th className="py-4 pr-5">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 text-[16px] md:text-[17px]">
+                      {recentHistory.map((row) => (
+                        <tr key={row.bookingId} className="transition hover:bg-blue-50/40">
+                          <td className="py-4 pl-5 pr-6 font-bold text-slate-800">{row.bookingCode || `BK-${row.bookingId}`}</td>
+                          <td className="py-4 pr-6 text-slate-700">{row.guest_name || "Guest"}</td>
+                          <td className="py-4 pr-6 text-slate-600">{getRoomType(row.rooms || row.roomDetails)}</td>
+                          <td className="py-4 pr-6 text-slate-600">{formatDate(row.check_in)}</td>
+                          <td className="py-4 pr-6 text-slate-600">{formatDate(row.check_out)}</td>
+                          <td className="py-4 pr-6 font-semibold text-slate-800">{formatCurrency(row.totalAmount)}</td>
+                          <td className="py-4 pr-5">
+                            <Badge variant={Number(row.remainingAmount) > 0 ? "balance" : "completed"}>
+                              {Number(row.remainingAmount) > 0 ? "Balance Due" : "Completed"}
+                            </Badge>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </>
           )}
         </div>
 
@@ -808,47 +895,86 @@ const HotelDashboardHome = () => {
           ) : payments.length === 0 ? (
             <div className="py-8 text-center text-slate-400">No payment records found.</div>
           ) : (
-            <div className="w-full overflow-hidden rounded-2xl border border-slate-100">
-              <div className="w-full overflow-x-auto">
-                <table className="w-full min-w-[760px] text-left">
-                  <thead className="sticky top-0 z-10 bg-gradient-to-r from-blue-50 to-sky-50/60 text-[15px] md:text-[16px] font-bold uppercase tracking-wide text-slate-500">
-                    <tr>
-                      <th className="py-4 pl-5 pr-6">Payment ID</th>
-                      <th className="py-4 pr-6">Booking ID</th>
-                      <th className="py-4 pr-6">Guest Name</th>
-                      <th className="py-4 pr-6">Amount</th>
-                      <th className="py-4 pr-6">Payment Method</th>
-                      <th className="py-4 pr-6">Payment Date</th>
-                      <th className="py-4 pr-5">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 text-[16px] md:text-[17px]">
-                    {payments.map((p) => (
-                      <tr key={p.id} className="transition hover:bg-blue-50/40">
-                        <td className="py-4 pl-5 pr-6 font-bold text-slate-800">PAY-{String(p.id).slice(-4)}</td>
-                        <td className="py-4 pr-6 text-slate-600">{p.bookingCode}</td>
-                        <td className="py-4 pr-6 text-slate-700">{p.guestName}</td>
-                        <td className="py-4 pr-6 font-semibold text-slate-800">{formatCurrency(p.amount)}</td>
-                        <td className="py-4 pr-6 text-slate-600">{p.paymentMode}</td>
-                        <td className="py-4 pr-6 text-slate-600">{formatDate(p.createdAt)}</td>
-                        <td className="py-4 pr-5">
-                          <div className="flex items-center gap-2.5">
-                            <Badge variant={p.status === "Paid" ? "paid" : "pending"}>{p.status}</Badge>
-                            <button
-                              type="button"
-                              className="rounded-lg border border-slate-200 p-2 text-slate-500 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600"
-                              aria-label="Download receipt"
-                            >
-                              <FaDownload className="text-[13px]" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            <>
+              {/* Mobile cards — phone view only */}
+              <div className="space-y-4 sm:hidden">
+                {payments.map((p) => (
+                  <div
+                    key={p.id}
+                    className="rounded-2xl border border-slate-100 bg-white p-4 shadow-[0_2px_10px_rgba(15,23,42,0.05)]"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="text-[15px] font-bold text-slate-800">PAY-{String(p.id).slice(-4)}</div>
+                        <div className="mt-0.5 text-[14px] text-slate-600">{p.guestName}</div>
+                      </div>
+                      <Badge variant={p.status === "Paid" ? "paid" : "pending"}>{p.status}</Badge>
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-3 border-t border-slate-100 pt-4">
+                      <CardField label="Booking ID">{p.bookingCode}</CardField>
+                      <CardField label="Amount">{formatCurrency(p.amount)}</CardField>
+                      <CardField label="Payment Method">{p.paymentMode}</CardField>
+                      <CardField label="Payment Date">{formatDate(p.createdAt)}</CardField>
+                    </div>
+
+                    <div className="mt-4 flex justify-end border-t border-slate-100 pt-4">
+                      <button
+                        type="button"
+                        className="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-[13px] font-semibold text-slate-500 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600"
+                        aria-label="Download receipt"
+                      >
+                        <FaDownload className="text-[13px]" />
+                        Receipt
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
-            </div>
+
+              {/* Desktop / tablet table */}
+              <div className="hidden w-full overflow-hidden rounded-2xl border border-slate-100 sm:block">
+                <div className="w-full overflow-x-auto">
+                  <table className="w-full min-w-[760px] text-left">
+                    <thead className="sticky top-0 z-10 bg-gradient-to-r from-blue-50 to-sky-50/60 text-[15px] md:text-[16px] font-bold uppercase tracking-wide text-slate-500">
+                      <tr>
+                        <th className="py-4 pl-5 pr-6">Payment ID</th>
+                        <th className="py-4 pr-6">Booking ID</th>
+                        <th className="py-4 pr-6">Guest Name</th>
+                        <th className="py-4 pr-6">Amount</th>
+                        <th className="py-4 pr-6">Payment Method</th>
+                        <th className="py-4 pr-6">Payment Date</th>
+                        <th className="py-4 pr-5">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 text-[16px] md:text-[17px]">
+                      {payments.map((p) => (
+                        <tr key={p.id} className="transition hover:bg-blue-50/40">
+                          <td className="py-4 pl-5 pr-6 font-bold text-slate-800">PAY-{String(p.id).slice(-4)}</td>
+                          <td className="py-4 pr-6 text-slate-600">{p.bookingCode}</td>
+                          <td className="py-4 pr-6 text-slate-700">{p.guestName}</td>
+                          <td className="py-4 pr-6 font-semibold text-slate-800">{formatCurrency(p.amount)}</td>
+                          <td className="py-4 pr-6 text-slate-600">{p.paymentMode}</td>
+                          <td className="py-4 pr-6 text-slate-600">{formatDate(p.createdAt)}</td>
+                          <td className="py-4 pr-5">
+                            <div className="flex items-center gap-2.5">
+                              <Badge variant={p.status === "Paid" ? "paid" : "pending"}>{p.status}</Badge>
+                              <button
+                                type="button"
+                                className="rounded-lg border border-slate-200 p-2 text-slate-500 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600"
+                                aria-label="Download receipt"
+                              >
+                                <FaDownload className="text-[13px]" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </>
           )}
         </div>
 

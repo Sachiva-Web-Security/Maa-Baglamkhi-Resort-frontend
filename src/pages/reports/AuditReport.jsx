@@ -84,6 +84,82 @@ function ExpandableJsonCell({ value }) {
   );
 }
 
+function ExpandableJsonBlock({ label, value }) {
+  const hasValue = value && (typeof value !== "object" || Object.keys(value).length);
+
+  return (
+    <details className="group rounded-xl border border-slate-200 bg-slate-50/80 transition-colors duration-300 open:border-sky-300 open:bg-sky-50/60">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 text-[13px] font-bold uppercase tracking-wide text-slate-500 [&::-webkit-details-marker]:hidden">
+        <span className="flex items-center gap-2">
+          {label}
+          {!hasValue ? <span className="text-[13px] font-medium normal-case text-slate-400">--</span> : null}
+        </span>
+        {hasValue ? (
+          <FaChevronDown className="shrink-0 text-xs text-slate-400 transition-transform duration-300 group-open:rotate-180" />
+        ) : null}
+      </summary>
+      {hasValue ? (
+        <div className="border-t border-slate-200/80 px-3 py-2">
+          <pre className="max-h-48 overflow-auto whitespace-pre-wrap break-words text-xs font-medium leading-6 text-slate-600">
+            {JSON.stringify(value, null, 2)}
+          </pre>
+        </div>
+      ) : null}
+    </details>
+  );
+}
+
+function AuditLogCard({ log }) {
+  const statusTone = getStatusTone(log.response_status);
+
+  return (
+    <div className="rounded-2xl border border-slate-200/70 bg-white p-4 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.25)] transition-all duration-300 active:scale-[0.99]">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="text-[13px] font-bold uppercase tracking-[0.14em] text-slate-400">Log #{log.id}</div>
+          <div className="mt-1 truncate text-[16px] font-bold text-slate-900">
+            {log.user_name || `User #${log.user_id || "--"}`}
+          </div>
+          <div className="mt-0.5 truncate text-[14px] font-medium text-slate-500">{log.user_email || "--"}</div>
+        </div>
+        <span className={`inline-flex shrink-0 rounded-full px-3 py-1 text-[14px] font-bold ${statusTone}`}>
+          {log.response_status}
+        </span>
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <span className="inline-flex rounded-full bg-sky-50 px-3 py-1 text-[14px] font-bold text-sky-700 ring-1 ring-sky-200">
+          {log.action}
+        </span>
+        <span className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-[14px] font-bold uppercase text-slate-600 ring-1 ring-slate-200">
+          {log.http_method}
+        </span>
+      </div>
+
+      <div className="mt-3 space-y-1.5 rounded-xl bg-slate-50/80 p-3">
+        <div className="flex items-start justify-between gap-3 text-[14px]">
+          <span className="shrink-0 font-bold text-slate-400">Endpoint</span>
+          <span className="break-all text-right font-medium text-slate-700">{log.endpoint || "--"}</span>
+        </div>
+        <div className="flex items-center justify-between gap-3 text-[14px]">
+          <span className="shrink-0 font-bold text-slate-400">IP</span>
+          <span className="font-medium text-slate-700">{log.ip_address || "--"}</span>
+        </div>
+        <div className="flex items-center justify-between gap-3 text-[14px]">
+          <span className="shrink-0 font-bold text-slate-400">Timestamp</span>
+          <span className="font-medium text-slate-700">{formatDateTime(log.created_at)}</span>
+        </div>
+      </div>
+
+      <div className="mt-3 grid gap-2">
+        <ExpandableJsonBlock label="Request Data" value={log.request_data} />
+        <ExpandableJsonBlock label="Old Value" value={log.old_value} />
+        <ExpandableJsonBlock label="New Value" value={log.new_value} />
+      </div>
+    </div>
+  );
+}
+
 export default function AuditReport() {
   const [logs, setLogs] = useState([]);
   const [summary, setSummary] = useState({
@@ -134,7 +210,7 @@ export default function AuditReport() {
         ...(res.data?.pagination || {}),
       }));
     } catch (err) {
-      setError(err.response?.data?.message || "Unable to load audit logs");
+      setError(err.response?.data?.message || "Audit logs load nahi ho paaye.");
     } finally {
       setLoading(false);
     }
@@ -365,7 +441,7 @@ export default function AuditReport() {
           </div>
         ) : null}
 
-        {/* TABLE */}
+        {/* TABLE / CARDS */}
         <section className="space-y-4 lg:space-y-6">
           {loading ? (
             <div className="flex items-center justify-center rounded-3xl border border-slate-200/70 bg-white/85 py-20 shadow-[0_20px_50px_-24px_rgba(15,23,42,0.15)] backdrop-blur-xl">
@@ -376,7 +452,15 @@ export default function AuditReport() {
             </div>
           ) : logs.length ? (
             <>
-              <div className="overflow-hidden rounded-3xl border border-slate-200/70 bg-white/90 shadow-[0_20px_50px_-24px_rgba(15,23,42,0.15)] backdrop-blur-xl">
+              {/* Mobile: card list (phone only) */}
+              <div className="grid grid-cols-1 gap-3 sm:hidden">
+                {logs.map((log) => (
+                  <AuditLogCard key={log.id} log={log} />
+                ))}
+              </div>
+
+              {/* Tablet/Desktop: table */}
+              <div className="hidden overflow-hidden rounded-3xl border border-slate-200/70 bg-white/90 shadow-[0_20px_50px_-24px_rgba(15,23,42,0.15)] backdrop-blur-xl sm:block">
                 <div className="overflow-x-auto">
                   <table className="min-w-full">
                     <thead className="sticky top-0 z-10 bg-[linear-gradient(180deg,#f8fafc_0%,#eef2ff_100%)]">
