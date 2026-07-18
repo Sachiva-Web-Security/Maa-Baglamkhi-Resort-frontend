@@ -134,7 +134,7 @@ export default function AuditReport() {
         ...(res.data?.pagination || {}),
       }));
     } catch (err) {
-      setError(err.response?.data?.message || "Audit logs load nahi ho paaye.");
+      setError(err.response?.data?.message || "Unable to load audit logs");
     } finally {
       setLoading(false);
     }

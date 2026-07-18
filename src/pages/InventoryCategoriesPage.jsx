@@ -18,6 +18,8 @@ import {
   updateInventoryMasterRecord,
 } from "../services/inventoryMastersService";
 
+import BackButton from "../components/Inventory/BackButton";
+
 // ---- Design tokens (visual only — does not touch any logic below) ----
 const c = {
   line: "#E7EEFB", muted: "#6B7280", text: "#1C231F",
@@ -245,10 +247,14 @@ const InventoryCategoriesPage = () => {
       />
 
       {/* Header */}
-      <div className="relative flex flex-col sm:flex-row sm:items-center items-stretch justify-between flex-wrap gap-4 mb-7">
-        <div className="flex items-center gap-4">
+      <BackButton className="shrink-0" />
+      <div className="relative flex flex-col sm:flex-row sm:items-center items-stretch justify-between flex-wrap gap-3 sm:gap-4 mb-5 sm:mb-7">
+                  
+
+        <div className="flex items-center gap-3 sm:gap-4">
+         
           <div
-            className="flex items-center justify-center shrink-0 text-white w-[46px] h-[46px] sm:w-[58px] sm:h-[58px] text-[19px] sm:text-[24px] rounded-[16px] sm:rounded-[18px]"
+            className="flex items-center justify-center shrink-0 text-white w-[42px] h-[42px] sm:w-[46px] sm:h-[46px] md:w-[58px] md:h-[58px] text-[17px] sm:text-[19px] md:text-[24px] rounded-[14px] sm:rounded-[16px] md:rounded-[18px]"
             style={{
               background: "linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%)",
               boxShadow: "0 10px 24px rgba(37,99,235,0.28)",
@@ -256,11 +262,11 @@ const InventoryCategoriesPage = () => {
           >
             <FaListAlt />
           </div>
-          <div>
-            <h1 className="m-0 leading-tight font-bold text-[22px] sm:text-[38px]" style={{ color: c.navy, letterSpacing: "-0.02em" }}>
+          <div className="min-w-0">
+            <h1 className="m-0 leading-tight font-bold text-[20px] sm:text-[22px] md:text-[38px]" style={{ color: c.navy, letterSpacing: "-0.02em" }}>
               Menu Categories
             </h1>
-            <p className="m-0 mt-1 text-[14.5px] sm:text-[19px]" style={{ color: c.slate }}>
+            <p className="m-0 mt-0.5 sm:mt-1 text-[13px] sm:text-[14.5px] md:text-[19px]" style={{ color: c.slate }}>
               Organize your menu items into categories
             </p>
           </div>
@@ -269,23 +275,23 @@ const InventoryCategoriesPage = () => {
         <button
           type="button"
           onClick={() => { setEditingCat(null); setShowForm(true); }}
-          className={`${primaryBtn} w-full sm:w-auto h-[42px] sm:h-[48px]`}
+          className={`${primaryBtn} w-full sm:w-auto h-[40px] sm:h-[42px] md:h-[48px] text-[13px] sm:text-[14px] md:text-[15px]`}
           style={{
             background: "linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%)",
-            padding: "0 26px",
+            padding: "0 20px sm:px-5 md:px-6",
             boxShadow: "0 10px 24px rgba(37,99,235,0.28)",
           }}
         >
-          <FaPlus className="text-sm" /> Add Category
+          <FaPlus className="text-xs sm:text-sm" /> Add Category
         </button>
       </div>
 
       {/* Search */}
-      <div className="relative mb-6">
-        <div className="relative w-full sm:max-w-md">
-          <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-[14px] sm:text-[16px]" style={{ color: "#94A3B8" }} />
+      <div className="relative mb-4 sm:mb-5 md:mb-6">
+        <div className="relative w-full">
+          <FaSearch className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 text-[13px] sm:text-[14px] md:text-[16px]" style={{ color: "#94A3B8" }} />
           <input
-            className="w-full rounded-[16px] border bg-white pl-12 pr-4 font-medium outline-none transition-all duration-250 h-[52px] sm:h-[58px] text-[14px] sm:text-[15px]"
+            className="w-full rounded-[14px] sm:rounded-[16px] border bg-white pl-10 sm:pl-12 pr-4 font-medium outline-none transition-all duration-250 h-[48px] sm:h-[52px] md:h-[58px] text-[13px] sm:text-[14px] md:text-[15px]"
             style={{ borderColor: c.line, boxShadow: "0 1px 3px rgba(15,42,92,0.05)" }}
             placeholder="Search categories…"
             value={search}
@@ -302,24 +308,25 @@ const InventoryCategoriesPage = () => {
         </div>
       </div>
 
-      {/* Categories table */}
+      {/* Categories - Desktop table / Mobile cards */}
       <div
         className="relative bg-white overflow-hidden"
-        style={{ borderRadius: "22px", border: `1px solid ${c.line}`, boxShadow: "0 1px 3px rgba(15,42,92,0.06)" }}
+        style={{ borderRadius: "18px sm:rounded-[22px] md:rounded-[22px]", border: `1px solid ${c.line}`, boxShadow: "0 1px 3px rgba(15,42,92,0.06)" }}
       >
-        <div className="overflow-x-auto">
+        {/* Desktop / Tablet table (md and up) */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full min-w-[560px] text-left">
             <thead>
               <tr>
                 <th
-                  className="text-left font-bold uppercase tracking-[0.05em] py-4 px-6 border-b"
-                  style={{ fontSize: "13px", color: "#2563EB", borderColor: c.line }}
+                  className="text-left font-bold uppercase tracking-[0.05em] py-3 md:py-4 px-4 md:px-6 border-b"
+                  style={{ fontSize: "12px md:text-[13px]", color: "#2563EB", borderColor: c.line }}
                 >
                   Name
                 </th>
                 <th
-                  className="text-left font-bold uppercase tracking-[0.05em] py-4 px-6 border-b w-[140px]"
-                  style={{ fontSize: "13px", color: "#2563EB", borderColor: c.line }}
+                  className="text-left font-bold uppercase tracking-[0.05em] py-3 md:py-4 px-4 md:px-6 border-b w-[120px] md:w-[140px]"
+                  style={{ fontSize: "12px md:text-[13px]", color: "#2563EB", borderColor: c.line }}
                 >
                   Actions
                 </th>
@@ -328,22 +335,22 @@ const InventoryCategoriesPage = () => {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={2} className="py-14 text-center" style={{ color: c.muted, fontSize: "15px" }}>
+                  <td colSpan={2} className="py-10 md:py-14 text-center" style={{ color: c.muted, fontSize: "14px md:text-[15px]" }}>
                     Loading…
                   </td>
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
                   <td colSpan={2}>
-                    <div className="flex flex-col items-center text-center py-16 px-6">
+                    <div className="flex flex-col items-center text-center py-12 md:py-16 px-4 md:px-6">
                       <div
-                        className="flex items-center justify-center mb-4 w-[56px] h-[56px] sm:w-[72px] sm:h-[72px] rounded-[16px] sm:rounded-[20px]"
+                        className="flex items-center justify-center mb-3 md:mb-4 w-[48px] h-[48px] sm:w-[56px] sm:h-[56px] md:w-[72px] md:h-[72px] rounded-[14px] sm:rounded-[16px] md:rounded-[20px]"
                         style={{ background: "#EAF1FF" }}
                       >
-                        <FaListAlt className="text-[22px] sm:text-[28px]" style={{ color: "#2563EB" }} />
+                        <FaListAlt className="text-[20px] sm:text-[22px] md:text-[28px]" style={{ color: "#2563EB" }} />
                       </div>
-                      <b className="block mb-1.5 text-[18px] sm:text-[21px]" style={{ color: c.navy }}>No categories</b>
-                      <span className="text-[14.5px] sm:text-[17px]" style={{ color: c.muted }}>Add your first category.</span>
+                      <b className="block mb-1 text-[16px] sm:text-[18px] md:text-[21px]" style={{ color: c.navy }}>No categories</b>
+                      <span className="text-[13px] sm:text-[14.5px] md:text-[17px]" style={{ color: c.muted }}>Add your first category.</span>
                     </div>
                   </td>
                 </tr>
@@ -356,21 +363,21 @@ const InventoryCategoriesPage = () => {
                     onMouseEnter={(e) => (e.currentTarget.style.background = "#F7FAFF")}
                     onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                   >
-                    <td className="py-4 px-6">
-                      <div className="flex items-center gap-3.5">
+                    <td className="py-3 md:py-4 px-4 md:px-6">
+                      <div className="flex items-center gap-2.5 sm:gap-3.5">
                         <div
                           className="flex items-center justify-center shrink-0"
-                          style={{ width: "44px", height: "44px", borderRadius: "13px", background: "#EAF1FF" }}
+                          style={{ width: "38px sm:w-[44px] md:w-[44px]", height: "38px sm:h-[44px] md:h-[44px]", borderRadius: "11px sm:rounded-[13px] md:rounded-[13px]", background: "#EAF1FF" }}
                         >
-                          <FaListAlt style={{ color: "#2563EB", fontSize: "18px" }} />
+                          <FaListAlt style={{ color: "#2563EB", fontSize: "16px sm:text-[18px] md:text-[18px]" }} />
                         </div>
-                        <span className="font-bold break-words min-w-0" style={{ fontSize: "17px", color: c.navy }}>
+                        <span className="font-bold break-words min-w-0" style={{ fontSize: "15px sm:text-[17px] md:text-[17px]", color: c.navy }}>
                           {cat.name || "-"}
                         </span>
                       </div>
                     </td>
-                    <td className="py-4 px-6">
-                      <div className="flex gap-2.5">
+                    <td className="py-3 md:py-4 px-4 md:px-6">
+                      <div className="flex gap-2">
                         <button
                           onClick={() => { setEditingCat(cat); setShowForm(true); }}
                           className={editBtn}
@@ -392,6 +399,50 @@ const InventoryCategoriesPage = () => {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile card list (below md) */}
+        <div className="md:hidden p-3 sm:p-4">
+          {loading ? (
+            <div className="py-10 text-center text-[14px]" style={{ color: c.muted }}>Loading…</div>
+          ) : filtered.length === 0 ? (
+            <div className="flex flex-col items-center text-center py-12 px-4">
+              <div className="flex items-center justify-center mb-3 w-[48px] h-[48px] rounded-[14px]" style={{ background: "#EAF1FF" }}>
+                <FaListAlt className="text-[20px]" style={{ color: "#2563EB" }} />
+              </div>
+              <b className="block mb-1 text-[16px]" style={{ color: c.navy }}>No categories</b>
+              <span className="text-[13px]" style={{ color: c.muted }}>Add your first category.</span>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2.5 sm:gap-3">
+              {filtered.map((cat) => (
+                <div key={cat.id} className="bg-white border border-[#E7EEFB] rounded-[18px] sm:rounded-[20px] p-3.5 sm:p-4 shadow-[0_4px_16px_rgba(11,30,77,0.06)]">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="flex items-center justify-center shrink-0 w-[38px] h-[38px] rounded-[12px]" style={{ background: "#EAF1FF" }}>
+                      <FaListAlt className="text-[16px]" style={{ color: "#2563EB" }} />
+                    </div>
+                    <span className="font-bold text-[15px] sm:text-[16px] break-words" style={{ color: c.navy }}>
+                      {cat.name || "-"}
+                    </span>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => { setEditingCat(cat); setShowForm(true); }}
+                      className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-[14px] border border-[#BFD6FB] bg-[#EAF2FE] px-3 py-2 text-[13px] sm:text-[14px] font-bold text-[#1D4ED8] transition-all duration-200 hover:bg-[#DCEAFE] active:scale-[0.97]"
+                    >
+                      <FaEdit className="text-xs" /> Edit
+                    </button>
+                    <button
+                      onClick={() => setDeletingId(cat.id)}
+                      className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-[14px] border border-rose-100 bg-rose-50 px-3 py-2 text-[13px] sm:text-[14px] font-bold text-rose-700 transition-all duration-200 hover:bg-rose-100 active:scale-[0.97]"
+                    >
+                      <FaTrash className="text-xs" /> Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

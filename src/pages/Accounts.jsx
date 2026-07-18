@@ -294,20 +294,20 @@ const AccountsModuleCard = ({
   };
 
   return (
-    <div className="rounded-[30px] border border-blue-100/70 bg-white p-6 shadow-[0_25px_60px_-15px_rgba(30,64,175,0.15)] transition-all duration-300 sm:p-7">
+    <div className="rounded-[20px] border border-blue-100/70 bg-white p-4 shadow-[0_20px_50px_-15px_rgba(30,64,175,0.15)] transition-all duration-300 sm:rounded-[24px] sm:p-5 md:p-6 xl:rounded-[30px] xl:p-7">
         <div>
-          <div className="text-base font-bold uppercase tracking-[0.18em] text-sky-600">{title}</div>
-          <div className="mt-2 text-lg font-medium leading-7 text-slate-500">{subtitle}</div>
+          <div className="text-[13px] font-bold uppercase tracking-[0.18em] text-sky-600 sm:text-base">{title}</div>
+          <div className="mt-1.5 text-base font-medium leading-6 text-slate-500 sm:mt-2 sm:text-lg sm:leading-7">{subtitle}</div>
         </div>
 
-      <form onSubmit={handleSubmit} className="mt-5 grid gap-4 md:grid-cols-2">
+      <form onSubmit={handleSubmit} className="mt-4 grid gap-3 md:grid-cols-2 md:gap-4">
         {fields.map((field) => {
           const isWideField =
             field.type === "textarea" || field.name === "description" || field.name === "notes";
 
           return (
           <label key={field.name} className={isWideField ? "block md:col-span-2" : "block"}>
-            <span className="mb-2 block text-[17px] font-bold uppercase tracking-[0.14em] text-slate-500">
+            <span className="mb-1.5 block text-[14px] font-bold uppercase tracking-[0.12em] text-slate-500 sm:mb-2 sm:text-[16px] sm:tracking-[0.14em]">
               {field.label}
             </span>
             {field.type === "select" ? (
@@ -349,7 +349,7 @@ const AccountsModuleCard = ({
         <button
           type="submit"
           disabled={saving}
-          className="rounded-2xl bg-gradient-to-r from-blue-800 via-blue-700 to-sky-500 px-5 py-3.5 text-[17px] font-bold text-white shadow-lg shadow-blue-900/20 transition-all duration-200 hover:shadow-xl hover:shadow-blue-900/30 hover:-translate-y-0.5 disabled:opacity-60 disabled:translate-y-0 md:col-span-2"
+          className="rounded-2xl bg-gradient-to-r from-blue-800 via-blue-700 to-sky-500 px-4 py-3 text-[15px] font-bold text-white shadow-lg shadow-blue-900/20 transition-all duration-200 hover:shadow-xl hover:shadow-blue-900/30 hover:-translate-y-0.5 disabled:opacity-60 disabled:translate-y-0 md:col-span-2 sm:px-5 sm:py-3.5 sm:text-[17px]"
         >
           {saving ? "Saving..." : editingId ? editLabel || "Update Entry" : submitLabel}
         </button>
@@ -360,7 +360,7 @@ const AccountsModuleCard = ({
               setEditingId(null);
               setForm(initialState);
             }}
-            className="rounded-2xl border border-blue-100 bg-white px-5 py-3.5 text-[17px] font-bold text-slate-700 transition-all duration-200 hover:bg-blue-50 md:col-span-2"
+            className="rounded-2xl border border-blue-100 bg-white px-4 py-3 text-[15px] font-bold text-slate-700 transition-all duration-200 hover:bg-blue-50 md:col-span-2 sm:px-5 sm:py-3.5 sm:text-[17px]"
           >
             Cancel Edit
           </button>
@@ -368,13 +368,13 @@ const AccountsModuleCard = ({
       </form>
 
       {filterNote ? (
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-3.5 text-lg font-medium text-amber-700">
+        <div className="mt-3.5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-base font-medium text-amber-700 sm:mt-4 sm:px-5 sm:py-3.5 sm:text-lg">
           <span>{filterNote}</span>
           {onClearFilter ? (
             <button
               type="button"
               onClick={onClearFilter}
-              className="rounded-full border border-amber-200 bg-white px-4 py-2 text-base font-bold text-amber-700 transition-colors duration-200 hover:bg-amber-100"
+              className="rounded-full border border-amber-200 bg-white px-3.5 py-1.5 text-[13px] font-bold text-amber-700 transition-colors duration-200 hover:bg-amber-100 sm:px-4 sm:py-2 sm:text-base"
             >
               Show All
             </button>
@@ -382,37 +382,37 @@ const AccountsModuleCard = ({
         </div>
       ) : null}
 
-      <div className="mt-6 overflow-x-auto rounded-[24px] border border-blue-100/70 shadow-sm">
-        <table className="min-w-full text-left text-lg">
-          <thead className="bg-gradient-to-r from-blue-950 via-blue-800 to-sky-600 text-[16px] font-bold uppercase tracking-[0.14em] text-white">
+      <div className="mt-4 overflow-x-auto rounded-[18px] border border-blue-100/70 shadow-sm sm:mt-5 sm:rounded-[24px]">
+        <table className="min-w-full text-left text-base">
+          <thead className="bg-gradient-to-r from-blue-950 via-blue-800 to-sky-600 text-[14px] font-bold uppercase tracking-[0.1em] text-white sm:text-[16px] sm:tracking-[0.14em]">
             <tr>
               {columns.map((column) => (
-                <th key={column.key} className="px-5 py-4">{column.label}</th>
+                <th key={column.key} className="px-3 py-3 sm:px-4 sm:py-4 md:px-5 md:py-4">{column.label}</th>
               ))}
-              <th className="px-5 py-4">Actions</th>
+              <th className="px-3 py-3 sm:px-4 sm:py-4 md:px-5 md:py-4">Actions</th>
             </tr>
           </thead>
           <tbody>
             {paginatedRows.map((row) => (
               <tr key={row.id} className="border-t border-blue-50 transition-colors duration-200 hover:bg-sky-50/60">
                 {columns.map((column) => (
-                  <td key={column.key} className="px-5 py-4 text-[17px] font-semibold text-slate-800">
+                  <td key={column.key} className="px-3 py-3 text-[14px] font-semibold text-slate-800 sm:px-4 sm:py-4 sm:text-[16px] md:px-5 md:py-4 md:text-[17px]">
                     {renderModuleValue(row[column.key], column.key)}
                   </td>
                 ))}
-                <td className="px-5 py-4">
-                  <div className="flex flex-wrap gap-2">
+                <td className="px-3 py-3 sm:px-4 sm:py-4 md:px-5 md:py-4">
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2">
                     <button
                       type="button"
                       onClick={() => handleEdit(row)}
-                      className="rounded-full border border-sky-200 bg-sky-50 px-5 py-2.5 text-[15px] font-bold text-sky-700 transition-all duration-200 hover:bg-sky-100 hover:shadow-md"
+                      className="rounded-full border border-sky-200 bg-sky-50 px-3.5 py-2 text-[13px] font-bold text-sky-700 transition-all duration-200 hover:bg-sky-100 hover:shadow-md sm:px-4 sm:py-2 sm:text-[14px] md:px-5 md:py-2.5 md:text-[15px]"
                     >
                       Edit
                     </button>
                     <button
                       type="button"
                       onClick={() => handleDeleteClick(row)}
-                      className="rounded-full border border-rose-200 bg-rose-50 px-5 py-2.5 text-[15px] font-bold text-rose-600 transition-all duration-200 hover:bg-rose-100 hover:shadow-md"
+                      className="rounded-full border border-rose-200 bg-rose-50 px-3.5 py-2 text-[13px] font-bold text-rose-600 transition-all duration-200 hover:bg-rose-100 hover:shadow-md sm:px-4 sm:py-2 sm:text-[14px] md:px-5 md:py-2.5 md:text-[15px]"
                     >
                       Delete
                     </button>
@@ -422,7 +422,7 @@ const AccountsModuleCard = ({
             ))}
             {!rows?.length ? (
               <tr>
-                <td colSpan={columns.length + 1} className="px-5 py-10 text-center text-[21px] font-medium text-slate-400">
+                <td colSpan={columns.length + 1} className="px-3 py-8 text-center text-[16px] font-medium text-slate-400 sm:px-4 sm:py-10 sm:text-[18px] md:text-[21px]">
                   No records yet.
                 </td>
               </tr>
@@ -432,8 +432,8 @@ const AccountsModuleCard = ({
       </div>
 
       {(rows || []).length > ACCOUNTS_MODULE_PAGE_SIZE ? (
-        <div className="mt-5 flex flex-col gap-3 rounded-[24px] border border-blue-100/70 bg-white px-5 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-          <div className="text-lg font-medium text-slate-500">
+        <div className="mt-4 flex flex-col gap-3 rounded-[18px] border border-blue-100/70 bg-white px-4 py-3 shadow-sm sm:mt-5 sm:flex-row sm:items-center sm:justify-between sm:rounded-[24px] sm:px-5 sm:py-4">
+          <div className="text-[13px] font-medium text-slate-500 sm:text-[15px] sm:font-medium">
             Showing{" "}
             <span className="font-semibold text-slate-900">
               {(page - 1) * ACCOUNTS_MODULE_PAGE_SIZE + 1}
@@ -447,12 +447,12 @@ const AccountsModuleCard = ({
             records
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
             <button
               type="button"
               onClick={() => setPage((current) => Math.max(1, current - 1))}
               disabled={page === 1}
-              className="rounded-full border border-blue-100 bg-white px-5 py-3 text-lg font-bold text-slate-500 transition-all duration-200 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-full border border-blue-100 bg-white px-3 py-2 text-[13px] font-bold text-slate-500 transition-all duration-200 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:py-2.5 sm:text-[14px]"
             >
               Previous
             </button>
@@ -466,7 +466,7 @@ const AccountsModuleCard = ({
                   key={`${title}-page-${pageNumber}`}
                   type="button"
                   onClick={() => setPage(pageNumber)}
-                  className={`h-11 min-w-[44px] rounded-full border px-3 text-lg font-bold transition-all duration-200 ${
+                  className={`h-8 min-w-[32px] rounded-full border px-2.5 text-[13px] font-bold transition-all duration-200 sm:h-9 sm:min-w-[36px] sm:px-3 sm:text-[14px] ${
                     isActive
                       ? "border-blue-800 bg-gradient-to-r from-blue-800 to-sky-500 text-white shadow-lg shadow-blue-900/25"
                       : "border-blue-100 bg-white text-slate-500 hover:bg-blue-50"
@@ -481,7 +481,7 @@ const AccountsModuleCard = ({
               type="button"
               onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
               disabled={page === totalPages}
-              className="rounded-full border border-blue-100 bg-white px-5 py-3 text-lg font-bold text-slate-500 transition-all duration-200 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-full border border-blue-100 bg-white px-3 py-2 text-[13px] font-bold text-slate-500 transition-all duration-200 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:py-2.5 sm:text-[14px]"
             >
               Next
             </button>
@@ -954,7 +954,7 @@ const Accounts = () => {
     {
       key: "petty-cash",
       title: "Petty Cash",
-      subtitle: "Small daily cash movements aur approvals ko maintain karein.",
+      subtitle: "Track and manage daily cash movements and approvals with ease.",
       fields: [
         { name: "entryDate", label: "Entry Date", type: "date", required: true },
         {
@@ -1654,8 +1654,7 @@ const Accounts = () => {
                 Accounts tabs workspace
               </h1>
               <p className="max-w-3xl text-[15px] leading-6 text-blue-50/85 sm:text-lg sm:leading-8 xl:text-xl">
-                Petty cash, GST, vendor payment, payroll aur scanner setup ko
-                yahan alag screen par open karke manage karein.
+                Manage petty cash, GST, vendor payments, payroll, and scanner settings from dedicated screens—all in one place.
               </p>
             </div>
           </section>
@@ -1701,57 +1700,57 @@ const Accounts = () => {
                 Manage income, expenses, invoices, and transaction records from
                 one attractive and responsive finance dashboard.
               </p>
-              <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:gap-3">
+              <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-2.5 md:gap-3">
                 <button
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-white px-5 py-3 text-[14px] font-bold text-blue-900 shadow-lg shadow-blue-950/20 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl sm:w-auto sm:justify-start sm:text-[17px]"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-white px-4 py-2.5 text-[13px] font-bold text-blue-900 shadow-lg shadow-blue-950/20 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl sm:w-auto sm:justify-start sm:text-[15px] md:text-[17px]"
                   onClick={() => setShowIncome(true)}
                 >
                   <FaPlus />
                   Add Income
                 </button>
                 <button
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-white px-5 py-3 text-[14px] font-bold text-blue-900 shadow-lg shadow-blue-950/20 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl sm:w-auto sm:justify-start sm:text-[17px]"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-white px-4 py-2.5 text-[13px] font-bold text-blue-900 shadow-lg shadow-blue-950/20 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl sm:w-auto sm:justify-start sm:text-[15px] md:text-[17px]"
                   onClick={() => setShowExpense(true)}
                 >
                   <FaMoneyBillWave />
                   Add Expense
                 </button>
                 <button
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-white px-5 py-3 text-[14px] font-bold text-blue-900 shadow-lg shadow-blue-950/20 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl sm:w-auto sm:justify-start sm:text-[17px]"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-white px-4 py-2.5 text-[13px] font-bold text-blue-900 shadow-lg shadow-blue-950/20 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl sm:w-auto sm:justify-start sm:text-[15px] md:text-[17px]"
                   onClick={() => setShowInvoice(true)}
                 >
                   <FaReceipt />
                   Invoice
                 </button>
                 <button
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-white px-5 py-3 text-[14px] font-bold text-blue-900 shadow-lg shadow-blue-950/20 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl sm:w-auto sm:justify-start sm:text-[17px]"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-white px-4 py-2.5 text-[13px] font-bold text-blue-900 shadow-lg shadow-blue-950/20 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl sm:w-auto sm:justify-start sm:text-[15px] md:text-[17px]"
                   onClick={openAccountsTabsPage}
                 >
                   <FaThLarge />
                   Accounts Tab
                 </button>
                 <button
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-sky-400 to-blue-500 px-5 py-3 text-[14px] font-bold text-white shadow-lg shadow-blue-950/30 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl sm:w-auto sm:justify-start sm:text-[17px]"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-sky-400 to-blue-500 px-4 py-2.5 text-[13px] font-bold text-white shadow-lg shadow-blue-950/30 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl sm:w-auto sm:justify-start sm:text-[15px] md:text-[17px]"
                   onClick={openBankReconciliationModule}
                 >
                   <FaChartLine />
                   Bank Reconciliation
                 </button>
                 <button
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/30 bg-white/10 px-5 py-3 text-[14px] font-bold text-white backdrop-blur-md transition-all duration-200 hover:-translate-y-0.5 hover:border-sky-200 hover:bg-white/20 sm:w-auto sm:justify-start sm:text-[17px]"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/30 bg-white/10 px-4 py-2.5 text-[13px] font-bold text-white backdrop-blur-md transition-all duration-200 hover:-translate-y-0.5 hover:border-sky-200 hover:bg-white/20 sm:w-auto sm:justify-start sm:text-[15px] md:text-[17px]"
                   onClick={openCustomerInvoicesPage}
                 >
                   <FaFileInvoiceDollar className="text-white" />
                   Customer Invoices
                 </button>
-                <label className="w-full rounded-2xl border border-white/25 bg-white/95 px-4 py-3 text-left shadow-lg shadow-blue-950/10 backdrop-blur-md transition-all duration-200 focus-within:border-sky-400 focus-within:ring-4 focus-within:ring-sky-100 sm:w-auto sm:min-w-[220px]">
-                  <span className="block text-[13px] font-semibold uppercase tracking-[0.16em] text-slate-500 sm:text-[15px] sm:tracking-[0.2em]">
+                <label className="w-full rounded-2xl border border-white/25 bg-white/95 px-3.5 py-2.5 text-left shadow-lg shadow-blue-950/10 backdrop-blur-md transition-all duration-200 focus-within:border-sky-400 focus-within:ring-4 focus-within:ring-sky-100 sm:w-auto sm:min-w-[180px] md:min-w-[220px]">
+                  <span className="block text-[12px] font-semibold uppercase tracking-[0.14em] text-slate-500 sm:text-[13px] sm:tracking-[0.18em]">
                     Payment Filter
                   </span>
                   <select
                     value={selectedPaymentMode}
                     onChange={(event) => setSelectedPaymentMode(event.target.value)}
-                    className="mt-2 w-full bg-transparent text-[15px] font-semibold text-slate-900 outline-none sm:text-lg"
+                    className="mt-1 w-full bg-transparent text-[14px] font-semibold text-slate-900 outline-none sm:text-[15px] md:text-lg"
                   >
                     {paymentModeOptions.map((mode) => (
                       <option key={mode} value={mode} className="text-slate-900">
@@ -1763,19 +1762,19 @@ const Accounts = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2.5 sm:gap-3 xl:grid-cols-2">
+            <div className="grid grid-cols-2 gap-2 sm:gap-2.5 md:gap-3 xl:grid-cols-2">
               {[
                 { label: "Net Position", value: formatINR(totals.net) },
                 { label: "GST Payable", value: formatINR(totals.gstPayable) },
               ].map((item) => (
-                <div key={item.label} className="rounded-[18px] border border-white/25 bg-white/95 px-3.5 py-3.5 shadow-lg shadow-blue-950/10 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 sm:rounded-[24px] sm:px-5 sm:py-5">
-                  <span className="text-[13px] text-slate-500 sm:text-[16px]">{item.label}</span>
-                  <div className="mt-2 text-2xl font-black leading-none text-slate-900 sm:mt-3 sm:text-4xl">{item.value}</div>
+                <div key={item.label} className="rounded-[14px] border border-white/25 bg-white/95 px-3 py-2.5 shadow-lg shadow-blue-950/10 backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 sm:rounded-[20px] sm:px-4 sm:py-3 md:rounded-[24px] md:px-5 md:py-4 xl:rounded-[24px] xl:px-5 xl:py-4">
+                  <span className="text-[11px] text-slate-500 sm:text-[14px] md:text-[16px]">{item.label}</span>
+                  <div className="mt-1 text-xl font-black leading-none text-slate-900 sm:mt-2 sm:text-2xl md:text-3xl xl:text-4xl">{item.value}</div>
                 </div>
               ))}
             </div>
 
-            <div className="mt-3 grid grid-cols-2 gap-2.5 sm:mt-4 sm:gap-3 xl:grid-cols-4">
+            <div className="mt-2 grid grid-cols-2 gap-2 sm:mt-3 sm:gap-3 md:grid-cols-2 xl:grid-cols-4">
               {[
                 {
                   label: "Today's Payments",
@@ -1808,22 +1807,22 @@ const Accounts = () => {
               ].map((card) => (
                 <div
                   key={card.label}
-                  className="rounded-[18px] border border-white/25 bg-white/95 px-3.5 py-3.5 shadow-lg shadow-blue-950/10 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 sm:rounded-[22px] sm:px-5 sm:py-4"
+                  className="rounded-[14px] border border-blue-100/70 bg-white px-3 py-3 shadow-[0_10px_30px_-10px_rgba(30,64,175,0.15)] sm:rounded-[20px] sm:px-4 sm:py-3.5 md:rounded-[22px] md:p-4 xl:rounded-[24px] xl:px-5 xl:py-4"
                 >
-                  <div className="text-[12px] font-semibold uppercase tracking-[0.14em] text-slate-500 sm:text-[13px] sm:tracking-[0.18em]">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-500 sm:text-[12px] sm:tracking-[0.14em] md:text-[13px]">
                     {card.label}
                   </div>
-                  <div className={`mt-2 text-2xl font-black leading-none ${card.tone}`}>
+                  <div className={`mt-1 text-xl font-black leading-none sm:text-2xl md:text-2xl xl:text-2xl xl:mt-2 ${card.tone}`}>
                     {card.value}
                   </div>
-                  <div className="mt-1 text-[13px] text-slate-400">{card.note}</div>
+                  <div className="mt-1 text-[11px] leading-4 text-slate-400 sm:text-[12px] sm:leading-5 md:text-[13px] md:leading-5">{card.note}</div>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 md:gap-5 xl:grid-cols-4">
+        <section className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-3 md:gap-4 xl:grid-cols-4">
           {[
             {
               label: "Selected Payment Mode",
@@ -1862,24 +1861,24 @@ const Accounts = () => {
             return (
               <div
                 key={item.label}
-                className="group rounded-[20px] border border-blue-100/70 bg-white p-4 shadow-[0_20px_50px_-15px_rgba(30,64,175,0.15)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_28px_60px_-15px_rgba(30,64,175,0.22)] sm:rounded-[24px] sm:p-5 xl:rounded-[30px] xl:p-6"
+                className="group rounded-[18px] border border-blue-100/70 bg-white p-3.5 shadow-[0_10px_30px_-10px_rgba(30,64,175,0.15)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_15px_40px_-10px_rgba(30,64,175,0.22)] sm:rounded-[24px] sm:p-4 md:rounded-[26px] md:p-5 xl:rounded-[30px] xl:p-6"
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="text-[13px] font-semibold uppercase tracking-[0.1em] text-slate-400 sm:text-[15px] sm:tracking-[0.14em] xl:text-[17px] xl:tracking-[0.16em]">
+                <div className="flex items-start justify-between gap-2 sm:gap-3">
+                  <div className="text-[12px] font-semibold uppercase tracking-[0.08em] text-slate-400 sm:text-[13px] sm:tracking-[0.12em] md:text-[15px] md:tracking-[0.14em] xl:text-[17px] xl:tracking-[0.16em]">
                     {item.label}
                   </div>
-                  <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${item.iconBg} text-lg shadow-sm transition-transform duration-300 group-hover:scale-110 sm:h-11 sm:w-11 sm:rounded-2xl xl:h-12 xl:w-12 xl:text-xl`}>
+                  <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${item.iconBg} text-base shadow-sm transition-transform duration-300 group-hover:scale-110 sm:h-10 sm:w-10 sm:rounded-xl sm:text-lg md:h-11 md:w-11 md:rounded-2xl xl:h-12 xl:w-12 xl:text-xl`}>
                     <Icon />
                   </span>
                 </div>
-                <div className={`mt-3 text-xl font-black sm:text-2xl xl:mt-4 xl:text-3xl ${item.tone}`}>{item.value}</div>
-                <div className="mt-2 text-[13px] leading-5 text-slate-500 sm:text-[15px] xl:text-[17px] xl:leading-6">{item.note}</div>
+                <div className={`mt-2 text-lg font-black sm:text-xl md:text-2xl xl:mt-3 xl:text-3xl ${item.tone}`}>{item.value}</div>
+                <div className="mt-1.5 text-[12px] leading-4 text-slate-500 sm:text-[13px] sm:leading-5 md:text-[15px] xl:text-[17px] xl:leading-6">{item.note}</div>
               </div>
             );
           })}
         </section>
 
-        <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 md:gap-5 xl:grid-cols-4">
+        <section className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-3 md:gap-4 xl:grid-cols-4">
           {[
             { label: "Total Income", value: formatINR(totals.income), icon: FaMoneyBillWave, tone: "emerald" },
             { label: "Total Expense", value: formatINR(totals.expense), icon: FaReceipt, tone: "rose" },
@@ -1898,14 +1897,14 @@ const Accounts = () => {
             return (
               <div
                 key={card.label}
-                className="group rounded-[20px] border border-blue-100/70 bg-white p-4 shadow-[0_20px_50px_-15px_rgba(30,64,175,0.15)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_28px_60px_-15px_rgba(30,64,175,0.22)] sm:rounded-[24px] sm:p-5 xl:rounded-[30px] xl:p-6"
+                className="group rounded-[18px] border border-blue-100/70 bg-white p-3.5 shadow-[0_10px_30px_-10px_rgba(30,64,175,0.15)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_15px_40px_-10px_rgba(30,64,175,0.22)] sm:rounded-[24px] sm:p-4 md:rounded-[26px] md:p-5 xl:rounded-[30px] xl:p-6"
               >
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start justify-between gap-2 sm:gap-3">
                   <div>
-                    <div className="text-[13px] font-semibold uppercase tracking-[0.1em] text-slate-400 sm:text-[15px] sm:tracking-[0.14em] xl:text-[17px] xl:tracking-[0.16em]">{card.label}</div>
-                    <div className="mt-2 text-2xl font-black leading-none text-slate-900 sm:mt-3 sm:text-[32px] xl:mt-4 xl:text-[38px]">{card.value}</div>
+                    <div className="text-[12px] font-semibold uppercase tracking-[0.08em] text-slate-400 sm:text-[13px] sm:tracking-[0.12em] md:text-[15px] xl:text-[17px] xl:tracking-[0.16em]">{card.label}</div>
+                    <div className="mt-1 text-[22px] font-black leading-none text-slate-900 sm:text-[28px] md:text-[32px] xl:mt-3 xl:text-[38px]">{card.value}</div>
                   </div>
-                  <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-lg shadow-sm transition-transform duration-300 group-hover:scale-110 sm:h-12 sm:w-12 sm:rounded-2xl xl:h-14 xl:w-14 xl:text-2xl ${toneClass}`}>
+                  <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-base shadow-sm transition-transform duration-300 group-hover:scale-110 sm:h-10 sm:w-10 sm:rounded-xl sm:text-lg md:h-11 md:w-11 md:rounded-2xl xl:h-14 xl:w-14 xl:text-2xl ${toneClass}`}>
                     <Icon />
                   </span>
                 </div>
@@ -1914,35 +1913,35 @@ const Accounts = () => {
           })}
         </section>
 
-        <section className="rounded-[20px] border border-blue-100/70 bg-white shadow-[0_20px_50px_-15px_rgba(30,64,175,0.15)] sm:rounded-[24px] xl:rounded-[30px]">
+        <section className="rounded-[20px] border border-blue-100/70 bg-white p-3 shadow-[0_20px_50px_-15px_rgba(30,64,175,0.15)] sm:rounded-[24px] sm:p-4 md:p-5 xl:rounded-[30px]">
           {/* Desktop / tablet table (≥768px) — unchanged structure and data */}
           <div className="hidden overflow-x-auto md:block">
             <table className="min-w-full text-left">
               <thead className="bg-gradient-to-r from-blue-950 via-blue-800 to-sky-600 text-[16px] uppercase tracking-[0.18em] text-white">
                 <tr>
-                  <th className="px-6 py-5 font-bold">Date</th>
-                  <th className="px-6 py-5 font-bold">Type</th>
-                  <th className="px-6 py-5 font-bold">Description</th>
-                  <th className="px-6 py-5 font-bold">Amount</th>
-                  <th className="px-6 py-5 font-bold">Payment Mode</th>
-                  <th className="px-6 py-5 font-bold">Action</th>
+                  <th className="px-4 py-4 font-bold sm:px-5 sm:py-5">Date</th>
+                  <th className="px-4 py-4 font-bold sm:px-5 sm:py-5">Type</th>
+                  <th className="px-4 py-4 font-bold sm:px-5 sm:py-5">Description</th>
+                  <th className="px-4 py-4 font-bold sm:px-5 sm:py-5">Amount</th>
+                  <th className="px-4 py-4 font-bold sm:px-5 sm:py-5">Payment Mode</th>
+                  <th className="px-4 py-4 font-bold sm:px-5 sm:py-5">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {paginatedTransactionRecords.map((r) => (
                   <tr key={r.id} className="border-t border-blue-50 transition-colors duration-200 hover:bg-sky-50/60">
-                    <td className="px-6 py-5 text-[17px] text-slate-500">{r.date}</td>
-                    <td className="px-6 py-5">
-                      <span className={`inline-flex rounded-full border px-4 py-2 text-[15px] font-bold ${r.type === "Income" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-rose-200 bg-rose-50 text-rose-600"}`}>
+                    <td className="px-4 py-3.5 text-[15px] text-slate-500 sm:px-5 sm:py-5 sm:text-[17px]">{r.date}</td>
+                    <td className="px-4 py-3.5 sm:px-5 sm:py-5">
+                      <span className={`inline-flex rounded-full border px-3 py-1.5 text-[13px] font-bold sm:px-4 sm:py-2 sm:text-[15px] ${r.type === "Income" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-rose-200 bg-rose-50 text-rose-600"}`}>
                         {r.type}
                       </span>
                     </td>
-                    <td className="px-6 py-5 text-[17px] text-slate-600">{r.description}</td>
-                    <td className="px-6 py-5 text-[17px] font-bold text-slate-900">{formatINR(r.amount)}</td>
-                    <td className="px-6 py-5 text-[17px] text-slate-500">{r.paymentMode}</td>
-                    <td className="px-6 py-5">
+                    <td className="px-4 py-3.5 text-[15px] text-slate-600 sm:px-5 sm:py-5 sm:text-[17px]">{r.description}</td>
+                    <td className="px-4 py-3.5 text-[15px] font-bold text-slate-900 sm:px-5 sm:py-5 sm:text-[17px]">{formatINR(r.amount)}</td>
+                    <td className="px-4 py-3.5 text-[15px] text-slate-500 sm:px-5 sm:py-5 sm:text-[17px]">{r.paymentMode}</td>
+                    <td className="px-4 py-3.5 sm:px-5 sm:py-5">
                       <button
-                        className="rounded-full border border-sky-200 bg-sky-50 px-5 py-2.5 text-[15px] font-bold text-sky-700 transition-all duration-200 hover:bg-sky-100 hover:shadow-md"
+                        className="rounded-full border border-sky-200 bg-sky-50 px-4 py-2 text-[13px] font-bold text-sky-700 transition-all duration-200 hover:bg-sky-100 hover:shadow-md sm:px-5 sm:py-2.5 sm:text-[15px]"
                         onClick={() => {
                           setSelectedRecord(r);
                           setShowView(true);
@@ -1955,7 +1954,7 @@ const Accounts = () => {
                 ))}
                 {!filteredRecords.length ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-10 text-center text-[21px] text-slate-400">
+                    <td colSpan={6} className="px-4 py-8 text-center text-[18px] text-slate-400 sm:px-6 sm:py-10 sm:text-[21px]">
                       No transaction records match the selected payment mode.
                     </td>
                   </tr>
@@ -1965,53 +1964,53 @@ const Accounts = () => {
           </div>
 
           {/* Mobile card list (<768px) — same data, same handlers, card layout */}
-          <div className="block space-y-3 p-3 md:hidden">
+          <div className="space-y-3 p-2.5 md:hidden">
             {paginatedTransactionRecords.map((r) => (
               <div
                 key={r.id}
-                className="rounded-[18px] border border-blue-100/70 bg-white p-3.5 shadow-[0_10px_30px_-12px_rgba(30,64,175,0.18)] transition-all duration-200"
+                className="rounded-[20px] border border-blue-100/70 bg-white p-4 shadow-[0_10px_30px_-12px_rgba(30,64,175,0.18)] transition-all duration-200"
               >
-                <div className="flex items-start justify-between gap-2">
+                <div className="flex items-start justify-between gap-2.5">
                   <div className="text-[14px] font-bold text-slate-900">{r.description}</div>
-                  <span className={`shrink-0 rounded-full border px-3 py-1 text-[12px] font-bold ${r.type === "Income" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-rose-200 bg-rose-50 text-rose-600"}`}>
+                  <span className={`shrink-0 rounded-full border px-2.5 py-1 text-[12px] font-bold ${r.type === "Income" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-rose-200 bg-rose-50 text-rose-600"}`}>
                     {r.type}
                   </span>
                 </div>
-                <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2">
+                <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2.5">
                   <div>
-                    <div className="text-[13px] font-semibold uppercase tracking-wide text-slate-400">Date</div>
-                    <div className="text-[14px] text-slate-600">{r.date}</div>
+                    <div className="text-[12px] font-semibold uppercase tracking-wide text-slate-400">Date</div>
+                    <div className="text-[14px] font-medium text-slate-700">{r.date}</div>
                   </div>
                   <div>
-                    <div className="text-[13px] font-semibold uppercase tracking-wide text-slate-400">Payment Mode</div>
-                    <div className="text-[14px] text-slate-600">{r.paymentMode}</div>
+                    <div className="text-[12px] font-semibold uppercase tracking-wide text-slate-400">Payment Mode</div>
+                    <div className="text-[14px] font-medium text-slate-700">{r.paymentMode}</div>
                   </div>
                   <div className="col-span-2">
-                    <div className="text-[13px] font-semibold uppercase tracking-wide text-slate-400">Amount</div>
+                    <div className="text-[12px] font-semibold uppercase tracking-wide text-slate-400">Amount</div>
                     <div className="text-[15px] font-bold text-slate-900">{formatINR(r.amount)}</div>
                   </div>
                 </div>
                 <button
-                  className="mt-3.5 w-full rounded-full border border-sky-200 bg-sky-50 px-5 py-2.5 text-[14px] font-bold text-sky-700 transition-all duration-200 hover:bg-sky-100"
+                  className="mt-3.5 w-full rounded-full border border-sky-200 bg-sky-50 px-5 py-2.5 text-[14px] font-bold text-sky-700 transition-all duration-200 hover:bg-sky-100 active:scale-[0.98]"
                   onClick={() => {
                     setSelectedRecord(r);
                     setShowView(true);
                   }}
                 >
-                  View
+                  View Details
                 </button>
               </div>
             ))}
-            {!filteredRecords.length ? (
-              <div className="px-4 py-10 text-center text-[20px] text-slate-400">
+            {!paginatedTransactionRecords.length ? (
+              <div className="rounded-[20px] border border-dashed border-blue-100 bg-blue-50/50 px-4 py-8 text-center text-[15px] text-slate-400">
                 No transaction records match the selected payment mode.
               </div>
             ) : null}
           </div>
 
           {filteredRecords.length > TRANSACTION_PAGE_SIZE ? (
-            <div className="flex flex-col items-center gap-3 border-t border-blue-50 px-4 py-4 sm:px-6 sm:py-5 md:flex-row md:items-center md:justify-between">
-              <div className="text-[14px] text-slate-500 sm:text-[15px]">
+            <div className="flex flex-col items-center gap-3 border-t border-blue-50 px-3 py-4 sm:px-4 sm:py-4 md:flex-row md:items-center md:justify-between">
+              <div className="text-[13px] text-slate-500 sm:text-[15px]">
                 Showing{" "}
                 <span className="font-semibold text-slate-900">
                   {(transactionPage - 1) * TRANSACTION_PAGE_SIZE + 1}
@@ -2025,12 +2024,12 @@ const Accounts = () => {
                 records
               </div>
 
-              <div className="flex flex-wrap items-center justify-center gap-2">
+              <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
                 <button
                   type="button"
                   onClick={() => setTransactionPage((current) => Math.max(1, current - 1))}
                   disabled={transactionPage === 1}
-                  className="rounded-full border border-blue-100 bg-white px-4 py-2.5 text-[14px] font-semibold text-slate-500 transition-all duration-200 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-full border border-blue-100 bg-white px-3 py-1.5 text-[13px] font-semibold text-slate-500 transition-all duration-200 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:py-2.5 sm:text-[14px]"
                 >
                   Previous
                 </button>
@@ -2044,7 +2043,7 @@ const Accounts = () => {
                       key={`transaction-page-${page}`}
                       type="button"
                       onClick={() => setTransactionPage(page)}
-                      className={`h-9 min-w-[36px] rounded-full border px-3 text-[14px] font-bold transition-all duration-200 ${
+                      className={`h-8 min-w-[32px] rounded-full border px-2.5 text-[13px] font-bold transition-all duration-200 sm:h-9 sm:min-w-[36px] sm:px-3 sm:text-[14px] ${
                         isActive
                           ? "border-blue-800 bg-gradient-to-r from-blue-800 to-sky-500 text-white shadow-lg shadow-blue-900/25"
                           : "border-blue-100 bg-white text-slate-500 hover:bg-blue-50"
@@ -2059,7 +2058,7 @@ const Accounts = () => {
                   type="button"
                   onClick={() => setTransactionPage((current) => Math.min(transactionTotalPages, current + 1))}
                   disabled={transactionPage === transactionTotalPages}
-                  className="rounded-full border border-blue-100 bg-white px-4 py-2.5 text-[14px] font-semibold text-slate-500 transition-all duration-200 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-full border border-blue-100 bg-white px-3 py-1.5 text-[13px] font-semibold text-slate-500 transition-all duration-200 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:py-2.5 sm:text-[14px]"
                 >
                   Next
                 </button>
@@ -2375,31 +2374,31 @@ const Accounts = () => {
         </section>
         ) : null}
 
-        <section className="rounded-[30px] border border-blue-100/70 bg-white p-6 shadow-[0_20px_50px_-15px_rgba(30,64,175,0.15)] sm:p-7">
+        <section className="rounded-[20px] border border-blue-100/70 bg-white p-4 shadow-[0_20px_50px_-15px_rgba(30,64,175,0.15)] sm:rounded-[24px] sm:p-5 md:p-6 xl:rounded-[30px] xl:p-7">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <div className="text-[12px] lg:text-[15px] font-semibold uppercase tracking-[0.18em] text-sky-600">
                 Full Accounts Flow
               </div>
-              <h2 className="mt-2 text-[22px] lg:text-[32px] font-black text-slate-900">Extended accounts controls</h2>
-              <p className="mt-3 max-w-3xl text-[12px] lg:text-[17px]  leading-7 text-slate-500">
+              <h2 className="mt-2 text-[20px] lg:text-[32px] font-black text-slate-900">Extended accounts controls</h2>
+              <p className="mt-2 max-w-3xl text-[12px] leading-6 text-slate-500 lg:text-[17px] lg:leading-7">
           “Along with the existing transaction and invoice workflow, bank, petty cash, GST, vendor, purchase, payroll, and profit-center entries are also managed within this module.”
               </p>
             </div>
-            <div className="rounded-[24px] border border-blue-100/70 bg-blue-50/60 px-5 py-4">
-              <div className="text-[14px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+            <div className="rounded-[18px] border border-blue-100/70 bg-blue-50/60 px-4 py-3 sm:rounded-[24px] sm:px-5 sm:py-4">
+              <div className="text-[13px] font-semibold uppercase tracking-[0.18em] text-slate-500 sm:text-[14px]">
                 Profit Center Net
               </div>
-              <div className="mt-3 space-y-2 text-[12px] text-slate-800">
+              <div className="mt-2 space-y-1.5 text-[12px] text-slate-800 sm:mt-3 sm:space-y-2 sm:text-[12px]">
                 {(extendedSummary.profitCenters || []).length ? (
                   extendedSummary.profitCenters.map((center) => (
-                    <div key={center.centerName} className="flex items-center justify-between gap-4">
-                      <span>{center.centerName}</span>
-                      <span className="text-lg font-bold text-slate-900">{formatINR(center.net)}</span>
+                    <div key={center.centerName} className="flex items-center justify-between gap-3">
+                      <span className="text-[13px] sm:text-[14px]">{center.centerName}</span>
+                      <span className="text-base font-bold text-slate-900 sm:text-lg">{formatINR(center.net)}</span>
                     </div>
                   ))
                 ) : (
-                  <div>No profit center breakdown yet.</div>
+                  <div className="text-[13px]">No profit center breakdown yet.</div>
                 )}
               </div>
             </div>
@@ -2407,17 +2406,21 @@ const Accounts = () => {
         </section>
 
         {showIncome && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
-            <div className="w-full max-w-3xl overflow-hidden rounded-[30px] bg-white shadow-[0_30px_90px_rgba(2,32,71,0.3)]">
-              <TransactionForm type="Income" onSubmit={handleAddIncome} onCancel={() => setShowIncome(false)} />
+          <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-slate-950/50 p-0 sm:p-4 backdrop-blur-sm">
+            <div className="flex max-h-[100dvh] w-full max-w-3xl flex-col overflow-hidden rounded-none bg-white shadow-[0_30px_90px_rgba(2,32,71,0.3)] sm:max-h-none sm:rounded-[30px]">
+              <div className="flex-1 overflow-y-auto">
+                <TransactionForm type="Income" onSubmit={handleAddIncome} onCancel={() => setShowIncome(false)} />
+              </div>
             </div>
           </div>
         )}
 
         {showExpense && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
-            <div className="w-full max-w-3xl overflow-hidden rounded-[30px] bg-white shadow-[0_30px_90px_rgba(2,32,71,0.3)]">
-              <TransactionForm type="Expense" onSubmit={handleAddExpense} onCancel={() => setShowExpense(false)} />
+          <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-slate-950/50 p-0 sm:p-4 backdrop-blur-sm">
+            <div className="flex max-h-[100dvh] w-full max-w-3xl flex-col overflow-hidden rounded-none bg-white shadow-[0_30px_90px_rgba(2,32,71,0.3)] sm:max-h-none sm:rounded-[30px]">
+              <div className="flex-1 overflow-y-auto">
+                <TransactionForm type="Expense" onSubmit={handleAddExpense} onCancel={() => setShowExpense(false)} />
+              </div>
             </div>
           </div>
         )}
@@ -2431,16 +2434,16 @@ const Accounts = () => {
         )}
 
         {showView && selectedRecord && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
-            <div className="w-full max-w-3xl overflow-hidden rounded-[30px] bg-white shadow-[0_30px_90px_rgba(2,32,71,0.3)]">
-              <div className="flex items-center justify-between border-b border-blue-50 bg-gradient-to-r from-blue-50 to-sky-50 px-6 py-5">
+          <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-slate-950/50 p-3 backdrop-blur-sm">
+            <div className="w-full max-w-3xl overflow-hidden rounded-[24px] bg-white shadow-[0_30px_90px_rgba(2,32,71,0.3)] sm:rounded-[30px]">
+              <div className="flex flex-col gap-3 border-b border-blue-50 bg-gradient-to-r from-blue-50 to-sky-50 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-5">
                 <div>
-                  <h3 className="text-xl font-black text-slate-900">
+                  <h3 className="text-lg font-black text-slate-900 sm:text-xl">
                     {selectedBookingId
                       ? `Payments for Booking #${selectedBookingId}`
                       : "Record Details"}
                   </h3>
-                  <p className="mt-1 text-[15px] text-slate-500">
+                  <p className="mt-1 text-[14px] text-slate-500 sm:text-[15px]">
                     {selectedBookingId
                       ? `All transactions, invoices, and payments linked to this booking.`
                       : "No booking id found on this record."}
@@ -2451,7 +2454,7 @@ const Accounts = () => {
                     setShowView(false);
                     setSelectedRecord(null);
                   }}
-                  className="rounded-full border border-blue-100 bg-white px-4 py-2 text-[15px] font-bold text-slate-700 transition-all duration-200 hover:bg-blue-50"
+                  className="self-start rounded-full border border-blue-100 bg-white px-4 py-2 text-[14px] font-bold text-slate-700 transition-all duration-200 hover:bg-blue-50 sm:self-auto sm:text-[15px]"
                 >
                   Close
                 </button>
@@ -2499,28 +2502,54 @@ const Accounts = () => {
                         <div className="mb-2 text-[13px] font-semibold uppercase tracking-[0.2em] text-slate-500">
                           Account Transactions
                         </div>
-                        <table className="min-w-full rounded-xl border border-blue-100/70 text-left text-sm">
-                          <thead className="bg-gradient-to-r from-blue-950 via-blue-800 to-sky-600 text-xs uppercase text-white">
-                            <tr>
-                              <th className="px-3 py-2">Date</th>
-                              <th className="px-3 py-2">Type</th>
-                              <th className="px-3 py-2">Description</th>
-                              <th className="px-3 py-2">Amount</th>
-                              <th className="px-3 py-2">Mode</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {group.transactions.map((record) => (
-                              <tr key={record.id} className="border-t border-blue-50">
-                                <td className="px-3 py-2">{record.date}</td>
-                                <td className="px-3 py-2">{record.type}</td>
-                                <td className="px-3 py-2">{record.description}</td>
-                                <td className="px-3 py-2 font-semibold">{formatINR(record.amount)}</td>
-                                <td className="px-3 py-2">{record.paymentMode}</td>
+
+                        {/* Desktop table (≥768px) */}
+                        <div className="hidden md:block overflow-x-auto rounded-xl border border-blue-100/70">
+                          <table className="min-w-full text-left text-sm">
+                            <thead className="bg-gradient-to-r from-blue-950 via-blue-800 to-sky-600 text-xs uppercase text-white">
+                              <tr>
+                                <th className="px-3 py-2">Date</th>
+                                <th className="px-3 py-2">Type</th>
+                                <th className="px-3 py-2">Description</th>
+                                <th className="px-3 py-2">Amount</th>
+                                <th className="px-3 py-2">Mode</th>
                               </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                            </thead>
+                            <tbody>
+                              {group.transactions.map((record) => (
+                                <tr key={record.id} className="border-t border-blue-50">
+                                  <td className="px-3 py-2">{record.date}</td>
+                                  <td className="px-3 py-2">{record.type}</td>
+                                  <td className="px-3 py-2">{record.description}</td>
+                                  <td className="px-3 py-2 font-semibold">{formatINR(record.amount)}</td>
+                                  <td className="px-3 py-2">{record.paymentMode}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+
+                        {/* Mobile cards (<768px) */}
+                        <div className="space-y-2.5 md:hidden">
+                          {group.transactions.map((record) => (
+                            <div key={record.id} className="rounded-[18px] border border-blue-100/70 bg-white p-3.5 shadow-[0_8px_20px_-8px_rgba(30,64,175,0.12)]">
+                              <div className="flex items-center justify-between gap-2">
+                                <span className={`inline-flex rounded-full border px-2.5 py-1 text-[12px] font-bold ${record.type === "Income" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-rose-200 bg-rose-50 text-rose-600"}`}>
+                                  {record.type}
+                                </span>
+                                <span className="text-[14px] font-bold text-slate-900">{formatINR(record.amount)}</span>
+                              </div>
+                              <div className="mt-2.5 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-[13px]">
+                                <span className="font-semibold uppercase tracking-wide text-slate-400">Date</span>
+                                <span className="font-medium text-slate-700">{record.date}</span>
+                                <span className="font-semibold uppercase tracking-wide text-slate-400">Description</span>
+                                <span className="font-medium text-slate-700">{record.description}</span>
+                                <span className="font-semibold uppercase tracking-wide text-slate-400">Mode</span>
+                                <span className="font-medium text-slate-700">{record.paymentMode}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
                     {group.invoices.length > 0 && (
@@ -2528,30 +2557,54 @@ const Accounts = () => {
                         <div className="mb-2 text-[13px] font-semibold uppercase tracking-[0.2em] text-slate-500">
                           Linked Invoices
                         </div>
-                        <table className="min-w-full rounded-xl border border-blue-100/70 text-left text-sm">
-                          <thead className="bg-gradient-to-r from-blue-950 via-blue-800 to-sky-600 text-xs uppercase text-white">
-                            <tr>
-                              <th className="px-3 py-2">Invoice</th>
-                              <th className="px-3 py-2">Guest</th>
-                              <th className="px-3 py-2">Room</th>
-                              <th className="px-3 py-2">Total</th>
-                              <th className="px-3 py-2">Status</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {group.invoices.map((invoice) => (
-                              <tr key={invoice.id} className="border-t border-blue-50">
-                                <td className="px-3 py-2">{invoice.invoice_no || `#${invoice.id}`}</td>
-                                <td className="px-3 py-2">{invoice.customer_name || invoice.guest_name || "-"}</td>
-                                <td className="px-3 py-2">{invoice.room_no || "-"}</td>
-                                <td className="px-3 py-2 font-semibold">{formatINR(invoice.totalAmount || invoice.total_amount || invoice.final_total || 0)}</td>
-                                <td className="px-3 py-2">
-                                  {invoice.payment_status || invoice.status || "-"}
-                                </td>
+
+                        {/* Desktop table (≥768px) */}
+                        <div className="hidden md:block overflow-x-auto rounded-xl border border-blue-100/70">
+                          <table className="min-w-full text-left text-sm">
+                            <thead className="bg-gradient-to-r from-blue-950 via-blue-800 to-sky-600 text-xs uppercase text-white">
+                              <tr>
+                                <th className="px-3 py-2">Invoice</th>
+                                <th className="px-3 py-2">Guest</th>
+                                <th className="px-3 py-2">Room</th>
+                                <th className="px-3 py-2">Total</th>
+                                <th className="px-3 py-2">Status</th>
                               </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                            </thead>
+                            <tbody>
+                              {group.invoices.map((invoice) => (
+                                <tr key={invoice.id} className="border-t border-blue-50">
+                                  <td className="px-3 py-2">{invoice.invoice_no || `#${invoice.id}`}</td>
+                                  <td className="px-3 py-2">{invoice.customer_name || invoice.guest_name || "-"}</td>
+                                  <td className="px-3 py-2">{invoice.room_no || "-"}</td>
+                                  <td className="px-3 py-2 font-semibold">{formatINR(invoice.totalAmount || invoice.total_amount || invoice.final_total || 0)}</td>
+                                  <td className="px-3 py-2">
+                                    {invoice.payment_status || invoice.status || "-"}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+
+                        {/* Mobile cards (<768px) */}
+                        <div className="space-y-2.5 md:hidden">
+                          {group.invoices.map((invoice) => (
+                            <div key={invoice.id} className="rounded-[18px] border border-blue-100/70 bg-white p-3.5 shadow-[0_8px_20px_-8px_rgba(30,64,175,0.12)]">
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="text-[14px] font-bold text-slate-900">{invoice.invoice_no || `#${invoice.id}`}</span>
+                                <span className="text-[14px] font-bold text-blue-900">{formatINR(invoice.totalAmount || invoice.total_amount || invoice.final_total || 0)}</span>
+                              </div>
+                              <div className="mt-2.5 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-[13px]">
+                                <span className="font-semibold uppercase tracking-wide text-slate-400">Guest</span>
+                                <span className="font-medium text-slate-700">{invoice.customer_name || invoice.guest_name || "-"}</span>
+                                <span className="font-semibold uppercase tracking-wide text-slate-400">Room</span>
+                                <span className="font-medium text-slate-700">{invoice.room_no || "-"}</span>
+                                <span className="font-semibold uppercase tracking-wide text-slate-400">Status</span>
+                                <span className="font-medium text-slate-700">{invoice.payment_status || invoice.status || "-"}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
                     {group.transactions.length === 0 && group.invoices.length === 0 && (

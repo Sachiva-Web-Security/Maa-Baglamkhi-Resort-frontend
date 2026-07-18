@@ -67,6 +67,7 @@ const TransactionForm = ({ type, onSubmit, onCancel, initialData = {} }) => {
 
   const title = type === "Expense" ? "Add expense record" : "Add income record";
   const suggestions = DESCRIPTION_SUGGESTIONS[type] || [];
+  const isIncome = type === "Income";
 
   return (
     <form className="accounts-form" onSubmit={handleSubmit}>
@@ -78,7 +79,7 @@ const TransactionForm = ({ type, onSubmit, onCancel, initialData = {} }) => {
      The description, amount, and payment mode will be saved directly in the accounts ledger.
           </p>
         </div>
-        <span className={`accounts-form__badge accounts-form__badge--${type.toLowerCase()}`}>
+        <span className={`accounts-form__badge ${isIncome ? "accounts-form__badge--income" : "accounts-form__badge--expense"}`}>
           {type}
         </span>
       </div>

@@ -461,31 +461,99 @@ const abortController = new AbortController();
     }
   }, [billingPage, billingTotalPages]);
 
+  const renderStatusBadge = (status) => (
+    <span
+      className={`inline-flex rounded-full border px-3 py-1 text-[12px] font-bold sm:px-4 sm:py-1.5 sm:text-sm ${
+        String(status).toLowerCase() === "paid"
+          ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+          : "border-amber-200 bg-amber-50 text-amber-700"
+      }`}
+    >
+      {status}
+    </span>
+  );
+
+  const renderSourceBadge = (source) => (
+    <span
+      className={`inline-flex rounded-full border px-3 py-1 text-[12px] font-bold sm:px-4 sm:py-1.5 sm:text-sm ${
+        source === "Restaurant"
+          ? "border-cyan-200 bg-cyan-50 text-cyan-700"
+          : source === "Banquet"
+          ? "border-violet-200 bg-violet-50 text-violet-700"
+          : "border-emerald-200 bg-emerald-50 text-emerald-700"
+      }`}
+    >
+      {source}
+    </span>
+  );
+
+  const renderActionButton = (record) => {
+    if (record.actionKind === "invoice") {
+      return (
+        <button
+          type="button"
+          onClick={() => navigate(`/invoice/${record.actionId}`)}
+          className="w-full rounded-full border border-slate-200 bg-white px-4 py-2.5 text-[13px] font-bold text-slate-700 sm:w-auto sm:text-sm"
+        >
+          Open Invoice
+        </button>
+      );
+    }
+    if (record.actionKind === "hotel-booking") {
+      return (
+        <button
+          type="button"
+          onClick={() => navigate("/hotel/payment-history", { state: { bookingId: record.actionId } })}
+          className="w-full rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-[13px] font-bold text-emerald-700 sm:w-auto sm:text-sm"
+        >
+          Open Payment History
+        </button>
+      );
+    }
+    if (record.actionKind === "banquet") {
+      return (
+        <button
+          type="button"
+          onClick={() => navigate("/banquet", { state: { focusBookingId: record.actionId, openBanquetBill: true } })}
+          className="w-full rounded-full border border-violet-200 bg-violet-50 px-4 py-2.5 text-[13px] font-bold text-violet-700 sm:w-auto sm:text-sm"
+        >
+          Open Banquet
+        </button>
+      );
+    }
+    return (
+      <span className="inline-flex w-full items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2.5 text-[13px] font-semibold text-slate-500 sm:w-auto sm:text-sm">
+        Restaurant bill record
+      </span>
+    );
+  };
+
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-[linear-gradient(135deg,#f5fbff_0%,#f3f8f4_28%,#fff8f1_58%,#f8fafc_100%)] p-4 sm:p-6 lg:p-8">
+    <div className="relative min-h-screen overflow-x-hidden bg-[linear-gradient(135deg,#f5fbff_0%,#f3f8f4_28%,#fff8f1_58%,#f8fafc_100%)] p-3 sm:p-6 lg:p-8">
       <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute left-[-8%] top-[-6%] h-72 w-72 rounded-full bg-cyan-200/45 blur-3xl sm:h-96 sm:w-96" />
         <div className="absolute right-[-10%] top-[8%] h-72 w-72 rounded-full bg-amber-200/45 blur-3xl sm:h-[28rem] sm:w-[28rem]" />
       </div>
 
-      <div className="space-y-7">
-        <section className="overflow-hidden rounded-[28px] border border-slate-900/10 bg-[linear-gradient(120deg,#071b34_0%,#0d4a53_52%,#162d45_100%)] px-5 py-6 text-white shadow-[0_22px_55px_rgba(15,23,42,0.12)] sm:px-7 sm:py-8">
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(320px,0.95fr)] lg:items-center">
-            <div className="space-y-4">
-              <p className="text-sm font-semibold uppercase tracking-[0.26em] text-cyan-200">
+      <div className="space-y-5 sm:space-y-7">
+        {/* HERO */}
+        <section className="overflow-hidden rounded-[22px] border border-slate-900/10 bg-gradient-to-br from-blue-950 via-blue-800 to-sky-500 px-4 py-5 text-white shadow-[0_22px_55px_rgba(15,23,42,0.12)] sm:rounded-[28px] sm:px-7 sm:py-8">
+          <div className="grid gap-5 sm:gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(320px,0.95fr)] lg:items-center">
+            <div className="space-y-3 sm:space-y-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.26em] text-cyan-200 sm:text-sm">
                 Finance Center
               </p>
-              <h1 className="text-4xl font-black leading-tight sm:text-5xl">
+              <h1 className="text-3xl font-black leading-tight sm:text-4xl lg:text-5xl">
                 Customer invoices full workspace
               </h1>
-              <p className="max-w-3xl text-lg leading-8 text-slate-100/85 sm:text-xl">
+              <p className="max-w-3xl text-base leading-7 text-slate-100/85 sm:text-lg sm:leading-8 lg:text-xl">
                 View hotel, restaurant, and banquet billing records together on one dedicated page.
               </p>
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <button
                   type="button"
                   onClick={() => navigate("/accounts")}
-                  className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-base font-bold text-slate-900 shadow-[0_16px_35px_rgba(255,255,255,0.15)]"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-white px-5 py-3 text-base font-bold text-slate-900 shadow-[0_16px_35px_rgba(255,255,255,0.15)] sm:w-auto"
                 >
                   <FaArrowLeft className="text-cyan-600" />
                   Back To Accounts
@@ -493,12 +561,12 @@ const abortController = new AbortController();
                 <button
                   type="button"
                   onClick={refreshData}
-                  className="inline-flex items-center gap-2 rounded-full border border-cyan-200/40 bg-cyan-400/15 px-5 py-3 text-base font-bold text-white backdrop-blur-md transition hover:border-cyan-200 hover:bg-cyan-400/20"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-cyan-200/40 bg-cyan-400/15 px-5 py-3 text-base font-bold text-white backdrop-blur-md transition hover:border-cyan-200 hover:bg-cyan-400/20 sm:w-auto"
                 >
                   <FaFileInvoiceDollar className="text-cyan-200" />
                   Refresh Invoices
                 </button>
-                <label className="min-w-[220px] rounded-[20px] border border-white/15 bg-white/10 px-4 py-3 text-left backdrop-blur-md">
+                <label className="w-full rounded-[20px] border border-white/15 bg-white/10 px-4 py-3 text-left backdrop-blur-md sm:min-w-[220px] sm:w-auto">
                   <span className="block text-sm font-semibold uppercase tracking-[0.2em] text-cyan-100/80">
                     Payment Filter
                   </span>
@@ -517,7 +585,7 @@ const abortController = new AbortController();
               </div>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
               {[
                 { label: "Billing Records", value: String(combinedBillingRecords.length), tone: "text-cyan-200" },
                 { label: "Combined Total", value: formatINR(filteredBillingTotals.finalAmount), tone: "text-white" },
@@ -526,10 +594,10 @@ const abortController = new AbortController();
               ].map((item) => (
                 <div
                   key={item.label}
-                  className="rounded-[22px] border border-white/12 bg-white/10 px-4 py-4 backdrop-blur-md"
+                  className="rounded-[18px] border border-white/12 bg-white/10 px-3 py-3 backdrop-blur-md sm:rounded-[22px] sm:px-4 sm:py-4"
                 >
-                  <span className="text-[16px] font-semibold text-slate-100/85">{item.label}</span>
-                  <div className={`mt-3 text-3xl font-bold leading-none ${item.tone}`}>
+                  <span className="text-[13px] font-semibold text-slate-100/85 sm:text-[16px]">{item.label}</span>
+                  <div className={`mt-2 text-xl font-bold leading-none sm:mt-3 sm:text-3xl ${item.tone}`}>
                     {item.value}
                   </div>
                 </div>
@@ -538,31 +606,33 @@ const abortController = new AbortController();
           </div>
         </section>
 
-        <section className="rounded-[26px] border border-white/60 bg-white/82 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
-          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        {/* MAIN CARD */}
+        <section className="rounded-[20px] border border-white/60 bg-white/82 p-3.5 shadow-[0_18px_45px_rgba(15,23,42,0.08)] sm:rounded-[26px] sm:p-5">
+          <div className="mb-4 flex flex-col gap-3 sm:mb-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <div className="text-base font-semibold uppercase tracking-[0.18em] text-cyan-700">
+              <div className="text-sm font-semibold uppercase tracking-[0.18em] text-cyan-700 sm:text-base">
                 Customer Invoices
               </div>
-              <h2 className="mt-2 text-5xl font-black text-slate-900">
+              <h2 className="mt-2 text-2xl font-black text-slate-900 sm:text-3xl lg:text-5xl">
                 Hotel + restaurant + banquet billing records
               </h2>
-              <p className="mt-2 text-xl text-slate-500">
+              {/* <p className="mt-2 text-[15px] leading-6 text-slate-500 sm:text-base lg:text-xl">
                 Hotel invoices, restaurant bills, and banquet invoices are displayed here together
                 so the Accounts team can track source-wise billing, totals, and payment status.
-              </p>
+              </p> */}
             </div>
-            <div className="rounded-full bg-slate-100 px-5 py-2.5 text-base font-bold text-slate-600">
+            <div className="w-fit rounded-full bg-slate-100 px-4 py-2 text-sm font-bold text-slate-600 sm:px-5 sm:py-2.5 sm:text-base">
               {combinedBillingRecords.length} billing records
             </div>
           </div>
 
-          <div className="mb-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {/* FILTERS */}
+          <div className="mb-4 grid grid-cols-1 gap-3 sm:mb-5 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
             <label className="flex flex-col gap-1">
-              <span className="text-base font-semibold uppercase tracking-[0.16em] text-slate-500">
+              <span className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500 sm:text-base">
                 Billing Source
               </span>
-              <select value={selectedBillingSource} onChange={(event) => setSelectedBillingSource(event.target.value)} className={`${fieldClass} py-3.5 text-lg`}>
+              <select value={selectedBillingSource} onChange={(event) => setSelectedBillingSource(event.target.value)} className={`${fieldClass} py-3 text-base sm:py-3.5 sm:text-lg`}>
                 {billingSourceOptions.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
@@ -572,10 +642,10 @@ const abortController = new AbortController();
             </label>
 
             <label className="flex flex-col gap-1">
-              <span className="text-base font-semibold uppercase tracking-[0.16em] text-slate-500">
+              <span className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500 sm:text-base">
                 Filter By Room
               </span>
-              <select value={selectedInvoiceRoom} onChange={(event) => setSelectedInvoiceRoom(event.target.value)} className={`${fieldClass} py-3.5 text-lg`}>
+              <select value={selectedInvoiceRoom} onChange={(event) => setSelectedInvoiceRoom(event.target.value)} className={`${fieldClass} py-3 text-base sm:py-3.5 sm:text-lg`}>
                 <option value="all">All Rooms</option>
                 {roomFilterOptions.map((room) => (
                   <option key={room} value={room}>
@@ -586,10 +656,10 @@ const abortController = new AbortController();
             </label>
 
             <label className="flex flex-col gap-1">
-              <span className="text-base font-semibold uppercase tracking-[0.16em] text-slate-500">
+              <span className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500 sm:text-base">
                 Filter By Restaurant Table
               </span>
-              <select value={selectedRestaurantTable} onChange={(event) => setSelectedRestaurantTable(event.target.value)} className={`${fieldClass} py-3.5 text-lg`}>
+              <select value={selectedRestaurantTable} onChange={(event) => setSelectedRestaurantTable(event.target.value)} className={`${fieldClass} py-3 text-base sm:py-3.5 sm:text-lg`}>
                 <option value="all">All Tables</option>
                 {restaurantTableOptions.map((tableNo) => (
                   <option key={tableNo} value={tableNo}>
@@ -600,10 +670,10 @@ const abortController = new AbortController();
             </label>
 
             <label className="flex flex-col gap-1">
-              <span className="text-base font-semibold uppercase tracking-[0.16em] text-slate-500">
+              <span className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500 sm:text-base">
                 Filter By Banquet Hall
               </span>
-              <select value={selectedBanquetHall} onChange={(event) => setSelectedBanquetHall(event.target.value)} className={`${fieldClass} py-3.5 text-lg`}>
+              <select value={selectedBanquetHall} onChange={(event) => setSelectedBanquetHall(event.target.value)} className={`${fieldClass} py-3 text-base sm:py-3.5 sm:text-lg`}>
                 <option value="all">All Halls</option>
                 {banquetHallOptions.map((hallName) => (
                   <option key={hallName} value={hallName}>
@@ -614,32 +684,34 @@ const abortController = new AbortController();
             </label>
           </div>
 
-          <div className="mb-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <div className="rounded-[22px] border border-emerald-100 bg-emerald-50/80 p-4">
-              <div className="text-[18px] font-semibold uppercase tracking-[0.16em] text-emerald-700">Filtered Room Total</div>
-              <div className="mt-2 text-3xl font-black text-emerald-800">{formatINR(filteredBillingTotals.roomAmount)}</div>
-              <div className="mt-1 text-[18px] font-semibold text-emerald-700/80">
+          {/* TOTALS */}
+          <div className="mb-4 grid grid-cols-1 gap-3 sm:mb-5 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
+            <div className="rounded-[18px] border border-emerald-100 bg-emerald-50/80 p-3.5 sm:rounded-[22px] sm:p-4">
+              <div className="text-sm font-semibold uppercase tracking-[0.16em] text-emerald-700 sm:text-[18px]">Filtered Room Total</div>
+              <div className="mt-2 text-2xl font-black text-emerald-800 sm:text-3xl">{formatINR(filteredBillingTotals.roomAmount)}</div>
+              <div className="mt-1 text-sm font-semibold text-emerald-700/80 sm:text-[18px]">
                 {selectedInvoiceRoom === "all" ? "Room share across all invoice records." : `Room share for Room ${selectedInvoiceRoom}.`}
               </div>
             </div>
-            <div className="rounded-[22px] border border-cyan-100 bg-cyan-50/80 p-4">
-              <div className="text-[18px] font-semibold uppercase tracking-[0.16em] text-cyan-700">Filtered Restaurant Total</div>
-              <div className="mt-2 text-3xl font-black text-cyan-800">{formatINR(filteredBillingTotals.restaurantAmount)}</div>
-              <div className="mt-1 text-[18px] font-semibold text-cyan-700/80">Restaurant bills plus room-service order totals.</div>
+            <div className="rounded-[18px] border border-cyan-100 bg-cyan-50/80 p-3.5 sm:rounded-[22px] sm:p-4">
+              <div className="text-sm font-semibold uppercase tracking-[0.16em] text-cyan-700 sm:text-[18px]">Filtered Restaurant Total</div>
+              <div className="mt-2 text-2xl font-black text-cyan-800 sm:text-3xl">{formatINR(filteredBillingTotals.restaurantAmount)}</div>
+              <div className="mt-1 text-sm font-semibold text-cyan-700/80 sm:text-[18px]">Restaurant bills plus room-service order totals.</div>
             </div>
-            <div className="rounded-[22px] border border-violet-100 bg-violet-50/80 p-4">
-              <div className="text-[18px] font-semibold uppercase tracking-[0.16em] text-violet-700">Filtered Banquet Total</div>
-              <div className="mt-2 text-3xl font-black text-violet-800">{formatINR(filteredBillingTotals.banquetAmount)}</div>
-              <div className="mt-1 text-[18px] font-semibold text-violet-700/80">Real banquet booking totals from the banquet module.</div>
+            <div className="rounded-[18px] border border-violet-100 bg-violet-50/80 p-3.5 sm:rounded-[22px] sm:p-4">
+              <div className="text-sm font-semibold uppercase tracking-[0.16em] text-violet-700 sm:text-[18px]">Filtered Banquet Total</div>
+              <div className="mt-2 text-2xl font-black text-violet-800 sm:text-3xl">{formatINR(filteredBillingTotals.banquetAmount)}</div>
+              <div className="mt-1 text-sm font-semibold text-violet-700/80 sm:text-[18px]">Real banquet booking totals from the banquet module.</div>
             </div>
-            <div className="rounded-[22px] border border-slate-200 bg-slate-50/90 p-4">
-              <div className="text-[18px] font-semibold uppercase tracking-[0.16em] text-slate-700">Filtered Combined Total</div>
-              <div className="mt-2 text-3xl font-black text-slate-900">{formatINR(filteredBillingTotals.finalAmount)}</div>
-              <div className="mt-1 text-[18px] font-semibold text-slate-700">Combined billed amount for the current filter.</div>
+            <div className="rounded-[18px] border border-slate-200 bg-slate-50/90 p-3.5 sm:rounded-[22px] sm:p-4">
+              <div className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-700 sm:text-[18px]">Filtered Combined Total</div>
+              <div className="mt-2 text-2xl font-black text-slate-900 sm:text-3xl">{formatINR(filteredBillingTotals.finalAmount)}</div>
+              <div className="mt-1 text-sm font-semibold text-slate-700 sm:text-[18px]">Combined billed amount for the current filter.</div>
             </div>
           </div>
 
-          <div className="overflow-x-auto rounded-[22px] border border-slate-200">
+          {/* DESKTOP / TABLET TABLE (>=1280px only, unchanged) */}
+          <div className="hidden overflow-x-auto rounded-[22px] border border-slate-200 xl:block">
             <table className="min-w-full text-left text-base">
               <thead className="bg-slate-50 text-sm uppercase tracking-[0.16em] text-slate-500">
                 <tr>
@@ -657,42 +729,16 @@ const abortController = new AbortController();
               <tbody>
                 {paginatedBillingRecords.map((record) => (
                   <tr key={record.id} className="border-t border-slate-200">
-                    <td className="px-4 py-4">
-                      <span className={`inline-flex rounded-full border px-4 py-1.5 text-sm font-bold ${record.source === "Restaurant" ? "border-cyan-200 bg-cyan-50 text-cyan-700" : record.source === "Banquet" ? "border-violet-200 bg-violet-50 text-violet-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`}>
-                        {record.source}
-                      </span>
-                    </td>
+                    <td className="px-4 py-4">{renderSourceBadge(record.source)}</td>
                     <td className="px-4 py-4 text-lg font-semibold text-slate-900">{record.reference}</td>
                     <td className="px-4 py-4 text-lg text-slate-700">{record.customerName}</td>
                     <td className="px-4 py-4 text-lg text-slate-700">{record.locationLabel}</td>
                     <td className="px-4 py-4 text-lg text-slate-700">{record.date}</td>
                     <td className="px-4 py-4 text-lg font-bold text-slate-900">{formatINR(record.total)}</td>
                     <td className="px-4 py-4 text-lg text-slate-700">{record.paymentMode}</td>
+                    <td className="px-4 py-4">{renderStatusBadge(record.paymentStatus)}</td>
                     <td className="px-4 py-4">
-                      <span className={`inline-flex rounded-full border px-4 py-1.5 text-sm font-bold ${String(record.paymentStatus).toLowerCase() === "paid" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-amber-200 bg-amber-50 text-amber-700"}`}>
-                        {record.paymentStatus}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="flex flex-wrap gap-2">
-                        {record.actionKind === "invoice" ? (
-                          <button type="button" onClick={() => navigate(`/invoice/${record.actionId}`)} className="rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700">
-                            Open Invoice
-                          </button>
-                        ) : record.actionKind === "hotel-booking" ? (
-                          <button type="button" onClick={() => navigate("/hotel/payment-history", { state: { bookingId: record.actionId } })} className="rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-bold text-emerald-700">
-                            Open Payment History
-                          </button>
-                        ) : record.actionKind === "banquet" ? (
-                          <button type="button" onClick={() => navigate("/banquet", { state: { focusBookingId: record.actionId, openBanquetBill: true } })} className="rounded-full border border-violet-200 bg-violet-50 px-4 py-2.5 text-sm font-bold text-violet-700">
-                            Open Banquet
-                          </button>
-                        ) : (
-                          <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-500">
-                            Restaurant bill record
-                          </span>
-                        )}
-                      </div>
+                      <div className="flex flex-wrap gap-2">{renderActionButton(record)}</div>
                     </td>
                   </tr>
                 ))}
@@ -708,13 +754,86 @@ const abortController = new AbortController();
             </table>
           </div>
 
+          {/* MOBILE / TABLET CARD LIST (<1280px) */}
+          <div className="space-y-3 xl:hidden">
+            {paginatedBillingRecords.map((record) => (
+              <div
+                key={record.id}
+                className="rounded-[18px] border border-slate-200 bg-white p-3.5 shadow-sm sm:rounded-[20px] sm:p-4"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    {renderSourceBadge(record.source)}
+                    <div className="mt-2 text-[15px] font-bold text-slate-900 sm:text-lg">
+                      {record.reference}
+                    </div>
+                  </div>
+                  {renderStatusBadge(record.paymentStatus)}
+                </div>
+
+                <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2.5 border-t border-slate-100 pt-3">
+                  <div>
+                    <div className="text-[13px] font-semibold uppercase tracking-wide text-slate-400 sm:text-sm">
+                      Customer
+                    </div>
+                    <div className="text-[14px] font-medium text-slate-700 sm:text-[15px]">
+                      {record.customerName}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-[13px] font-semibold uppercase tracking-wide text-slate-400 sm:text-sm">
+                      Room / Table
+                    </div>
+                    <div className="text-[14px] font-medium text-slate-700 sm:text-[15px]">
+                      {record.locationLabel}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-[13px] font-semibold uppercase tracking-wide text-slate-400 sm:text-sm">
+                      Date
+                    </div>
+                    <div className="text-[14px] font-medium text-slate-700 sm:text-[15px]">
+                      {record.date}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-[13px] font-semibold uppercase tracking-wide text-slate-400 sm:text-sm">
+                      Payment Mode
+                    </div>
+                    <div className="text-[14px] font-medium text-slate-700 sm:text-[15px]">
+                      {record.paymentMode}
+                    </div>
+                  </div>
+                  <div className="col-span-2">
+                    <div className="text-[13px] font-semibold uppercase tracking-wide text-slate-400 sm:text-sm">
+                      Total
+                    </div>
+                    <div className="text-[16px] font-bold text-slate-900 sm:text-lg">
+                      {formatINR(record.total)}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-3.5 flex gap-2 border-t border-slate-100 pt-3.5">
+                  {renderActionButton(record)}
+                </div>
+              </div>
+            ))}
+
+            {!combinedBillingRecords.length ? (
+              <div className="rounded-[18px] border border-slate-200 bg-white px-4 py-8 text-center text-[15px] text-slate-500 sm:rounded-[22px]">
+                No hotel, restaurant, or banquet billing records match the current filters.
+              </div>
+            ) : null}
+          </div>
+
           {combinedBillingRecords.length > BILLING_PAGE_SIZE ? (
-            <div className="flex flex-col gap-3 border-t border-slate-200 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="text-sm text-slate-500">
+            <div className="flex flex-col items-center gap-3 border-t border-slate-200 px-2 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-4">
+              <div className="text-center text-sm text-slate-500 sm:text-left">
                 Showing <span className="font-semibold text-slate-900">{(billingPage - 1) * BILLING_PAGE_SIZE + 1}</span> to <span className="font-semibold text-slate-900">{Math.min(billingPage * BILLING_PAGE_SIZE, combinedBillingRecords.length)}</span> of <span className="font-semibold text-slate-900">{combinedBillingRecords.length}</span> billing records
               </div>
 
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-center justify-center gap-2">
                 <button type="button" onClick={() => setBillingPage((current) => Math.max(1, current - 1))} disabled={billingPage === 1} className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50">
                   Previous
                 </button>

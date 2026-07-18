@@ -94,9 +94,9 @@ const banquteFieldCls =
 const banquteLabelCls =
   "mb-1.5 block text-[11.5px] font-semibold uppercase tracking-[0.08em] text-[#64748B]";
 const banqutePrimaryBtn =
-  "inline-flex items-center justify-center gap-1.5 rounded-[20px] px-4 py-2.5 text-[13.5px] font-bold bg-gradient-to-r from-blue-800 via-blue-700 to-sky-500 text-white shadow-[0_10px_26px_rgba(37,99,235,0.3)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_34px_rgba(37,99,235,0.38)] active:translate-y-0";
+  "inline-flex items-center justify-center gap-1.5 rounded-[18px] sm:rounded-[20px] px-4 py-2.5 text-[13.5px] font-bold bg-gradient-to-r from-blue-800 via-blue-700 to-sky-500 text-white shadow-[0_10px_26px_rgba(37,99,235,0.3)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_34px_rgba(37,99,235,0.38)] active:translate-y-0";
 const banquteGhostBtn =
-  "inline-flex items-center justify-center gap-1.5 rounded-[20px] px-4 py-2.5 text-[13.5px] font-bold border border-[#E1E7F5] text-[#0B1B33] bg-white hover:border-blue-300 hover:bg-blue-50/60 transition-all duration-300";
+  "inline-flex items-center justify-center gap-1.5 rounded-[18px] sm:rounded-[20px] px-4 py-2.5 text-[13.5px] font-bold border border-[#E1E7F5] text-[#0B1B33] bg-white hover:border-blue-300 hover:bg-blue-50/60 transition-all duration-300";
 const banquteDangerBtn =
   "inline-flex items-center justify-center gap-1 rounded-[18px] px-2.5 py-1.5 text-[12px] font-bold border border-rose-100 bg-rose-50 text-rose-700 hover:bg-rose-100 hover:shadow-sm transition-all duration-300";
 
@@ -149,13 +149,13 @@ const bookingFilterDefaults = {
 };
 
 const inputCls =
-  "w-full h-14 rounded-[18px] border border-[#E1E7F5] bg-white px-4 py-3 text-[17px] font-semibold text-slate-900 shadow-[0_2px_10px_rgba(15,40,90,0.05)] outline-none transition-all duration-300 placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 sm:text-lg";
+  "w-full h-14 rounded-[18px] border border-[#E1E7F5] bg-white px-4 py-3 text-[14px] font-semibold text-slate-900 shadow-[0_2px_10px_rgba(15,40,90,0.05)] outline-none transition-all duration-300 placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 sm:text-[16px]";
 
 const labelCls =
-  "mb-2 block text-[17px] font-bold uppercase tracking-[0.16em] text-slate-500";
+  "mb-2 block text-[14px] font-bold uppercase tracking-[0.16em] text-slate-500 sm:text-[17px]";
 
 const modalCloseBtnCls =
-  "rounded-full border border-blue-100 bg-white px-4 py-2 text-[17px] font-bold text-slate-700 transition-all duration-300 hover:border-blue-300 hover:text-blue-700 hover:shadow-sm";
+  "rounded-full border border-blue-100 bg-white px-3 py-1.5 text-[14px] font-bold text-slate-700 transition-all duration-300 hover:border-blue-300 hover:text-blue-700 hover:shadow-sm sm:px-4 sm:py-2 sm:text-[17px]";
 
 const statIcons = [FaCalendarAlt, FaCheckCircle, FaReceipt, FaUsers];
 
@@ -166,22 +166,23 @@ function ModalShell({
   children,
   widthClass = "max-w-5xl",
   heightClass = "h-[min(88vh,760px)]",
+  wideClass,
 }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-blue-950/55 p-3 backdrop-blur-md sm:p-4">
-      <div className={`w-full ${widthClass}`}>
+      <div className={`w-full ${widthClass} ${wideClass ? `xl:${wideClass}` : ""}`}>
         <div
-          className={`mx-auto flex w-full flex-col overflow-hidden rounded-[32px] border border-white/60 bg-[linear-gradient(180deg,#ffffff_0%,#f5f9ff_100%)] p-5 shadow-[0_40px_110px_rgba(15,40,90,0.32)] sm:p-8 ${heightClass}`}
+          className={`mx-auto flex w-full flex-col overflow-hidden rounded-[28px] border border-white/60 bg-[linear-gradient(180deg,#ffffff_0%,#f5f9ff_100%)] p-4 shadow-[0_40px_110px_rgba(15,40,90,0.32)] sm:p-6 ${heightClass}`}
         >
-          <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
             <div>
               {eyebrow ? (
-                <p className="text-[15px] font-bold uppercase tracking-[0.24em] text-sky-500">
+                <p className="text-[13px] font-bold uppercase tracking-[0.24em] text-sky-500 sm:text-[15px]">
                   {eyebrow}
                 </p>
               ) : null}
               {title ? (
-                <h3 className="mt-1 text-[32px] font-black text-blue-950 sm:text-[34px]">
+                <h3 className="mt-1 text-[24px] font-black text-blue-950 sm:text-[32px]">
                   {title}
                 </h3>
               ) : null}
@@ -240,19 +241,19 @@ function PaginationControls({
     });
 
   return (
-    <div className="flex flex-col gap-3 rounded-[22px] border border-[#E1E7F5] bg-white px-4 py-4 shadow-[0_8px_24px_rgba(15,40,90,0.06)] lg:flex-row lg:items-center lg:justify-between">
+    <div className="flex flex-col gap-3 rounded-[18px] sm:rounded-[20px] sm:rounded-[22px] border border-[#E1E7F5] bg-white px-3 py-3 shadow-[0_8px_24px_rgba(15,40,90,0.06)] lg:flex-row lg:items-center lg:justify-between">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
-        <div className="text-[17px] font-bold text-slate-600">
+        <div className="text-[14px] font-bold text-slate-600 sm:text-[17px]">
           {label} Page {page} of {totalPages}
           {startItem && endItem ? ` • Showing ${startItem}-${endItem} of ${totalItems}` : ""}
         </div>
         {pageSizeOptions?.length && onPageSizeChange ? (
-          <label className="flex items-center gap-2 text-[16px] font-bold uppercase tracking-[0.14em] text-slate-500">
+          <label className="flex items-center gap-2 text-[13px] font-bold uppercase tracking-[0.14em] text-slate-500 sm:text-[14px]">
             Rows
             <select
               value={pageSize}
               onChange={(event) => onPageSizeChange(Number(event.target.value))}
-              className="rounded-full border border-blue-100 bg-white px-3 py-2 text-[16px] font-bold text-slate-700 outline-none transition-all duration-300 focus:border-blue-300"
+              className="rounded-full border border-blue-100 bg-white px-3 py-2 text-[13px] font-bold text-slate-700 outline-none transition-all duration-300 focus:border-blue-300 sm:text-[14px]"
             >
               {pageSizeOptions.map((option) => (
                 <option key={option} value={option}>
@@ -268,7 +269,7 @@ function PaginationControls({
           type="button"
           onClick={() => onChange(Math.max(1, page - 1))}
           disabled={page === 1}
-          className="rounded-full border border-blue-100 px-4 py-2.5 text-[17px] font-bold text-slate-700 transition-all duration-300 hover:border-blue-300 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-full border border-blue-100 px-3 py-2 text-[13px] font-bold text-slate-700 transition-all duration-300 hover:border-blue-300 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:py-2.5 sm:text-[17px]"
         >
           Previous
         </button>
@@ -279,12 +280,12 @@ function PaginationControls({
           return (
             <div key={pageNumber} className="flex items-center gap-2">
               {shouldShowGap ? (
-                <span className="px-1 text-[17px] font-bold text-slate-300">...</span>
+                <span className="px-1 text-[14px] font-bold text-slate-300 sm:text-[17px]">...</span>
               ) : null}
               <button
                 type="button"
                 onClick={() => onChange(pageNumber)}
-                className={`h-10 min-w-[40px] rounded-full px-3 text-[17px] font-bold transition-all duration-300 ${
+                className={`h-9 min-w-[36px] rounded-full px-2.5 text-[13px] font-bold transition-all duration-300 sm:h-10 sm:min-w-[40px] sm:px-3 sm:text-[17px] ${
                   pageNumber === page
                     ? "bg-gradient-to-r from-blue-800 to-sky-500 text-white shadow-[0_10px_25px_rgba(37,99,235,0.3)]"
                     : "border border-blue-100 bg-white text-slate-700 hover:border-blue-300 hover:text-blue-700"
@@ -299,7 +300,7 @@ function PaginationControls({
           type="button"
           onClick={() => onChange(Math.min(totalPages, page + 1))}
           disabled={page === totalPages}
-          className="rounded-full border border-blue-100 px-4 py-2.5 text-[17px] font-bold text-slate-700 transition-all duration-300 hover:border-blue-300 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-full border border-blue-100 px-3 py-2 text-[13px] font-bold text-slate-700 transition-all duration-300 hover:border-blue-300 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:py-2.5 sm:text-[17px]"
         >
           Next
         </button>
@@ -332,7 +333,7 @@ function resolveBanquetHallImage(image) {
 
 function getReservationStatusBadgeClass(status) {
   const baseClass =
-    "inline-flex items-center rounded-full border px-3 py-1 text-[15px] font-bold uppercase tracking-[0.1em] shadow-[0_2px_8px_rgba(15,40,90,0.05)] sm:text-[16px]";
+    "inline-flex items-center rounded-full border px-2.5 py-1 text-[12px] font-bold uppercase tracking-[0.1em] shadow-[0_2px_8px_rgba(15,40,90,0.05)] sm:px-3 sm:py-1 sm:text-[14px]";
 
   switch (status) {
     case "Confirmed":
@@ -352,7 +353,7 @@ function getReservationStatusBadgeClass(status) {
 
 function getPaymentStatusBadgeClass(status) {
   const baseClass =
-    "inline-flex items-center rounded-full border px-3 py-1 text-[15px] font-bold shadow-[0_2px_8px_rgba(15,40,90,0.05)] sm:text-[16px]";
+    "inline-flex items-center rounded-full border px-2.5 py-1 text-[12px] font-bold shadow-[0_2px_8px_rgba(15,40,90,0.05)] sm:px-3 sm:py-1 sm:text-[14px]";
 
   switch (status) {
     case "Paid":
@@ -1868,7 +1869,7 @@ const Banquet = () => {
               <>
               <div className="hidden overflow-x-auto lg:block">
                 <table className="min-w-full text-left text-[17px]">
-                <thead className="sticky top-0 z-10 bg-[linear-gradient(180deg,#f4f9ff_0%,#e8f2ff_100%)] text-[16px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                <thead className="sticky top-0 z-10 bg-[linear-gradient(180deg,#f4f9ff_0%,#e8f2ff_100%)] text-[13px] sm:text-[14px] font-bold uppercase tracking-[0.16em] text-slate-500">
                     <tr>
                       <th className="px-4 py-4">Image</th>
                       <th className="px-4 py-4">Hall Name</th>
@@ -1901,7 +1902,7 @@ const Banquet = () => {
                                   hallId: hall.id,
                                 }))
                               }
-                              className="flex h-[76px] w-[76px] items-center justify-center overflow-hidden rounded-[20px] border border-blue-100 bg-slate-50 shadow-sm transition-all duration-300 hover:border-blue-300 hover:shadow-[0_12px_30px_rgba(37,99,235,0.18)]"
+                              className="flex h-[76px] w-[76px] items-center justify-center overflow-hidden rounded-[18px] sm:rounded-[20px] border border-blue-100 bg-slate-50 shadow-sm transition-all duration-300 hover:border-blue-300 hover:shadow-[0_12px_30px_rgba(37,99,235,0.18)]"
                             >
                               {hallImage ? (
                                 <img
@@ -1931,7 +1932,7 @@ const Banquet = () => {
                                 {hall.name || "Unnamed Hall"}
                               </div>
                             </button>
-                            <p className="mt-1 max-w-[34ch] text-[16px] leading-7 text-slate-500">
+                            <p className="mt-1 max-w-[34ch] text-[13px] sm:text-[14px] leading-7 text-slate-500">
                               Elegant venue setup for weddings, celebrations,
                               conferences and premium social events.
                             </p>
@@ -2001,7 +2002,7 @@ const Banquet = () => {
                   return (
                     <div
                       key={hall.id}
-                      className={`rounded-[22px] border p-3 shadow-[0_8px_24px_rgba(15,40,90,0.06)] transition-all duration-300 ${
+                      className={`rounded-[22px] border p-3 sm:p-4 shadow-[0_8px_24px_rgba(15,40,90,0.06)] transition-all duration-300 ${
                         isSelected
                           ? "border-blue-300 bg-blue-50/70"
                           : "border-[#E1E7F5] bg-white"
@@ -2013,7 +2014,7 @@ const Banquet = () => {
                           onClick={() =>
                             setWizard((prev) => ({ ...prev, hallId: hall.id }))
                           }
-                          className="mx-auto flex h-40 w-full max-w-[280px] shrink-0 items-center justify-center overflow-hidden rounded-[20px] border border-blue-100 bg-slate-50 shadow-sm sm:mx-0 sm:h-20 sm:w-20 sm:max-w-none"
+                          className="mx-auto flex h-32 w-full max-w-[240px] shrink-0 items-center justify-center overflow-hidden rounded-[18px] sm:rounded-[20px] border border-blue-100 bg-slate-50 shadow-sm sm:mx-0 sm:h-20 sm:w-20 sm:max-w-none"
                         >
                           {hallImage ? (
                             <img
@@ -2035,7 +2036,7 @@ const Banquet = () => {
                             }
                             className="text-left"
                           >
-                            <div className="text-center text-[18px] font-black text-blue-950 sm:text-left sm:text-[17px]">
+                            <div className="text-center text-[16px] font-black text-blue-950 sm:text-left sm:text-[17px]">
                               {hall.name || "Unnamed Hall"}
                             </div>
                           </button>
@@ -2057,7 +2058,7 @@ const Banquet = () => {
                           </div>
                         </div>
                       </div>
-                      <div className="mt-3 grid grid-cols-2 gap-2 text-[16px] text-slate-600 sm:text-[15px]">
+                      <div className="mt-3 grid grid-cols-2 gap-2 text-[13px] text-slate-600 sm:text-[15px]">
                         <div>Capacity: <span className="font-bold text-slate-900">{hall.capacity || 0}</span></div>
                         <div>Rate: <span className="font-bold text-slate-900">{formatINR(hall.ratePerHour)}</span></div>
                       </div>
@@ -2065,14 +2066,14 @@ const Banquet = () => {
                         <button
                           type="button"
                           onClick={() => setDetailHall(hall)}
-                          className="min-h-[44px] flex-1 rounded-[18px] border border-blue-200 bg-blue-50 px-3 py-2.5 text-[16px] font-bold text-blue-700 sm:flex-none sm:text-[14px]"
+                          className="min-h-[40px] flex-1 rounded-[16px] border border-blue-200 bg-blue-50 px-3 py-2.5 text-[13px] sm:text-[14px] font-bold text-blue-700 sm:flex-none"
                         >
                           View
                         </button>
                         <button
                           type="button"
                           onClick={() => handleEditHall(hall)}
-                          className="min-h-[44px] flex-1 inline-flex items-center justify-center gap-1 rounded-[18px] border border-amber-200 bg-amber-50 px-3 py-2.5 text-[16px] font-bold text-amber-700 sm:flex-none sm:text-[14px]"
+                          className="min-h-[40px] flex-1 inline-flex items-center justify-center gap-1 rounded-[16px] border border-amber-200 bg-amber-50 px-3 py-2.5 text-[13px] sm:text-[14px] font-bold text-amber-700 sm:flex-none"
                         >
                           <FaEdit />
                           Edit
@@ -2080,7 +2081,7 @@ const Banquet = () => {
                         <button
                           type="button"
                           onClick={() => handleDeleteHall(hall)}
-                          className="min-h-[44px] flex-1 inline-flex items-center justify-center gap-1 rounded-[18px] border border-rose-200 bg-rose-50 px-3 py-2.5 text-[16px] font-bold text-rose-700 sm:flex-none sm:text-[14px]"
+                          className="min-h-[40px] flex-1 inline-flex items-center justify-center gap-1 rounded-[16px] border border-rose-200 bg-rose-50 px-3 py-2.5 text-[13px] sm:text-[14px] font-bold text-rose-700 sm:flex-none"
                         >
                           <FaTrash />
                           Delete
@@ -2092,12 +2093,12 @@ const Banquet = () => {
               </div>
               </>
             ) : (
-              <div className="flex flex-col items-center gap-3 p-10 text-center">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-50 text-blue-500">
-                  <FaGlassCheers className="text-2xl" />
+              <div className="flex flex-col items-center gap-3 p-8 text-center sm:p-10">
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-50 text-blue-500 sm:h-16 sm:w-16">
+                  <FaGlassCheers className="text-xl sm:text-2xl" />
                 </div>
-                <div className="text-[17px] font-bold text-blue-950">No banquet hall yet</div>
-                <div className="text-[15px] font-medium text-slate-500">
+                <div className="text-[15px] font-bold text-blue-950 sm:text-[17px]">No banquet hall yet</div>
+                <div className="text-[13px] font-medium text-slate-500 sm:text-[15px]">
                   No banquet hall has been added yet. Create a new hall using Add Hall.
                 </div>
               </div>
@@ -2295,7 +2296,7 @@ const Banquet = () => {
                       <div className="text-[17px] font-bold text-blue-950">
                         {booking.hallName}
                       </div>
-                      <div className="mt-1 text-[16px] text-slate-500">
+                      <div className="mt-1 text-[13px] sm:text-[14px] text-slate-500">
                         {booking.customerName} |{" "}
                         {booking.eventTitle || booking.eventType}
                       </div>
@@ -2304,7 +2305,7 @@ const Banquet = () => {
                       {booking.status}
                     </span>
                   </div>
-                  <div className="mt-4 grid grid-cols-2 gap-2 text-[16px] text-slate-600 md:grid-cols-4">
+                  <div className="mt-4 grid grid-cols-2 gap-2 text-[13px] sm:text-[14px] text-slate-600 md:grid-cols-4">
                     <div>Date: {booking.date}</div>
                     <div>
                       Time: {booking.startTime} - {booking.endTime}
@@ -2418,7 +2419,7 @@ const Banquet = () => {
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
                 <Icon />
               </div>
-                  <div className="mt-3 text-[16px] font-black uppercase tracking-[0.14em] text-slate-500">
+                  <div className="mt-3 text-[13px] sm:text-[14px] font-black uppercase tracking-[0.14em] text-slate-500">
                 {item.label}
               </div>
               <div className="mt-2 text-[30px] font-black text-blue-950">
@@ -2584,7 +2585,7 @@ const Banquet = () => {
               </p>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <div className="flex h-12 w-full items-center gap-2 rounded-[20px] border border-white/30 bg-white px-3 shadow-[0_8px_20px_rgba(15,40,90,0.15)] transition-all duration-300 focus-within:border-sky-300 focus-within:shadow-[0_8px_24px_rgba(37,99,235,0.2)] hover:shadow-[0_10px_26px_rgba(15,40,90,0.2)] sm:h-14 sm:w-auto sm:min-w-[220px] sm:px-4">
+              <div className="flex h-12 w-full items-center gap-2 rounded-[18px] sm:rounded-[20px] border border-white/30 bg-white px-3 shadow-[0_8px_20px_rgba(15,40,90,0.15)] transition-all duration-300 focus-within:border-sky-300 focus-within:shadow-[0_8px_24px_rgba(37,99,235,0.2)] hover:shadow-[0_10px_26px_rgba(15,40,90,0.2)] sm:h-14 sm:w-auto sm:min-w-[220px] sm:px-4">
                 <FaSearch className="text-blue-300" size={14} />
                 <input
                   value={dashboardSearch}
@@ -2678,7 +2679,7 @@ const Banquet = () => {
                       key={item.id}
                       type="button"
                       onClick={() => setActiveQuickSection(item.id)}
-                      className="group flex items-start gap-3 rounded-[20px] sm:rounded-[24px] border border-[#E1E7F5] bg-white p-3 text-left shadow-[0_8px_24px_rgba(15,40,90,0.06)] transition-all duration-300 hover:-translate-y-1 hover:border-[#2F6FE4] hover:shadow-[0_16px_34px_rgba(37,99,235,0.14)] sm:p-4"
+                      className="group flex items-start gap-3 rounded-[18px] sm:rounded-[20px] sm:rounded-[24px] border border-[#E1E7F5] bg-white p-3 text-left shadow-[0_8px_24px_rgba(15,40,90,0.06)] transition-all duration-300 hover:-translate-y-1 hover:border-[#2F6FE4] hover:shadow-[0_16px_34px_rgba(37,99,235,0.14)] sm:p-4"
                     >
                       <span className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[12px] text-white shadow-[0_8px_18px_rgba(15,40,90,0.16)] sm:h-11 sm:w-11 sm:rounded-[14px] ${sectionIconTones[item.id] || "bg-[#0F6E64]"}`}>
                         <Icon size={15} className="sm:hidden" />
@@ -2728,10 +2729,10 @@ const Banquet = () => {
                             {booking.startTime || "--:--"}
                           </span>
                           <div className="min-w-0 flex-1">
-                            <div className="truncate text-[16px] font-bold text-[#0B1B33]">
+                            <div className="truncate text-[13px] sm:text-[14px] font-bold text-[#0B1B33]">
                               {booking.hallName || "Hall"}
                             </div>
-                            <div className="truncate text-[16px] text-[#64748B]">
+                            <div className="truncate text-[13px] sm:text-[14px] text-[#64748B]">
                               {booking.eventTitle || booking.eventType}
                             </div>
                           </div>
@@ -2784,10 +2785,10 @@ const Banquet = () => {
                           <FaCalendarAlt size={13} />
                         </span>
                         <div className="min-w-0 flex-1">
-                          <div className="truncate text-[16px] font-bold text-[#0B1B33]">
+                          <div className="truncate text-[13px] sm:text-[14px] font-bold text-[#0B1B33]">
                             {booking.customerName}
                           </div>
-                          <div className="truncate text-[16px] text-[#64748B]">
+                          <div className="truncate text-[13px] sm:text-[14px] text-[#64748B]">
                             {booking.hallName || "Hall"} • {booking.guests || 0} Guests
                           </div>
                         </div>
@@ -2945,7 +2946,7 @@ const Banquet = () => {
           <div className="hidden overflow-x-auto rounded-[28px] border border-[#E1E7F5] md:block">
             {filteredBookings.length ? (
               <table className="min-w-full overflow-hidden bg-white">
-                <thead className="sticky top-0 z-10 bg-[linear-gradient(180deg,#f4f9ff_0%,#e8f1ff_100%)] text-left text-[16px] uppercase tracking-[0.12em] text-[#64748B]">
+                <thead className="sticky top-0 z-10 bg-[linear-gradient(180deg,#f4f9ff_0%,#e8f1ff_100%)] text-left text-[13px] sm:text-[14px] uppercase tracking-[0.12em] text-[#64748B]">
                   <tr>
                     <th className="px-3 py-4 text-[#64748B]">Guest</th>
                     <th className="px-3 py-4 text-[#64748B]">Event</th>
@@ -2974,7 +2975,7 @@ const Banquet = () => {
                           <div className="font-bold text-blue-950">
                             {booking.customerName}
                           </div>
-                          <div className="mt-1 text-[16px] text-slate-500">
+                          <div className="mt-1 text-[13px] sm:text-[14px] text-slate-500">
                             {booking.guestEmail || booking.phone || "Contact pending"}
                           </div>
                         </td>
@@ -2982,7 +2983,7 @@ const Banquet = () => {
                           <div className="font-semibold text-blue-950">
                             {booking.eventTitle || booking.eventType}
                           </div>
-                          <div className="mt-1 text-[16px] text-slate-500">
+                          <div className="mt-1 text-[13px] sm:text-[14px] text-slate-500">
                             {booking.eventType || "Event"} • {booking.guests || 0} guests
                           </div>
                         </td>
@@ -2990,7 +2991,7 @@ const Banquet = () => {
                           <div className="font-semibold text-blue-950">
                             {booking.hallName || "Hall pending"}
                           </div>
-                          <div className="mt-1 text-[16px] text-slate-500">
+                          <div className="mt-1 text-[13px] sm:text-[14px] text-slate-500">
                             {lightingLabelMap[booking.lightingSystem] ||
                               booking.lightingSystem ||
                               "Lighting pending"}
@@ -3000,7 +3001,7 @@ const Banquet = () => {
                           <div className="font-semibold text-blue-950">
                             {formatBookingDate(booking.date)}
                           </div>
-                          <div className="mt-1 text-[16px] text-slate-500">
+                          <div className="mt-1 text-[13px] sm:text-[14px] text-slate-500">
                             {booking.startTime || "--"} - {booking.endTime || "--"}
                           </div>
                         </td>
@@ -3008,10 +3009,10 @@ const Banquet = () => {
                           <div className="font-semibold text-blue-950">
                             {formatINR(booking.grandTotal || 0)}
                           </div>
-                          <div className="mt-1 text-[16px] text-emerald-700">
+                          <div className="mt-1 text-[13px] sm:text-[14px] text-emerald-700">
                             Received {formatINR(booking.netReceived || 0)}
                           </div>
-                          <div className="mt-1 text-[16px] text-rose-600">
+                          <div className="mt-1 text-[13px] sm:text-[14px] text-rose-600">
                             Due {formatINR(booking.balanceDue || 0)}
                           </div>
                         </td>
@@ -3031,10 +3032,10 @@ const Banquet = () => {
                           <div className="font-semibold text-blue-950">
                             {menuPackageNameMap[booking.menuPackageId] || "Custom package"}
                           </div>
-                          <div className="mt-1 text-[16px] text-slate-500">
+                          <div className="mt-1 text-[13px] sm:text-[14px] text-slate-500">
                             {booking.mealSection || "Meal section pending"}
                           </div>
-                          <div className="mt-1 text-[16px] text-blue-700">
+                          <div className="mt-1 text-[13px] sm:text-[14px] text-blue-700">
                             {customItemsCount} custom selections
                           </div>
                         </td>
@@ -3042,11 +3043,11 @@ const Banquet = () => {
                           <div className="font-semibold text-blue-950">
                             {booking.invoiceNo || "Draft only"}
                           </div>
-                          <div className="mt-1 text-[16px] text-slate-500">
+                          <div className="mt-1 text-[13px] sm:text-[14px] text-slate-500">
                             {booking.paymentMode || "Pending"}
                           </div>
                           {booking.paymentReferenceId ? (
-                            <div className="mt-1 text-[16px] text-slate-400">
+                            <div className="mt-1 text-[13px] sm:text-[14px] text-slate-400">
                               Ref {booking.paymentReferenceId}
                             </div>
                           ) : null}
@@ -3144,7 +3145,7 @@ const Banquet = () => {
                 </tbody>
               </table>
             ) : (
-              <div className="rounded-[28px] border border-dashed border-blue-200 bg-blue-50/30 p-6 text-[17px] text-slate-500">
+              <div className="rounded-[28px] border border-dashed border-blue-200 bg-blue-50/30 p-6 text-[14px] text-slate-500 sm:text-[17px]">
                 {hasAppliedBookingFilters
                   ? "Current filters ke saath koi reservation match nahi hua."
                   : "No reservations are available. Create your first booking using ‘Add New."}
@@ -3176,91 +3177,90 @@ const Banquet = () => {
                 return (
                   <div
                     key={booking.id}
-                    className="rounded-[24px] border border-[#E1E7F5] bg-white p-4 shadow-[0_8px_24px_rgba(15,40,90,0.06)] sm:rounded-[26px]"
+                    className="rounded-[22px] border border-[#E1E7F5] bg-white p-3 shadow-[0_8px_24px_rgba(15,40,90,0.06)] transition-all duration-300 sm:rounded-[24px] sm:p-4"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
-                        <div className="truncate text-[20px] font-bold text-blue-950 sm:text-[22px]">
+                        <div className="truncate text-[16px] font-bold text-blue-950 sm:text-[18px]">
                           {booking.customerName}
                         </div>
-                        <div className="mt-1 text-[17px] text-slate-500">
+                        <div className="mt-1 text-[13px] text-slate-500 sm:text-[15px]">
                           {booking.eventTitle || booking.eventType} • {booking.hallName}
                         </div>
                       </div>
-                      <span className={getReservationStatusBadgeClass(booking.status)}>
+                      <span className={getReservationStatusBadgeClass(booking.status).replace(/text-\[15px\]/g, 'text-[12px]').replace(/sm:text-\[16px\]/g, 'sm:text-[14px]')}>
                         {booking.status}
                       </span>
                     </div>
 
-                    <div className="mt-4 space-y-2.5">
-                      <div className="flex justify-between gap-2 text-[17px]">
+                    <div className="mt-3 space-y-2">
+                      <div className="flex justify-between gap-2 text-[13px]">
                         <span className="font-semibold text-slate-500">Event:</span>
                         <span className="font-bold text-blue-950 text-right">{booking.eventTitle || booking.eventType || "N/A"}</span>
                       </div>
-                      <div className="flex justify-between gap-2 text-[17px]">
+                      <div className="flex justify-between gap-2 text-[13px]">
                         <span className="font-semibold text-slate-500">Hall:</span>
                         <span className="font-bold text-blue-950 text-right">{booking.hallName || "N/A"}</span>
                       </div>
-                      <div className="flex justify-between gap-2 text-[17px]">
+                      <div className="flex justify-between gap-2 text-[13px]">
                         <span className="font-semibold text-slate-500">Date:</span>
                         <span className="font-bold text-blue-950 text-right">{formatBookingDate(booking.date)}</span>
                       </div>
-                      <div className="flex justify-between gap-2 text-[17px]">
+                      <div className="flex justify-between gap-2 text-[13px]">
                         <span className="font-semibold text-slate-500">Slot:</span>
                         <span className="font-bold text-blue-950 text-right">{booking.startTime || "--"} - {booking.endTime || "--"}</span>
                       </div>
-                      <div className="flex justify-between gap-2 text-[17px]">
+                      <div className="flex justify-between gap-2 text-[13px]">
                         <span className="font-semibold text-slate-500">Guests:</span>
                         <span className="font-bold text-blue-950 text-right">{booking.guests || 0}</span>
                       </div>
-                      <div className="flex justify-between gap-2 text-[17px]">
-                        <span className="font-semibold text-slate-500">Payment Status:</span>
+                      <div className="flex justify-between gap-2 text-[13px]">
+                        <span className="font-semibold text-slate-500">Payment:</span>
                         <span className="font-bold text-blue-950 text-right">{booking.paymentStatus || "Pending"}</span>
                       </div>
-                      <div className="flex justify-between gap-2 text-[17px]">
+                      <div className="flex justify-between gap-2 text-[13px]">
                         <span className="font-semibold text-slate-500">Total:</span>
                         <span className="font-bold text-blue-950 text-right">{formatINR(booking.grandTotal || 0)}</span>
                       </div>
-                      <div className="flex justify-between gap-2 text-[17px]">
+                      <div className="flex justify-between gap-2 text-[13px]">
                         <span className="font-semibold text-slate-500">Received:</span>
                         <span className="font-bold text-emerald-700 text-right">{formatINR(booking.netReceived || 0)}</span>
                       </div>
-                      <div className="flex justify-between gap-2 text-[17px]">
+                      <div className="flex justify-between gap-2 text-[13px]">
                         <span className="font-semibold text-slate-500">Balance Due:</span>
                         <span className="font-bold text-rose-600 text-right">{formatINR(booking.balanceDue || 0)}</span>
                       </div>
-                      <div className="flex justify-between gap-2 text-[17px]">
+                      <div className="flex justify-between gap-2 text-[13px]">
                         <span className="font-semibold text-slate-500">Package:</span>
                         <span className="font-bold text-blue-950 text-right">{menuPackageNameMap[booking.menuPackageId] || "Custom"}</span>
                       </div>
-                      <div className="flex justify-between gap-2 text-[17px]">
+                      <div className="flex justify-between gap-2 text-[13px]">
                         <span className="font-semibold text-slate-500">Custom Items:</span>
                         <span className="font-bold text-blue-950 text-right">{customItemsCount}</span>
                       </div>
-                      <div className="flex justify-between gap-2 text-[17px]">
+                      <div className="flex justify-between gap-2 text-[13px]">
                         <span className="font-semibold text-slate-500">Invoice:</span>
                         <span className="font-bold text-blue-950 text-right">{booking.invoiceNo || "Draft only"}</span>
                       </div>
-                      <div className="flex justify-between gap-2 text-[17px]">
+                      <div className="flex justify-between gap-2 text-[13px]">
                         <span className="font-semibold text-slate-500">Payment Mode:</span>
                         <span className="font-bold text-blue-950 text-right">{booking.paymentMode || "Pending"}</span>
                       </div>
                     </div>
 
-                    <div className="mt-5 flex flex-wrap gap-2">
+                    <div className="mt-4 grid grid-cols-2 gap-2">
                       <button
                         type="button"
                         onClick={() => handleEditBooking(booking)}
-                        className="inline-flex min-h-[44px] items-center gap-2 rounded-[18px] border border-blue-100 px-4 py-2.5 text-[17px] font-bold text-slate-700 sm:text-[15px]"
+                        className="inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-[16px] border border-blue-100 bg-white px-2 py-2 text-[13px] font-bold text-slate-700 transition-all duration-300 hover:border-blue-300 hover:text-blue-700 hover:shadow-sm sm:text-[15px]"
                       >
-                        <FaEdit />
-                        Edit
+                        <FaEdit /> Edit
                       </button>
                       {booking.status === "Confirmed" ? (
                         <button
                           type="button"
                           onClick={() => handleCancelBooking(booking)}
-                          className="min-h-[44px] rounded-[18px] bg-rose-500 px-4 py-2.5 text-[17px] font-bold text-white sm:text-[15px]"
+                          className="min-h-[40px] rounded-[16px] bg-rose-500 px-2 py-2 text-[13px] font-bold text-white transition-all duration-300 hover:bg-rose-600 hover:shadow-sm sm:text-[15px]"
                         >
                           Cancel
                         </button>
@@ -3269,7 +3269,7 @@ const Banquet = () => {
                         <button
                           type="button"
                           onClick={() => handleCompleteBooking(booking.id)}
-                          className="min-h-[44px] rounded-[18px] bg-amber-500 px-4 py-2.5 text-[17px] font-bold text-white sm:text-[15px]"
+                          className="min-h-[40px] rounded-[16px] bg-amber-500 px-2 py-2 text-[13px] font-bold text-white transition-all duration-300 hover:bg-amber-600 hover:shadow-sm sm:text-[15px]"
                         >
                           Complete
                         </button>
@@ -3278,7 +3278,7 @@ const Banquet = () => {
                         <button
                           type="button"
                           onClick={() => handleGenerateBill(booking)}
-                          className="min-h-[44px] rounded-[18px] bg-emerald-600 px-4 py-2.5 text-[17px] font-bold text-white sm:text-[15px]"
+                          className="min-h-[40px] rounded-[16px] bg-emerald-600 px-2 py-2 text-[13px] font-bold text-white transition-all duration-300 hover:bg-emerald-700 hover:shadow-sm sm:text-[15px]"
                         >
                           Bill
                         </button>
@@ -3290,7 +3290,7 @@ const Banquet = () => {
                             setSelectedBooking(booking);
                             setShowBill(true);
                           }}
-                          className="min-h-[44px] rounded-[18px] border border-blue-100 px-4 py-2.5 text-[17px] font-bold text-slate-700 sm:text-[15px]"
+                          className="min-h-[40px] rounded-[16px] border border-blue-100 bg-white px-2 py-2 text-[13px] font-bold text-slate-700 transition-all duration-300 hover:border-sky-300 hover:text-sky-700 hover:shadow-sm sm:text-[15px]"
                         >
                           View
                         </button>
@@ -3301,7 +3301,7 @@ const Banquet = () => {
                         <button
                           type="button"
                           onClick={() => handleRefundBooking(booking)}
-                          className="min-h-[44px] rounded-[18px] bg-violet-600 px-4 py-2.5 text-[17px] font-bold text-white sm:text-[15px]"
+                          className="min-h-[40px] rounded-[16px] bg-violet-600 px-2 py-2 text-[13px] font-bold text-white transition-all duration-300 hover:bg-violet-700 hover:shadow-sm sm:text-[15px]"
                         >
                           Refund
                         </button>
@@ -3309,14 +3309,14 @@ const Banquet = () => {
                       <button
                         type="button"
                         onClick={() => handleSendQuotation(booking, "email")}
-                        className="min-h-[44px] rounded-[18px] border border-blue-100 px-4 py-2.5 text-[17px] font-bold text-slate-700 sm:text-[15px]"
+                        className="min-h-[40px] rounded-[16px] border border-blue-100 bg-white px-2 py-2 text-[13px] font-bold text-slate-700 transition-all duration-300 hover:border-sky-300 hover:text-sky-700 hover:shadow-sm sm:text-[15px]"
                       >
                         <FaEnvelope />
                       </button>
                       <button
                         type="button"
                         onClick={() => handleSendQuotation(booking, "whatsapp")}
-                        className="min-h-[44px] rounded-[18px] border border-blue-100 px-4 py-2.5 text-[17px] font-bold text-slate-700 sm:text-[15px]"
+                        className="min-h-[40px] rounded-[16px] border border-blue-100 bg-white px-2 py-2 text-[13px] font-bold text-slate-700 transition-all duration-300 hover:border-emerald-300 hover:text-emerald-700 hover:shadow-sm sm:text-[15px]"
                       >
                         <FaWhatsapp />
                       </button>
@@ -3324,7 +3324,7 @@ const Banquet = () => {
                         <button
                           type="button"
                           onClick={() => handleDeleteBooking(booking)}
-                          className="min-h-[44px] rounded-[18px] border border-rose-200 px-4 py-2.5 text-[17px] font-bold text-rose-600 sm:text-[15px]"
+                          className="min-h-[40px] rounded-[16px] border border-rose-200 bg-white px-2 py-2 text-[13px] font-bold text-rose-600 transition-all duration-300 hover:bg-rose-50 hover:shadow-sm sm:text-[15px]"
                         >
                           Delete
                         </button>
@@ -3334,7 +3334,7 @@ const Banquet = () => {
                 );
               })
             ) : (
-              <div className="rounded-[24px] border border-dashed border-blue-200 bg-blue-50/30 p-6 text-[16px] text-slate-500">
+              <div className="rounded-[22px] border border-dashed border-blue-200 bg-blue-50/30 p-5 text-[14px] text-slate-500 sm:rounded-[24px] sm:p-6 sm:text-[16px]">
                 {hasAppliedBookingFilters
                   ? "Current filters ke saath koi reservation match nahi hua."
                   : "Koi reservation available nahi hai. `Add New` se pehli booking create kijiye."}
@@ -3353,8 +3353,8 @@ const Banquet = () => {
           }
           eyebrow="Reservation Form"
           onClose={resetWizard}
-          widthClass="max-w-5xl"
-          heightClass="h-[min(88vh,820px)]"
+          widthClass="max-w-7xl"
+          heightClass="h-[min(98vh,820px)]"
         >
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_340px]">
               <div className="space-y-6">
@@ -3698,13 +3698,13 @@ const Banquet = () => {
                       type="file"
                       accept="image/*,.pdf"
                       onChange={(e) => handleReceiptUpload(e.target.files?.[0])}
-                      className="block w-full text-[16px] text-slate-600 file:mr-4 file:rounded-full file:border-0 file:bg-gradient-to-r file:from-blue-800 file:to-sky-500 file:px-4 file:py-2 file:text-[15px] file:font-bold file:text-white"
+                      className="block w-full text-[13px] sm:text-[14px] text-slate-600 file:mr-4 file:rounded-full file:border-0 file:bg-gradient-to-r file:from-blue-800 file:to-sky-500 file:px-4 file:py-2 file:text-[15px] file:font-bold file:text-white"
                     />
-                    <p className="text-[16px] text-slate-500">
+                    <p className="text-[13px] sm:text-[14px] text-slate-500">
                       Optional hai. Image ya PDF receipt upload kar sakte hain.
                     </p>
                     {wizard.receiptFileName ? (
-                      <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-blue-50/60 px-4 py-3 text-[16px] text-slate-700">
+                      <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-blue-50/60 px-4 py-3 text-[13px] sm:text-[14px] text-slate-700">
                         <span className="font-semibold">{wizard.receiptFileName}</span>
                         {receiptPreviewUrl ? (
                           <a
@@ -3733,10 +3733,10 @@ const Banquet = () => {
                   <div className="space-y-4 rounded-[24px] border border-blue-100 bg-white p-4 shadow-[0_6px_18px_rgba(15,40,90,0.05)]">
                     <div className="flex flex-col gap-3 rounded-2xl border border-blue-100 bg-blue-50/60 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
                       <div>
-                        <div className="text-[16px] font-bold text-blue-950">
+                        <div className="text-[13px] sm:text-[14px] font-bold text-blue-950">
                           Restaurant menu se select karein
                         </div>
-                        <div className="mt-1 text-[16px] text-slate-500">
+                        <div className="mt-1 text-[13px] sm:text-[14px] text-slate-500">
                           Full restaurant menu khol kar items select kijiye, fir
                           yahin reservation form par wapas aa jayenge.
                         </div>
@@ -3744,7 +3744,7 @@ const Banquet = () => {
                       <button
                         type="button"
                         onClick={handleOpenRestaurantMenu}
-                        className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-blue-800 to-sky-500 px-4 py-2.5 text-[16px] font-bold text-white shadow-[0_10px_24px_rgba(37,99,235,0.28)] transition-all duration-300 hover:-translate-y-0.5"
+                        className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-blue-800 to-sky-500 px-4 py-2.5 text-[13px] sm:text-[14px] font-bold text-white shadow-[0_10px_24px_rgba(37,99,235,0.28)] transition-all duration-300 hover:-translate-y-0.5"
                       >
                         Open Restaurant Menu
                       </button>
@@ -3754,7 +3754,7 @@ const Banquet = () => {
                         {menuCategories.length ? (
                           menuCategories.map((category) => (
                             <div key={category} className="rounded-2xl border border-blue-50 p-4">
-                              <div className="text-[16px] font-bold text-blue-950">
+                              <div className="text-[13px] sm:text-[14px] font-bold text-blue-950">
                                 {category}
                               </div>
                               <div className="mt-3 grid gap-2 sm:grid-cols-2">
@@ -3767,13 +3767,13 @@ const Banquet = () => {
                                       key={item.id || `${category}-${item.name}`}
                                       type="button"
                                       onClick={() => toggleCustomMenuSelection(item.name)}
-                                      className={`rounded-2xl border px-3 py-3 text-left text-[16px] font-semibold transition-all duration-300 ${
+                                      className={`rounded-2xl border px-3 py-3 text-left text-[13px] sm:text-[14px] font-semibold transition-all duration-300 ${
                                         isSelected
                                           ? "border-blue-300 bg-blue-50 text-blue-700"
                                           : "border-blue-50 bg-slate-50 text-slate-600 hover:border-blue-200 hover:text-blue-700"
                                       }`}
                                     >
-                                      <span className="block text-[16px] font-bold">
+                                      <span className="block text-[13px] sm:text-[14px] font-bold">
                                         {item.name}
                                       </span>
                                       {item.price ? (
@@ -3788,14 +3788,14 @@ const Banquet = () => {
                             </div>
                           ))
                         ) : (
-                          <div className="rounded-2xl border border-dashed border-blue-100 px-4 py-5 text-[16px] text-slate-500">
+                          <div className="rounded-2xl border border-dashed border-blue-100 px-4 py-5 text-[13px] sm:text-[14px] text-slate-500">
                             Restaurant menu abhi load nahi hua. Aap manual items add kar sakte hain.
                           </div>
                         )}
                       </div>
 
                       <div className="space-y-3 rounded-2xl bg-blue-50/40 p-4">
-                        <div className="text-[16px] font-bold text-blue-950">
+                        <div className="text-[13px] sm:text-[14px] font-bold text-blue-950">
                           Manual item add
                         </div>
                         <div className="flex flex-col gap-2 sm:flex-row">
@@ -3819,19 +3819,19 @@ const Banquet = () => {
                           <button
                             type="button"
                             onClick={handleAddManualMenuItem}
-                          className="rounded-full bg-gradient-to-r from-blue-800 to-sky-500 px-4 py-2 text-[16px] font-bold text-white"
+                          className="rounded-full bg-gradient-to-r from-blue-800 to-sky-500 px-4 py-2 text-[13px] sm:text-[14px] font-bold text-white"
                           >
                             Add
                           </button>
                         </div>
-                        <div className="text-[16px] text-slate-500">
+                        <div className="text-[13px] sm:text-[14px] text-slate-500">
               You can select from the full menu or manually add a custom item here.
                         </div>
                       </div>
                     </div>
 
                     <div>
-                      <div className="text-[16px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                      <div className="text-[13px] sm:text-[14px] font-bold uppercase tracking-[0.16em] text-slate-500">
                         Selected items
                       </div>
                       <div className="mt-3 flex flex-wrap gap-2">
@@ -3845,7 +3845,7 @@ const Banquet = () => {
                                 onClick={() =>
                                   handleRemoveSelectedRestaurantMenuItem(item, index)
                                 }
-                              className="rounded-2xl bg-blue-50 px-3 py-2 text-[16px] font-semibold text-blue-700"
+                              className="rounded-2xl bg-blue-50 px-3 py-2 text-[13px] sm:text-[14px] font-semibold text-blue-700"
                               >
                                 {item.name} x{item.qty} • {formatINR(item.total)} x
                               </button>
@@ -3858,7 +3858,7 @@ const Banquet = () => {
                                   key={`selected-${item}`}
                                   type="button"
                                   onClick={() => handleRemoveSelectedCustomMenuItem(item)}
-                                  className="rounded-full bg-blue-50 px-3 py-2 text-[16px] font-semibold text-blue-700"
+                                  className="rounded-full bg-blue-50 px-3 py-2 text-[13px] sm:text-[14px] font-semibold text-blue-700"
                                 >
                                   {item} x
                                 </button>
@@ -3869,20 +3869,20 @@ const Banquet = () => {
                                 key={`manual-${item}`}
                                 type="button"
                                 onClick={() => handleRemoveManualMenuItem(item)}
-                                className="rounded-full bg-amber-50 px-3 py-2 text-[16px] font-semibold text-amber-700"
+                                className="rounded-full bg-amber-50 px-3 py-2 text-[13px] sm:text-[14px] font-semibold text-amber-700"
                               >
                                 {item} x
                               </button>
                             ))}
                           </>
                         ) : (
-                          <div className="text-[16px] text-slate-500">
+                          <div className="text-[13px] sm:text-[14px] text-slate-500">
             “No custom menu item has been selected yet.”
                           </div>
                         )}
                       </div>
                       {wizard.selectedRestaurantMenuItems.length ? (
-                        <div className="mt-4 flex items-center justify-between rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-[16px]">
+                        <div className="mt-4 flex items-center justify-between rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-[13px] sm:text-[14px]">
                           <span className="font-semibold text-slate-700">
                             Selected items total
                           </span>
@@ -3908,7 +3908,7 @@ const Banquet = () => {
                   />
                 </div>
                 {reservationError ? (
-                  <div className="rounded-[22px] border border-rose-200 bg-rose-50 px-4 py-3 text-[16px] font-semibold text-rose-700">
+                  <div className="rounded-[22px] border border-rose-200 bg-rose-50 px-4 py-3 text-[13px] sm:text-[14px] font-semibold text-rose-700">
                     {reservationError}
                   </div>
                 ) : null}
@@ -3919,7 +3919,7 @@ const Banquet = () => {
                   <div className="text-[17px] font-bold text-blue-950">
                     Reservation summary
                   </div>
-                  <div className="mt-4 space-y-3 text-[16px] text-slate-600">
+                  <div className="mt-4 space-y-3 text-[13px] sm:text-[14px] text-slate-600">
                     <div className="flex items-center justify-between gap-3">
                       <span className="inline-flex items-center gap-2">
                         <FaGlassCheers className="text-blue-600" />
@@ -3995,14 +3995,14 @@ const Banquet = () => {
                       </div>
                     ) : null}
                   </div>
-                  <div className="mt-5 rounded-[20px] bg-gradient-to-br from-blue-950 to-blue-800 px-4 py-4 text-white shadow-[0_16px_34px_rgba(11,27,51,0.3)]">
-              <div className="text-[16px] uppercase tracking-[0.2em] text-blue-200">
+                  <div className="mt-5 rounded-[18px] sm:rounded-[20px] bg-gradient-to-br from-blue-950 to-blue-800 px-4 py-4 text-white shadow-[0_16px_34px_rgba(11,27,51,0.3)]">
+              <div className="text-[13px] sm:text-[14px] uppercase tracking-[0.2em] text-blue-200">
                       Estimated total
                     </div>
                     <div className="mt-2 text-[30px] font-black">
                       {formatINR(wizardTotals.grandTotal)}
                     </div>
-                    <div className="mt-3 text-[16px] text-blue-100">
+                    <div className="mt-3 text-[13px] sm:text-[14px] text-blue-100">
                       Bakaya: {formatINR(wizardTotals.balanceDue)}
                     </div>
                   </div>
@@ -4012,15 +4012,15 @@ const Banquet = () => {
                   <div className="text-[17px] font-bold text-blue-950">
                     After booking
                   </div>
-                  <p className="mt-3 text-[16px] leading-6 text-slate-500">
+                  <p className="mt-3 text-[13px] sm:text-[14px] leading-6 text-slate-500">
           “Action buttons are provided on the booking dashboard to send quotations to guests via email or WhatsApp.”
                   </p>
                   <div className="mt-4 flex flex-wrap gap-2">
-                    <span className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-2 text-[16px] font-semibold text-blue-700">
+                    <span className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-2 text-[13px] sm:text-[14px] font-semibold text-blue-700">
                       <FaEnvelope />
                       Email Quote
                     </span>
-                    <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-2 text-[16px] font-semibold text-emerald-700">
+                    <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-2 text-[13px] sm:text-[14px] font-semibold text-emerald-700">
                       <FaWhatsapp />
                       WhatsApp Quote
                     </span>
@@ -4072,10 +4072,10 @@ const Banquet = () => {
           heightClass="h-[min(78vh,560px)]"
         >
           <div className="grid gap-4">
-            <div className="grid gap-5 sm:grid-cols-[140px_minmax(0,1fr)]">
+            <div className="grid gap-5 sm:grid-cols-[200px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)]">
               <div>
                 <label className={labelCls}>Hall Image</label>
-                <div className="flex aspect-square w-full max-w-[140px] items-center justify-center overflow-hidden rounded-[24px] border border-dashed border-blue-200 bg-blue-50/40">
+                <div className="flex aspect-square w-full max-w-[140px] sm:max-w-[200px] xl:max-w-[280px] items-center justify-center overflow-hidden rounded-[24px] border border-dashed border-blue-200 bg-blue-50/40">
                   {hallImagePreview || newHall.image ? (
                     <img
                       src={hallImagePreview || resolveBanquetHallImage(newHall.image)}
@@ -4110,7 +4110,7 @@ const Banquet = () => {
                         setHallImageMode("upload");
                         setNewHall((prev) => ({ ...prev, image: "" }));
                       }}
-                      className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-[16px] font-bold transition-all duration-300 ${
+                      className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-[13px] sm:text-[14px] font-bold transition-all duration-300 ${
                         hallImageMode === "upload"
                           ? "bg-gradient-to-r from-blue-800 to-sky-500 text-white"
                           : "border border-blue-100 bg-white text-slate-600 hover:border-blue-300"
@@ -4129,7 +4129,7 @@ const Banquet = () => {
                         setHallImagePreview("");
                         setHallImageMode("url");
                       }}
-                      className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-[16px] font-bold transition-all duration-300 ${
+                      className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-[13px] sm:text-[14px] font-bold transition-all duration-300 ${
                         hallImageMode === "url"
                           ? "bg-gradient-to-r from-blue-800 to-sky-500 text-white"
                           : "border border-blue-100 bg-white text-slate-600 hover:border-blue-300"
@@ -4143,7 +4143,7 @@ const Banquet = () => {
                 {hallImageMode === "upload" ? (
                   <div>
                     <label className={labelCls}>Upload Image</label>
-                    <label className="flex cursor-pointer items-center gap-3 rounded-2xl border border-dashed border-blue-200 bg-blue-50/40 px-4 py-3 text-[16px] font-medium text-slate-600 transition-all duration-300 hover:border-blue-300 hover:bg-blue-50">
+                    <label className="flex cursor-pointer items-center gap-3 rounded-2xl border border-dashed border-blue-200 bg-blue-50/40 px-4 py-3 text-[13px] sm:text-[14px] font-medium text-slate-600 transition-all duration-300 hover:border-blue-300 hover:bg-blue-50">
                       <FaImage className="text-slate-500" />
                       <span className="min-w-0 flex-1 truncate">
                         {hallImageFile
@@ -4224,7 +4224,7 @@ const Banquet = () => {
                   </select>
                 </div>
               ) : null}
-              <label className="flex items-center justify-between gap-3 rounded-2xl border border-blue-100 px-4 py-3 text-[16px] font-semibold text-slate-700">
+              <label className="flex items-center justify-between gap-3 rounded-2xl border border-blue-100 px-4 py-3 text-[13px] sm:text-[14px] font-semibold text-slate-700">
                 <span>AC enabled hall</span>
                 <input
                   type="checkbox"
@@ -4236,7 +4236,7 @@ const Banquet = () => {
                 />
               </label>
               {hallFormError ? (
-                <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-[16px] font-semibold text-rose-700">
+                <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-[13px] sm:text-[14px] font-semibold text-rose-700">
                   {hallFormError}
                 </div>
               ) : null}
@@ -4268,7 +4268,7 @@ const Banquet = () => {
         >
           <div className="mt-2 grid gap-4 sm:grid-cols-2">
               <div className="rounded-[22px] border border-blue-100 bg-blue-50/40 p-4">
-                <div className="text-[16px] uppercase tracking-[0.18em] text-slate-500">
+                <div className="text-[13px] sm:text-[14px] uppercase tracking-[0.18em] text-slate-500">
                   Capacity
                 </div>
                 <div className="mt-2 text-[24px] font-black text-blue-950">
@@ -4276,7 +4276,7 @@ const Banquet = () => {
                 </div>
               </div>
               <div className="rounded-[22px] border border-blue-100 bg-blue-50/40 p-4">
-                <div className="text-[16px] uppercase tracking-[0.18em] text-slate-500">
+                <div className="text-[13px] sm:text-[14px] uppercase tracking-[0.18em] text-slate-500">
                   Rate / hour
                 </div>
                 <div className="mt-2 text-[24px] font-black text-blue-950">
@@ -4284,7 +4284,7 @@ const Banquet = () => {
                 </div>
               </div>
               <div className="rounded-[22px] border border-blue-100 bg-blue-50/40 p-4">
-                <div className="text-[16px] uppercase tracking-[0.18em] text-slate-500">
+                <div className="text-[13px] sm:text-[14px] uppercase tracking-[0.18em] text-slate-500">
                   Cooling
                 </div>
                 <div className="mt-2 text-[18px] font-bold text-blue-950">
@@ -4292,7 +4292,7 @@ const Banquet = () => {
                 </div>
               </div>
               <div className="rounded-[22px] border border-blue-100 bg-blue-50/40 p-4">
-                <div className="text-[16px] uppercase tracking-[0.18em] text-slate-500">
+                <div className="text-[13px] sm:text-[14px] uppercase tracking-[0.18em] text-slate-500">
                   Status
                 </div>
                 <div className="mt-2 text-[18px] font-bold text-blue-950">
@@ -4300,7 +4300,7 @@ const Banquet = () => {
                 </div>
               </div>
               {hallFormError ? (
-                <div className="rounded-[22px] border border-rose-200 bg-rose-50 p-4 text-[16px] font-semibold text-rose-700 sm:col-span-2">
+                <div className="rounded-[22px] border border-rose-200 bg-rose-50 p-4 text-[13px] sm:text-[14px] font-semibold text-rose-700 sm:col-span-2">
                   {hallFormError}
                 </div>
               ) : null}
@@ -4308,7 +4308,7 @@ const Banquet = () => {
                 <button
                   type="button"
                   onClick={() => handleEditHall(delayedDetailHall)}
-                  className="inline-flex items-center gap-2 rounded-full bg-amber-500 px-4 py-2 text-[16px] font-bold text-white transition-all duration-300 hover:bg-amber-600"
+                  className="inline-flex items-center gap-2 rounded-full bg-amber-500 px-4 py-2 text-[13px] sm:text-[14px] font-bold text-white transition-all duration-300 hover:bg-amber-600"
                 >
                   <FaEdit />
                   Edit Hall
@@ -4317,7 +4317,7 @@ const Banquet = () => {
                   type="button"
                   onClick={() => handleDeleteHall(delayedDetailHall)}
                   disabled={isDeletingHall}
-                  className="inline-flex items-center gap-2 rounded-full bg-rose-600 px-4 py-2 text-[16px] font-bold text-white transition-all duration-300 hover:bg-rose-700 disabled:opacity-60"
+                  className="inline-flex items-center gap-2 rounded-full bg-rose-600 px-4 py-2 text-[13px] sm:text-[14px] font-bold text-white transition-all duration-300 hover:bg-rose-700 disabled:opacity-60"
                 >
                   <FaTrash />
                   {isDeletingHall ? "Deleting..." : "Delete Hall"}
@@ -4352,12 +4352,12 @@ const Banquet = () => {
               </div>
 
               <div className="space-y-4">
-                <div className="rounded-[22px] border border-rose-200 bg-rose-50 px-4 py-3 text-[16px] leading-6 text-rose-700">
+                <div className="rounded-[22px] border border-rose-200 bg-rose-50 px-4 py-3 text-[13px] sm:text-[14px] leading-6 text-rose-700">
                   Are you sure you want to permanently delete this banquet hall? This action cannot be undone.
                 </div>
 
                 <div className="overflow-x-auto rounded-[22px] border border-blue-100">
-                  <table className="min-w-full text-[16px]">
+                  <table className="min-w-full text-[13px] sm:text-[14px]">
                     <tbody>
                       <tr className="border-b border-blue-100 bg-blue-50/40">
                         <td className="px-4 py-3 font-semibold text-slate-500">Hall Name</td>
@@ -4386,7 +4386,7 @@ const Banquet = () => {
             </div>
 
             {hallFormError ? (
-              <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-[16px] font-semibold text-rose-700">
+              <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-[13px] sm:text-[14px] font-semibold text-rose-700">
                 {hallFormError}
               </div>
             ) : null}
@@ -4403,7 +4403,7 @@ const Banquet = () => {
                 type="button"
                 onClick={confirmDeleteHall}
                 disabled={isDeletingHall}
-                className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-rose-600 to-rose-500 px-5 py-2.5 text-[16px] font-bold text-white shadow-[0_14px_30px_rgba(244,63,94,0.24)] transition-all duration-300 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-rose-600 to-rose-500 px-5 py-2.5 text-[13px] sm:text-[14px] font-bold text-white shadow-[0_14px_30px_rgba(244,63,94,0.24)] transition-all duration-300 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isDeletingHall ? "Deleting..." : "Delete Hall"}
               </button>
@@ -4434,7 +4434,7 @@ const Banquet = () => {
                 {delayedReservationSuccess.message || "reservation has been saved."}
               </p>
               {delayedReservationSuccess.detail || delayedReservationSuccess.hallName ? (
-                <p className="text-[16px] leading-6 text-slate-600">
+                <p className="text-[13px] sm:text-[14px] leading-6 text-slate-600">
                   {delayedReservationSuccess.hallName ? (
                     <span className="font-semibold text-blue-950">
                       {delayedReservationSuccess.hallName}
@@ -4463,7 +4463,7 @@ const Banquet = () => {
             <button
               type="button"
               onClick={() => setReservationSuccess(null)}
-              className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-blue-800 to-sky-500 px-6 py-3 text-[16px] font-bold text-white shadow-[0_16px_35px_rgba(37,99,235,0.3)] transition-all duration-300 hover:-translate-y-0.5"
+              className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-blue-800 to-sky-500 px-6 py-3 text-[13px] sm:text-[14px] font-bold text-white shadow-[0_16px_35px_rgba(37,99,235,0.3)] transition-all duration-300 hover:-translate-y-0.5"
             >
               Continue
             </button>
@@ -4498,7 +4498,7 @@ const Banquet = () => {
           heightClass="h-[min(78vh,620px)]"
         >
             <div>
-              <div className="text-[16px] font-bold uppercase tracking-[0.24em] text-blue-600">
+              <div className="text-[13px] sm:text-[14px] font-bold uppercase tracking-[0.24em] text-blue-600">
                 Package Pricing
               </div>
               <div className="mt-4 max-w-xs">
@@ -4531,14 +4531,14 @@ const Banquet = () => {
 
             <div className="mt-6 grid gap-4 sm:grid-cols-[minmax(0,1fr)_220px]">
               <div className="rounded-[24px] border border-blue-100 bg-blue-50/30 p-5">
-                <div className="text-[16px] font-bold uppercase tracking-[0.18em] text-slate-500">
+                <div className="text-[13px] sm:text-[14px] font-bold uppercase tracking-[0.18em] text-slate-500">
                   Included Highlights
                 </div>
                 <div className="mt-4 space-y-3">
                   {delayedSelectedMenuPackage.highlights.map((item) => (
                     <div
                       key={item}
-                      className="rounded-2xl bg-white px-4 py-3 text-[16px] font-medium text-slate-700 shadow-[0_4px_14px_rgba(15,40,90,0.05)]"
+                      className="rounded-2xl bg-white px-4 py-3 text-[13px] sm:text-[14px] font-medium text-slate-700 shadow-[0_4px_14px_rgba(15,40,90,0.05)]"
                     >
                       {item}
                     </div>
@@ -4547,20 +4547,20 @@ const Banquet = () => {
               </div>
 
               <div className="rounded-[24px] border border-blue-100 bg-[linear-gradient(180deg,#eef6ff_0%,#f8fafc_100%)] p-5">
-                <div className="text-[16px] font-bold uppercase tracking-[0.18em] text-blue-700">
+                <div className="text-[13px] sm:text-[14px] font-bold uppercase tracking-[0.18em] text-blue-700">
                   Meal Type
                 </div>
                 <div className="mt-3 text-[18px] font-bold text-blue-950">
                   {delayedSelectedMenuPackage.mealLabel}
                 </div>
-                <div className="mt-6 text-[16px] font-bold uppercase tracking-[0.18em] text-blue-700">
+                <div className="mt-6 text-[13px] sm:text-[14px] font-bold uppercase tracking-[0.18em] text-blue-700">
                   Available Sections
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {mealSections.map((section) => (
                     <span
                       key={section}
-                      className="rounded-full bg-white px-3 py-1.5 text-[16px] font-semibold text-slate-700 shadow-[0_4px_14px_rgba(15,40,90,0.05)]"
+                      className="rounded-full bg-white px-3 py-1.5 text-[13px] sm:text-[14px] font-semibold text-slate-700 shadow-[0_4px_14px_rgba(15,40,90,0.05)]"
                     >
                       {section}
                     </span>

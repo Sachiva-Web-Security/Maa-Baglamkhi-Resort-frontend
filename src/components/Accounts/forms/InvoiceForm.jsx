@@ -153,169 +153,228 @@ const InvoiceForm = ({
     }
   };
 
+  const inputClassName =
+    "w-full rounded-xl border border-blue-200 bg-white px-3.5 py-2.5 text-[15px] font-semibold text-slate-900 outline-none transition-all duration-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 sm:px-4 sm:py-2.5 sm:text-base md:text-base";
+
+  const labelClassName =
+    "mb-1.5 block text-[13px] font-semibold text-slate-600 sm:mb-2 sm:text-[14px] md:text-base";
+
   return (
-    <div className="bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] px-4 py-4 sm:px-5 sm:py-5">
+    <div className="bg-gradient-to-b from-white to-blue-50/30 px-3.5 py-4 sm:px-5 sm:py-5 md:px-6 md:py-6">
       <form onSubmit={handleSubmit}>
-        <div className="mb-4 rounded-[24px] border border-[#E4E1D8] bg-white px-4 py-3 shadow-[0_16px_40px_rgba(15,23,42,0.06)] sm:px-5">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <p className="text-[16px] font-semibold uppercase tracking-[0.24em] text-[#0B4F48]">
+        {/* Header Section */}
+        <div className="mb-4 rounded-[20px] border border-blue-100 bg-gradient-to-r from-blue-50 to-sky-50 px-4 py-3.5 shadow-sm sm:mb-5 sm:rounded-[24px] sm:px-5 sm:py-4 md:mb-6 md:rounded-[24px] md:px-6 md:py-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="text-center sm:text-left">
+              <p className="text-[13px] font-semibold uppercase tracking-[0.2em] text-blue-800 sm:text-[15px] sm:tracking-[0.24em]">
                 Invoice Form
               </p>
-              <h2 className="mt-1 text-[2.25rem] font-black text-[#1C231F] sm:text-[2.45rem]">
+              <h2 className="mt-1 text-[1.5rem] font-black text-slate-900 sm:text-[2rem] md:text-[2.25rem] lg:text-[2.45rem]">
                 {invoiceId ? "Edit Invoice" : "Generate Invoice"}
               </h2>
-              <p className="mt-1 text-[18px] font-semibold text-[#6B6F66]">
+              <p className="mt-1 text-[14px] font-semibold text-slate-500 sm:text-[15px] md:text-[18px]">
                 Fill guest, stay, and billing details. Final total updates automatically.
               </p>
             </div>
 
-            <div className="rounded-[18px] border border-[#CFE7E2] bg-[#E4F0EE]/80 px-4 py-2.5 sm:min-w-[220px]">
-              <div className="text-[16px] font-semibold uppercase tracking-[0.2em] text-[#0B4F48]">
+            <div className="mx-auto sm:mx-0 rounded-[16px] border border-blue-200 bg-white px-4 py-2.5 sm:min-w-[200px] sm:rounded-[18px] sm:px-5 md:min-w-[220px]">
+              <div className="text-[13px] font-semibold uppercase tracking-[0.2em] text-blue-800 sm:text-[15px]">
                 Invoice No
               </div>
-              <div className="mt-2 text-[18px] font-semibold text-[#1C231F]">{form.invoiceNo}</div>
+              <div className="mt-1.5 text-[16px] font-bold text-slate-900 sm:text-[18px]">{form.invoiceNo}</div>
             </div>
           </div>
         </div>
 
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.7fr)_minmax(320px,0.9fr)]">
+        {/* Main Content Grid */}
+        <div className="grid gap-4 md:gap-5 xl:grid-cols-[minmax(0,1.7fr)_minmax(320px,0.9fr)]">
+          {/* Left Column - Form Fields */}
           <div className="space-y-4">
-            <section className="rounded-[22px] border border-[#E4E1D8] bg-white p-4 shadow-[0_14px_36px_rgba(15,23,42,0.05)]">
-              <div className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-[#6B6F66]">
+            {/* Basic Details */}
+            <div className="rounded-[20px] border border-blue-100 bg-white p-4 shadow-[0_12px_30px_rgba(30,64,175,0.06)] sm:rounded-[22px] sm:p-5 md:rounded-[22px] md:p-5">
+              <div className="mb-3 text-[12px] font-semibold uppercase tracking-[0.18em] text-slate-500 sm:text-xs">
                 Basic Details
               </div>
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-                <Input
-                  label="Invoice No"
-                  name="invoiceNo"
-                  value={form.invoiceNo}
-                  onChange={handleChange}
-                />
+                <div>
+                  <label className={labelClassName}>Invoice No</label>
+                  <input
+                    className={inputClassName}
+                    name="invoiceNo"
+                    value={form.invoiceNo}
+                    onChange={handleChange}
+                  />
+                </div>
 
-                <Input
-                  label="Date"
-                  type="date"
-                  name="date"
-                  value={form.date}
-                  onChange={handleChange}
-                />
+                <div>
+                  <label className={labelClassName}>Date</label>
+                  <input
+                    type="date"
+                    className={inputClassName}
+                    name="date"
+                    value={form.date}
+                    onChange={handleChange}
+                  />
+                </div>
 
-                <Input
-                  label="Customer Name"
-                  name="customerName"
-                  value={form.customerName}
-                  onChange={handleChange}
-                  required
-                />
+                <div>
+                  <label className={labelClassName}>Customer Name</label>
+                  <input
+                    className={inputClassName}
+                    name="customerName"
+                    value={form.customerName}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
 
-                <Input
-                  label="Phone"
-                  name="phone"
-                  value={form.phone}
-                  onChange={handleChange}
-                />
+                <div>
+                  <label className={labelClassName}>Phone</label>
+                  <input
+                    className={inputClassName}
+                    name="phone"
+                    value={form.phone}
+                    onChange={handleChange}
+                  />
+                </div>
 
-                <Input
-                  label="Room No"
-                  name="roomNo"
-                  value={form.roomNo}
-                  onChange={handleChange}
-                />
+                <div>
+                  <label className={labelClassName}>Room No</label>
+                  <input
+                    className={inputClassName}
+                    name="roomNo"
+                    value={form.roomNo}
+                    onChange={handleChange}
+                  />
+                </div>
 
-                <Input
-                  label="Price Per Day (Rs.)"
-                  type="number"
-                  name="pricePerDay"
-                  value={form.pricePerDay}
-                  onChange={handleChange}
-                />
+                <div>
+                  <label className={labelClassName}>Price Per Day (Rs.)</label>
+                  <input
+                    type="number"
+                    className={inputClassName}
+                    name="pricePerDay"
+                    value={form.pricePerDay}
+                    onChange={handleChange}
+                  />
+                </div>
               </div>
-            </section>
+            </div>
 
-            <section className="rounded-[22px] border border-[#E4E1D8] bg-white p-4 shadow-[0_14px_36px_rgba(15,23,42,0.05)]">
-              <div className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-[#6B6F66]">
+            {/* Stay And Charges */}
+            <div className="rounded-[20px] border border-blue-100 bg-white p-4 shadow-[0_12px_30px_rgba(30,64,175,0.06)] sm:rounded-[22px] sm:p-5 md:rounded-[22px] md:p-5">
+              <div className="mb-3 text-[12px] font-semibold uppercase tracking-[0.18em] text-slate-500 sm:text-xs">
                 Stay And Charges
               </div>
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-                <Input
-                  label="Check In"
-                  type="date"
-                  name="checkIn"
-                  value={form.checkIn}
-                  onChange={handleChange}
-                />
+                <div>
+                  <label className={labelClassName}>Check In</label>
+                  <input
+                    type="date"
+                    className={inputClassName}
+                    name="checkIn"
+                    value={form.checkIn}
+                    onChange={handleChange}
+                  />
+                </div>
 
-                <Input
-                  label="Check Out"
-                  type="date"
-                  name="checkOut"
-                  value={form.checkOut}
-                  onChange={handleChange}
-                />
+                <div>
+                  <label className={labelClassName}>Check Out</label>
+                  <input
+                    type="date"
+                    className={inputClassName}
+                    name="checkOut"
+                    value={form.checkOut}
+                    onChange={handleChange}
+                  />
+                </div>
 
-                <Input
-                  label="Food Charge (Rs.)"
-                  type="number"
-                  name="foodCharge"
-                  value={form.foodCharge}
-                  onChange={handleChange}
-                />
+                <div>
+                  <label className={labelClassName}>Food Charge (Rs.)</label>
+                  <input
+                    type="number"
+                    className={inputClassName}
+                    name="foodCharge"
+                    value={form.foodCharge}
+                    onChange={handleChange}
+                  />
+                </div>
 
-                <Input
-                  label="Extra Charge (Rs.)"
-                  type="number"
-                  name="extraCharge"
-                  value={form.extraCharge}
-                  onChange={handleChange}
-                />
+                <div>
+                  <label className={labelClassName}>Extra Charge (Rs.)</label>
+                  <input
+                    type="number"
+                    className={inputClassName}
+                    name="extraCharge"
+                    value={form.extraCharge}
+                    onChange={handleChange}
+                  />
+                </div>
 
-                <Input
-                  label="GST %"
-                  type="number"
-                  name="gst"
-                  value={form.gst}
-                  onChange={handleChange}
-                />
+                <div>
+                  <label className={labelClassName}>GST %</label>
+                  <input
+                    type="number"
+                    className={inputClassName}
+                    name="gst"
+                    value={form.gst}
+                    onChange={handleChange}
+                  />
+                </div>
 
-                <Input
-                  label="Discount (Rs.)"
-                  type="number"
-                  name="discount"
-                  value={form.discount}
-                  onChange={handleChange}
-                />
+                <div>
+                  <label className={labelClassName}>Discount (Rs.)</label>
+                  <input
+                    type="number"
+                    className={inputClassName}
+                    name="discount"
+                    value={form.discount}
+                    onChange={handleChange}
+                  />
+                </div>
               </div>
-            </section>
+            </div>
 
-            <section className="rounded-[22px] border border-[#E4E1D8] bg-white p-4 shadow-[0_14px_36px_rgba(15,23,42,0.05)]">
-              <div className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-[#6B6F66]">
+            {/* Payment And Notes */}
+            <div className="rounded-[20px] border border-blue-100 bg-white p-4 shadow-[0_12px_30px_rgba(30,64,175,0.06)] sm:rounded-[22px] sm:p-5 md:rounded-[22px] md:p-5">
+              <div className="mb-3 text-[12px] font-semibold uppercase tracking-[0.18em] text-slate-500 sm:text-xs">
                 Payment And Notes
               </div>
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                <Select
-                  label="Payment Mode"
-                  name="paymentMode"
-                  value={form.paymentMode}
-                  onChange={handleChange}
-                  options={["Cash", "Card", "UPI", "Bank Transfer"]}
-                />
+                <div>
+                  <label className={labelClassName}>Payment Mode</label>
+                  <select
+                    name="paymentMode"
+                    value={form.paymentMode}
+                    onChange={handleChange}
+                    className={inputClassName}
+                  >
+                    <option value="Cash">Cash</option>
+                    <option value="Card">Card</option>
+                    <option value="UPI">UPI</option>
+                    <option value="Bank Transfer">Bank Transfer</option>
+                  </select>
+                </div>
 
-                <Select
-                  label="Status"
-                  name="status"
-                  value={form.status}
-                  onChange={handleChange}
-                  options={["Paid", "Pending", "Partially Paid"]}
-                />
+                <div>
+                  <label className={labelClassName}>Status</label>
+                  <select
+                    name="status"
+                    value={form.status}
+                    onChange={handleChange}
+                    className={inputClassName}
+                  >
+                    <option value="Paid">Paid</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Partially Paid">Partially Paid</option>
+                  </select>
+                </div>
               </div>
 
               <div className="mt-3">
-                <label className="mb-1 block text-[16px] font-semibold text-[#1C231F]">
-                  Notes
-                </label>
+                <label className={labelClassName}>Notes</label>
                 <textarea
-                  className="min-h-[84px] w-full rounded-xl border border-[#E4E1D8] bg-white px-4 py-2.5 text-[16px] font-semibold text-[#1C231F] outline-none transition focus:border-[#0B4F48] focus:ring-4 focus:ring-[#CFE7E2]"
+                  className="min-h-[72px] w-full rounded-xl border border-blue-200 bg-white px-3.5 py-2.5 text-[15px] font-semibold text-slate-900 outline-none transition-all duration-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 sm:min-h-[80px] sm:px-4"
                   name="notes"
                   value={form.notes}
                   onChange={handleChange}
@@ -323,64 +382,83 @@ const InvoiceForm = ({
                   placeholder="Optional notes for the invoice"
                 />
               </div>
-            </section>
+            </div>
           </div>
 
-          <div className="space-y-4">
-            <section className="rounded-[22px] border border-[#E4E1D8] bg-[linear-gradient(180deg,#f5f9ff_0%,#eef6ff_100%)] p-4 shadow-[0_16px_40px_rgba(15,23,42,0.06)]">
-              <div className="text-xs font-semibold uppercase tracking-[0.2em] text-[#0B4F48]">
+          {/* Right Column - Summary */}
+          <div className="mt-4 space-y-4 md:mt-0">
+            <div className="rounded-[20px] border border-blue-100 bg-gradient-to-br from-blue-50 to-sky-50 p-4 shadow-[0_14px_36px_rgba(30,64,175,0.05)] sm:rounded-[22px] sm:p-5 md:rounded-[22px] md:p-5">
+              <div className="text-[12px] font-semibold uppercase tracking-[0.18em] text-blue-800 sm:text-xs">
                 Invoice Summary
               </div>
-              <div className="mt-3 space-y-2.5">
-                <SummaryRow label="Total Days" value={String(calculated.days)} />
-                <SummaryRow label="Room Charge" value={`Rs. ${calculated.roomCharge.toFixed(2)}`} />
-                <SummaryRow label="Subtotal" value={`Rs. ${calculated.subtotal.toFixed(2)}`} />
-                <SummaryRow label={`GST (${form.gst}%)`} value={`Rs. ${calculated.gstAmount.toFixed(2)}`} />
+              <div className="mt-3 space-y-2 sm:space-y-2.5">
+                <div className="flex items-center justify-between gap-3 rounded-[12px] bg-white/70 px-3 py-2">
+                  <span className="text-[14px] font-semibold text-slate-600 sm:text-[15px]">Total Days</span>
+                  <span className="text-[14px] font-semibold text-slate-900 sm:text-[15px]">{String(calculated.days)}</span>
+                </div>
+                <div className="flex items-center justify-between gap-3 rounded-[12px] bg-white/70 px-3 py-2">
+                  <span className="text-[14px] font-semibold text-slate-600 sm:text-[15px]">Room Charge</span>
+                  <span className="text-[14px] font-semibold text-blue-900 sm:text-[15px]">Rs. {calculated.roomCharge.toFixed(2)}</span>
+                </div>
+                <div className="flex items-center justify-between gap-3 rounded-[12px] bg-white/70 px-3 py-2">
+                  <span className="text-[14px] font-semibold text-slate-600 sm:text-[15px]">Subtotal</span>
+                  <span className="text-[14px] font-semibold text-blue-900 sm:text-[15px]">Rs. {calculated.subtotal.toFixed(2)}</span>
+                </div>
+                <div className="flex items-center justify-between gap-3 rounded-[12px] bg-white/70 px-3 py-2">
+                  <span className="text-[14px] font-semibold text-slate-600 sm:text-[15px]">GST ({form.gst}%)</span>
+                  <span className="text-[14px] font-semibold text-blue-900 sm:text-[15px]">Rs. {calculated.gstAmount.toFixed(2)}</span>
+                </div>
                 {Number(form.discount) > 0 ? (
-                  <SummaryRow
-                    label="Discount"
-                    value={`- Rs. ${Number(form.discount).toFixed(2)}`}
-                    valueClassName="text-[#0F6E64]"
-                  />
+                  <div className="flex items-center justify-between gap-3 rounded-[12px] bg-white/70 px-3 py-2">
+                    <span className="text-[14px] font-semibold text-slate-600 sm:text-[15px]">Discount</span>
+                    <span className="text-[14px] font-semibold text-sky-700 sm:text-[15px]">- Rs. {Number(form.discount).toFixed(2)}</span>
+                  </div>
                 ) : null}
               </div>
 
-              <div className="mt-4 rounded-[18px] border border-[#CFE7E2] bg-white px-4 py-3.5">
-                <div className="flex items-center justify-between gap-4">
-                  <span className="text-[16px] font-semibold text-[#1C231F]">Final Total</span>
-                  <span className="text-[1.8rem] font-black text-[#0B4F48]">
+              <div className="mt-4 rounded-[16px] border border-blue-200 bg-white px-4 py-3 sm:rounded-[18px] sm:px-5 sm:py-3.5">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-[15px] font-semibold text-slate-900 sm:text-[16px]">Final Total</span>
+                  <span className="text-[1.5rem] font-black text-blue-900 sm:text-[1.6rem] md:text-[1.8rem]">
                     Rs. {calculated.finalTotal.toFixed(2)}
                   </span>
                 </div>
               </div>
-            </section>
+            </div>
 
-            <section className="rounded-[22px] border border-[#E4E1D8] bg-white/90 p-4 shadow-[0_14px_36px_rgba(15,23,42,0.05)]">
-              <div className="text-xs font-semibold uppercase tracking-[0.2em] text-[#6B6F66]">
+            <div className="rounded-[20px] border border-blue-100 bg-white/90 p-4 shadow-[0_12px_30px_rgba(30,64,175,0.05)] sm:rounded-[22px] sm:p-5 md:rounded-[22px] md:p-5">
+              <div className="text-[12px] font-semibold uppercase tracking-[0.18em] text-slate-500 sm:text-xs">
                 Quick Info
               </div>
-              <div className="mt-3 space-y-2.5 text-[16px] font-semibold text-[#6B6F66]">
-                <div className="flex items-center justify-between gap-4">
+              <div className="mt-3 space-y-2.5 text-[14px] font-semibold text-slate-600 sm:text-[15px]">
+                <div className="flex items-center justify-between gap-3">
                   <span>Payment Mode</span>
-                  <span className="font-semibold text-[#1C231F]">{form.paymentMode}</span>
+                  <span className="font-semibold text-slate-900">{form.paymentMode}</span>
                 </div>
-                <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center justify-between gap-3">
                   <span>Status</span>
-                  <span className="font-semibold text-[#1C231F]">{form.status}</span>
+                  <span className={`font-semibold ${
+                    form.status === "Paid"
+                      ? "text-emerald-600"
+                      : form.status === "Pending"
+                      ? "text-amber-600"
+                      : "text-sky-600"
+                  }`}>{form.status}</span>
                 </div>
-                <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center justify-between gap-3">
                   <span>Customer</span>
-                  <span className="font-semibold text-[#1C231F]">{form.customerName || "--"}</span>
+                  <span className="font-semibold text-slate-900">{form.customerName || "--"}</span>
                 </div>
               </div>
-            </section>
+            </div>
           </div>
         </div>
 
-        <div className="mt-4 flex justify-end gap-3 border-t border-[#E4E1D8] pt-4">
+        {/* Action Buttons */}
+        <div className="mt-4 flex flex-col-reverse gap-2.5 border-t border-blue-100 pt-4 sm:mt-5 sm:flex-row sm:justify-end sm:gap-3 sm:border-t md:mt-6 md:pt-5">
           <button
             type="button"
-            className="rounded-xl border border-[#E4E1D8] bg-white px-5 py-2.5 text-[16px] font-semibold text-[#1C231F] transition hover:bg-[#F6F5F1]"
+            className="w-full rounded-xl border border-blue-200 bg-white px-5 py-2.5 text-[14px] font-semibold text-slate-700 transition-all duration-200 hover:bg-blue-50 active:scale-[0.98] sm:w-auto sm:text-[15px] md:text-base"
             onClick={onCancel}
           >
             Cancel
@@ -388,7 +466,7 @@ const InvoiceForm = ({
 
           <button
             type="submit"
-            className="rounded-xl bg-gradient-to-r from-cyan-600 to-indigo-600 px-5 py-2.5 text-[16px] font-semibold text-white shadow-[0_12px_30px_rgba(8,145,178,0.2)] transition hover:from-cyan-700 hover:to-indigo-700"
+            className="w-full rounded-xl bg-gradient-to-r from-blue-700 to-sky-500 px-5 py-2.5 text-[14px] font-semibold text-white shadow-[0_8px_25px_rgba(30,64,175,0.25)] transition-all duration-200 hover:from-blue-800 hover:to-sky-600 hover:shadow-[0_12px_30px_rgba(30,64,175,0.3)] active:scale-[0.98] disabled:opacity-60 sm:w-auto sm:text-[15px] md:text-base md:px-5 md:py-2.5"
             disabled={loading}
           >
             {loading ? "Saving..." : invoiceId ? "Update Invoice" : "Generate Invoice"}
@@ -398,43 +476,5 @@ const InvoiceForm = ({
     </div>
   );
 };
-
-const Input = ({ label, required, ...props }) => (
-  <div>
-    <label className="mb-1 block text-[16px] font-semibold text-[#1C231F]">
-      {label}
-    </label>
-    <input
-      className="w-full rounded-xl border border-[#E4E1D8] bg-white px-4 py-2.5 text-[16px] font-semibold text-[#1C231F] outline-none transition focus:border-[#0B4F48] focus:ring-4 focus:ring-[#CFE7E2]"
-      required={required}
-      {...props}
-    />
-  </div>
-);
-
-const Select = ({ label, options, ...props }) => (
-  <div>
-    <label className="mb-1 block text-[16px] font-semibold text-[#1C231F]">
-      {label}
-    </label>
-    <select
-      className="w-full rounded-xl border border-[#E4E1D8] bg-white px-4 py-2.5 text-[16px] font-semibold text-[#1C231F] outline-none transition focus:border-[#0B4F48] focus:ring-4 focus:ring-[#CFE7E2]"
-      {...props}
-    >
-      {options.map((opt) => (
-        <option key={opt} value={opt}>
-          {opt}
-        </option>
-      ))}
-    </select>
-  </div>
-);
-
-const SummaryRow = ({ label, value, valueClassName = "text-[#1C231F]" }) => (
-  <div className="flex items-center justify-between gap-4 rounded-[14px] bg-white/70 px-3 py-2.5">
-    <span className="text-[16px] font-semibold text-[#6B6F66]">{label}</span>
-    <span className={`text-[16px] font-semibold ${valueClassName}`}>{value}</span>
-  </div>
-);
 
 export default InvoiceForm;

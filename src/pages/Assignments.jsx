@@ -397,6 +397,46 @@ const Assignment = () => {
     { icon: FaCheckCircle, label: "Completed", value: stats.completed || 0 },
   ];
 
+  // Shared action buttons used inside both the table row and the mobile card
+  const renderActionButtons = (assignment) => (
+    <div className="flex flex-wrap gap-2">
+      {normalizeLower(assignment.status) === "pending" && (
+        <button
+          onClick={() => updateTaskStatus(assignment.id, "In Progress")}
+          className="rounded-full bg-gradient-to-r from-sky-600 to-cyan-400 px-4 py-2 text-sm font-bold text-white shadow-sm shadow-sky-200 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+        >
+          Start
+        </button>
+      )}
+      {normalizeLower(assignment.status) === "in progress" && (
+        <button
+          onClick={() => updateTaskStatus(assignment.id, "Completed")}
+          className="rounded-full bg-gradient-to-r from-emerald-600 to-emerald-400 px-4 py-2 text-sm font-bold text-white shadow-sm shadow-emerald-200 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+        >
+          Complete
+        </button>
+      )}
+      {canManageAssignments && (
+        <button
+          onClick={() => editTask(assignment)}
+          className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-blue-700 to-blue-500 px-4 py-2 text-sm font-bold text-white shadow-sm shadow-blue-200 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+        >
+          <FaEdit className="text-xs" />
+          Edit
+        </button>
+      )}
+      {canManageAssignments && (
+        <button
+          onClick={() => deleteTask(assignment.id)}
+          className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-rose-600 to-rose-400 px-4 py-2 text-sm font-bold text-white shadow-sm shadow-rose-200 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+        >
+          <FaTrashAlt className="text-xs" />
+          Delete
+        </button>
+      )}
+    </div>
+  );
+
   return (
     <div className="relative min-h-screen w-full overflow-x-hidden bg-slate-100 p-4 sm:p-6 lg:p-8">
       <div className="w-full space-y-6 sm:space-y-7">
@@ -668,8 +708,96 @@ const Assignment = () => {
           </section>
         )}
 
-        {/* TABLE */}
-        <section className="rounded-[28px] border border-white/70 bg-white/90 shadow-[0_20px_50px_rgba(15,23,42,0.08)]">
+        {/* MOBILE CARDS (phone view only) */}
+        <section className="space-y-4 sm:hidden">
+          {pageLoading && (
+            <div className="rounded-[22px] border border-white/70 bg-white/90 px-5 py-10 text-center text-sm font-semibold text-slate-500 shadow-[0_14px_35px_rgba(15,23,42,0.08)]">
+              Loading assignments...
+            </div>
+          )}
+
+          {!pageLoading && assignments.length === 0 && (
+            <div className="rounded-[22px] border border-white/70 bg-white/90 px-5 py-10 text-center text-sm font-semibold text-slate-500 shadow-[0_14px_35px_rgba(15,23,42,0.08)]">
+              No tasks assigned yet
+            </div>
+          )}
+
+          {assignments.map((assignment) => (
+            <div
+              key={assignment.id}
+              className="rounded-[22px] border border-white/70 bg-white/95 p-4 shadow-[0_14px_35px_rgba(15,23,42,0.1)]"
+            >
+              {/* Top row: staff + room */}
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600">
+                    <FaUserCircle />
+                  </span>
+                  <div>
+                    <div className="text-[15px] font-bold text-slate-900">
+                      {assignment.staff_name}
+                    </div>
+                    <div className="flex items-center gap-1 text-xs font-semibold text-slate-500">
+                      <FaBed className="text-[10px]" />
+                      Room {assignment.room_number}
+                    </div>
+                  </div>
+                </div>
+                <span
+                  className={`inline-flex flex-shrink-0 rounded-full px-3 py-1 text-xs font-bold ${getPriorityBadge(assignment.priority)}`}
+                >
+                  {assignment.priority || "Normal"}
+                </span>
+              </div>
+
+              {/* Task + notes */}
+              <div className="mt-3 border-t border-slate-100 pt-3">
+                <div className="text-sm font-semibold text-slate-700">{assignment.task}</div>
+                {assignment.notes ? (
+                  <div className="mt-1.5 flex items-start gap-1.5 text-xs leading-5 text-slate-500">
+                    <FaStickyNote className="mt-0.5 flex-shrink-0 text-[10px]" />
+                    <span>{assignment.notes}</span>
+                  </div>
+                ) : null}
+              </div>
+
+              {/* Status + due time */}
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3">
+                <span
+                  className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${getStatusBadge(assignment.status)}`}
+                >
+                  {assignment.status || "Pending"}
+                </span>
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500">
+                  <FaClock className="text-[10px]" />
+                  Due: {assignment.due_time || "--"}
+                </div>
+              </div>
+
+              {/* Meta info */}
+              <div className="mt-3 space-y-1 border-t border-slate-100 pt-3 text-xs text-slate-500">
+                <div>
+                  Assigned by:{" "}
+                  <span className="font-semibold text-slate-700">
+                    {assignment.assigned_by || assignment.created_by_name || "--"}
+                  </span>
+                </div>
+                <div>Assigned on: {formatTimestamp(assignment.created_at)}</div>
+                <div>
+                  Updated: {formatTimestamp(assignment.updated_at || assignment.created_at)}
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="mt-4 border-t border-slate-100 pt-3">
+                {renderActionButtons(assignment)}
+              </div>
+            </div>
+          ))}
+        </section>
+
+        {/* TABLE (tablet & desktop view) */}
+        <section className="hidden rounded-[28px] border border-white/70 bg-white/90 shadow-[0_20px_50px_rgba(15,23,42,0.08)] sm:block">
           <div className="max-h-[640px] overflow-auto rounded-[28px]">
             <table className="min-w-full text-left">
               <thead className="sticky top-0 z-10 bg-slate-50/95 text-[15px] uppercase tracking-wide text-slate-500 backdrop-blur">
@@ -737,44 +865,7 @@ const Assignment = () => {
                     <td className="px-5 py-4 hidden text-[16px] text-slate-600 xl:table-cell">
                       {formatTimestamp(assignment.updated_at || assignment.created_at)}
                     </td>
-                    <td className="px-5 py-4">
-                      <div className="flex flex-wrap gap-2">
-                        {normalizeLower(assignment.status) === "pending" && (
-                          <button
-                            onClick={() => updateTaskStatus(assignment.id, "In Progress")}
-                            className="rounded-full bg-gradient-to-r from-sky-600 to-cyan-400 px-4 py-2 text-sm font-bold text-white shadow-sm shadow-sky-200 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
-                          >
-                            Start
-                          </button>
-                        )}
-                        {normalizeLower(assignment.status) === "in progress" && (
-                          <button
-                            onClick={() => updateTaskStatus(assignment.id, "Completed")}
-                            className="rounded-full bg-gradient-to-r from-emerald-600 to-emerald-400 px-4 py-2 text-sm font-bold text-white shadow-sm shadow-emerald-200 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
-                          >
-                            Complete
-                          </button>
-                        )}
-                        {canManageAssignments && (
-                          <button
-                            onClick={() => editTask(assignment)}
-                            className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-blue-700 to-blue-500 px-4 py-2 text-sm font-bold text-white shadow-sm shadow-blue-200 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
-                          >
-                            <FaEdit className="text-xs" />
-                            Edit
-                          </button>
-                        )}
-                        {canManageAssignments && (
-                          <button
-                            onClick={() => deleteTask(assignment.id)}
-                            className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-rose-600 to-rose-400 px-4 py-2 text-sm font-bold text-white shadow-sm shadow-rose-200 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
-                          >
-                            <FaTrashAlt className="text-xs" />
-                            Delete
-                          </button>
-                        )}
-                      </div>
-                    </td>
+                    <td className="px-5 py-4">{renderActionButtons(assignment)}</td>
                   </tr>
                 ))}
 

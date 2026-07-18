@@ -316,39 +316,40 @@ const BankReconciliation = () => {
   ];
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-[linear-gradient(135deg,#f5fbff_0%,#f3f8f4_28%,#fff8f1_58%,#f8fafc_100%)] p-4 sm:p-6 lg:p-8">
+    <div className="relative min-h-screen overflow-x-hidden bg-[linear-gradient(135deg,#f5fbff_0%,#f3f8f4_28%,#fff8f1_58%,#f8fafc_100%)] p-3 sm:p-4 md:p-6 xl:p-8">
       <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute left-[-8%] top-[-6%] h-72 w-72 rounded-full bg-cyan-200/45 blur-3xl sm:h-96 sm:w-96" />
-        <div className="absolute right-[-10%] top-[8%] h-72 w-72 rounded-full bg-amber-200/45 blur-3xl sm:h-[28rem] sm:w-[28rem]" />
+        <div className="absolute left-[-8%] top-[-6%] h-56 w-56 rounded-full bg-cyan-200/45 blur-3xl sm:h-72 sm:w-72 md:h-96 md:w-96" />
+        <div className="absolute right-[-10%] top-[8%] h-56 w-56 rounded-full bg-amber-200/45 blur-3xl sm:h-72 sm:w-72 md:h-[28rem] md:w-[28rem]" />
       </div>
 
-      <div className="space-y-7">
-        <section className="overflow-hidden rounded-[28px] border border-slate-900/10 bg-[linear-gradient(120deg,#071b34_0%,#0d4a53_52%,#162d45_100%)] px-5 py-6 text-white shadow-[0_22px_55px_rgba(15,23,42,0.12)] sm:px-7 sm:py-8">
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(320px,0.95fr)] lg:items-center">
-            <div className="space-y-4">
-              <p className="text-sm font-semibold uppercase tracking-[0.26em] text-cyan-200">
+      <div className="space-y-5 sm:space-y-6 xl:space-y-7">
+        {/* HERO SECTION */}
+        <section className="overflow-hidden rounded-[22px] border border-slate-900/10 bg-[linear-gradient(120deg,#172554_0%,#1e40af_52%,#0ea5e9_100%)] px-4 py-5 text-white shadow-[0_22px_55px_rgba(15,23,42,0.12)] sm:px-5 sm:py-6 md:rounded-[28px] md:px-7 md:py-8 xl:px-7 xl:py-8">
+          <div className="grid gap-5 sm:gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(320px,0.95fr)] lg:items-center">
+            <div className="space-y-3 sm:space-y-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200 sm:text-sm sm:tracking-[0.26em]">
                 Finance Center
               </p>
-              <h1 className="text-4xl font-black leading-tight sm:text-5xl">
+              <h1 className="text-2xl font-black leading-tight sm:text-3xl md:text-4xl xl:text-5xl">
                 Bank reconciliation full workspace
               </h1>
-              <p className="max-w-3xl text-lg leading-8 text-slate-100/85 sm:text-xl">
+              <p className="max-w-3xl text-[15px] leading-6 text-slate-100/85 sm:text-base sm:leading-7 md:text-lg md:leading-8 xl:text-xl">
                 Manage bank ledger entries, review unmatched billing rows, and complete full
                 reconciliation from one dedicated page.
               </p>
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:gap-3">
                 <button
                   type="button"
                   onClick={() => navigate("/accounts")}
-                  className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-base font-bold text-slate-900 shadow-[0_16px_35px_rgba(255,255,255,0.15)]"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-bold text-slate-900 shadow-[0_16px_35px_rgba(255,255,255,0.15)] sm:w-auto sm:justify-start sm:py-3 sm:text-base"
                 >
-                  <FaArrowLeft className="text-cyan-600" />
+                  <FaArrowLeft className="text-blue-700" />
                   Back To Accounts
                 </button>
                 <button
                   type="button"
                   onClick={refreshData}
-                  className="inline-flex items-center gap-2 rounded-full border border-cyan-200/40 bg-cyan-400/15 px-5 py-3 text-base font-bold text-white backdrop-blur-md transition hover:border-cyan-200 hover:bg-cyan-400/20"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-cyan-200/40 bg-cyan-400/15 px-5 py-2.5 text-sm font-bold text-white backdrop-blur-md transition hover:border-cyan-200 hover:bg-cyan-400/20 sm:w-auto sm:justify-start sm:py-3 sm:text-base"
                 >
                   <FaChartLine className="text-cyan-200" />
                   Refresh Reconciliation
@@ -356,19 +357,19 @@ const BankReconciliation = () => {
                 <button
                   type="button"
                   onClick={openReconciliationData}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-3 text-base font-bold text-white backdrop-blur-md transition hover:border-cyan-200 hover:text-cyan-100"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-2.5 text-sm font-bold text-white backdrop-blur-md transition hover:border-cyan-200 hover:text-cyan-100 sm:w-auto sm:justify-start sm:py-3 sm:text-base"
                 >
                   <FaTable className="text-cyan-200" />
                   Reconciliation Data
                 </button>
-                <label className="min-w-[220px] rounded-[20px] border border-white/15 bg-white/10 px-4 py-3 text-left backdrop-blur-md">
-                  <span className="block text-sm font-semibold uppercase tracking-[0.2em] text-cyan-100/80">
+                <label className="w-full rounded-[18px] border border-white/15 bg-white/10 px-4 py-2.5 text-left backdrop-blur-md sm:min-w-[220px] sm:w-auto sm:rounded-[20px] sm:py-3">
+                  <span className="block text-xs font-semibold uppercase tracking-[0.18em] text-cyan-100/80 sm:text-sm sm:tracking-[0.2em]">
                     Payment Filter
                   </span>
                   <select
                     value={selectedPaymentMode}
                     onChange={(event) => setSelectedPaymentMode(event.target.value)}
-                    className="mt-2 w-full bg-transparent text-base font-semibold text-white outline-none"
+                    className="mt-2 w-full bg-transparent text-sm font-semibold text-white outline-none sm:text-base"
                   >
                     {paymentModeOptions.map((mode) => (
                       <option key={mode} value={mode} className="text-slate-900">
@@ -380,14 +381,14 @@ const BankReconciliation = () => {
               </div>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 xs:grid-cols-2 sm:grid-cols-2">
               {bankCards.map((card) => (
                 <div
                   key={card.label}
-                  className="rounded-[22px] border border-white/12 bg-white/10 px-4 py-4 backdrop-blur-md"
+                  className="rounded-[18px] border border-white/12 bg-white/10 px-4 py-3.5 backdrop-blur-md sm:rounded-[22px] sm:py-4"
                 >
-                  <span className="text-sm text-slate-100/75">{card.label}</span>
-                  <div className={`mt-3 text-3xl font-bold leading-none ${card.tone}`}>
+                  <span className="text-[13px] text-slate-100/75 sm:text-sm">{card.label}</span>
+                  <div className={`mt-2 text-2xl font-bold leading-none sm:mt-3 sm:text-3xl ${card.tone}`}>
                     {card.value}
                   </div>
                 </div>
@@ -408,40 +409,45 @@ const BankReconciliation = () => {
           onUnlink={handleUnlinkBankLedger}
         />
 
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
           {departmentSummaryCards.map((item) => (
             <div
               key={item.label}
-              className="rounded-[24px] border border-white/60 bg-white/82 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)]"
+              className="rounded-[18px] border border-white/60 bg-white/82 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] sm:rounded-[24px] sm:p-5"
             >
-              <div className="text-[16px] font-semibold uppercase tracking-[0.18em] text-slate-700">
+              <div className="text-[13px] font-semibold uppercase tracking-[0.14em] text-slate-700 sm:text-[16px] sm:tracking-[0.18em]">
                 {item.label}
               </div>
-              <div className={`mt-3 text-[2.35rem] font-black ${item.tone}`}>{item.value}</div>
-              <div className="mt-2 text-[16px] font-semibold text-slate-700">
+              <div className={`mt-2 text-2xl font-black sm:mt-3 sm:text-[2.35rem] ${item.tone}`}>
+                {item.value}
+              </div>
+              <div className="mt-2 text-[13px] font-semibold text-slate-700 sm:text-[16px]">
                 Live backend summary from invoices, restaurant bills, and department-tagged expenses.
               </div>
             </div>
           ))}
         </section>
 
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
           {extendedSummaryCards.map((item) => (
             <div
               key={item.label}
-              className="rounded-[24px] border border-white/60 bg-white/82 p-5 text-left shadow-[0_18px_45px_rgba(15,23,42,0.08)]"
+              className="rounded-[18px] border border-white/60 bg-white/82 p-4 text-left shadow-[0_18px_45px_rgba(15,23,42,0.08)] sm:rounded-[24px] sm:p-5"
             >
-              <div className="text-[16px] font-semibold uppercase tracking-[0.18em] text-slate-700">
+              <div className="text-[13px] font-semibold uppercase tracking-[0.14em] text-slate-700 sm:text-[16px] sm:tracking-[0.18em]">
                 {item.label}
               </div>
-              <div className={`mt-3 text-[2.35rem] font-black ${item.tone}`}>{item.value}</div>
+              <div className={`mt-2 text-2xl font-black sm:mt-3 sm:text-[2.35rem] ${item.tone}`}>
+                {item.value}
+              </div>
               {item.helper ? (
-                <div className="mt-2 text-[16px] font-semibold text-slate-700">{item.helper}</div>
+                <div className="mt-2 text-[13px] font-semibold text-slate-700 sm:text-[16px]">
+                  {item.helper}
+                </div>
               ) : null}
             </div>
           ))}
         </section>
-
       </div>
     </div>
   );
