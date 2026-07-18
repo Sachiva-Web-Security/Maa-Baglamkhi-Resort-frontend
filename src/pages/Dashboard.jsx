@@ -204,6 +204,17 @@ const Dashboard = () => {
   }, []);
 
   useEffect(() => {
+    const previousHtmlOverflowX = document.documentElement.style.overflowX;
+    const previousBodyOverflowX = document.body.style.overflowX;
+    document.documentElement.style.overflowX = "hidden";
+    document.body.style.overflowX = "hidden";
+    return () => {
+      document.documentElement.style.overflowX = previousHtmlOverflowX;
+      document.body.style.overflowX = previousBodyOverflowX;
+    };
+  }, []);
+
+  useEffect(() => {
     const freshLoginFlag = localStorage.getItem("freshLogin");
     if (freshLoginFlag !== "true") {
       setLoading(false);
@@ -393,6 +404,7 @@ const Dashboard = () => {
       {
         key: "attention",
         tone: "border-rose-200 bg-rose-50",
+        icon: FaExclamationTriangle,
         iconClass: "text-rose-500",
         title: `${attentionCount} live room issue${attentionCount === 1 ? "" : "s"}`,
         detail: `${dirtyRoomCount} dirty room, ${unassignedHousekeepingCount} unassigned housekeeping room.`,
@@ -400,6 +412,7 @@ const Dashboard = () => {
       {
         key: "confirmed",
         tone: "border-amber-200 bg-amber-50",
+        icon: FaCalendarAlt,
         iconClass: "text-amber-500",
         title: `${selectedDaySnapshot.confirmed.length} confirmed room${selectedDaySnapshot.confirmed.length === 1 ? "" : "s"}`,
         detail: `Confirmed for ${formatDateLabel(selectedDate)} from live booking board.`,
@@ -407,6 +420,7 @@ const Dashboard = () => {
       {
         key: "checked-in",
         tone: "border-cyan-200 bg-cyan-50",
+        icon: FaKey,
         iconClass: "text-cyan-500",
         title: `${selectedDaySnapshot.checked_in.length} checked-in room${selectedDaySnapshot.checked_in.length === 1 ? "" : "s"}`,
         detail: `In-house rooms for ${formatDateLabel(selectedDate)} from active stay data.`,
@@ -512,13 +526,14 @@ const Dashboard = () => {
       title: "Expected Check-outs",
       subtitle: "Guests scheduled to check out today.",
       items: apiMetrics.expectedCheckoutDetails || [],
-     empty: "There was no expected checkout today.",
+      empty: "There was no expected checkout today.",
     },
     today_checkins: {
       title: "Today's Check-ins",
       subtitle: "Guests who are already marked as checked in today.",
       items: apiMetrics.todayCheckinDetails || [],
- empty: "There was no checked-in arrival record today.",    },
+      empty: "There was no checked-in arrival record today.",
+    },
   };
   const activeMetricPanel = metricPanelData[openMetricPanel] || null;
   const activeMetricPanelTotalPages = activeMetricPanel
@@ -543,7 +558,7 @@ const Dashboard = () => {
     {
       title: "Occupied Rooms",
       value: String(liveOccupiedRooms || apiMetrics.occupiedRooms || 0),
-      subtitle: "Live stay activity",
+      subtitle: `${occupancyRate} occupancy`,
       icon: FaKey,
       gradient: "bg-blue-600",
       route: "/stayover",
@@ -1127,7 +1142,6 @@ const Dashboard = () => {
   useEffect(() => {
     if (!selectedRoom) return;
 
-    const roomId = getRoomTaskKey(selectedRoom);
     const assignee = selectedRoom.roomData?.assignee;
     setSelectedAssignee(assignee && assignee !== "No Housekeeper" ? assignee : "");
     setSelectedCleaningMinutes(30);
@@ -1324,7 +1338,7 @@ const Dashboard = () => {
       ) : null}
 
       <div
-        className={`dashboard-typography dashboard-shell relative isolate min-h-fit w-full overflow-x-hidden transition-all duration-300 ${
+        className={`dashboard-typography dashboard-shell relative isolate min-h-fit w-full transition-all duration-300 ${
           blurBg ? "blur-[6px]" : ""
         }`}
       >
@@ -1335,8 +1349,57 @@ const Dashboard = () => {
           <div className="absolute inset-0 bg-[linear-gradient(rgba(148,163,184,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.08)_1px,transparent_1px)] bg-[size:88px_88px] opacity-60" />
         </div>
 
-        <div className="mt-2 max-w-full space-y-6 sm:mt-3">
-          <div className="grid w-full grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
+        <div className="relative left-1/2 right-1/2 -mx-[50vw] w-screen max-w-none overflow-x-hidden space-y-5 px-3 pb-10 pt-3 sm:space-y-6 sm:px-4 sm:pt-4 lg:px-6 xl:px-8">
+          {/* ---------------------------------------------------------------- */}
+          {/* Page header                                                      */}
+          {/* ---------------------------------------------------------------- */}
+          <div className="dashboard-card flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+            <div className="min-w-0">
+              <p className="dashboard-label text-blue-600">Front Desk</p>
+              <h1 className="mt-1 truncate text-xl font-black tracking-tight text-slate-900 sm:text-2xl">
+                Dashboard
+              </h1>
+              <p className="dashboard-subheading mt-1 text-slate-500">
+                {formatDateLabel(todayISO())} &middot; {liveTotalRooms} rooms &middot; {occupancyRate} occupied
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 sm:gap-3">
+              <button
+                type="button"
+                onClick={() => loadDashboardData(true)}
+                title="Refresh dashboard"
+                className="dashboard-button-secondary flex h-11 w-11 items-center justify-center rounded-full text-slate-600"
+              >
+                <FaSyncAlt className={refreshingDashboard ? "animate-spin" : ""} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setNotificationOpen(true)}
+                title="Notifications"
+                className="dashboard-button-secondary relative flex h-11 w-11 items-center justify-center rounded-full text-slate-600"
+              >
+                <FaBell />
+                {dashboardNotifications.length ? (
+                  <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-rose-500 px-1 text-[11px] font-bold text-white shadow-sm">
+                    {dashboardNotifications.length}
+                  </span>
+                ) : null}
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate("/hotel/guest", { state: { resetBookingDraft: true } })}
+                className="dashboard-button-primary hidden items-center gap-2 rounded-full px-5 py-2.5 text-xs font-bold uppercase tracking-[0.14em] sm:inline-flex"
+              >
+                <FaDoorOpen /> New Booking
+              </button>
+            </div>
+          </div>
+
+          {/* ---------------------------------------------------------------- */}
+          {/* Metrics                                                          */}
+          {/* ---------------------------------------------------------------- */}
+          <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-7">
             {metrics.map((metric) => (
               <MetricCard
                 key={metric.title}
@@ -1351,7 +1414,7 @@ const Dashboard = () => {
           </div>
 
           {activeMetricPanel ? (
-            <div className="dashboard-card mt-4 p-4 sm:p-5">
+            <div className="dashboard-card p-4 sm:p-5">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <p className="dashboard-label text-blue-600">
@@ -1363,7 +1426,7 @@ const Dashboard = () => {
                 <button
                   type="button"
                   onClick={() => setOpenMetricPanel("")}
-                  className="dashboard-button-secondary inline-flex items-center gap-2 px-3 py-2 text-xs font-semibold"
+                  className="dashboard-button-secondary inline-flex items-center gap-2 self-start px-3 py-2 text-xs font-semibold"
                 >
                   <FaTimes className="text-[11px]" />
                   Close
@@ -1378,13 +1441,13 @@ const Dashboard = () => {
                       className="dashboard-card-subtle p-4"
                     >
                       <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <div className="text-lg font-black text-slate-900">{item.guestName || "Guest"}</div>
+                        <div className="min-w-0">
+                          <div className="truncate text-lg font-black text-slate-900">{item.guestName || "Guest"}</div>
                           <div className="mt-1 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
                             {item.bookingCode || "Direct Booking"}
                           </div>
                         </div>
-                        <span className="rounded-full bg-blue-50 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-blue-700">
+                        <span className="shrink-0 rounded-full bg-blue-50 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-blue-700">
                           {item.bookingStatus || "Confirmed"}
                         </span>
                       </div>
@@ -1486,19 +1549,18 @@ const Dashboard = () => {
             </div>
           ) : null}
 
-          <section
-            id="dashboard-stay-overview"
-            className="flex w-full flex-col gap-6"
-          >
+          {/* ---------------------------------------------------------------- */}
+          {/* Stay overview board                                              */}
+          {/* ---------------------------------------------------------------- */}
+          <section id="dashboard-stay-overview" className="flex w-full flex-col gap-5 sm:gap-6">
             <div className="dashboard-card w-full self-stretch p-4 sm:p-5">
               <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                 <div>
                   <p className="dashboard-label text-blue-600">
                     Stay Overview
                   </p>
-
                   <p className="dashboard-subheading mt-2">
-                    "Shows all room statuses for the selected date."
+                    Shows all room statuses for the selected date.
                   </p>
                 </div>
 
@@ -1528,8 +1590,39 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              <div className="mt-5 overflow-x-auto">
-                <div className="min-w-[1700px] space-y-3">
+              <div className="mt-5 flex flex-col gap-3 border-b border-slate-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="dashboard-label normal-case tracking-[0.08em] text-slate-500">
+                  Selected date: <span className="font-semibold text-slate-700">{formatDateLabel(selectedDate)}</span>
+                </div>
+                <div className="dashboard-card-subtle inline-flex flex-wrap items-center gap-2 rounded-full px-3 py-2 shadow-sm sm:ml-auto">
+                  <button
+                    type="button"
+                    onClick={() => jumpBoardWindow(addDays(boardStartDate, -1))}
+                    className="dashboard-button-primary inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-[0.16em]"
+                  >
+                    Previous
+                  </button>
+                  <div className="dashboard-button-secondary inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium text-slate-700">
+                    <FaCalendarAlt className="text-blue-600" />
+                    <input
+                      type="date"
+                      value={boardStartDate}
+                      onChange={(event) => jumpBoardWindow(event.target.value)}
+                      className="bg-transparent outline-none"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => jumpBoardWindow(addDays(boardStartDate, 1))}
+                    className="dashboard-button-primary inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-[0.16em]"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+
+              <div className="mt-4 -mx-4 overflow-x-auto px-4 pb-1 [scrollbar-width:thin] sm:mx-0 sm:px-0">
+                <div className="min-w-[1080px] space-y-3">
                   {stayOverview.map((day) => {
                     const isExpanded = expandedBoardDay === day.date;
 
@@ -1545,34 +1638,34 @@ const Dashboard = () => {
                         <button
                           type="button"
                           onClick={() => toggleBoardDay(day.date)}
-                          className="grid w-full grid-cols-[150px_minmax(230px,1.25fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)_minmax(220px,1.15fr)] text-left"
+                          className="grid w-full grid-cols-[130px_repeat(5,minmax(150px,1fr))] text-left"
                         >
                           <div
-                            className={`flex items-center justify-between gap-3 border-r px-4 py-4 text-lg font-bold ${
+                            className={`flex items-center justify-between gap-2 border-r px-3 py-3.5 text-sm font-bold sm:text-base ${
                               isExpanded
                                 ? "border-slate-200 bg-slate-50 text-slate-900"
                                 : "border-slate-200 bg-white text-slate-700"
                             }`}
                           >
-                            <span>{formatDateLabel(day.date)}</span>
+                            <span className="truncate">{formatDateLabel(day.date)}</span>
                             <span
-                              className={`flex h-10 w-10 items-center justify-center rounded-full border bg-transparent text-slate-500 shadow-sm transition-transform duration-500 ease-out ${
+                              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border bg-transparent text-slate-500 shadow-sm transition-transform duration-500 ease-out ${
                                 isExpanded ? "rotate-180 border-blue-200 text-blue-700" : "rotate-0 border-slate-200"
                               }`}
                             >
-                              <FaChevronDown className="text-base" />
+                              <FaChevronDown className="text-sm" />
                             </span>
                           </div>
 
                           {boardOrder.map((key) => (
                             <div
                               key={`inline-${day.date}-${key}`}
-                              className={`border-r px-3 py-3 text-center text-lg last:border-r-0 ${
+                              className={`border-r px-3 py-3 text-center last:border-r-0 ${
                                 isExpanded ? "border-slate-200 bg-slate-50/40" : "border-slate-200 bg-white"
                               }`}
                             >
-                              <div className="text-lg font-black text-slate-900">{BOARD_BUCKET_META[key].label}</div>
-                              <div className={`mt-1 text-base font-semibold ${isExpanded ? "text-blue-700" : "text-slate-500"}`}>
+                              <div className="text-sm font-black text-slate-900 sm:text-base">{BOARD_BUCKET_META[key].label}</div>
+                              <div className={`mt-1 text-sm font-semibold ${isExpanded ? "text-blue-700" : "text-slate-500"}`}>
                                 {day.board[key].length} rooms
                               </div>
                             </div>
@@ -1596,187 +1689,131 @@ const Dashboard = () => {
                   })}
                 </div>
               </div>
-
-
-              <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="dashboard-label normal-case tracking-[0.08em] text-slate-500">
-                  Selected date: {formatDateLabel(selectedDate)}
-                </div>
-                <div className="dashboard-card-subtle inline-flex flex-wrap items-center gap-2 rounded-full px-3 py-2 shadow-sm sm:ml-auto">
-                  <button
-                    type="button"
-                    onClick={() => jumpBoardWindow(addDays(boardStartDate, -1))}
-                    className="dashboard-button-primary inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-[0.16em]"
-                  >
-                    Previous
-                  </button>
-                  <div className="dashboard-button-secondary inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium text-slate-700">
-                    <FaCalendarAlt className="text-blue-600" />
-                    <input
-                      type="date"
-                      value={boardStartDate}
-                      onChange={(event) => jumpBoardWindow(event.target.value)}
-                      className="bg-transparent outline-none"
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => jumpBoardWindow(addDays(boardStartDate, 1))}
-                    className="dashboard-button-primary inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-[0.16em]"
-                    >
-                    Next
-                  </button>
-                </div>
-              </div>
+              <p className="mt-2 text-xs text-slate-400 sm:hidden">Swipe sideways to see every room status column.</p>
             </div>
 
+            {/* -------------------------------------------------------------- */}
+            {/* Quick actions + alerts                                         */}
+            {/* -------------------------------------------------------------- */}
             <div className="grid w-full items-stretch gap-5 lg:grid-cols-2">
-            <div className="dashboard-card flex h-full w-full self-start p-4 sm:p-5">
-              <div className="flex w-full flex-col">
-              <div className="mb-4 flex items-center justify-between">
-                <div>
-                  <p className="dashboard-label text-blue-600">
-                    Quick Actions
-                  </p>
-                  <h3 className="dashboard-heading mt-1">Daily shortcuts</h3>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => loadDashboardData(true)}
-                  className="dashboard-button-secondary rounded-full p-2 text-slate-600"
-                >
-                  <FaSyncAlt className={refreshingDashboard ? "animate-spin" : ""} />
-                </button>
-              </div>
-              <div className="space-y-3">
-                {quickActions.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <button
-                      key={item.label}
-                      type="button"
-                      onClick={() =>
-                        navigate(
-                          item.route,
-                          item.route === "/hotel/guest"
-                            ? { state: { resetBookingDraft: true } }
-                            : undefined,
-                        )
-                      }
-                      className="dashboard-card-subtle relative flex w-full items-center justify-between overflow-visible px-4 py-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className={`flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-r ${item.tone} text-white`}>
-                          <Icon />
-                        </span>
-                        <div className="min-w-0">
-                          <div className="dashboard-subheading text-slate-900">{item.label}</div>
-                          <div className="dashboard-body">{item.helper}</div>
-                          <div className="mt-1 text-sm font-semibold text-slate-700 sm:text-[15px]">
-                            {item.detail}
+              <div className="dashboard-card flex h-full w-full self-start p-4 sm:p-5">
+                <div className="flex w-full flex-col">
+                  <div className="mb-4">
+                    <p className="dashboard-label text-blue-600">Quick Actions</p>
+                    <h3 className="dashboard-heading mt-1">Daily shortcuts</h3>
+                  </div>
+                  <div className="space-y-3">
+                    {quickActions.map((item) => {
+                      const Icon = item.icon;
+                      return (
+                        <button
+                          key={item.label}
+                          type="button"
+                          onClick={() =>
+                            navigate(
+                              item.route,
+                              item.route === "/hotel/guest"
+                                ? { state: { resetBookingDraft: true } }
+                                : undefined,
+                            )
+                          }
+                          className="dashboard-card-subtle relative flex w-full items-center justify-between gap-3 overflow-visible px-4 py-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                        >
+                          <div className="flex min-w-0 items-center gap-3">
+                            <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-r ${item.tone} text-white`}>
+                              <Icon />
+                            </span>
+                            <div className="min-w-0">
+                              <div className="dashboard-subheading text-slate-900">{item.label}</div>
+                              <div className="dashboard-body">{item.helper}</div>
+                              <div className="mt-1 truncate text-sm font-semibold text-slate-700 sm:text-[15px]">
+                                {item.detail}
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-base font-black text-slate-900 sm:text-lg">{item.liveValue}</div>
-                        <div className="dashboard-label mt-1 text-slate-400">
-                          {item.liveLabel}
-                        </div>
-                      </div>
+                          <div className="shrink-0 text-right">
+                            <div className="text-base font-black text-slate-900 sm:text-lg">{item.liveValue}</div>
+                            <div className="dashboard-label mt-1 text-slate-400">
+                              {item.liveLabel}
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              <div className="dashboard-card flex h-full w-full self-start p-5 sm:p-6">
+                <div className="flex w-full flex-col">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <p className="dashboard-label text-amber-500">Front Office Alert</p>
+                      <h3 className="dashboard-heading mt-2">Actionable room issues</h3>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => navigate("/housekeeping")}
+                      className="dashboard-button-secondary inline-flex w-fit items-center px-4 py-2 text-sm font-semibold text-amber-700"
+                    >
+                      Review All
                     </button>
-                  );
-                })}
-              </div>
-            </div>
-            </div>
+                  </div>
 
-            <div className="dashboard-card flex h-full w-full self-start p-5 sm:p-6">
-              <div className="flex w-full flex-col">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <p className="dashboard-label text-amber-500">
-                    Front Office Alert
-                  </p>
-                  <h3 className="dashboard-heading mt-2">Actionable room issues</h3>
-                </div>
-                <button
-                  type="button"
-                  className="dashboard-button-secondary inline-flex w-fit items-center px-4 py-2 text-sm font-semibold text-amber-700"
-                >
-                  Review All
-                </button>
-              </div>
+                  <div className="dashboard-card-subtle mt-6 p-4 sm:p-5">
+                    <div className="mb-4 flex items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                      <div className="dashboard-heading">Alerts</div>
+                    </div>
 
-              <div className="dashboard-card-subtle mt-6 p-4 sm:p-5">
-                <div className="mb-4 flex items-center justify-between gap-3 border-b border-slate-100 pb-3">
-                  <div className="dashboard-heading">Alerts</div>
-                  <button
-                    type="button"
-                    className="text-sm font-semibold text-amber-700 transition hover:text-amber-800"
-                  >
-                    Clear All
-                  </button>
-                </div>
+                    <div className="space-y-2">
+                      {actionableAlerts.map((item) => {
+                        const accentMap = {
+                          attention: { line: "border-rose-100/80" },
+                          confirmed: { line: "border-amber-100/80" },
+                          "checked-in": { line: "border-sky-100/80" },
+                        };
+                        const accent = accentMap[item.key] || { line: "border-slate-100" };
+                        const Icon = item.icon;
 
-                <div className="space-y-1.5">
-                {actionableAlerts.map((item) => {
-                  const accentMap = {
-                    attention: {
-                      dot: "bg-rose-600",
-                      line: "border-rose-100/80",
-                    },
-                    confirmed: {
-                      dot: "bg-amber-600",
-                      line: "border-amber-100/80",
-                    },
-                    "checked-in": {
-                      dot: "bg-sky-600",
-                      line: "border-sky-100/80",
-                    },
-                  };
-
-                  const accent = accentMap[item.key] || {
-                    dot: "bg-slate-500",
-                    line: "border-slate-100",
-                  };
-
-                  return (
-                  <div
-                    key={item.key}
-                    className={`rounded-xl border bg-white px-3 py-3 transition hover:bg-slate-50 sm:px-4 ${accent.line}`}
-                  >
-                    <div className="flex items-start gap-4">
-                      <div className={`mt-[9px] h-3 w-3 shrink-0 rounded-full ${accent.dot}`} />
-                      <div className="min-w-0">
-                        <div className="dashboard-subheading text-slate-900">{item.title}</div>
-                        <div className="dashboard-body mt-1">{item.detail}</div>
-                      </div>
+                        return (
+                          <div
+                            key={item.key}
+                            className={`rounded-xl border bg-white px-3 py-3 transition hover:bg-slate-50 sm:px-4 ${accent.line}`}
+                          >
+                            <div className="flex items-start gap-3">
+                              <span className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-50 ${item.iconClass}`}>
+                                <Icon className="text-base" />
+                              </span>
+                              <div className="min-w-0">
+                                <div className="dashboard-subheading text-slate-900">{item.title}</div>
+                                <div className="dashboard-body mt-1">{item.detail}</div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
-                  );
-                })}
                 </div>
               </div>
-            </div>
-            </div>
             </div>
           </section>
 
-          <div className="grid w-full grid-cols-1 gap-6 xl:grid-cols-3 xl:items-stretch">
-            <div className="dashboard-card flex h-full min-w-0 flex-col px-5 py-5 sm:px-6 sm:py-6">
-              <div className="min-h-0 h-[320px] flex-1 sm:h-[360px]">
+          {/* ---------------------------------------------------------------- */}
+          {/* Charts                                                           */}
+          {/* ---------------------------------------------------------------- */}
+          <div className="grid w-full grid-cols-1 gap-5 sm:gap-6 xl:grid-cols-3 xl:items-stretch">
+            <div className="dashboard-card flex h-full min-w-0 flex-col px-4 py-4 sm:px-6 sm:py-6">
+              <div className="min-h-0 h-[300px] flex-1 sm:h-[360px]">
                 <MonthlyRevenueChart />
               </div>
             </div>
             <div className="dashboard-card flex h-full min-w-0 flex-col p-4 sm:p-5">
               <FoodSalesChart />
             </div>
-
             <div className="dashboard-card flex h-full min-w-0 flex-col p-4 sm:p-5">
               <div className="w-full">
-                <p className="dashboard-label text-blue-600">
-                  Room Mix
-                </p>
+                <p className="dashboard-label text-blue-600">Room Mix</p>
                 <div className="dashboard-subheading mb-3 mt-1 text-slate-900">Occupancy overview</div>
                 <RoomOccupancyChart
                   rooms={rooms}
@@ -1786,10 +1823,12 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
-
         </div>
       </div>
 
+      {/* ---------------------------------------------------------------- */}
+      {/* Notification center modal                                        */}
+      {/* ---------------------------------------------------------------- */}
       {notificationOpen ? (
         <div
           className="fixed inset-0 z-[1100] flex items-start justify-center bg-slate-950/55 px-4 py-6 backdrop-blur-sm"
@@ -1841,7 +1880,7 @@ const Dashboard = () => {
                 ))
               ) : (
                 <div className="rounded-[18px] border border-dashed border-slate-200 bg-slate-50 px-4 py-5 text-sm text-slate-500">
-     There are no notifications at this time.
+                  There are no notifications at this time.
                 </div>
               )}
             </div>
@@ -1849,16 +1888,19 @@ const Dashboard = () => {
         </div>
       ) : null}
 
+      {/* ---------------------------------------------------------------- */}
+      {/* Room preview modal                                                */}
+      {/* ---------------------------------------------------------------- */}
       {selectedRoom ? (
         <div
           className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-950/55 px-4 py-6 backdrop-blur-sm"
           onClick={() => setSelectedRoom(null)}
         >
           <div
-            className="w-full max-w-xl rounded-[2rem] border border-white/70 bg-[linear-gradient(180deg,#fbfdff_0%,#f5faf8_100%)] shadow-[0_30px_80px_rgba(15,23,42,0.24)]"
+            className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-[2rem] border border-white/70 bg-[linear-gradient(180deg,#fbfdff_0%,#f5faf8_100%)] shadow-[0_30px_80px_rgba(15,23,42,0.24)]"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-5 py-5 sm:px-6">
+            <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-slate-200 bg-[#fbfdff]/95 px-5 py-5 backdrop-blur sm:px-6">
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-cyan-700">Room Preview</p>
                 <h3 className="mt-1 text-2xl font-bold text-slate-900">
@@ -1884,11 +1926,11 @@ const Dashboard = () => {
                     key={item.label}
                     className="rounded-[1.25rem] border border-slate-200 bg-white px-4 py-4 shadow-sm"
                   >
-                  <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">{item.label}</div>
-                  <div className="mt-2 text-sm font-semibold text-slate-900">{item.value}</div>
-                </div>
-              ))}
-            </div>
+                    <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">{item.label}</div>
+                    <div className="mt-2 text-sm font-semibold text-slate-900">{item.value}</div>
+                  </div>
+                ))}
+              </div>
 
               <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm">
                 <div className="text-sm font-semibold text-slate-900">Booking snapshot</div>
@@ -1936,6 +1978,57 @@ const Dashboard = () => {
                 </div>
               </div>
 
+              {isCleaningTaskEditable(selectedRoom) ? (
+                <div className="rounded-[1.5rem] border border-violet-200 bg-violet-50/60 p-4 shadow-sm">
+                  <div className="text-sm font-semibold text-violet-900">Assign housekeeping</div>
+                  <p className="mt-1 text-xs text-violet-700">
+                    Send a cleaning task to a housekeeper with a time-bound deadline.
+                  </p>
+
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    <label className="block">
+                      <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-700">Housekeeper</span>
+                      <select
+                        value={selectedAssignee}
+                        onChange={(event) => setSelectedAssignee(event.target.value)}
+                        className="mt-1.5 w-full rounded-xl border border-violet-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-800 outline-none focus:border-violet-400"
+                      >
+                        <option value="">Select housekeeper</option>
+                        {housekeepers.map((name) => (
+                          <option key={name} value={name}>
+                            {name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+
+                    <label className="block">
+                      <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-700">Time allotted</span>
+                      <select
+                        value={selectedCleaningMinutes}
+                        onChange={(event) => setSelectedCleaningMinutes(Number(event.target.value))}
+                        className="mt-1.5 w-full rounded-xl border border-violet-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-800 outline-none focus:border-violet-400"
+                      >
+                        {CLEANING_TIME_OPTIONS.map((minutes) => (
+                          <option key={minutes} value={minutes}>
+                            {minutes} min
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleAssignCleaning}
+                    disabled={assigningCleaning}
+                    className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                  >
+                    {assigningCleaning ? "Assigning..." : "Assign Cleaning"}
+                  </button>
+                </div>
+              ) : null}
+
               <div className="grid gap-3 sm:grid-cols-2">
                 {selectedRoom.booking?.bookingId && !String(selectedRoom.booking.bookingId).startsWith("room-") ? (
                   <button
@@ -1945,9 +2038,7 @@ const Dashboard = () => {
                     }
                     className="rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700"
                   >
-                    {isRoomInStay(selectedRoom.booking)
-                      ? "Check Out"
-                      : "Check In"}
+                    {isRoomInStay(selectedRoom.booking) ? "Check Out" : "Check In"}
                   </button>
                 ) : null}
                 <button
