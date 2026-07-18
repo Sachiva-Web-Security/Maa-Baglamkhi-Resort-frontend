@@ -2575,27 +2575,27 @@ const Banquet = () => {
     <div className="relative min-h-screen w-full overflow-x-hidden bg-[linear-gradient(180deg,#F2F6FF_0%,#F7F9FE_40%,#FFFFFF_100%)] p-3 sm:p-6">
       <div className="space-y-6">
         {/* Header / Hero */}
-        <section className="relative overflow-hidden rounded-[32px] bg-gradient-to-b from-blue-950 via-blue-800 to-sky-500 p-5 shadow-[0_20px_60px_rgba(15,40,90,0.25)] sm:p-7">
+        <section className="relative overflow-hidden rounded-[32px] bg-gradient-to-b from-blue-950 via-blue-800 to-sky-500 p-4 shadow-[0_20px_60px_rgba(15,40,90,0.25)] sm:p-7">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <h1 className="text-[24px] font-bold text-white sm:text-[36px]">Banquet Dashboard</h1>
-              <p className="mt-1 text-[18px] sm:text-[20px] text-white/80">
+              <h1 className="text-[22px] font-bold text-white sm:text-[36px]">Banquet Dashboard</h1>
+              <p className="mt-1 text-[15px] sm:text-[20px] text-white/80">
                 Manage banquet halls, events, reservations and more
               </p>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <div className="flex h-14 w-full min-w-0 items-center gap-2 rounded-[20px] border border-white/30 bg-white px-4 shadow-[0_8px_20px_rgba(15,40,90,0.15)] transition-all duration-300 focus-within:border-sky-300 focus-within:shadow-[0_8px_24px_rgba(37,99,235,0.2)] hover:shadow-[0_10px_26px_rgba(15,40,90,0.2)] sm:w-auto sm:min-w-[220px]">
+              <div className="flex h-12 w-full items-center gap-2 rounded-[20px] border border-white/30 bg-white px-3 shadow-[0_8px_20px_rgba(15,40,90,0.15)] transition-all duration-300 focus-within:border-sky-300 focus-within:shadow-[0_8px_24px_rgba(37,99,235,0.2)] hover:shadow-[0_10px_26px_rgba(15,40,90,0.2)] sm:h-14 sm:w-auto sm:min-w-[220px] sm:px-4">
                 <FaSearch className="text-blue-300" size={14} />
                 <input
                   value={dashboardSearch}
                   onChange={(e) => setDashboardSearch(e.target.value)}
                   placeholder="Quick search reservations, halls..."
-                  className="w-full bg-transparent text-[16px] font-medium text-[#0B1B33] outline-none placeholder:text-slate-400"
+                  className="w-full bg-transparent text-[14px] font-medium text-[#0B1B33] outline-none placeholder:text-slate-400 sm:text-[16px]"
                 />
               </div>
-              <div className="flex h-14 items-center gap-2 rounded-[18px] border border-white/30 bg-white px-4 shadow-[0_8px_20px_rgba(15,40,90,0.15)] sm:w-auto">
+              <div className="flex h-12 items-center gap-2 rounded-[18px] border border-white/30 bg-white px-3 sm:h-14 sm:px-4">
                 <FaCalendarAlt className="text-blue-600" size={14} />
-                <span className="text-[15px] font-semibold text-[#0B1B33]">{todayLabel}</span>
+                <span className="text-[13px] font-semibold text-[#0B1B33] sm:text-[15px]">{todayLabel}</span>
               </div>
             </div>
           </div>
@@ -2608,22 +2608,23 @@ const Banquet = () => {
             return (
               <div
                 key={card.label}
-                className="group relative overflow-hidden rounded-[26px] border border-[#E1E7F5] bg-white p-4 shadow-[0_10px_28px_rgba(15,40,90,0.06)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_38px_rgba(15,40,90,0.12)]"
+                className="group relative overflow-hidden rounded-[22px] sm:rounded-[26px] border border-[#E1E7F5] bg-white p-3 shadow-[0_10px_28px_rgba(15,40,90,0.06)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_38px_rgba(15,40,90,0.12)] sm:p-4"
               >
-                <span className="pointer-events-none absolute -right-6 -top-6 h-20 w-20 rounded-full bg-blue-50/70 transition-all duration-300 group-hover:scale-125" />
-                <span className={`relative inline-flex h-11 w-11 items-center justify-center rounded-[14px] text-white shadow-[0_8px_18px_rgba(15,40,90,0.18)] ${card.iconTone}`}>
-                  <Icon size={16} />
+                <span className="pointer-events-none absolute -right-6 -top-6 h-16 w-16 sm:h-20 sm:w-20 rounded-full bg-blue-50/70 transition-all duration-300 group-hover:scale-125" />
+                <span className={`relative inline-flex h-9 w-9 items-center justify-center rounded-[12px] text-white shadow-[0_8px_18px_rgba(15,40,90,0.18)] sm:h-11 sm:w-11 sm:rounded-[14px] ${card.iconTone}`}>
+                  <Icon size={14} className="sm:hidden" />
+                  <Icon size={16} className="hidden sm:block" />
                 </span>
-                <div className="relative mt-3 text-[16px] font-medium text-[#64748B] sm:text-[17px]">{card.label}</div>
-                <div className="relative mt-1 text-[20px] font-bold text-[#0B1B33] leading-tight sm:text-[22px] lg:text-[24px]">
+                <div className="relative mt-2 text-[14px] font-medium text-[#64748B] sm:text-[17px]">{card.label}</div>
+                <div className="relative mt-1 text-[18px] font-bold text-[#0B1B33] leading-tight sm:text-[22px] lg:text-[24px]">
                   {card.value}
                 </div>
                 <button
                   type="button"
                   onClick={() => setActiveQuickSection(card.sectionId)}
-                  className="relative mt-2 inline-flex items-center gap-1 text-[15px] font-semibold text-[#2F6FE4] transition-all duration-300 hover:text-[#0B4F9C]"
+                  className="relative mt-1.5 inline-flex items-center gap-1 text-[13px] font-semibold text-[#2F6FE4] transition-all duration-300 hover:text-[#0B4F9C] sm:mt-2 sm:text-[15px]"
                 >
-                  View Details <FaChevronRight size={9} />
+                  View Details <FaChevronRight size={8} className="sm:hidden" /><FaChevronRight size={9} className="hidden sm:block" />
                 </button>
               </div>
             );
@@ -2659,7 +2660,7 @@ const Banquet = () => {
             {/* All sections */}
             <section>
               <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <h2 className="text-[30px] font-bold text-[#0B1B33]">All Sections</h2>
+                <h2 className="text-[26px] font-bold text-[#0B1B33] sm:text-[30px]">All Sections</h2>
                 <button
                   type="button"
                   onClick={openCreateReservationForm}
@@ -2677,16 +2678,18 @@ const Banquet = () => {
                       key={item.id}
                       type="button"
                       onClick={() => setActiveQuickSection(item.id)}
-                      className="group flex items-start gap-3 rounded-[24px] border border-[#E1E7F5] bg-white p-4 text-left shadow-[0_8px_24px_rgba(15,40,90,0.06)] transition-all duration-300 hover:-translate-y-1 hover:border-[#2F6FE4] hover:shadow-[0_16px_34px_rgba(37,99,235,0.14)]"
+                      className="group flex items-start gap-3 rounded-[20px] sm:rounded-[24px] border border-[#E1E7F5] bg-white p-3 text-left shadow-[0_8px_24px_rgba(15,40,90,0.06)] transition-all duration-300 hover:-translate-y-1 hover:border-[#2F6FE4] hover:shadow-[0_16px_34px_rgba(37,99,235,0.14)] sm:p-4"
                     >
-                      <span className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] text-white shadow-[0_8px_18px_rgba(15,40,90,0.16)] ${sectionIconTones[item.id] || "bg-[#0F6E64]"}`}>
-                        <Icon size={17} />
+                      <span className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[12px] text-white shadow-[0_8px_18px_rgba(15,40,90,0.16)] sm:h-11 sm:w-11 sm:rounded-[14px] ${sectionIconTones[item.id] || "bg-[#0F6E64]"}`}>
+                        <Icon size={15} className="sm:hidden" />
+                        <Icon size={17} className="hidden sm:block" />
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block text-[22px] font-bold text-[#0B1B33]">{item.label}</span>
-                        <span className="mt-0.5 block truncate text-[17px] text-[#64748B]">{item.desc}</span>
+                        <span className="block text-[18px] font-bold text-[#0B1B33] sm:text-[22px]">{item.label}</span>
+                        <span className="mt-0.5 block truncate text-[13px] text-[#64748B] sm:text-[17px]">{item.desc}</span>
                       </span>
-                      <FaChevronRight size={12} className="mt-1.5 shrink-0 text-[#CBD5F0] transition-all duration-300 group-hover:translate-x-1 group-hover:text-blue-400" />
+                      <FaChevronRight size={10} className="mt-1 shrink-0 text-[#CBD5F0] transition-all duration-300 group-hover:translate-x-1 group-hover:text-blue-400 sm:hidden" />
+                      <FaChevronRight size={12} className="mt-1.5 hidden shrink-0 text-[#CBD5F0] transition-all duration-300 group-hover:translate-x-1 group-hover:text-blue-400 sm:block" />
                     </button>
                   );
                 })}

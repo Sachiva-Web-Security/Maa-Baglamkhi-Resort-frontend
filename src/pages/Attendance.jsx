@@ -253,8 +253,8 @@ const Attendance = () => {
       {/* MODAL - admin only */}
       {isAdmin && showManualEntry && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-blue-950/50 p-3 backdrop-blur-sm sm:p-4">
-          <div className="w-full max-w-[760px]">
-            <div className="mx-auto flex w-full flex-col overflow-hidden rounded-[32px] border border-white/60 bg-[linear-gradient(180deg,#ffffff_0%,#f5f9ff_100%)] p-6 shadow-[0_30px_90px_rgba(15,40,90,0.28)] sm:p-7">
+          <div className="w-[calc(100%-1.5rem)] max-w-[760px] max-h-[calc(100vh-1.5rem)] sm:max-h-[90vh] overflow-y-auto overscroll-contain">
+            <div className="mx-auto flex w-full flex-col overflow-hidden rounded-[32px] border border-white/60 bg-[linear-gradient(180deg,#ffffff_0%,#f5f9ff_100%)] p-5 shadow-[0_30px_90px_rgba(15,40,90,0.28)] sm:p-7">
               <AttendanceForm
                 onSubmit={handleManualSubmit}
                 onCancel={() => setShowManualEntry(false)}

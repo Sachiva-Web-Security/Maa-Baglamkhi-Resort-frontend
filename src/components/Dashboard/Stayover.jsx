@@ -887,22 +887,21 @@ const Stayover = () => {
         <div className="absolute bottom-[-8%] left-[22%] h-72 w-72 rounded-full bg-amber-200/40 blur-3xl sm:h-[26rem] sm:w-[26rem]" />
       </div>
 
-      <div className="relative w-full space-y-6">
-        <section className="overflow-hidden rounded-[30px] border border-white/70 bg-[linear-gradient(135deg,#08253d_0%,#0e5b6a_50%,#0f3f67_100%)] px-5 py-6 text-white shadow-[0_24px_70px_rgba(15,23,42,0.18)] sm:px-7 lg:px-8">
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(340px,0.8fr)] lg:items-center">
+      <div className="relative w-full space-y-4 md:space-y-5 lg:space-y-6">
+        <section className="overflow-hidden rounded-[24px] sm:rounded-[28px] lg:rounded-[30px] border border-white/70 bg-gradient-to-br from-blue-950 via-blue-800 to-sky-500 px-4 py-5 text-white shadow-[0_24px_70px_rgba(15,23,42,0.18)] sm:px-7 lg:px-8">
+          <div className="grid gap-5 md:gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(340px,0.8fr)] lg:items-center">
             <div>
-              <p className="text-sm font-bold uppercase tracking-[0.35em] text-cyan-200">Stay Overview</p>
-              <h1 className="mt-3 text-4xl font-black leading-tight sm:text-5xl">
+              <p className="text-xs sm:text-sm font-bold uppercase tracking-[0.35em] text-cyan-200">Stay Overview</p>
+              <h1 className="mt-2 text-2xl sm:text-4xl font-black leading-tight lg:text-5xl">
                 Category-wise room inventory with live booking status
               </h1>
-              <p className="mt-3 max-w-3xl text-base font-medium leading-7 text-slate-100/90 sm:text-lg">
-                Stayoverview open karte hi aapko room-wise strip milegi, aur main dashboard ka data bhi isi live source se aayega.
-              </p>
+              <p className="mt-2 text-sm sm:text-base font-medium leading-6 sm:leading-7 text-slate-100/90">
+Stay Overview provides a live room-wise status view, with the same real-time data seamlessly reflected across the main dashboard.              </p>
               <div className="mt-5 flex flex-wrap gap-3">
                 <button
                   type="button"
                   onClick={() => navigate("/dashboard")}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-3 text-base font-bold text-white backdrop-blur transition hover:bg-white/15"
+                  className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2.5 text-sm sm:text-base font-bold text-white backdrop-blur transition hover:bg-white/15"
                 >
                   <FaDoorOpen />
                   Main Dashboard
@@ -910,7 +909,7 @@ const Stayover = () => {
                 <button
                   type="button"
                   onClick={() => navigate("/stayover")}
-                  className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-base font-bold text-slate-900 shadow-[0_12px_30px_rgba(255,255,255,0.2)] transition hover:-translate-y-0.5"
+                  className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-full bg-white px-4 py-2.5 text-sm sm:text-base font-bold text-slate-900 shadow-[0_12px_30px_rgba(255,255,255,0.2)] transition hover:-translate-y-0.5"
                 >
                   <FaCalendarAlt className="text-sky-600" />
                   Stay Overview
@@ -918,7 +917,7 @@ const Stayover = () => {
                 <button
                   type="button"
                   onClick={() => navigate("/hotel/guest", { state: { resetBookingDraft: true } })}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-3 text-base font-bold text-white backdrop-blur transition hover:bg-white/15"
+                  className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2.5 text-sm sm:text-base font-bold text-white backdrop-blur transition hover:bg-white/15"
                 >
                   <FaPlus />
                   New Booking
@@ -926,17 +925,17 @@ const Stayover = () => {
               </div>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+            <div className="grid gap-3 grid-cols-1 md:grid-cols-3 xl:grid-cols-3">
               {summaryCards.map((card) => {
                 const Icon = card.icon;
                 return (
-                  <div key={card.label} className="rounded-[22px] border border-white/12 bg-white/10 p-4 backdrop-blur-md">
-                    <div className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-r ${card.tone} text-white`}>
+                  <div key={card.label} className="rounded-[18px] sm:rounded-[22px] border border-white/12 bg-white/10 p-3 sm:p-4 backdrop-blur-md">
+                    <div className={`inline-flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-xl bg-gradient-to-r ${card.tone} text-white`}>
                       <Icon />
                     </div>
-                    <div className="mt-4 text-base font-bold text-slate-100/90">{card.label}</div>
-                    <div className="mt-1 text-4xl font-black">{card.value}</div>
-                    <div className="mt-1 text-sm font-medium text-slate-200/80">{card.helper}</div>
+                    <div className="mt-3 sm:mt-4 text-sm sm:text-base font-bold text-slate-100/90">{card.label}</div>
+                    <div className="mt-1 text-3xl sm:text-4xl font-black">{card.value}</div>
+                    <div className="mt-1 text-xs sm:text-sm font-medium text-slate-200/80">{card.helper}</div>
                   </div>
                 );
               })}
@@ -944,28 +943,28 @@ const Stayover = () => {
           </div>
         </section>
 
-        <section className="rounded-[28px] border border-slate-200/70 bg-white/85 p-4 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
+        <section className="rounded-[24px] sm:rounded-[28px] lg:rounded-[30px] border border-slate-200/70 bg-white/85 p-4 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-5">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
             <div>
-              <p className="text-sm font-bold uppercase tracking-[0.28em] text-sky-700">Booking Strip</p>
-              <h2 className="mt-2 text-3xl font-black text-slate-900">Room-number stay overview board</h2>
-              <p className="mt-2 text-base font-medium text-slate-500">
-                Room rows aur next 7 din ki booking strip booking master style me.
-              </p>
+              <p className="text-xs sm:text-sm font-bold uppercase tracking-[0.28em] text-sky-700">Booking Strip</p>
+              <h2 className="mt-1 sm:mt-2 text-2xl sm:text-3xl font-black text-slate-900">Room-number stay overview board</h2>
+              <p className="mt-1 sm:mt-2 text-sm sm:text-base font-medium text-slate-500">
+Room-wise rows with a 7-day booking timeline, displayed in a Booking Master–style layout.              </p>
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-              <div className="inline-flex flex-wrap items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 shadow-sm">
+              <div className="flex flex-wrap items-center justify-center gap-2 rounded-2xl sm:rounded-full border border-slate-200 bg-slate-50 p-2 sm:px-3 sm:py-2 shadow-sm">
                 <button
                   type="button"
                   onClick={() => shiftDateWindow(-7)}
-                  className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-600 px-4 py-2 text-sm font-bold uppercase tracking-[0.16em] text-white shadow-sm transition hover:bg-sky-700"
+                  className="inline-flex items-center justify-center gap-1 sm:gap-2 rounded-full border border-sky-200 bg-sky-600 px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold uppercase tracking-[0.16em] text-white shadow-sm transition hover:bg-sky-700"
                 >
                   <FaArrowLeft />
-                  Previous
+                  <span className="hidden xs:inline">Previous</span>
+                  <span className="xs:hidden">Prev</span>
                 </button>
-                <div className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 text-base font-semibold text-slate-700 shadow-sm">
-                  <FaCalendarAlt className="text-sky-600" />
+                <div className="inline-flex items-center gap-2 rounded-full bg-white px-2 sm:px-3 py-2 text-sm sm:text-base font-semibold text-slate-700 shadow-sm">
+                  <FaCalendarAlt className="text-sky-600 text-xs sm:text-base" />
                   <input
                     type="date"
                     value={selectedDate}
@@ -975,28 +974,29 @@ const Stayover = () => {
                       setDateWindowStart(nextDate);
                       setExpandedDay(nextDate);
                     }}
-                    className="bg-transparent outline-none"
+                    className="bg-transparent outline-none w-28 sm:w-auto"
                   />
                 </div>
                 <button
                   type="button"
                   onClick={() => shiftDateWindow(7)}
-                  className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-600 px-4 py-2 text-sm font-bold uppercase tracking-[0.16em] text-white shadow-sm transition hover:bg-sky-700"
+                  className="inline-flex items-center justify-center gap-1 sm:gap-2 rounded-full border border-sky-200 bg-sky-600 px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold uppercase tracking-[0.16em] text-white shadow-sm transition hover:bg-sky-700"
                 >
-                  Next
+                  <span className="hidden xs:inline">Next</span>
+                  <span className="xs:hidden">Next</span>
                   <FaArrowRight />
                 </button>
-                <div className="rounded-full bg-slate-100 px-4 py-2 text-sm font-bold uppercase tracking-[0.18em] text-slate-600">
+                <div className="hidden sm:inline-flex rounded-full bg-slate-100 px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold uppercase tracking-[0.18em] text-slate-600">
                   7 day pagination
                 </div>
               </div>
-              <div className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm">
+              <div className="rounded-full bg-white px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold text-slate-600 shadow-sm text-center">
                 {formatShortDate(dateWindowStart)} - {formatShortDate(addDays(dateWindowStart, 6))}
               </div>
               <button
                 type="button"
                 onClick={() => navigate("/hotel/guest", { state: { resetBookingDraft: true } })}
-                className="rounded-full bg-gradient-to-r from-sky-600 to-blue-500 px-5 py-3 text-base font-bold text-white shadow-[0_12px_30px_rgba(37,99,235,0.24)] transition hover:-translate-y-0.5"
+                className="w-full sm:w-auto rounded-full bg-linear-to-r from-sky-600 to-blue-500 px-5 py-3 text-base font-bold text-white shadow-[0_12px_30px_rgba(37,99,235,0.24)] transition hover:-translate-y-0.5"
               >
                 Start With Guest
               </button>
@@ -1030,7 +1030,8 @@ const Stayover = () => {
                   Refreshing live booking data...
                 </div>
               ) : null}
-              <div className="mt-6">
+              {/* Desktop Room Table */}
+              <div className="hidden lg:block mt-6">
                 <div className="min-w-[1260px] overflow-hidden rounded-[24px] border border-slate-200 bg-white">
                   <div className="grid grid-cols-[220px_repeat(7,minmax(0,1fr))]">
                     <div className="sticky left-0 z-30 border-r border-b border-slate-200 bg-slate-700 px-4 py-3 text-sm font-bold uppercase tracking-[0.18em] text-white">
@@ -1071,13 +1072,13 @@ const Stayover = () => {
                       </button>
                     ))}
 
-                    <div className="sticky left-0 z-30 border-r border-b border-slate-200 bg-[#6b8d92] px-4 py-2.5 text-sm font-bold text-white">
+                    <div className="sticky left-0 z-30 border-r border-b border-slate-200 bg-[#6b7892] px-4 py-2.5 text-sm font-bold text-white">
                       Total
                     </div>
                     {dailySummary.map((day) => (
                       <div
                         key={day.date}
-                        className="border-r border-b border-slate-200 bg-[#86a7aa] px-3 py-2.5 text-center text-white last:border-r-0"
+                        className="border-r border-b border-slate-200 bg-[#7b969f] px-3 py-2.5 text-center text-white last:border-r-0"
                       >
                         <div className="text-2xl font-black">{day.available}</div>
                         <div className="text-sm font-bold uppercase tracking-[0.16em] text-white/85">Available</div>
@@ -1250,6 +1251,91 @@ const Stayover = () => {
                     </div>
                   </div>
                 </div>
+              </div>
+
+              {/* Mobile Room Cards */}
+              <div className="lg:hidden mt-4 space-y-3">
+                {sortedRooms.map((room) => {
+                  const roomStatusMeta = STATUS_META[room.status] || STATUS_META.available;
+                  return (
+                    <div key={room.id} className="rounded-[22px] border border-slate-200 bg-white p-4 shadow-sm">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className="text-xl font-black text-slate-900">{room.roomNumber}</div>
+                          <div className="mt-1 text-sm font-bold uppercase tracking-[0.14em] text-sky-700">
+                            ID {room.roomId || room.id || "--"}
+                          </div>
+                          <div className="text-sm font-bold uppercase tracking-[0.14em] text-slate-500">
+                            {room.categoryName || "Uncategorized"}
+                          </div>
+                          <div className={`mt-2 inline-flex rounded-full px-3 py-1.5 text-xs font-extrabold tracking-[0.01em] ${roomStatusMeta.badge}`}>
+                            {roomStatusMeta.label}
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => navigate("/hotel/room", { state: { editRoomId: room.id } })}
+                          className="rounded-full bg-white p-2 text-slate-600 shadow-sm"
+                        >
+                          <FaEdit />
+                        </button>
+                      </div>
+
+                      {/* 7-Day Mini Strip */}
+                      <div className="mt-3 flex flex-wrap gap-1.5">
+                        {visibleDates.map((date) => {
+                          const cell = getCellData(room, date);
+                          const meta = STATUS_META[cell.status] || STATUS_META.available;
+                          return (
+                            <div key={date} className={`flex-1 min-w-[38px] rounded-lg px-1 py-2 text-center ${meta.badge}`}>
+                              <div className="text-[10px] font-bold opacity-80">{formatShortDate(date)}</div>
+                              <div className="mt-0.5 text-[11px] font-black truncate">
+                                {cell.booking ? (cell.booking.guestName?.split(' ')[0] || '...') : meta.label}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {room.status === "cleaning" && (
+                          <button
+                            type="button"
+                            onClick={() => handleRoomStatus(room, "available")}
+                            className="flex-1 min-w-[70px] rounded-full bg-emerald-500 px-2 py-2 text-xs font-bold text-white"
+                          >
+                            Mark Clean
+                          </button>
+                        )}
+                        {room.status === "available" && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              navigate("/hotel/guest", {
+                                state: {
+                                  roomNumber: room.roomNumber,
+                                  category: room.categoryName,
+                                  resetBookingDraft: true,
+                                },
+                              })
+                            }
+                            className="flex-1 min-w-[70px] rounded-full bg-sky-600 px-2 py-2 text-xs font-bold text-white"
+                          >
+                            Book Now
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => openRoomPreview(room, null)}
+                          className="flex-1 min-w-[70px] rounded-full border border-slate-200 bg-white px-2 py-2 text-xs font-bold text-slate-700"
+                        >
+                          View Details
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
 
               <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

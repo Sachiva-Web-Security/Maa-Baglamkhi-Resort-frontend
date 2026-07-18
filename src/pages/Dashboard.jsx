@@ -1075,7 +1075,7 @@ const Dashboard = () => {
   };
 
   const renderExpandedBoard = (day) => (
-    <div className="grid grid-cols-[150px_repeat(5,1fr)] border-t border-sky-400 bg-[linear-gradient(180deg,rgba(255,255,255,0.32)_0%,rgba(255,255,255,0.16)_100%)]">
+    <div className="w-full grid grid-cols-[150px_repeat(5,1fr)] border-t border-sky-400 bg-[linear-gradient(180deg,rgba(255,255,255,0.32)_0%,rgba(255,255,255,0.16)_100%)]">
       <div className="border-r border-sky-400 bg-[linear-gradient(180deg,rgba(224,242,254,0.55)_0%,rgba(240,249,255,0.2)_100%)]" />
       {boardOrder.map((key) => {
         const meta = BOARD_BUCKET_META[key];
@@ -1083,13 +1083,13 @@ const Dashboard = () => {
         const isOpen = bucketOpen[key] !== false;
 
         return (
-          <div key={`${day.date}-${key}`} className="border-r border-sky-400 bg-[linear-gradient(180deg,rgba(255,255,255,0.4)_0%,rgba(255,255,255,0.16)_100%)] backdrop-blur-sm last:border-r-0">
-            <div className={`h-1.5 w-full ${meta.bar}`} />
-            <div className="flex h-[336px] flex-col px-3 py-3">
+          <div key={`${day.date}-${key}`} className="border-r border-sky-400 bg-[linear-gradient(180deg,rgba(255,255,255,0.4)_0%,rgba(255,255,255,0.16)_100%)] backdrop-blur-sm last:border-r-0 flex flex-col min-w-0">
+            <div className="h-1.5 w-full flex-shrink-0" style={{ background: meta.bar.replace('bg-', '').replace('bg-[', '').replace(']', '') }} />
+            <div className="flex flex-col flex-1 min-h-0 w-full px-3 py-3">
               <button
                 type="button"
                 onClick={() => toggleBucket(key)}
-                className="flex items-center justify-between gap-2 rounded-[16px] border border-sky-400 bg-white/45 px-3 py-2 text-left shadow-[0_10px_20px_rgba(15,23,42,0.04)] backdrop-blur-sm"
+                className={`flex w-full items-center justify-between gap-2 rounded-[16px] border px-3 py-2 text-left text-sm shadow-sm ${meta.soft}`}
               >
                 <div className="text-sm font-black tracking-[0.04em] text-slate-900">
                   {meta.label} ({items.length})
@@ -1105,14 +1105,16 @@ const Dashboard = () => {
 
               <div
                 style={{ gridTemplateRows: isOpen ? "1fr" : "0fr" }}
-                className="mt-3 grid min-h-0 flex-1 transition-[grid-template-rows] duration-500 ease-out"
+                className="mt-3 grid min-h-0 flex-1 w-full transition-[grid-template-rows] duration-500 ease-out"
               >
                 <div
                   className={`min-h-0 overflow-hidden transition-all duration-500 ease-out ${
                     isOpen ? "opacity-100 translate-y-0" : "pointer-events-none opacity-0 translate-y-2"
                   }`}
                 >
-                  {renderBoardColumnContent(day, key)}
+                  <div className="w-full">
+                    {renderBoardColumnContent(day, key)}
+                  </div>
                 </div>
               </div>
             </div>
@@ -1488,7 +1490,7 @@ const Dashboard = () => {
             id="dashboard-stay-overview"
             className="flex w-full flex-col gap-6"
           >
-            <div className="dashboard-card w-full self-start p-4 sm:p-5">
+            <div className="dashboard-card w-full self-stretch p-4 sm:p-5">
               <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                 <div>
                   <p className="dashboard-label text-blue-600">

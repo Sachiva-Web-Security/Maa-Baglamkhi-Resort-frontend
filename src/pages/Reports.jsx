@@ -545,7 +545,7 @@ const Reports = () => {
       {
         label: "Primary Total",
         value: primaryValue,
-        note: reportType === "housekeeping" ? "Total room count in selected rows." : "Selected report type ka main business total.",
+        note: reportType === "housekeeping" ? "Total room count in selected rows." : "Overall business total for the selected report type.",
         icon: <FaChartLine className="text-[16px]" />,
       },
       {
