@@ -1349,7 +1349,7 @@ const Dashboard = () => {
           <div className="absolute inset-0 bg-[linear-gradient(rgba(148,163,184,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.08)_1px,transparent_1px)] bg-[size:88px_88px] opacity-60" />
         </div>
 
-        <div className="relative left-1/2 right-1/2 -mx-[50vw] w-screen max-w-none overflow-x-hidden space-y-5 px-3 pb-10 pt-3 sm:space-y-6 sm:px-4 sm:pt-4 lg:px-6 xl:px-8">
+        <div className="relative w-full overflow-x-hidden space-y-5 px-3 pb-10 pt-3 sm:space-y-6 sm:px-4 sm:pt-4 lg:px-6 xl:px-8">
           {/* ---------------------------------------------------------------- */}
           {/* Page header                                                      */}
           {/* ---------------------------------------------------------------- */}
