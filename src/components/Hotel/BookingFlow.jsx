@@ -30,6 +30,10 @@
 //    spacing and button sizing as the "Booking Confirmed" screen.
 //  - Everything is responsive from 320px phones up to 4K, with no horizontal
 //    scroll anywhere (tables scroll internally with a sticky header instead).
+//  - RESPONSIVE PASS (this revision): desktop (>=1280px) is untouched pixel for
+//    pixel. Tablet/iPad (768-1279px) reflows headers/filters to stack neatly.
+//    Mobile (<=767px) converts every data table into stacked cards, stacks
+//    every modal/header/footer, and removes all horizontal scrolling.
 // -----------------------------------------------------------------------------
 
 import React, { useEffect, useMemo, useState } from "react";
@@ -103,13 +107,17 @@ import Room from "./Room";
      Buttons / Pagination: 17px / weight 600
      Status Badges: 14px
      Modal Title  : 28px   Modal Content: 16-17px
+
+   NOTE (responsive pass): on phones (<640px) several of the above scale down
+   further via the `max-[639px]:` arbitrary-variant classes below, so desktop
+   (sm:/md:/lg:) sizing is completely untouched.
 */
 
 const fieldCls =
-  "w-full h-[52px] sm:h-[54px] md:h-14 rounded-2xl border border-blue-200 bg-white px-4 sm:px-5 text-[17px] font-medium text-slate-800 shadow-sm transition-all duration-300 placeholder:text-base placeholder:font-medium placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 focus:shadow-lg outline-none";
+  "w-full h-[52px] sm:h-[54px] md:h-14 rounded-2xl border border-blue-200 bg-white px-4 sm:px-5 text-[17px] font-medium text-slate-800 shadow-sm transition-all duration-300 placeholder:text-base placeholder:font-medium placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 focus:shadow-lg outline-none max-[639px]:h-12 max-[639px]:text-[15px] max-[639px]:rounded-xl";
 
 const labelCls =
-  "mb-2 block text-[17px] font-semibold text-slate-700";
+  "mb-2 block text-[17px] font-semibold text-slate-700 max-[639px]:text-[13px] max-[639px]:mb-1.5";
 
 const panelCls =
   `
@@ -125,6 +133,8 @@ duration-300
 w-full
 max-w-full
 overflow-hidden
+max-[639px]:rounded-[18px]
+max-[639px]:p-3.5
 `;
 
 const sectionTitleCls =
@@ -140,20 +150,23 @@ text-2xl sm:text-3xl md:text-[34px]
 font-bold
 text-blue-900
 leading-tight
+max-[639px]:text-lg
+max-[639px]:mb-3
+max-[639px]:pb-2
 `;
 
 /* Card title scale (28/24/22) — used for the biggest heading inside a card
    (e.g. "New Booking" / "Edit Booking", "All Bookings"). */
 const cardTitleCls =
-  "text-[22px] sm:text-2xl md:text-[28px] font-bold text-slate-900 leading-tight";
+  "text-[22px] sm:text-2xl md:text-[28px] font-bold text-slate-900 leading-tight max-[639px]:text-xl";
 
 /* Hero title scale (42/36/30) — used for the top-level page/screen heading,
    e.g. the "Booking Confirmed!" screen title. */
 const heroTitleCls =
-  "text-[30px] sm:text-4xl md:text-[42px] font-black text-slate-900 leading-tight";
+  "text-[30px] sm:text-4xl md:text-[42px] font-black text-slate-900 leading-tight max-[639px]:text-2xl";
 
 /* Modal title scale (28px, all breakpoints) */
-const modalTitleCls = "text-[28px] font-black leading-tight text-slate-900";
+const modalTitleCls = "text-[28px] font-black leading-tight text-slate-900 max-[639px]:text-xl";
 
 const btnBase =
   `
@@ -176,6 +189,10 @@ disabled:cursor-not-allowed
 disabled:hover:translate-y-0
 disabled:active:scale-100
 whitespace-nowrap
+max-[639px]:h-11
+max-[639px]:px-4
+max-[639px]:text-[14px]
+max-[639px]:rounded-lg
 `;
 
 const primaryBtn =
@@ -254,6 +271,11 @@ ${toneCls}
 `;
 };
 
+/* Full-width variant of rowActionBtn used inside the mobile card layout so
+   every action button in the card footer shares equal width. Desktop table
+   rows keep using rowActionBtn(tone) unchanged. */
+const cardActionBtn = (tone = "neutral") => `${rowActionBtn(tone)} flex-1 min-w-[0] justify-center text-[13px] h-10 px-2`;
+
 const softBtn = (active) =>
   `
 inline-flex
@@ -269,6 +291,9 @@ font-semibold
 transition-all
 duration-300
 active:scale-[0.98]
+max-[639px]:h-9
+max-[639px]:px-3
+max-[639px]:text-[13px]
 ${
 active
 ?
@@ -279,7 +304,7 @@ active
 `;
 
 const cardTileCls =
-  "rounded-2xl border border-slate-200/80 bg-slate-50/60 p-4 sm:p-5";
+  "rounded-2xl border border-slate-200/80 bg-slate-50/60 p-4 sm:p-5 max-[639px]:rounded-xl max-[639px]:p-3.5";
 
 /* ─────────────────────────── helpers ─────────────────────────── */
 
@@ -363,7 +388,7 @@ const statusStyle = (status) => {
 };
 
 const statusBadgeCls = (status) =>
-  `inline-block rounded-full px-3 sm:px-4 py-1 sm:py-1.5 text-sm font-bold ${statusStyle(status)}`;
+  `inline-block rounded-full px-3 sm:px-4 py-1 sm:py-1.5 text-sm font-bold ${statusStyle(status)} max-[639px]:text-[12px] max-[639px]:px-2.5 max-[639px]:py-1`;
 
 /* ─────────────────────────── shared modal primitive ─────────────────────────── */
 /* Every popup on the page (Toast, Cancel Booking, Collect Payment, Refund) is
@@ -383,18 +408,18 @@ const Modal = ({
   if (!open) return null;
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/45 px-4 py-6 backdrop-blur-sm"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/45 px-4 py-6 backdrop-blur-sm max-[639px]:items-end max-[639px]:px-0 max-[639px]:py-0"
       onClick={closeOnBackdrop ? onClose : undefined}
     >
       <div
-        className="max-h-[90vh] w-full max-w-md sm:max-w-lg overflow-y-auto rounded-[24px] sm:rounded-[30px] border border-white/70 bg-white p-6 sm:p-8 md:p-10 shadow-[0_30px_90px_rgba(15,23,42,0.28)]"
+        className="max-h-[90vh] w-full max-w-md sm:max-w-lg overflow-y-auto rounded-[24px] sm:rounded-[30px] border border-white/70 bg-white p-6 sm:p-8 md:p-10 shadow-[0_30px_90px_rgba(15,23,42,0.28)] max-[639px]:max-h-[92vh] max-[639px]:rounded-b-none max-[639px]:rounded-t-[22px] max-[639px]:p-5"
         onClick={(e) => e.stopPropagation()}
       >
         {(Icon || title) && (
           <div className="mb-4 flex items-start gap-4">
             {Icon && (
               <span
-                className={`flex h-14 w-14 sm:h-16 sm:w-16 shrink-0 items-center justify-center rounded-full ${iconTone} text-2xl sm:text-3xl text-white shadow-lg`}
+                className={`flex h-14 w-14 sm:h-16 sm:w-16 shrink-0 items-center justify-center rounded-full ${iconTone} text-2xl sm:text-3xl text-white shadow-lg max-[639px]:h-11 max-[639px]:w-11 max-[639px]:text-lg`}
               >
                 <Icon />
               </span>
@@ -414,9 +439,9 @@ const Modal = ({
             </button>
           </div>
         )}
-        <div className="text-[17px] leading-relaxed text-slate-600">{children}</div>
+        <div className="text-[17px] leading-relaxed text-slate-600 max-[639px]:text-[14px]">{children}</div>
         {actions && (
-          <div className="mt-7 sm:mt-8 flex flex-wrap justify-end gap-3">{actions}</div>
+          <div className="mt-7 sm:mt-8 flex flex-wrap justify-end gap-3 max-[639px]:mt-5 max-[639px]:flex-col-reverse max-[639px]:gap-2">{actions}</div>
         )}
       </div>
     </div>
@@ -464,9 +489,16 @@ const FLOW_STEPS = [
   },
 ];
 
+// FlowBar: unchanged on tablet/desktop (sm:flex-nowrap layout with wrapping
+// pills). On phones (<640px) the steps become a single horizontally
+// scrollable row (per the requested "image-1" behaviour) instead of
+// wrapping to multiple lines, with a subtle snap + no visible scrollbar.
 const FlowBar = ({ view, onJump }) => (
-  <div className="rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-[0_10px_30px_rgba(15,23,42,0.05)]">
-    <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-2 sm:flex-nowrap">
+  <div className="rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-[0_10px_30px_rgba(15,23,42,0.05)] max-[639px]:p-3">
+    <div
+      className="flex items-center justify-between gap-3 sm:gap-2 sm:flex-nowrap sm:flex-wrap max-[639px]:flex-nowrap max-[639px]:overflow-x-auto max-[639px]:justify-start max-[639px]:snap-x max-[639px]:snap-mandatory max-[639px]:-mx-3 max-[639px]:px-3 max-[639px]:pb-1"
+      style={{ WebkitOverflowScrolling: "touch", scrollbarWidth: "none" }}
+    >
       {FLOW_STEPS.map((step, idx) => {
         const Icon = step.icon;
         const isActive = step.view === view;
@@ -475,11 +507,11 @@ const FlowBar = ({ view, onJump }) => (
             <button
               type="button"
               onClick={() => onJump(step.view)}
-              className="group flex min-w-[104px] sm:min-w-[110px] flex-1 flex-col items-center gap-2 rounded-xl px-2 py-1 text-center transition hover:bg-slate-50"
+              className="group flex min-w-[104px] sm:min-w-[110px] flex-1 flex-col items-center gap-2 rounded-xl px-2 py-1 text-center transition hover:bg-slate-50 max-[639px]:flex-none max-[639px]:min-w-[92px] max-[639px]:snap-center max-[639px]:shrink-0"
               title={step.desc}
             >
               <span
-                className={`flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-full text-lg sm:text-xl transition ${
+                className={`flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-full text-lg sm:text-xl transition max-[639px]:h-9 max-[639px]:w-9 max-[639px]:text-base ${
                   isActive
                     ? "bg-sky-500 text-white shadow-[0_8px_18px_rgba(14,165,233,0.35)]"
                     : "bg-sky-50 text-sky-600 group-hover:bg-sky-100"
@@ -487,7 +519,7 @@ const FlowBar = ({ view, onJump }) => (
               >
                 <Icon />
               </span>
-              <span className={`text-[17px] font-bold leading-snug ${isActive ? "text-sky-700" : "text-slate-700"}`}>
+              <span className={`text-[17px] font-bold leading-snug ${isActive ? "text-sky-700" : "text-slate-700"} max-[639px]:text-[11px] max-[639px]:leading-tight`}>
                 {step.num}. {step.title}
               </span>
             </button>
@@ -636,19 +668,19 @@ const FeatureModal = ({ title, subtitle, size = "max-w-6xl", onClose, children }
 
   return (
     <div
-      className="fixed inset-0 z-[950] flex items-center justify-center bg-slate-950/70 px-3 py-4 backdrop-blur-sm sm:px-6"
+      className="fixed inset-0 z-[950] flex items-center justify-center bg-slate-950/70 px-3 py-4 backdrop-blur-sm sm:px-6 max-[639px]:items-end max-[639px]:px-0 max-[639px]:py-0"
       onClick={onClose}
     >
       <div
-        className={`relative max-h-[140vh] w-full ${size} overflow-y-auto rounded-[28px] bg-white shadow-[0_30px_90px_rgba(15,23,42,0.35)]`}
+        className={`relative max-h-[140vh] w-full ${size} overflow-y-auto rounded-[28px] bg-white shadow-[0_30px_90px_rgba(15,23,42,0.35)] max-[639px]:max-h-[94vh] max-[639px]:rounded-b-none max-[639px]:rounded-t-[22px]`}
         onClick={(event) => event.stopPropagation()}
         role="dialog"
         aria-modal="true"
       >
-        <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-slate-100 bg-white/95 px-5 py-4 backdrop-blur">
+        <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-slate-100 bg-white/95 px-5 py-4 backdrop-blur max-[639px]:px-4 max-[639px]:py-3">
           <div>
             <h3 className={modalTitleCls}>{title}</h3>
-            {subtitle && <p className="mt-1 text-[17px] text-slate-500">{subtitle}</p>}
+            {subtitle && <p className="mt-1 text-[17px] text-slate-500 max-[639px]:text-[13px]">{subtitle}</p>}
           </div>
           <button
             type="button"
@@ -659,7 +691,7 @@ const FeatureModal = ({ title, subtitle, size = "max-w-6xl", onClose, children }
             <FaTimes />
           </button>
         </div>
-        <div className="p-4 sm:p-5">{children}</div>
+        <div className="p-4 sm:p-5 max-[639px]:p-3">{children}</div>
       </div>
     </div>
   );
@@ -730,65 +762,105 @@ const PaymentHistoryModal = ({ booking, onClose }) => {
             No payment history found for this booking.
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-xl border border-slate-200">
-            <table className="w-full min-w-[600px] text-left">
-              <thead className="bg-slate-50 text-base font-bold uppercase text-slate-400">
-                <tr>
-                  <th className="px-4 sm:px-5 py-3">Date & Time</th>
-                  <th className="px-4 sm:px-5 py-3">Type</th>
-                  <th className="px-4 sm:px-5 py-3">Amount</th>
-                  <th className="px-4 sm:px-5 py-3">Mode</th>
-                  <th className="px-4 sm:px-5 py-3">Status</th>
-                  <th className="px-4 sm:px-5 py-3">Reference</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-[17px]">
-                {history.map((payment) => (
-                  <tr key={payment.id}>
-                    <td className="px-4 sm:px-5 py-3 text-slate-700">{formatDate(payment.created_at)}</td>
-                    <td className="px-4 sm:px-5 py-3">
-                      <span className={`inline-block rounded-full px-3 py-1 text-sm font-bold ${
-                        payment.payment_type === "Advance" ? "bg-blue-50 text-blue-700" :
-                        payment.payment_type === "Refund" ? "bg-amber-50 text-amber-700" :
-                        "bg-emerald-50 text-emerald-700"
-                      }`}>
-                        {payment.payment_type || "Payment"}
-                      </span>
-                    </td>
-                    <td className={`px-4 sm:px-5 py-3 font-bold ${
-                      payment.payment_type === "Refund" ? "text-rose-600" : "text-emerald-600"
-                    }`}>
-                      {payment.payment_type === "Refund" ? "-" : "+"}{formatCurrency(payment.amount)}
-                    </td>
-                    <td className="px-4 sm:px-5 py-3 text-slate-700">{payment.payment_mode || "-"}</td>
-                    <td className="px-4 sm:px-5 py-3">
-                      <span className={statusBadgeCls(payment.payment_status)}>
-                        {payment.payment_status || "Pending"}
-                      </span>
-                    </td>
-                    <td className="px-4 sm:px-5 py-3 text-slate-600 font-mono text-[17px]">
-                      {payment.transaction_id || payment.reference_id || "-"}
-                    </td>
+          <>
+            {/* Desktop / tablet table — unchanged, just scrolls internally if needed */}
+            <div className="hidden sm:block overflow-x-auto rounded-xl border border-slate-200">
+              <table className="w-full min-w-[600px] text-left">
+                <thead className="bg-slate-50 text-base font-bold uppercase text-slate-400">
+                  <tr>
+                    <th className="px-4 sm:px-5 py-3">Date & Time</th>
+                    <th className="px-4 sm:px-5 py-3">Type</th>
+                    <th className="px-4 sm:px-5 py-3">Amount</th>
+                    <th className="px-4 sm:px-5 py-3">Mode</th>
+                    <th className="px-4 sm:px-5 py-3">Status</th>
+                    <th className="px-4 sm:px-5 py-3">Reference</th>
                   </tr>
-                ))}
-                <tr className="border-t-2 border-slate-200 bg-slate-50/50">
-                  <td className="px-4 sm:px-5 py-3 font-bold text-slate-800" colSpan={2}>Total</td>
-                  <td className="px-4 sm:px-5 py-3 font-black text-xl text-slate-900">
-                    {formatCurrency(history.reduce((sum, p) => sum + (Number(p.amount) || 0), 0))}
-                  </td>
-                  <td className="px-4 sm:px-5 py-3" colSpan={3}></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-[17px]">
+                  {history.map((payment) => (
+                    <tr key={payment.id}>
+                      <td className="px-4 sm:px-5 py-3 text-slate-700">{formatDate(payment.created_at)}</td>
+                      <td className="px-4 sm:px-5 py-3">
+                        <span className={`inline-block rounded-full px-3 py-1 text-sm font-bold ${
+                          payment.payment_type === "Advance" ? "bg-blue-50 text-blue-700" :
+                          payment.payment_type === "Refund" ? "bg-amber-50 text-amber-700" :
+                          "bg-emerald-50 text-emerald-700"
+                        }`}>
+                          {payment.payment_type || "Payment"}
+                        </span>
+                      </td>
+                      <td className={`px-4 sm:px-5 py-3 font-bold ${
+                        payment.payment_type === "Refund" ? "text-rose-600" : "text-emerald-600"
+                      }`}>
+                        {payment.payment_type === "Refund" ? "-" : "+"}{formatCurrency(payment.amount)}
+                      </td>
+                      <td className="px-4 sm:px-5 py-3 text-slate-700">{payment.payment_mode || "-"}</td>
+                      <td className="px-4 sm:px-5 py-3">
+                        <span className={statusBadgeCls(payment.payment_status)}>
+                          {payment.payment_status || "Pending"}
+                        </span>
+                      </td>
+                      <td className="px-4 sm:px-5 py-3 text-slate-600 font-mono text-[17px]">
+                        {payment.transaction_id || payment.reference_id || "-"}
+                      </td>
+                    </tr>
+                  ))}
+                  <tr className="border-t-2 border-slate-200 bg-slate-50/50">
+                    <td className="px-4 sm:px-5 py-3 font-bold text-slate-800" colSpan={2}>Total</td>
+                    <td className="px-4 sm:px-5 py-3 font-black text-xl text-slate-900">
+                      {formatCurrency(history.reduce((sum, p) => sum + (Number(p.amount) || 0), 0))}
+                    </td>
+                    <td className="px-4 sm:px-5 py-3" colSpan={3}></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile — stacked transaction cards, no horizontal scroll */}
+            <div className="sm:hidden space-y-3">
+              {history.map((payment) => (
+                <div key={payment.id} className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className={`inline-block rounded-full px-2.5 py-1 text-[12px] font-bold ${
+                      payment.payment_type === "Advance" ? "bg-blue-50 text-blue-700" :
+                      payment.payment_type === "Refund" ? "bg-amber-50 text-amber-700" :
+                      "bg-emerald-50 text-emerald-700"
+                    }`}>
+                      {payment.payment_type || "Payment"}
+                    </span>
+                    <span className={statusBadgeCls(payment.payment_status)}>
+                      {payment.payment_status || "Pending"}
+                    </span>
+                  </div>
+                  <div className={`mt-2 text-lg font-black ${payment.payment_type === "Refund" ? "text-rose-600" : "text-emerald-600"}`}>
+                    {payment.payment_type === "Refund" ? "-" : "+"}{formatCurrency(payment.amount)}
+                  </div>
+                  <div className="mt-2 grid grid-cols-2 gap-y-1 text-[13px]">
+                    <span className="text-slate-400 font-semibold">Date</span>
+                    <span className="text-right text-slate-700">{formatDate(payment.created_at)}</span>
+                    <span className="text-slate-400 font-semibold">Mode</span>
+                    <span className="text-right text-slate-700">{payment.payment_mode || "-"}</span>
+                    <span className="text-slate-400 font-semibold">Reference</span>
+                    <span className="text-right text-slate-700 font-mono break-all">{payment.transaction_id || payment.reference_id || "-"}</span>
+                  </div>
+                </div>
+              ))}
+              <div className="rounded-2xl border-2 border-slate-200 bg-slate-50 p-3.5 flex items-center justify-between">
+                <span className="font-bold text-slate-800 text-[14px]">Total</span>
+                <span className="font-black text-lg text-slate-900">
+                  {formatCurrency(history.reduce((sum, p) => sum + (Number(p.amount) || 0), 0))}
+                </span>
+              </div>
+            </div>
+          </>
         )}
 
-        <div className="mt-6 flex flex-wrap justify-between items-center gap-4 pt-4 border-t border-slate-200">
-          <div className="text-[17px] text-slate-500">
+        <div className="mt-6 flex flex-wrap justify-between items-center gap-4 pt-4 border-t border-slate-200 max-[639px]:flex-col max-[639px]:items-stretch">
+          <div className="text-[17px] text-slate-500 max-[639px]:text-[13px] max-[639px]:text-center">
             Showing {history.length} transaction{history.length !== 1 ? "s" : ""}
           </div>
           <div className="flex gap-2">
-            <button onClick={onClose} className={primaryBtn}>Close</button>
+            <button onClick={onClose} className={`${primaryBtn} max-[639px]:w-full`}>Close</button>
           </div>
         </div>
       </div>
@@ -862,7 +934,7 @@ const DocumentUploadModal = ({ booking, onClose }) => {
       onClose={onClose}
     >
       <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
-        <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-5">
+        <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-5 max-[639px]:p-3.5 max-[639px]:rounded-xl">
           <div className={sectionTitleCls}>Upload Guest Document</div>
           <div className="space-y-4">
             <div>
@@ -896,7 +968,7 @@ const DocumentUploadModal = ({ booking, onClose }) => {
                 placeholder="Aadhaar, passport, signed check-in form..."
               />
             </div>
-            <label className="flex items-center gap-2 text-[17px] font-bold text-slate-700">
+            <label className="flex items-center gap-2 text-[17px] font-bold text-slate-700 max-[639px]:text-[13px]">
               <input
                 type="checkbox"
                 checked={form.termsAccepted}
@@ -904,13 +976,13 @@ const DocumentUploadModal = ({ booking, onClose }) => {
               />
               Guest consent / terms accepted
             </label>
-            <button type="button" onClick={handleUpload} disabled={!file || uploading} className={primaryBtn}>
+            <button type="button" onClick={handleUpload} disabled={!file || uploading} className={`${primaryBtn} max-[639px]:w-full`}>
               <FaFileUpload className="text-xs" /> {uploading ? "Uploading..." : "Upload Document"}
             </button>
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-5">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 max-[639px]:p-3.5 max-[639px]:rounded-xl">
           <div className={sectionTitleCls}>Uploaded Documents</div>
           {loading ? (
             <div className="py-10 text-center text-slate-400">Loading documents...</div>
@@ -924,16 +996,16 @@ const DocumentUploadModal = ({ booking, onClose }) => {
                 const url = buildUploadUrl(doc.file_url);
                 const label = documentTypeOptions.find((item) => item.value === doc.document_type)?.label || doc.document_type;
                 return (
-                  <div key={doc.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50/70 p-4">
+                  <div key={doc.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50/70 p-4 max-[639px]:p-3">
                     <div>
-                      <div className="font-black text-slate-900">{label}</div>
-                      <div className="mt-1 text-[17px] text-slate-500">{doc.notes || "No notes"} - {formatDate(doc.uploaded_at)}</div>
+                      <div className="font-black text-slate-900 max-[639px]:text-[14px]">{label}</div>
+                      <div className="mt-1 text-[17px] text-slate-500 max-[639px]:text-[12px]">{doc.notes || "No notes"} - {formatDate(doc.uploaded_at)}</div>
                     </div>
-                    <div className="flex gap-2">
-                      <a href={url} target="_blank" rel="noreferrer" className={ghostBtn}>
+                    <div className="flex gap-2 max-[639px]:w-full">
+                      <a href={url} target="_blank" rel="noreferrer" className={`${ghostBtn} max-[639px]:flex-1 max-[639px]:text-[13px] max-[639px]:h-9`}>
                         <FaEye className="text-xs" /> View
                       </a>
-                      <button type="button" onClick={() => handleDelete(doc.id)} className={dangerBtn}>
+                      <button type="button" onClick={() => handleDelete(doc.id)} className={`${dangerBtn} max-[639px]:flex-1 max-[639px]:text-[13px] max-[639px]:h-9`}>
                         <FaTrash className="text-xs" /> Delete
                       </button>
                     </div>
@@ -1678,7 +1750,7 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
       ) : (
         <div className="space-y-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 max-[639px]:w-full max-[639px]:flex-wrap">
               <span className="text-[14px] font-bold uppercase tracking-wider text-slate-500">Invoice Actions:</span>
               {sendStatus ? (
                 <div
@@ -1692,36 +1764,38 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
                 </div>
               ) : null}
             </div>
-            <div className="flex flex-wrap gap-2">
-              <button type="button" onClick={handleSendNotification} disabled={sending || loading || !invoice} className={`${primaryBtn} bg-gradient-to-r from-emerald-600 to-teal-500`}>
+            <div className="flex flex-wrap gap-2 max-[639px]:w-full max-[639px]:grid max-[639px]:grid-cols-2">
+              <button type="button" onClick={handleSendNotification} disabled={sending || loading || !invoice} className={`${primaryBtn} bg-gradient-to-r from-emerald-600 to-teal-500 max-[639px]:col-span-2 max-[639px]:text-[13px]`}>
                 <FaCommentDots className="text-xs" />
                 {sending ? "Sending..." : "Send WhatsApp + SMS"}
               </button>
-              <button type="button" onClick={loadInvoice} className={ghostBtn}>Regenerate</button>
-              <button type="button" onClick={handlePrint} className={ghostBtn}><FaPrint className="text-xs" /> Print</button>
-              <button type="button" onClick={handleDownloadPdf} className={primaryBtn}><FaDownload className="text-xs" /> PDF</button>
+              <button type="button" onClick={loadInvoice} className={`${ghostBtn} max-[639px]:text-[13px]`}>Regenerate</button>
+              <button type="button" onClick={handlePrint} className={`${ghostBtn} max-[639px]:text-[13px]`}><FaPrint className="text-xs" /> Print</button>
+              <button type="button" onClick={handleDownloadPdf} className={`${primaryBtn} max-[639px]:col-span-2 max-[639px]:text-[13px]`}><FaDownload className="text-xs" /> PDF</button>
             </div>
           </div>
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="flex flex-wrap justify-between gap-4 border-b border-slate-100 pb-5">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm max-[639px]:p-3.5 max-[639px]:rounded-xl">
+            <div className="flex flex-wrap justify-between gap-4 border-b border-slate-100 pb-5 max-[639px]:pb-3 max-[639px]:gap-2">
               <div>
                 <div className="text-sm font-bold uppercase text-slate-400">Invoice No</div>
-                <div className="text-2xl font-black text-slate-900">{invoiceNo}</div>
+                <div className="text-2xl font-black text-slate-900 max-[639px]:text-lg">{invoiceNo}</div>
               </div>
               <div className="text-right">
                 <div className="text-sm font-bold uppercase text-slate-400">Total</div>
-                <div className="text-3xl font-black text-emerald-600">{formatCurrency(invoiceTotal)}</div>
+                <div className="text-3xl font-black text-emerald-600 max-[639px]:text-xl">{formatCurrency(invoiceTotal)}</div>
               </div>
             </div>
-            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 max-[639px]:mt-3">
               {buildLines().slice(1, 6).map(([key, value]) => (
                 <div key={key} className="rounded-xl bg-slate-50 p-3">
                   <div className="text-sm font-bold uppercase text-slate-400">{key}</div>
-                  <div className="font-bold text-slate-800">{value}</div>
+                  <div className="font-bold text-slate-800 max-[639px]:text-[14px]">{value}</div>
                 </div>
               ))}
             </div>
-            <div className="mt-5 overflow-x-auto rounded-xl border border-slate-100">
+
+            {/* Desktop / tablet items table */}
+            <div className="hidden sm:block mt-5 overflow-x-auto rounded-xl border border-slate-100">
               <table className="w-full min-w-[560px] text-left text-[17px]">
                 <thead className="bg-slate-50 text-base font-bold uppercase text-slate-400">
                   <tr><th className="px-4 py-3">Item</th><th className="px-4 py-3">Qty</th><th className="px-4 py-3">Rate</th><th className="px-4 py-3 text-right">Total</th></tr>
@@ -1737,6 +1811,19 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
                   ))}
                 </tbody>
               </table>
+            </div>
+
+            {/* Mobile items — stacked cards */}
+            <div className="sm:hidden mt-3 space-y-2">
+              {items.map((item, idx) => (
+                <div key={idx} className="rounded-xl border border-slate-100 bg-slate-50/60 p-3 flex items-center justify-between gap-2">
+                  <div>
+                    <div className="font-semibold text-slate-800 text-[14px]">{item.name || item.description || "Item"}</div>
+                    <div className="text-[12px] text-slate-500">Qty {item.quantity || 1} × {formatCurrency(item.price)}</div>
+                  </div>
+                  <div className="font-black text-[14px] text-slate-900 shrink-0">{formatCurrency(item.total)}</div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -1754,24 +1841,24 @@ const WhatsAppSendModal = ({ booking, detail, sending, result, onSend, onClose }
   const invoiceNo = detail?.invoice?.invoiceNo || detail?.invoice_no || `BK-${b.bookingId}`;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 max-[639px]:items-end max-[639px]:p-0">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={sending ? undefined : onClose} />
-      <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+      <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 max-[639px]:rounded-b-none max-[639px]:rounded-t-[22px] max-[639px]:max-h-[92vh] max-[639px]:overflow-y-auto">
         {/* Header */}
-        <div className="bg-[#25D366] px-6 py-5 flex items-center gap-3">
-          <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
-            <FaWhatsapp className="text-[#25D366] text-2xl" />
+        <div className="bg-[#25D366] px-6 py-5 flex items-center gap-3 max-[639px]:px-4 max-[639px]:py-4">
+          <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center max-[639px]:w-10 max-[639px]:h-10">
+            <FaWhatsapp className="text-[#25D366] text-2xl max-[639px]:text-xl" />
           </div>
           <div>
-            <h3 className="text-white font-bold text-lg">Send Invoice via WhatsApp</h3>
+            <h3 className="text-white font-bold text-lg max-[639px]:text-base">Send Invoice via WhatsApp</h3>
             <p className="text-white/80 text-xs">Invoice will be sent with PDF attachment</p>
           </div>
         </div>
 
         {/* Content */}
-        <div className="px-6 py-5 space-y-4">
+        <div className="px-6 py-5 space-y-4 max-[639px]:px-4 max-[639px]:py-4">
           {/* Guest Info */}
-          <div className="bg-slate-50 rounded-xl p-4 space-y-3">
+          <div className="bg-slate-50 rounded-xl p-4 space-y-3 max-[639px]:p-3">
             <div className="flex items-center gap-2">
               <FaUser className="text-slate-400 text-sm" />
               <span className="text-slate-500 text-sm font-medium">Guest</span>
@@ -1790,13 +1877,13 @@ const WhatsAppSendModal = ({ booking, detail, sending, result, onSend, onClose }
           </div>
 
           {/* Admin Info */}
-          <div className="bg-blue-50 rounded-xl p-4">
+          <div className="bg-blue-50 rounded-xl p-4 max-[639px]:p-3">
             <p className="text-blue-700 text-sm font-medium">Admin (Resort) will also receive a notification</p>
           </div>
 
           {/* Result / Status */}
           {result && (
-            <div className={`rounded-xl p-4 flex items-start gap-3 ${
+            <div className={`rounded-xl p-4 flex items-start gap-3 max-[639px]:p-3 ${
               result.type === "success"
                 ? "bg-green-50 border border-green-200"
                 : result.type === "partial"
@@ -1829,7 +1916,7 @@ const WhatsAppSendModal = ({ booking, detail, sending, result, onSend, onClose }
         </div>
 
         {/* Footer */}
-        <div className="px-6 pb-5 flex gap-3">
+        <div className="px-6 pb-5 flex gap-3 max-[639px]:px-4 max-[639px]:pb-4">
           {!sending && !result && (
             <>
               <button onClick={onClose} className="flex-1 px-4 py-2.5 border border-slate-200 text-slate-600 font-medium rounded-lg hover:bg-slate-50 transition-colors text-sm">
@@ -2927,18 +3014,18 @@ const handleJumpStep = (stepView) => {
 
   const renderList = () => (
     <div className={panelCls}>
-      <div className="mb-5 sm:mb-6 flex flex-wrap items-center justify-between gap-4">
+      <div className="mb-5 sm:mb-6 flex flex-wrap items-center justify-between gap-4 max-[767px]:flex-col max-[767px]:items-stretch max-[767px]:gap-3">
         <div>
           <h2 className={cardTitleCls}>All Bookings</h2>
-          <p className="mt-1 text-[17px] text-slate-500">View and manage all your hotel reservations</p>
+          <p className="mt-1 text-[17px] text-slate-500 max-[639px]:text-[14px]">View and manage all your hotel reservations</p>
         </div>
-        <button type="button" onClick={openNewBooking} className={primaryBtn}>
+        <button type="button" onClick={openNewBooking} className={`${primaryBtn} max-[767px]:w-full`}>
           <FaPlus className="text-lg" /> New Booking
         </button>
       </div>
 
-      <div className="mb-4 flex flex-wrap items-center gap-2 sm:gap-3">
-        <div className="relative min-w-[220px] flex-1">
+      <div className="mb-4 flex flex-wrap items-center gap-2 sm:gap-3 max-[767px]:flex-col max-[767px]:items-stretch">
+        <div className="relative min-w-[220px] flex-1 max-[767px]:min-w-0 max-[767px]:w-full">
           <FaSearch className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             value={search}
@@ -2950,15 +3037,18 @@ const handleJumpStep = (stepView) => {
             className={`${fieldCls} pl-11`}
           />
         </div>
-        <button type="button" className={ghostBtn}>
-          <FaFilter className="text-sm" /> Filter
-        </button>
-        <button type="button" onClick={handleExportCSV} className={ghostBtn}>
-          <FaDownload className="text-sm" /> Export
-        </button>
+        <div className="flex gap-2 max-[767px]:w-full">
+          <button type="button" className={`${ghostBtn} max-[767px]:flex-1`}>
+            <FaFilter className="text-sm" /> Filter
+          </button>
+          <button type="button" onClick={handleExportCSV} className={`${ghostBtn} max-[767px]:flex-1`}>
+            <FaDownload className="text-sm" /> Export
+          </button>
+        </div>
       </div>
 
-      <div className="max-w-full overflow-x-auto rounded-xl border border-slate-100">
+      {/* Desktop / tablet table — layout, sizing, and columns unchanged */}
+      <div className="hidden md:block max-w-full overflow-x-auto rounded-xl border border-slate-100">
         <table className="w-full min-w-[860px] text-left">
           <thead className="sticky top-0 z-10 bg-slate-50 text-base font-bold uppercase tracking-wide text-slate-500">
             <tr>
@@ -3061,7 +3151,74 @@ const handleJumpStep = (stepView) => {
         </table>
       </div>
 
-      <div className="mt-5 flex flex-col sm:flex-row flex-wrap items-center justify-center sm:justify-between gap-3 text-[17px] text-slate-500">
+      {/* Mobile / small-tablet — bookings become stacked cards, no horizontal scroll */}
+      <div className="md:hidden space-y-3">
+        {loading ? (
+          <div className="py-10 text-center text-slate-400">Loading bookings...</div>
+        ) : pagedBookings.length === 0 ? (
+          <div className="py-10 text-center text-slate-400">No bookings found.</div>
+        ) : (
+          pagedBookings.map((b) => (
+            <div
+              key={b.bookingId}
+              className="rounded-[18px] border border-slate-200 bg-white p-3.5 shadow-sm"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <div className="font-bold text-slate-900 text-[15px]">{b.bookingCode || `BK-${b.bookingId}`}</div>
+                  <div className="mt-0.5 text-[14px] text-slate-600">{b.guest_name || "Walk-in Guest"}</div>
+                </div>
+                <span className={statusBadgeCls(b.booking_status)}>
+                  {b.booking_status || "Pending"}
+                </span>
+              </div>
+
+              <div className="mt-3 grid grid-cols-2 gap-y-2 gap-x-3 rounded-xl bg-slate-50/70 p-3 text-[13px]">
+                <div>
+                  <div className="font-semibold text-slate-400">Check-In</div>
+                  <div className="text-slate-700 font-medium">{formatDate(b.check_in)}</div>
+                </div>
+                <div>
+                  <div className="font-semibold text-slate-400">Check-Out</div>
+                  <div className="text-slate-700 font-medium">{formatDate(b.check_out)}</div>
+                </div>
+                <div>
+                  <div className="font-semibold text-slate-400">Rooms</div>
+                  <div className="text-slate-700 font-medium">{b.rooms || "-"}</div>
+                </div>
+                <div>
+                  <div className="font-semibold text-slate-400">Booking Type</div>
+                  <div className="text-slate-700 font-medium">{b.bookingType || "-"}</div>
+                </div>
+                <div className="col-span-2 flex items-center justify-between border-t border-slate-200 pt-2 mt-1">
+                  <span className="font-semibold text-slate-400">Amount</span>
+                  <span className="font-black text-slate-900 text-[15px]">{formatCurrency(b.totalAmount)}</span>
+                </div>
+              </div>
+
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button title="View details" onClick={() => openDetails(b)} className={cardActionBtn("neutral")}>
+                  <FaEye /> View
+                </button>
+                <button title="Edit booking" onClick={() => openEditBooking(b)} className={cardActionBtn("neutral")}>
+                  <FaEdit /> Edit
+                </button>
+                <button title="Guest folio" onClick={() => handleOpenFolio(b)} className={cardActionBtn("primary")}>
+                  <FaBook /> Folio
+                </button>
+                <button title="Manage booking" onClick={() => openManage(b)} className={cardActionBtn("danger")}>
+                  <FaTrash /> Delete
+                </button>
+                <button title="Guest Profile" onClick={() => handleOpenGuestProfile(b)} className={`${cardActionBtn("neutral")} basis-full`}>
+                  <FaIdCard /> Guest Profile
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      <div className="mt-5 flex flex-col sm:flex-row flex-wrap items-center justify-center sm:justify-between gap-3 text-[17px] text-slate-500 max-[639px]:text-[13px]">
         <span className="text-center sm:text-left">
           Showing {pagedBookings.length ? (page - 1) * pageSize + 1 : 0}
           {" "}to {(page - 1) * pageSize + pagedBookings.length} of {filteredBookings.length} entries
@@ -3070,7 +3227,7 @@ const handleJumpStep = (stepView) => {
           <button
             disabled={page <= 1}
             onClick={() => setPage((p) => Math.max(1, p - 1))}
-            className="flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition disabled:opacity-40"
+            className="flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition disabled:opacity-40 max-[639px]:h-9 max-[639px]:w-9"
           >
             <FaChevronLeft className="text-sm" />
           </button>
@@ -3078,7 +3235,7 @@ const handleJumpStep = (stepView) => {
             <button
               key={i}
               onClick={() => setPage(i + 1)}
-              className={`h-10 w-10 sm:h-11 sm:w-11 rounded-lg text-[17px] font-bold transition ${
+              className={`h-10 w-10 sm:h-11 sm:w-11 rounded-lg text-[17px] font-bold transition max-[639px]:h-9 max-[639px]:w-9 max-[639px]:text-[14px] ${
                 page === i + 1 ? "bg-sky-500 text-white" : "text-slate-500 hover:bg-slate-100"
               }`}
             >
@@ -3088,7 +3245,7 @@ const handleJumpStep = (stepView) => {
           <button
             disabled={page >= totalPages}
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            className="flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition disabled:opacity-40"
+            className="flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition disabled:opacity-40 max-[639px]:h-9 max-[639px]:w-9"
           >
             <FaChevronRight className="text-sm" />
           </button>
@@ -3101,25 +3258,25 @@ const handleJumpStep = (stepView) => {
 
   const renderForm = () => (
     <div className={panelCls}>
-      <div className="mb-6 sm:mb-8 flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-5 sm:pb-6">
+      <div className="mb-6 sm:mb-8 flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-5 sm:pb-6 max-[767px]:flex-col max-[767px]:items-stretch max-[767px]:gap-3">
         <div>
           <h2 className={cardTitleCls}>{isEdit ? "Edit Booking" : "New Booking"}</h2>
-          <p className="mt-1 text-[17px] text-slate-500">
+          <p className="mt-1 text-[17px] text-slate-500 max-[639px]:text-[14px]">
             {isEdit ? "Update the booking details below." : "Fill all details below to create a new booking — everything happens on this one page."}
           </p>
         </div>
-        <div className="flex gap-2 sm:gap-3">
-          <button type="button" onClick={goToList} className={ghostBtn}>
+        <div className="flex gap-2 sm:gap-3 max-[767px]:w-full">
+          <button type="button" onClick={goToList} className={`${ghostBtn} max-[767px]:flex-1`}>
             Cancel
           </button>
-          <button type="button" onClick={handleSaveBooking} disabled={saving} className={primaryBtn}>
+          <button type="button" onClick={handleSaveBooking} disabled={saving} className={`${primaryBtn} max-[767px]:flex-1`}>
             {saving ? "Saving..." : "Save Booking"}
           </button>
         </div>
       </div>
 
       {/* section anchors — purely visual / scroll cues, all sections are already on screen below */}
-      <div className="mb-6 sm:mb-8 flex flex-wrap gap-2 sm:gap-3">
+      <div className="mb-6 sm:mb-8 flex flex-wrap gap-2 sm:gap-3 max-[639px]:flex-nowrap max-[639px]:overflow-x-auto max-[639px]:-mx-3.5 max-[639px]:px-3.5 max-[639px]:pb-1" style={{ WebkitOverflowScrolling: "touch" }}>
         {[
           { id: "sec-guest", label: "Guest Information" },
           { id: "sec-booking", label: "Booking Details" },
@@ -3127,7 +3284,7 @@ const handleJumpStep = (stepView) => {
           { id: "sec-other", label: "Other Details" },
           { id: "sec-payment", label: "Payment Details" },
         ].map((s) => (
-          <a key={s.id} href={`#${s.id}`} className={softBtn(false)}>
+          <a key={s.id} href={`#${s.id}`} className={`${softBtn(false)} max-[639px]:shrink-0`}>
             {s.label}
           </a>
         ))}
@@ -3187,7 +3344,7 @@ const handleJumpStep = (stepView) => {
             </div>
 
             <div className="mt-5 sm:mt-6 border-t border-slate-200 pt-5 sm:pt-6">
-              <div className="mb-3 text-xl font-bold text-blue-900">
+              <div className="mb-3 text-xl font-bold text-blue-900 max-[639px]:text-base">
                 Stay Details
               </div>
 
@@ -3259,7 +3416,7 @@ const handleJumpStep = (stepView) => {
                 <label className={labelCls}>Booking Type</label>
                 <div className="flex flex-wrap gap-4 sm:gap-5 pt-1">
                   {["Walk-In", "VIA", "Online"].map((t) => (
-                    <label key={t} className="flex items-center gap-2 text-[17px] font-semibold text-slate-700">
+                    <label key={t} className="flex items-center gap-2 text-[17px] font-semibold text-slate-700 max-[639px]:text-[14px]">
                       <input
                         type="radio"
                         name="bookingType"
@@ -3312,7 +3469,7 @@ const handleJumpStep = (stepView) => {
                     onChange={handleChange}
                     className={fieldCls}
                   />
-                  <button type="button" onClick={addRoomRow} className="shrink-0 h-[52px] sm:h-[54px] md:h-14 rounded-xl bg-sky-500 px-4 sm:px-5 text-[17px] font-bold text-white transition hover:bg-sky-600 active:scale-95">
+                  <button type="button" onClick={addRoomRow} className="shrink-0 h-[52px] sm:h-[54px] md:h-14 rounded-xl bg-sky-500 px-4 sm:px-5 text-[17px] font-bold text-white transition hover:bg-sky-600 active:scale-95 max-[639px]:h-12 max-[639px]:px-3 max-[639px]:text-[14px]">
                     + Add
                   </button>
                 </div>
@@ -3336,91 +3493,175 @@ const handleJumpStep = (stepView) => {
             </div>
 
             {formData.rooms.length > 0 && (
-              <div className="mt-4 sm:mt-5 max-w-full overflow-x-auto rounded-xl border border-slate-200">
-                <table className="w-full min-w-[560px] text-left">
-                  <thead className="sticky top-0 z-10 bg-slate-100 text-base font-bold uppercase text-slate-500">
-                    <tr>
-                      <th className="px-3 py-2.5">Category</th>
-                      <th className="px-3 py-2.5">Room No</th>
-                      <th className="px-3 py-2.5">Price</th>
-                      <th className="px-3 py-2.5">GST %</th>
-                      <th className="px-3 py-2.5">Qty</th>
-                      <th className="px-3 py-2.5">Total</th>
-                      <th className="px-3 py-2.5" />
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 bg-white text-[17px]">
-                    {formData.rooms.map((row) => (
-                      <tr key={row.id}>
-                        <td className="px-3 py-2">
-                          <select
-                            value={row.categoryId || ""}
-                            onChange={(e) => updateRoomRow(row.id, "categoryId", e.target.value)}
-                            className="w-28 sm:w-32 rounded-lg border border-slate-200 px-2 py-1.5 text-[17px]"
-                          >
-                            <option value="">Select category</option>
-                            {categorySetup.map((c) => (
-                              <option key={c.id} value={c.id}>{c.name}</option>
-                            ))}
-                          </select>
-                        </td>
-                        <td className="px-3 py-2">
-                          <select
-                            value={row.roomNo}
-                            onChange={(e) => updateRoomRow(row.id, "roomNo", e.target.value)}
-                            disabled={!row.categoryId}
-                            className="w-24 sm:w-28 rounded-lg border border-slate-200 px-2 py-1.5 text-[17px] disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
-                          >
-                            <option value="">
-                              {row.categoryId ? "Select room" : "Pick category first"}
-                            </option>
-                            {getRoomNumbersForCategory(row.categoryId, row.roomNo).map((r) => (
-                              <option key={r.roomNo} value={r.roomNo} disabled={r.alreadyPicked}>
-                                {r.roomNo}
-                                {r.status && r.status.toLowerCase() !== "available"
-                                  ? ` (${r.status})`
-                                  : ""}
-                                {r.alreadyPicked ? " — already added" : ""}
+              <>
+                {/* Desktop/tablet: table, unchanged */}
+                <div className="hidden sm:block mt-4 sm:mt-5 max-w-full overflow-x-auto rounded-xl border border-slate-200">
+                  <table className="w-full min-w-[560px] text-left">
+                    <thead className="sticky top-0 z-10 bg-slate-100 text-base font-bold uppercase text-slate-500">
+                      <tr>
+                        <th className="px-3 py-2.5">Category</th>
+                        <th className="px-3 py-2.5">Room No</th>
+                        <th className="px-3 py-2.5">Price</th>
+                        <th className="px-3 py-2.5">GST %</th>
+                        <th className="px-3 py-2.5">Qty</th>
+                        <th className="px-3 py-2.5">Total</th>
+                        <th className="px-3 py-2.5" />
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 bg-white text-[17px]">
+                      {formData.rooms.map((row) => (
+                        <tr key={row.id}>
+                          <td className="px-3 py-2">
+                            <select
+                              value={row.categoryId || ""}
+                              onChange={(e) => updateRoomRow(row.id, "categoryId", e.target.value)}
+                              className="w-28 sm:w-32 rounded-lg border border-slate-200 px-2 py-1.5 text-[17px]"
+                            >
+                              <option value="">Select category</option>
+                              {categorySetup.map((c) => (
+                                <option key={c.id} value={c.id}>{c.name}</option>
+                              ))}
+                            </select>
+                          </td>
+                          <td className="px-3 py-2">
+                            <select
+                              value={row.roomNo}
+                              onChange={(e) => updateRoomRow(row.id, "roomNo", e.target.value)}
+                              disabled={!row.categoryId}
+                              className="w-24 sm:w-28 rounded-lg border border-slate-200 px-2 py-1.5 text-[17px] disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
+                            >
+                              <option value="">
+                                {row.categoryId ? "Select room" : "Pick category first"}
                               </option>
-                            ))}
-                          </select>
-                        </td>
-                        <td className="px-3 py-2">
+                              {getRoomNumbersForCategory(row.categoryId, row.roomNo).map((r) => (
+                                <option key={r.roomNo} value={r.roomNo} disabled={r.alreadyPicked}>
+                                  {r.roomNo}
+                                  {r.status && r.status.toLowerCase() !== "available"
+                                    ? ` (${r.status})`
+                                    : ""}
+                                  {r.alreadyPicked ? " — already added" : ""}
+                                </option>
+                              ))}
+                            </select>
+                          </td>
+                          <td className="px-3 py-2">
+                            <input
+                              type="number"
+                              value={row.price}
+                              onChange={(e) => updateRoomRow(row.id, "price", e.target.value)}
+                              className="w-20 sm:w-24 rounded-lg border border-slate-200 px-2 py-1.5 text-[17px]"
+                            />
+                          </td>
+                          <td className="px-3 py-2">
+                            <input
+                              type="number"
+                              value={row.gst}
+                              onChange={(e) => updateRoomRow(row.id, "gst", e.target.value)}
+                              className="w-16 sm:w-20 rounded-lg border border-slate-200 px-2 py-1.5 text-[17px]"
+                            />
+                          </td>
+                          <td className="px-3 py-2">
+                            <input
+                              type="number"
+                              min={1}
+                              value={row.quantity}
+                              onChange={(e) => updateRoomRow(row.id, "quantity", e.target.value)}
+                              className="w-16 sm:w-20 rounded-lg border border-slate-200 px-2 py-1.5 text-[17px]"
+                            />
+                          </td>
+                          <td className="px-3 py-2 font-semibold text-slate-700">{formatCurrency(rowTotal(row, stayNights))}</td>
+                          <td className="px-3 py-2">
+                            <button onClick={() => removeRoomRow(row.id)} className="text-rose-500 transition hover:text-rose-700 active:scale-95">
+                              <FaTimes className="text-lg" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile: room rows become stacked cards */}
+                <div className="sm:hidden mt-4 space-y-3">
+                  {formData.rooms.map((row) => (
+                    <div key={row.id} className="rounded-xl border border-slate-200 bg-white p-3 space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[13px] font-bold text-slate-400 uppercase">Room Row</span>
+                        <button onClick={() => removeRoomRow(row.id)} className="text-rose-500 transition hover:text-rose-700 active:scale-95">
+                          <FaTimes className="text-base" />
+                        </button>
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-[12px] font-semibold text-slate-500">Category</label>
+                        <select
+                          value={row.categoryId || ""}
+                          onChange={(e) => updateRoomRow(row.id, "categoryId", e.target.value)}
+                          className="w-full rounded-lg border border-slate-200 px-2 py-2 text-[14px]"
+                        >
+                          <option value="">Select category</option>
+                          {categorySetup.map((c) => (
+                            <option key={c.id} value={c.id}>{c.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-[12px] font-semibold text-slate-500">Room No</label>
+                        <select
+                          value={row.roomNo}
+                          onChange={(e) => updateRoomRow(row.id, "roomNo", e.target.value)}
+                          disabled={!row.categoryId}
+                          className="w-full rounded-lg border border-slate-200 px-2 py-2 text-[14px] disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
+                        >
+                          <option value="">
+                            {row.categoryId ? "Select room" : "Pick category first"}
+                          </option>
+                          {getRoomNumbersForCategory(row.categoryId, row.roomNo).map((r) => (
+                            <option key={r.roomNo} value={r.roomNo} disabled={r.alreadyPicked}>
+                              {r.roomNo}
+                              {r.status && r.status.toLowerCase() !== "available" ? ` (${r.status})` : ""}
+                              {r.alreadyPicked ? " — already added" : ""}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2">
+                        <div>
+                          <label className="mb-1 block text-[12px] font-semibold text-slate-500">Price</label>
                           <input
                             type="number"
                             value={row.price}
                             onChange={(e) => updateRoomRow(row.id, "price", e.target.value)}
-                            className="w-20 sm:w-24 rounded-lg border border-slate-200 px-2 py-1.5 text-[17px]"
+                            className="w-full rounded-lg border border-slate-200 px-2 py-2 text-[14px]"
                           />
-                        </td>
-                        <td className="px-3 py-2">
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-[12px] font-semibold text-slate-500">GST %</label>
                           <input
                             type="number"
                             value={row.gst}
                             onChange={(e) => updateRoomRow(row.id, "gst", e.target.value)}
-                            className="w-16 sm:w-20 rounded-lg border border-slate-200 px-2 py-1.5 text-[17px]"
+                            className="w-full rounded-lg border border-slate-200 px-2 py-2 text-[14px]"
                           />
-                        </td>
-                        <td className="px-3 py-2">
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-[12px] font-semibold text-slate-500">Qty</label>
                           <input
                             type="number"
                             min={1}
                             value={row.quantity}
                             onChange={(e) => updateRoomRow(row.id, "quantity", e.target.value)}
-                            className="w-16 sm:w-20 rounded-lg border border-slate-200 px-2 py-1.5 text-[17px]"
+                            className="w-full rounded-lg border border-slate-200 px-2 py-2 text-[14px]"
                           />
-                        </td>
-                        <td className="px-3 py-2 font-semibold text-slate-700">{formatCurrency(rowTotal(row, stayNights))}</td>
-                        <td className="px-3 py-2">
-                          <button onClick={() => removeRoomRow(row.id)} className="text-rose-500 transition hover:text-rose-700 active:scale-95">
-                            <FaTimes className="text-lg" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between border-t border-slate-100 pt-2">
+                        <span className="text-[12px] font-semibold text-slate-500">Row Total</span>
+                        <span className="font-bold text-slate-800 text-[14px]">{formatCurrency(rowTotal(row, stayNights))}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
           </div>
         </div>
@@ -3473,32 +3714,32 @@ const handleJumpStep = (stepView) => {
       </div>
 
       {/* booking summary footer */}
-      <div className="mt-6 sm:mt-8 flex flex-wrap items-center justify-between gap-5 sm:gap-6 rounded-2xl border border-slate-200 bg-slate-50 px-5 sm:px-6 py-4 sm:py-5">
-        <div className="flex flex-wrap gap-6 sm:gap-8 text-[17px]">
+      <div className="mt-6 sm:mt-8 flex flex-wrap items-center justify-between gap-5 sm:gap-6 rounded-2xl border border-slate-200 bg-slate-50 px-5 sm:px-6 py-4 sm:py-5 max-[639px]:rounded-xl max-[639px]:px-3.5 max-[639px]:py-3.5 max-[639px]:gap-3">
+        <div className="flex flex-wrap gap-6 sm:gap-8 text-[17px] max-[639px]:gap-3 max-[639px]:w-full max-[639px]:grid max-[639px]:grid-cols-2">
           <div>
-            <div className="text-sm font-bold uppercase text-slate-400">Guest Name</div>
-            <div className="font-bold text-slate-800">{guestFullName || "-"}</div>
+            <div className="text-sm font-bold uppercase text-slate-400 max-[639px]:text-[11px]">Guest Name</div>
+            <div className="font-bold text-slate-800 max-[639px]:text-[13px]">{guestFullName || "-"}</div>
           </div>
           <div>
-            <div className="text-sm font-bold uppercase text-slate-400">Stay Duration</div>
-            <div className="font-bold text-slate-800">{stayNights} Night{stayNights === 1 ? "" : "s"}</div>
+            <div className="text-sm font-bold uppercase text-slate-400 max-[639px]:text-[11px]">Stay Duration</div>
+            <div className="font-bold text-slate-800 max-[639px]:text-[13px]">{stayNights} Night{stayNights === 1 ? "" : "s"}</div>
           </div>
           <div>
-            <div className="text-sm font-bold uppercase text-slate-400">Check-In</div>
-            <div className="font-bold text-slate-800">{formData.checkIn ? formatDate(formData.checkIn) : "-"}</div>
+            <div className="text-sm font-bold uppercase text-slate-400 max-[639px]:text-[11px]">Check-In</div>
+            <div className="font-bold text-slate-800 max-[639px]:text-[13px]">{formData.checkIn ? formatDate(formData.checkIn) : "-"}</div>
           </div>
           <div>
-            <div className="text-sm font-bold uppercase text-slate-400">Check-Out</div>
-            <div className="font-bold text-slate-800">{formData.checkOut ? formatDate(formData.checkOut) : "-"}</div>
+            <div className="text-sm font-bold uppercase text-slate-400 max-[639px]:text-[11px]">Check-Out</div>
+            <div className="font-bold text-slate-800 max-[639px]:text-[13px]">{formData.checkOut ? formatDate(formData.checkOut) : "-"}</div>
           </div>
           <div>
-            <div className="text-sm font-bold uppercase text-slate-400">Total Rooms</div>
-            <div className="font-bold text-slate-800">{formData.rooms.length || "-"}</div>
+            <div className="text-sm font-bold uppercase text-slate-400 max-[639px]:text-[11px]">Total Rooms</div>
+            <div className="font-bold text-slate-800 max-[639px]:text-[13px]">{formData.rooms.length || "-"}</div>
           </div>
         </div>
-        <div className="text-right">
-          <div className="text-sm font-bold uppercase text-slate-400">Total Amount</div>
-          <div className="text-2xl sm:text-3xl font-black text-emerald-600">{formatCurrency(grandTotal)}</div>
+        <div className="text-right max-[639px]:w-full max-[639px]:text-left max-[639px]:border-t max-[639px]:border-slate-200 max-[639px]:pt-3">
+          <div className="text-sm font-bold uppercase text-slate-400 max-[639px]:text-[11px]">Total Amount</div>
+          <div className="text-2xl sm:text-3xl font-black text-emerald-600 max-[639px]:text-xl">{formatCurrency(grandTotal)}</div>
         </div>
       </div>
     </div>
@@ -3524,7 +3765,7 @@ const handleJumpStep = (stepView) => {
       `}
     >
       {/* Success Icon */}
-      <div className="mx-auto flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-full bg-emerald-500 text-3xl sm:text-4xl text-white shadow-[0_14px_30px_rgba(16,185,129,0.35)]">
+      <div className="mx-auto flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-full bg-emerald-500 text-3xl sm:text-4xl text-white shadow-[0_14px_30px_rgba(16,185,129,0.35)] max-[639px]:h-14 max-[639px]:w-14 max-[639px]:text-2xl">
         <FaCheckCircle />
       </div>
 
@@ -3533,67 +3774,67 @@ const handleJumpStep = (stepView) => {
         Booking Confirmed!
       </h2>
 
-      <p className="mt-2 text-[17px] sm:text-lg text-slate-500 text-center">
+      <p className="mt-2 text-[17px] sm:text-lg text-slate-500 text-center max-[639px]:text-[14px]">
         Your booking has been confirmed successfully.
       </p>
 
       {/* Booking Reference */}
-      <div className="mx-auto mt-6 w-full max-w-xs rounded-2xl bg-emerald-50 px-5 py-4 shadow-sm text-center">
-        <div className="text-sm font-bold uppercase text-emerald-600">
+      <div className="mx-auto mt-6 w-full max-w-xs rounded-2xl bg-emerald-50 px-5 py-4 shadow-sm text-center max-[639px]:mt-4 max-[639px]:px-3.5 max-[639px]:py-3">
+        <div className="text-sm font-bold uppercase text-emerald-600 max-[639px]:text-[11px]">
           Booking Reference
         </div>
 
-        <div className="mt-1 text-2xl font-black text-emerald-700 break-all">
+        <div className="mt-1 text-2xl font-black text-emerald-700 break-all max-[639px]:text-lg">
           {formData.bookingCode || formData.bookingId}
         </div>
       </div>
 
       {/* Details */}
-      <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-5 text-center w-full max-w-xl mx-auto justify-items-center">
+      <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-5 text-center w-full max-w-xl mx-auto justify-items-center max-[639px]:mt-5 max-[639px]:gap-3">
         <div>
-          <div className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+          <div className="text-sm font-semibold uppercase tracking-wide text-slate-400 max-[639px]:text-[11px]">
             Guest Name
           </div>
-          <div className="text-lg sm:text-xl font-bold text-slate-800 break-words">
+          <div className="text-lg sm:text-xl font-bold text-slate-800 break-words max-[639px]:text-[15px]">
             {guestFullName}
           </div>
         </div>
 
         <div>
-          <div className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+          <div className="text-sm font-semibold uppercase tracking-wide text-slate-400 max-[639px]:text-[11px]">
             Rooms
           </div>
-          <div className="text-lg sm:text-xl font-bold text-slate-800 break-words">
+          <div className="text-lg sm:text-xl font-bold text-slate-800 break-words max-[639px]:text-[15px]">
             {formData.rooms.length}
           </div>
         </div>
 
         <div>
-          <div className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+          <div className="text-sm font-semibold uppercase tracking-wide text-slate-400 max-[639px]:text-[11px]">
             Check-In
           </div>
-          <div className="text-lg sm:text-xl font-bold text-slate-800 break-words">
+          <div className="text-lg sm:text-xl font-bold text-slate-800 break-words max-[639px]:text-[15px]">
             {formatDate(formData.checkIn)}
           </div>
         </div>
 
         <div>
-          <div className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+          <div className="text-sm font-semibold uppercase tracking-wide text-slate-400 max-[639px]:text-[11px]">
             Check-Out
           </div>
-          <div className="text-lg sm:text-xl font-bold text-slate-800 break-words">
+          <div className="text-lg sm:text-xl font-bold text-slate-800 break-words max-[639px]:text-[15px]">
             {formatDate(formData.checkOut)}
           </div>
         </div>
 
-        <div className="col-span-2 border-t border-slate-200 pt-5 text-center">
-          <div className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+        <div className="col-span-2 border-t border-slate-200 pt-5 text-center max-[639px]:pt-3">
+          <div className="text-sm font-semibold uppercase tracking-wide text-slate-400 max-[639px]:text-[11px]">
             Total Amount
           </div>
 
-          <div className="mt-1 text-2xl sm:text-3xl font-black text-blue-700">
+          <div className="mt-1 text-2xl sm:text-3xl font-black text-blue-700 max-[639px]:text-xl">
             {formatCurrency(grandTotal)}
-            <div className="text-[17px] text-emerald-600">
+            <div className="text-[17px] text-emerald-600 max-[639px]:text-[13px]">
               ({formData.rooms.length} room{formData.rooms.length > 1 ? 's' : ''} × {stayNights} night{stayNights > 1 ? 's' : ''})
             </div>
           </div>
@@ -3601,8 +3842,8 @@ const handleJumpStep = (stepView) => {
       </div>
 
       {/* Buttons */}
-      <div className="mt-10 flex justify-center w-full">
-        <div className="grid w-full max-w-xl grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="mt-10 flex justify-center w-full max-[639px]:mt-6">
+        <div className="grid w-full max-w-xl grid-cols-1 gap-4 sm:grid-cols-2 max-[639px]:gap-2.5">
           <button
             type="button"
             onClick={() => window.print()}
@@ -3660,27 +3901,29 @@ const handleJumpStep = (stepView) => {
 
     return (
       <div className={panelCls}>
-        <div className="mb-5 sm:mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4 sm:pb-5">
+        <div className="mb-5 sm:mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4 sm:pb-5 max-[767px]:flex-col max-[767px]:items-stretch">
           <div>
             <div className="text-sm font-bold uppercase text-slate-400">Booking Reference</div>
             <h2 className={cardTitleCls}>{d.booking_code || b.bookingCode || `BK-${b.bookingId}`}</h2>
           </div>
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 max-[767px]:w-full">
             <span className={statusBadgeCls(d.booking_status || b.booking_status)}>
               {d.booking_status || b.booking_status || "Pending"}
             </span>
-            <button onClick={() => window.print()} className={ghostBtn}>
-              <FaPrint className="text-sm" /> Print
-            </button>
-            <button onClick={() => openEditBooking(b)} className={ghostBtn}>
-              <FaEdit className="text-sm" /> Edit
-            </button>
-            <button onClick={() => setShowInvoiceModal(true)} className={primaryBtn}>
-              <FaFileAlt className="text-sm" /> Generate Invoice
-            </button>
-            <button onClick={() => { setWaResult(null); setShowWhatsAppModal(true); }} className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#25D366] hover:bg-[#1da851] text-white font-semibold rounded-lg shadow-md transition-all duration-200 hover:shadow-lg text-sm">
-              <FaWhatsapp className="text-lg" /> Send Invoice via WhatsApp
-            </button>
+            <div className="flex flex-wrap gap-2 max-[767px]:w-full max-[767px]:grid max-[767px]:grid-cols-2">
+              <button onClick={() => window.print()} className={`${ghostBtn} max-[767px]:text-[13px]`}>
+                <FaPrint className="text-sm" /> Print
+              </button>
+              <button onClick={() => openEditBooking(b)} className={`${ghostBtn} max-[767px]:text-[13px]`}>
+                <FaEdit className="text-sm" /> Edit
+              </button>
+              <button onClick={() => setShowInvoiceModal(true)} className={`${primaryBtn} max-[767px]:text-[13px]`}>
+                <FaFileAlt className="text-sm" /> Generate Invoice
+              </button>
+              <button onClick={() => { setWaResult(null); setShowWhatsAppModal(true); }} className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#25D366] hover:bg-[#1da851] text-white font-semibold rounded-lg shadow-md transition-all duration-200 hover:shadow-lg text-sm max-[767px]:justify-center max-[767px]:text-[13px]">
+                <FaWhatsapp className="text-lg" /> Send Invoice via WhatsApp
+              </button>
+            </div>
           </div>
         </div>
 
@@ -3690,7 +3933,7 @@ const handleJumpStep = (stepView) => {
           <div className="grid gap-5 md:grid-cols-3">
             <div className={cardTileCls}>
               <div className={sectionTitleCls}>Guest Information</div>
-              <dl className="space-y-2.5 text-[17px]">
+              <dl className="space-y-2.5 text-[17px] max-[639px]:text-[14px]">
                 <div className="flex justify-between gap-3"><dt className="text-slate-500">Name</dt><dd className="font-bold text-slate-800">{d.guest_name || b.guest_name || "-"}</dd></div>
                 <div className="flex justify-between gap-3"><dt className="text-slate-500">Email</dt><dd className="font-bold text-slate-800">{d.guest_email || "-"}</dd></div>
                 <div className="flex justify-between gap-3"><dt className="text-slate-500">Mobile</dt><dd className="font-bold text-slate-800">{d.mobile || b.mobile || "-"}</dd></div>
@@ -3699,7 +3942,7 @@ const handleJumpStep = (stepView) => {
 
             <div className={cardTileCls}>
               <div className={sectionTitleCls}>Stay Information</div>
-              <dl className="space-y-2.5 text-[17px]">
+              <dl className="space-y-2.5 text-[17px] max-[639px]:text-[14px]">
                 <div className="flex justify-between gap-3"><dt className="text-slate-500">Check-In</dt><dd className="font-bold text-slate-800">{formatDate(d.check_in || b.check_in)}</dd></div>
                 <div className="flex justify-between gap-3"><dt className="text-slate-500">Check-Out</dt><dd className="font-bold text-slate-800">{formatDate(d.check_out || b.check_out)}</dd></div>
                 <div className="flex justify-between gap-3"><dt className="text-slate-500">Rooms</dt><dd className="font-bold text-slate-800">{b.rooms || (d.rooms || []).length || "-"}</dd></div>
@@ -3708,7 +3951,7 @@ const handleJumpStep = (stepView) => {
 
             <div className={cardTileCls}>
               <div className={sectionTitleCls}>Payment Information</div>
-              <dl className="space-y-2.5 text-[17px]">
+              <dl className="space-y-2.5 text-[17px] max-[639px]:text-[14px]">
                 <div className="flex justify-between gap-3"><dt className="text-slate-500">Room Charges</dt><dd className="font-bold text-slate-800">{formatCurrency(roomChargesTotal)}</dd></div>
                 <div className="flex justify-between gap-3"><dt className="text-slate-500">Folio Charges</dt><dd className="font-bold text-slate-800">{formatCurrency(folioChargesTotal)}</dd></div>
                 <div className="flex justify-between gap-3"><dt className="text-slate-500">Total (Room + Folio)</dt><dd className="font-bold text-slate-800">{formatCurrency(updatedTotalAmount)}</dd></div>
@@ -3720,7 +3963,8 @@ const handleJumpStep = (stepView) => {
             {Array.isArray(d.rooms) && d.rooms.length > 0 && (
               <div className={`md:col-span-3 ${cardTileCls}`}>
                 <div className={sectionTitleCls}>Room &amp; Tariff Information</div>
-                <div className="max-w-full overflow-x-auto">
+                {/* Desktop/tablet table */}
+                <div className="hidden sm:block max-w-full overflow-x-auto">
                   <table className="w-full min-w-[460px] text-left">
                     <thead className="text-base font-bold uppercase text-slate-400">
                       <tr>
@@ -3744,6 +3988,22 @@ const handleJumpStep = (stepView) => {
                     </tbody>
                   </table>
                 </div>
+                {/* Mobile stacked cards */}
+                <div className="sm:hidden space-y-2">
+                  {d.rooms.map((r, i) => (
+                    <div key={i} className="rounded-xl border border-slate-200 bg-white p-3 grid grid-cols-2 gap-y-1.5 text-[13px]">
+                      <span className="col-span-2 font-bold text-slate-800 text-[14px]">{r.room_number || r.roomNumber || r.roomNo}</span>
+                      <span className="text-slate-400 font-semibold">Tariff</span>
+                      <span className="text-right text-slate-700">{formatCurrency(r.tariff || r.price)}</span>
+                      <span className="text-slate-400 font-semibold">GST %</span>
+                      <span className="text-right text-slate-700">{r.gst || r.gstPercent || 0}%</span>
+                      <span className="text-slate-400 font-semibold">Qty</span>
+                      <span className="text-right text-slate-700">{r.quantity || 1}</span>
+                      <span className="text-slate-400 font-semibold border-t border-slate-100 pt-1">Total</span>
+                      <span className="text-right font-bold text-slate-900 border-t border-slate-100 pt-1">{formatCurrency(r.total)}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -3755,44 +4015,63 @@ const handleJumpStep = (stepView) => {
               ) : folioCharges.length === 0 ? (
                 <div className="py-6 text-center text-slate-400">No extra folio charges added for this booking.</div>
               ) : (
-                <div className="max-w-full overflow-x-auto">
-                  <table className="w-full min-w-[460px] text-left">
-                    <thead className="text-base font-bold uppercase text-slate-400">
-                      <tr>
-                        <th className="py-2 pr-4">Charge Name</th>
-                        <th className="py-2 pr-4">Description</th>
-                        <th className="py-2">Amount</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-200 text-[17px]">
-                      {folioCharges.map((entry) => (
-                        <tr key={entry.id}>
-                          <td className="py-2 pr-4 font-semibold text-slate-800">{entry.category || "Extra Charge"}</td>
-                          <td className="py-2 pr-4 text-slate-600">{entry.description || "-"}</td>
-                          <td className="py-2 font-semibold">{formatCurrency(entry.amount)}</td>
+                <>
+                  {/* Desktop/tablet table */}
+                  <div className="hidden sm:block max-w-full overflow-x-auto">
+                    <table className="w-full min-w-[460px] text-left">
+                      <thead className="text-base font-bold uppercase text-slate-400">
+                        <tr>
+                          <th className="py-2 pr-4">Charge Name</th>
+                          <th className="py-2 pr-4">Description</th>
+                          <th className="py-2">Amount</th>
                         </tr>
-                      ))}
-                    </tbody>
-                    <tfoot>
-                      <tr className="border-t-2 border-slate-200">
-                        <td className="py-2 pr-4 font-bold text-slate-800" colSpan={2}>Folio Charges Total</td>
-                        <td className="py-2 font-bold text-slate-900">{formatCurrency(folioChargesTotal)}</td>
-                      </tr>
-                    </tfoot>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody className="divide-y divide-slate-200 text-[17px]">
+                        {folioCharges.map((entry) => (
+                          <tr key={entry.id}>
+                            <td className="py-2 pr-4 font-semibold text-slate-800">{entry.category || "Extra Charge"}</td>
+                            <td className="py-2 pr-4 text-slate-600">{entry.description || "-"}</td>
+                            <td className="py-2 font-semibold">{formatCurrency(entry.amount)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                      <tfoot>
+                        <tr className="border-t-2 border-slate-200">
+                          <td className="py-2 pr-4 font-bold text-slate-800" colSpan={2}>Folio Charges Total</td>
+                          <td className="py-2 font-bold text-slate-900">{formatCurrency(folioChargesTotal)}</td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                  {/* Mobile stacked cards */}
+                  <div className="sm:hidden space-y-2">
+                    {folioCharges.map((entry) => (
+                      <div key={entry.id} className="rounded-xl border border-slate-200 bg-white p-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-semibold text-slate-800 text-[14px]">{entry.category || "Extra Charge"}</span>
+                          <span className="font-bold text-slate-900 text-[14px]">{formatCurrency(entry.amount)}</span>
+                        </div>
+                        <div className="mt-1 text-[12px] text-slate-500">{entry.description || "-"}</div>
+                      </div>
+                    ))}
+                    <div className="rounded-xl border-2 border-slate-200 bg-slate-50 p-3 flex items-center justify-between">
+                      <span className="font-bold text-slate-800 text-[13px]">Folio Charges Total</span>
+                      <span className="font-black text-slate-900 text-[14px]">{formatCurrency(folioChargesTotal)}</span>
+                    </div>
+                  </div>
+                </>
               )}
             </div>
 
             {/* Updated grand total: Room Charges + Folio Charges, plus Remaining charge */}
-            <div className={`md:col-span-3 ${cardTileCls} flex flex-wrap items-center justify-between gap-4`}>
+            <div className={`md:col-span-3 ${cardTileCls} flex flex-wrap items-center justify-between gap-4 max-[639px]:flex-col max-[639px]:items-stretch max-[639px]:gap-3`}>
               <div>
                 <div className={sectionTitleCls + " !mb-0 !border-none !pb-0"}>Updated Total Amount</div>
-                <div className="text-2xl sm:text-3xl font-black text-emerald-600">{formatCurrency(updatedTotalAmount)}</div>
+                <div className="text-2xl sm:text-3xl font-black text-emerald-600 max-[639px]:text-xl">{formatCurrency(updatedTotalAmount)}</div>
               </div>
-              <div className="text-right">
+              <div className="text-right max-[639px]:text-left max-[639px]:border-t max-[639px]:border-slate-200 max-[639px]:pt-3">
                 <div className="text-sm font-bold uppercase text-slate-400">Remaining Charge</div>
-                <div className="text-2xl sm:text-3xl font-black text-rose-600">{formatCurrency(remainingAmount)}</div>
+                <div className="text-2xl sm:text-3xl font-black text-rose-600 max-[639px]:text-xl">{formatCurrency(remainingAmount)}</div>
               </div>
             </div>
           </div>
@@ -3819,9 +4098,9 @@ const handleJumpStep = (stepView) => {
           />
         )}
 
-        <div className="mt-6 sm:mt-8 flex flex-wrap justify-end gap-2 sm:gap-3 border-t border-slate-100 pt-5 sm:pt-6">
-          <button onClick={goToList} className={ghostBtn}>Back to All Bookings</button>
-          <button onClick={() => openManage(b)} className={primaryBtn}>Manage This Booking</button>
+        <div className="mt-6 sm:mt-8 flex flex-wrap justify-end gap-2 sm:gap-3 border-t border-slate-100 pt-5 sm:pt-6 max-[639px]:flex-col-reverse">
+          <button onClick={goToList} className={`${ghostBtn} max-[639px]:w-full`}>Back to All Bookings</button>
+          <button onClick={() => openManage(b)} className={`${primaryBtn} max-[639px]:w-full`}>Manage This Booking</button>
         </div>
       </div>
     );
@@ -3859,7 +4138,7 @@ const handleJumpStep = (stepView) => {
                   else if (manageStatus === "Cancelled") setCancelModal({ open: true, reason: "", submitting: false });
                   else showToast("error", "Select a status", "Please choose a status to update to.");
                 }}
-                className={primaryBtn}
+                className={`${primaryBtn} max-[639px]:w-full`}
               >
                 Update
               </button>
@@ -3916,7 +4195,7 @@ const handleJumpStep = (stepView) => {
         </div>
 
         <div className="mt-6 sm:mt-8 flex justify-end border-t border-slate-100 pt-5 sm:pt-6">
-          <button onClick={goToList} className={ghostBtn}>Back to All Bookings</button>
+          <button onClick={goToList} className={`${ghostBtn} max-[639px]:w-full`}>Back to All Bookings</button>
         </div>
       </div>
     );
@@ -3926,13 +4205,13 @@ const handleJumpStep = (stepView) => {
 
   return (
     <div
-      className="min-h-screen w-full max-w-full overflow-x-hidden bg-gradient-to-br from-blue-50 via-white to-blue-100 space-y-6 sm:space-y-8 p-3 sm:p-6 md:p-8 lg:p-10 xl:p-12"
+      className="min-h-screen w-full max-w-full overflow-x-hidden bg-gradient-to-br from-blue-50 via-white to-blue-100 space-y-6 sm:space-y-8 p-3 sm:p-6 md:p-8 lg:p-10 xl:p-12 max-[639px]:space-y-4 max-[639px]:p-2.5"
       style={{ fontFamily: '"Segoe UI", "Helvetica Neue", Arial, sans-serif' }}
     >
     <div className="flex items-center gap-3 mb-2">
         <button
           onClick={() => navigate("/hotel")}
-          className="flex items-center gap-2 rounded-lg bg-white/80 px-4 py-2 text-sm font-medium text-slate-700 shadow-sm ring-1 ring-slate-200 hover:bg-white hover:text-blue-700 active:scale-[0.98] transition"
+          className="flex items-center gap-2 rounded-lg bg-white/80 px-4 py-2 text-sm font-medium text-slate-700 shadow-sm ring-1 ring-slate-200 hover:bg-white hover:text-blue-700 active:scale-[0.98] transition max-[639px]:px-3 max-[639px]:py-1.5 max-[639px]:text-[13px]"
           title="Back to Hotel"
         >
           <FaArrowLeft className="text-base" />
@@ -4008,7 +4287,7 @@ const handleJumpStep = (stepView) => {
         iconTone={toast.type === "success" ? "bg-emerald-500" : "bg-rose-500"}
         title={toast.title}
         actions={
-          <button onClick={closeToast} className={primaryBtn}>
+          <button onClick={closeToast} className={`${primaryBtn} max-[639px]:w-full`}>
             Continue
           </button>
         }
@@ -4025,8 +4304,8 @@ const handleJumpStep = (stepView) => {
         title="Cancel this booking?"
         actions={
           <>
-            <button onClick={() => setCancelModal({ open: false, reason: "", submitting: false })} className={ghostBtn}>Close</button>
-            <button onClick={handleConfirmCancel} disabled={cancelModal.submitting} className={dangerBtn}>
+            <button onClick={() => setCancelModal({ open: false, reason: "", submitting: false })} className={`${ghostBtn} max-[639px]:w-full`}>Close</button>
+            <button onClick={handleConfirmCancel} disabled={cancelModal.submitting} className={`${dangerBtn} max-[639px]:w-full`}>
               {cancelModal.submitting ? "Cancelling..." : "Confirm Cancel"}
             </button>
           </>
@@ -4054,8 +4333,8 @@ const handleJumpStep = (stepView) => {
         title="Collect Payment"
         actions={
           <>
-            <button onClick={() => setCollectModal({ open: false, amount: "", mode: "Cash", submitting: false })} className={ghostBtn}>Close</button>
-            <button onClick={handleCollectPayment} disabled={collectModal.submitting} className={primaryBtn}>
+            <button onClick={() => setCollectModal({ open: false, amount: "", mode: "Cash", submitting: false })} className={`${ghostBtn} max-[639px]:w-full`}>Close</button>
+            <button onClick={handleCollectPayment} disabled={collectModal.submitting} className={`${primaryBtn} max-[639px]:w-full`}>
               {collectModal.submitting ? "Saving..." : "Collect"}
             </button>
           </>
@@ -4093,8 +4372,8 @@ const handleJumpStep = (stepView) => {
         title="Refund Payment"
         actions={
           <>
-            <button onClick={() => setRefundModal({ open: false, amount: "", submitting: false })} className={ghostBtn}>Close</button>
-            <button onClick={handleRefund} disabled={refundModal.submitting} className={primaryBtn}>
+            <button onClick={() => setRefundModal({ open: false, amount: "", submitting: false })} className={`${ghostBtn} max-[639px]:w-full`}>Close</button>
+            <button onClick={handleRefund} disabled={refundModal.submitting} className={`${primaryBtn} max-[639px]:w-full`}>
               {refundModal.submitting ? "Processing..." : "Refund"}
             </button>
           </>
