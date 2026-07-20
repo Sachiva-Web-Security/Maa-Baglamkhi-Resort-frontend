@@ -208,6 +208,13 @@ export const restaurantService = {
     const response = await API.put(`/restaurant/item-action-requests/${id}/review`, payload);
     return response.data;
   },
+
+  async sendRestaurantInvoiceWhatsApp(billId, payload = {}) {
+    const response = await API.post(`/restaurant/invoice/send-whatsapp/${billId}`, payload, {
+      timeout: 30_000,
+    });
+    return response.data;
+  },
 };
 
 export default restaurantService;

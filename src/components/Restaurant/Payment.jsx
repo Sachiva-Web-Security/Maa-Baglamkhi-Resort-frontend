@@ -9,7 +9,7 @@ import {
   FiShoppingBag,
   FiHome,
 } from "react-icons/fi";
-import { FaTimes } from "react-icons/fa";
+import { FaTimes, FaWhatsapp } from "react-icons/fa";
 import API from "../../api";
 import { restaurantService } from "../../services/restaurantService";
 import { getCurrentActor } from "../../utils/currentActor";
@@ -22,6 +22,7 @@ import {
   todayISO,
 } from "../Dashboard/stayoverUtils";
 import FolioView from "../Hotel/FolioView";
+import WhatsAppInvoiceModal from "./WhatsAppInvoiceModal";
 
 // ─── FeatureModal (same as BookingFlow) ───────────────────────────────────────
 const FeatureModal = ({ title, subtitle, size = "max-w-6xl", onClose, children }) => {
@@ -1320,6 +1321,9 @@ const Payment = ({
   const [folioBookingId, setFolioBookingId] = useState(null);
   const [folioBookingCode, setFolioBookingCode] = useState(null);
 
+  // WhatsApp invoice modal state (only for table booking / restaurant POS invoices)
+  const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
+
   useEffect(() => {
     if (!folioResult.show && !showFolioPopup) return undefined;
 
@@ -2265,7 +2269,28 @@ const Payment = ({
                   >
                     Cancel Transaction
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowWhatsAppModal(true)}
+                    disabled={!generatedBill?.id}
+                    className="flex h-[50px] w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green-600 to-emerald-500 px-5 text-[15px] font-bold text-white shadow-[0_10px_26px_-10px_rgba(16,185,129,0.45)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 sm:h-[54px] sm:w-auto sm:min-w-[190px] sm:text-[17px]"
+                  >
+                    <FaWhatsapp size={18} />
+                    Send WhatsApp Invoice
+                  </button>
                 </div>
+
+                {/* WhatsApp invoice modal */}
+                {showWhatsAppModal ? (
+                  <WhatsAppInvoiceModal
+                    invoice={invoice}
+                    generatedBill={generatedBill}
+                    onClose={() => setShowWhatsAppModal(false)}
+                    onSuccess={(result) => {
+                      console.log("[WhatsApp] Invoice sent:", result);
+                    }}
+                  />
+                ) : null}
               </div>
             )}
           </div>
