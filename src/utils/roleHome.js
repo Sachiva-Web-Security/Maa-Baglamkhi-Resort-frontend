@@ -5,6 +5,7 @@ export const ROLE_HOME = {
   housekeeping: "/housekeeping-dashboard",
   accountant: "/accounts-dashboard",
   kitchen: "/kitchen-dashboard",
+  chef: "/chef-dashboard",
   waiter: "/restaurant-dashboard",
   staff: "/staff-dashboard",
 };
@@ -16,6 +17,7 @@ export const ROLE_LABELS = {
   housekeeping: "Housekeeping",
   accountant: "Accountant",
   kitchen: "Kitchen",
+  chef: "Chef",
   waiter: "Waiter",
   staff: "Staff",
 };

@@ -6,7 +6,7 @@ const ENV =
     : {};
 
 const API = axios.create({
-  baseURL: ENV.VITE_API_BASE || ENV.VITE_API_URL || ENV.VITE_BACKEND_ORIGIN || "/api",
+  baseURL: ENV.VITE_API_BASE || ENV.VITE_API_URL || ENV.VITE_BACKEND_ORIGIN || "http://localhost:5002/api",
   timeout: 15_000,
   withCredentials: true,
 });
@@ -42,6 +42,7 @@ API.interceptors.response.use(
   (err) => {
     const shouldRetry =
       !err.config?.skipRetry &&
+      err.response?.status !== 401 && // never retry auth failures
       err.code === "ERR_NETWORK" &&
       (err.message?.includes("ECONNREFUSED") ||
         err.message?.includes("ECONNRESET") ||
@@ -61,17 +62,20 @@ API.interceptors.response.use(
   }
 );
 
-// On 401 (expired/invalid token), clear auth and redirect to login
+// On 401 (expired/invalid token), clear auth state. Do NOT redirect here —
+// let React Router (ProtectedRoute / RoleHomeRedirect) handle navigation.
 API.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err.response?.status === 401 && !err.config?.skipAuthRedirect) {
-      localStorage.removeItem("token");
-      localStorage.removeItem("role");
-      localStorage.removeItem("name");
-      localStorage.removeItem("email");
-      localStorage.removeItem("isAuthenticated");
-      window.location.href = `${window.location.origin}/login`;
+      ["token", "role", "name", "email", "isAuthenticated"].forEach((key) =>
+        localStorage.removeItem(key)
+      );
+      try {
+        window.dispatchEvent(new Event("auth:unauthorized"));
+      } catch {
+        // no-op
+      }
     }
     return Promise.reject(err);
   }

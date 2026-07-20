@@ -13,14 +13,8 @@ export default defineConfig(({ mode }) => {
       strictPort: true,
       proxy: {
         '/api': {
-          target: env.VITE_BACKEND_URL || 'http://localhost:5002',
+          target: env.VITE_BACKEND_URL || env.VITE_BACKEND_ORIGIN || 'http://localhost:5002',
           changeOrigin: true,
-          secure: false,
-        },
-        '/uploads': {
-          target: env.VITE_BACKEND_URL || 'http://localhost:5002',
-          changeOrigin: true,
-          secure: false,
         },
       },
     },

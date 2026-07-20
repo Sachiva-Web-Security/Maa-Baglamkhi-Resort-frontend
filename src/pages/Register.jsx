@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import API from "../api";
-import bgImage from "../assets/bg.jpg";
+
+// Referenced from /public so a missing file never crashes the app (see Login.jsx).
+const bgImage = "/bg.jpg";
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -64,7 +66,9 @@ const Register = () => {
     <div
       className="min-h-screen flex items-center justify-center font-[Poppins] bg-cover bg-center"
       style={{
-        backgroundImage: `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url(${bgImage})`,
+        backgroundColor: "#0b1730",
+        backgroundImage: `linear-gradient(135deg, #081225 0%, #0b1730 55%, #09101f 100%), url(${bgImage})`,
+        backgroundBlendMode: "overlay",
       }}
     >
       <div className="w-[90%] sm:w-[380px] p-6 sm:p-10 rounded-2xl bg-black/20 backdrop-blur-xl shadow-2xl border border-white/30">

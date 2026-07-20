@@ -43,6 +43,7 @@ const ROLE_LABEL_MAP = {
   housekeeping: "Housekeeping Staff",
   accountant: "Accountant",
   kitchen: "Kitchen Staff",
+  chef: "Chef",
   waiter: "Waiter",
   staff: "Staff",
 };
@@ -210,6 +211,23 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
         //   { id: 6036, name: "Menu List", path: "/inventory/menu-list", icon: FaClipboardList },
         //   { id: 6037, name: "Purchase Invoices", path: "/inventory/purchases", icon: FaShoppingCart },
         //   { id: 6038, name: "Reports", path: "/inventory/reports", icon: FaChartBar },
+        // ]
+      },
+    ],
+    chef: [
+      { id: "601c", name: "Chef Dashboard", icon: FaFire, path: "/chef-dashboard", section: "operations" },
+      { id: "601d", name: "Kitchen Orders", icon: FaClipboardList, path: "/kitchen", section: "operations" },
+      { id: "602c", name: "Restaurant POS", icon: FaUtensils, path: "/restaurant", section: "operations" },
+      { id: "603c", name: "Inventory", icon: FaBoxes, path: "/inventory", section: "records",
+        // children: [
+        //   { id: "6031", name: "Categories", path: "/inventory/categories", icon: FaListAlt },
+        //   { id: "6032", name: "Vendors", path: "/inventory/vendors", icon: FaTruck },
+        //   { id: "6033", name: "Units", path: "/inventory/units", icon: FaBalanceScale },
+        //   { id: "6034", name: "Items / Stock", path: "/inventory/items", icon: FaWarehouse },
+        //   { id: "6035", name: "Menu Items", path: "/inventory/menu-items", icon: FaUtensils },
+        //   { id: "6036", name: "Menu List", path: "/inventory/menu-list", icon: FaClipboardList },
+        //   { id: "6037", name: "Purchase Invoices", path: "/inventory/purchases", icon: FaShoppingCart },
+        //   { id: "6038", name: "Reports", path: "/inventory/reports", icon: FaChartBar },
         // ]
       },
     ],
@@ -517,6 +535,21 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
               <button
                 type="button"
                 onClick={() => navigate("/restaurant/notifications")}
+                className="mt-2 flex min-h-[44px] w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.06] px-3 py-2.5 text-sm font-bold text-slate-200 transition-all duration-300 hover:border-blue-400/50 hover:bg-white/[0.09] hover:text-white"
+              >
+                🔔
+                {showLabels && <span>Notifications</span>}
+                {unreadNotificationCount > 0 && (
+                  <span className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full bg-rose-500 px-1.5 text-[11px] font-black text-white">
+                    {unreadNotificationCount > 9 ? "9+" : unreadNotificationCount}
+                  </span>
+                )}
+              </button>
+            )}
+            {role === "chef" && (
+              <button
+                type="button"
+                onClick={() => navigate("/chef-dashboard")}
                 className="mt-2 flex min-h-[44px] w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.06] px-3 py-2.5 text-sm font-bold text-slate-200 transition-all duration-300 hover:border-blue-400/50 hover:bg-white/[0.09] hover:text-white"
               >
                 🔔

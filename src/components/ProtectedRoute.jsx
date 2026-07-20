@@ -4,6 +4,16 @@ import { Navigate } from "react-router-dom";
 import API from "../api";
 import { getRoleHome } from "../utils/roleHome";
 
+function isValidSession(data) {
+  return Boolean(
+    data &&
+      typeof data === "object" &&
+      !Array.isArray(data) &&
+      data.id &&
+      data.role
+  );
+}
+
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -15,9 +25,9 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
       try {
         const res = await API.get("/auth/me", { skipRetry: true, skipAuthRedirect: true });
         if (!cancelled) {
-          setSession(res.data);
+          setSession(isValidSession(res.data) ? res.data : null);
         }
-      } catch (err) {
+      } catch {
         if (!cancelled) setSession(null);
       } finally {
         if (!cancelled) setLoading(false);

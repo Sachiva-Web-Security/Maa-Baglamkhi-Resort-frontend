@@ -52,6 +52,7 @@ import HousekeepingDashboard from "./pages/HousekeepingDashboard";
 import HousekeeperNotification from "./pages/housekeepernotification";
 import Kitchen from "./pages/Kitchen";
 import KitchenDashboard from "./pages/KitchenDashboard";
+import ChefDashboard from "./pages/ChefDashboard";
 import WaiterDeliveryQueue from "./pages/WaiterDeliveryQueue";
 import Login from "./pages/Login";
 import ManagerDashboard from "./pages/ManagerDashboard";
@@ -71,14 +72,24 @@ import DaywiseCollection from "./pages/reports/DaywiseCollection";
 import IncomeExpenditure from "./pages/reports/IncomeExpenditure";
 import SalesReport from "./pages/reports/SalesReport";
 
+function isValidSession(data) {
+  return Boolean(
+    data &&
+      typeof data === "object" &&
+      !Array.isArray(data) &&
+      data.id &&
+      data.role
+  );
+}
+
 const ROLES = {
-  ALL: ["admin", "manager", "receptionist", "waiter", "kitchen", "housekeeping", "accountant", "staff"],
+  ALL: ["admin", "manager", "receptionist", "waiter", "kitchen", "chef", "housekeeping", "accountant", "staff"],
   ADMIN_ONLY: ["admin"],
   HOTEL: ["admin", "manager", "receptionist", "staff"],
   RESTAURANT: ["admin", "manager", "waiter", "kitchen", "staff", "receptionist"],
-  KITCHEN: ["admin", "manager", "kitchen"],
+  KITCHEN: ["admin", "manager", "kitchen", "chef"],
   ACCOUNTS: ["admin", "manager", "accountant"],
-  INVENTORY: ["admin", "manager", "kitchen", "receptionist"],
+  INVENTORY: ["admin", "manager", "kitchen", "chef", "receptionist"],
   HOUSEKEEPING: ["admin", "manager", "housekeeping", "receptionist"],
   BANQUET: ["admin", "manager", "receptionist"],
   REPORTS: ["admin", "manager", "accountant"],
@@ -200,26 +211,36 @@ function AppRoutes({ isAuthenticated, setIsAuthenticated, protect }) {
     );
   }
 
-  return (
-    <div className={`desktop-scale-shell ${isAuthRoute ? "auth-route-shell" : ""}`}>
-      <div className={`desktop-scale-content ${isAuthRoute ? "auth-route-content" : ""}`}>
-        <Routes>
-          <Route
-            path="/login"
-            element={
-              isAuthenticated ? (
-                <RoleHomeRedirect />
-              ) : (
-                <Login setIsAuthenticated={setIsAuthenticated} />
-              )
-            }
-          />
-          <Route
-            path="/register"
-            element={isAuthenticated ? <RoleHomeRedirect /> : <Register />}
-          />
-          <Route path="/" element={<RoleHomeRedirect />} />
+  // Auth routes render WITHOUT the desktop zoom wrapper
+  if (isAuthRoute) {
+    return (
+      <Routes>
+        <Route
+          path="/login"
+          element={
+            isAuthenticated ? (
+              <RoleHomeRedirect />
+            ) : (
+              <Login setIsAuthenticated={setIsAuthenticated} />
+            )
+          }
+        />
+        <Route
+          path="/register"
+          element={isAuthenticated ? <RoleHomeRedirect /> : <Register />}
+        />
+        <Route path="/" element={<RoleHomeRedirect />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    );
+  }
 
+  // All other routes render with the desktop layout shell + zoom
+  return (
+    <div className="desktop-scale-shell">
+      <div className="desktop-scale-content">
+        <Routes>
+          <Route path="/" element={<RoleHomeRedirect />} />
           <Route path="/dashboard" element={protect(<Dashboard />, ["admin"], { fullWidth: true })} />
           <Route path="/manager-dashboard" element={protect(<ManagerDashboard />, ["manager"])} />
           <Route
@@ -235,6 +256,7 @@ function AppRoutes({ isAuthenticated, setIsAuthenticated, protect }) {
             element={protect(<AccountsDashboard />, ["accountant"])}
           />
           <Route path="/kitchen-dashboard" element={protect(<KitchenDashboard />, ["kitchen"])} />
+          <Route path="/chef-dashboard" element={protect(<ChefDashboard />, ["chef"])} />
           <Route
             path="/restaurant-dashboard"
             element={protect(<RestaurantDashboard />, ["waiter"])}
@@ -343,17 +365,23 @@ function App() {
 
     const verify = async () => {
       try {
-        const res = await API.get("/auth/me");
-        if (!cancelled) setIsAuthenticated(true);
+        const res = await API.get("/auth/me", { timeout: 5000 });
+        if (!cancelled) setIsAuthenticated(isValidSession(res.data));
       } catch {
         if (!cancelled) setIsAuthenticated(false);
       }
     };
 
     verify();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
+  }, []);
+
+  // When any API call gets 401, the interceptor clears localStorage.
+  // Listen for it and update auth state so routes re-evaluate without a page reload.
+  useEffect(() => {
+    const handleUnauthorized = () => setIsAuthenticated(false);
+    window.addEventListener("auth:unauthorized", handleUnauthorized);
+    return () => window.removeEventListener("auth:unauthorized", handleUnauthorized);
   }, []);
 
   const protect = (element, roles, options = {}) => (

@@ -5,7 +5,15 @@ import { useNavigate } from "react-router-dom";
 import API from "../api";
 import { getRoleHome } from "../utils/roleHome";
 import { withAudit } from "../utils/auditAction";
-import bgImage from "../assets/bg.jpg";
+
+// NOTE: Previously this imported "../assets/bg.jpg" directly, but that file
+// doesn't exist in the project, which crashed the whole app at build time
+// (blank white/dark screen, nothing rendered). We now reference it from the
+// /public folder instead, so the app works with or without the image.
+// To use a real background image: drop a file at `public/bg.jpg` in your
+// project root (not src/assets). If it's missing, the gradient below is
+// used as a fallback and nothing breaks.
+const bgImage = "/bg.jpg";
 
 const ROLE_LOGIN_HINTS = [
   { role: "admin", email: "admin@resort.com", label: "Admin" },
@@ -114,10 +122,12 @@ const Login = ({ setIsAuthenticated }) => {
     <div
       className="relative flex min-h-screen w-full items-center justify-center overflow-hidden px-4 py-8 sm:px-6"
       style={{
-        backgroundImage: `url(${bgImage})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
+        backgroundColor: "#0b1730",
+        backgroundImage: `linear-gradient(135deg, #081225 0%, #0b1730 55%, #09101f 100%), url(${bgImage})`,
+        backgroundSize: "cover, cover",
+        backgroundPosition: "center, center",
+        backgroundRepeat: "no-repeat, no-repeat",
+        backgroundBlendMode: "overlay",
         minHeight: "100vh",
       }}
     >

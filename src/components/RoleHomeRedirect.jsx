@@ -4,6 +4,16 @@ import { useEffect, useState } from "react";
 import API from "../api";
 import { getRoleHome } from "../utils/roleHome";
 
+function isValidSession(data) {
+  return Boolean(
+    data &&
+      typeof data === "object" &&
+      !Array.isArray(data) &&
+      data.id &&
+      data.role
+  );
+}
+
 const RoleHomeRedirect = () => {
   const [redirectTo, setRedirectTo] = useState(null);
 
@@ -14,7 +24,7 @@ const RoleHomeRedirect = () => {
       try {
         const res = await API.get("/auth/me");
         if (!cancelled) {
-          setRedirectTo(getRoleHome(res.data?.role));
+          setRedirectTo(isValidSession(res.data) ? getRoleHome(res.data.role) : "/login");
         }
       } catch {
         if (!cancelled) setRedirectTo("/login");
