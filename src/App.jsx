@@ -352,7 +352,7 @@ function App() {
 
     const verify = async () => {
       try {
-        const res = await API.get("/auth/me");
+        await API.get("/auth/me", { skipRetry: true, skipAuthRedirect: true });
         if (!cancelled) setIsAuthenticated(true);
       } catch {
         if (!cancelled) setIsAuthenticated(false);

@@ -10,7 +10,7 @@ const STATUS_CONFIG = {
 };
 
 const STATUS_ORDER = ["Occupied", "Available", "Cleaning", "Maintenance"];
-const CHART_MIN_HEIGHT = 240;
+const CHART_MIN_HEIGHT = 200;
 
 const RoomOccupancyChart = () => {
   const [data, setData] = useState([]);

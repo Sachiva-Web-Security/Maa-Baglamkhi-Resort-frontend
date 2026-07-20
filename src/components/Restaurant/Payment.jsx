@@ -1849,47 +1849,72 @@ const Payment = ({
               <div className="space-y-4 sm:space-y-6">
 
                 {/* Active table + Selected row card + Customer — shown together in one row */}
-                <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-3 items-stretch">
+                <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3 items-stretch">
 
                   {/* Bill summary card */}
-                  <div className={`${glassCard} p-4 sm:p-6`}>
-                    <div className="flex h-full flex-wrap items-start justify-between gap-4">
-                      <div className="min-w-0">
-                        <p className="text-[13px] font-bold uppercase tracking-[0.12em] text-blue-400 sm:text-[16px]">
-                          Active {String(entityType || "Table").toLowerCase()}
-                        </p>
-                        <div className="mt-2 flex flex-wrap items-center gap-2 sm:gap-2.5">
-                          <div className="text-xl font-bold text-slate-900 sm:text-2xl">
+                  <div className={`${glassCard} p-4 sm:p-5 md:p-6 md:col-span-2 lg:col-span-1`}>
+                    <div className="flex h-full flex-col gap-3.5 sm:gap-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-blue-400 sm:text-[13px] md:text-[15px]">
+                            Active {String(entityType || "Table").toLowerCase()}
+                          </p>
+                          <div className="mt-1.5 text-lg font-bold text-slate-900 sm:mt-2 sm:text-xl md:text-2xl">
                             {String(entityType || "Table").toLowerCase() === "room" ? "Room" : "Table"} {invoice.table}
                           </div>
-                          <span className="rounded-full bg-gradient-to-r from-blue-50 to-sky-50 px-3 py-1 text-[13px] font-bold uppercase tracking-[0.06em] text-blue-600 shadow-sm sm:px-3.5 sm:py-1.5 sm:text-[15px]">
-                            {activeStationLabel}
-                          </span>
                         </div>
-                        <div className="mt-4 grid grid-cols-3 gap-3 sm:mt-5 sm:gap-4">
-                          <div>
-                            <div className="text-[13px] font-bold uppercase tracking-[0.08em] text-slate-400 sm:text-[16px]">Subtotal</div>
-                            <div className="mt-1 text-[15px] font-bold text-slate-900 sm:text-[18px]">{formatCurrency(invoice.subtotal)}</div>
+                        <span className="shrink-0 rounded-full bg-gradient-to-r from-blue-50 to-sky-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.06em] text-blue-600 shadow-sm sm:px-3 sm:py-1.5 sm:text-[12px] md:text-[14px]">
+                          {activeStationLabel}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4">
+                        <div className="min-w-0">
+                          <div className="truncate text-[9.5px] font-bold uppercase tracking-[0.06em] text-slate-400 sm:text-[11px] md:text-[13px]">
+                            Subtotal
                           </div>
-                          <div>
-                            <div className="text-[13px] font-bold uppercase tracking-[0.08em] text-slate-400 sm:text-[16px]">Tax (5%)</div>
-                            <div className="mt-1 text-[15px] font-bold text-slate-900 sm:text-[18px]">{formatCurrency(invoice.gst)}</div>
+                          <div className="mt-0.5 truncate text-[13px] font-bold text-slate-900 sm:mt-1 sm:text-[15px] md:text-[17px]">
+                            {formatCurrency(invoice.subtotal)}
                           </div>
-                          <div>
-                            <div className="text-[13px] font-bold uppercase tracking-[0.08em] text-slate-400 sm:text-[16px]">Service</div>
-                            <div className="mt-1 text-[15px] font-bold text-slate-900 sm:text-[18px]">{formatCurrency(0)}</div>
+                        </div>
+                        <div className="min-w-0">
+                          <div className="truncate text-[9.5px] font-bold uppercase tracking-[0.06em] text-slate-400 sm:text-[11px] md:text-[13px]">
+                            Tax (5%)
+                          </div>
+                          <div className="mt-0.5 truncate text-[13px] font-bold text-slate-900 sm:mt-1 sm:text-[15px] md:text-[17px]">
+                            {formatCurrency(invoice.gst)}
+                          </div>
+                        </div>
+                        <div className="min-w-0">
+                          <div className="truncate text-[9.5px] font-bold uppercase tracking-[0.06em] text-slate-400 sm:text-[11px] md:text-[13px]">
+                            Service
+                          </div>
+                          <div className="mt-0.5 truncate text-[13px] font-bold text-slate-900 sm:mt-1 sm:text-[15px] md:text-[17px]">
+                            {formatCurrency(0)}
                           </div>
                         </div>
                       </div>
 
-                      <div className="text-right">
-                        <div className="text-[13px] font-bold uppercase tracking-[0.08em] text-slate-400 sm:text-[16px]">Grand Total</div>
-                        <div className="mt-1 text-2xl font-bold leading-none bg-gradient-to-r from-blue-900 via-blue-700 to-sky-500 bg-clip-text text-transparent sm:text-[32px]">{formatCurrency(computedTotal)}</div>
-                        <div className="mt-3 rounded-xl bg-gradient-to-br from-blue-50 to-sky-50/60 px-3.5 py-2.5 text-[14px] text-slate-600 shadow-inner sm:mt-4 sm:px-4 sm:py-3 sm:text-[17px]">
-                          <div>{personCount} Person{personCount > 1 ? "s" : ""}</div>
-                          <div className="mt-0.5 font-semibold text-slate-800">Per Person {formatCurrency(perPersonAmount)}</div>
+                      <div className="mt-auto border-t border-blue-50 pt-3.5 sm:pt-4">
+                        <div className="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-400 sm:text-[13px] md:text-[15px]">
+                          Grand Total
+                        </div>
+                        <div className="mt-1 bg-gradient-to-r from-blue-900 via-blue-700 to-sky-500 bg-clip-text text-[26px] font-bold leading-none text-transparent sm:text-[30px] md:text-[34px]">
+                          {formatCurrency(computedTotal)}
+                        </div>
+                        <div className="mt-3 rounded-xl bg-gradient-to-br from-blue-50 to-sky-50/60 px-3 py-2.5 text-[12.5px] text-slate-600 shadow-inner sm:px-4 sm:py-3 sm:text-[14px] md:text-[16px]">
+                          <div className="flex items-center justify-between gap-2 sm:block">
+                            <span>
+                              {personCount} Person{personCount > 1 ? "s" : ""}
+                            </span>
+                            <span className="font-semibold text-slate-800 sm:mt-0.5 sm:block">
+                              Per Person {formatCurrency(perPersonAmount)}
+                            </span>
+                          </div>
                           {invoice.tokenId ? (
-                            <div className="mt-0.5 text-[12px] text-slate-500 sm:text-[15px]">Visit ID: {formatVisitId(invoice.tokenCode, invoice.tokenId)}</div>
+                            <div className="mt-1.5 truncate text-[10.5px] text-slate-500 sm:text-[12px] md:text-[14px]">
+                              Visit ID: {formatVisitId(invoice.tokenCode, invoice.tokenId)}
+                            </div>
                           ) : null}
                         </div>
                       </div>
@@ -1980,7 +2005,7 @@ const Payment = ({
                 </div>
 
                 {/* Payment method + Discount + Split bill — one row, 3 columns */}
-                <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-3 items-stretch">
+                <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3 items-stretch">
                   <div className={`${glassCard} p-4 sm:p-6`}>
                     <div className="flex items-center gap-3">
                       <span className={iconBadge("from-blue-100", "to-blue-50", "text-blue-600")}>

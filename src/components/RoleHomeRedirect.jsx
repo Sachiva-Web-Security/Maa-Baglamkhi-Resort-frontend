@@ -12,7 +12,7 @@ const RoleHomeRedirect = () => {
 
     const check = async () => {
       try {
-        const res = await API.get("/auth/me");
+        const res = await API.get("/auth/me", { skipRetry: true, skipAuthRedirect: true });
         if (!cancelled) {
           setRedirectTo(getRoleHome(res.data?.role));
         }

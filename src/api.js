@@ -71,7 +71,10 @@ API.interceptors.response.use(
       localStorage.removeItem("name");
       localStorage.removeItem("email");
       localStorage.removeItem("isAuthenticated");
-      window.location.href = `${window.location.origin}/login`;
+
+      if (window.location.pathname !== "/login") {
+        window.location.assign(`${window.location.origin}/login`);
+      }
     }
     return Promise.reject(err);
   }

@@ -987,11 +987,11 @@ const Dashboard = () => {
                               </button>
 
                               {key === "available" ? (
-                                <div className="flex items-center justify-end gap-2 border-t border-white/40 px-3.5 pb-3 pt-2">
+                                <div className="flex flex-wrap items-center justify-end gap-1.5 border-t border-white/40 px-2.5 pb-2.5 pt-2 sm:flex-nowrap sm:gap-2 sm:px-3.5 sm:pb-3 sm:pt-2">
                                   <button
                                     type="button"
                                     onClick={() => openRoomPreview(item)}
-                                    className={`rounded-lg border border-current/30 bg-white/70 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.12em] ${tone.sub} transition hover:bg-white`}
+                                    className={`flex-1 basis-[40%] whitespace-nowrap rounded-md border border-current/30 bg-white/70 px-2 py-1.5 text-[10px] font-bold uppercase tracking-[0.08em] sm:rounded-lg sm:basis-auto sm:px-3 sm:text-xs sm:tracking-[0.12em] ${tone.sub} transition hover:bg-white`}
                                   >
                                     Preview
                                   </button>
@@ -1009,7 +1009,7 @@ const Dashboard = () => {
                                         },
                                       });
                                     }}
-                                    className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.12em] text-white shadow-sm transition hover:from-blue-700 hover:to-blue-800"
+                                    className="inline-flex flex-1 basis-[40%] items-center justify-center gap-1 whitespace-nowrap rounded-md bg-gradient-to-r from-blue-600 to-blue-700 px-2 py-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-white shadow-sm transition hover:from-blue-700 hover:to-blue-800 sm:basis-auto sm:rounded-lg sm:px-3 sm:text-xs sm:tracking-[0.12em]"
                                   >
                                     Book Now
                                   </button>
@@ -1017,11 +1017,11 @@ const Dashboard = () => {
                               ) : null}
 
                               {key === "checkout" && item.booking ? (
-                                <div className="flex items-center justify-end gap-2 border-t border-white/40 px-3.5 pb-3 pt-2">
+                                <div className="flex flex-wrap items-center justify-end gap-1.5 border-t border-white/40 px-2.5 pb-2.5 pt-2 sm:flex-nowrap sm:gap-2 sm:px-3.5 sm:pb-3 sm:pt-2">
                                   <button
                                     type="button"
                                     onClick={() => handleManageBooking(item)}
-                                    className={`inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-rose-600 to-rose-700 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.12em] text-white shadow-sm transition hover:from-rose-700 hover:to-rose-800`}
+                                    className={`inline-flex flex-1 basis-[40%] items-center justify-center gap-1 whitespace-nowrap rounded-md bg-gradient-to-r from-rose-600 to-rose-700 px-2 py-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-white shadow-sm transition hover:from-rose-700 hover:to-rose-800 sm:basis-auto sm:rounded-lg sm:px-3 sm:text-xs sm:tracking-[0.12em]`}
                                   >
                                     Manage Booking
                                   </button>
@@ -1090,7 +1090,7 @@ const Dashboard = () => {
   };
 
   const renderExpandedBoard = (day) => (
-    <div className="w-full grid grid-cols-[150px_repeat(5,1fr)] border-t border-sky-400 bg-[linear-gradient(180deg,rgba(255,255,255,0.32)_0%,rgba(255,255,255,0.16)_100%)]">
+    <div className="w-full grid grid-cols-[110px_repeat(5,minmax(180px,1fr))] border-t border-sky-400 bg-[linear-gradient(180deg,rgba(255,255,255,0.32)_0%,rgba(255,255,255,0.16)_100%)] md:grid-cols-[120px_repeat(5,minmax(210px,1fr))] xl:grid-cols-[150px_repeat(5,1fr)]">
       <div className="border-r border-sky-400 bg-[linear-gradient(180deg,rgba(224,242,254,0.55)_0%,rgba(240,249,255,0.2)_100%)]" />
       {boardOrder.map((key) => {
         const meta = BOARD_BUCKET_META[key];
@@ -1100,27 +1100,27 @@ const Dashboard = () => {
         return (
           <div key={`${day.date}-${key}`} className="border-r border-sky-400 bg-[linear-gradient(180deg,rgba(255,255,255,0.4)_0%,rgba(255,255,255,0.16)_100%)] backdrop-blur-sm last:border-r-0 flex flex-col min-w-0">
             <div className="h-1.5 w-full flex-shrink-0" style={{ background: meta.bar.replace('bg-', '').replace('bg-[', '').replace(']', '') }} />
-            <div className="flex flex-col flex-1 min-h-0 w-full px-3 py-3">
+            <div className="flex flex-col flex-1 min-h-0 w-full px-2 py-2 sm:px-3 sm:py-3">
               <button
                 type="button"
                 onClick={() => toggleBucket(key)}
-                className={`flex w-full items-center justify-between gap-2 rounded-[16px] border px-3 py-2 text-left text-sm shadow-sm ${meta.soft}`}
+                className={`flex w-full items-center justify-between gap-2 rounded-[14px] border px-2.5 py-1.5 text-left text-xs shadow-sm sm:rounded-[16px] sm:px-3 sm:py-2 sm:text-sm ${meta.soft}`}
               >
-                <div className="text-sm font-black tracking-[0.04em] text-slate-900">
+                <div className="text-xs font-black tracking-[0.04em] text-slate-900 sm:text-sm">
                   {meta.label} ({items.length})
                 </div>
                 <span
-                  className={`flex h-8 w-8 items-center justify-center rounded-full border border-sky-400 bg-white/70 text-slate-500 shadow-sm transition-transform duration-500 ease-out ${
+                  className={`flex h-7 w-7 items-center justify-center rounded-full border border-sky-400 bg-white/70 text-slate-500 shadow-sm transition-transform duration-500 ease-out sm:h-8 sm:w-8 ${
                     isOpen ? "rotate-180" : "rotate-0"
                   }`}
                 >
-                  <FaChevronDown className="text-xs transition-transform duration-500 ease-out" />
+                  <FaChevronDown className="text-[11px] transition-transform duration-500 ease-out sm:text-xs" />
                 </span>
               </button>
 
               <div
                 style={{ gridTemplateRows: isOpen ? "1fr" : "0fr" }}
-                className="mt-3 grid min-h-0 flex-1 w-full transition-[grid-template-rows] duration-500 ease-out"
+                className="mt-2 grid min-h-0 flex-1 w-full transition-[grid-template-rows] duration-500 ease-out sm:mt-3"
               >
                 <div
                   className={`min-h-0 overflow-hidden transition-all duration-500 ease-out ${
@@ -1356,7 +1356,7 @@ const Dashboard = () => {
           <div className="dashboard-card flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
             <div className="min-w-0">
               <p className="dashboard-label text-blue-600">Front Desk</p>
-              <h1 className="mt-1 truncate text-xl font-black tracking-tight text-slate-900 sm:text-2xl">
+              <h1 className="mt-1 truncate text-[32px] font-black tracking-tight text-blue-800 sm:text-[36px]">
                 Dashboard
               </h1>
               <p className="dashboard-subheading mt-1 text-slate-500">
@@ -1389,7 +1389,7 @@ const Dashboard = () => {
               <button
                 type="button"
                 onClick={() => navigate("/hotel/guest", { state: { resetBookingDraft: true } })}
-                className="dashboard-button-primary hidden items-center gap-2 rounded-full px-5 py-2.5 text-xs font-bold uppercase tracking-[0.14em] sm:inline-flex"
+                className="dashboard-button-primary inline-flex w-full items-center justify-center gap-2 rounded-full px-5 py-3 text-xs font-bold uppercase tracking-[0.14em] sm:w-auto sm:inline-flex"
               >
                 <FaDoorOpen /> New Booking
               </button>
@@ -1551,6 +1551,8 @@ const Dashboard = () => {
 
           {/* ---------------------------------------------------------------- */}
           {/* Stay overview board                                              */}
+          {/* Desktop (xl+): exact original board with 6-column grid.           */}
+          {/* Mobile/tablet: compact expandable cards per day with room lists.  */}
           {/* ---------------------------------------------------------------- */}
           <section id="dashboard-stay-overview" className="flex w-full flex-col gap-5 sm:gap-6">
             <div className="dashboard-card w-full self-stretch p-4 sm:p-5">
@@ -1564,11 +1566,11 @@ const Dashboard = () => {
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <button
                     type="button"
                     onClick={() => navigate("/dashboard")}
-                    className={`rounded-full border px-4 py-2 text-[11px] font-bold uppercase tracking-[0.18em] transition ${
+                    className={`flex-1 rounded-full border px-3 py-2 text-[10px] font-bold uppercase tracking-[0.18em] transition sm:flex-none sm:px-4 sm:text-[11px] ${
                       activeDashboardTab === "main"
                         ? "dashboard-button-primary"
                         : "dashboard-button-secondary"
@@ -1579,7 +1581,7 @@ const Dashboard = () => {
                   <button
                     type="button"
                     onClick={() => navigate("/stayover")}
-                    className={`rounded-full px-4 py-2 text-[11px] font-bold uppercase tracking-[0.18em] transition ${
+                    className={`flex-1 rounded-full px-3 py-2 text-[10px] font-bold uppercase tracking-[0.18em] transition sm:flex-none sm:px-4 sm:text-[11px] ${
                       activeDashboardTab === "stay"
                         ? "dashboard-button-primary"
                         : "dashboard-button-secondary border"
@@ -1621,8 +1623,9 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              <div className="mt-4 -mx-4 overflow-x-auto px-4 pb-1 [scrollbar-width:thin] sm:mx-0 sm:px-0">
-                <div className="min-w-[1080px] space-y-3">
+              {/* ===== Unified Stay Overview board: full 5-column Kanban at all breakpoints ===== */}
+              <div className="mt-4 -mx-3 overflow-x-auto px-3 pb-1 [scrollbar-width:thin] sm:-mx-4 sm:px-4 sm:mx-0 sm:px-0">
+                <div className="min-w-[1040px] space-y-3 md:min-w-[1180px] xl:min-w-[1080px]">
                   {stayOverview.map((day) => {
                     const isExpanded = expandedBoardDay === day.date;
 
@@ -1638,10 +1641,10 @@ const Dashboard = () => {
                         <button
                           type="button"
                           onClick={() => toggleBoardDay(day.date)}
-                          className="grid w-full grid-cols-[130px_repeat(5,minmax(150px,1fr))] text-left"
+                          className="grid w-full grid-cols-[110px_repeat(5,minmax(180px,1fr))] text-left md:grid-cols-[120px_repeat(5,minmax(210px,1fr))] xl:grid-cols-[130px_repeat(5,minmax(150px,1fr))]"
                         >
                           <div
-                            className={`flex items-center justify-between gap-2 border-r px-3 py-3.5 text-sm font-bold sm:text-base ${
+                            className={`flex items-center justify-between gap-2 border-r px-2 py-3 text-xs font-bold sm:px-3 sm:text-sm md:text-base ${
                               isExpanded
                                 ? "border-slate-200 bg-slate-50 text-slate-900"
                                 : "border-slate-200 bg-white text-slate-700"
@@ -1649,23 +1652,23 @@ const Dashboard = () => {
                           >
                             <span className="truncate">{formatDateLabel(day.date)}</span>
                             <span
-                              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border bg-transparent text-slate-500 shadow-sm transition-transform duration-500 ease-out ${
+                              className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border bg-transparent text-slate-500 shadow-sm transition-transform duration-500 ease-out sm:h-8 sm:w-8 ${
                                 isExpanded ? "rotate-180 border-blue-200 text-blue-700" : "rotate-0 border-slate-200"
                               }`}
                             >
-                              <FaChevronDown className="text-sm" />
+                              <FaChevronDown className="text-xs sm:text-sm" />
                             </span>
                           </div>
 
                           {boardOrder.map((key) => (
                             <div
                               key={`inline-${day.date}-${key}`}
-                              className={`border-r px-3 py-3 text-center last:border-r-0 ${
+                              className={`border-r px-2 py-3 text-center last:border-r-0 sm:px-3 ${
                                 isExpanded ? "border-slate-200 bg-slate-50/40" : "border-slate-200 bg-white"
                               }`}
                             >
-                              <div className="text-sm font-black text-slate-900 sm:text-base">{BOARD_BUCKET_META[key].label}</div>
-                              <div className={`mt-1 text-sm font-semibold ${isExpanded ? "text-blue-700" : "text-slate-500"}`}>
+                              <div className="text-xs font-black text-slate-900 sm:text-sm md:text-base">{BOARD_BUCKET_META[key].label}</div>
+                              <div className={`mt-1 text-xs font-semibold sm:text-sm ${isExpanded ? "text-blue-700" : "text-slate-500"}`}>
                                 {day.board[key].length} rooms
                               </div>
                             </div>
@@ -1689,14 +1692,15 @@ const Dashboard = () => {
                   })}
                 </div>
               </div>
-              <p className="mt-2 text-xs text-slate-400 sm:hidden">Swipe sideways to see every room status column.</p>
-            </div>
+
+              {/* ===== Mobile & Tablet board removed: unified Kanban board above handles all breakpoints ===== */}
+              </div>
 
             {/* -------------------------------------------------------------- */}
             {/* Quick actions + alerts                                         */}
             {/* -------------------------------------------------------------- */}
-            <div className="grid w-full items-stretch gap-5 lg:grid-cols-2">
-              <div className="dashboard-card flex h-full w-full self-start p-4 sm:p-5">
+            <div className="grid w-full items-stretch gap-4 sm:gap-5 lg:grid-cols-2">
+              <div className="dashboard-card flex h-full w-full min-w-0 self-start p-3 sm:p-5">
                 <div className="flex w-full flex-col">
                   <div className="mb-4">
                     <p className="dashboard-label text-blue-600">Quick Actions</p>
@@ -1717,23 +1721,23 @@ const Dashboard = () => {
                                 : undefined,
                             )
                           }
-                          className="dashboard-card-subtle relative flex w-full items-center justify-between gap-3 overflow-visible px-4 py-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                          className="dashboard-card-subtle relative flex w-full min-w-0 flex-col items-start gap-3 overflow-hidden px-3 py-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-4"
                         >
-                          <div className="flex min-w-0 items-center gap-3">
-                            <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-r ${item.tone} text-white`}>
+                          <div className="flex w-full min-w-0 items-start gap-3 sm:w-auto sm:flex-1 sm:items-center">
+                            <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-r ${item.tone} text-white sm:h-11 sm:w-11 sm:rounded-2xl`}>
                               <Icon />
                             </span>
                             <div className="min-w-0">
-                              <div className="dashboard-subheading text-slate-900">{item.label}</div>
-                              <div className="dashboard-body">{item.helper}</div>
-                              <div className="mt-1 truncate text-sm font-semibold text-slate-700 sm:text-[15px]">
+                              <div className="dashboard-subheading text-sm text-slate-900 sm:text-base">{item.label}</div>
+                              <div className="dashboard-body text-xs sm:text-sm">{item.helper}</div>
+                              <div className="mt-1 text-xs font-semibold leading-5 text-slate-700 sm:text-sm md:text-[15px]">
                                 {item.detail}
                               </div>
                             </div>
                           </div>
-                          <div className="shrink-0 text-right">
-                            <div className="text-base font-black text-slate-900 sm:text-lg">{item.liveValue}</div>
-                            <div className="dashboard-label mt-1 text-slate-400">
+                          <div className="flex w-full shrink-0 items-center justify-between gap-3 border-t border-slate-200 pt-2 text-left sm:w-auto sm:min-w-[128px] sm:flex-col sm:items-end sm:justify-center sm:border-t-0 sm:pt-0 sm:text-right">
+                            <div className="max-w-full break-words text-sm font-black text-slate-900 sm:text-base md:text-lg">{item.liveValue}</div>
+                            <div className="dashboard-label mt-0 text-[10px] tracking-[0.12em] text-slate-400 sm:mt-1 sm:text-[11px]">
                               {item.liveLabel}
                             </div>
                           </div>
@@ -1744,24 +1748,24 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              <div className="dashboard-card flex h-full w-full self-start p-5 sm:p-6">
+              <div className="dashboard-card flex h-full w-full min-w-0 self-start p-3 sm:p-5 lg:p-6">
                 <div className="flex w-full flex-col">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                       <p className="dashboard-label text-amber-500">Front Office Alert</p>
-                      <h3 className="dashboard-heading mt-2">Actionable room issues</h3>
+                      <h3 className="dashboard-heading mt-1.5 text-lg sm:mt-2 sm:text-[22px]">Actionable room issues</h3>
                     </div>
                     <button
                       type="button"
                       onClick={() => navigate("/housekeeping")}
-                      className="dashboard-button-secondary inline-flex w-fit items-center px-4 py-2 text-sm font-semibold text-amber-700"
+                      className="dashboard-button-secondary inline-flex w-full items-center justify-center px-4 py-2 text-sm font-semibold text-amber-700 sm:w-fit"
                     >
                       Review All
                     </button>
                   </div>
 
-                  <div className="dashboard-card-subtle mt-6 p-4 sm:p-5">
-                    <div className="mb-4 flex items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                  <div className="dashboard-card-subtle mt-4 p-3 sm:mt-6 sm:p-5">
+                    <div className="mb-3 flex items-center justify-between gap-3 border-b border-slate-100 pb-3 sm:mb-4">
                       <div className="dashboard-heading">Alerts</div>
                     </div>
 
@@ -1780,13 +1784,13 @@ const Dashboard = () => {
                             key={item.key}
                             className={`rounded-xl border bg-white px-3 py-3 transition hover:bg-slate-50 sm:px-4 ${accent.line}`}
                           >
-                            <div className="flex items-start gap-3">
-                              <span className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-50 ${item.iconClass}`}>
-                                <Icon className="text-base" />
+                            <div className="flex min-w-0 items-start gap-2.5 sm:gap-3">
+                              <span className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-50 sm:h-9 sm:w-9 ${item.iconClass}`}>
+                                <Icon className="text-sm sm:text-base" />
                               </span>
                               <div className="min-w-0">
-                                <div className="dashboard-subheading text-slate-900">{item.title}</div>
-                                <div className="dashboard-body mt-1">{item.detail}</div>
+                                <div className="dashboard-subheading text-sm text-slate-900 sm:text-base">{item.title}</div>
+                                <div className="dashboard-body mt-1 text-xs sm:text-sm">{item.detail}</div>
                               </div>
                             </div>
                           </div>
@@ -1804,12 +1808,14 @@ const Dashboard = () => {
           {/* ---------------------------------------------------------------- */}
           <div className="grid w-full grid-cols-1 gap-5 sm:gap-6 xl:grid-cols-3 xl:items-stretch">
             <div className="dashboard-card flex h-full min-w-0 flex-col px-4 py-4 sm:px-6 sm:py-6">
-              <div className="min-h-0 h-[300px] flex-1 sm:h-[360px]">
+              <div className="min-h-0 h-[260px] flex-1 sm:h-[320px] xl:h-[360px]">
                 <MonthlyRevenueChart />
               </div>
             </div>
             <div className="dashboard-card flex h-full min-w-0 flex-col p-4 sm:p-5">
-              <FoodSalesChart />
+              <div className="min-h-0 h-[260px] w-full flex-1 sm:h-[320px] xl:h-[360px]">
+                <FoodSalesChart />
+              </div>
             </div>
             <div className="dashboard-card flex h-full min-w-0 flex-col p-4 sm:p-5">
               <div className="w-full">
@@ -2124,3 +2130,5 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
+
