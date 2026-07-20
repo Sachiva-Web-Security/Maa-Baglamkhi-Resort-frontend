@@ -270,7 +270,7 @@ const AssignmentNotification = () => {
   return (
     <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-slate-50 p-3 sm:p-6 lg:p-8">
       {/* Header */}
-      <div className="mb-6 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-indigo-900 via-indigo-700 to-sky-500 p-4 text-white shadow-xl sm:p-6 lg:p-8">
+      <div className="mb-6 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-blue-950 via-blue-800 to-sky-500 p-4 text-white shadow-xl sm:p-6 lg:p-8">
         <div className="flex flex-col gap-4 sm:gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0">
             <div className="inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1 sm:px-4 sm:py-1.5 text-xs font-semibold">
@@ -285,7 +285,7 @@ const AssignmentNotification = () => {
           </div>
           <button
             onClick={fetchAssignments}
-            className="inline-flex w-full shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-2xl bg-white/15 px-5 py-2.5 sm:py-3 text-base sm:text-lg font-semibold text-white backdrop-blur transition hover:bg-white/25 sm:w-fit lg:justify-start"
+            className="inline-flex w-full shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-2xl bg-white/20 px-5 py-2.5 sm:py-3 text-base sm:text-lg font-semibold text-white backdrop-blur transition hover:bg-white/25 sm:w-fit lg:justify-start"
           >
             <FaRedo className="h-4 w-4" /> Refresh
           </button>

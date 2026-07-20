@@ -1350,56 +1350,68 @@ const Dashboard = () => {
         </div>
 
         <div className="relative w-full overflow-x-hidden space-y-5 px-3 pb-10 pt-3 sm:space-y-6 sm:px-4 sm:pt-4 lg:px-6 xl:px-8">
-          {/* ---------------------------------------------------------------- */}
-          {/* Page header                                                      */}
-          {/* ---------------------------------------------------------------- */}
-          <div className="dashboard-card flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
-            <div className="min-w-0">
-              <p className="dashboard-label text-blue-600">Front Desk</p>
-              <h1 className="mt-1 truncate text-[32px] font-black tracking-tight text-blue-800 sm:text-[36px]">
-                Dashboard
-              </h1>
-              <p className="dashboard-subheading mt-1 text-slate-500">
-                {formatDateLabel(todayISO())} &middot; {liveTotalRooms} rooms &middot; {occupancyRate} occupied
-              </p>
-            </div>
+          {/* Page header with gradient background */}
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-blue-950 via-blue-800 to-blue-500 p-5 shadow-[0_18px_48px_rgba(2,6,23,0.35)] sm:rounded-[2rem] sm:p-6 xl:p-8">
+            {/* Animated background orbs */}
+            <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-white/[0.07] blur-2xl" />
+            <div className="pointer-events-none absolute -bottom-10 -left-10 h-44 w-44 rounded-full bg-sky-300/[0.12] blur-xl" />
+            <div className="pointer-events-none absolute right-[30%] top-[10%] h-32 w-32 rounded-full bg-blue-400/[0.08] blur-xl" />
 
-            <div className="flex items-center gap-2 sm:gap-3">
-              <button
-                type="button"
-                onClick={() => loadDashboardData(true)}
-                title="Refresh dashboard"
-                className="dashboard-button-secondary flex h-11 w-11 items-center justify-center rounded-full text-slate-600"
-              >
-                <FaSyncAlt className={refreshingDashboard ? "animate-spin" : ""} />
-              </button>
-              <button
-                type="button"
-                onClick={() => setNotificationOpen(true)}
-                title="Notifications"
-                className="dashboard-button-secondary relative flex h-11 w-11 items-center justify-center rounded-full text-slate-600"
-              >
-                <FaBell />
-                {dashboardNotifications.length ? (
-                  <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-rose-500 px-1 text-[11px] font-bold text-white shadow-sm">
-                    {dashboardNotifications.length}
+            <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
+                <p className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-sky-100 backdrop-blur-sm sm:text-[11px] sm:tracking-[0.22em]">
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inset-0 rounded-full bg-sky-300 animate-ping" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-sky-200" />
                   </span>
-                ) : null}
-              </button>
-              <button
-                type="button"
-                onClick={() => navigate("/hotel/guest", { state: { resetBookingDraft: true } })}
-                className="dashboard-button-primary inline-flex w-full items-center justify-center gap-2 rounded-full px-5 py-3 text-xs font-bold uppercase tracking-[0.14em] sm:w-auto sm:inline-flex"
-              >
-                <FaDoorOpen /> New Booking
-              </button>
+                  Front Desk
+                </p>
+                <h1 className="mt-3 text-[32px] font-black tracking-tight text-white drop-shadow-sm sm:text-[38px] lg:text-[42px]">
+                  Dashboard
+                </h1>
+                <p className="mt-2 text-sm font-medium text-blue-100/90 sm:text-base">
+                  {formatDateLabel(todayISO())} &middot; {liveTotalRooms} rooms &middot; {occupancyRate} occupied
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 sm:gap-3">
+                <button
+                  type="button"
+                  onClick={() => loadDashboardData(true)}
+                  title="Refresh dashboard"
+                  className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-sm transition-all duration-200 hover:bg-white/20 hover:scale-105 active:scale-95"
+                >
+                  <FaSyncAlt className={refreshingDashboard ? "animate-spin" : ""} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setNotificationOpen(true)}
+                  title="Notifications"
+                  className="dashboard-button-secondary relative inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-sm transition-all duration-200 hover:bg-white/20 hover:scale-105 active:scale-95"
+                >
+                  <FaBell />
+                  {dashboardNotifications.length ? (
+                    <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-rose-500 px-1 text-[11px] font-bold text-white shadow-lg ring-2 ring-white">
+                      {dashboardNotifications.length}
+                    </span>
+                  ) : null}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate("/hotel/guest", { state: { resetBookingDraft: true } })}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-white px-5 py-3 text-xs font-bold uppercase tracking-[0.14em] text-blue-900 shadow-[0_10px_24px_rgba(2,6,23,0.25)] transition-all duration-200 hover:bg-sky-50 hover:scale-[1.02] active:scale-[0.98] sm:w-auto sm:inline-flex"
+                >
+                  <FaDoorOpen /> New Booking
+                </button>
+              </div>
             </div>
           </div>
 
           {/* ---------------------------------------------------------------- */}
           {/* Metrics                                                          */}
           {/* ---------------------------------------------------------------- */}
-          <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-7">
+          {/* Responsive metrics grid: 1 col on phone, 2 on sm, 3 on md, 4 on lg, 7 on xl */}
+          <div className="grid w-full grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
             {metrics.map((metric) => (
               <MetricCard
                 key={metric.title}
