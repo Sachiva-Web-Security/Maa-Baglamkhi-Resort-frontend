@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   FiUser,
@@ -701,6 +702,7 @@ const Payment = ({
   const location = useLocation();
   const actor = getCurrentActor();
   const routeInvoice = location.state || null;
+  const shellRef = useRef(null);
 
   const [submitting, setSubmitting] = useState(false);
   const [selectedItemIndex] = useState(0);
@@ -1318,6 +1320,51 @@ const Payment = ({
   const [folioBookingId, setFolioBookingId] = useState(null);
   const [folioBookingCode, setFolioBookingCode] = useState(null);
 
+  useEffect(() => {
+    if (!folioResult.show && !showFolioPopup) return undefined;
+
+    const findScrollableParent = (node) => {
+      let current = node?.parentElement || null;
+
+      while (current && current !== document.body) {
+        const style = window.getComputedStyle(current);
+        const canScroll = /(auto|scroll)/.test(style.overflowY);
+
+        if (canScroll && current.scrollHeight > current.clientHeight) {
+          return current;
+        }
+
+        current = current.parentElement;
+      }
+
+      return null;
+    };
+
+    const scrollParent = findScrollableParent(shellRef.current);
+    const originalBodyOverflow = document.body.style.overflow;
+    const originalHtmlOverflow = document.documentElement.style.overflow;
+    const originalScrollParentOverflow = scrollParent?.style.overflowY || "";
+    const originalScrollParentOverscroll = scrollParent?.style.overscrollBehavior || "";
+
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+
+    if (scrollParent) {
+      scrollParent.style.overflowY = "hidden";
+      scrollParent.style.overscrollBehavior = "contain";
+    }
+
+    return () => {
+      document.body.style.overflow = originalBodyOverflow;
+      document.documentElement.style.overflow = originalHtmlOverflow;
+
+      if (scrollParent) {
+        scrollParent.style.overflowY = originalScrollParentOverflow;
+        scrollParent.style.overscrollBehavior = originalScrollParentOverscroll;
+      }
+    };
+  }, [folioResult.show, showFolioPopup]);
+
   const handleCreateSplitBill = async () => {
     if (!invoice) return;
 
@@ -1456,13 +1503,13 @@ const Payment = ({
   const FolioResultPopup = () => {
     if (!folioResult.show) return null;
 
-    return (
+    return createPortal(
       <div
-        className="fixed inset-0 z-[2000] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm"
+        className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden overscroll-contain bg-slate-950/60 p-4 backdrop-blur-sm"
         onClick={() => setFolioResult({ ...folioResult, show: false })}
       >
         <div
-          className={`max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border ${
+          className={`max-h-[90vh] w-full max-w-md overflow-y-auto overscroll-contain rounded-2xl border ${
             folioResult.success
               ? "border-emerald-200/70 bg-gradient-to-br from-emerald-50 to-white"
               : "border-rose-200/70 bg-gradient-to-br from-rose-50 to-white"
@@ -1549,7 +1596,8 @@ const Payment = ({
             </div>
           </div>
         </div>
-      </div>
+      </div>,
+      document.body,
     );
   };
 
@@ -1568,7 +1616,7 @@ const Payment = ({
     "h-[50px] w-full rounded-xl border border-rose-200 bg-rose-50 px-6 text-[15px] font-bold text-rose-600 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-rose-100 sm:h-[54px] sm:w-auto sm:text-[17px]";
 
   return (
-    <div className={shellClassName}>
+    <div ref={shellRef} className={shellClassName}>
       {/* Result Popup */}
       <FolioResultPopup />
 

@@ -5,6 +5,7 @@ import {
   FaBell,
   FaCheck,
   FaCheckCircle,
+  FaChevronDown,
   FaChevronLeft,
   FaChevronRight,
   FaClipboardList,
@@ -78,6 +79,68 @@ const normalizeAssignment = (row) => ({
   completedAt: row.completedAt || row.completed_at || null,
 });
 
+// Reusable filter dropdown: a styled button + an absolutely positioned panel
+// pinned to left:0/right:0 of its own wrapper, so the option list can never
+// grow wider than the trigger and spill off the edge of the screen the way
+// a native <select> popup can.
+const FilterDropdown = ({ label, value, options, isOpen, onToggle, onSelect, onRequestClose }) => (
+  <div
+    className="relative w-full sm:w-auto"
+    onBlur={(event) => {
+      if (!event.currentTarget.contains(event.relatedTarget)) {
+        onRequestClose();
+      }
+    }}
+  >
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-haspopup="listbox"
+      aria-expanded={isOpen}
+      className="flex w-full items-center justify-between gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-left text-base sm:text-lg text-slate-700 shadow-sm outline-none sm:w-auto sm:min-w-[10rem]"
+    >
+      <span className="truncate">{value || label}</span>
+      <FaChevronDown
+        className={`shrink-0 text-xs text-slate-400 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+      />
+    </button>
+    {isOpen ? (
+      <div
+        className="absolute left-0 right-0 top-full z-[80] mt-2 max-h-[240px] overflow-y-auto overscroll-contain rounded-2xl border border-slate-200 bg-white py-1.5 text-sm text-slate-900 shadow-[0_18px_45px_rgba(15,23,42,0.18)] sm:right-auto sm:min-w-[10rem] sm:text-base"
+        role="listbox"
+      >
+        <button
+          type="button"
+          role="option"
+          aria-selected={value === ""}
+          onMouseDown={(event) => event.preventDefault()}
+          onClick={() => onSelect("")}
+          className={`block w-full truncate px-4 py-2.5 text-left transition hover:bg-blue-50 ${
+            value === "" ? "bg-blue-600 font-bold text-white hover:bg-blue-600" : "text-slate-900"
+          }`}
+        >
+          {label}
+        </button>
+        {options.map((option) => (
+          <button
+            key={option}
+            type="button"
+            role="option"
+            aria-selected={value === option}
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={() => onSelect(option)}
+            className={`block w-full truncate px-4 py-2.5 text-left transition hover:bg-blue-50 ${
+              value === option ? "bg-blue-600 font-bold text-white hover:bg-blue-600" : "text-slate-900"
+            }`}
+          >
+            {option}
+          </button>
+        ))}
+      </div>
+    ) : null}
+  </div>
+);
+
 const AssignmentNotification = () => {
   const currentUser = (localStorage.getItem("name") || "").trim();
   const currentRole = String(localStorage.getItem("role") || "").toLowerCase();
@@ -92,6 +155,10 @@ const AssignmentNotification = () => {
   const [filterPriority, setFilterPriority] = useState("");
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
+
+  // Which filter dropdown (if any) is currently open. Kept as a single
+  // value so opening one filter automatically closes the other.
+  const [openFilter, setOpenFilter] = useState(null); // 'status' | 'priority' | null
 
   const fetchAssignments = useCallback(async () => {
     try {
@@ -286,26 +353,32 @@ const AssignmentNotification = () => {
             className="w-full min-w-0 bg-transparent text-base sm:text-lg outline-none placeholder:text-sm sm:placeholder:text-base"
           />
         </label>
-        <select
+
+        <FilterDropdown
+          label="All Statuses"
           value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value)}
-          className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-base sm:text-lg text-slate-700 shadow-sm outline-none sm:w-auto"
-        >
-          <option value="">All Statuses</option>
-          {Object.keys(STATUS_CONFIG).map((s) => (
-            <option key={s}>{s}</option>
-          ))}
-        </select>
-        <select
+          options={Object.keys(STATUS_CONFIG)}
+          isOpen={openFilter === "status"}
+          onToggle={() => setOpenFilter((prev) => (prev === "status" ? null : "status"))}
+          onSelect={(val) => {
+            setFilterStatus(val);
+            setOpenFilter(null);
+          }}
+          onRequestClose={() => setOpenFilter((prev) => (prev === "status" ? null : prev))}
+        />
+
+        <FilterDropdown
+          label="All Priorities"
           value={filterPriority}
-          onChange={(e) => setFilterPriority(e.target.value)}
-          className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-base sm:text-lg text-slate-700 shadow-sm outline-none sm:w-auto"
-        >
-          <option value="">All Priorities</option>
-          {Object.keys(PRIORITY_CONFIG).map((p) => (
-            <option key={p}>{p}</option>
-          ))}
-        </select>
+          options={Object.keys(PRIORITY_CONFIG)}
+          isOpen={openFilter === "priority"}
+          onToggle={() => setOpenFilter((prev) => (prev === "priority" ? null : "priority"))}
+          onSelect={(val) => {
+            setFilterPriority(val);
+            setOpenFilter(null);
+          }}
+          onRequestClose={() => setOpenFilter((prev) => (prev === "priority" ? null : prev))}
+        />
       </div>
 
       {/* Results info */}

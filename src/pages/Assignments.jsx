@@ -16,12 +16,13 @@ import {
   FaEdit,
   FaTrashAlt,
   FaPlus,
+  FaChevronDown,
 } from "react-icons/fa";
 
 import API from "../api";
 
 const fieldCls =
-  "w-full h-14 sm:h-[60px] rounded-2xl border border-blue-100 bg-white pl-12 pr-4 text-sm sm:text-[16px] text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-100 shadow-sm";
+  "block w-full max-w-full h-12 sm:h-[60px] rounded-2xl border border-blue-100 bg-white pl-11 pr-8 text-xs sm:pl-12 sm:pr-4 sm:text-[16px] text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-100 shadow-sm";
 
 const textAreaCls =
   "w-full min-h-[132px] resize-y rounded-2xl border border-blue-100 bg-white pl-12 pr-4 py-4 text-sm sm:text-[16px] text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-100 shadow-sm";
@@ -33,6 +34,33 @@ const priorityOptions = ["Urgent", "High", "Normal", "Low"];
 
 const normalizeText = (value) => String(value || "").trim();
 const normalizeLower = (value) => normalizeText(value).toLowerCase();
+
+const compactRoomType = (value) =>
+  normalizeText(value)
+    .replace(/\bROOM\b/gi, "")
+    .replace(/NON-AC/gi, "Non-AC")
+    .replace(/AC/gi, "AC")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+
+const compactRoomStatus = (value) =>
+  normalizeText(value)
+    .replace(/Vacant Clean/gi, "Clean")
+    .replace(/Vacant Dirty/gi, "Dirty")
+    .replace(/Occupied/gi, "Occ")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+
+const formatRoomOptionLabel = (room) => {
+  const parts = [`Rm ${room.roomNo}`];
+  const roomType = compactRoomType(room.roomType);
+  const status = compactRoomStatus(room.status);
+
+  if (roomType) parts.push(roomType);
+  if (status) parts.push(status);
+
+  return parts.join(" - ");
+};
 
 const roomSortValue = (roomNo) => {
   const numericValue = Number.parseInt(String(roomNo || ""), 10);
@@ -177,6 +205,19 @@ const Assignment = () => {
   const [saving, setSaving] = useState(false);
   const [assignmentNotice, setAssignmentNotice] = useState("");
 
+  // Single source of truth for which custom dropdown (if any) is open.
+  // Using one state instead of three booleans guarantees only one panel
+  // is ever open at a time, which is what keeps their positioning correct.
+  const [openDropdown, setOpenDropdown] = useState(null); // 'staff' | 'room' | 'priority' | null
+
+  const staffDropdownOpen = openDropdown === "staff";
+  const roomDropdownOpen = openDropdown === "room";
+  const priorityDropdownOpen = openDropdown === "priority";
+
+  const toggleDropdown = (name) => {
+    setOpenDropdown((prev) => (prev === name ? null : name));
+  };
+
   const loadUsers = async () => {
     try {
       const res = await API.get("/users");
@@ -266,6 +307,7 @@ const Assignment = () => {
       status: "Pending",
     });
     setEditId(null);
+    setOpenDropdown(null);
   };
 
   const handleChange = (event) => {
@@ -273,8 +315,27 @@ const Assignment = () => {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleStaffSelect = (name) => {
+    setForm((prev) => ({ ...prev, staff_name: name }));
+    setOpenDropdown(null);
+  };
+
+  const handleRoomSelect = (roomNo) => {
+    setForm((prev) => ({ ...prev, room_number: roomNo }));
+    setOpenDropdown(null);
+  };
+
+  const handlePrioritySelect = (priority) => {
+    setForm((prev) => ({ ...prev, priority }));
+    setOpenDropdown(null);
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
+    if (!form.room_number) {
+      setAssignmentNotice("Please select a room before assigning the task.");
+      return;
+    }
     setSaving(true);
 
     try {
@@ -374,6 +435,11 @@ const Assignment = () => {
     }
     return rows;
   }, [form.room_number, rooms]);
+
+  const selectedRoom = useMemo(
+    () => selectableRooms.find((room) => String(room.roomNo) === String(form.room_number)) || null,
+    [form.room_number, selectableRooms],
+  );
 
   const selectableStaff = useMemo(() => {
     const rows = [...selectableUsers];
@@ -526,7 +592,7 @@ const Assignment = () => {
 
         {/* FORM */}
         {canManageAssignments && (
-          <section className="rounded-[28px] border border-white/70 bg-white/85 p-5 shadow-[0_20px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-7">
+          <section className="w-full max-w-full overflow-visible rounded-[22px] border border-white/70 bg-white/85 p-4 shadow-[0_20px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:rounded-[28px] sm:p-7">
             <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
               <div>
                 <p className="text-xs font-bold uppercase tracking-wide text-blue-500 sm:text-sm md:text-[16px]">
@@ -558,72 +624,184 @@ const Assignment = () => {
               </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="grid gap-4 lg:grid-cols-4">
-              <div className="relative self-start">
-                <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-blue-400">
+            <form onSubmit={handleSubmit} className="grid w-full min-w-0 max-w-full gap-3 sm:gap-4 lg:grid-cols-4">
+              {/* STAFF - custom dropdown so the panel always stays within the field width/screen */}
+              <div
+                className="relative min-w-0 self-start"
+                onBlur={(event) => {
+                  if (!event.currentTarget.contains(event.relatedTarget)) {
+                    setOpenDropdown((prev) => (prev === "staff" ? null : prev));
+                  }
+                }}
+              >
+                <span className="pointer-events-none absolute inset-y-0 left-4 z-10 flex items-center text-blue-400">
                   <FaUserCircle />
                 </span>
-                <select
-                  name="staff_name"
-                  value={form.staff_name}
-                  onChange={handleChange}
-                  className={fieldCls}
-                  required
+                <button
+                  type="button"
+                  className={`${fieldCls} text-left`}
+                  aria-haspopup="listbox"
+                  aria-expanded={staffDropdownOpen}
+                  onClick={() => toggleDropdown("staff")}
                 >
-                  <option value="">
-                    {selectableStaff.length ? "Select Staff" : "No staff available"}
-                  </option>
-                  {selectableStaff.map((user) => (
-                    <option key={user.id} value={user.name}>
-                      {user.name} ({user.role})
-                    </option>
-                  ))}
-                </select>
+                  <span className="block truncate pr-5">
+                    {form.staff_name
+                      ? form.staff_name
+                      : selectableStaff.length
+                        ? "Select Staff"
+                        : "No staff available"}
+                  </span>
+                </button>
+                <span className="pointer-events-none absolute inset-y-0 right-4 z-10 flex items-center text-blue-400">
+                  <FaChevronDown
+                    className={`text-xs transition-transform duration-200 ${staffDropdownOpen ? "rotate-180" : ""}`}
+                  />
+                </span>
+                <input type="hidden" name="staff_name" value={form.staff_name} required />
+                {staffDropdownOpen ? (
+                  <div
+                    className="absolute left-0 right-0 top-full z-[80] mt-2 max-h-[220px] overflow-y-auto overscroll-contain rounded-2xl border border-blue-100 bg-white py-1.5 text-xs text-slate-900 shadow-[0_18px_45px_rgba(15,23,42,0.18)] sm:text-sm"
+                    role="listbox"
+                  >
+                    {selectableStaff.length ? (
+                      selectableStaff.map((user) => (
+                        <button
+                          key={user.id}
+                          type="button"
+                          role="option"
+                          aria-selected={String(form.staff_name) === String(user.name)}
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={() => handleStaffSelect(user.name)}
+                          className={`block w-full truncate px-4 py-2.5 text-left transition hover:bg-blue-50 ${
+                            String(form.staff_name) === String(user.name)
+                              ? "bg-blue-600 font-bold text-white hover:bg-blue-600"
+                              : "text-slate-900"
+                          }`}
+                        >
+                          {user.name} ({user.role})
+                        </button>
+                      ))
+                    ) : (
+                      <div className="px-4 py-3 text-slate-500">No staff available</div>
+                    )}
+                  </div>
+                ) : null}
               </div>
 
-              <div className="relative self-start">
-                <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-blue-400">
+              {/* ROOM - custom dropdown */}
+              <div
+                className="relative min-w-0 self-start"
+                onBlur={(event) => {
+                  if (!event.currentTarget.contains(event.relatedTarget)) {
+                    setOpenDropdown((prev) => (prev === "room" ? null : prev));
+                  }
+                }}
+              >
+                <span className="pointer-events-none absolute inset-y-0 left-4 z-10 flex items-center text-blue-400">
                   <FaBed />
                 </span>
-                <select
-                  name="room_number"
-                  value={form.room_number}
-                  onChange={handleChange}
-                  className={fieldCls}
-                  required
+                <button
+                  type="button"
+                  className={`${fieldCls} text-left`}
+                  aria-haspopup="listbox"
+                  aria-expanded={roomDropdownOpen}
+                  onClick={() => toggleDropdown("room")}
                 >
-                  <option value="">
-                    {selectableRooms.length ? "Select Room" : "No rooms available"}
-                  </option>
-                  {selectableRooms.map((room) => (
-                    <option key={room.roomNo} value={room.roomNo}>
-                      Room {room.roomNo}
-                      {room.roomType ? ` - ${room.roomType}` : ""}
-                      {room.status ? ` - ${room.status}` : ""}
-                    </option>
-                  ))}
-                </select>
+                  <span className="block truncate pr-5">
+                    {selectedRoom
+                      ? formatRoomOptionLabel(selectedRoom)
+                      : selectableRooms.length
+                        ? "Select Room"
+                        : "No rooms available"}
+                  </span>
+                </button>
+                <span className="pointer-events-none absolute inset-y-0 right-4 z-10 flex items-center text-blue-400">
+                  <FaChevronDown
+                    className={`text-xs transition-transform duration-200 ${roomDropdownOpen ? "rotate-180" : ""}`}
+                  />
+                </span>
+                <input type="hidden" name="room_number" value={form.room_number} required />
+                {roomDropdownOpen ? (
+                  <div className="absolute left-0 right-0 top-full z-[80] mt-2 max-h-[220px] overflow-y-auto overscroll-contain rounded-2xl border border-blue-100 bg-white py-1.5 text-xs text-slate-900 shadow-[0_18px_45px_rgba(15,23,42,0.18)] sm:text-sm" role="listbox">
+                    {selectableRooms.length ? (
+                      selectableRooms.map((room) => (
+                        <button
+                          key={room.roomNo}
+                          type="button"
+                          role="option"
+                          aria-selected={String(form.room_number) === String(room.roomNo)}
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={() => handleRoomSelect(room.roomNo)}
+                          className={`block w-full truncate px-4 py-2.5 text-left transition hover:bg-blue-50 ${
+                            String(form.room_number) === String(room.roomNo)
+                              ? "bg-blue-600 font-bold text-white hover:bg-blue-600"
+                              : "text-slate-900"
+                          }`}
+                        >
+                          {formatRoomOptionLabel(room)}
+                        </button>
+                      ))
+                    ) : (
+                      <div className="px-4 py-3 text-slate-500">No rooms available</div>
+                    )}
+                  </div>
+                ) : null}
               </div>
 
-              <div className="relative self-start">
-                <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-blue-400">
+              {/* PRIORITY - custom dropdown so the panel always stays within the field width/screen */}
+              <div
+                className="relative min-w-0 self-start"
+                onBlur={(event) => {
+                  if (!event.currentTarget.contains(event.relatedTarget)) {
+                    setOpenDropdown((prev) => (prev === "priority" ? null : prev));
+                  }
+                }}
+              >
+                <span className="pointer-events-none absolute inset-y-0 left-4 z-10 flex items-center text-blue-400">
                   <FaFlag />
                 </span>
-                <select
-                  name="priority"
-                  value={form.priority}
-                  onChange={handleChange}
-                  className={fieldCls}
+                <button
+                  type="button"
+                  className={`${fieldCls} text-left`}
+                  aria-haspopup="listbox"
+                  aria-expanded={priorityDropdownOpen}
+                  onClick={() => toggleDropdown("priority")}
                 >
-                  {priorityOptions.map((priority) => (
-                    <option key={priority} value={priority}>
-                      {priority} Priority
-                    </option>
-                  ))}
-                </select>
+                  <span className="block truncate pr-5">{form.priority} Priority</span>
+                </button>
+                <span className="pointer-events-none absolute inset-y-0 right-4 z-10 flex items-center text-blue-400">
+                  <FaChevronDown
+                    className={`text-xs transition-transform duration-200 ${priorityDropdownOpen ? "rotate-180" : ""}`}
+                  />
+                </span>
+                <input type="hidden" name="priority" value={form.priority} />
+                {priorityDropdownOpen ? (
+                  <div
+                    className="absolute left-0 right-0 top-full z-[80] mt-2 max-h-[220px] overflow-y-auto overscroll-contain rounded-2xl border border-blue-100 bg-white py-1.5 text-xs text-slate-900 shadow-[0_18px_45px_rgba(15,23,42,0.18)] sm:text-sm"
+                    role="listbox"
+                  >
+                    {priorityOptions.map((priority) => (
+                      <button
+                        key={priority}
+                        type="button"
+                        role="option"
+                        aria-selected={form.priority === priority}
+                        onMouseDown={(event) => event.preventDefault()}
+                        onClick={() => handlePrioritySelect(priority)}
+                        className={`block w-full truncate px-4 py-2.5 text-left transition hover:bg-blue-50 ${
+                          form.priority === priority
+                            ? "bg-blue-600 font-bold text-white hover:bg-blue-600"
+                            : "text-slate-900"
+                        }`}
+                      >
+                        {priority} Priority
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
               </div>
 
-              <div className="relative self-start">
+              <div className="relative min-w-0 self-start">
                 <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-blue-400">
                   <FaClock />
                 </span>
@@ -636,7 +814,7 @@ const Assignment = () => {
                 />
               </div>
 
-              <div className="relative self-start">
+              <div className="relative min-w-0 self-start">
                 <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-blue-400">
                   <FaClipboardList />
                 </span>
@@ -651,7 +829,7 @@ const Assignment = () => {
                 />
               </div>
 
-              <div className="relative self-start">
+              <div className="relative min-w-0 self-start">
                 <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-blue-400">
                   <FaCheckCircle />
                 </span>
@@ -671,7 +849,7 @@ const Assignment = () => {
               </div>
 
               <div className="lg:col-span-2">
-                <div className="relative self-start">
+                <div className="relative min-w-0 self-start">
                   <span className="pointer-events-none absolute left-4 top-5 text-blue-400">
                     <FaStickyNote />
                   </span>
