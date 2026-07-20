@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import API from "../../api";
 import { getCurrentActor } from "../../utils/currentActor";
 
@@ -83,6 +84,7 @@ const IconWallet = ({ className }) => (
 
 const PaymentBills = () => {
   const actor = getCurrentActor();
+  const sectionRef = useRef(null);
   const [bills, setBills] = useState([]);
   const [loading, setLoading] = useState(true);
   const [roomNumbers, setRoomNumbers] = useState(new Set());
@@ -188,8 +190,135 @@ const PaymentBills = () => {
     }
   }, [billPage, totalBillPages]);
 
+  useEffect(() => {
+    if (!selectedBill) return undefined;
+
+    const findScrollableParent = (node) => {
+      let current = node?.parentElement || null;
+
+      while (current && current !== document.body) {
+        const style = window.getComputedStyle(current);
+        const canScroll = /(auto|scroll)/.test(style.overflowY);
+
+        if (canScroll && current.scrollHeight > current.clientHeight) {
+          return current;
+        }
+
+        current = current.parentElement;
+      }
+
+      return null;
+    };
+
+    const scrollParent = findScrollableParent(sectionRef.current);
+    const originalBodyOverflow = document.body.style.overflow;
+    const originalHtmlOverflow = document.documentElement.style.overflow;
+    const originalScrollParentOverflow = scrollParent?.style.overflowY || "";
+    const originalScrollParentOverscroll = scrollParent?.style.overscrollBehavior || "";
+
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+
+    if (scrollParent) {
+      scrollParent.style.overflowY = "hidden";
+      scrollParent.style.overscrollBehavior = "contain";
+    }
+
+    return () => {
+      document.body.style.overflow = originalBodyOverflow;
+      document.documentElement.style.overflow = originalHtmlOverflow;
+
+      if (scrollParent) {
+        scrollParent.style.overflowY = originalScrollParentOverflow;
+        scrollParent.style.overscrollBehavior = originalScrollParentOverscroll;
+      }
+    };
+  }, [selectedBill]);
+
+  const billDetailPopup = selectedBill
+    ? createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden overscroll-contain bg-slate-950/55 px-3 py-4 backdrop-blur-sm">
+          <div className="relative flex max-h-[90vh] w-full max-w-[460px] flex-col overflow-hidden rounded-[18px] border border-white/40 bg-white/95 shadow-[0_28px_80px_rgba(15,23,42,0.32)] sm:rounded-[22px]">
+            <button
+              type="button"
+              onClick={() => setSelectedBill(null)}
+              className="absolute right-3 top-3 z-10 rounded-lg bg-white/15 px-2.5 py-1.5 text-[12px] font-bold text-white backdrop-blur-sm ring-1 ring-white/30 transition hover:bg-white/25"
+            >
+              Close
+            </button>
+
+            <div className="overflow-y-auto overscroll-contain">
+              <div className="relative overflow-hidden bg-gradient-to-br from-blue-950 via-blue-700 to-sky-500 px-4 py-4 text-white sm:px-5">
+                <IconBillDoc className="pointer-events-none absolute -right-5 -top-5 h-20 w-20 text-white/10" />
+                <p className="relative z-10 pr-16 text-[10px] font-semibold uppercase tracking-[0.16em] text-cyan-100/85">
+                  Bill Detail Card
+                </p>
+                <h3 className="relative z-10 mt-1.5 break-words text-xl font-black sm:text-2xl">{getEntityLabel(selectedBill)}</h3>
+                <p className="relative z-10 mt-1 break-words text-[12px] text-white/85 sm:text-[13px]">
+                  Bill #{selectedBill.id} | {formatDate(selectedBill.created_at)}
+                </p>
+              </div>
+
+              <div className="px-4 py-4 sm:px-5">
+                <div className="grid gap-2.5 sm:grid-cols-2">
+                  <div className="min-w-0 rounded-[12px] border border-blue-100 bg-blue-50/50 px-3 py-3">
+                    <div className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Customer Name</div>
+                    <div className="mt-1 break-words text-[15px] font-black text-slate-900">
+                      {getCustomerDisplay(selectedBill, getGuestInfoForBill(selectedBill)).name}
+                    </div>
+                  </div>
+                  <div className="min-w-0 rounded-[12px] border border-blue-100 bg-blue-50/50 px-3 py-3">
+                    <div className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Mobile Number</div>
+                    <div className="mt-1 break-words text-[15px] font-black text-slate-900">
+                      {getCustomerDisplay(selectedBill, getGuestInfoForBill(selectedBill)).phone}
+                    </div>
+                  </div>
+                  <div className="min-w-0 rounded-[12px] border border-blue-100 bg-blue-50/50 px-3 py-3">
+                    <div className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Bill Status</div>
+                    <div
+                      className={`mt-1.5 inline-flex rounded-full border px-2.5 py-1 text-[12px] font-black ${getStatusMeta(selectedBill).classes}`}
+                    >
+                      {getStatusMeta(selectedBill).label}
+                    </div>
+                    <div className="mt-1 text-[12px] text-slate-500">{getStatusMeta(selectedBill).billStage}</div>
+                  </div>
+                  <div className="min-w-0 rounded-[12px] border border-emerald-100 bg-emerald-50/60 px-3 py-3">
+                    <div className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Total Amount</div>
+                    <div className="mt-1 break-words text-lg font-black text-emerald-600">{formatCurrency(selectedBill.total)}</div>
+                  </div>
+                </div>
+
+                <div className="mt-2.5 grid gap-2.5 sm:grid-cols-3">
+                  <div className="min-w-0 rounded-[12px] border border-blue-100 px-3 py-3">
+                    <div className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Subtotal</div>
+                    <div className="mt-1 break-words text-[14px] font-black text-slate-900">{formatCurrency(selectedBill.subtotal)}</div>
+                  </div>
+                  <div className="min-w-0 rounded-[12px] border border-blue-100 px-3 py-3">
+                    <div className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Tax</div>
+                    <div className="mt-1 break-words text-[14px] font-black text-slate-900">{formatCurrency(selectedBill.gst)}</div>
+                  </div>
+                  <div className="min-w-0 rounded-[12px] border border-blue-100 px-3 py-3">
+                    <div className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Payment Mode</div>
+                    <div className="mt-1 break-words text-[14px] font-black text-slate-900">{selectedBill.paymentMethod || "Pending"}</div>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedBill(null)}
+                  className="mt-3 w-full rounded-xl border border-blue-200 bg-white px-4 py-2.5 text-[13px] font-bold text-blue-700 shadow-sm transition hover:bg-blue-50 md:hidden"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body,
+      )
+    : null;
   return (
-    <section className="w-full max-w-full space-y-5 overflow-x-hidden px-3 sm:space-y-6 sm:px-4 md:space-y-8 md:px-6 lg:px-0">
+    <section ref={sectionRef} className="w-full max-w-full space-y-5 overflow-x-hidden px-3 sm:space-y-6 sm:px-4 md:space-y-8 md:px-6 lg:px-0">
       {/* Hero */}
       <div className="relative overflow-hidden rounded-[20px] border border-blue-900/20 bg-gradient-to-br from-blue-950 via-blue-900 via-blue-700 to-sky-500 px-4 py-6 text-white shadow-[0_25px_65px_rgba(15,44,111,0.28)] sm:rounded-[24px] sm:px-6 sm:py-7 md:rounded-[28px] md:px-8 md:py-9 lg:px-10 lg:py-10">
         {/* Blue glow */}
@@ -507,86 +636,8 @@ const PaymentBills = () => {
         </div>
       </div>
 
-      {/* Bill Detail Popup */}
-      {selectedBill ? (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/55 px-3 py-4 backdrop-blur-sm sm:px-4 sm:py-6">
-          <div className="relative flex max-h-[94vh] w-full max-w-[600px] flex-col overflow-hidden rounded-[22px] border border-white/40 bg-white/95 shadow-[0_35px_100px_rgba(15,23,42,0.35)] sm:max-h-[92vh] sm:rounded-[30px]">
-            <button
-              type="button"
-              onClick={() => setSelectedBill(null)}
-              className="absolute right-3 top-3 z-10 rounded-lg bg-white/15 px-3 py-1.5 text-[13px] font-bold text-white backdrop-blur-sm ring-1 ring-white/30 transition hover:bg-white/25 sm:right-5 sm:top-5 sm:rounded-xl sm:px-4 sm:py-2 sm:text-[17px]"
-            >
-              Close
-            </button>
+      {billDetailPopup}
 
-            <div className="overflow-y-auto">
-              <div className="relative overflow-hidden bg-gradient-to-br from-blue-950 via-blue-700 to-sky-500 px-5 py-6 text-white sm:px-8 sm:py-7">
-                <IconBillDoc className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 text-white/10 sm:h-32 sm:w-32" />
-                <p className="relative z-10 pr-16 text-[12px] font-semibold uppercase tracking-[0.18em] text-cyan-100/85 sm:pr-20 sm:text-[15px] sm:tracking-[0.28em]">
-                  Bill Detail Card
-                </p>
-                <h3 className="relative z-10 mt-2 break-words text-2xl font-black sm:mt-3 sm:text-4xl">{getEntityLabel(selectedBill)}</h3>
-                <p className="relative z-10 mt-1.5 break-words text-[14px] text-white/85 sm:mt-2 sm:text-[18px]">
-                  Bill #{selectedBill.id} | {formatDate(selectedBill.created_at)}
-                </p>
-              </div>
-
-              <div className="px-5 py-5 sm:px-8 sm:py-6">
-                <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
-                  <div className="min-w-0 rounded-[16px] border border-blue-100 bg-blue-50/50 px-4 py-4 sm:rounded-[22px] sm:px-5 sm:py-5">
-                    <div className="text-[12px] uppercase tracking-[0.14em] text-slate-500 sm:text-[15px] sm:tracking-[0.18em]">Customer Name</div>
-                    <div className="mt-1.5 break-words text-lg font-black text-slate-900 sm:mt-2 sm:text-2xl">
-                      {getCustomerDisplay(selectedBill, getGuestInfoForBill(selectedBill)).name}
-                    </div>
-                  </div>
-                  <div className="min-w-0 rounded-[16px] border border-blue-100 bg-blue-50/50 px-4 py-4 sm:rounded-[22px] sm:px-5 sm:py-5">
-                    <div className="text-[12px] uppercase tracking-[0.14em] text-slate-500 sm:text-[15px] sm:tracking-[0.18em]">Mobile Number</div>
-                    <div className="mt-1.5 break-words text-lg font-black text-slate-900 sm:mt-2 sm:text-2xl">
-                      {getCustomerDisplay(selectedBill, getGuestInfoForBill(selectedBill)).phone}
-                    </div>
-                  </div>
-                  <div className="min-w-0 rounded-[16px] border border-blue-100 bg-blue-50/50 px-4 py-4 sm:rounded-[22px] sm:px-5 sm:py-5">
-                    <div className="text-[12px] uppercase tracking-[0.14em] text-slate-500 sm:text-[15px] sm:tracking-[0.18em]">Bill Status</div>
-                    <div
-                      className={`mt-1.5 inline-flex rounded-full border px-3 py-1 text-[13px] font-black sm:mt-2 sm:px-4 sm:py-1.5 sm:text-[17px] ${getStatusMeta(selectedBill).classes}`}
-                    >
-                      {getStatusMeta(selectedBill).label}
-                    </div>
-                    <div className="mt-1.5 text-[13px] text-slate-500 sm:mt-2 sm:text-[17px]">{getStatusMeta(selectedBill).billStage}</div>
-                  </div>
-                  <div className="min-w-0 rounded-[16px] border border-emerald-100 bg-emerald-50/60 px-4 py-4 sm:rounded-[22px] sm:px-5 sm:py-5">
-                    <div className="text-[12px] uppercase tracking-[0.14em] text-slate-500 sm:text-[15px] sm:tracking-[0.18em]">Total Amount</div>
-                    <div className="mt-1.5 break-words text-xl font-black text-emerald-600 sm:mt-2 sm:text-3xl">{formatCurrency(selectedBill.total)}</div>
-                  </div>
-                </div>
-
-                <div className="mt-3 grid gap-3 sm:mt-4 sm:grid-cols-3 sm:gap-4">
-                  <div className="min-w-0 rounded-[14px] border border-blue-100 px-4 py-4 sm:rounded-[20px] sm:px-5 sm:py-5">
-                    <div className="text-[12px] uppercase tracking-[0.14em] text-slate-500 sm:text-[15px] sm:tracking-[0.18em]">Subtotal</div>
-                    <div className="mt-1.5 break-words text-lg font-black text-slate-900 sm:mt-2 sm:text-xl">{formatCurrency(selectedBill.subtotal)}</div>
-                  </div>
-                  <div className="min-w-0 rounded-[14px] border border-blue-100 px-4 py-4 sm:rounded-[20px] sm:px-5 sm:py-5">
-                    <div className="text-[12px] uppercase tracking-[0.14em] text-slate-500 sm:text-[15px] sm:tracking-[0.18em]">Tax</div>
-                    <div className="mt-1.5 break-words text-lg font-black text-slate-900 sm:mt-2 sm:text-xl">{formatCurrency(selectedBill.gst)}</div>
-                  </div>
-                  <div className="min-w-0 rounded-[14px] border border-blue-100 px-4 py-4 sm:rounded-[20px] sm:px-5 sm:py-5">
-                    <div className="text-[12px] uppercase tracking-[0.14em] text-slate-500 sm:text-[15px] sm:tracking-[0.18em]">Payment Mode</div>
-                    <div className="mt-1.5 break-words text-lg font-black text-slate-900 sm:mt-2 sm:text-xl">{selectedBill.paymentMethod || "Pending"}</div>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setSelectedBill(null)}
-                  className="mt-5 w-full rounded-xl border border-blue-200 bg-white px-5 py-3 text-[15px] font-bold text-blue-700 shadow-sm transition hover:bg-blue-50 sm:mt-6 sm:py-3.5 sm:text-[17px] md:hidden"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : null}
     </section>
   );
 };

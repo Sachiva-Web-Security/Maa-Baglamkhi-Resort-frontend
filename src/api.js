@@ -68,13 +68,14 @@ API.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err.response?.status === 401 && !err.config?.skipAuthRedirect) {
-      ["token", "role", "name", "email", "isAuthenticated"].forEach((key) =>
-        localStorage.removeItem(key)
-      );
-      try {
-        window.dispatchEvent(new Event("auth:unauthorized"));
-      } catch {
-        // no-op
+      localStorage.removeItem("token");
+      localStorage.removeItem("role");
+      localStorage.removeItem("name");
+      localStorage.removeItem("email");
+      localStorage.removeItem("isAuthenticated");
+
+      if (window.location.pathname !== "/login") {
+        window.location.assign(`${window.location.origin}/login`);
       }
     }
     return Promise.reject(err);

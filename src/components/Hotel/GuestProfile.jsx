@@ -55,11 +55,14 @@ const buildUploadUrl = (value) => {
 // ─── Shared premium button style (Blue-950 → Blue-700 → Sky-500) ──────────────
 // Buttons: 52px mobile / 54px tablet / 56px desktop, full width on mobile, auto width on desktop
 const primaryBtnCls =
-  "inline-flex h-[52px] sm:h-[54px] lg:h-14 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-950 via-blue-700 to-sky-500 px-6 text-[16px] font-bold text-white shadow-lg shadow-blue-200 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-blue-300/50 disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-lg";
+  "inline-flex h-[52px] sm:h-[54px] lg:h-14 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-950 via-blue-700 to-sky-500 px-6 text-[14px] sm:text-[15px] lg:text-[16px] font-bold text-white shadow-lg shadow-blue-200 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-blue-300/50 disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-lg active:scale-[0.98]";
 const secondaryBtnCls =
-  "inline-flex h-[52px] sm:h-[54px] lg:h-14 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-6 text-[16px] font-bold text-slate-700 transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200 hover:bg-blue-50/60 hover:shadow-md";
+  "inline-flex h-[52px] sm:h-[54px] lg:h-14 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-6 text-[14px] sm:text-[15px] lg:text-[16px] font-bold text-slate-700 transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200 hover:bg-blue-50/60 hover:shadow-md active:scale-[0.98]";
 const viewBtnCls =
-  "inline-flex h-10 items-center justify-center whitespace-nowrap rounded-full bg-gradient-to-r from-blue-950 to-blue-700 px-5 text-sm font-bold text-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-200";
+  "inline-flex h-10 items-center justify-center whitespace-nowrap rounded-full bg-gradient-to-r from-blue-950 to-blue-700 px-5 text-sm font-bold text-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-200 active:scale-[0.98]";
+// Mobile-only card action button (full width, sits at bottom of card)
+const mobileCardViewBtnCls =
+  "inline-flex h-11 w-full items-center justify-center whitespace-nowrap rounded-xl bg-gradient-to-r from-blue-950 to-blue-700 px-5 text-[14px] font-bold text-white shadow-sm transition-all duration-300 active:scale-[0.98]";
 
 const GuestProfile = ({ isModal = false, onClose }) => {
   const navigate = useNavigate();
@@ -133,8 +136,8 @@ const GuestProfile = ({ isModal = false, onClose }) => {
   }, [profile]);
 
   return (
-    <div className="min-h-screen w-full overflow-x-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-white p-4 sm:p-6 md:p-8 lg:p-10">
-      <div className="mx-auto w-full max-w-[1600px] min-w-0 space-y-6 sm:space-y-7 lg:space-y-8">
+    <div className="min-h-screen w-full overflow-x-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-white p-4 sm:p-6 md:p-8 lg:p-8 xl:p-10">
+      <div className="mx-auto w-full max-w-[1600px] min-w-0 space-y-5 sm:space-y-7 lg:space-y-8">
 
         {/* Hero */}
         <section className="relative w-full min-w-0 overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-blue-950 via-blue-700 to-sky-500 px-5 py-8 text-white shadow-[0_30px_80px_rgba(15,23,42,0.25)] sm:px-8 sm:py-10 md:px-10">
@@ -158,14 +161,14 @@ const GuestProfile = ({ isModal = false, onClose }) => {
             </svg>
           </div>
 
-          <div className="relative min-w-0 text-center sm:text-left">
+          <div className="relative min-w-0 text-center md:text-left">
             <p className="text-sm font-bold uppercase tracking-[0.32em] text-sky-200">
               Guest Intelligence
             </p>
             <h1 className="mt-3 break-words text-[28px] font-black leading-tight sm:text-[30px] md:text-[36px] lg:text-[42px]">
               Guest Profile &amp; Stay History
             </h1>
-            <p className="mx-auto mt-4 max-w-2xl break-words text-[16px] font-medium leading-7 text-blue-50/90 sm:mx-0">
+            <p className="mx-auto mt-4 max-w-2xl break-words text-[15px] font-medium leading-7 text-blue-50/90 sm:text-[16px] md:mx-0">
               "Search by mobile number or name to view all of a guest&apos;s past stays, total spend,
               and booking patterns in one place."
             </p>
@@ -174,10 +177,10 @@ const GuestProfile = ({ isModal = false, onClose }) => {
 
         {/* Search */}
         <div className="w-full min-w-0 rounded-3xl border border-slate-200 bg-white/90 p-4 shadow-xl shadow-blue-100/40 backdrop-blur sm:p-6 md:p-8">
-          <label className="mb-3 block text-[16px] font-semibold uppercase tracking-[0.2em] text-slate-600">
+          <label className="mb-3 block text-[13px] font-semibold uppercase tracking-[0.2em] text-slate-600 sm:text-[16px]">
             Search Guest by Mobile or Name
           </label>
-          <div className="flex flex-col gap-3 sm:flex-row">
+          <div className="flex flex-col gap-3 md:flex-row">
             <div className="relative min-w-0 flex-1">
               <HiOutlineMagnifyingGlass className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-xl text-slate-400 sm:text-2xl" />
               <input
@@ -193,13 +196,13 @@ const GuestProfile = ({ isModal = false, onClose }) => {
               type="button"
               onClick={handleSearch}
               disabled={searching || !searchQuery.trim()}
-              className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-950 via-blue-700 to-sky-500 px-8 text-[16px] font-bold text-white shadow-lg shadow-blue-200 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-blue-300/50 disabled:opacity-60 sm:w-auto sm:min-w-[160px] lg:h-[60px]"
+              className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-950 via-blue-700 to-sky-500 px-8 text-[15px] font-bold text-white shadow-lg shadow-blue-200 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-blue-300/50 disabled:opacity-60 sm:text-[16px] md:w-auto md:min-w-[160px] lg:h-[60px]"
             >
               {searching ? "Searching..." : "Search"}
             </button>
           </div>
           {error && (
-            <p className="mt-4 break-words rounded-xl bg-rose-50 px-4 py-3 text-[16px] font-semibold text-rose-700">
+            <p className="mt-4 break-words rounded-xl bg-rose-50 px-4 py-3 text-[14px] font-semibold text-rose-700 sm:text-[16px]">
               Warning: {error}
             </p>
           )}
@@ -214,51 +217,51 @@ const GuestProfile = ({ isModal = false, onClose }) => {
                   <div className="flex h-[60px] w-[60px] shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-950 via-blue-700 to-sky-500 text-2xl font-black text-white shadow-lg shadow-blue-200 sm:h-[68px] sm:w-[68px] sm:text-3xl lg:h-[76px] lg:w-[76px]">
                     {(profile.guest?.guest_name || "G").charAt(0).toUpperCase()}
                   </div>
-                  <div className="min-w-0">
-                    <h2 className="break-words text-[22px] font-bold text-slate-900 sm:text-[28px] lg:text-[32px]">
+                  <div className="min-w-0 flex-1">
+                    <h2 className="break-words text-[20px] font-bold text-slate-900 sm:text-[28px] lg:text-[32px]">
                       {profile.guest?.guest_name || "-"}
                     </h2>
-                    <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-[16px] font-semibold text-slate-500">
-                      <span className="inline-flex min-w-0 items-center gap-1.5 break-words">
+                    <div className="mt-2 flex flex-col gap-y-2 text-[14px] font-semibold text-slate-500 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-4 sm:text-[16px]">
+                      <span className="flex min-w-0 max-w-full items-center gap-1.5">
                         <HiOutlinePhone className="shrink-0 text-lg text-blue-600 sm:text-xl" />
-                        {profile.guest?.mobile || "-"}
+                        <span className="min-w-0 break-words">{profile.guest?.mobile || "-"}</span>
                       </span>
                       <span className="hidden text-slate-300 sm:inline">|</span>
-                      <span className="inline-flex min-w-0 items-center gap-1.5 break-words">
+                      <span className="flex min-w-0 max-w-full items-center gap-1.5">
                         <HiOutlineEnvelope className="shrink-0 text-lg text-sky-600 sm:text-xl" />
-                        {profile.guest?.guest_email || "-"}
+                        <span className="min-w-0 break-all">{profile.guest?.guest_email || "-"}</span>
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:min-w-[420px] lg:grid-cols-3">
-                  <div className="group rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-4 text-center transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-100 sm:p-5">
+                <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 lg:min-w-[420px] lg:grid-cols-3">
+                  <div className="group rounded-[20px] border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-4 text-center transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-100 sm:rounded-2xl sm:p-5">
                     <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-xl bg-blue-100 text-blue-700">
                       <HiOutlineUserGroup className="text-[22px] sm:text-2xl lg:text-[28px]" />
                     </div>
-                    <div className="text-[16px] font-semibold uppercase tracking-wide text-blue-600">
+                    <div className="text-[13px] font-semibold uppercase tracking-wide text-blue-600 sm:text-[16px]">
                       Stays
                     </div>
-                    <div className="mt-1 text-3xl font-black text-blue-950 sm:text-4xl">{totalStats.stays}</div>
+                    <div className="mt-1 text-[26px] font-black text-blue-950 sm:text-3xl lg:text-4xl">{totalStats.stays}</div>
                   </div>
-                  <div className="group rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-4 text-center transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-100 sm:p-5">
+                  <div className="group rounded-[20px] border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-4 text-center transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-100 sm:rounded-2xl sm:p-5">
                     <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-xl bg-blue-100 text-blue-700">
                       <HiOutlineMoon className="text-[22px] sm:text-2xl lg:text-[28px]" />
                     </div>
-                    <div className="text-[16px] font-semibold uppercase tracking-wide text-blue-600">
+                    <div className="text-[13px] font-semibold uppercase tracking-wide text-blue-600 sm:text-[16px]">
                       Nights
                     </div>
-                    <div className="mt-1 text-3xl font-black text-blue-950 sm:text-4xl">{totalStats.nights}</div>
+                    <div className="mt-1 text-[26px] font-black text-blue-950 sm:text-3xl lg:text-4xl">{totalStats.nights}</div>
                   </div>
-                  <div className="group rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-4 text-center transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-100 sm:p-5">
+                  <div className="group rounded-[20px] border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-4 text-center transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-100 sm:rounded-2xl sm:p-5">
                     <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-xl bg-blue-100 text-blue-700">
                       <HiOutlineBanknotes className="text-[22px] sm:text-2xl lg:text-[28px]" />
                     </div>
-                    <div className="text-[16px] font-semibold uppercase tracking-wide text-blue-600">
+                    <div className="text-[13px] font-semibold uppercase tracking-wide text-blue-600 sm:text-[16px]">
                       Total Spent
                     </div>
-                    <div className="mt-1 break-words text-2xl font-black text-blue-950 sm:text-3xl">
+                    <div className="mt-1 break-words text-[20px] font-black text-blue-950 sm:text-2xl lg:text-3xl">
                       {formatCurrency(totalStats.revenue)}
                     </div>
                   </div>
@@ -267,13 +270,13 @@ const GuestProfile = ({ isModal = false, onClose }) => {
             </div>
 
             {/* Uploaded Documents */}
-            <div className="w-full min-w-0 rounded-3xl border border-slate-200 bg-white p-5 shadow-lg transition-all duration-300 hover:shadow-2xl sm:p-6 md:p-8">
-              <div className="mb-6 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="w-full min-w-0 rounded-3xl border border-slate-200 bg-white p-4 shadow-lg transition-all duration-300 hover:shadow-2xl sm:p-6 md:p-8">
+              <div className="mb-5 flex flex-col items-start gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
-                  <h3 className="break-words text-[24px] font-bold text-slate-900 sm:text-[30px] lg:text-[34px]">
+                  <h3 className="break-words text-[20px] font-bold text-slate-900 sm:text-[30px] lg:text-[34px]">
                     Uploaded Documents ({profile.documents?.length || 0})
                   </h3>
-                  <p className="mt-1 text-[16px] font-medium text-slate-500">
+                  <p className="mt-1 text-[14px] font-medium text-slate-500 sm:text-[16px]">
                     Hardcopy check-in forms aur guest related images ab table format me available hain.
                   </p>
                 </div>
@@ -287,86 +290,148 @@ const GuestProfile = ({ isModal = false, onClose }) => {
                   <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-100 text-blue-600">
                     <HiOutlineDocumentText className="text-[28px] sm:text-[32px]" />
                   </div>
-                  <p className="break-words text-[16px] font-semibold text-slate-500">
+                  <p className="break-words text-[14px] font-semibold text-slate-500 sm:text-[16px]">
                     Is guest ke liye abhi koi uploaded document nahi mila.
                   </p>
                 </div>
               ) : (
-                <div className="w-full min-w-0 overflow-hidden rounded-3xl border border-slate-200 shadow-sm">
-                  <div className="max-h-[520px] w-full overflow-auto">
-                    <table className="w-full min-w-[720px] text-left">
-                      <thead className="sticky top-0 z-10 bg-slate-50">
-                        <tr className="text-[15px] font-bold uppercase tracking-wide text-blue-900/80">
-                          <th className="px-4 py-4 sm:px-6 sm:py-5">Preview</th>
-                          <th className="px-4 py-4 sm:px-6 sm:py-5">Document Type</th>
-                          <th className="px-4 py-4 sm:px-6 sm:py-5">Booking</th>
-                          <th className="px-4 py-4 sm:px-6 sm:py-5">Uploaded On</th>
-                          <th className="px-4 py-4 sm:px-6 sm:py-5">Terms</th>
-                          <th className="px-4 py-4 sm:px-6 sm:py-5">Notes</th>
-                          <th className="px-4 py-4 sm:px-6 sm:py-5">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {profile.documents.map((document, idx) => (
-                          <tr
-                            key={document.id}
-                            className={`border-t border-slate-100 align-middle text-[16px] font-medium text-slate-700 transition-colors duration-200 hover:bg-blue-50/50 ${
-                              idx % 2 === 1 ? "bg-slate-50/50" : "bg-white"
+                <>
+                  {/* Desktop / Laptop / Tablet: table with horizontal scroll */}
+                  <div className="hidden w-full min-w-0 overflow-hidden rounded-3xl border border-slate-200 shadow-sm md:block">
+                    <div className="max-h-[520px] w-full overflow-auto">
+                      <table className="w-full min-w-[720px] text-left">
+                        <thead className="sticky top-0 z-10 bg-slate-50">
+                          <tr className="text-[15px] font-bold uppercase tracking-wide text-blue-900/80">
+                            <th className="px-4 py-4 sm:px-6 sm:py-5">Preview</th>
+                            <th className="px-4 py-4 sm:px-6 sm:py-5">Document Type</th>
+                            <th className="px-4 py-4 sm:px-6 sm:py-5">Booking</th>
+                            <th className="px-4 py-4 sm:px-6 sm:py-5">Uploaded On</th>
+                            <th className="px-4 py-4 sm:px-6 sm:py-5">Terms</th>
+                            <th className="px-4 py-4 sm:px-6 sm:py-5">Notes</th>
+                            <th className="px-4 py-4 sm:px-6 sm:py-5">Action</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {profile.documents.map((document, idx) => (
+                            <tr
+                              key={document.id}
+                              className={`border-t border-slate-100 align-middle text-[16px] font-medium text-slate-700 transition-colors duration-200 hover:bg-blue-50/50 ${
+                                idx % 2 === 1 ? "bg-slate-50/50" : "bg-white"
+                              }`}
+                            >
+                              <td className="px-4 py-4 sm:px-6 sm:py-5">
+                                <img
+                                  src={buildUploadUrl(document.file_url)}
+                                  alt={documentTypeLabels[document.document_type] || "Guest document"}
+                                  className="h-16 w-24 rounded-xl border border-slate-200 object-cover shadow-sm transition-transform duration-300 hover:scale-105 sm:h-20 sm:w-32 sm:rounded-2xl"
+                                />
+                              </td>
+                              <td className="px-4 py-4 text-[16px] font-bold text-slate-900 sm:px-6 sm:py-5">
+                                {documentTypeLabels[document.document_type] || "Document"}
+                              </td>
+                              <td className="px-4 py-4 text-[16px] font-medium text-slate-600 sm:px-6 sm:py-5">
+                                {document.booking_code || `#${document.booking_id}`}
+                              </td>
+                              <td className="px-4 py-4 text-[16px] font-medium text-slate-600 sm:px-6 sm:py-5">
+                                {formatDate(document.uploaded_at)}
+                              </td>
+                              <td className="px-4 py-4 sm:px-6 sm:py-5">
+                                <span
+                                  className={`whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-bold uppercase tracking-wide ${
+                                    Number(document.terms_accepted)
+                                      ? "bg-emerald-100 text-emerald-700"
+                                      : "bg-rose-100 text-rose-700"
+                                  }`}
+                                >
+                                  {Number(document.terms_accepted) ? "Accepted" : "Pending"}
+                                </span>
+                              </td>
+                              <td className="max-w-[260px] break-words px-4 py-4 text-[16px] font-medium text-slate-600 sm:px-6 sm:py-5">
+                                {document.notes || "--"}
+                              </td>
+                              <td className="px-4 py-4 sm:px-6 sm:py-5">
+                                <a
+                                  href={buildUploadUrl(document.file_url)}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className={viewBtnCls}
+                                >
+                                  View
+                                </a>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Mobile: one card per document */}
+                  <div className="space-y-3 md:hidden">
+                    {profile.documents.map((document) => (
+                      <div
+                        key={document.id}
+                        className="w-full min-w-0 rounded-[20px] border border-slate-200 bg-white p-4 shadow-md"
+                      >
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={buildUploadUrl(document.file_url)}
+                            alt={documentTypeLabels[document.document_type] || "Guest document"}
+                            className="h-16 w-16 shrink-0 rounded-[18px] border border-slate-200 object-cover shadow-sm"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <div className="break-words text-[15px] font-bold text-slate-900">
+                              {documentTypeLabels[document.document_type] || "Document"}
+                            </div>
+                            <div className="mt-0.5 truncate text-[13px] font-medium text-slate-500">
+                              {document.booking_code || `#${document.booking_id}`}
+                            </div>
+                          </div>
+                          <span
+                            className={`shrink-0 whitespace-nowrap rounded-full px-3 py-1 text-[12px] font-bold uppercase tracking-wide ${
+                              Number(document.terms_accepted)
+                                ? "bg-emerald-100 text-emerald-700"
+                                : "bg-rose-100 text-rose-700"
                             }`}
                           >
-                            <td className="px-4 py-4 sm:px-6 sm:py-5">
-                              <img
-                                src={buildUploadUrl(document.file_url)}
-                                alt={documentTypeLabels[document.document_type] || "Guest document"}
-                                className="h-16 w-24 rounded-xl border border-slate-200 object-cover shadow-sm transition-transform duration-300 hover:scale-105 sm:h-20 sm:w-32 sm:rounded-2xl"
-                              />
-                            </td>
-                            <td className="px-4 py-4 text-[16px] font-bold text-slate-900 sm:px-6 sm:py-5">
-                              {documentTypeLabels[document.document_type] || "Document"}
-                            </td>
-                            <td className="px-4 py-4 text-[16px] font-medium text-slate-600 sm:px-6 sm:py-5">
-                              {document.booking_code || `#${document.booking_id}`}
-                            </td>
-                            <td className="px-4 py-4 text-[16px] font-medium text-slate-600 sm:px-6 sm:py-5">
+                            {Number(document.terms_accepted) ? "Accepted" : "Pending"}
+                          </span>
+                        </div>
+
+                        <div className="mt-4 space-y-2 border-t border-slate-100 pt-3">
+                          <div className="flex items-center justify-between gap-3">
+                            <span className="text-[13px] font-semibold text-slate-500">Uploaded On</span>
+                            <span className="text-[14px] font-bold text-slate-800">
                               {formatDate(document.uploaded_at)}
-                            </td>
-                            <td className="px-4 py-4 sm:px-6 sm:py-5">
-                              <span
-                                className={`whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-bold uppercase tracking-wide ${
-                                  Number(document.terms_accepted)
-                                    ? "bg-emerald-100 text-emerald-700"
-                                    : "bg-rose-100 text-rose-700"
-                                }`}
-                              >
-                                {Number(document.terms_accepted) ? "Accepted" : "Pending"}
-                              </span>
-                            </td>
-                            <td className="max-w-[260px] break-words px-4 py-4 text-[16px] font-medium text-slate-600 sm:px-6 sm:py-5">
+                            </span>
+                          </div>
+                          <div className="flex items-start justify-between gap-3">
+                            <span className="shrink-0 text-[13px] font-semibold text-slate-500">Notes</span>
+                            <span className="break-words text-right text-[14px] font-medium text-slate-700">
                               {document.notes || "--"}
-                            </td>
-                            <td className="px-4 py-4 sm:px-6 sm:py-5">
-                              <a
-                                href={buildUploadUrl(document.file_url)}
-                                target="_blank"
-                                rel="noreferrer"
-                                className={viewBtnCls}
-                              >
-                                View
-                              </a>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                            </span>
+                          </div>
+                        </div>
+
+                        <a
+                          href={buildUploadUrl(document.file_url)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className={`${mobileCardViewBtnCls} mt-4`}
+                        >
+                          View
+                        </a>
+                      </div>
+                    ))}
                   </div>
-                </div>
+                </>
               )}
             </div>
 
             {/* Stay History */}
-            <div className="w-full min-w-0 rounded-3xl border border-slate-200 bg-white p-5 shadow-lg transition-all duration-300 hover:shadow-2xl sm:p-6 md:p-8">
-              <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <h3 className="break-words text-[24px] font-bold text-slate-900 sm:text-[30px] lg:text-[34px]">
+            <div className="w-full min-w-0 rounded-3xl border border-slate-200 bg-white p-4 shadow-lg transition-all duration-300 hover:shadow-2xl sm:p-6 md:p-8">
+              <div className="mb-5 flex flex-col gap-4 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
+                <h3 className="break-words text-[20px] font-bold text-slate-900 sm:text-[30px] lg:text-[34px]">
                   Stay History ({profile.bookings?.length || 0} bookings)
                 </h3>
                 <button
@@ -384,78 +449,146 @@ const GuestProfile = ({ isModal = false, onClose }) => {
                   <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-100 text-blue-600">
                     <HiOutlineCalendarDays className="text-[28px] sm:text-[32px]" />
                   </div>
-                  <p className="break-words text-[16px] font-semibold text-slate-500">No past bookings found.</p>
+                  <p className="break-words text-[14px] font-semibold text-slate-500 sm:text-[16px]">No past bookings found.</p>
                 </div>
               ) : (
-                <div className="w-full min-w-0 overflow-hidden rounded-3xl border border-slate-200 shadow-sm">
-                  <div className="max-h-[520px] w-full overflow-auto">
-                    <table className="w-full min-w-[760px] text-left">
-                      <thead className="sticky top-0 z-10 bg-slate-50">
-                        <tr className="text-[15px] font-bold uppercase tracking-wide text-blue-900/80">
-                          <th className="px-4 py-4 sm:px-6 sm:py-5">Booking</th>
-                          <th className="px-4 py-4 sm:px-6 sm:py-5">Rooms</th>
-                          <th className="px-4 py-4 sm:px-6 sm:py-5">Stay Dates</th>
-                          <th className="px-4 py-4 sm:px-6 sm:py-5">Status</th>
-                          <th className="px-4 py-4 sm:px-6 sm:py-5">Paid</th>
-                          <th className="px-4 py-4 sm:px-6 sm:py-5">Due</th>
-                          <th className="px-4 py-4 sm:px-6 sm:py-5">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {profile.bookings.map((b, idx) => (
-                          <tr
-                            key={b.bookingId}
-                            className={`border-t border-slate-100 align-middle text-[16px] font-medium text-slate-700 transition-colors duration-200 hover:bg-blue-50/50 ${
-                              idx % 2 === 1 ? "bg-slate-50/50" : "bg-white"
+                <>
+                  {/* Desktop / Laptop / Tablet: table with horizontal scroll */}
+                  <div className="hidden w-full min-w-0 overflow-hidden rounded-3xl border border-slate-200 shadow-sm md:block">
+                    <div className="max-h-[520px] w-full overflow-auto">
+                      <table className="w-full min-w-[760px] text-left">
+                        <thead className="sticky top-0 z-10 bg-slate-50">
+                          <tr className="text-[15px] font-bold uppercase tracking-wide text-blue-900/80">
+                            <th className="px-4 py-4 sm:px-6 sm:py-5">Booking</th>
+                            <th className="px-4 py-4 sm:px-6 sm:py-5">Rooms</th>
+                            <th className="px-4 py-4 sm:px-6 sm:py-5">Stay Dates</th>
+                            <th className="px-4 py-4 sm:px-6 sm:py-5">Status</th>
+                            <th className="px-4 py-4 sm:px-6 sm:py-5">Paid</th>
+                            <th className="px-4 py-4 sm:px-6 sm:py-5">Due</th>
+                            <th className="px-4 py-4 sm:px-6 sm:py-5">Action</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {profile.bookings.map((b, idx) => (
+                            <tr
+                              key={b.bookingId}
+                              className={`border-t border-slate-100 align-middle text-[16px] font-medium text-slate-700 transition-colors duration-200 hover:bg-blue-50/50 ${
+                                idx % 2 === 1 ? "bg-slate-50/50" : "bg-white"
+                              }`}
+                            >
+                              <td className="px-4 py-4 text-[16px] font-black text-slate-900 sm:px-6 sm:py-5">#{b.bookingId}</td>
+                              <td className="px-4 py-4 text-[16px] font-bold text-slate-800 sm:px-6 sm:py-5">
+                                {b.rooms || "Room not set"}
+                              </td>
+                              <td className="whitespace-nowrap px-4 py-4 text-[16px] font-medium text-slate-600 sm:px-6 sm:py-5">
+                                {formatDate(b.check_in)} to {formatDate(b.check_out)}
+                              </td>
+                              <td className="px-4 py-4 sm:px-6 sm:py-5">
+                                <span
+                                  className={`whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-bold ${
+                                    STATUS_COLORS[b.booking_status] || "bg-slate-100 text-slate-600"
+                                  }`}
+                                >
+                                  {b.booking_status || "Unknown"}
+                                </span>
+                              </td>
+                              <td className="px-4 py-4 text-[16px] font-black text-blue-700 sm:px-6 sm:py-5">
+                                {formatCurrency(b.paidAmount)}
+                              </td>
+                              <td className="px-4 py-4 text-[16px] font-black text-rose-600 sm:px-6 sm:py-5">
+                                {Number(b.remainingAmount) > 0
+                                  ? formatCurrency(b.remainingAmount)
+                                  : formatCurrency(0)}
+                              </td>
+                              <td className="px-4 py-4 sm:px-6 sm:py-5">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setStoredBookingId(b.bookingId);
+                                    if (isModal) onClose?.();
+                                    else {
+                                      navigate("/hotel/communication", {
+                                        state: { bookingId: b.bookingId },
+                                      });
+                                    }
+                                  }}
+                                  className={viewBtnCls}
+                                >
+                                  View
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Mobile: one card per booking */}
+                  <div className="space-y-3 md:hidden">
+                    {profile.bookings.map((b) => (
+                      <div
+                        key={b.bookingId}
+                        className="w-full min-w-0 rounded-[20px] border border-slate-200 bg-white p-4 shadow-md"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="text-[15px] font-black text-slate-900">#{b.bookingId}</div>
+                            <div className="mt-0.5 break-words text-[13px] font-bold text-slate-600">
+                              {b.rooms || "Room not set"}
+                            </div>
+                          </div>
+                          <span
+                            className={`shrink-0 whitespace-nowrap rounded-full px-3 py-1 text-[12px] font-bold ${
+                              STATUS_COLORS[b.booking_status] || "bg-slate-100 text-slate-600"
                             }`}
                           >
-                            <td className="px-4 py-4 text-[16px] font-black text-slate-900 sm:px-6 sm:py-5">#{b.bookingId}</td>
-                            <td className="px-4 py-4 text-[16px] font-bold text-slate-800 sm:px-6 sm:py-5">
-                              {b.rooms || "Room not set"}
-                            </td>
-                            <td className="whitespace-nowrap px-4 py-4 text-[16px] font-medium text-slate-600 sm:px-6 sm:py-5">
+                            {b.booking_status || "Unknown"}
+                          </span>
+                        </div>
+
+                        <div className="mt-4 space-y-2 border-t border-slate-100 pt-3">
+                          <div className="flex items-center justify-between gap-3">
+                            <span className="text-[13px] font-semibold text-slate-500">Stay Dates</span>
+                            <span className="text-right text-[14px] font-bold text-slate-800">
                               {formatDate(b.check_in)} to {formatDate(b.check_out)}
-                            </td>
-                            <td className="px-4 py-4 sm:px-6 sm:py-5">
-                              <span
-                                className={`whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-bold ${
-                                  STATUS_COLORS[b.booking_status] || "bg-slate-100 text-slate-600"
-                                }`}
-                              >
-                                {b.booking_status || "Unknown"}
-                              </span>
-                            </td>
-                            <td className="px-4 py-4 text-[16px] font-black text-blue-700 sm:px-6 sm:py-5">
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between gap-3">
+                            <span className="text-[13px] font-semibold text-slate-500">Paid</span>
+                            <span className="text-[15px] font-black text-blue-700">
                               {formatCurrency(b.paidAmount)}
-                            </td>
-                            <td className="px-4 py-4 text-[16px] font-black text-rose-600 sm:px-6 sm:py-5">
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between gap-3">
+                            <span className="text-[13px] font-semibold text-slate-500">Due</span>
+                            <span className="text-[15px] font-black text-rose-600">
                               {Number(b.remainingAmount) > 0
                                 ? formatCurrency(b.remainingAmount)
                                 : formatCurrency(0)}
-                            </td>
-                            <td className="px-4 py-4 sm:px-6 sm:py-5">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setStoredBookingId(b.bookingId);
-                                  if (isModal) onClose?.();
-                                  else {
-                                    navigate("/hotel/communication", {
-                                      state: { bookingId: b.bookingId },
-                                    });
-                                  }
-                                }}
-                                className={viewBtnCls}
-                              >
-                                View
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                            </span>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setStoredBookingId(b.bookingId);
+                            if (isModal) onClose?.();
+                            else {
+                              navigate("/hotel/communication", {
+                                state: { bookingId: b.bookingId },
+                              });
+                            }
+                          }}
+                          className={`${mobileCardViewBtnCls} mt-4`}
+                        >
+                          View
+                        </button>
+                      </div>
+                    ))}
                   </div>
-                </div>
+                </>
               )}
             </div>
           </>
@@ -466,9 +599,9 @@ const GuestProfile = ({ isModal = false, onClose }) => {
             <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-blue-100 to-sky-50 text-blue-600 shadow-inner sm:h-24 sm:w-24">
               <HiOutlineUserCircle className="text-[48px] sm:text-[60px]" />
             </div>
-            <div className="text-[24px] font-bold text-slate-800 sm:text-[28px]">Guest</div>
-            <p className="mt-3 break-words text-[16px] font-semibold text-slate-500">Enter a guest mobile no.</p>
-            <p className="mx-auto mt-2 max-w-md break-words text-[16px] font-medium leading-7 text-slate-400">
+            <div className="text-[22px] font-bold text-slate-800 sm:text-[28px]">Guest</div>
+            <p className="mt-3 break-words text-[14px] font-semibold text-slate-500 sm:text-[16px]">Enter a guest mobile no.</p>
+            <p className="mx-auto mt-2 max-w-md break-words text-[14px] font-medium leading-7 text-slate-400 sm:text-[16px]">
               "Past stays, total spend, and booking history will all be visible in one place."
             </p>
           </div>

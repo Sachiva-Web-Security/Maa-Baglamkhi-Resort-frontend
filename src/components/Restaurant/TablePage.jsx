@@ -168,6 +168,42 @@ const TablePage = () => {
     setSeatDrafts(nextDrafts);
   }, [tables]);
 
+  // Lock background page scroll whenever a modal (Add Table / Remove Table) is open.
+  // This prevents the page behind the popup from scrolling on mobile while the
+  // popup itself is open, without affecting the modal's own internal scrolling.
+  useEffect(() => {
+    const isModalOpen = showAddTable || Boolean(removeDialogTable);
+    if (!isModalOpen) return undefined;
+
+    const scrollY = window.scrollY;
+    const { body } = document;
+    const previousStyles = {
+      position: body.style.position,
+      top: body.style.top,
+      left: body.style.left,
+      right: body.style.right,
+      width: body.style.width,
+      overflow: body.style.overflow,
+    };
+
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.left = "0";
+    body.style.right = "0";
+    body.style.width = "100%";
+    body.style.overflow = "hidden";
+
+    return () => {
+      body.style.position = previousStyles.position;
+      body.style.top = previousStyles.top;
+      body.style.left = previousStyles.left;
+      body.style.right = previousStyles.right;
+      body.style.width = previousStyles.width;
+      body.style.overflow = previousStyles.overflow;
+      window.scrollTo(0, scrollY);
+    };
+  }, [showAddTable, removeDialogTable]);
+
   const handleAddTable = async () => {
     if (!tableForm.number.trim()) return;
 

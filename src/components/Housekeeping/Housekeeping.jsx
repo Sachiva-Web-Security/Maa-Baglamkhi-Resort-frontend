@@ -192,7 +192,7 @@ export default function Housekeeping() {
       <div className="w-full">
 
         {/* Header */}
-        <div className="mb-5 flex flex-col gap-4 rounded-3xl bg-gradient-to-r from-[#0a1e57] via-[#1e56e6] to-[#7db8f5] p-5 shadow-[0_8px_30px_rgba(37,99,235,0.25)] sm:flex-row sm:items-center sm:justify-between lg:p-10">
+        <div className="mb-5 flex flex-col gap-4 rounded-3xl bg-gradient-to-r from-[#0a1e57] via-[#1e56e6] to-sky-500 p-5 shadow-[0_8px_30px_rgba(37,99,235,0.25)] sm:flex-row sm:items-center sm:justify-between lg:p-10">
           <div className="flex items-center gap-4">
             <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl bg-white/15 text-white ring-1 ring-white/30 sm:h-16 sm:w-16">
               <FaBuilding className="text-2xl sm:text-3xl" />

@@ -175,8 +175,8 @@ function Layout({ children, setIsAuthenticated, fullWidth }) {
       <div
         className="flex min-h-screen flex-col transition-all duration-300"
         style={{
-          marginLeft: isMobile ? 0 : sidebarWidth,
-          width: isMobile ? "100%" : `calc(100% - ${sidebarWidth}px)`,
+          marginLeft: isMobile ? 0 : fullWidth ? 0 : sidebarWidth,
+          width: isMobile ? "100%" : fullWidth ? "100%" : `calc(100% - ${sidebarWidth}px)`,
         }}
       >
         <Header
@@ -191,7 +191,16 @@ function Layout({ children, setIsAuthenticated, fullWidth }) {
           className="flex-1 overflow-y-auto"
           style={{ paddingTop: `${HEADER_HEIGHT + HEADER_CONTENT_GAP}px` }}
         >
-          <div className={fullWidth ? "" : "p-3 sm:p-4 lg:p-5"}>{children}</div>
+          <div
+            className={fullWidth ? "p-3 sm:p-4 lg:p-5" : "p-3 sm:p-4 lg:p-5"}
+            style={
+              fullWidth && !isMobile
+                ? { paddingLeft: `${sidebarWidth + 12}px` }
+                : undefined
+            }
+          >
+            {children}
+          </div>
         </div>
       </div>
       {showDashboardFooter ? (

@@ -111,7 +111,7 @@ const FiltersSection = ({
             </div>
 
             {/* Title */}
-            <h2 className="mt-4 md:mt-5 text-[30px] sm:text-[34px] md:text-[38px] xl:text-[42px] font-extrabold text-white leading-tight break-words">
+            <h2 className="mt-4 md:mt-5 text-[24px] sm:text-[28px] md:text-[32px] xl:text-[36px] font-extrabold text-white leading-tight break-words">
               Attendance Dashboard
             </h2>
 

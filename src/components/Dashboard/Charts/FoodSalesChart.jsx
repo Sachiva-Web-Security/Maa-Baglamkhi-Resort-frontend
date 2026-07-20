@@ -50,18 +50,18 @@ const FoodSalesChart = () => {
 
   return (
     <div className="flex h-full w-full min-w-0 flex-col">
-      <p className="text-[14px] font-bold uppercase tracking-[0.28em] text-emerald-300">
+      <p className="text-[12px] font-bold uppercase tracking-[0.28em] text-emerald-300 sm:text-[14px]">
         Dining Trend
       </p>
-      <h3 className="mt-2 text-2xl font-black text-slate-900">
+      <h3 className="mt-1.5 text-xl font-black text-slate-900 sm:mt-2 sm:text-2xl">
         Food sales this week
       </h3>
-      <div className="mt-4 min-h-0 flex-1 w-full">
-        <div style={{ minWidth: 0, minHeight: 200 }}>
-          <ResponsiveContainer width="100%" height={250}>
+      <div className="mt-3 min-h-0 flex-1 w-full sm:mt-4">
+        <div className="h-full min-h-[200px] w-full min-w-0">
+          <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data}>
-              <XAxis dataKey="day" tick={{ fontSize: 13, fill: "#64748b" }} />
-              <YAxis tick={{ fontSize: 13, fill: "#64748b" }} />
+              <XAxis dataKey="day" tick={{ fontSize: 10, fill: "#64748b" }} />
+              <YAxis tick={{ fontSize: 10, fill: "#64748b" }} />
               <Tooltip />
 
               <Line
@@ -79,3 +79,4 @@ const FoodSalesChart = () => {
 };
 
 export default FoodSalesChart;
+

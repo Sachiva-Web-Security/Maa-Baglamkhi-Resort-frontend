@@ -70,32 +70,32 @@ const MonthlyRevenueChart = () => {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="flex flex-col gap-4 border-b border-sky-200/80 pb-5 sm:flex-row sm:items-start sm:justify-between">
+      <div className="flex flex-col gap-3 border-b border-sky-200/80 pb-4 sm:flex-row sm:items-start sm:justify-between sm:gap-4 sm:pb-5">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-slate-500">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.34em] text-slate-500 sm:text-[11px]">
             Revenue Trend
           </p>
-          <h3 className="mt-2 text-[1.15rem] font-bold text-[#0a2340] sm:text-[1.28rem]">
+          <h3 className="mt-1.5 text-[1rem] font-bold text-[#0a2340] sm:mt-2 sm:text-[1.28rem]">
             Reservation statistics
           </h3>
         </div>
 
         <div className="text-left sm:text-right">
-          <div className="text-[2rem] font-bold leading-none text-[#0a2340] sm:text-[2.3rem]">
+          <div className="text-[1.65rem] font-bold leading-none text-[#0a2340] sm:text-[2.3rem]">
             {formatCompactValue(summary.current)}
           </div>
-          <div className="mt-1 text-sm font-semibold text-[#f0a94d]">
+          <div className="mt-1 text-[12px] font-semibold text-[#f0a94d] sm:text-sm">
             {`${summary.delta >= 0 ? "+" : ""}${summary.delta.toFixed(1)}% vs last month`}
           </div>
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 pt-5">
-        <div style={{ minWidth: 0, minHeight: 200 }}>
-          <ResponsiveContainer width="100%" height={250}>
+      <div className="min-h-0 flex-1 pt-4 sm:pt-5">
+        <div className="h-full min-h-[200px] w-full min-w-0">
+          <ResponsiveContainer width="100%" height="100%">
             <AreaChart
               data={data}
-              margin={{ top: 14, right: 12, left: 0, bottom: 4 }}
+              margin={{ top: 14, right: 8, left: 0, bottom: 4 }}
             >
             <defs>
               <linearGradient id="reservationCurveFill" x1="0" y1="0" x2="0" y2="1">
@@ -109,7 +109,7 @@ const MonthlyRevenueChart = () => {
               dataKey="month"
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "#7a8696", fontSize: 11, fontWeight: 700 }}
+              tick={{ fill: "#7a8696", fontSize: 10, fontWeight: 700 }}
               dy={10}
             />
             <YAxis
@@ -152,3 +152,4 @@ const MonthlyRevenueChart = () => {
 };
 
 export default MonthlyRevenueChart;
+
