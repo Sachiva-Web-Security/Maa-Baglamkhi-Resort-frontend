@@ -16,12 +16,14 @@ const resolveSocketBaseURL = () => {
 };
 
 const getSocketScriptURL = () => {
-  // Load via the same origin (Vite dev server) so the /socket.io proxy in
-  // vite.config.js forwards the request to the backend.
-  return `/socket.io/socket.io.js?v=${SOCKET_CLIENT_VERSION}`;
+  const base = (import.meta.env.VITE_BACKEND_ORIGIN || "http://localhost:5002").replace(/\/$/, "");
+  return `${base}/socket.io/socket.io.js?v=${SOCKET_CLIENT_VERSION}`;
 };
 
-const getSocketServerURL = () => resolveSocketBaseURL();
+const getSocketServerURL = () => {
+  const base = (import.meta.env.VITE_BACKEND_ORIGIN || "http://localhost:5002").replace(/\/$/, "");
+  return `${base}/socket.io`;
+};
 
 const loadSocketScript = () =>
   new Promise((resolve, reject) => {
