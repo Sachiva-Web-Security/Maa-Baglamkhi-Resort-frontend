@@ -53,6 +53,8 @@ import HousekeeperNotification from "./pages/housekeepernotification";
 import Kitchen from "./pages/Kitchen";
 import KitchenDashboard from "./pages/KitchenDashboard";
 import ChefDashboard from "./pages/ChefDashboard";
+import ChefInventoryPage from "./pages/ChefInventoryPage";
+import AdminChefIssuePage from "./pages/AdminChefIssuePage";
 import WaiterDeliveryQueue from "./pages/WaiterDeliveryQueue";
 import Login from "./pages/Login";
 import ManagerDashboard from "./pages/ManagerDashboard";
@@ -96,6 +98,8 @@ const ROLES = {
   AUDIT: ["admin", "manager", "accountant"],
   ASSIGNMENTS: ["admin", "manager", "receptionist", "housekeeping", "accountant", "staff"],
   ASSIGNMENT_NOTIFICATIONS: ["admin", "manager", "receptionist", "housekeeping", "accountant", "staff"],
+  CHEF_ISSUE_ADMIN: ["admin", "manager"],
+  CHEF_ISSUE_SELF: ["chef", "kitchen"],
 };
 
 const HEADER_HEIGHT = 92;
@@ -295,6 +299,8 @@ function AppRoutes({ isAuthenticated, setIsAuthenticated, protect }) {
           <Route path="/inventory/procurement" element={protect(<Navigate to="/inventory/purchases" replace />, ROLES.INVENTORY)} />
           <Route path="/inventory/masters" element={protect(<InventoryMastersModulePage />, ROLES.INVENTORY)} />
           <Route path="/inventory/recipes" element={protect(<MenuRecipeModulePage />, ROLES.INVENTORY)} />
+          <Route path="/inventory/chef-issues" element={protect(<AdminChefIssuePage />, ROLES.CHEF_ISSUE_ADMIN)} />
+          <Route path="/chef/inventory" element={protect(<ChefInventoryPage />, ROLES.CHEF_ISSUE_SELF)} />
           <Route path="/housekeeping" element={protect(<Housekeeping />, ROLES.HOUSEKEEPING)} />
           <Route
             path="/housekeeping/notifications"

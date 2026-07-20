@@ -8,6 +8,7 @@ import {
   FaChartBar,
   FaChevronDown,
   FaClipboardList,
+  FaExchangeAlt,
   FaFire,
   FaGlassCheers,
   FaHistory,
@@ -127,6 +128,7 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
       { id: 109, name: "Banquet", icon: FaGlassCheers, path: "/banquet", section: "operations" },
       { id: 109, name: "Accounts", icon: FaWallet, path: "/accounts", section: "records" },
       { id: 110, name: "Inventory", icon: FaBoxes, path: "/inventory", section: "records" },
+      { id: 1101, name: "Chef Issues", icon: FaExchangeAlt, path: "/inventory/chef-issues", section: "records" },
       { id: 111, name: "Reports", icon: FaChartBar, path: "/reports", section: "records" },
       { id: 112, name: "Audit Logs", icon: FaHistory, path: "/reports/audit", section: "records" },
       { id: 113, name: "User Management", icon: FaUserCheck, path: "/user", section: "records" },
@@ -145,6 +147,7 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
       { id: 208, name: "Accounts", icon: FaWallet, path: "/accounts", section: "records" },
       { id: 209, name: "Reports", icon: FaChartBar, path: "/reports", section: "records" },
       { id: 210, name: "Inventory", icon: FaBoxes, path: "/inventory", section: "records"},
+      { id: 2101, name: "Chef Issues", icon: FaExchangeAlt, path: "/inventory/chef-issues", section: "records" },
       { id: 211, name: "Audit Logs", icon: FaHistory, path: "/reports/audit", section: "records" },
     
     ],
@@ -201,6 +204,7 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
     kitchen: [
      
       { id: 602, name: "Restaurant POS", icon: FaUtensils, path: "/restaurant", section: "operations" },
+      { id: "602k", name: "Raw Material", icon: FaExchangeAlt, path: "/chef/inventory", section: "operations" },
       { id: 603, name: "Inventory", icon: FaBoxes, path: "/inventory", section: "records",
         // children: [
         //   { id: 6031, name: "Categories", path: "/inventory/categories", icon: FaListAlt },
@@ -217,6 +221,7 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
     chef: [
       { id: "601c", name: "Chef Dashboard", icon: FaFire, path: "/chef-dashboard", section: "operations" },
       { id: "602c", name: "Kitchen Orders", icon: FaFire, path: "/kitchen", section: "operations" },
+      { id: "602d", name: "Raw Material", icon: FaExchangeAlt, path: "/chef/inventory", section: "operations" },
       { id: "603c", name: "Inventory", icon: FaBoxes, path: "/inventory", section: "records",
         // children: [
         //   { id: "6031", name: "Categories", path: "/inventory/categories", icon: FaListAlt },
@@ -642,4 +647,3 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
 };
 
 export default Sidebar;
-

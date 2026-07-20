@@ -16,6 +16,11 @@ export default defineConfig(({ mode }) => {
           target: env.VITE_BACKEND_URL || env.VITE_BACKEND_ORIGIN || 'http://localhost:5002',
           changeOrigin: true,
         },
+        '/socket.io': {
+          target: env.VITE_BACKEND_URL || env.VITE_BACKEND_ORIGIN || 'http://localhost:5002',
+          ws: true,
+          changeOrigin: true,
+        },
       },
     },
   }
