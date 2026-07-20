@@ -77,7 +77,7 @@ const SalaryManagement = () => {
 
     setSavingId(emp.id);
     try {
-      await API.put(`/salary/${emp.id}`, {
+      await API.post(`/salary/${emp.id}`, {
         salary: parseFloat(editForm.salary),
         designation: editForm.designation,
       });
