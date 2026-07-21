@@ -64,12 +64,46 @@ const viewBtnCls =
 const mobileCardViewBtnCls =
   "inline-flex h-11 w-full items-center justify-center whitespace-nowrap rounded-xl bg-gradient-to-r from-blue-950 to-blue-700 px-5 text-[14px] font-bold text-white shadow-sm transition-all duration-300 active:scale-[0.98]";
 
-const GuestProfile = ({ isModal = false, onClose }) => {
+const GuestProfile = ({ isModal = false, onClose, bookingId: initialBookingId = null }) => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [searching, setSearching] = useState(false);
   const [profile, setProfile] = useState(null);
   const [error, setError] = useState("");
+  const lastQueryRef = useRef("");
+
+  // Auto-load by bookingId (used when opening from a booking row)
+  useEffect(() => {
+    if (!initialBookingId) return;
+    let cancelled = false;
+    const load = async () => {
+      setSearching(true);
+      setError("");
+      try {
+        const res = await API.get(`/hotel/guest-profile?bookingId=${initialBookingId}`);
+        if (cancelled) return;
+        if (res.data && (res.data.guest || res.data.bookings?.length)) {
+          setProfile(res.data);
+          lastQueryRef.current = res.data.guest?.guest_name || "";
+          if (res.data.guest?.mobile) {
+            setSearchQuery(res.data.guest.mobile);
+          }
+        } else {
+          setError("No data for this booking.");
+          setProfile(null);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          console.error(err);
+          setError(err.response?.data?.error || "Failed to load this guest.");
+        }
+      } finally {
+        if (!cancelled) setSearching(false);
+      }
+    };
+    load();
+    return () => { cancelled = true; };
+  }, [initialBookingId]);
 
   const handleSearch = useCallback(async () => {
     const q = searchQuery.trim();
@@ -95,14 +129,17 @@ const GuestProfile = ({ isModal = false, onClose }) => {
     }
   }, [searchQuery]);
 
-  const lastQueryRef = useRef("");
-
   useEffect(() => {
     const reload = async () => {
-      const q = lastQueryRef.current.trim();
-      if (!q) return;
       try {
-        const res = await API.get(`/hotel/guest-profile?q=${encodeURIComponent(q)}`);
+        let res;
+        if (initialBookingId) {
+          res = await API.get(`/hotel/guest-profile?bookingId=${initialBookingId}`);
+        } else {
+          const q = lastQueryRef.current.trim();
+          if (!q) return;
+          res = await API.get(`/hotel/guest-profile?q=${encodeURIComponent(q)}`);
+        }
         if (res.data && (res.data.guest || res.data.bookings?.length)) {
           setProfile(res.data);
         }
@@ -112,7 +149,7 @@ const GuestProfile = ({ isModal = false, onClose }) => {
     };
     window.addEventListener("documentsUpdated", reload);
     return () => window.removeEventListener("documentsUpdated", reload);
-  }, []);
+  }, [initialBookingId]);
 
   const totalStats = React.useMemo(() => {
     if (!profile?.bookings?.length) {

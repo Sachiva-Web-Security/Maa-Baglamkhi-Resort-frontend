@@ -73,6 +73,9 @@ export default function Housekeeping() {
   const [rooms, setRooms] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [blockedRooms, setBlockedRooms] = useState([]);
+  const [assignmentPage, setAssignmentPage] = useState(1);
+  const [checkoutPage, setCheckoutPage] = useState(1);
+  const PAGE_SIZE = 10;
 
   const fetchData = useCallback(async () => {
     try {
@@ -82,24 +85,34 @@ export default function Housekeeping() {
         API.get("/hotel/room-blocks", { params: { status: "Active" } }),
       ]);
 
-      const roomsData =
-        roomsRes.status === "fulfilled" && Array.isArray(roomsRes.data)
-          ? roomsRes.data
-          : [];
-      const notifData =
-        notifRes.status === "fulfilled" && Array.isArray(notifRes.data?.data)
-          ? notifRes.data.data
-          : [];
-      const blocksData =
-        blocksRes.status === "fulfilled" && Array.isArray(blocksRes.data)
-          ? blocksRes.data
-          : [];
+      const ok = (r) => r.status === "fulfilled" && r.value?.status >= 200 && r.value?.status < 300;
+
+      const roomsData = ok(roomsRes) && Array.isArray(roomsRes.value?.data)
+        ? roomsRes.value.data
+        : [];
+      const notifData = ok(notifRes) && Array.isArray(notifRes.value?.data)
+        ? notifRes.value.data
+        : [];
+      const blocksData = ok(blocksRes) && Array.isArray(blocksRes.value?.data)
+        ? blocksRes.value.data
+        : [];
+
+      if (roomsRes.status === "fulfilled" && !Array.isArray(roomsRes.value?.data)) {
+        console.warn("[Housekeeping] /housekeeping did not return an array. status=",
+          roomsRes.value?.status, "body=", roomsRes.value?.data);
+      }
+      if (notifRes.status === "fulfilled" && !Array.isArray(notifRes.value?.data)) {
+        console.warn("[Housekeeping] /housekeeping/notifications did not return an array. status=",
+          notifRes.value?.status, "body=", notifRes.value?.data);
+      }
 
       setRooms(roomsData);
       setNotifications(notifData.map(normalizeNotification));
       setBlockedRooms(blocksData);
-    } catch {
-      // silently ignore — empty state shown below
+      setAssignmentPage(1);
+      setCheckoutPage(1);
+    } catch (err) {
+      console.error("[Housekeeping] fetchData error:", err);
     }
   }, []);
 
@@ -186,6 +199,104 @@ export default function Housekeeping() {
       })
       .sort((a, b) => String(a.roomNo || a.roomNumber).localeCompare(String(b.roomNo || b.roomNumber), undefined, { numeric: true }));
   }, [rooms]);
+
+  // Pagination for assignment list
+  const assignmentTotalPages = Math.max(1, Math.ceil(assignmentEntries.length / PAGE_SIZE));
+  const paginatedAssignmentEntries = useMemo(() => {
+    const safePage = Math.min(assignmentPage, assignmentTotalPages);
+    const start = (safePage - 1) * PAGE_SIZE;
+    return assignmentEntries.slice(start, start + PAGE_SIZE);
+  }, [assignmentEntries, assignmentPage, assignmentTotalPages]);
+
+  // Pagination for checkout-ready rooms
+  const checkoutTotalPages = Math.max(1, Math.ceil(checkoutReadyRooms.length / PAGE_SIZE));
+  const paginatedCheckoutRooms = useMemo(() => {
+    const safePage = Math.min(checkoutPage, checkoutTotalPages);
+    const start = (safePage - 1) * PAGE_SIZE;
+    return checkoutReadyRooms.slice(start, start + PAGE_SIZE);
+  }, [checkoutReadyRooms, checkoutPage, checkoutTotalPages]);
+
+  const PaginationBar = ({ page, totalPages, totalCount, onChange, accent = "blue" }) => {
+    if (totalCount === 0) return null;
+    const colors =
+      accent === "emerald"
+        ? "border-emerald-100 text-emerald-700 hover:bg-emerald-50"
+        : "border-blue-100 text-blue-700 hover:bg-blue-50";
+    const activeColors =
+      accent === "emerald"
+        ? "bg-emerald-600 text-white border-emerald-600"
+        : "bg-blue-600 text-white border-blue-600";
+    const start = (page - 1) * PAGE_SIZE + 1;
+    const end = Math.min(page * PAGE_SIZE, totalCount);
+
+    const goTo = (p) => {
+      const clamped = Math.min(Math.max(1, p), totalPages);
+      onChange(clamped);
+    };
+
+    const pages = [];
+    const maxButtons = 5;
+    let from = Math.max(1, page - 2);
+    let to = Math.min(totalPages, from + maxButtons - 1);
+    from = Math.max(1, to - maxButtons + 1);
+    for (let i = from; i <= to; i++) pages.push(i);
+
+    return (
+      <div className="flex flex-col items-center justify-between gap-3 border-t border-slate-100 px-4 py-4 sm:flex-row sm:px-6">
+        <p className="text-sm font-medium text-slate-500 sm:text-base">
+          Showing <span className="font-bold text-slate-800">{start}</span>–
+          <span className="font-bold text-slate-800">{end}</span> of{" "}
+          <span className="font-bold text-slate-800">{totalCount}</span>
+        </p>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <button
+            type="button"
+            disabled={page === 1}
+            onClick={() => goTo(1)}
+            className={`rounded-lg border px-3 py-1.5 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-40 ${colors}`}
+          >
+            «
+          </button>
+          <button
+            type="button"
+            disabled={page === 1}
+            onClick={() => goTo(page - 1)}
+            className={`rounded-lg border px-3 py-1.5 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-40 ${colors}`}
+          >
+            ‹ Prev
+          </button>
+          {pages.map((p) => (
+            <button
+              key={p}
+              type="button"
+              onClick={() => goTo(p)}
+              className={`rounded-lg border px-3 py-1.5 text-sm font-bold transition ${
+                p === page ? activeColors : colors
+              }`}
+            >
+              {p}
+            </button>
+          ))}
+          <button
+            type="button"
+            disabled={page === totalPages}
+            onClick={() => goTo(page + 1)}
+            className={`rounded-lg border px-3 py-1.5 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-40 ${colors}`}
+          >
+            Next ›
+          </button>
+          <button
+            type="button"
+            disabled={page === totalPages}
+            onClick={() => goTo(totalPages)}
+            className={`rounded-lg border px-3 py-1.5 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-40 ${colors}`}
+          >
+            »
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen w-full overflow-x-hidden bg-gradient-to-br from-blue-50 via-slate-50 to-blue-50 p-3 sm:p-4 lg:p-6">
@@ -275,8 +386,8 @@ Access room assignment details, room type, duration of stay, assigned by informa
                 </tr>
               </thead>
               <tbody>
-                {assignmentEntries.length ? (
-                  assignmentEntries.map((row) => (
+                {paginatedAssignmentEntries.length ? (
+                  paginatedAssignmentEntries.map((row) => (
                     <tr
                       key={row.id}
                       className={`border-t text-sm text-slate-700 transition-colors duration-200 hover:bg-blue-50/40 sm:text-base ${
@@ -319,6 +430,13 @@ Access room assignment details, room type, duration of stay, assigned by informa
               </tbody>
             </table>
           </div>
+          <PaginationBar
+            page={assignmentPage}
+            totalPages={assignmentTotalPages}
+            totalCount={assignmentEntries.length}
+            onChange={setAssignmentPage}
+            accent="blue"
+          />
         </div>
 
         {/* Checkout Available Rooms */}
@@ -345,8 +463,8 @@ Access room assignment details, room type, duration of stay, assigned by informa
                 </tr>
               </thead>
               <tbody>
-                {checkoutReadyRooms.length ? (
-                  checkoutReadyRooms.map((room, index) => (
+                {paginatedCheckoutRooms.length ? (
+                  paginatedCheckoutRooms.map((room, index) => (
                     <tr key={room.id || index} className="border-t border-emerald-50 text-sm text-slate-700 transition-colors duration-200 hover:bg-emerald-50/40 sm:text-base">
                       <td className="whitespace-nowrap px-5 py-4 text-[17px] font-bold text-slate-900 sm:px-6">{room.roomNo || room.roomNumber}</td>
                       <td className="whitespace-nowrap px-5 py-4 sm:px-6">{room.roomType || room.type || "Accommodation"}</td>
@@ -374,6 +492,13 @@ Access room assignment details, room type, duration of stay, assigned by informa
               </tbody>
             </table>
           </div>
+          <PaginationBar
+            page={checkoutPage}
+            totalPages={checkoutTotalPages}
+            totalCount={checkoutReadyRooms.length}
+            onChange={setCheckoutPage}
+            accent="emerald"
+          />
         </div>
 
       </div>
