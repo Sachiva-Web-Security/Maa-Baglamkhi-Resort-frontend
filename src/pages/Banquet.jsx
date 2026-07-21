@@ -30,6 +30,7 @@ import {
 } from "react-icons/fa";
 
 import BanquetBill from "../components/Banquet/BanquetBill";
+import BanquetWhatsAppModal from "../components/Banquet/BanquetWhatsAppModal";
 import API, { getBackendBaseURL } from "../api";
 import {
   banquetConfigStorageKey,
@@ -400,6 +401,8 @@ const Banquet = () => {
   const [reservationError, setReservationError] = useState("");
   const [isSavingReservation, setIsSavingReservation] = useState(false);
   const [reservationSuccess, setReservationSuccess] = useState(null);
+  const [showBanquetWhatsAppModal, setShowBanquetWhatsAppModal] = useState(false);
+  const [selectedBookingForWhatsApp, setSelectedBookingForWhatsApp] = useState(null);
   const [receiptInputKey, setReceiptInputKey] = useState(0);
   const [receiptPreviewUrl, setReceiptPreviewUrl] = useState("");
   const [dashboardSearch, setDashboardSearch] = useState("");
@@ -1026,7 +1029,8 @@ const Banquet = () => {
       Boolean(delayedHallDeleteTarget) ||
       delayedShowBill ||
       Boolean(delayedReservationSuccess) ||
-      Boolean(delayedSelectedMenuPackage);
+      Boolean(delayedSelectedMenuPackage) ||
+      showBanquetWhatsAppModal;
 
     if (!hasOpenModal) return undefined;
 
@@ -1038,6 +1042,10 @@ const Banquet = () => {
 
       if (selectedMenuPackage) {
         setSelectedMenuPackage(null);
+        return;
+      }
+      if (showBanquetWhatsAppModal) {
+        setShowBanquetWhatsAppModal(false);
         return;
       }
       if (showBill) {
@@ -1086,6 +1094,7 @@ const Banquet = () => {
     reservationSuccess,
     selectedMenuPackage,
     showAddHall,
+    showBanquetWhatsAppModal,
     showBill,
     showReservationForm,
   ]);
@@ -1667,6 +1676,36 @@ const Banquet = () => {
 
     const whatsappNumber = String(booking.phone || "").replace(/\D/g, "");
     window.open(`https://wa.me/${whatsappNumber}?text=${message}`, "_blank");
+  };
+
+  const handleSendBanquetInvoiceWhatsApp = (booking) => {
+    if (!booking.invoiceNo) {
+      window.alert("Pehle invoice generate karein (Bill button) phir WhatsApp se send karein.");
+      return;
+    }
+    setSelectedBookingForWhatsApp(booking);
+    setShowBanquetWhatsAppModal(true);
+  };
+
+  const handleBanquetWhatsAppSuccess = (result) => {
+    if (!selectedBookingForWhatsApp || !result) return;
+
+    const sendMode = result.sendMode || "pdf";
+    const detailText =
+      sendMode === "text-only"
+        ? "Invoice text message sent successfully (PDF file could not be delivered — check backend or ngrok URL)."
+        : "Invoice PDF and message sent to customer and admin successfully.";
+
+    showReservationSuccessPopup({
+      title: sendMode === "text-only" ? "Invoice sent (text only)" : "Invoice sent via WhatsApp",
+      eyebrow: "WhatsApp Sent",
+      message: `banquet invoice #${selectedBookingForWhatsApp.invoiceNo} has been sent.`,
+      customerName: selectedBookingForWhatsApp.customerName,
+      hallName: selectedBookingForWhatsApp.hallName,
+      date: selectedBookingForWhatsApp.date,
+      detail: detailText,
+      subjectLabel: "WhatsApp",
+    });
   };
 
   const handleAddHall = async () => {
@@ -2343,6 +2382,16 @@ const Banquet = () => {
                         className="rounded-[18px] bg-violet-600 px-3 py-2 text-[15px] font-bold text-white transition-all duration-300 hover:bg-violet-700"
                       >
                         Refund
+                      </button>
+                    ) : null}
+                    {booking.invoiceNo ? (
+                      <button
+                        type="button"
+                        onClick={() => handleSendBanquetInvoiceWhatsApp(booking)}
+                        className="inline-flex items-center gap-2 rounded-[18px] border border-emerald-100 bg-emerald-50 px-3 py-2 text-[15px] font-bold text-emerald-700 transition-all duration-300 hover:border-emerald-300 hover:text-emerald-800"
+                      >
+                        <FaWhatsapp />
+                        Send Invoice
                       </button>
                     ) : null}
                     {["Cancelled", "Refunded"].includes(booking.status) ? (
@@ -3101,6 +3150,16 @@ const Banquet = () => {
                                 View
                               </button>
                             ) : null}
+                            {booking.invoiceNo ? (
+                              <button
+                                type="button"
+                                onClick={() => handleSendBanquetInvoiceWhatsApp(booking)}
+                                className="inline-flex min-h-[44px] items-center gap-2 rounded-[18px] border border-emerald-100 bg-emerald-50 px-3 py-2 text-[17px] font-bold text-emerald-700 transition-all duration-300 hover:border-emerald-300 hover:text-emerald-800 hover:shadow-sm"
+                              >
+                                <FaWhatsapp />
+                                Send Invoice
+                              </button>
+                            ) : null}
                             {["Cancelled", "Refunded"].includes(booking.status) &&
                             Number(booking.advance || 0) >
                               Number(booking.refundAmount || 0) ? (
@@ -3293,6 +3352,16 @@ const Banquet = () => {
                           className="min-h-[40px] rounded-[16px] border border-blue-100 bg-white px-2 py-2 text-[13px] font-bold text-slate-700 transition-all duration-300 hover:border-sky-300 hover:text-sky-700 hover:shadow-sm sm:text-[15px]"
                         >
                           View
+                        </button>
+                      ) : null}
+                      {booking.invoiceNo ? (
+                        <button
+                          type="button"
+                          onClick={() => handleSendBanquetInvoiceWhatsApp(booking)}
+                          className="min-h-[40px] rounded-[16px] border border-emerald-100 bg-emerald-50 px-2 py-2 text-[13px] font-bold text-emerald-700 transition-all duration-300 hover:border-emerald-300 hover:text-emerald-800 hover:shadow-sm sm:text-[15px]"
+                          title="Send Invoice via WhatsApp"
+                        >
+                          <FaWhatsapp />
                         </button>
                       ) : null}
                       {["Cancelled", "Refunded"].includes(booking.status) &&
@@ -4487,6 +4556,14 @@ const Banquet = () => {
               formatINR={formatINR}
             />
         </ModalShell>
+      )}
+
+      {showBanquetWhatsAppModal && (
+        <BanquetWhatsAppModal
+          booking={selectedBookingForWhatsApp}
+          onClose={() => setShowBanquetWhatsAppModal(false)}
+          onSuccess={handleBanquetWhatsAppSuccess}
+        />
       )}
 
       {delayedSelectedMenuPackage && (
