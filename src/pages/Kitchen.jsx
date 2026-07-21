@@ -201,10 +201,10 @@ const Kitchen = () => {
         readyMessage: "",
       });
       fetchOrders();
-      showNotice("success", "Cancelled order wapas kitchen queue me aa gaya hai.");
+      showNotice("success", "The cancelled order has been returned to the kitchen queue.");
     } catch (err) {
       console.error(err);
-      showNotice("error", err.response?.data?.message || "Order restore nahi ho paaya.");
+      showNotice("error", err.response?.data?.message || "Unable to restore the order.");
     }
   };
 
@@ -212,10 +212,10 @@ const Kitchen = () => {
     try {
       const response = await restaurantService.removeKitchenOrder(order.id);
       fetchOrders();
-      showNotice("success", response?.message || "Cancelled order permanently remove ho gaya.");
+      showNotice("success", response?.message || "The cancelled order has been permanently removed.");
     } catch (err) {
       console.error(err);
-      showNotice("error", err.response?.data?.message || "Cancelled order remove nahi ho paaya.");
+      showNotice("error", err.response?.data?.message || "The cancelled order could not be removed.");
     }
   };
 
@@ -228,7 +228,7 @@ const Kitchen = () => {
       fetchOrders();
     } catch (err) {
       console.error(err);
-      showNotice("error", "ETA update nahi ho paaya.");
+      showNotice("error", "ETA could not be updated.");
     }
   };
 
@@ -238,7 +238,7 @@ const Kitchen = () => {
     try {
       await restaurantService.updateKitchenOrderStatus(order.id, {
         status: "Ready",
-        readyMessage: `${entityType} ${ref} ka order ready hai. Service ke liye bhej dijiye.`,
+        readyMessage: `${entityType} ${ref} order is ready. Please send it for service.`,
       });
 
       // Send notification to the waiter using both ID and name
@@ -249,7 +249,7 @@ const Kitchen = () => {
         const notification = {
           id: `ready-${order.id}-${Date.now()}`,
           title: "Order Ready!",
-          message: `${entityType} ${ref} ka order ready hai. Abhi serve kar sakte ho.`,
+          message: `${entityType} ${ref} order is ready. You can serve it now`,
           type: "success",
           route: `/restaurant/edit-token/${ref}`,
           meta: {
@@ -979,8 +979,8 @@ const Kitchen = () => {
               </h3>
               <p className="mt-2 text-[16px] leading-6 text-white/85 sm:text-[17px] sm:leading-7">
                 {confirmModal.type === "remove-order"
-                  ? "Ye order permanently list se remove ho jayega."
-                  : "Order queue se hata diya jayega aur active service flow stop ho jayega."}
+                  ? "This order will be permanently removed from the list."
+                  : "The order will be removed from the queue, and the active service flow will be stopped."}
               </p>
             </div>
 

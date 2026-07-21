@@ -92,6 +92,8 @@ const PaymentBills = () => {
   const [selectedBill, setSelectedBill] = useState(null);
   const [billPage, setBillPage] = useState(1);
 
+  const closeBillDetail = useCallback(() => setSelectedBill(null), []);
+
   // Create guest info lookup from rooms (for enriching bill data)
   const guestLookup = useMemo(() => {
     const lookup = new Map();
@@ -193,55 +195,33 @@ const PaymentBills = () => {
   useEffect(() => {
     if (!selectedBill) return undefined;
 
-    const findScrollableParent = (node) => {
-      let current = node?.parentElement || null;
-
-      while (current && current !== document.body) {
-        const style = window.getComputedStyle(current);
-        const canScroll = /(auto|scroll)/.test(style.overflowY);
-
-        if (canScroll && current.scrollHeight > current.clientHeight) {
-          return current;
-        }
-
-        current = current.parentElement;
-      }
-
-      return null;
-    };
-
-    const scrollParent = findScrollableParent(sectionRef.current);
-    const originalBodyOverflow = document.body.style.overflow;
-    const originalHtmlOverflow = document.documentElement.style.overflow;
-    const originalScrollParentOverflow = scrollParent?.style.overflowY || "";
-    const originalScrollParentOverscroll = scrollParent?.style.overscrollBehavior || "";
-
-    document.body.style.overflow = "hidden";
-    document.documentElement.style.overflow = "hidden";
-
-    if (scrollParent) {
-      scrollParent.style.overflowY = "hidden";
-      scrollParent.style.overscrollBehavior = "contain";
-    }
-
-    return () => {
-      document.body.style.overflow = originalBodyOverflow;
-      document.documentElement.style.overflow = originalHtmlOverflow;
-
-      if (scrollParent) {
-        scrollParent.style.overflowY = originalScrollParentOverflow;
-        scrollParent.style.overscrollBehavior = originalScrollParentOverscroll;
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopPropagation();
+        closeBillDetail();
       }
     };
-  }, [selectedBill]);
+
+    document.addEventListener("keydown", handleKeyDown, { capture: true });
+    return () => document.removeEventListener("keydown", handleKeyDown, { capture: true });
+  }, [selectedBill, closeBillDetail]);
 
   const billDetailPopup = selectedBill
     ? createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden overscroll-contain bg-slate-950/55 px-3 py-4 backdrop-blur-sm">
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden overscroll-contain bg-slate-950/55 px-3 py-4 backdrop-blur-sm"
+          onClick={(event) => {
+            // Only close when clicking the backdrop itself, not the inner card
+            if (event.target === event.currentTarget) {
+              closeBillDetail();
+            }
+          }}
+        >
           <div className="relative flex max-h-[90vh] w-full max-w-[460px] flex-col overflow-hidden rounded-[18px] border border-white/40 bg-white/95 shadow-[0_28px_80px_rgba(15,23,42,0.32)] sm:rounded-[22px]">
             <button
               type="button"
-              onClick={() => setSelectedBill(null)}
+              onClick={closeBillDetail}
               className="absolute right-3 top-3 z-10 rounded-lg bg-white/15 px-2.5 py-1.5 text-[12px] font-bold text-white backdrop-blur-sm ring-1 ring-white/30 transition hover:bg-white/25"
             >
               Close
@@ -305,7 +285,7 @@ const PaymentBills = () => {
 
                 <button
                   type="button"
-                  onClick={() => setSelectedBill(null)}
+                  onClick={closeBillDetail}
                   className="mt-3 w-full rounded-xl border border-blue-200 bg-white px-4 py-2.5 text-[13px] font-bold text-blue-700 shadow-sm transition hover:bg-blue-50 md:hidden"
                 >
                   Close

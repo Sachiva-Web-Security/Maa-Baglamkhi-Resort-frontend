@@ -1287,7 +1287,15 @@ const Payment = ({
       window.dispatchEvent(new Event("tokenUpdated"));
       if (typeof onSuccess === "function") onSuccess({ type: "paid", billId: paidBill.id });
 
-      alert("Payment Successful!");
+      setPaymentResult({
+        show: true,
+        success: true,
+        message: "Payment Successful!",
+        billId: paidBill.id,
+        total: computedTotal,
+        method: paymentMethod,
+      });
+
       handlePrint({
         ...invoice,
         customerName,
@@ -1300,11 +1308,19 @@ const Payment = ({
         printedAt: new Date().toISOString(),
         paidAt: new Date().toISOString(),
       });
+
       if (asModal) {
         handleClose();
       }
     } catch (error) {
-      alert(error.response?.data?.message || "Payment backend se save nahi ho paaya.");
+      setPaymentResult({
+        show: true,
+        success: false,
+        message: error.response?.data?.message || "Payment backend se save nahi ho paaya.",
+        billId: null,
+        total: 0,
+        method: "",
+      });
     } finally {
       setSubmitting(false);
     }
@@ -1319,6 +1335,9 @@ const Payment = ({
   const [showFolioPopup, setShowFolioPopup] = useState(false);
   const [folioBookingId, setFolioBookingId] = useState(null);
   const [folioBookingCode, setFolioBookingCode] = useState(null);
+
+  // Payment result popup state
+  const [paymentResult, setPaymentResult] = useState({ show: false, success: false, message: "", billId: null, total: 0, method: "" });
 
   useEffect(() => {
     if (!folioResult.show && !showFolioPopup) return undefined;
@@ -1601,6 +1620,95 @@ const Payment = ({
     );
   };
 
+  // ─── Payment Result Popup Modal ──────────────────────────────────────────────
+  const PaymentResultPopup = () => {
+    if (!paymentResult.show) return null;
+
+    return createPortal(
+      <div
+        className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden overscroll-contain bg-slate-950/60 p-4 backdrop-blur-sm"
+        onClick={() => setPaymentResult({ ...paymentResult, show: false })}
+      >
+        <div
+          className={`max-h-[90vh] w-full max-w-sm overscroll-contain rounded-2xl border shadow-[0_30px_90px_rgba(15,23,42,0.35)] sm:rounded-[28px] ${
+            paymentResult.success
+              ? "border-emerald-200/70 bg-gradient-to-br from-emerald-50 via-white to-white"
+              : "border-rose-200/70 bg-gradient-to-br from-rose-50 via-white to-white"
+          }`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Animated icon */}
+          <div className="flex justify-center pt-8 pb-4 sm:pt-10 sm:pb-5">
+            <div
+              className={`flex h-20 w-20 items-center justify-center rounded-full shadow-lg sm:h-24 sm:w-24 ${
+                paymentResult.success
+                  ? "bg-gradient-to-br from-emerald-500 to-green-500"
+                  : "bg-gradient-to-br from-rose-500 to-red-500"
+              }`}
+            >
+              <span className="text-4xl sm:text-5xl">
+                {paymentResult.success ? "✓" : "✕"}
+              </span>
+            </div>
+          </div>
+
+          {/* Title and message */}
+          <div className="px-5 pb-4 text-center sm:px-8 sm:pb-5">
+            <h2
+              className={`text-xl font-black sm:text-2xl ${
+                paymentResult.success ? "text-emerald-900" : "text-rose-900"
+              }`}
+            >
+              {paymentResult.success ? "Payment Successful" : "Payment Failed"}
+            </h2>
+            <p
+              className={`mt-2 text-[15px] font-medium sm:text-base ${
+                paymentResult.success ? "text-emerald-700" : "text-rose-700"
+              }`}
+            >
+              {paymentResult.message}
+            </p>
+          </div>
+
+          {/* Bill details card */}
+          {paymentResult.success && (
+            <div className="mx-5 mb-4 rounded-2xl border border-emerald-100 bg-white/80 p-4 shadow-sm sm:mx-8 sm:mb-5 sm:p-5">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100/50 p-3 text-center">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 sm:text-[11px]">Bill No</p>
+                  <p className="mt-1 text-base font-black text-emerald-900 sm:text-lg">#{paymentResult.billId || "--"}</p>
+                </div>
+                <div className="rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100/50 p-3 text-center">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 sm:text-[11px]">Total Paid</p>
+                  <p className="mt-1 text-base font-black text-emerald-900 sm:text-lg">Rs. {Number(paymentResult.total || 0).toLocaleString("en-IN")}</p>
+                </div>
+              </div>
+              <div className="mt-3 rounded-xl bg-gradient-to-br from-blue-50 to-sky-100/50 p-3 text-center">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-blue-600 sm:text-[11px]">Payment Method</p>
+                <p className="mt-1 text-sm font-black text-blue-900 sm:text-base">{paymentResult.method || "Cash"}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Action button */}
+          <div className="px-5 pb-6 sm:px-8 sm:pb-7">
+            <button
+              onClick={() => setPaymentResult({ ...paymentResult, show: false })}
+              className={`w-full rounded-2xl py-3.5 text-[15px] font-bold shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl sm:py-4 sm:text-[17px] ${
+                paymentResult.success
+                  ? "bg-gradient-to-r from-emerald-600 to-green-500 text-white shadow-[0_12px_28px_-10px_rgba(16,185,129,0.5)] hover:shadow-[0_16px_34px_-10px_rgba(16,185,129,0.6)]"
+                  : "bg-gradient-to-r from-rose-600 to-red-500 text-white shadow-[0_12px_28px_-10px_rgba(244,63,94,0.5)] hover:shadow-[0_16px_34px_-10px_rgba(244,63,94,0.6)]"
+              }`}
+            >
+              {paymentResult.success ? "Continue" : "OK"}
+            </button>
+          </div>
+        </div>
+      </div>,
+      document.body,
+    );
+  };
+
   // ─── Premium design tokens (styling-only helpers) ─────────────────────────
   const glassCard =
     "rounded-2xl border border-blue-100/80 bg-white shadow-[0_20px_50px_-20px_rgba(30,64,175,0.22)] sm:rounded-[26px]";
@@ -1617,8 +1725,9 @@ const Payment = ({
 
   return (
     <div ref={shellRef} className={shellClassName}>
-      {/* Result Popup */}
+      {/* Result Popups */}
       <FolioResultPopup />
+      <PaymentResultPopup />
 
       {/* Folio Popup */}
       {showFolioPopup && (
