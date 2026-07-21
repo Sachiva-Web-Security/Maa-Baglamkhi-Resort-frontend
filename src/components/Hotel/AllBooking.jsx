@@ -411,7 +411,9 @@ const AllBooking = () => {
           className: `${actionButtonCls} border border-slate-200 bg-white text-slate-700 hover:bg-slate-50`,
           onClick: () => {
             setStoredBookingId(booking.bookingId);
-            navigate("/hotel/edit-booking", { state: { bookingId: booking.bookingId } });
+            navigate("/hotel/edit-booking", {
+              state: { bookingId: booking.bookingId, bookingCode: booking.bookingCode || "", autoEdit: true },
+            });
           },
         },
         {

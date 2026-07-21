@@ -613,6 +613,14 @@ const normalizeBooking = (b) => {
   // Nothing usable came back at all (0 / missing) — fall back to summing the
   // room/tariff rows if the backend included them on this row.
   if (!totalAmount && Array.isArray(b.rooms) && b.rooms.length) {
+    const checkIn = new Date(b.check_in || b.checkIn || "");
+    const checkOut = new Date(b.check_out || b.checkOut || "");
+    const fallbackNights =
+      checkIn instanceof Date && !isNaN(checkIn) &&
+      checkOut instanceof Date && !isNaN(checkOut) &&
+      checkOut > checkIn
+        ? Math.max(Math.round((checkOut - checkIn) / 86400000), 1)
+        : 1;
     totalAmount = b.rooms.reduce((sum, r) => {
       if (!r || typeof r !== "object") return sum;
       const rowT = Number(r.total ?? r.amount ?? 0);
@@ -620,7 +628,7 @@ const normalizeBooking = (b) => {
       const tariff = Number(r.tariff ?? r.price ?? 0);
       const qty = Number(r.quantity ?? 1);
       const gst = Number(r.gst ?? r.gstPercent ?? 0);
-      const base = tariff * qty;
+      const base = tariff * qty * fallbackNights;
       return sum + base + (base * gst) / 100;
     }, 0);
   }
@@ -2215,6 +2223,24 @@ const BookingFlow = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookings, location.state?.autoManage, location.state?.bookingId, location.state?.focusRoomNo, location.state?.guestName]);
 
+  // Auto-open the Edit Booking form when the All Bookings page sends us here
+  // via `state.autoEdit = true` with a `bookingId`. We resolve the booking
+  // from the already-loaded list, then call openEditBooking so the rich form
+  // (with ALL booking fields, not the stripped-down /hotel/edit-booking route)
+  // is opened with every section — Guest, Stay, Booking, Room & Tariff, Other
+  // Details, Payment — populated.
+  useEffect(() => {
+    if (!location.state?.autoEdit) return;
+    const targetId = location.state.bookingId;
+    if (!targetId) return;
+
+    const matched = bookings.find((b) => String(b.bookingId) === String(targetId));
+    const target = matched || { bookingId: targetId, bookingCode: location.state.bookingCode || "" };
+    openEditBooking(target);
+    navigate(location.pathname, { replace: true, state: null });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bookings, location.state?.autoEdit, location.state?.bookingId]);
+
 
   /* ---------- derived ---------- */
 
@@ -2277,6 +2303,8 @@ const [selectedBookingId, setSelectedBookingId] = useState(null);
       const res = await API.get(`/hotel/full-booking/${booking.bookingId}`);
       const data = res.data || {};
       const nameParts = String(data.guest_name || data.guestName || "").trim().split(" ");
+      const bookingType = data.booking_type || data.bookingType || data.booking_source || data.bookingSource || "";
+
       setFormData({
         ...emptyForm(),
         bookingId: booking.bookingId,
@@ -2287,7 +2315,22 @@ const [selectedBookingId, setSelectedBookingId] = useState(null);
         mobile: data.mobile || "",
         checkIn: (data.check_in || data.checkIn || "").slice(0, 10),
         checkOut: (data.check_out || data.checkOut || "").slice(0, 10),
+        arrival: (data.arrival || "").slice(0, 5) || "12:00",
+        departure: (data.departure || "").slice(0, 5) || "12:00",
+        bookingType: ["Walk-In", "VIA", "Online"].includes(bookingType) ? bookingType : (bookingType ? "Walk-In" : "Walk-In"),
+        referralBy: "",
         company: data.company_name || data.companyName || "",
+        reference: data.booking_reference || data.bookingReference || "",
+        address: data.address || "",
+        guestCapacity: data.guestCapacity || "",
+        comingFrom: "",
+        goingTo: "",
+        purposeOfVisit: data.internal_notes || data.internalNotes || "",
+        remarks: data.guest_notes || data.guestNotes || "",
+        amount: data.paidAmount || 0,
+        discount: data.discountAmount || 0,
+        paymentMode: data.paymentMode || data.payment_mode || "Cash",
+        paymentNote: data.paymentRemarks || data.remarks || "",
         rooms: (Array.isArray(data.rooms) ? data.rooms : []).map((r) => {
           const roomNo = r.room_number || r.roomNumber || r.roomNo || "";
           // Best-effort: find which category this room number actually
@@ -2303,6 +2346,8 @@ const [selectedBookingId, setSelectedBookingId] = useState(null);
             price: r.tariff || r.price || 0,
             gst: r.gst || r.gstPercent || 0,
             quantity: r.quantity || 1,
+            adults: r.adults || 1,
+            children: r.children || 0,
           };
         }),
       });
@@ -2327,6 +2372,15 @@ const [selectedBookingId, setSelectedBookingId] = useState(null);
       if (data.mobile) {
         setSelectedBooking((prev) => ({ ...(prev || {}), mobile: data.mobile }));
       }
+      // Sync advance payment + stay dates from the fresh server response so the
+      // Details page doesn't read stale list-cache values (which is what caused
+      // "Advance Paid" / "Check-Out" to be wrong after editing a booking).
+      setSelectedBooking((prev) => ({
+        ...(prev || {}),
+        paidAmount: Number(data.paidAmount || 0),
+        check_in: data.check_in || "",
+        check_out: data.check_out || "",
+      }));
     } catch (err) {
       console.error(err);
       setBookingDetail(null);
@@ -2560,13 +2614,16 @@ const handleJumpStep = (stepView) => {
       showToast("error", "Mobile number required", "Please enter a valid 10-digit mobile number.");
       return false;
     }
-    if (!formData.guestCapacity.trim()) {
-      showToast("error", "Guest capacity required", "Please enter the guest capacity (adults + children).");
-      return false;
-    }
-    if (!formData.address.trim()) {
-      showToast("error", "Address required", "Please enter the guest's address.");
-      return false;
+    if (!isEdit) {
+      // New bookings: guest capacity and address are required.
+      if (!formData.guestCapacity.trim()) {
+        showToast("error", "Guest capacity required", "Please enter the guest capacity (adults + children).");
+        return false;
+      }
+      if (!formData.address.trim()) {
+        showToast("error", "Address required", "Please enter the guest's address.");
+        return false;
+      }
     }
     if (!formData.checkIn || !formData.checkOut) {
       showToast("error", "Stay dates required", "Please select both check-in and check-out dates.");
@@ -2659,20 +2716,60 @@ const handleJumpStep = (stepView) => {
           });
         }
       } else {
-        // Edit mode: one consolidated update call
+        // Edit mode: one consolidated update call. Send EVERY field the form
+        // exposes so the backend can update guests + other_booking + companies
+        // + reference_notes + advance_payment + room_tariff + pax in one go.
+        // Adults/children are pulled from the parsed "X (A Adults + C Children)"
+        // guestCapacity string when present, so the rich-form "Guest Capacity"
+        // input also persists.
+        const capacityMatch = String(formData.guestCapacity || "").match(/(\d+)\s*\(\s*(\d+)\s*Adults?\s*\+\s*(\d+)\s*Children?\s*\)/i);
+        const aggregateAdults = capacityMatch ? Number(capacityMatch[2] || 0) : null;
+        const aggregateChildren = capacityMatch ? Number(capacityMatch[3] || 0) : null;
+
         await API.put(`/hotel/full-booking/${bookingId}`, {
           guest_name: guestFullName,
+          guest_email: formData.guestEmail,
           mobile: formData.mobile,
-          company_name: formData.company,
+          company_name: formData.company || "Direct Booking",
           checkIn: formData.checkIn,
           checkOut: formData.checkOut,
-          rooms: formData.rooms.map((r) => ({
-            roomNumber: r.roomNo,
-            tariff: r.price,
-            gst: r.gst,
-            quantity: r.quantity,
-            total: rowTotal(r, stayNights),
-          })),
+          arrival: formData.arrival,
+          departure: formData.departure,
+          bookingType: formData.bookingType,
+          bookingSource: formData.bookingType,
+          bookingReference: formData.reference,
+          address: formData.address,
+          guestNotes: formData.remarks,
+          internalNotes: formData.purposeOfVisit,
+          paidAmount: Number(formData.amount || 0),
+          discountAmount: Number(formData.discount || 0),
+          paymentMode: formData.paymentMode || "Cash",
+          paymentRemarks: formData.paymentNote,
+          rooms: formData.rooms.map((r) => {
+            // Prefer the explicit per-room adults/children on the row; fall back
+            // to the aggregate only when the row has none (so per-room edits win).
+            const rowAdults =
+              r.adults != null && r.adults !== ""
+                ? Number(r.adults)
+                : aggregateAdults != null
+                ? aggregateAdults
+                : 1;
+            const rowChildren =
+              r.children != null && r.children !== ""
+                ? Number(r.children)
+                : aggregateChildren != null
+                ? aggregateChildren
+                : 0;
+            return {
+              roomNumber: r.roomNo,
+              tariff: r.price,
+              gst: r.gst,
+              quantity: r.quantity,
+              adults: rowAdults,
+              children: rowChildren,
+              total: rowTotal(r, stayNights),
+            };
+          }),
         });
       }
 
@@ -2684,7 +2781,26 @@ const handleJumpStep = (stepView) => {
         isEdit ? "The booking has been updated successfully." : "Your booking has been created successfully.",
       );
       await fetchBookings();
-      setView("confirmed");
+      // After a successful edit, merge the refreshed list entry into selectedBooking
+      // and open the Details page so the user immediately sees the updated totals,
+      // advance payment, and checkout date. For new bookings, keep the existing
+      // "confirmed" confirmation view.
+      const refreshed = (bookings || []).find((bk) => bk.bookingId === bookingId);
+      if (refreshed) {
+        setSelectedBooking((prev) => ({
+          ...(prev || {}),
+          ...refreshed,
+          bookingId,
+          bookingCode,
+          guest_name: guestFullName,
+        }));
+      }
+      if (isEdit) {
+        const detailTarget = { bookingId, bookingCode, guest_name: guestFullName } || refreshed;
+        openDetails(detailTarget);
+      } else {
+        setView("confirmed");
+      }
     } catch (err) {
       console.error(err);
       showToast(
@@ -3270,7 +3386,7 @@ const handleJumpStep = (stepView) => {
             Cancel
           </button>
           <button type="button" onClick={handleSaveBooking} disabled={saving} className={`${primaryBtn} max-[767px]:flex-1`}>
-            {saving ? "Saving..." : "Save Booking"}
+            {saving ? "Saving..." : isEdit ? "Update Booking" : "Save Booking"}
           </button>
         </div>
       </div>
@@ -3880,10 +3996,17 @@ const handleJumpStep = (stepView) => {
     const d = bookingDetail || {};
     const b = selectedBooking || {};
 
-    // Room charges total (from live room/tariff data, falling back to the booking's stored total)
-    const roomChargesTotal = Array.isArray(d.rooms) && d.rooms.length > 0
-      ? d.rooms.reduce((sum, r) => sum + (Number(r.total) || 0), 0)
-      : Number(b.totalAmount) || 0;
+    // Room charges total: prefer the per-room recalculated rowTotal (which the
+    // backend always enriches with nights: tariff * qty * nights + GST), then
+    // fall back to the booking-level totalAmount, then to the list-cache amount.
+    // This ordering prevents the summary-level totalAmount (which may be stale
+    // or single-night for old bookings) from overriding the correct multi-night value.
+    const roomChargesTotal =
+      Array.isArray(d.rooms) && d.rooms.length > 0
+        ? d.rooms.reduce((sum, r) => sum + (Number(r.rowTotal) || Number(r.total) || 0), 0)
+        : Number(d.totalAmount) > 0
+        ? Number(d.totalAmount)
+        : Number(b.totalAmount) || 0;
 
     // Folio (extra) charges added by the admin, fetched dynamically for this booking
     const folioChargesTotal = folioCharges.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
@@ -3894,7 +4017,7 @@ const handleJumpStep = (stepView) => {
     // Remaining/Balance logic:
     //  - If an advance has been paid -> Remaining = Updated Total (Room+Folio) - Advance Paid
     //  - If nothing has been paid yet -> Remaining = the full actual Updated Total (Room+Folio)
-    const advancePaid = Number(b.paidAmount) || 0;
+    const advancePaid = Number(d.paidAmount || b.paidAmount) || 0;
     const remainingAmount = advancePaid > 0
       ? Math.max(updatedTotalAmount - advancePaid, 0)
       : updatedTotalAmount;
@@ -3962,7 +4085,14 @@ const handleJumpStep = (stepView) => {
 
             {Array.isArray(d.rooms) && d.rooms.length > 0 && (
               <div className={`md:col-span-3 ${cardTileCls}`}>
-                <div className={sectionTitleCls}>Room &amp; Tariff Information</div>
+                <div className={sectionTitleCls}>
+                  Room &amp; Tariff Information
+                  {Number(d.nights) > 1 ? (
+                    <span className="ml-2 inline-block rounded-full bg-blue-50 px-3 py-1 text-sm font-bold normal-case text-blue-700">
+                      {d.nights} night{d.nights > 1 ? 's' : ''} × tariff
+                    </span>
+                  ) : null}
+                </div>
                 {/* Desktop/tablet table */}
                 <div className="hidden sm:block max-w-full overflow-x-auto">
                   <table className="w-full min-w-[460px] text-left">
@@ -3982,7 +4112,7 @@ const handleJumpStep = (stepView) => {
                           <td className="py-2 pr-4">{formatCurrency(r.tariff || r.price)}</td>
                           <td className="py-2 pr-4">{r.gst || r.gstPercent || 0}%</td>
                           <td className="py-2 pr-4">{r.quantity || 1}</td>
-                          <td className="py-2 font-semibold">{formatCurrency(r.total)}</td>
+                          <td className="py-2 font-semibold">{formatCurrency(r.rowTotal || r.total)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -4000,7 +4130,7 @@ const handleJumpStep = (stepView) => {
                       <span className="text-slate-400 font-semibold">Qty</span>
                       <span className="text-right text-slate-700">{r.quantity || 1}</span>
                       <span className="text-slate-400 font-semibold border-t border-slate-100 pt-1">Total</span>
-                      <span className="text-right font-bold text-slate-900 border-t border-slate-100 pt-1">{formatCurrency(r.total)}</span>
+                      <span className="text-right font-bold text-slate-900 border-t border-slate-100 pt-1">{formatCurrency(r.rowTotal || r.total)}</span>
                     </div>
                   ))}
                 </div>
