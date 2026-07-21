@@ -79,6 +79,7 @@ import {
   FaDoorOpen,
   FaSync,
   FaArrowLeft,
+  FaWallet,
 } from "react-icons/fa";
 
 import API, { getBackendBaseURL } from "../../api";
@@ -465,7 +466,7 @@ const FLOW_STEPS = [
     title: "Booking Confirmed",
     desc: "Booking is confirmed and reference number generated",
   },
- 
+
   {
     view: "details",
     num: 3,
@@ -480,12 +481,26 @@ const FLOW_STEPS = [
     title: "Manage Booking",
     desc: "Edit, Cancel, Check-in / Check-out or Update payment",
   },
-    {
+  {
     view: "list",
     num: 5,
     icon: FaListUl,
     title: "All Bookings",
     desc: "View all bookings in a list with status and details",
+  },
+  {
+    view: "history",
+    num: 6,
+    icon: FaHistory,
+    title: "Booking History",
+    desc: "Checked-out bookings archive with history",
+  },
+  {
+    view: "payments",
+    num: 7,
+    icon: FaWallet,
+    title: "Payment History",
+    desc: "All payment transactions across bookings",
   },
 ];
 
@@ -1984,9 +1999,13 @@ const BookingFlow = () => {
 
   // "view" controls which screen of the flow we're on — this is the ONLY thing
   // that changes when the user moves between steps. No route change happens.
-  const [view, setView] = useState(() =>
-    location.pathname.includes("guest") ? "form" : "list",
-  );
+  const [view, setView] = useState(() => {
+    const path = location.pathname;
+    if (path.includes("booking-history")) return "history";
+    if (path.includes("payment-history")) return "payments";
+    if (path.includes("guest")) return "form";
+    return "list";
+  });
   const [isEdit, setIsEdit] = useState(false);
 
   const [bookings, setBookings] = useState([]);
@@ -2019,6 +2038,14 @@ const BookingFlow = () => {
   const [paymentHistory, setPaymentHistory] = useState([]);
   const [paymentHistoryLoading, setPaymentHistoryLoading] = useState(false);
 
+  const [history, setHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyPage, setHistoryPage] = useState(1);
+  const HISTORY_PAGE_SIZE = 9;
+
+  const [allPayments, setAllPayments] = useState([]);
+  const [paymentsLoading, setPaymentsLoading] = useState(false);
+
   const showToast = (type, title, message) => setToast({ open: true, type, title, message });
   const closeToast = () => setToast((t) => ({ ...t, open: false }));
 
@@ -2038,9 +2065,84 @@ const BookingFlow = () => {
     }
   };
 
+  const dedupeHistory = (rows) => {
+    const map = new Map();
+    rows.forEach((row) => {
+      const key = [
+        String(row.guest_name || "").trim().toLowerCase(),
+        String(row.mobile || "").trim(),
+        String(row.check_in || "").trim(),
+        String(row.check_out || "").trim(),
+      ].join("|");
+      const current = map.get(key);
+      if (!current || Number(row.bookingId || 0) > Number(current.bookingId || 0)) {
+        map.set(key, row);
+      }
+    });
+    return Array.from(map.values());
+  };
+
+  const fetchHistory = async () => {
+    try {
+      setHistoryLoading(true);
+      const res = await API.get("/hotel/booking-history");
+      setHistory(dedupeHistory(Array.isArray(res.data) ? res.data : []));
+      setHistoryPage(1);
+    } catch (err) {
+      console.error("Failed to load booking history:", err);
+      showToast("error", "Could not load history", "Please check your connection.");
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  const fetchAllPayments = async () => {
+    try {
+      setPaymentsLoading(true);
+      const recent = [...bookings]
+        .sort((a, b) => Number(b.bookingId || 0) - Number(a.bookingId || 0))
+        .slice(0, 8);
+
+      const results = await Promise.all(
+        recent.map((b) =>
+          API.get(`/hotel/payment-history/${b.bookingId}`)
+            .then((res) => ({ booking: b, entries: Array.isArray(res.data) ? res.data : [] }))
+            .catch(() => ({ booking: b, entries: [] })),
+        ),
+      );
+
+      const flattened = results.flatMap(({ booking, entries }) =>
+        entries.map((entry) => ({
+          id: entry.id || `${booking.bookingId}-${entry.created_at || Math.random()}`,
+          bookingId: booking.bookingId,
+          bookingCode: booking.bookingCode || `BK-${booking.bookingId}`,
+          guestName: entry.guest_name || booking.guest_name || "Guest",
+          amount: Number(entry.amount || 0),
+          discount: Number(entry.discount_amount || 0),
+          paymentMode: entry.payment_mode || "-",
+          paymentType: entry.payment_type || entry.type || "Payment",
+          createdAt: entry.created_at || booking.check_in,
+          status: Number(booking.remainingAmount) > 0 ? "Pending" : "Paid",
+          rooms: entry.rooms || booking.rooms || "-",
+        })),
+      );
+
+      flattened.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setAllPayments(flattened);
+    } catch (err) {
+      console.error("Failed to load payment history:", err);
+      showToast("error", "Could not load payment history", "Please try again.");
+      setAllPayments([]);
+    } finally {
+      setPaymentsLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchBookings();
-    API.get("/hotel/rooms/setup")
+    const checkIn = formData.checkIn ? `?checkIn=${formData.checkIn}` : "";
+    const checkOut = formData.checkOut ? `&checkOut=${formData.checkOut}` : "";
+    API.get(`/hotel/rooms/setup${checkIn}${checkOut}`)
       .then((res) => setCategorySetup(Array.isArray(res.data) ? res.data : []))
       .catch((err) => console.error("Failed to load room categories:", err));
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -2425,6 +2527,18 @@ const handleJumpStep = (stepView) => {
     return;
   }
 
+  if (stepView === "history") {
+    setView("history");
+    fetchHistory();
+    return;
+  }
+
+  if (stepView === "payments") {
+    setView("payments");
+    fetchAllPayments();
+    return;
+  }
+
   if (stepView === "confirmed") {
     if (!formData.bookingId) {
       showToast(
@@ -2591,7 +2705,15 @@ const handleJumpStep = (stepView) => {
         roomNo: rn,
         status: statusByRoom.get(rn) || "Available",
         alreadyPicked: roomsAlreadyPicked.has(rn),
-      }));
+      }))
+      // Exclude rooms that are already occupied or blocked for the selected dates
+      .filter((item) => {
+        const s = String(item.status || "").toLowerCase();
+        if (s === "available") return true;
+        if (s === "booked" || s.includes("booked")) return false;
+        if (s.includes("occupied") || s.includes("blocked") || s.includes("maintenance") || s.includes("out of service")) return false;
+        return true;
+      });
   };
 
   const removeRoomRow = (id) => {
@@ -2638,6 +2760,38 @@ const handleJumpStep = (stepView) => {
 
   const handleSaveBooking = async () => {
     if (!validateForm()) return;
+
+    // PRE-SAVE AVAILABILITY CHECK: prevent the booking if any selected room
+    // is already booked for an overlapping date range.
+    if (formData.rooms.length > 0 && formData.checkIn && formData.checkOut) {
+      try {
+        const roomNumbers = formData.rooms
+          .map((r) => String(r.roomNo || "").trim())
+          .filter(Boolean);
+
+        if (roomNumbers.length > 0) {
+          const checkRes = await API.post("/hotel/rooms/validate-availability", {
+            roomNumbers,
+            checkIn: formData.checkIn,
+            checkOut: formData.checkOut,
+            excludeBookingId: isEdit ? formData.bookingId : null,
+          });
+
+          if (!checkRes.data.available && checkRes.data.conflicts.length) {
+            const c = checkRes.data.conflicts[0];
+            showToast(
+              "error",
+              "Room already occupied",
+              `Room ${c.roomNumber} is already occupied from ${String(c.check_in).slice(0, 10)} to ${String(c.check_out).slice(0, 10)} by ${c.guest_name || "another guest"}. Please select a different room or change the dates.`,
+            );
+            return;
+          }
+        }
+      } catch (availErr) {
+        console.warn("Availability pre-check failed, continuing with save:", availErr);
+      }
+    }
+
     setSaving(true);
     try {
       let bookingId = formData.bookingId;
@@ -4331,6 +4485,329 @@ const handleJumpStep = (stepView) => {
     );
   };
 
+  /* ─────────────────────────── render: Booking History ─────────────────────────── */
+
+  const renderHistory = () => {
+    const totalHistoryPages = Math.max(1, Math.ceil(history.length / HISTORY_PAGE_SIZE));
+    const start = (historyPage - 1) * HISTORY_PAGE_SIZE;
+    const pageRows = history.slice(start, start + HISTORY_PAGE_SIZE);
+
+    return (
+      <div className={panelCls}>
+        <div className="mb-5 sm:mb-6 flex flex-wrap items-center justify-between gap-4 max-[767px]:flex-col max-[767px]:items-stretch max-[767px]:gap-3">
+          <div>
+            <h2 className={cardTitleCls}>Booking History</h2>
+            <p className="mt-1 text-[17px] text-slate-500 max-[639px]:text-[14px]">Checked-out bookings archive — {history.length} records</p>
+          </div>
+          <div className="flex gap-2 max-[767px]:w-full">
+            <button type="button" onClick={() => setView("list")} className={`${ghostBtn} max-[767px]:flex-1`}>
+              <FaArrowLeft className="text-sm" /> All Bookings
+            </button>
+            <button type="button" onClick={fetchHistory} disabled={historyLoading} className={`${ghostBtn} max-[767px]:flex-1`}>
+              <FaSync className={`text-sm ${historyLoading ? "animate-spin" : ""}`} /> Refresh
+            </button>
+          </div>
+        </div>
+
+        {historyLoading ? (
+          <div className="py-12 text-center text-slate-400">Loading booking history...</div>
+        ) : history.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-slate-200 py-12 text-center text-slate-400">
+            No booking history yet.
+          </div>
+        ) : (
+          <>
+            {/* DESKTOP TABLE (xl+) */}
+            <div className="hidden xl:block overflow-x-auto rounded-xl border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f7fbff_100%)]">
+              <table className="w-full min-w-[1380px] text-left">
+                <thead className="bg-[linear-gradient(120deg,#0f172a_0%,#1e3a8a_60%,#0ea5e9_100%)]">
+                  <tr className="text-[16px] font-bold uppercase tracking-[0.2em] text-sky-50">
+                    <th className="px-6 py-5">Booking</th>
+                    <th className="px-6 py-5">Guest</th>
+                    <th className="px-6 py-5">Contact</th>
+                    <th className="px-6 py-5">Stay Dates</th>
+                    <th className="px-6 py-5">Room Details</th>
+                    <th className="px-6 py-5">Total</th>
+                    <th className="px-6 py-5">Remaining</th>
+                    <th className="px-6 py-5">Status</th>
+                    <th className="px-6 py-5">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pageRows.map((row) => {
+                    const remaining = Number(row.remainingAmount || 0);
+                    const roomDetails = String(row.roomDetails || row.rooms || "--").split(" || ").join("\n");
+                    return (
+                      <tr key={row.bookingId} className="border-t border-slate-100 align-top text-[17px] text-slate-800">
+                        <td className="px-6 py-6">
+                          <div className="inline-flex flex-col gap-1.5 rounded-2xl bg-sky-50/80 px-4 py-3 ring-1 ring-sky-100">
+                            <div className="text-[11px] font-bold uppercase tracking-[0.24em] text-sky-700">Booking Ref</div>
+                            <div className="text-lg font-black text-slate-900">#{row.bookingCode || row.bookingId}</div>
+                            <div className="text-[15px] text-slate-500">{row.company_name || "Direct booking"}</div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-6">
+                          <div className="text-lg font-black text-slate-900">{row.guest_name || "Walk-in Guest"}</div>
+                          <div className="text-[15px] text-slate-500">{row.booking_source || row.bookingPoint || "--"}</div>
+                        </td>
+                        <td className="px-6 py-6">
+                          <div className="font-semibold text-slate-900">{row.mobile || "--"}</div>
+                          <div className="max-w-[260px] break-words text-[15px] text-slate-500">{row.guest_email || "--"}</div>
+                        </td>
+                        <td className="px-6 py-6">
+                          <div className="font-semibold text-slate-900">{formatDate(row.check_in)}</div>
+                          <div className="text-[13px] font-semibold uppercase tracking-[0.18em] text-sky-500">to</div>
+                          <div className="font-semibold text-slate-900">{formatDate(row.check_out)}</div>
+                        </td>
+                        <td className="px-6 py-6">
+                          <div className="max-w-[320px] whitespace-pre-line rounded-2xl bg-slate-50/80 px-4 py-3 font-semibold leading-7 text-slate-900 ring-1 ring-slate-100">
+                            {roomDetails}
+                          </div>
+                        </td>
+                        <td className="px-6 py-6 text-lg font-black text-slate-900">{formatCurrency(row.totalAmount)}</td>
+                        <td className={`px-6 py-6 text-lg font-black ${remaining > 0 ? "text-rose-600" : "text-emerald-600"}`}>{formatCurrency(remaining)}</td>
+                        <td className="px-6 py-6">
+                          <span className={statusBadgeCls(row.booking_status || "Checked Out")}>{row.booking_status || "Checked Out"}</span>
+                        </td>
+                        <td className="px-6 py-6">
+                          <div className="flex flex-wrap gap-2">
+                            <button type="button" onClick={() => navigate("/hotel/payment-history", { state: { bookingId: row.bookingId, bookingCode: row.bookingCode } })} className={rowActionBtn("primary")}>
+                              <FaHistory className="text-[18px] sm:text-xl" /> Payment History
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* MOBILE & TABLET CARD VIEW (below xl) */}
+            <div className="grid grid-cols-1 gap-4 xl:hidden sm:grid-cols-2">
+              {pageRows.map((row) => {
+                const remaining = Number(row.remainingAmount || 0);
+                const roomDetails = String(row.roomDetails || row.rooms || "--").split(" || ").join(", ");
+                return (
+                  <div key={row.bookingId} className="rounded-[18px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f7fbff_100%)] p-3.5 shadow-sm">
+                    <div className="mb-3 flex flex-wrap items-center gap-2">
+                      <div className="min-w-0 flex-1 rounded-2xl bg-sky-50/80 px-3 py-2 ring-1 ring-sky-100">
+                        <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-sky-700">Booking Ref</div>
+                        <div className="truncate text-base font-black text-slate-900">#{row.bookingCode || row.bookingId}</div>
+                      </div>
+                      <span className={statusBadgeCls(row.booking_status || "Checked Out")}>{row.booking_status || "Checked Out"}</span>
+                    </div>
+                    <div className="mb-3">
+                      <div className="text-base font-black text-slate-900">{row.guest_name || "Walk-in Guest"}</div>
+                      <div className="text-[13px] text-slate-500">{row.company_name || "Direct booking"} · {row.booking_source || row.bookingPoint || "--"}</div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-2.5 rounded-2xl bg-slate-50/70 p-3 ring-1 ring-slate-100">
+                      <div>
+                        <div className="text-[13px] font-semibold text-slate-500">Check-in</div>
+                        <div className="text-[14px] font-semibold text-slate-900">{formatDate(row.check_in)}</div>
+                      </div>
+                      <div>
+                        <div className="text-[13px] font-semibold text-slate-500">Check-out</div>
+                        <div className="text-[14px] font-semibold text-slate-900">{formatDate(row.check_out)}</div>
+                      </div>
+                      <div className="col-span-2">
+                        <div className="text-[13px] font-semibold text-slate-500">Room Details</div>
+                        <div className="text-[14px] font-semibold leading-5 text-slate-900">{roomDetails}</div>
+                      </div>
+                      <div>
+                        <div className="text-[13px] font-semibold text-slate-500">Total</div>
+                        <div className="text-[15px] font-black text-slate-900">{formatCurrency(row.totalAmount)}</div>
+                      </div>
+                      <div>
+                        <div className="text-[13px] font-semibold text-slate-500">Remaining</div>
+                        <div className={`text-[15px] font-black ${remaining > 0 ? "text-rose-600" : "text-emerald-600"}`}>{formatCurrency(remaining)}</div>
+                      </div>
+                    </div>
+                    <div className="mt-3.5 flex gap-2.5">
+                      <button type="button" onClick={() => navigate("/hotel/payment-history", { state: { bookingId: row.bookingId, bookingCode: row.bookingCode } })} className={`${cardActionBtn("primary")}`}>
+                        <FaHistory /> Payment History
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Pagination */}
+            <div className="mt-5 rounded-[20px] border border-sky-100 bg-[linear-gradient(180deg,#f8fbff_0%,#f0f6ff_100%)] p-3.5 sm:p-4">
+              <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="text-center text-sm text-slate-500 sm:text-left">
+                  Showing <span className="font-bold text-slate-900">{history.length > 0 ? start + 1 : 0}</span> to <span className="font-bold text-slate-900">{Math.min(start + HISTORY_PAGE_SIZE, history.length)}</span> of <span className="font-bold text-slate-900">{history.length}</span> records
+                </div>
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  <button type="button" onClick={() => setHistoryPage((c) => Math.max(1, c - 1))} disabled={historyPage <= 1} className="inline-flex min-w-[80px] items-center justify-center rounded-full bg-slate-800 px-3.5 py-2 text-[13px] font-bold text-white transition disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400">
+                    Previous
+                  </button>
+                  {Array.from({ length: totalHistoryPages }, (_, i) => i + 1).map((pn) => (
+                    <button key={pn} type="button" onClick={() => setHistoryPage(pn)} className={`h-9 min-w-[38px] rounded-full border px-2.5 text-[13px] font-bold transition ${pn === historyPage ? "border-transparent bg-blue-600 text-white" : "border-slate-200 bg-white text-slate-600 hover:border-blue-300"}`}>
+                      {pn}
+                    </button>
+                  ))}
+                  <button type="button" onClick={() => setHistoryPage((c) => Math.min(totalHistoryPages, c + 1))} disabled={historyPage >= totalHistoryPages} className="inline-flex min-w-[80px] items-center justify-center rounded-full bg-slate-800 px-3.5 py-2 text-[13px] font-bold text-white transition disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400">
+                    Next
+                  </button>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    );
+  };
+
+  /* ─────────────────────────── render: Payment History ─────────────────────────── */
+
+  const renderPayments = () => {
+    const totalPaid = allPayments.reduce((sum, p) => sum + p.amount, 0);
+    const totalDiscount = allPayments.reduce((sum, p) => sum + p.discount, 0);
+
+    return (
+      <div className={panelCls}>
+        <div className="mb-5 sm:mb-6 flex flex-wrap items-center justify-between gap-4 max-[767px]:flex-col max-[767px]:items-stretch max-[767px]:gap-3">
+          <div>
+            <h2 className={cardTitleCls}>Payment History</h2>
+            <p className="mt-1 text-[17px] text-slate-500 max-[639px]:text-[14px]">
+              {allPayments.length} transactions · Total received: {formatCurrency(totalPaid)}
+            </p>
+          </div>
+          <div className="flex gap-2 max-[767px]:w-full">
+            <button type="button" onClick={() => setView("list")} className={`${ghostBtn} max-[767px]:flex-1`}>
+              <FaArrowLeft className="text-sm" /> All Bookings
+            </button>
+            <button type="button" onClick={fetchAllPayments} disabled={paymentsLoading} className={`${ghostBtn} max-[767px]:flex-1`}>
+              <FaSync className={`text-sm ${paymentsLoading ? "animate-spin" : ""}`} /> Refresh
+            </button>
+          </div>
+        </div>
+
+        {/* Summary cards */}
+        <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4">
+            <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-700">Total Payments</div>
+            <div className="mt-2 text-xl font-black text-emerald-900">{formatCurrency(totalPaid)}</div>
+            <div className="mt-1 text-[13px] text-emerald-600">{allPayments.length} transactions</div>
+          </div>
+          <div className="rounded-2xl border border-amber-100 bg-amber-50/70 p-4">
+            <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-amber-700">Total Discount</div>
+            <div className="mt-2 text-xl font-black text-amber-900">{formatCurrency(totalDiscount)}</div>
+          </div>
+          <div className="rounded-2xl border border-sky-100 bg-sky-50/70 p-4">
+            <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-sky-700">Advance / Paid</div>
+            <div className="mt-2 text-xl font-black text-sky-900">
+              {formatCurrency(allPayments.filter((p) => p.paymentType === "Advance").reduce((s, p) => s + p.amount, 0))}
+            </div>
+          </div>
+          <div className="rounded-2xl border border-violet-100 bg-violet-50/70 p-4">
+            <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-violet-700">Final Payment</div>
+            <div className="mt-2 text-xl font-black text-violet-900">
+              {formatCurrency(allPayments.filter((p) => p.paymentType === "Final Payment").reduce((s, p) => s + p.amount, 0))}
+            </div>
+          </div>
+        </div>
+
+        {paymentsLoading ? (
+          <div className="py-12 text-center text-slate-400">Loading payment history...</div>
+        ) : allPayments.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-slate-200 py-12 text-center text-slate-400">
+            No payment records found.
+          </div>
+        ) : (
+          <>
+            {/* DESKTOP TABLE (xl+) */}
+            <div className="hidden xl:block overflow-x-auto rounded-xl border border-slate-200">
+              <table className="w-full min-w-[1100px] text-left">
+                <thead className="bg-slate-50 text-[15px] font-bold uppercase tracking-[0.15em] text-slate-500">
+                  <tr>
+                    <th className="px-5 py-4">Booking</th>
+                    <th className="px-5 py-4">Guest</th>
+                    <th className="px-5 py-4">Type</th>
+                    <th className="px-5 py-4">Amount</th>
+                    <th className="px-5 py-4">Discount</th>
+                    <th className="px-5 py-4">Mode</th>
+                    <th className="px-5 py-4">Date</th>
+                    <th className="px-5 py-4">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-[17px]">
+                  {allPayments.map((p) => (
+                    <tr key={p.id} className="hover:bg-slate-50/70">
+                      <td className="px-5 py-4">
+                        <span className="font-bold text-slate-800">{p.bookingCode || `BK-${p.bookingId}`}</span>
+                      </td>
+                      <td className="px-5 py-4 text-slate-700">{p.guestName}</td>
+                      <td className="px-5 py-4">
+                        <span className={`inline-block rounded-full px-3 py-1 text-[13px] font-bold ${
+                          p.paymentType === "Advance" ? "bg-blue-50 text-blue-700" :
+                          p.paymentType === "Final Payment" ? "bg-emerald-50 text-emerald-700" :
+                          p.paymentType === "Refund" ? "bg-amber-50 text-amber-700" :
+                          "bg-slate-100 text-slate-600"
+                        }`}>{p.paymentType}</span>
+                      </td>
+                      <td className={`px-5 py-4 font-bold ${p.paymentType === "Refund" ? "text-rose-600" : "text-emerald-600"}`}>
+                        {p.paymentType === "Refund" ? "-" : "+"}{formatCurrency(p.amount)}
+                      </td>
+                      <td className="px-5 py-4 text-slate-600">{formatCurrency(p.discount)}</td>
+                      <td className="px-5 py-4 text-slate-600">{p.paymentMode}</td>
+                      <td className="px-5 py-4 text-slate-600">{formatDate(p.createdAt)}</td>
+                      <td className="px-5 py-4">
+                        <span className={statusBadgeCls(p.status === "Paid" ? "confirmed" : "pending")}>{p.status}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* MOBILE & TABLET CARD VIEW */}
+            <div className="grid grid-cols-1 gap-3 xl:hidden">
+              {allPayments.map((p) => (
+                <div key={p.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <div className="text-sm font-bold text-slate-400">{p.bookingCode || `BK-${p.bookingId}`}</div>
+                      <div className="text-base font-black text-slate-900">{p.guestName}</div>
+                    </div>
+                    <span className={`inline-block rounded-full px-3 py-1 text-[12px] font-bold ${
+                      p.paymentType === "Advance" ? "bg-blue-50 text-blue-700" :
+                      p.paymentType === "Final Payment" ? "bg-emerald-50 text-emerald-700" :
+                      p.paymentType === "Refund" ? "bg-amber-50 text-amber-700" :
+                      "bg-slate-100 text-slate-600"
+                    }`}>{p.paymentType}</span>
+                  </div>
+                  <div className="mt-3 grid grid-cols-2 gap-y-2 gap-x-3 text-[13px]">
+                    <div>
+                      <div className="font-semibold text-slate-400">Amount</div>
+                      <div className={`font-black text-[15px] ${p.paymentType === "Refund" ? "text-rose-600" : "text-emerald-600"}`}>
+                        {p.paymentType === "Refund" ? "-" : "+"}{formatCurrency(p.amount)}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="font-semibold text-slate-400">Discount</div>
+                      <div className="font-bold text-slate-900">{formatCurrency(p.discount)}</div>
+                    </div>
+                    <div>
+                      <div className="font-semibold text-slate-400">Mode</div>
+                      <div className="font-semibold text-slate-700">{p.paymentMode}</div>
+                    </div>
+                    <div>
+                      <div className="font-semibold text-slate-400">Date</div>
+                      <div className="font-semibold text-slate-700">{formatDate(p.createdAt)}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    );
+  };
+
   /* ─────────────────────────── page shell ─────────────────────────── */
 
   return (
@@ -4352,6 +4829,8 @@ const handleJumpStep = (stepView) => {
       <FlowBar view={view} onJump={handleJumpStep} />
 
       {view === "list" && renderList()}
+      {view === "history" && renderHistory()}
+      {view === "payments" && renderPayments()}
       {view === "form" && renderForm()}
       {view === "confirmed" && renderConfirmed()}
       {view === "details" && renderDetails()}

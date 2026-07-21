@@ -21,9 +21,7 @@ import {
 
 import API from "../api";
 import BookingFlow from "../components/Hotel/BookingFlow";
-import BookingHistory from "../components/Hotel/BookingHistory";
 import BookingSteps from "../components/Hotel/BookingSteps";
-import PaymentHistory from "../components/Hotel/PaymentHistroy";
 import { setStoredBookingId } from "../components/Hotel/bookingSession";
 
 import FolioView from "../components/Hotel/FolioView";
@@ -50,6 +48,8 @@ const BOOKING_FLOW_PATHS = [
   "collect-payment",
   "all-bookings",
   "edit-booking",
+  "booking-history",
+  "payment-history",
 ];
 
 // Full-width pages that draw their own page chrome (no extra rounded-card
@@ -1116,8 +1116,8 @@ const Hotel = () => {
             <Route path="all-bookings"    element={<BookingFlow />} />
             <Route path="edit-booking"    element={<BookingFlow />} />
             {/* ── Features kept separate from the booking flow (unchanged) ── */}
-            <Route path="booking-history"    element={<BookingHistory />} />
-            <Route path="payment-history"    element={<PaymentHistory />} />
+            <Route path="booking-history"    element={<BookingFlow />} />
+            <Route path="payment-history"    element={<BookingFlow />} />
             <Route path="folio"              element={<FolioView />} />
             <Route path="room-maintenance"   element={<RoomMaintenance />} />
             <Route path="guest-profile"      element={<GuestProfile />} />
