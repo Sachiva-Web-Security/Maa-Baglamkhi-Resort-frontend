@@ -210,16 +210,29 @@ const EditToken = () => {
 
   useEffect(() => {
     let active = true;
+    let timerId = null;
+
+    const scheduleNext = (delay) => {
+      if (!active) return;
+      timerId = setTimeout(tick, delay);
+    };
+
+    const tick = async () => {
+      if (!active) return;
+      const ok = await loadKitchenOrder();
+      // 4s after success, 8s after failure (back off)
+      scheduleNext(ok ? 4000 : 8000);
+    };
 
     const loadKitchenOrder = async () => {
       try {
         // Fetch both token and kitchen order to get full status
         const [tokenRes, kitchenRes] = await Promise.all([
-          API.get(`/token/table/${table}`),
-          API.get("/kitchen/orders"),
+          API.get(`/token/table/${table}`, { timeout: 8000, skipRetry: true }),
+          API.get("/kitchen/orders", { timeout: 8000, skipRetry: true }),
         ]);
 
-        if (!active) return;
+        if (!active) return false;
 
         const tokenData = tokenRes.data;
         const rows = Array.isArray(kitchenRes.data) ? kitchenRes.data : [];
@@ -239,7 +252,7 @@ const EditToken = () => {
           tokenOrderStatus: tokenData?.order_status || null,
         } : null;
 
-        if (!active) return;
+        if (!active) return false;
 
         setKitchenOrder(mergedOrder);
 
@@ -250,20 +263,22 @@ const EditToken = () => {
             readySound.current?.play().catch(() => {});
           }
         }
+
+        return true;
       } catch (error) {
         if (active) {
           console.log("Kitchen status load failed:", error);
           setKitchenOrder(null);
         }
+        return false;
       }
     };
 
-    loadKitchenOrder();
-    const interval = setInterval(loadKitchenOrder, 4000);
+    tick();
 
     return () => {
       active = false;
-      clearInterval(interval);
+      if (timerId) clearTimeout(timerId);
     };
   }, [entityType, table]);
 

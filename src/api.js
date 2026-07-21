@@ -40,14 +40,16 @@ API.interceptors.request.use((req) => {
 API.interceptors.response.use(
   (res) => res,
   (err) => {
+    const isTimeout = err.code === "ECONNABORTED" || err.message?.includes("timeout");
     const shouldRetry =
       !err.config?.skipRetry &&
       err.response?.status !== 401 && // never retry auth failures
-      err.code === "ERR_NETWORK" &&
-      (err.message?.includes("ECONNREFUSED") ||
+      (err.code === "ERR_NETWORK" ||
+        err.message?.includes("ECONNREFUSED") ||
         err.message?.includes("ECONNRESET") ||
         err.message?.includes("ETIMEDOUT") ||
-        err.message?.includes("socket hang up"));
+        err.message?.includes("socket hang up") ||
+        isTimeout);
 
     if (!shouldRetry || err.config?.__retryCount >= 3) {
       return Promise.reject(err);
