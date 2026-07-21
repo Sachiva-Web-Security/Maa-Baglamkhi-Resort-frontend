@@ -115,6 +115,10 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
 
   // Each item can optionally declare a `section` ("operations" | "records").
   // Items without a `section` render ungrouped, directly under the header.
+  //
+  // IMPORTANT: every `id` below must be UNIQUE across the whole array.
+  // Duplicate ids previously caused two buttons to highlight together
+  // (e.g. "Banquet" and "Accounts" both used id 109).
   const roleMenuMap = {
     admin: [
       { id: 101, name: "Attendance", icon: FaUserCheck, path: "/attendance" },
@@ -126,18 +130,18 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
       { id: 107, name: "Assignments", icon: FaTasks, path: "/assignments", section: "operations" },
       { id: 108, name: "Assign Notifications", icon: FaBell, path: "/assignment-notification", section: "operations" },
       { id: 109, name: "Banquet", icon: FaGlassCheers, path: "/banquet", section: "operations" },
-      { id: 109, name: "Accounts", icon: FaWallet, path: "/accounts", section: "records" },
+      { id: 1090, name: "Accounts", icon: FaWallet, path: "/accounts", section: "records" },
       { id: 110, name: "Inventory", icon: FaBoxes, path: "/inventory", section: "records" },
       { id: 1101, name: "Chef Issues", icon: FaExchangeAlt, path: "/inventory/chef-issues", section: "records" },
       { id: 111, name: "Reports", icon: FaChartBar, path: "/reports", section: "records" },
       { id: 112, name: "Audit Logs", icon: FaHistory, path: "/reports/audit", section: "records" },
       { id: 113, name: "User Management", icon: FaUserCheck, path: "/user", section: "records" },
-   
+
       { id: 114, name: "Salary", icon: FaMoneyBillWave, path: "/salary", section: "records" },
     ],
     manager: [
       { id: 201, name: "All Bookings", icon: FaHotel, path: "/hotel/all-bookings", section: "operations" },
-       { id: 101, name: "Attendance", icon: FaUserCheck, path: "/attendance" },
+      { id: 101, name: "Attendance", icon: FaUserCheck, path: "/attendance" },
       { id: 202, name: "Housekeeping", icon: FaBroom, path: "/housekeeping", section: "operations" },
       { id: 203, name: "HK Notifications", icon: FaBell, path: "/housekeeping/notifications", section: "operations" },
       { id: 204, name: "Assignments", icon: FaTasks, path: "/assignments", section: "operations" },
@@ -146,15 +150,14 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
       { id: 207, name: "Restaurant POS", icon: FaUtensils, path: "/restaurant", section: "operations" },
       { id: 208, name: "Accounts", icon: FaWallet, path: "/accounts", section: "records" },
       { id: 209, name: "Reports", icon: FaChartBar, path: "/reports", section: "records" },
-      { id: 210, name: "Inventory", icon: FaBoxes, path: "/inventory", section: "records"},
+      { id: 210, name: "Inventory", icon: FaBoxes, path: "/inventory", section: "records" },
       { id: 2101, name: "Chef Issues", icon: FaExchangeAlt, path: "/inventory/chef-issues", section: "records" },
       { id: 211, name: "Audit Logs", icon: FaHistory, path: "/reports/audit", section: "records" },
-    
+
     ],
     receptionist: [
       { id: 301, name: "Guest Booking", icon: FaHotel, path: "/hotel/guest", section: "operations" },
-      { id: 302, name: "All Bookings", icon: FaClipboardList, path: "/hotel/all-bookings", section: "operations" },
-      { id: 303, name: "Check-In / Out", icon: FaTasks, path: "/hotel/communication", section: "operations" },
+      // { id: 303, name: "Check-In / Out", icon: FaTasks, path: "/hotel/communication", section: "operations" },
       { id: 304, name: "Guest List", icon: FaUserCheck, path: "/hotel/booking-history", section: "operations" },
       { id: 305, name: "Housekeeping", icon: FaBroom, path: "/housekeeping", section: "operations" },
       { id: 306, name: "HK Notifications", icon: FaBell, path: "/housekeeping/notifications", section: "operations" },
@@ -202,7 +205,7 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
       { id: 506, name: "Audit Logs", icon: FaHistory, path: "/reports/audit", section: "records" },
     ],
     kitchen: [
-     
+
       { id: 602, name: "Restaurant POS", icon: FaUtensils, path: "/restaurant", section: "operations" },
       { id: "602k", name: "Raw Material", icon: FaExchangeAlt, path: "/chef/inventory", section: "operations" },
       { id: 603, name: "Inventory", icon: FaBoxes, path: "/inventory", section: "records",
@@ -219,8 +222,8 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
       },
     ],
     chef: [
-      { id: "601c", name: "Chef Dashboard", icon: FaFire, path: "/chef-dashboard", section: "operations" },
-      { id: "602c", name: "Kitchen Orders", icon: FaFire, path: "/kitchen", section: "operations" },
+      // { id: "601c", name: "Chef Dashboard", icon: FaFire, path: "/chef-dashboard", section: "operations" },
+      // { id: "602c", name: "Kitchen Orders", icon: FaFire, path: "/kitchen", section: "operations" },
       { id: "602d", name: "Raw Material", icon: FaExchangeAlt, path: "/chef/inventory", section: "operations" },
       { id: "603c", name: "Inventory", icon: FaBoxes, path: "/inventory", section: "records",
         // children: [
@@ -268,7 +271,42 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
     })).filter((group) => group.items.length > 0);
 
     return { headItems: head, groupedSections: sections, profileItem: profile };
-  }, [menuItems]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [role, dashboardPath, readyOrdersCount]);
+
+  // Flat list of every navigable (non-parent) item, used to work out which
+  // single button is "active" for the current route.
+  const flatNavItems = useMemo(
+    () => [...headItems, ...groupedSections.flatMap((g) => g.items), ...(profileItem ? [profileItem] : [])],
+    [headItems, groupedSections, profileItem]
+  );
+
+  // FIX: previously every item whose path was a *prefix* of the current
+  // pathname was marked active independently (e.g. "/inventory" matches
+  // "/inventory/chef-issues"), so two buttons ("Inventory" and
+  // "Chef Issues") lit up together for one click/hover.
+  //
+  // Now we pick exactly ONE winner: the item whose path is the longest
+  // (i.e. most specific) match for the current pathname. Only that item
+  // is marked active; every other item — even if its path is a partial
+  // prefix — stays un-highlighted.
+  const activeNavId = useMemo(() => {
+    const pathname = location.pathname;
+    let bestId = null;
+    let bestLength = -1;
+
+    flatNavItems.forEach((item) => {
+      if (!item.path) return;
+      const isExact = pathname === item.path;
+      const isPrefix = pathname.startsWith(`${item.path}/`);
+      if ((isExact || isPrefix) && item.path.length > bestLength) {
+        bestLength = item.path.length;
+        bestId = item.id;
+      }
+    });
+
+    return bestId;
+  }, [flatNavItems, location.pathname]);
 
   // Auto-expand any parent whose child matches the active route (unless user has manually collapsed).
   useEffect(() => {
@@ -282,6 +320,7 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
         break;
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [groupedSections, headItems, location.pathname]);
 
   const handleNavClick = (path) => {
@@ -320,10 +359,11 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
     const Icon = item.icon;
     const hasChildren = Array.isArray(item.children) && item.children.length > 0;
     const isExpanded = expandedItem === item.id;
-    // A parent with children is "active" if any child route matches
-    const directActive = hasChildren ? false : isActive(item.path);
+    // A parent with children is "active" if any child route matches.
+    // A leaf item is active only if it WON the longest-match comparison
+    // above — this guarantees exactly one leaf is active at a time.
     const groupActive = hasChildren ? isChildActive(item.children) : false;
-    const active = directActive || groupActive;
+    const active = hasChildren ? groupActive : item.id === activeNavId;
     const hovered = hoveredItem === item.id;
     const highlighted = isItemHighlighted(item.id, active);
     const showBadge = item.badgeCount > 0;

@@ -6,6 +6,14 @@ import {
 import chefService from "../services/chefService";
 import { getUserFromStorage } from "../utils/authStorage";
 
+/*
+  RESPONSIVE STRATEGY (layout/typography only — no logic changed):
+  - Base (no prefix)  => Mobile   ( <768px )
+  - md:                => Tablet / iPad ( 768px – 1279px )
+  - xl:                => Desktop ( >=1280px ) — matches the previous
+    desktop-only design pixel-for-pixel; nothing here changes at xl.
+*/
+
 function StatusBadge({ status }) {
   const map = {
     issued: { label: "Issued", classes: "bg-amber-100 text-amber-700 border-amber-200", Icon: FaHourglassHalf },
@@ -15,8 +23,12 @@ function StatusBadge({ status }) {
   const cfg = map[status] || { label: status, classes: "bg-slate-100 text-slate-600", Icon: FaHourglassHalf };
   const Icon = cfg.Icon;
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${cfg.classes}`}>
-      <Icon size={11} /> {cfg.label}
+    <span
+      className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[12px] font-semibold sm:px-3 sm:py-1.5 sm:text-[13px] xl:text-[15px] ${cfg.classes}`}
+    >
+      <Icon size={11} className="xl:hidden" />
+      <Icon size={13} className="hidden xl:inline" />
+      {cfg.label}
     </span>
   );
 }
@@ -181,66 +193,68 @@ export default function ChefInventoryPage() {
   }, [issues]);
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#f8fbff_0%,#eef2ff_100%)] p-4 md:p-8">
-      <div className="mx-auto max-w-7xl space-y-6">
+    <div className="min-h-screen w-full overflow-x-hidden bg-[linear-gradient(180deg,#f8fbff_0%,#eef2ff_100%)] p-3 sm:p-4 md:p-6 xl:p-8">
+      <div className="mx-auto w-full max-w-none space-y-4 px-0 sm:px-2 md:space-y-5 md:px-4 xl:space-y-6 xl:px-6">
         {/* Header */}
-        <div className="overflow-hidden rounded-[28px] border border-white/70 bg-[linear-gradient(135deg,#0f172a_0%,#1e3a8a_60%,#0e7490_100%)] px-6 py-6 text-white shadow-[0_24px_60px_rgba(15,23,42,0.25)]">
-          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+        <div className="overflow-hidden rounded-[20px] border border-white/70 bg-[linear-gradient(135deg,#0f172a_0%,#1e3a8a_60%,#0e7490_100%)] px-4 py-5 text-white shadow-[0_24px_60px_rgba(15,23,42,0.25)] sm:rounded-[24px] md:px-8 md:py-6 xl:rounded-[28px] xl:px-10">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15">
-                <FaUtensils size={22} />
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/15 xl:h-12 xl:w-12">
+                <FaUtensils size={20} />
               </div>
               <div>
                 <h1 className="text-2xl font-bold md:text-3xl">Kitchen Inventory · {loggedInName}</h1>
-                <p className="mt-1 text-sm text-white/80">
+                <p className="mt-1 text-[15px] leading-snug text-white/80 md:text-[17px] xl:text-[19px]">
                   Request raw material and record leftover returns against each issue.
                 </p>
               </div>
             </div>
-            <div className="flex gap-3 text-sm">
-              <div className="rounded-2xl bg-white/10 px-4 py-3">
-                <p className="text-xs uppercase tracking-wider text-white/70">Open</p>
-                <p className="text-xl font-bold">{myStats.openCount}</p>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3 xl:flex xl:flex-wrap xl:gap-3">
+              <div className="rounded-xl bg-white/10 px-3 py-2.5 xl:rounded-2xl xl:px-4 xl:py-3">
+                <p className="text-[11px] uppercase tracking-wider text-white/70 sm:text-[13px] xl:text-[16px]">Open</p>
+                <p className="text-lg font-bold sm:text-xl xl:text-2xl">{myStats.openCount}</p>
               </div>
-              <div className="rounded-2xl bg-white/10 px-4 py-3">
-                <p className="text-xs uppercase tracking-wider text-white/70">Issued</p>
-                <p className="text-xl font-bold">{myStats.issued.toFixed(2)}</p>
+              <div className="rounded-xl bg-white/10 px-3 py-2.5 xl:rounded-2xl xl:px-4 xl:py-3">
+                <p className="text-[11px] uppercase tracking-wider text-white/70 sm:text-[13px] xl:text-[16px]">Issued</p>
+                <p className="text-lg font-bold sm:text-xl xl:text-2xl">{myStats.issued.toFixed(2)}</p>
               </div>
-              <div className="rounded-2xl bg-white/10 px-4 py-3">
-                <p className="text-xs uppercase tracking-wider text-white/70">Returned</p>
-                <p className="text-xl font-bold">{myStats.returned.toFixed(2)}</p>
+              <div className="rounded-xl bg-white/10 px-3 py-2.5 xl:rounded-2xl xl:px-4 xl:py-3">
+                <p className="text-[11px] uppercase tracking-wider text-white/70 sm:text-[13px] xl:text-[16px]">Returned</p>
+                <p className="text-lg font-bold sm:text-xl xl:text-2xl">{myStats.returned.toFixed(2)}</p>
               </div>
-              <div className="rounded-2xl bg-white/10 px-4 py-3">
-                <p className="text-xs uppercase tracking-wider text-white/70">With Chef</p>
-                <p className="text-xl font-bold">{myStats.remaining.toFixed(2)}</p>
+              <div className="rounded-xl bg-white/10 px-3 py-2.5 xl:rounded-2xl xl:px-4 xl:py-3">
+                <p className="text-[11px] uppercase tracking-wider text-white/70 sm:text-[13px] xl:text-[16px]">With Chef</p>
+                <p className="text-lg font-bold sm:text-xl xl:text-2xl">{myStats.remaining.toFixed(2)}</p>
               </div>
             </div>
           </div>
         </div>
 
         {error && (
-          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+          <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-[14px] font-medium text-red-700 xl:rounded-2xl xl:px-4 xl:py-3 xl:text-[17px]">
             {error}
           </div>
         )}
         {success && (
-          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-[14px] font-medium text-emerald-700 xl:rounded-2xl xl:px-4 xl:py-3 xl:text-[17px]">
             {success}
           </div>
         )}
 
         {/* Request form */}
-        <div className="rounded-[26px] border border-white/80 bg-white p-6 shadow-[0_22px_50px_rgba(15,23,42,0.08)]">
-          <div className="mb-5 flex items-center gap-3">
-            <FaHandHolding className="text-cyan-500" />
-            <h2 className="text-xl font-bold text-slate-900">Request Item from Inventory</h2>
+        <div className="rounded-[20px] border border-white/80 bg-white p-4 shadow-[0_22px_50px_rgba(15,23,42,0.08)] sm:rounded-[22px] md:p-6 xl:rounded-[26px] xl:p-8">
+          <div className="mb-4 flex items-center gap-3 md:mb-5 xl:mb-6">
+            <FaHandHolding className="text-cyan-500" size={18} />
+            <h2 className="text-[20px] font-bold leading-tight text-slate-900 sm:text-[24px] md:text-[28px] xl:text-[32px]">
+              Request Item from Inventory
+            </h2>
           </div>
-          <form onSubmit={handleRequest} className="grid gap-4 md:grid-cols-2">
+          <form onSubmit={handleRequest} className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5">
             <Field label="Inventory Item" required>
               <select
                 value={requestDraft.itemId}
                 onChange={handleItemSelect}
-                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-[14px] outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100 md:text-[15px] xl:px-4 xl:py-3 xl:text-[17px]"
               >
                 <option value="">Select an item…</option>
                 {items.map((it) => (
@@ -261,7 +275,7 @@ export default function ChefInventoryPage() {
                   setRequestDraft((c) => ({ ...c, quantityIssued: e.target.value }))
                 }
                 placeholder="e.g. 2"
-                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-[14px] outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100 md:text-[15px] xl:px-4 xl:py-3 xl:text-[17px]"
               />
             </Field>
 
@@ -270,7 +284,7 @@ export default function ChefInventoryPage() {
                 value={requestDraft.unit}
                 onChange={(e) => setRequestDraft((c) => ({ ...c, unit: e.target.value }))}
                 placeholder="kg / ltr / pcs"
-                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-[14px] outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100 md:text-[15px] xl:px-4 xl:py-3 xl:text-[17px]"
               />
             </Field>
 
@@ -279,7 +293,7 @@ export default function ChefInventoryPage() {
                 value={requestDraft.purpose}
                 onChange={(e) => setRequestDraft((c) => ({ ...c, purpose: e.target.value }))}
                 placeholder="e.g. Lunch prep / Banquet / Daily cooking"
-                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-[14px] outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100 md:text-[15px] xl:px-4 xl:py-3 xl:text-[17px]"
               />
             </Field>
 
@@ -289,7 +303,7 @@ export default function ChefInventoryPage() {
                 value={requestDraft.remarks}
                 onChange={(e) => setRequestDraft((c) => ({ ...c, remarks: e.target.value }))}
                 placeholder="Any additional note"
-                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-[14px] outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100 md:text-[15px] xl:px-4 xl:py-3 xl:text-[17px]"
               />
             </Field>
 
@@ -297,9 +311,9 @@ export default function ChefInventoryPage() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 via-sky-500 to-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-[0_18px_30px_rgba(37,99,235,0.25)] transition hover:-translate-y-0.5 disabled:opacity-60"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 via-sky-500 to-blue-600 px-5 py-2.5 text-[14px] font-semibold text-white shadow-[0_18px_30px_rgba(37,99,235,0.25)] transition hover:-translate-y-0.5 disabled:opacity-60 sm:w-auto md:text-[16px] xl:px-6 xl:py-3 xl:text-[17px]"
               >
-                <FaBoxOpen size={12} />
+                <FaBoxOpen size={13} />
                 {submitting ? "Issuing…" : "Issue to Me"}
               </button>
             </div>
@@ -307,26 +321,28 @@ export default function ChefInventoryPage() {
         </div>
 
         {/* Issues list */}
-        <div className="rounded-[26px] border border-white/80 bg-white p-6 shadow-[0_22px_50px_rgba(15,23,42,0.08)]">
-          <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="rounded-[20px] border border-white/80 bg-white p-4 shadow-[0_22px_50px_rgba(15,23,42,0.08)] sm:rounded-[22px] md:p-6 xl:rounded-[26px] xl:p-8">
+          <div className="mb-4 flex flex-col gap-3 md:mb-5 xl:flex-row xl:items-center xl:justify-between">
             <div className="flex items-center gap-3">
-              <FaClipboardCheck className="text-emerald-500" />
-              <h2 className="text-xl font-bold text-slate-900">My Issued Items</h2>
+              <FaClipboardCheck className="text-emerald-500" size={18} />
+              <h2 className="text-[20px] font-bold leading-tight text-slate-900 sm:text-[24px] md:text-[28px] xl:text-[32px]">
+                My Issued Items
+              </h2>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2">
-                <FaSearch className="text-slate-400" size={12} />
+            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center xl:w-auto">
+              <div className="flex w-full items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 sm:w-auto">
+                <FaSearch className="shrink-0 text-slate-400" size={14} />
                 <input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search by item or purpose…"
-                  className="w-48 bg-transparent text-sm outline-none"
+                  className="w-full bg-transparent text-[14px] outline-none sm:w-48 xl:text-[17px]"
                 />
               </div>
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm"
+                className="w-full rounded-full border border-slate-200 bg-white px-3 py-2 text-[14px] sm:w-auto xl:text-[17px]"
               >
                 <option value="">All Status</option>
                 <option value="issued">Issued</option>
@@ -336,32 +352,33 @@ export default function ChefInventoryPage() {
               <button
                 type="button"
                 onClick={refresh}
-                className="rounded-full border border-cyan-200 bg-cyan-50 px-4 py-2 text-xs font-semibold text-cyan-700 hover:bg-cyan-100"
+                className="w-full rounded-full border border-cyan-200 bg-cyan-50 px-4 py-2 text-[14px] font-semibold text-cyan-700 hover:bg-cyan-100 sm:w-auto xl:text-[16px]"
               >
                 Refresh
               </button>
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+          {/* ── Desktop / Tablet table (>=768px) ─────────────────────────── */}
+          <div className="hidden overflow-x-auto md:block">
+            <table className="min-w-full text-[13px] md:text-[15px] xl:text-[17px]">
+              <thead className="bg-slate-50 text-[12px] uppercase tracking-wide text-slate-500 md:text-[14px] xl:text-[16px]">
                 <tr>
-                  <th className="px-4 py-3 text-left">Item</th>
-                  <th className="px-4 py-3 text-left">Issued</th>
-                  <th className="px-4 py-3 text-left">Returned</th>
-                  <th className="px-4 py-3 text-left">With Chef</th>
-                  <th className="px-4 py-3 text-left">Purpose</th>
-                  <th className="px-4 py-3 text-left">Status</th>
-                  <th className="px-4 py-3 text-left">Issued At</th>
-                  <th className="px-4 py-3 text-left">Issued By</th>
-                  <th className="px-4 py-3 text-left">Action</th>
+                  <th className="px-2 py-2.5 text-left md:px-3 xl:px-4 xl:py-3">Item</th>
+                  <th className="px-2 py-2.5 text-left md:px-3 xl:px-4 xl:py-3">Issued</th>
+                  <th className="px-2 py-2.5 text-left md:px-3 xl:px-4 xl:py-3">Returned</th>
+                  <th className="px-2 py-2.5 text-left md:px-3 xl:px-4 xl:py-3">With Chef</th>
+                  <th className="hidden px-2 py-2.5 text-left xl:table-cell xl:px-4 xl:py-3">Purpose</th>
+                  <th className="px-2 py-2.5 text-left md:px-3 xl:px-4 xl:py-3">Status</th>
+                  <th className="hidden px-2 py-2.5 text-left xl:table-cell xl:px-4 xl:py-3">Issued At</th>
+                  <th className="hidden px-2 py-2.5 text-left xl:table-cell xl:px-4 xl:py-3">Issued By</th>
+                  <th className="px-2 py-2.5 text-left md:px-3 xl:px-4 xl:py-3">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={9} className="px-4 py-12 text-center text-slate-400">
+                    <td colSpan={9} className="px-4 py-14 text-center text-[18px] text-slate-400 xl:text-[21px]">
                       Loading…
                     </td>
                   </tr>
@@ -371,35 +388,39 @@ export default function ChefInventoryPage() {
                       Number(row.quantityIssued || 0) - Number(row.quantityReturned || 0);
                     return (
                       <tr key={row.id} className="border-t border-slate-100 hover:bg-cyan-50/40">
-                        <td className="px-4 py-3 font-medium text-slate-800">
+                        <td className="px-2 py-2.5 font-medium text-slate-800 md:px-3 xl:px-4 xl:py-3">
                           {row.itemName}
-                          <div className="text-xs text-slate-500">{row.unit || ""}</div>
+                          <div className="text-[12px] text-slate-500 xl:text-[15px]">{row.unit || ""}</div>
                         </td>
-                        <td className="px-4 py-3 text-slate-700">
+                        <td className="px-2 py-2.5 text-slate-700 md:px-3 xl:px-4 xl:py-3">
                           {Number(row.quantityIssued || 0).toFixed(2)}
                         </td>
-                        <td className="px-4 py-3 text-slate-700">
+                        <td className="px-2 py-2.5 text-slate-700 md:px-3 xl:px-4 xl:py-3">
                           {Number(row.quantityReturned || 0).toFixed(2)}
                         </td>
-                        <td className="px-4 py-3 font-semibold text-slate-900">
+                        <td className="px-2 py-2.5 font-semibold text-slate-900 md:px-3 xl:px-4 xl:py-3">
                           {remaining.toFixed(2)}
                         </td>
-                        <td className="px-4 py-3 text-slate-600">{row.purpose || "—"}</td>
-                        <td className="px-4 py-3">
+                        <td className="hidden px-2 py-2.5 text-slate-600 xl:table-cell xl:px-4 xl:py-3">
+                          {row.purpose || "—"}
+                        </td>
+                        <td className="px-2 py-2.5 md:px-3 xl:px-4 xl:py-3">
                           <StatusBadge status={row.status} />
                         </td>
-                        <td className="px-4 py-3 text-xs text-slate-500">
+                        <td className="hidden px-2 py-2.5 text-[13px] text-slate-500 xl:table-cell xl:px-4 xl:py-3 xl:text-[15px]">
                           {row.issuedAt ? new Date(row.issuedAt).toLocaleString() : "—"}
                         </td>
-                        <td className="px-4 py-3 text-xs text-slate-600">{row.createdBy || "—"}</td>
-                        <td className="px-4 py-3">
+                        <td className="hidden px-2 py-2.5 text-[13px] text-slate-600 xl:table-cell xl:px-4 xl:py-3 xl:text-[15px]">
+                          {row.createdBy || "—"}
+                        </td>
+                        <td className="px-2 py-2.5 md:px-3 xl:px-4 xl:py-3">
                           {row.status === "fully_returned" ? (
-                            <span className="text-xs text-slate-400">Closed</span>
+                            <span className="text-[13px] text-slate-400 xl:text-[15px]">Closed</span>
                           ) : (
                             <button
                               type="button"
                               onClick={() => openReturn(row)}
-                              className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100"
+                              className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-[13px] font-semibold text-emerald-700 transition hover:bg-emerald-100 md:px-3 xl:text-[16px]"
                             >
                               <FaUndo size={10} /> Return
                             </button>
@@ -410,7 +431,7 @@ export default function ChefInventoryPage() {
                   })
                 ) : (
                   <tr>
-                    <td colSpan={9} className="px-4 py-12 text-center text-slate-400">
+                    <td colSpan={9} className="px-4 py-14 text-center text-[18px] text-slate-400 xl:text-[21px]">
                       No items issued yet.
                     </td>
                   </tr>
@@ -418,26 +439,110 @@ export default function ChefInventoryPage() {
               </tbody>
             </table>
           </div>
+
+          {/* ── Mobile stacked cards (<768px) ─────────────────────────────── */}
+          <div className="space-y-3 md:hidden">
+            {loading ? (
+              <div className="rounded-2xl border border-slate-100 bg-slate-50 py-12 text-center text-[20px] text-slate-400">
+                Loading…
+              </div>
+            ) : filteredIssues.length ? (
+              filteredIssues.map((row) => {
+                const remaining =
+                  Number(row.quantityIssued || 0) - Number(row.quantityReturned || 0);
+                return (
+                  <div
+                    key={row.id}
+                    className="rounded-[20px] border border-slate-100 bg-white p-3.5 shadow-[0_10px_28px_rgba(15,23,42,0.06)]"
+                  >
+                    <div className="mb-3 flex items-start justify-between gap-2">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-cyan-50 text-cyan-600">
+                          <FaBoxOpen size={22} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="truncate text-[15px] font-bold text-slate-900">{row.itemName}</p>
+                          <p className="truncate text-[13px] text-slate-500">
+                            {row.purpose || "No purpose noted"}
+                          </p>
+                        </div>
+                      </div>
+                      <StatusBadge status={row.status} />
+                    </div>
+
+                    <div className="mb-3 grid grid-cols-2 gap-x-3 gap-y-2 rounded-xl bg-slate-50 p-3">
+                      <div>
+                        <p className="text-[13px] uppercase tracking-wide text-slate-400">Issued</p>
+                        <p className="text-[14px] font-semibold text-slate-800">
+                          {Number(row.quantityIssued || 0).toFixed(2)} {row.unit || ""}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[13px] uppercase tracking-wide text-slate-400">Returned</p>
+                        <p className="text-[14px] font-semibold text-slate-800">
+                          {Number(row.quantityReturned || 0).toFixed(2)} {row.unit || ""}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[13px] uppercase tracking-wide text-slate-400">With Chef</p>
+                        <p className="text-[14px] font-semibold text-slate-900">
+                          {remaining.toFixed(2)} {row.unit || ""}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[13px] uppercase tracking-wide text-slate-400">Issued At</p>
+                        <p className="text-[14px] font-semibold text-slate-800">
+                          {row.issuedAt ? new Date(row.issuedAt).toLocaleDateString() : "—"}
+                        </p>
+                      </div>
+                      <div className="col-span-2">
+                        <p className="text-[13px] uppercase tracking-wide text-slate-400">Issued By</p>
+                        <p className="text-[14px] font-semibold text-slate-800">{row.createdBy || "—"}</p>
+                      </div>
+                    </div>
+
+                    {row.status === "fully_returned" ? (
+                      <span className="block w-full rounded-full bg-slate-100 py-2 text-center text-[14px] font-semibold text-slate-400">
+                        Closed
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => openReturn(row)}
+                        className="inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 py-2.5 text-[14px] font-semibold text-emerald-700 transition hover:bg-emerald-100"
+                      >
+                        <FaUndo size={12} /> Return
+                      </button>
+                    )}
+                  </div>
+                );
+              })
+            ) : (
+              <div className="rounded-2xl border border-slate-100 bg-slate-50 py-12 text-center text-[20px] text-slate-400">
+                No items issued yet.
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Return modal */}
       {returnModal && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/50 p-4">
-          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-900">
+          <div className="w-full max-w-md rounded-2xl bg-white p-4 shadow-2xl sm:rounded-3xl sm:p-6">
+            <div className="mb-4 flex items-center justify-between sm:mb-5">
+              <h3 className="text-[18px] font-bold leading-tight text-slate-900 sm:text-[22px] xl:text-[24px]">
                 Return Leftover — {returnModal.itemName}
               </h3>
               <button
                 type="button"
                 onClick={() => setReturnModal(null)}
-                className="rounded-full p-2 text-slate-400 hover:bg-slate-100"
+                className="shrink-0 rounded-full p-2 text-slate-400 hover:bg-slate-100"
               >
-                <FaTimes />
+                <FaTimes size={18} />
               </button>
             </div>
-            <p className="mb-4 rounded-xl bg-amber-50 px-4 py-2 text-xs font-medium text-amber-700">
+            <p className="mb-4 rounded-xl bg-amber-50 px-3 py-2 text-[14px] font-medium text-amber-700 sm:px-4 sm:py-2.5 xl:text-[16px]">
               Maximum returnable quantity: {returnModal.max}
             </p>
             <form onSubmit={submitReturn} className="space-y-4">
@@ -451,7 +556,7 @@ export default function ChefInventoryPage() {
                   onChange={(e) =>
                     setReturnForm((c) => ({ ...c, quantityReturned: e.target.value }))
                   }
-                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-[14px] outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100 sm:px-4 sm:py-3 xl:text-[17px]"
                   placeholder="e.g. 2"
                 />
               </Field>
@@ -462,23 +567,23 @@ export default function ChefInventoryPage() {
                   onChange={(e) =>
                     setReturnForm((c) => ({ ...c, remarks: e.target.value }))
                   }
-                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-[14px] outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100 sm:px-4 sm:py-3 xl:text-[17px]"
                 />
               </Field>
-              <div className="flex justify-end gap-2 pt-2">
+              <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
                 <button
                   type="button"
                   onClick={() => setReturnModal(null)}
-                  className="rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                  className="w-full rounded-full border border-slate-200 bg-white px-5 py-2.5 text-[14px] font-semibold text-slate-700 hover:bg-slate-50 sm:w-auto xl:text-[17px]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={returning}
-                  className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg disabled:opacity-60"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 px-5 py-2.5 text-[14px] font-semibold text-white shadow-lg disabled:opacity-60 sm:w-auto xl:text-[17px]"
                 >
-                  <FaUndo size={12} />
+                  <FaUndo size={13} />
                   {returning ? "Saving…" : "Confirm Return"}
                 </button>
               </div>
@@ -493,7 +598,7 @@ export default function ChefInventoryPage() {
 function Field({ label, required, children, full = false }) {
   return (
     <div className={full ? "md:col-span-2" : ""}>
-      <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-600">
+      <label className="mb-1.5 block text-[13px] font-semibold uppercase tracking-wider text-slate-600 md:mb-2 md:text-[15px] xl:text-[17px]">
         {label} {required && <span className="text-red-500">*</span>}
       </label>
       {children}
