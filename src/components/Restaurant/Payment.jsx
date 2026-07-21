@@ -1337,13 +1337,11 @@ const Payment = ({
   const [folioBookingId, setFolioBookingId] = useState(null);
   const [folioBookingCode, setFolioBookingCode] = useState(null);
 
-<<<<<<< HEAD
   // WhatsApp invoice modal state (only for table booking / restaurant POS invoices)
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
-=======
+
   // Payment result popup state
   const [paymentResult, setPaymentResult] = useState({ show: false, success: false, message: "", billId: null, total: 0, method: "" });
->>>>>>> f00594351c90cfb40efd9564cf05ad364cb7519b
 
   useEffect(() => {
     if (!folioResult.show && !showFolioPopup) return undefined;
