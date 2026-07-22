@@ -12,6 +12,8 @@ import {
   FaExclamationCircle,
   FaHotel,
   FaPlus,
+  FaSignInAlt,
+  FaSignOutAlt,
   FaTimes,
 } from "react-icons/fa";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -516,6 +518,26 @@ const Stayover = () => {
     } catch (err) {
       console.error(err);
       showActionPopup("error", "Room status update nahi ho paaya.");
+    }
+  };
+
+  const handleCellBookingLifecycle = async (room, booking, action) => {
+    if (!booking?.bookingId || String(booking.bookingId).startsWith("room-")) {
+      showActionPopup("error", "Is room ke liye valid booking record nahi mila.");
+      return;
+    }
+
+    try {
+      await API.put(`/hotel/${action}/${booking.bookingId}`);
+      if (action === "check-out") {
+        const roomId = room.id || room.roomId || room.roomNumber;
+        await API.put(`/housekeeping/status/${roomId}`, { status: "Vacant Dirty" });
+      }
+      await loadData(true);
+      showActionPopup("success", action === "check-in" ? "Guest checked in." : "Guest checked out. Room cleaning me chala gaya.");
+    } catch (error) {
+      console.error(error);
+      showActionPopup("error", action === "check-in" ? "Check-in failed" : "Check-out failed");
     }
   };
 
@@ -1243,6 +1265,42 @@ Room-wise rows with a 7-day booking timeline, displayed in a Booking Master–st
                                     {meta.label}
                                   </button>
                                 )}
+
+                                {/* Check In / Check Out action buttons */}
+                                {cell.booking && !String(cell.booking.bookingId).startsWith("room-") && (() => {
+                                  const isCheckedIn = String(cell.booking.bookingStatus || "").toLowerCase().includes("checked in");
+                                  const canCheckIn = !isCheckedIn;
+                                  const canCheckOut = isCheckedIn;
+                                  if (!canCheckIn && !canCheckOut) return null;
+                                  return (
+                                    <div className="mt-2 flex gap-1.5">
+                                      {canCheckIn && (
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleCellBookingLifecycle(room, cell.booking, "check-in");
+                                          }}
+                                          className="flex-1 rounded-lg bg-emerald-600 px-2 py-1.5 text-[11px] font-bold text-white shadow-sm transition hover:bg-emerald-700"
+                                        >
+                                          <FaSignInAlt className="text-[10px]" /> In
+                                        </button>
+                                      )}
+                                      {canCheckOut && (
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleCellBookingLifecycle(room, cell.booking, "check-out");
+                                          }}
+                                          className="flex-1 rounded-lg bg-orange-500 px-2 py-1.5 text-[11px] font-bold text-white shadow-sm transition hover:bg-orange-600"
+                                        >
+                                          <FaSignOutAlt className="text-[10px]" /> Out
+                                        </button>
+                                      )}
+                                    </div>
+                                  );
+                                })()}
                               </div>
                             );
                           })}
@@ -1296,6 +1354,38 @@ Room-wise rows with a 7-day booking timeline, displayed in a Booking Master–st
                           );
                         })}
                       </div>
+
+                      {/* Check In / Check Out for today's booking */}
+                      {(() => {
+                        const todayCell = getCellData(room, today);
+                        if (!todayCell.booking || String(todayCell.booking.bookingId).startsWith("room-")) return null;
+                        const isCheckedIn = String(todayCell.booking.bookingStatus || "").toLowerCase().includes("checked in");
+                        const canCheckIn = !isCheckedIn;
+                        const canCheckOut = isCheckedIn;
+                        if (!canCheckIn && !canCheckOut) return null;
+                        return (
+                          <div className="mt-2 flex gap-2">
+                            {canCheckIn && (
+                              <button
+                                type="button"
+                                onClick={() => handleCellBookingLifecycle(room, todayCell.booking, "check-in")}
+                                className="flex-1 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700"
+                              >
+                                <FaSignInAlt className="text-xs" /> Check In
+                              </button>
+                            )}
+                            {canCheckOut && (
+                              <button
+                                type="button"
+                                onClick={() => handleCellBookingLifecycle(room, todayCell.booking, "check-out")}
+                                className="flex-1 rounded-lg bg-orange-500 px-3 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-orange-600"
+                              >
+                                <FaSignOutAlt className="text-xs" /> Check Out
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })()}
 
                       {/* Action Buttons */}
                       <div className="mt-3 flex flex-wrap gap-2">
@@ -1674,7 +1764,7 @@ Room-wise rows with a 7-day booking timeline, displayed in a Booking Master–st
                       <div>
                         <div className="text-sm font-semibold text-slate-900">Cleaning Task</div>
                         <p className="mt-1 text-xs text-slate-600">
-                          Housekeeper assign karein aur estimated cleaning time set karein.
+**Assign a housekeeper and set the estimated cleaning time.**
                         </p>
                       </div>
                       <div className="rounded-full bg-white px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-violet-700 shadow-sm">
@@ -1703,7 +1793,8 @@ Room-wise rows with a 7-day booking timeline, displayed in a Booking Master–st
                           })}
                         </select>
                         <div className="text-[11px] text-slate-500">
-                          Busy housekeeper dobara assign nahi hogi jab tak current task complete na ho.
+                          **A busy housekeeper cannot be assigned to another room until their current cleaning task is completed.**
+.
                         </div>
                         <div className="text-[11px] font-semibold text-violet-700">
                           Current task status: {selectedAssigneeBusy ? "Busy" : "Available"}
@@ -1812,21 +1903,24 @@ Room-wise rows with a 7-day booking timeline, displayed in a Booking Master–st
 
               <div className="grid gap-3 sm:grid-cols-2">
                 {selectedRoom.booking?.bookingId && !String(selectedRoom.booking.bookingId).startsWith("room-") ? (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleBookingLifecycle(
-                        String(selectedRoom.booking?.bookingStatus || "").toLowerCase().includes("checked in")
-                          ? "check-out"
-                          : "check-in",
-                      )
-                    }
-                    className="rounded-[1rem] bg-gradient-to-r from-emerald-600 to-teal-500 px-4 py-3 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(16,185,129,0.18)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(16,185,129,0.24)]"
-                  >
-                    {String(selectedRoom.booking?.bookingStatus || "").toLowerCase().includes("checked in")
-                      ? "Check Out"
-                      : "Check In"}
-                  </button>
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => handleBookingLifecycle("check-in")}
+                      disabled={String(selectedRoom.booking?.bookingStatus || "").toLowerCase().includes("checked in")}
+                      className="rounded-[1rem] bg-gradient-to-r from-emerald-600 to-teal-500 px-4 py-3 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(16,185,129,0.18)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(16,185,129,0.24)] disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <FaSignInAlt className="text-sm" /> Check In
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleBookingLifecycle("check-out")}
+                      disabled={!String(selectedRoom.booking?.bookingStatus || "").toLowerCase().includes("checked in")}
+                      className="rounded-[1rem] bg-gradient-to-r from-orange-500 to-amber-500 px-4 py-3 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(249,115,22,0.18)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(249,115,22,0.24)] disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <FaSignOutAlt className="text-sm" /> Check Out
+                    </button>
+                  </>
                 ) : null}
                 <button
                   type="button"
