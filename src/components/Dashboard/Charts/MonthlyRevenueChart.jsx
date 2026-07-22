@@ -92,7 +92,7 @@ const MonthlyRevenueChart = () => {
 
       <div className="min-h-0 flex-1 pt-4 sm:pt-5">
         <div className="h-full min-h-[200px] w-full min-w-0">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minHeight={200}>
             <AreaChart
               data={data}
               margin={{ top: 14, right: 8, left: 0, bottom: 4 }}

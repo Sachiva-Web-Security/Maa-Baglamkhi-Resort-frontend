@@ -58,7 +58,7 @@ const FoodSalesChart = () => {
       </h3>
       <div className="mt-3 min-h-0 flex-1 w-full sm:mt-4">
         <div className="h-full min-h-[200px] w-full min-w-0">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minHeight={200}>
             <LineChart data={data}>
               <XAxis dataKey="day" tick={{ fontSize: 10, fill: "#64748b" }} />
               <YAxis tick={{ fontSize: 10, fill: "#64748b" }} />
