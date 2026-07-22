@@ -2956,11 +2956,17 @@ const handleJumpStep = (stepView) => {
         setView("confirmed");
       }
     } catch (err) {
-      console.error(err);
+      console.error("[BookingFlow] Save failed:", {
+        status: err.response?.status,
+        data: err.response?.data,
+        message: err.message,
+      });
+      const serverMsg = err.response?.data?.message || "We could not save this booking. Please check the required fields and try again.";
+      const serverDetail = err.response?.data?.error || err.response?.data?.code || "";
       showToast(
         "error",
         "Save Failed",
-        err.response?.data?.message || "We could not save this booking. Please check the required fields and try again.",
+        serverDetail ? `${serverMsg} (${serverDetail})` : serverMsg,
       );
     } finally {
       setSaving(false);
