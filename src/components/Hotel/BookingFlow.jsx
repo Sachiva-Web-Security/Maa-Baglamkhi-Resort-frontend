@@ -2701,18 +2701,20 @@ const handleJumpStep = (stepView) => {
     return (Array.isArray(cat.rooms) ? cat.rooms : [])
       .map((rn) => String(rn).trim())
       .filter(Boolean)
-      .map((rn) => ({
-        roomNo: rn,
-        status: statusByRoom.get(rn) || "Available",
-        alreadyPicked: roomsAlreadyPicked.has(rn),
-      }))
-      // Exclude rooms that are already occupied or blocked for the selected dates
-      .filter((item) => {
-        const s = String(item.status || "").toLowerCase();
-        if (s === "available") return true;
-        if (s === "booked" || s.includes("booked")) return false;
-        if (s.includes("occupied") || s.includes("blocked") || s.includes("maintenance") || s.includes("out of service")) return false;
-        return true;
+      .map((rn) => {
+        const s = String(statusByRoom.get(rn) || "Available").toLowerCase();
+        let disabledReason = null;
+        if (s === "booked" || s.includes("booked")) disabledReason = "Booked";
+        else if (s.includes("occupied")) disabledReason = "Occupied";
+        else if (s.includes("blocked")) disabledReason = "Blocked";
+        else if (s.includes("maintenance") || s.includes("out of service")) disabledReason = "Maintenance";
+
+        return {
+          roomNo: rn,
+          status: statusByRoom.get(rn) || "Available",
+          alreadyPicked: roomsAlreadyPicked.has(rn),
+          disabledReason,
+        };
       });
   };
 
@@ -3809,15 +3811,18 @@ const handleJumpStep = (stepView) => {
                               <option value="">
                                 {row.categoryId ? "Select room" : "Pick category first"}
                               </option>
-                              {getRoomNumbersForCategory(row.categoryId, row.roomNo).map((r) => (
-                                <option key={r.roomNo} value={r.roomNo} disabled={r.alreadyPicked}>
-                                  {r.roomNo}
-                                  {r.status && r.status.toLowerCase() !== "available"
-                                    ? ` (${r.status})`
-                                    : ""}
-                                  {r.alreadyPicked ? " — already added" : ""}
-                                </option>
-                              ))}
+                              {getRoomNumbersForCategory(row.categoryId, row.roomNo).map((r) => {
+                                const isDisabled = r.alreadyPicked || r.disabledReason;
+                                const label = r.disabledReason
+                                  ? `${r.roomNo} (${r.disabledReason})`
+                                  : r.roomNo;
+                                return (
+                                  <option key={r.roomNo} value={r.roomNo} disabled={isDisabled}>
+                                    {label}
+                                    {r.alreadyPicked && !r.disabledReason ? " — already added" : ""}
+                                  </option>
+                                );
+                              })}
                             </select>
                           </td>
                           <td className="px-3 py-2">
@@ -3891,13 +3896,18 @@ const handleJumpStep = (stepView) => {
                           <option value="">
                             {row.categoryId ? "Select room" : "Pick category first"}
                           </option>
-                          {getRoomNumbersForCategory(row.categoryId, row.roomNo).map((r) => (
-                            <option key={r.roomNo} value={r.roomNo} disabled={r.alreadyPicked}>
-                              {r.roomNo}
-                              {r.status && r.status.toLowerCase() !== "available" ? ` (${r.status})` : ""}
-                              {r.alreadyPicked ? " — already added" : ""}
-                            </option>
-                          ))}
+                          {getRoomNumbersForCategory(row.categoryId, row.roomNo).map((r) => {
+                            const isDisabled = r.alreadyPicked || r.disabledReason;
+                            const label = r.disabledReason
+                              ? `${r.roomNo} (${r.disabledReason})`
+                              : r.roomNo;
+                            return (
+                              <option key={r.roomNo} value={r.roomNo} disabled={isDisabled}>
+                                {label}
+                                {r.alreadyPicked && !r.disabledReason ? " — already added" : ""}
+                              </option>
+                            );
+                          })}
                         </select>
                       </div>
                       <div className="grid grid-cols-3 gap-2">
