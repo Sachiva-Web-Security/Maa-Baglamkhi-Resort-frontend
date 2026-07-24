@@ -1019,18 +1019,17 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
     const tariff = Number(r.tariff ?? r.price ?? 0);
     const qty = Number(r.quantity ?? 1);
     const gstPercent = Number(r.gst ?? r.gstPercent ?? 0);
-    const base = tariff * qty;
-    const gstAmount = (base * gstPercent) / 100;
-    const total = base + gstAmount;
-    const nights = qty;
+    const total = Number(r.total || 0);
+    const baseAmount = gstPercent > 0 ? total / (1 + gstPercent / 100) : total;
+    const gstAmount = total - baseAmount;
     return {
       id: `room-${idx}-${r.room_number || r.roomNumber || r.roomNo || idx}`,
       name: `Room ${r.room_number || r.roomNumber || r.roomNo || idx + 1}`,
-      description: `${r.room_type || r.category || "Room"} — ${nights} night(s) @ ${formatCurrency(tariff)}/night${gstPercent > 0 ? ` + ${gstPercent}% GST` : ""}`,
-      quantity: nights,
+      description: `${r.room_type || r.category || "Room"} — ${qty} room(s)${gstPercent > 0 ? `, ${gstPercent}% GST` : ""}`,
+      quantity: qty,
       price: tariff,
       gst: gstPercent,
-      gstAmount: gstAmount,
+      gstAmount: Math.round(gstAmount * 100) / 100,
       total: total,
       isRoom: true,
     };
@@ -4107,17 +4106,7 @@ const handleJumpStep = (stepView) => {
               </div>
             </div>
 
-            <div className={cardTileCls}>
-              <div className={sectionTitleCls}>Send Notification</div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <button onClick={() => handleNotify("email")} className={ghostBtn}>
-                  <FaEnvelope className="text-sm" /> Send Email to Guest
-                </button>
-                <button onClick={() => handleNotify("sms")} className={ghostBtn}>
-                  <FaCommentDots className="text-sm" /> Send SMS to Guest
-                </button>
-              </div>
-            </div>
+
           </div>
         </div>
 
