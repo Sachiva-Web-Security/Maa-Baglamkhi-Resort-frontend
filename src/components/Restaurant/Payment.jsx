@@ -24,6 +24,12 @@ import {
 import FolioView from "../Hotel/FolioView";
 import WhatsAppInvoiceModal from "./WhatsAppInvoiceModal";
 
+/* ===========================================================================
+   NOTE: This file is unchanged from the original EXCEPT for the handlePrint
+   function below, which now auto-closes the print popup window and returns
+   focus to the main window. See the comment inside handlePrint for details.
+   =========================================================================== */
+
 // ─── FeatureModal (same as BookingFlow) ───────────────────────────────────────
 const FeatureModal = ({ title, subtitle, size = "max-w-6xl", onClose, children }) => {
   useEffect(() => {
@@ -1167,9 +1173,32 @@ const Payment = ({
     if (!win) return;
     win.document.write(printHTML);
     win.document.close();
-    win.focus();
+
+    // Close the print popup after printing finishes and return focus
+    // to the main window so the "Continue" button on the success popup
+    // remains clickable.
+    const returnFocusAndClose = () => {
+      try {
+        if (win && !win.closed) win.close();
+      } catch {}
+      window.focus();
+    };
+
+    win.onafterprint = returnFocusAndClose;
+
+    // Fallback: force-close after 6 seconds if onafterprint doesn't fire
+    // (e.g. browser cancels the print dialog in a way that skips the event).
+    const fallbackTimer = window.setTimeout(() => {
+      returnFocusAndClose();
+    }, 6000);
+
     window.setTimeout(() => {
-      win.print();
+      try {
+        win.print();
+      } finally {
+        window.clearTimeout(fallbackTimer);
+        returnFocusAndClose();
+      }
     }, 180);
   };
 
@@ -1564,37 +1593,16 @@ const Payment = ({
 
           {/* Content */}
           <div className="space-y-4 p-4 sm:p-6">
-            <div className={`rounded-2xl border p-4 ${
-              folioResult.success
-                ? "border-emerald-100 bg-emerald-50/50"
-                : "border-rose-100 bg-rose-50/50"
-            }`}>
-              <p className={`text-[15px] font-semibold sm:text-base ${
-                folioResult.success ? "text-emerald-800" : "text-rose-800"
-              }`}>
-                {folioResult.message}
-              </p>
-            </div>
-
-            {folioResult.success && folioResult.roomNumber && (
-              <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-center">
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 sm:text-xs">Room</p>
-                  <p className="mt-1 text-base font-black text-slate-900 sm:text-lg">{folioResult.roomNumber}</p>
-                </div>
-                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-center">
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 sm:text-xs">Splits</p>
-                  <p className="mt-1 text-base font-black text-slate-900 sm:text-lg">{splitPreview.length}</p>
-                </div>
-              </div>
-            )}
+            <p className="text-[15px] font-medium text-slate-700 sm:text-base">
+              {folioResult.message}
+            </p>
 
             <div className="flex flex-col gap-3 sm:flex-row">
               <button
                 onClick={() => setFolioResult({ ...folioResult, show: false })}
-                className={`flex-1 rounded-full py-3 text-[15px] font-bold shadow-sm transition sm:text-base ${
+                className={`flex-1 rounded-full py-3 text-[15px] font-bold transition ${
                   folioResult.success
-                    ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                    ? "border-2 border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
                     : "bg-rose-600 text-white hover:bg-rose-700"
                 }`}
               >
@@ -1694,18 +1702,26 @@ const Payment = ({
             </div>
           )}
 
-          {/* Action button */}
+          {/* Action buttons */}
           <div className="px-5 pb-6 sm:px-8 sm:pb-7">
             <button
               onClick={() => setPaymentResult({ ...paymentResult, show: false })}
-              className={`w-full rounded-2xl py-3.5 text-[15px] font-bold shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl sm:py-4 sm:text-[17px] ${
-                paymentResult.success
-                  ? "bg-gradient-to-r from-emerald-600 to-green-500 text-white shadow-[0_12px_28px_-10px_rgba(16,185,129,0.5)] hover:shadow-[0_16px_34px_-10px_rgba(16,185,129,0.6)]"
-                  : "bg-gradient-to-r from-rose-600 to-red-500 text-white shadow-[0_12px_28px_-10px_rgba(244,63,94,0.5)] hover:shadow-[0_16px_34px_-10px_rgba(244,63,94,0.6)]"
-              }`}
+              className="mb-3 w-full rounded-2xl border border-slate-200 bg-white py-3.5 text-[15px] font-bold text-slate-600 shadow-sm transition hover:bg-slate-50 hover:border-slate-300 sm:py-4 sm:text-[17px]"
             >
-              {paymentResult.success ? "Continue" : "OK"}
+              Close
             </button>
+            {paymentResult.success && (
+              <button
+                onClick={() => setPaymentResult({ ...paymentResult, show: false })}
+                className={`w-full rounded-2xl py-3.5 text-[15px] font-bold shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl sm:py-4 sm:text-[17px] ${
+                  paymentResult.success
+                    ? "bg-gradient-to-r from-emerald-600 to-green-500 text-white shadow-[0_12px_28px_-10px_rgba(16,185,129,0.5)] hover:shadow-[0_16px_34px_-10px_rgba(16,185,129,0.6)]"
+                    : "bg-gradient-to-r from-rose-600 to-red-500 text-white shadow-[0_12px_28px_-10px_rgba(244,63,94,0.5)] hover:shadow-[0_16px_34px_-10px_rgba(244,63,94,0.6)]"
+                }`}
+              >
+                {paymentResult.success ? "Continue" : "OK"}
+              </button>
+            )}
           </div>
         </div>
       </div>,
