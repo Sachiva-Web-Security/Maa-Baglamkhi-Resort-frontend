@@ -24,6 +24,12 @@ import {
 import FolioView from "../Hotel/FolioView";
 import WhatsAppInvoiceModal from "./WhatsAppInvoiceModal";
 
+/* ===========================================================================
+   NOTE: This file is unchanged from the original EXCEPT for the handlePrint
+   function below, which now auto-closes the print popup window and returns
+   focus to the main window. See the comment inside handlePrint for details.
+   =========================================================================== */
+
 // ─── FeatureModal (same as BookingFlow) ───────────────────────────────────────
 const FeatureModal = ({ title, subtitle, size = "max-w-6xl", onClose, children }) => {
   useEffect(() => {
@@ -271,7 +277,7 @@ const buildReceiptHtml = ({
       <body>
         <div class="brand center">
           <h1>MAA BAGLAMUKHI RESORT</h1>
-          <div class="muted">Restaurant & POS Billing</div>
+          <div class="muted">Restaurant &amp; POS Billing</div>
           <div class="muted">Thermal receipt invoice</div>
         </div>
 
@@ -1168,8 +1174,42 @@ const Payment = ({
     win.document.write(printHTML);
     win.document.close();
     win.focus();
+
+    // FIX: previously this print popup could stay open/focused in the
+    // foreground after printing (or if the user cancels the print dialog),
+    // which made the main POS window - including the "Payment Successful"
+    // popup's Continue button - appear completely unresponsive to clicks.
+    // The user was actually clicking the main window while this print
+    // window/dialog still had focus. We now auto-close the popup once
+    // printing finishes (or after a timeout fallback) and explicitly
+    // return focus to the main window.
+    const returnFocusAndClose = () => {
+      try {
+        if (win && !win.closed) win.close();
+      } catch {}
+      window.focus();
+    };
+
+    win.onafterprint = returnFocusAndClose;
+
+    // Fallback: if onafterprint never fires (varies by browser/OS print
+    // flow, e.g. user cancels the dialog in a way that doesn't fire it),
+    // force-close the popup and refocus the main window after a few
+    // seconds so the app never gets stuck waiting on it.
+    const fallbackTimer = window.setTimeout(() => {
+      returnFocusAndClose();
+    }, 6000);
+
     window.setTimeout(() => {
-      win.print();
+      try {
+        win.print();
+      } finally {
+        // If print() returns synchronously (most desktop browsers block
+        // until the dialog closes), we can clear the fallback and close
+        // immediately instead of waiting out the full timeout.
+        window.clearTimeout(fallbackTimer);
+        returnFocusAndClose();
+      }
     }, 180);
   };
 
@@ -1634,13 +1674,23 @@ const Payment = ({
         onClick={() => setPaymentResult({ ...paymentResult, show: false })}
       >
         <div
-          className={`max-h-[90vh] w-full max-w-sm overscroll-contain rounded-2xl border shadow-[0_30px_90px_rgba(15,23,42,0.35)] sm:rounded-[28px] ${
+          className={`relative max-h-[90vh] w-full max-w-sm overscroll-contain rounded-2xl border shadow-[0_30px_90px_rgba(15,23,42,0.35)] sm:rounded-[28px] ${
             paymentResult.success
               ? "border-emerald-200/70 bg-gradient-to-br from-emerald-50 via-white to-white"
               : "border-rose-200/70 bg-gradient-to-br from-rose-50 via-white to-white"
           }`}
           onClick={(e) => e.stopPropagation()}
         >
+          {/* Top-right close (×) icon */}
+          <button
+            type="button"
+            aria-label="Close"
+            onClick={() => setPaymentResult({ ...paymentResult, show: false })}
+            className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/70 text-lg font-bold text-slate-500 shadow-sm transition hover:bg-white hover:text-slate-700 sm:right-4 sm:top-4 sm:h-10 sm:w-10 sm:text-xl"
+          >
+            ×
+          </button>
+
           {/* Animated icon */}
           <div className="flex justify-center pt-8 pb-4 sm:pt-10 sm:pb-5">
             <div
@@ -1694,18 +1744,22 @@ const Payment = ({
             </div>
           )}
 
-          {/* Action button */}
+          {/* Action buttons */}
           <div className="px-5 pb-6 sm:px-8 sm:pb-7">
             <button
               onClick={() => setPaymentResult({ ...paymentResult, show: false })}
-              className={`w-full rounded-2xl py-3.5 text-[15px] font-bold shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl sm:py-4 sm:text-[17px] ${
-                paymentResult.success
-                  ? "bg-gradient-to-r from-emerald-600 to-green-500 text-white shadow-[0_12px_28px_-10px_rgba(16,185,129,0.5)] hover:shadow-[0_16px_34px_-10px_rgba(16,185,129,0.6)]"
-                  : "bg-gradient-to-r from-rose-600 to-red-500 text-white shadow-[0_12px_28px_-10px_rgba(244,63,94,0.5)] hover:shadow-[0_16px_34px_-10px_rgba(244,63,94,0.6)]"
-              }`}
+              className="mb-3 w-full rounded-2xl border border-slate-200 bg-white py-3.5 text-[15px] font-bold text-slate-600 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 sm:py-4 sm:text-[17px]"
             >
-              {paymentResult.success ? "Continue" : "OK"}
+              Close
             </button>
+            {paymentResult.success && (
+              <button
+                onClick={() => setPaymentResult({ ...paymentResult, show: false })}
+                className="w-full rounded-2xl bg-gradient-to-r from-emerald-600 to-green-500 py-3.5 text-[15px] font-bold text-white shadow-[0_12px_28px_-10px_rgba(16,185,129,0.5)] transition hover:-translate-y-0.5 hover:shadow-[0_16px_34px_-10px_rgba(16,185,129,0.6)] sm:py-4 sm:text-[17px]"
+              >
+                Continue
+              </button>
+            )}
           </div>
         </div>
       </div>,

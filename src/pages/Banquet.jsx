@@ -323,13 +323,29 @@ function formatBookingDate(dateValue) {
   }).format(parsed);
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// IMAGE UPLOAD FIX (this revision):
+// Previously this function only prepended the backend base URL when the
+// stored value did NOT start with "/", "http://", "https://" or "data:".
+// Backend upload routes (multer etc.) almost always return a path that
+// DOES start with "/" (e.g. "/uploads/hall-123.jpg"), so the old check
+// `raw.startsWith("/")` incorrectly treated that as an "already complete"
+// URL and returned it as-is. The browser then tried to resolve it against
+// the FRONTEND origin (e.g. http://localhost:5173/uploads/hall-123.jpg)
+// instead of the BACKEND origin, so the image 404'd even though the hall
+// record itself saved fine.
+// Fix: only treat true absolute URLs (http/https) and data: URIs as
+// "already complete". Everything else (including "/uploads/xyz.jpg") gets
+// the backend base URL prepended, matching the working pattern already
+// used by buildUploadUrl() in BookingFlow.jsx.
+// ─────────────────────────────────────────────────────────────────────────
 function resolveBanquetHallImage(image) {
   const raw = String(image || "").trim();
   if (!raw) return null;
-  if (raw.startsWith("http://") || raw.startsWith("https://") || raw.startsWith("data:") || raw.startsWith("/")) {
+  if (/^https?:\/\//i.test(raw) || raw.startsWith("data:")) {
     return raw;
   }
-  return `${getBackendBaseURL()}/uploads/${raw}`;
+  return `${getBackendBaseURL()}${raw.startsWith("/") ? raw : `/${raw}`}`;
 }
 
 function getReservationStatusBadgeClass(status) {
