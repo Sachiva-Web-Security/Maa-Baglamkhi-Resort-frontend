@@ -9,7 +9,7 @@ import { getCurrentActor, namesMatch } from "../../utils/currentActor";
 
 const ACTIVE_INVOICE_KEY = "restaurant-active-invoice";
 const SAVED_INVOICE_KEY = "restaurant-saved-invoice";
-const TABLE_PAGE_SIZE = 5;
+const TABLE_GRID_PAGE_SIZE = 12;
 const normalizeInvoiceStatus = (value) => String(value || "").trim().toLowerCase();
 const isSettledInvoiceStatus = (value) => {
   const normalized = normalizeInvoiceStatus(value);
@@ -78,8 +78,9 @@ const TablePage = () => {
   const [seatDrafts, setSeatDrafts] = useState({});
   const [savingSeatId, setSavingSeatId] = useState(null);
   const [removingTableId, setRemovingTableId] = useState(null);
-  const [tablePage, setTablePage] = useState(1);
   const [removeDialogTable, setRemoveDialogTable] = useState(null);
+  const [statusFilter, setStatusFilter] = useState("all"); // all | occupied | available
+  const [tablePage, setTablePage] = useState(1);
 
   const getDisplayWaiterName = (value) => {
     const normalized = String(value || "").trim();
@@ -169,8 +170,6 @@ const TablePage = () => {
   }, [tables]);
 
   // Lock background page scroll whenever a modal (Add Table / Remove Table) is open.
-  // This prevents the page behind the popup from scrolling on mobile while the
-  // popup itself is open, without affecting the modal's own internal scrolling.
   useEffect(() => {
     const isModalOpen = showAddTable || Boolean(removeDialogTable);
     if (!isModalOpen) return undefined;
@@ -207,16 +206,12 @@ const TablePage = () => {
   const handleAddTable = async () => {
     if (!tableForm.number.trim()) return;
 
+    const exists = tables.some((t) => String(t.name).trim() === tableForm.number.trim());
 
-const exists = tables.some(
-  (t) => String(t.name).trim() === tableForm.number.trim()
-);
-
-if (exists) {
-  alert("Table already exists");
-  return;
-}
-
+    if (exists) {
+      alert("Table already exists");
+      return;
+    }
 
     try {
       setSaving(true);
@@ -305,17 +300,29 @@ if (exists) {
   const runningTables = displayedTableRows.filter((row) => row.occupied).length;
   const blankTables = displayedTableRows.filter((row) => row.status === "Available").length;
   const pendingInvoice = displayedTableRows.filter((row) => row.itemCount > 0 && row.showPayNow).length;
-  const totalTablePages = Math.max(1, Math.ceil(displayedTableRows.length / TABLE_PAGE_SIZE));
-  const paginatedTableRows = useMemo(
+
+  const filteredTableRows = useMemo(() => {
+    if (statusFilter === "occupied") return displayedTableRows.filter((row) => row.occupied);
+    if (statusFilter === "available") return displayedTableRows.filter((row) => !row.occupied);
+    return displayedTableRows;
+  }, [displayedTableRows, statusFilter]);
+
+  const totalTablePages = Math.max(1, Math.ceil(filteredTableRows.length / TABLE_GRID_PAGE_SIZE));
+  const visibleTableRows = useMemo(
     () =>
-      displayedTableRows.slice(
-        (tablePage - 1) * TABLE_PAGE_SIZE,
-        tablePage * TABLE_PAGE_SIZE,
+      filteredTableRows.slice(
+        (tablePage - 1) * TABLE_GRID_PAGE_SIZE,
+        tablePage * TABLE_GRID_PAGE_SIZE,
       ),
-    [displayedTableRows, tablePage],
+    [filteredTableRows, tablePage],
   );
-  const visibleTableStart = displayedTableRows.length ? (tablePage - 1) * TABLE_PAGE_SIZE + 1 : 0;
-  const visibleTableEnd = Math.min(tablePage * TABLE_PAGE_SIZE, displayedTableRows.length);
+  const visibleTableStart = filteredTableRows.length ? (tablePage - 1) * TABLE_GRID_PAGE_SIZE + 1 : 0;
+  const visibleTableEnd = Math.min(tablePage * TABLE_GRID_PAGE_SIZE, filteredTableRows.length);
+
+  // Reset to page 1 whenever the filter changes, and clamp if the current page no longer exists.
+  useEffect(() => {
+    setTablePage(1);
+  }, [statusFilter]);
 
   useEffect(() => {
     if (tablePage > totalTablePages) {
@@ -334,7 +341,6 @@ if (exists) {
     })
       ? storedInvoice
       : null;
-    const table = tables.find((entry) => entry.name === tableName);
 
     if (!items.length) {
       return;
@@ -407,7 +413,6 @@ if (exists) {
     const billKey = createBillLookupKey("Table", tableName, snapshot?.tokenId || null);
     const relatedBill = billByTable[billKey] || null;
     const reusableBill = items.length ? getReusableBill(relatedBill) : relatedBill;
-    const table = tables.find((entry) => entry.name === tableName);
 
     const subtotal = items.length
       ? items.reduce((sum, item) => sum + Number(item.qty || 0) * Number(item.rate || 0), 0)
@@ -457,7 +462,6 @@ if (exists) {
 
       {/* Header */}
       <div className="relative overflow-hidden rounded-2xl border border-blue-100/70 bg-white/80 p-4 shadow-[0_20px_50px_-15px_rgba(30,64,175,0.15)] backdrop-blur-xl xs:p-5 sm:rounded-[28px] sm:p-7 lg:p-9">
-        {/* subtle wave pattern */}
         <svg
           className="pointer-events-none absolute inset-0 h-full w-full opacity-[0.06]"
           viewBox="0 0 800 240"
@@ -540,7 +544,7 @@ if (exists) {
         </div>
       </div>
 
-      {/* Table list card */}
+      {/* Table grid card — every table renders at once, no pagination */}
       <div className="overflow-hidden rounded-2xl border border-blue-100/70 bg-white/90 shadow-[0_20px_50px_-20px_rgba(30,64,175,0.18)] backdrop-blur sm:rounded-3xl">
         <div className="flex flex-col gap-4 border-b border-blue-100/70 bg-gradient-to-r from-blue-50/60 via-white to-white px-4 py-5 sm:flex-row sm:items-start sm:justify-between sm:px-7 sm:py-6">
           <div className="flex items-start gap-3 sm:gap-4">
@@ -549,110 +553,114 @@ if (exists) {
             </span>
             <div className="min-w-0">
               <div className="text-[12px] font-bold uppercase tracking-wider text-blue-700 sm:text-[15px]">Table Management</div>
-              <h3 className="mt-1 text-lg font-extrabold tracking-tight text-slate-900 sm:text-[24px]">Restaurant tables in list view</h3>
-              {/* <p className="mt-1.5 text-[13px] text-slate-500 sm:text-[17px]">Status, section, booking info, person count, and actions in one place.</p> */}
+              <h3 className="mt-1 text-lg font-extrabold tracking-tight text-slate-900 sm:text-[24px]">Restaurant tables — card view</h3>
             </div>
           </div>
 
-          <button
-            type="button"
-            className="inline-flex h-10 w-10 shrink-0 items-center justify-center self-end rounded-xl border border-blue-200 bg-white text-blue-600 shadow-sm transition-all duration-200 hover:border-blue-300 hover:bg-blue-50 hover:shadow-md sm:h-11 sm:w-11 sm:self-auto"
-            aria-label="Filter table list"
-          >
-            <FiFilter className="text-lg" />
-          </button>
+          <div className="flex items-center gap-2 self-end sm:self-auto">
+            {[
+              { key: "all", label: "All" },
+              { key: "occupied", label: "Occupied" },
+              { key: "available", label: "Available" },
+            ].map((option) => (
+              <button
+                key={option.key}
+                type="button"
+                onClick={() => setStatusFilter(option.key)}
+                className={`inline-flex h-10 items-center gap-1.5 whitespace-nowrap rounded-xl border px-3 text-[13px] font-bold shadow-sm transition-all duration-200 sm:text-[14px] ${
+                  statusFilter === option.key
+                    ? "border-blue-700 bg-blue-700 text-white shadow-md shadow-blue-600/30"
+                    : "border-blue-200 bg-white text-blue-600 hover:border-blue-300 hover:bg-blue-50"
+                }`}
+              >
+                {option.key === "all" ? <FiFilter className="text-base" /> : null}
+                {option.label}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Mobile / tablet card layout (below lg) */}
-        <div className="flex flex-col gap-3 p-3 lg:hidden">
-          {paginatedTableRows.map(({ table, status, occupied, snapshot, itemCount, showPayNow }) => {
+        {/* Compact rectangle card grid — scales from 2 columns on phones up to 6 on wide screens */}
+        <div className="grid grid-cols-2 gap-2.5 p-3 xs:grid-cols-3 sm:grid-cols-3 sm:gap-3 sm:p-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+          {visibleTableRows.map(({ table, status, occupied, snapshot, itemCount, showPayNow }) => {
             const assignedWaiterName = getDisplayWaiterName(snapshot.waiterName);
             const tableOwnedByCurrentWaiter =
               !snapshot.tokenId ||
               !snapshot.waiterName ||
               namesMatch(snapshot.waiterName, actor.name);
             const waiterLocked = isWaiter && !tableOwnedByCurrentWaiter;
+            const isEditingSeats = seatDrafts[table.id] !== undefined;
 
             return (
               <div
                 key={table.id}
-                className="rounded-2xl border border-blue-100 bg-white p-4 shadow-sm"
+                className={`group relative flex flex-col overflow-hidden rounded-xl border bg-white p-2.5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md sm:rounded-2xl sm:p-3 ${
+                  occupied ? "border-amber-200" : "border-emerald-200"
+                }`}
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <div className="text-[17px] font-extrabold text-blue-700">T{table.name}</div>
-                    <div className="mt-0.5 text-[13px] font-medium text-slate-400">ID #{table.id}</div>
+                {/* status accent strip */}
+                <span
+                  className={`absolute inset-x-0 top-0 h-1 ${occupied ? "bg-amber-400" : "bg-emerald-400"}`}
+                  aria-hidden="true"
+                />
+
+                {/* Header: table number + status */}
+                <div className="flex items-center justify-between gap-1.5">
+                  <div className="min-w-0">
+                    <div className="truncate text-[15px] font-extrabold text-blue-700 sm:text-[17px]">T{table.name}</div>
+                    <div className="truncate text-[10px] font-medium text-slate-400 sm:text-[11px]">
+                      {[table.floorName, table.sectionName].filter(Boolean).join(" / ") || "Unmapped"}
+                    </div>
                   </div>
                   <span
-                    className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1 text-[13px] font-bold shadow-sm ${
-                      occupied
-                        ? "border-amber-200 bg-gradient-to-r from-amber-50 to-amber-100/60 text-amber-700"
-                        : "border-emerald-200 bg-gradient-to-r from-emerald-50 to-emerald-100/60 text-emerald-700"
-                    }`}
-                  >
-                    <span className={`h-1.5 w-1.5 rounded-full ${occupied ? "bg-amber-500" : "bg-emerald-500"}`} />
-                    {status}
-                  </span>
+                    className={`inline-flex h-2 w-2 shrink-0 rounded-full ${occupied ? "bg-amber-500" : "bg-emerald-500"}`}
+                    title={status}
+                  />
                 </div>
 
-                <div className="mt-3 grid grid-cols-2 gap-3">
-                  <div>
-                    <div className="text-[11px] font-bold uppercase tracking-wide text-blue-900/50">Section</div>
-                    <div className="mt-1 text-[14px] font-medium text-slate-600">
-                      {[table.floorName, table.sectionName].filter(Boolean).join(" / ") || "Unmapped section"}
-                    </div>
+                {/* Booking / seats info */}
+                <div className="mt-2 flex items-center justify-between gap-1.5">
+                  <div className="min-w-0 truncate rounded-lg bg-gradient-to-r from-blue-50 to-sky-50 px-2 py-1 text-[10px] font-bold text-blue-700 ring-1 ring-blue-100 sm:text-[11px]">
+                    {snapshot.tokenCode || "No booking"}
                   </div>
-                  <div>
-                    <div className="text-[11px] font-bold uppercase tracking-wide text-blue-900/50">Persons</div>
-                    <div className="mt-1">
-                      {isWaiter ? (
-                        <div className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50/70 px-2.5 py-1.5 text-[14px] font-bold text-slate-700">
-                          <FiUsers className="text-blue-400" /> {table.seatCount || 1}
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-1.5">
-                          <input
-                            type="number"
-                            min="1"
-                            value={seatDrafts[table.id] ?? String(table.seatCount || 1)}
-                            onChange={(event) =>
-                              setSeatDrafts((current) => ({
-                                ...current,
-                                [table.id]: event.target.value.replace(/\D/g, "").slice(0, 2) || "1",
-                              }))
-                            }
-                            className="h-10 w-16 rounded-lg border border-blue-200 bg-white px-2 text-[15px] font-bold text-slate-800 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/15"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => handleSeatSave(table)}
-                            disabled={savingSeatId === table.id}
-                            className="h-10 rounded-lg bg-blue-700 px-3 text-[13px] font-bold uppercase tracking-wide text-white shadow-md shadow-blue-600/25 transition-all duration-200 hover:bg-blue-800 disabled:opacity-60"
-                          >
-                            {savingSeatId === table.id ? "..." : "Save"}
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                  <div className="flex shrink-0 items-center gap-0.5 text-[11px] font-bold text-slate-600 sm:text-[12px]">
+                    <FiUsers className="text-blue-400" /> {table.seatCount || 1}
                   </div>
                 </div>
 
-                <div className="mt-3">
-                  <div className="text-[11px] font-bold uppercase tracking-wide text-blue-900/50">Booking Info</div>
-                  <div className="mt-1 inline-flex rounded-lg bg-gradient-to-r from-blue-50 to-sky-50 px-3 py-1.5 text-[13px] font-bold text-blue-700 shadow-sm ring-1 ring-blue-100">
-                    {snapshot.tokenCode || "No Active Booking"}
-                  </div>
-                  <div className="mt-2 text-[13px] text-slate-500">
-                    {itemCount ? `${itemCount} menu items added` : "No items yet"}
-                  </div>
-                  <div className="mt-2 text-[12px] font-semibold uppercase tracking-wide text-slate-400">
-                    Waiter: <span className="text-slate-700">{assignedWaiterName}</span>
-                  </div>
+                <div className="mt-1.5 truncate text-[10px] text-slate-500 sm:text-[11px]">
+                  {itemCount ? `${itemCount} items` : "No items"} · {assignedWaiterName}
                 </div>
 
-                <div className="mt-4 flex flex-wrap gap-2">
+                {!isWaiter ? (
+                  <div className="mt-2 flex items-center gap-1">
+                    <input
+                      type="number"
+                      min="1"
+                      value={seatDrafts[table.id] ?? String(table.seatCount || 1)}
+                      onChange={(event) =>
+                        setSeatDrafts((current) => ({
+                          ...current,
+                          [table.id]: event.target.value.replace(/\D/g, "").slice(0, 2) || "1",
+                        }))
+                      }
+                      className="h-7 w-full min-w-0 rounded-lg border border-blue-200 bg-white px-1.5 text-[12px] font-bold text-slate-800 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleSeatSave(table)}
+                      disabled={savingSeatId === table.id}
+                      className="h-7 shrink-0 rounded-lg bg-blue-700 px-2 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm transition-all duration-200 hover:bg-blue-800 disabled:opacity-60"
+                    >
+                      {savingSeatId === table.id ? "..." : "Save"}
+                    </button>
+                  </div>
+                ) : null}
+
+                {/* Actions */}
+                <div className="mt-2 grid grid-cols-2 gap-1">
                   <button
-                    className="flex-1 basis-[45%] rounded-xl bg-slate-900 px-4 py-2.5 text-[14px] font-bold text-white shadow-md shadow-slate-900/20 transition-all duration-200 hover:bg-slate-800 hover:shadow-lg disabled:opacity-50"
+                    className="col-span-2 rounded-lg bg-slate-900 px-2 py-1.5 text-[11px] font-bold text-white shadow-sm transition-all duration-200 hover:bg-slate-800 disabled:opacity-50 sm:text-[12px]"
                     disabled={waiterLocked}
                     onClick={() => {
                       setSelectedTable(table.name);
@@ -662,28 +670,8 @@ if (exists) {
                     {waiterLocked ? "Assigned" : "+ Booking"}
                   </button>
 
-                  {occupied && itemCount ? (
-                    <button
-                      className="flex-1 basis-[45%] rounded-xl bg-blue-700 px-4 py-2.5 text-[14px] font-bold text-white shadow-md shadow-blue-600/25 transition-all duration-200 hover:bg-blue-800 hover:shadow-lg disabled:opacity-50"
-                      disabled={waiterLocked}
-                      onClick={() => openCreateInvoice(table.name)}
-                    >
-                      Invoice
-                    </button>
-                  ) : null}
-
-                  {showPayNow ? (
-                    <button
-                      className="flex-1 basis-[45%] rounded-xl bg-amber-500 px-4 py-2.5 text-[14px] font-bold text-white shadow-md shadow-amber-500/25 transition-all duration-200 hover:bg-amber-600 hover:shadow-lg disabled:opacity-50"
-                      disabled={waiterLocked}
-                      onClick={() => openPayNow(table.name)}
-                    >
-                      Pay
-                    </button>
-                  ) : null}
-
                   <button
-                    className="flex-1 basis-[45%] rounded-xl border border-blue-200 bg-white px-4 py-2.5 text-[14px] font-bold text-blue-700 shadow-sm transition-all duration-200 hover:border-blue-300 hover:bg-blue-50 disabled:opacity-50"
+                    className="rounded-lg border border-blue-200 bg-white px-2 py-1.5 text-[11px] font-bold text-blue-700 shadow-sm transition-all duration-200 hover:border-blue-300 hover:bg-blue-50 disabled:opacity-50 sm:text-[12px]"
                     disabled={waiterLocked}
                     onClick={() => {
                       setSelectedTable(table.name);
@@ -693,12 +681,41 @@ if (exists) {
                     Items
                   </button>
 
-                  {!isWaiter ? (
+                  {occupied && itemCount ? (
+                    <button
+                      className="rounded-lg bg-blue-700 px-2 py-1.5 text-[11px] font-bold text-white shadow-sm transition-all duration-200 hover:bg-blue-800 disabled:opacity-50 sm:text-[12px]"
+                      disabled={waiterLocked}
+                      onClick={() => openCreateInvoice(table.name)}
+                    >
+                      Invoice
+                    </button>
+                  ) : showPayNow ? (
+                    <button
+                      className="rounded-lg bg-amber-500 px-2 py-1.5 text-[11px] font-bold text-white shadow-sm transition-all duration-200 hover:bg-amber-600 disabled:opacity-50 sm:text-[12px]"
+                      disabled={waiterLocked}
+                      onClick={() => openPayNow(table.name)}
+                    >
+                      Pay
+                    </button>
+                  ) : !isWaiter ? (
                     <button
                       type="button"
                       onClick={() => setRemoveDialogTable(table)}
                       disabled={removingTableId === table.id}
-                      className="flex-1 basis-[45%] rounded-xl bg-rose-50 px-4 py-2.5 text-[14px] font-bold text-rose-600 shadow-sm transition-all duration-200 hover:bg-rose-100 hover:shadow-md disabled:opacity-60"
+                      className="rounded-lg bg-rose-50 px-2 py-1.5 text-[11px] font-bold text-rose-600 shadow-sm transition-all duration-200 hover:bg-rose-100 disabled:opacity-60 sm:text-[12px]"
+                    >
+                      {removingTableId === table.id ? "..." : "Remove"}
+                    </button>
+                  ) : (
+                    <span />
+                  )}
+
+                  {!isWaiter && (occupied && itemCount ? true : showPayNow) ? (
+                    <button
+                      type="button"
+                      onClick={() => setRemoveDialogTable(table)}
+                      disabled={removingTableId === table.id}
+                      className="col-span-2 rounded-lg bg-rose-50 px-2 py-1.5 text-[11px] font-bold text-rose-600 shadow-sm transition-all duration-200 hover:bg-rose-100 disabled:opacity-60 sm:text-[12px]"
                     >
                       {removingTableId === table.id ? "Removing..." : "Remove"}
                     </button>
@@ -709,159 +726,11 @@ if (exists) {
           })}
         </div>
 
-        {/* Desktop / large tablet table layout (lg and up) */}
-        <div className="hidden overflow-x-auto lg:block">
-          <table className="w-full min-w-[980px] border-collapse">
-            <thead className="bg-gradient-to-r from-blue-50/70 to-blue-50/30">
-              <tr className="text-left">
-                <th className="px-6 py-4 text-[16px] font-bold uppercase tracking-wide text-blue-900/60">Table ID</th>
-                <th className="px-6 py-4 text-[16px] font-bold uppercase tracking-wide text-blue-900/60">Status</th>
-                <th className="px-6 py-4 text-[16px] font-bold uppercase tracking-wide text-blue-900/60">Section</th>
-                <th className="px-6 py-4 text-[16px] font-bold uppercase tracking-wide text-blue-900/60">Booking Info</th>
-                <th className="px-6 py-4 text-[16px] font-bold uppercase tracking-wide text-blue-900/60">Persons</th>
-                <th className="px-6 py-4 text-right text-[16px] font-bold uppercase tracking-wide text-blue-900/60">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedTableRows.map(({ table, status, occupied, snapshot, itemCount, showPayNow }) => {
-                const assignedWaiterName = getDisplayWaiterName(snapshot.waiterName);
-                const tableOwnedByCurrentWaiter =
-                  !snapshot.tokenId ||
-                  !snapshot.waiterName ||
-                  namesMatch(snapshot.waiterName, actor.name);
-                const waiterLocked = isWaiter && !tableOwnedByCurrentWaiter;
-
-                return (
-                  <tr key={table.id} className="border-t border-blue-50 align-top transition-colors duration-150 hover:bg-blue-50/40">
-                    <td className="px-6 py-5">
-                      <div className="text-[18px] font-extrabold text-blue-700">T{table.name}</div>
-                      <div className="mt-0.5 text-[15px] font-medium text-slate-400">ID #{table.id}</div>
-                    </td>
-                    <td className="px-6 py-5">
-                      <span
-                        className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[15px] font-bold shadow-sm ${
-                          occupied
-                            ? "border-amber-200 bg-gradient-to-r from-amber-50 to-amber-100/60 text-amber-700"
-                            : "border-emerald-200 bg-gradient-to-r from-emerald-50 to-emerald-100/60 text-emerald-700"
-                        }`}
-                      >
-                        <span className={`h-1.5 w-1.5 rounded-full ${occupied ? "bg-amber-500" : "bg-emerald-500"}`} />
-                        {status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-5 text-[17px] font-medium text-slate-600">
-                      {[table.floorName, table.sectionName].filter(Boolean).join(" / ") || "Unmapped section"}
-                    </td>
-                    <td className="px-6 py-5">
-                      <div className="inline-flex rounded-lg bg-gradient-to-r from-blue-50 to-sky-50 px-3.5 py-2 text-[15px] font-bold text-blue-700 shadow-sm ring-1 ring-blue-100">
-                        {snapshot.tokenCode || "No Active Booking"}
-                      </div>
-                      <div className="mt-2 text-[15px] text-slate-500">
-                        {itemCount ? `${itemCount} menu items added` : "No items yet"}
-                      </div>
-                      <div className="mt-2 text-[15px] font-semibold uppercase tracking-wide text-slate-400">
-                        Waiter: <span className="text-slate-700">{assignedWaiterName}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-5">
-                      {isWaiter ? (
-                        <div className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50/70 px-3.5 py-2.5 text-[17px] font-bold text-slate-700">
-                          <FiUsers className="text-blue-400" /> {table.seatCount || 1} guests
-                        </div>
-                      ) : (
-                        <div className="flex max-w-[220px] items-center gap-2">
-                          <input
-                            type="number"
-                            min="1"
-                            value={seatDrafts[table.id] ?? String(table.seatCount || 1)}
-                            onChange={(event) =>
-                              setSeatDrafts((current) => ({
-                                ...current,
-                                [table.id]: event.target.value.replace(/\D/g, "").slice(0, 2) || "1",
-                              }))
-                            }
-                            className="h-11 w-20 rounded-xl border border-blue-200 bg-white px-3 text-[17px] font-bold text-slate-800 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/15"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => handleSeatSave(table)}
-                            disabled={savingSeatId === table.id}
-                            className="h-11 rounded-xl bg-blue-700 px-4 text-[15px] font-bold uppercase tracking-wide text-white shadow-md shadow-blue-600/25 transition-all duration-200 hover:bg-blue-800 disabled:opacity-60"
-                          >
-                            {savingSeatId === table.id ? "Saving..." : "Save"}
-                          </button>
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-6 py-5">
-                      <div className="flex flex-wrap justify-end gap-2">
-                        <button
-                          className="rounded-xl bg-slate-900 px-4 py-2.5 text-[15px] font-bold text-white shadow-md shadow-slate-900/20 transition-all duration-200 hover:bg-slate-800 hover:shadow-lg disabled:opacity-50"
-                          disabled={waiterLocked}
-                          onClick={() => {
-                            setSelectedTable(table.name);
-                            navigate(`/restaurant/token/${table.name}`);
-                          }}
-                        >
-                          {waiterLocked ? "Assigned" : "+ Booking"}
-                        </button>
-
-                        {occupied && itemCount ? (
-                          <button
-                            className="rounded-xl bg-blue-700 px-4 py-2.5 text-[15px] font-bold text-white shadow-md shadow-blue-600/25 transition-all duration-200 hover:bg-blue-800 hover:shadow-lg disabled:opacity-50"
-                            disabled={waiterLocked}
-                            onClick={() => openCreateInvoice(table.name)}
-                          >
-                            Invoice
-                          </button>
-                        ) : null}
-
-                        {showPayNow ? (
-                          <button
-                            className="rounded-xl bg-amber-500 px-4 py-2.5 text-[15px] font-bold text-white shadow-md shadow-amber-500/25 transition-all duration-200 hover:bg-amber-600 hover:shadow-lg disabled:opacity-50"
-                            disabled={waiterLocked}
-                            onClick={() => openPayNow(table.name)}
-                          >
-                            Pay
-                          </button>
-                        ) : null}
-
-                        <button
-                          className="rounded-xl border border-blue-200 bg-white px-4 py-2.5 text-[15px] font-bold text-blue-700 shadow-sm transition-all duration-200 hover:border-blue-300 hover:bg-blue-50 disabled:opacity-50"
-                          disabled={waiterLocked}
-                          onClick={() => {
-                            setSelectedTable(table.name);
-                            navigate(`/restaurant/token-items/${table.name}`);
-                          }}
-                        >
-                          Items
-                        </button>
-
-                        {!isWaiter ? (
-                          <button
-                            type="button"
-                            onClick={() => setRemoveDialogTable(table)}
-                            disabled={removingTableId === table.id}
-                            className="rounded-xl bg-rose-50 px-4 py-2.5 text-[15px] font-bold text-rose-600 shadow-sm transition-all duration-200 hover:bg-rose-100 hover:shadow-md disabled:opacity-60"
-                          >
-                            {removingTableId === table.id ? "Removing..." : "Remove"}
-                          </button>
-                        ) : null}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-
         <div className="flex flex-col gap-3 border-t border-blue-100/70 bg-blue-50/20 px-4 py-4 sm:px-7 sm:py-5 lg:flex-row lg:items-center lg:justify-between">
-          <div className="text-center text-[14px] text-slate-500 sm:text-left sm:text-[17px]">
-            Showing{" "}
-            <span className="font-bold text-slate-900">{visibleTableStart}</span>-
+          <div className="text-center text-[13px] text-slate-500 sm:text-left sm:text-[15px]">
+            Showing <span className="font-bold text-slate-900">{visibleTableStart}</span>-
             <span className="font-bold text-slate-900">{visibleTableEnd}</span> of{" "}
-            <span className="font-bold text-slate-900">{displayedTableRows.length}</span> tables
+            <span className="font-bold text-slate-900">{filteredTableRows.length}</span> tables
           </div>
 
           {totalTablePages > 1 ? (

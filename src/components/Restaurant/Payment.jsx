@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   FiUser,
   FiCreditCard,
@@ -161,6 +161,9 @@ const buildReceiptHtml = ({
   discountAmount,
   perPersonAmount,
   computedTotal,
+  printLabel = "INVOICE",
+  explicitInvoiceNo = null,
+  explicitTableNo = null,
 }) => {
   const printedAt = invoice?.paidAt || invoice?.printedAt || invoice?.date || new Date().toISOString();
   const sgstAmount = Number(invoice?.gst || 0) / 2;
@@ -171,6 +174,17 @@ const buildReceiptHtml = ({
   const userName = localStorage.getItem("name") || localStorage.getItem("username") || "POS User";
   const entityLabel = String(entityType || invoice?.entityType || "Table").toLowerCase() === "room" ? "Room No" : "Table No";
   const kotNos = invoice?.tokenId ? String(invoice.tokenId) : formatVisitId(invoice?.tokenCode, invoice?.tokenId);
+  const invoiceNoDisplay =
+    explicitInvoiceNo ||
+    buildReceiptInvoiceNo(invoice) ||
+    (invoice?.tokenId ? `TMP-${String(invoice.tokenId).padStart(4, "0")}` : "----");
+  const tableDisplay =
+    explicitTableNo ||
+    invoice?.table ||
+    invoice?.tableNumber ||
+    invoice?.postedRoomNumber ||
+    invoice?.sourceTableNumber ||
+    "--";
   const itemRows = (Array.isArray(invoice?.items) ? invoice.items : [])
     .map((item) => {
       const qty = Number(item?.qty || 0);
@@ -282,15 +296,15 @@ const buildReceiptHtml = ({
         </div>
 
         <div class="separator"></div>
-        <div class="center title">DUPLICATE INVOICE</div>
+        <div class="center title">${escapeReceiptHtml(printLabel)}</div>
         <div class="separator"></div>
 
         <div class="meta-row">
-          <span>Invoice No: ${escapeReceiptHtml(buildReceiptInvoiceNo(invoice))}</span>
+          <span>Invoice No: ${escapeReceiptHtml(invoiceNoDisplay)}</span>
           <span>Date: ${escapeReceiptHtml(formatReceiptDateOnly(printedAt))}</span>
         </div>
         <div class="meta-row">
-          <span>${escapeReceiptHtml(entityLabel)}: ${escapeReceiptHtml(invoice?.table || "--")}</span>
+          <span>${escapeReceiptHtml(entityLabel)}: ${escapeReceiptHtml(tableDisplay)}</span>
           <span>Time: ${escapeReceiptHtml(formatReceiptTimeOnly(printedAt))}</span>
         </div>
         <div class="meta-row">
@@ -1152,9 +1166,51 @@ const Payment = ({
     return true;
   };
 
-  const handlePrint = (overrideInvoice = null) => {
-    const invoiceToPrint = overrideInvoice || invoice;
-    if (!invoiceToPrint) return;
+  const handlePrint = async (overrideInvoice = null) => {
+    const rawInvoice = overrideInvoice || invoice;
+    if (!rawInvoice) return;
+
+    // Hydrate items from the server if the invoice was created without them
+    // (e.g. bill created from token but items not yet attached).
+    let invoiceToPrint = rawInvoice;
+    const tokenId = rawInvoice.tokenId || invoice?.tokenId || null;
+    if (tokenId && (!Array.isArray(invoiceToPrint.items) || !invoiceToPrint.items.length)) {
+      try {
+        const itemsRes = await API.get(`/token/items/${tokenId}`);
+        const tokenItems = Array.isArray(itemsRes.data) ? itemsRes.data : [];
+        if (tokenItems.length) {
+          invoiceToPrint = {
+            ...invoiceToPrint,
+            items: tokenItems.map((item) => ({
+              id: item.id,
+              name: item.item_name || item.name || "Menu Item",
+              qty: Number(item.qty || item.quantity || 0),
+              rate: Number(item.rate || item.price || 0),
+            })),
+          };
+        }
+      } catch {
+        // Proceed without items if the API call fails
+      }
+    }
+
+    // Determine print label: if a bill already exists, show "INVOICE" (original),
+    // otherwise show "COPY" to indicate it's not the final printed version.
+    const hasBill = Number(invoiceToPrint?.billId || 0) > 0;
+    const printLabel = hasBill ? "INVOICE" : "INVOICE COPY";
+
+    // Pull values from React state directly so the receipt is always correct,
+    // even if the invoice object has gaps (e.g. before payment when billId is null).
+    const explicitInvoiceNo = generatedBill?.id
+      ? String(generatedBill.id).padStart(4, "0")
+      : invoiceToPrint?.billId
+        ? String(invoiceToPrint.billId).padStart(4, "0")
+        : invoiceToPrint?.tokenId
+          ? `TMP-${String(invoiceToPrint.tokenId).padStart(4, "0")}`
+          : null;
+    const explicitTableNo =
+      invoiceToPrint?.table || invoiceToPrint?.tableNumber || invoiceToPrint?.postedRoomNumber ||
+      null;
 
     const printHTML = buildReceiptHtml({
       invoice: invoiceToPrint,
@@ -1167,6 +1223,9 @@ const Payment = ({
       discountAmount,
       perPersonAmount,
       computedTotal,
+      printLabel,
+      explicitInvoiceNo,
+      explicitTableNo,
     });
 
     const win = window.open("", "", "width=420,height=760");
@@ -1174,9 +1233,6 @@ const Payment = ({
     win.document.write(printHTML);
     win.document.close();
 
-    // Close the print popup after printing finishes and return focus
-    // to the main window so the "Continue" button on the success popup
-    // remains clickable.
     const returnFocusAndClose = () => {
       try {
         if (win && !win.closed) win.close();
@@ -1186,8 +1242,6 @@ const Payment = ({
 
     win.onafterprint = returnFocusAndClose;
 
-    // Fallback: force-close after 6 seconds if onafterprint doesn't fire
-    // (e.g. browser cancels the print dialog in a way that skips the event).
     const fallbackTimer = window.setTimeout(() => {
       returnFocusAndClose();
     }, 6000);

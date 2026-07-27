@@ -360,6 +360,29 @@ const buildUploadUrl = (value) => {
   return `${getBackendBaseURL()}${raw.startsWith("/") ? raw : `/${raw}`}`;
 };
 
+// Module-level toWords so handlePrintInvoiceDirect (and any other caller)
+// outside InvoiceModal can use it without a scope error.
+const toWords = (amount) => {
+  if (!amount || amount <= 0) return "Rupees Zero Only";
+  const ones = ["","One","Two","Three","Four","Five","Six","Seven","Eight","Nine","Ten","Eleven","Twelve","Thirteen","Fourteen","Fifteen","Sixteen","Seventeen","Eighteen","Nineteen"];
+  const tens = ["","","Twenty","Thirty","Forty","Fifty","Sixty","Seventy","Eighty","Ninety"];
+  const words = (n) => {
+    if (n === 0) return "";
+    if (n < 20) return ones[n] + " ";
+    if (n < 100) return tens[Math.floor(n/10)] + " " + words(n%10);
+    if (n < 1000) return ones[Math.floor(n/100)] + " Hundred " + words(n%100);
+    if (n < 1e5) return words(Math.floor(n/1000)) + " Thousand " + words(n%1000);
+    if (n < 1e7) return words(Math.floor(n/1e5)) + " Lakh " + words(n%1e5);
+    return words(Math.floor(n/1e7)) + " Crore " + words(n%1e7);
+  };
+  const rounded = Math.round(amount * 100) / 100;
+  const whole = Math.floor(rounded);
+  const paise = Math.round((rounded - whole) * 100);
+  let result = "Rupees " + words(whole).trim();
+  if (paise > 0) result += " and " + words(paise).trim() + " Paise";
+  return result + " Only";
+};
+
 const STATUS_STYLES = {
   confirmed: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100",
   "checked-in": "bg-sky-50 text-sky-700 ring-1 ring-sky-100",
@@ -1163,10 +1186,17 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
         <title>${invoiceNo} - ${RESORT_NAME_INVOICE}</title>
         <style>
           @page { size: A4; margin: 12mm; }
+          html, body {
+            background: #ffffff !important;
+            background-color: #ffffff !important;
+            color: #0f172a;
+          }
           * { box-sizing: border-box; margin: 0; padding: 0; }
           body {
             font-family: "Helvetica Neue", Arial, sans-serif;
             color: #0f172a;
+            background: #ffffff !important;
+            background-color: #ffffff !important;
             padding: 20px;
             font-size: 11px;
             line-height: 1.4;
@@ -1292,27 +1322,27 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
           }
 
           .payment-box {
-            border: 1px solid #0f172a;
-            background: #0f172a;
-            color: #ffffff;
+            border: 1px solid #cbd5e1;
+            background: #f8fafc;
+            color: #0f172a;
             padding: 8px 10px;
             font-size: 10px;
           }
           .payment-box .pb-label {
             font-size: 8px; font-weight: 700; text-transform: uppercase;
-            letter-spacing: 0.06em; color: #cbd5e1; margin-bottom: 2px;
+            letter-spacing: 0.06em; color: #475569; margin-bottom: 2px;
           }
           .payment-box .pb-row {
             display: flex; justify-content: space-between;
             padding: 1px 0; font-size: 10px;
           }
-          .payment-box .pb-row .pb-lbl { color: #cbd5e1; }
+          .payment-box .pb-row .pb-lbl { color: #475569; }
           .payment-box .pb-row.grand {
-            border-top: 1px solid rgba(255,255,255,0.25);
+            border-top: 1px solid #e2e8f0;
             margin-top: 3px; padding-top: 3px;
             font-weight: 800; font-size: 13px;
           }
-          .payment-box .pb-row .pb-lbl.grand { color: #ffffff; }
+          .payment-box .pb-row .pb-lbl.grand { color: #0f172a; }
 
           .words-box {
             border: 1px solid #cbd5e1;
@@ -1475,9 +1505,9 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
       y = margin;
     };
 
-    doc.setFillColor(15, 23, 42);
+    doc.setFillColor(241, 245, 249);
     doc.rect(0, 0, pageWidth, 26, "F");
-    doc.setTextColor(255, 255, 255);
+    doc.setTextColor(15, 23, 42);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(18);
     doc.text(RESORT_NAME_INVOICE, center, y + 9, { align: "center" });
@@ -1537,9 +1567,9 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
     const colX = [margin + 2, margin + 50, margin + 120, margin + 145, rightEdge - 3];
     const headerRow = ["#", "Description", "Qty", "Rate", "Amount"];
 
-    doc.setFillColor(15, 23, 42);
+    doc.setFillColor(226, 232, 240);
     doc.rect(margin, y, pageWidth - margin * 2, 7, "F");
-    doc.setTextColor(255, 255, 255);
+    doc.setTextColor(15, 23, 42);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(8);
     headerRow.forEach((label, i) => {
@@ -1593,11 +1623,13 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
     doc.setTextColor(100, 100, 100);
     doc.text("Invoice issued u/s 31 of CGST Act, 2017", margin, y + 20);
 
-    doc.setFillColor(15, 23, 42);
+    doc.setFillColor(248, 250, 252);
     doc.roundedRect(totalsX, y, totalsW, 34, 1.5, 1.5, "F");
+    doc.setDrawColor(203, 213, 225);
+    doc.roundedRect(totalsX, y, totalsW, 34, 1.5, 1.5, "S");
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
-    doc.setTextColor(200, 200, 200);
+    doc.setTextColor(51, 65, 85);
     const tx = totalsX + 4;
     const tv = rightEdge - 4;
 
@@ -1615,19 +1647,19 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
       doc.text(`- ${formatCurrency(invoiceDiscount)}`, tv, y + 21, { align: "right" });
     }
 
-    doc.setDrawColor(255, 255, 255);
+    doc.setDrawColor(203, 213, 225);
     doc.setLineWidth(0.3);
     doc.line(tx, y + (invoiceDiscount > 0 ? 26 : 23), tv, y + (invoiceDiscount > 0 ? 26 : 23));
 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
-    doc.setTextColor(255, 255, 255);
+    doc.setTextColor(15, 23, 42);
     doc.text("GRAND TOTAL", tx, y + (invoiceDiscount > 0 ? 31 : 28));
     doc.text(formatCurrency(invoiceTotal), tv, y + (invoiceDiscount > 0 ? 31 : 28), { align: "right" });
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(7);
-    doc.setTextColor(160, 160, 160);
+    doc.setTextColor(100, 116, 139);
     doc.text("(inclusive of all taxes)", tv, y + (invoiceDiscount > 0 ? 34 : 31), { align: "right" });
 
     y += 40;
@@ -1762,27 +1794,6 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
     }
   };
 
-  const toWords = (amount) => {
-    if (!amount || amount <= 0) return "Rupees Zero Only";
-    const ones = ["","One","Two","Three","Four","Five","Six","Seven","Eight","Nine","Ten","Eleven","Twelve","Thirteen","Fourteen","Fifteen","Sixteen","Seventeen","Eighteen","Nineteen"];
-    const tens = ["","","Twenty","Thirty","Forty","Fifty","Sixty","Seventy","Eighty","Ninety"];
-    const words = (n) => {
-      if (n === 0) return "";
-      if (n < 20) return ones[n] + " ";
-      if (n < 100) return tens[Math.floor(n/10)] + " " + words(n%10);
-      if (n < 1000) return ones[Math.floor(n/100)] + " Hundred " + words(n%100);
-      if (n < 1e5) return words(Math.floor(n/1000)) + " Thousand " + words(n%1000);
-      if (n < 1e7) return words(Math.floor(n/1e5)) + " Lakh " + words(n%1e5);
-      return words(Math.floor(n/1e7)) + " Crore " + words(n%1e7);
-    };
-    const rounded = Math.round(amount * 100) / 100;
-    const whole = Math.floor(rounded);
-    const paise = Math.round((rounded - whole) * 100);
-    let result = "Rupees " + words(whole).trim();
-    if (paise > 0) result += " and " + words(paise).trim() + " Paise";
-    return result + " Only";
-  };
-
   return (
     <FeatureModal
       title="Invoice"
@@ -1829,15 +1840,15 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
           <div className="rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
 
             {/* Brand header */}
-            <div className="bg-slate-900 px-5 sm:px-8 py-5 sm:py-6 flex items-center gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white/10 text-white text-xl">
+            <div className="bg-slate-50 px-5 sm:px-8 py-5 sm:py-6 flex items-center gap-4 border-b border-slate-200">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white text-xl">
                 <FaHotel />
               </div>
               <div className="flex-1 text-center">
-                <div className="text-xl sm:text-2xl font-black text-white tracking-wide">TAX INVOICE</div>
-                <div className="text-[13px] sm:text-sm font-semibold text-slate-300 mt-0.5">{RESORT_NAME_INVOICE}</div>
+                <div className="text-xl sm:text-2xl font-black text-slate-900 tracking-wide">TAX INVOICE</div>
+                <div className="text-[13px] sm:text-sm font-semibold text-slate-600 mt-0.5">{RESORT_NAME_INVOICE}</div>
               </div>
-              <div className="hidden sm:block rounded-full bg-white/10 px-3 py-1 text-[11px] font-bold text-slate-300 tracking-wide">
+              <div className="hidden sm:block rounded-full bg-white border border-slate-200 px-3 py-1 text-[11px] font-bold text-slate-700 tracking-wide">
                 GSTIN: {RESORT_GSTIN_INVOICE}
               </div>
             </div>
@@ -1924,15 +1935,15 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
             <div className="overflow-x-auto">
               <table className="w-full min-w-[680px] text-left text-[15px]">
                 <thead>
-                  <tr className="bg-slate-900 text-white">
-                    <th className="px-5 sm:px-6 py-3 text-[11px] font-bold uppercase tracking-widest">Date</th>
-                    <th className="px-5 sm:px-6 py-3 text-[11px] font-bold uppercase tracking-widest">Particulars</th>
-                    <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-widest text-right">Tariff</th>
-                    <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-widest text-right">Disc</th>
-                    <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-widest text-right">Taxable</th>
-                    <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-widest text-right">SGST 2.5%</th>
-                    <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-widest text-right">CGST 2.5%</th>
-                    <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-widest text-right">Total</th>
+                  <tr className="bg-slate-100 text-slate-900">
+                    <th className="px-5 sm:px-6 py-3 text-[11px] font-bold uppercase tracking-widest text-slate-700">Date</th>
+                    <th className="px-5 sm:px-6 py-3 text-[11px] font-bold uppercase tracking-widest text-slate-700">Particulars</th>
+                    <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-widest text-right text-slate-700">Tariff</th>
+                    <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-widest text-right text-slate-700">Disc</th>
+                    <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-widest text-right text-slate-700">Taxable</th>
+                    <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-widest text-right text-slate-700">SGST 2.5%</th>
+                    <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-widest text-right text-slate-700">CGST 2.5%</th>
+                    <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-widest text-right text-slate-700">Total</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -2003,42 +2014,42 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
                   </div>
 
                   {/* Right: Totals card */}
-                  <div className="bg-slate-900 px-5 sm:px-8 py-5">
+                  <div className="bg-slate-50 px-5 sm:px-8 py-5 border-l border-slate-200">
                     <div className="space-y-2">
                       <div className="flex justify-between text-[13px]">
-                        <span className="text-slate-400">Tariff Total</span>
-                        <span className="text-slate-200 font-semibold tabular-nums">{formatCurrency(tariffTotal)}</span>
+                        <span className="text-slate-600">Tariff Total</span>
+                        <span className="text-slate-900 font-semibold tabular-nums">{formatCurrency(tariffTotal)}</span>
                       </div>
                       {discountTotal > 0 && (
                         <div className="flex justify-between text-[13px]">
-                          <span className="text-slate-400">Discount</span>
-                          <span className="text-slate-200 font-semibold tabular-nums">- {formatCurrency(discountTotal)}</span>
+                          <span className="text-slate-600">Discount</span>
+                          <span className="text-slate-900 font-semibold tabular-nums">- {formatCurrency(discountTotal)}</span>
                         </div>
                       )}
                       <div className="flex justify-between text-[13px]">
-                        <span className="text-slate-400">Taxable</span>
-                        <span className="text-slate-200 font-semibold tabular-nums">{formatCurrency(tariffTotal - discountTotal)}</span>
+                        <span className="text-slate-600">Taxable</span>
+                        <span className="text-slate-900 font-semibold tabular-nums">{formatCurrency(tariffTotal - discountTotal)}</span>
                       </div>
                       <div className="flex justify-between text-[13px]">
-                        <span className="text-slate-400">SGST @ 2.5%</span>
-                        <span className="text-slate-200 font-semibold tabular-nums">{formatCurrency(sgstTotal)}</span>
+                        <span className="text-slate-600">SGST @ 2.5%</span>
+                        <span className="text-slate-900 font-semibold tabular-nums">{formatCurrency(sgstTotal)}</span>
                       </div>
                       <div className="flex justify-between text-[13px]">
-                        <span className="text-slate-400">CGST @ 2.5%</span>
-                        <span className="text-slate-200 font-semibold tabular-nums">{formatCurrency(cgstTotal)}</span>
+                        <span className="text-slate-600">CGST @ 2.5%</span>
+                        <span className="text-slate-900 font-semibold tabular-nums">{formatCurrency(cgstTotal)}</span>
                       </div>
                       <div className="flex justify-between text-[13px]">
-                        <span className="text-slate-400">Round Off</span>
-                        <span className="text-slate-200 font-semibold tabular-nums">{formatCurrency(roundOff)}</span>
+                        <span className="text-slate-600">Round Off</span>
+                        <span className="text-slate-900 font-semibold tabular-nums">{formatCurrency(roundOff)}</span>
                       </div>
-                      <div className="border-t border-white/10 pt-2 mt-1">
+                      <div className="border-t border-slate-200 pt-2 mt-1">
                         <div className="flex justify-between text-[11px]">
-                          <span className="text-slate-500 font-bold uppercase tracking-wider">Final Total</span>
-                          <span className="text-white font-black text-lg tabular-nums">{formatCurrency(finalTotal)}</span>
+                          <span className="text-slate-700 font-bold uppercase tracking-wider">Final Total</span>
+                          <span className="text-slate-900 font-black text-lg tabular-nums">{formatCurrency(finalTotal)}</span>
                         </div>
                       </div>
-                      <div className="pt-1.5 border-t border-white/5">
-                        <div className="text-[12px] text-slate-500 italic leading-relaxed">
+                      <div className="pt-1.5 border-t border-slate-100">
+                        <div className="text-[12px] text-slate-600 italic leading-relaxed">
                           {amountInWords}
                         </div>
                       </div>
@@ -3282,7 +3293,19 @@ const handleJumpStep = (stepView) => {
     const invoiceNo = d.invoice_no || d.invoiceNo || b.bookingCode || `INV-${b.bookingId}`;
     const guestName = d.guest_name || b.guest_name || "Guest";
     const roomType = d.room_type || b.room_type || b.roomType || "Single";
-    const roomNo = d.room_no || d.roomNumber || b.room_no || b.roomNumber || "104";
+    const roomNo =
+      d.room_no ||
+      d.roomNumber ||
+      d.room_no_list ||
+      (Array.isArray(d.rooms) && d.rooms[0]
+        ? d.rooms[0].room_number || d.rooms[0].roomNo || d.rooms[0].room_no
+        : null) ||
+      b.room_no ||
+      b.roomNumber ||
+      (Array.isArray(b.rooms) && b.rooms[0]
+        ? b.rooms[0].room_number || b.rooms[0].roomNo || b.rooms[0].room_no
+        : null) ||
+      "104";
     const noOfNights = d.no_of_nights || b.no_of_nights || b.nights || d.nights || 1;
     const pax = d.no_of_guests || d.guest_capacity || b.no_of_guests || "2 Adults, 0";
     const guestAddress = d.address || b.address || "BHOPAL";
@@ -3348,10 +3371,17 @@ const handleJumpStep = (stepView) => {
         <title>${invoiceNo} - ${RESORT_NAME_INVOICE}</title>
         <style>
           @page { size: A4; margin: 10mm; }
+          html, body {
+            background: #ffffff !important;
+            background-color: #ffffff !important;
+            color: #0f172a;
+          }
           * { box-sizing: border-box; margin: 0; padding: 0; }
           body {
             font-family: "Helvetica Neue", Arial, sans-serif;
             color: #0f172a;
+            background: #ffffff !important;
+            background-color: #ffffff !important;
             padding: 16px;
             font-size: 10px;
             line-height: 1.35;
@@ -3359,7 +3389,7 @@ const handleJumpStep = (stepView) => {
           .resort-header {
             text-align: center;
             padding: 8px 0 6px;
-            border-bottom: 2px solid #0f172a;
+            border-bottom: 2px solid #94a3b8;
             margin-bottom: 4px;
           }
           .resort-header .logo-row {
@@ -3420,8 +3450,8 @@ const handleJumpStep = (stepView) => {
             font-size: 9px;
           }
           table.items thead th {
-            background: #0f172a;
-            color: #ffffff;
+            background: #e2e8f0;
+            color: #0f172a;
             padding: 4px 5px;
             font-weight: 700;
             text-align: left;
@@ -3477,27 +3507,27 @@ const handleJumpStep = (stepView) => {
           .tariff-box .tb-row.grand .tb-lbl { color: #0f172a; font-weight: 800; }
 
           .payment-box {
-            border: 1px solid #0f172a;
-            background: #0f172a;
-            color: #ffffff;
+            border: 1px solid #cbd5e1;
+            background: #f8fafc;
+            color: #0f172a;
             padding: 6px 8px;
             font-size: 9px;
           }
           .payment-box .pb-label {
             font-size: 8px; font-weight: 700; text-transform: uppercase;
-            letter-spacing: 0.06em; color: #cbd5e1; margin-bottom: 2px;
+            letter-spacing: 0.06em; color: #475569; margin-bottom: 2px;
           }
           .payment-box .pb-row {
             display: flex; justify-content: space-between;
             padding: 0.5px 0; font-size: 9px;
           }
-          .payment-box .pb-row .pb-lbl { color: #cbd5e1; }
+          .payment-box .pb-row .pb-lbl { color: #475569; }
           .payment-box .pb-row.grand {
-            border-top: 1px solid rgba(255,255,255,0.25);
+            border-top: 1px solid #e2e8f0;
             margin-top: 2px; padding-top: 2px;
             font-weight: 800; font-size: 11px;
           }
-          .payment-box .pb-row.grand .pb-lbl { color: #fff; }
+          .payment-box .pb-row.grand .pb-lbl { color: #0f172a; font-weight: 800; }
 
           .words-box {
             border: 1px solid #cbd5e1;
@@ -4381,11 +4411,27 @@ const handleJumpStep = (stepView) => {
         <div className="grid w-full max-w-xl grid-cols-1 gap-4 sm:grid-cols-2">
           <button
             type="button"
-            onClick={() => window.print()}
+            onClick={() => {
+              // Print Receipt lives on the Booking Confirmed screen but
+              // there's no separate booking loaded there, so fall back to
+              // using the currently selected booking (if any) and the same
+              // dedicated invoice window the Booking Details "Print Invoice"
+              // button uses. This guarantees a clean A4 invoice instead of
+              // printing the entire Booking Confirmed page.
+              if (selectedBooking?.bookingId || bookingDetail) {
+                handlePrintInvoiceDirect();
+              } else {
+                showToast(
+                  "error",
+                  "No booking selected",
+                  "Open a booking from the list, then click Print Invoice from Booking Details.",
+                );
+              }
+            }}
             className={`${ghostBtn} w-full`}
           >
             <FaPrint className="text-lg" />
-            Print Receipt
+            Print Invoice
           </button>
 
           <button
