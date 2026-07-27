@@ -5,6 +5,7 @@ import RestaurantContext from "../../Context/restaurantContext";
 import API, { getBackendBaseURL } from "../../api";
 import { restaurantService } from "../../services/restaurantService";
 import { getCurrentActor } from "../../utils/currentActor";
+import { printKOT } from "../../utils/printKOT";
 
 const normalizeCategory = (value) => (value || "Other").trim().toLowerCase();
 const normalizeItemName = (value) => String(value || "").trim().toLowerCase();
@@ -393,6 +394,20 @@ const MenuPage = () => {
         prepTimeMinutes,
         items: order.map(({ name, qty: quantity, rate: price }) => ({ name, quantity, price })),
       });
+
+      // Auto-trigger KOT print (frontend fallback + backend handles silent print)
+      try {
+        printKOT({
+          table,
+          waiter: waiterName,
+          entityType,
+          items: order.map(({ name, qty: quantity, rate: price }) => ({ name, quantity, price })),
+          prepTimeMinutes,
+        });
+      } catch (printErr) {
+        console.warn("KOT frontend print failed:", printErr);
+      }
+
       window.dispatchEvent(new Event("kitchenUpdated"));
       window.dispatchEvent(new Event("tokenUpdated"));
       navigate(`/restaurant/edit-token/${table}`, { state: { items: order, entityType, roomData } });
