@@ -385,7 +385,9 @@ const MenuPage = () => {
         order.map(({ name, qty: quantity, rate: price }) => ({ name, quantity, price })),
       );
       localStorage.setItem(`entityType:${table}`, entityType);
-      await restaurantService.createKitchenOrder({
+
+      console.log("[MenuPage] Creating kitchen order...");
+      const kitchenResult = await restaurantService.createKitchenOrder({
         table,
         waiter: waiterName,
         entityType,
@@ -394,9 +396,11 @@ const MenuPage = () => {
         prepTimeMinutes,
         items: order.map(({ name, qty: quantity, rate: price }) => ({ name, quantity, price })),
       });
+      console.log("[MenuPage] Kitchen order created:", kitchenResult);
 
       // Auto-trigger KOT print (frontend fallback + backend handles silent print)
       try {
+        console.log("[MenuPage] Triggering frontend KOT print fallback...");
         printKOT({
           table,
           waiter: waiterName,
@@ -404,8 +408,9 @@ const MenuPage = () => {
           items: order.map(({ name, qty: quantity, rate: price }) => ({ name, quantity, price })),
           prepTimeMinutes,
         });
+        console.log("[MenuPage] Frontend KOT print triggered");
       } catch (printErr) {
-        console.warn("KOT frontend print failed:", printErr);
+        console.warn("[MenuPage] KOT frontend print failed:", printErr);
       }
 
       window.dispatchEvent(new Event("kitchenUpdated"));
@@ -413,6 +418,7 @@ const MenuPage = () => {
       navigate(`/restaurant/edit-token/${table}`, { state: { items: order, entityType, roomData } });
       setOrder([]);
     } catch (err) {
+      console.error("[MenuPage] Submit error:", err);
       setSubmitError(err.response?.data?.message || "Failed to submit order");
     } finally {
       setIsSubmitting(false);
