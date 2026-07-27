@@ -342,19 +342,10 @@ function formatBookingDate(dateValue) {
 function resolveBanquetHallImage(image) {
   const raw = String(image || "").trim();
   if (!raw) return null;
-<<<<<<< HEAD
   if (/^https?:\/\//i.test(raw) || raw.startsWith("data:")) {
     return raw;
   }
   return `${getBackendBaseURL()}${raw.startsWith("/") ? raw : `/${raw}`}`;
-=======
-  if (raw.startsWith("http://") || raw.startsWith("https://") || raw.startsWith("data:")) {
-    return raw;
-  }
-  return raw.startsWith("/")
-    ? `${getBackendBaseURL()}${raw}`
-    : `${getBackendBaseURL()}/uploads/${raw}`;
->>>>>>> 869a8ee37896cc8a2f334857a143894d390b2b7a
 }
 
 function getReservationStatusBadgeClass(status) {

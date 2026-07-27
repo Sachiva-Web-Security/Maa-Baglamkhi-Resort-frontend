@@ -1232,7 +1232,6 @@ const Payment = ({
     if (!win) return;
     win.document.write(printHTML);
     win.document.close();
-<<<<<<< HEAD
     win.focus();
 
     // FIX: previously this print popup could stay open/focused in the
@@ -1243,9 +1242,6 @@ const Payment = ({
     // window/dialog still had focus. We now auto-close the popup once
     // printing finishes (or after a timeout fallback) and explicitly
     // return focus to the main window.
-=======
-
->>>>>>> 869a8ee37896cc8a2f334857a143894d390b2b7a
     const returnFocusAndClose = () => {
       try {
         if (win && !win.closed) win.close();
@@ -1255,13 +1251,10 @@ const Payment = ({
 
     win.onafterprint = returnFocusAndClose;
 
-<<<<<<< HEAD
     // Fallback: if onafterprint never fires (varies by browser/OS print
     // flow, e.g. user cancels the dialog in a way that doesn't fire it),
     // force-close the popup and refocus the main window after a few
     // seconds so the app never gets stuck waiting on it.
-=======
->>>>>>> 869a8ee37896cc8a2f334857a143894d390b2b7a
     const fallbackTimer = window.setTimeout(() => {
       returnFocusAndClose();
     }, 6000);
@@ -1270,12 +1263,9 @@ const Payment = ({
       try {
         win.print();
       } finally {
-<<<<<<< HEAD
         // If print() returns synchronously (most desktop browsers block
         // until the dialog closes), we can clear the fallback and close
         // immediately instead of waiting out the full timeout.
-=======
->>>>>>> 869a8ee37896cc8a2f334857a143894d390b2b7a
         window.clearTimeout(fallbackTimer);
         returnFocusAndClose();
       }
@@ -1796,22 +1786,13 @@ const Payment = ({
           <div className="px-5 pb-6 sm:px-8 sm:pb-7">
             <button
               onClick={() => setPaymentResult({ ...paymentResult, show: false })}
-<<<<<<< HEAD
-              className="mb-3 w-full rounded-2xl border border-slate-200 bg-white py-3.5 text-[15px] font-bold text-slate-600 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 sm:py-4 sm:text-[17px]"
-=======
               className="mb-3 w-full rounded-2xl border border-slate-200 bg-white py-3.5 text-[15px] font-bold text-slate-600 shadow-sm transition hover:bg-slate-50 hover:border-slate-300 sm:py-4 sm:text-[17px]"
->>>>>>> 869a8ee37896cc8a2f334857a143894d390b2b7a
             >
               Close
             </button>
             {paymentResult.success && (
               <button
                 onClick={() => setPaymentResult({ ...paymentResult, show: false })}
-<<<<<<< HEAD
-                className="w-full rounded-2xl bg-gradient-to-r from-emerald-600 to-green-500 py-3.5 text-[15px] font-bold text-white shadow-[0_12px_28px_-10px_rgba(16,185,129,0.5)] transition hover:-translate-y-0.5 hover:shadow-[0_16px_34px_-10px_rgba(16,185,129,0.6)] sm:py-4 sm:text-[17px]"
-              >
-                Continue
-=======
                 className={`w-full rounded-2xl py-3.5 text-[15px] font-bold shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl sm:py-4 sm:text-[17px] ${
                   paymentResult.success
                     ? "bg-gradient-to-r from-emerald-600 to-green-500 text-white shadow-[0_12px_28px_-10px_rgba(16,185,129,0.5)] hover:shadow-[0_16px_34px_-10px_rgba(16,185,129,0.6)]"
@@ -1819,7 +1800,6 @@ const Payment = ({
                 }`}
               >
                 {paymentResult.success ? "Continue" : "OK"}
->>>>>>> 869a8ee37896cc8a2f334857a143894d390b2b7a
               </button>
             )}
           </div>
