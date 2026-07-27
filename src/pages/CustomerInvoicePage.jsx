@@ -374,49 +374,62 @@ const CustomerInvoicePage = () => {
       {/* ── Screen wrapper (print sabko chupaega) ──────────────── */}
       <style>{`
         @page {
-          size: 80mm auto;
-          margin: 0;
-        }
-
-        .invoice-screen-wrapper > *:not(.invoice-print-area) {
-          /* hide everything except the print area on print */
+          size: A4 portrait;
+          margin: 12mm;
         }
 
         @media print {
           html, body {
             background: #ffffff !important;
+            color: #000000 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
+          }
+          .invoice-screen-wrapper {
+            max-width: none !important;
             margin: 0 !important;
             padding: 0 !important;
           }
-          body * {
-            visibility: hidden !important;
-            height: 0 !important;
-            overflow: hidden !important;
+          .invoice-screen-wrapper > *:not(.invoice-a4-sheet) {
+            display: none !important;
           }
-          .invoice-print-area,
-          .invoice-print-area * {
-            visibility: visible !important;
-            height: auto !important;
-            overflow: visible !important;
+          .invoice-a4-sheet,
+          .invoice-a4-sheet * {
+            color: #000000 !important;
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
+            text-shadow: none !important;
+            box-shadow: none !important;
           }
-          .invoice-print-area {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 80mm;
-            padding: 4mm;
-            background: #fff;
-            color: #000;
-            font-family: "Courier New", "Lucida Console", monospace;
-            font-size: 9pt;
-            line-height: 1.3;
+          .invoice-a4-sheet {
+            display: block !important;
+            width: 100% !important;
+            max-width: none !important;
+            border: 0 !important;
+            border-radius: 0 !important;
+            background: #ffffff !important;
+            padding: 0 !important;
+          }
+          .invoice-a4-sheet table,
+          .invoice-a4-sheet th,
+          .invoice-a4-sheet td,
+          .invoice-a4-sheet [class*="border"] {
+            border-color: #000000 !important;
+          }
+          .invoice-a4-sheet th,
+          .invoice-a4-sheet .font-semibold,
+          .invoice-a4-sheet .font-bold,
+          .invoice-a4-sheet .font-black {
+            font-weight: 700 !important;
           }
         }
       `}</style>
 
       <div className="invoice-screen-wrapper mx-auto w-full max-w-[880px] space-y-4">
         {/* ── Action bar ─────────────────────────────────────────── */}
-        <section className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-white p-4 shadow-sm">
+        <section className="no-print flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-white p-4 shadow-sm">
           <div>
             <p className="text-xs font-bold uppercase tracking-widest text-slate-500">
               Hotel Tax Invoice
@@ -457,19 +470,19 @@ const CustomerInvoicePage = () => {
         </section>
 
         {/* ── Invoice preview card (screen view) ─────────────────── */}
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <section className="invoice-a4-sheet rounded-2xl border-2 border-slate-900 bg-white p-6 shadow-sm">
           <div className="flex items-center justify-center gap-3 border-b-2 border-dashed border-slate-300 pb-3">
             <h2 className="text-center text-xl font-black tracking-wide text-slate-900">
               {RESORT_NAME}
             </h2>
           </div>
-          <div className="mt-1 text-center text-xs text-slate-600">
+          <div className="mt-1 text-center text-xs font-semibold text-slate-900">
             {RESORT_ADDRESS} | {RESORT_DISTRICT}
           </div>
-          <div className="text-center text-xs text-slate-600">
+          <div className="text-center text-xs font-semibold text-slate-900">
             Ph: {RESORT_PHONE} | Email: {RESORT_EMAIL} | {RESORT_WEBSITE}
           </div>
-          <div className="text-center text-xs text-slate-500">
+          <div className="text-center text-xs font-semibold text-slate-900">
             GSTIN: {RESORT_GSTIN} | State: ${RESORT_STATE_CODE}
           </div>
 
@@ -481,16 +494,16 @@ const CustomerInvoicePage = () => {
 
           <div className="mt-3 grid grid-cols-2 gap-4 border border-slate-200 p-3">
             <div>
-              <div className="text-xs font-bold uppercase tracking-wider text-slate-500">Guest</div>
+              <div className="text-xs font-bold uppercase tracking-wider text-slate-900">Guest</div>
               <div className="mt-1 text-sm font-bold text-slate-900">{invoice?.customerName || "Guest"}</div>
-              <div className="text-xs text-slate-600">Phone: {invoice?.phone || "--"}</div>
-              <div className="text-xs text-slate-600">Booking: {invoice?.bookingId || "--"}</div>
+              <div className="text-xs font-semibold text-slate-900">Phone: {invoice?.phone || "--"}</div>
+              <div className="text-xs font-semibold text-slate-900">Booking: {invoice?.bookingId || "--"}</div>
             </div>
             <div>
-              <div className="text-xs font-bold uppercase tracking-wider text-slate-500">Room Details</div>
-              <div className="mt-1 text-xs text-slate-600">Room: {invoice?.roomNumber || "--"}</div>
-              <div className="text-xs text-slate-600">Check-In: {formatDate(invoice?.checkIn)}</div>
-              <div className="text-xs text-slate-600">Check-Out: {formatDate(invoice?.checkOut)}</div>
+              <div className="text-xs font-bold uppercase tracking-wider text-slate-900">Room Details</div>
+              <div className="mt-1 text-xs font-semibold text-slate-900">Room: {invoice?.roomNumber || "--"}</div>
+              <div className="text-xs font-semibold text-slate-900">Check-In: {formatDate(invoice?.checkIn)}</div>
+              <div className="text-xs font-semibold text-slate-900">Check-Out: {formatDate(invoice?.checkOut)}</div>
             </div>
           </div>
 
@@ -513,7 +526,7 @@ const CustomerInvoicePage = () => {
                       <td className="border border-slate-300 px-2 py-1.5">
                         <div className="font-semibold">{item.name}</div>
                         {item.category && (
-                          <div className="text-[10px] text-slate-500">{item.category}</div>
+                          <div className="text-[10px] font-semibold text-slate-900">{item.category}</div>
                         )}
                       </td>
                       <td className="border border-slate-300 px-2 py-1.5 text-center">{item.quantity || 1}</td>
@@ -523,7 +536,7 @@ const CustomerInvoicePage = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={5} className="border border-slate-300 px-3 py-4 text-center text-slate-500">
+                    <td colSpan={5} className="border border-slate-300 px-3 py-4 text-center font-semibold text-slate-900">
                       No items found
                     </td>
                   </tr>
@@ -534,15 +547,15 @@ const CustomerInvoicePage = () => {
 
           <div className="mt-3 grid grid-cols-2 gap-4">
             <div className="border border-slate-200 p-3">
-              <div className="text-xs font-bold uppercase tracking-wider text-slate-500">Payment Info</div>
-              <div className="mt-1 text-xs text-slate-700">
+              <div className="text-xs font-bold uppercase tracking-wider text-slate-900">Payment Info</div>
+              <div className="mt-1 text-xs font-semibold text-slate-900">
                 Status: <span className="font-bold">{paymentStatusLabel}</span>
               </div>
-              <div className="text-xs text-slate-700">
+              <div className="text-xs font-semibold text-slate-900">
                 Mode: {invoice?.paymentMode || invoice?.paymentMethod || "Front Desk"}
               </div>
               {invoice?.paymentReference && (
-                <div className="text-xs text-slate-700">Ref: {invoice.paymentReference}</div>
+                <div className="text-xs font-semibold text-slate-900">Ref: {invoice.paymentReference}</div>
               )}
             </div>
             <div className="border-2 border-slate-900 bg-slate-50 p-3">
@@ -576,10 +589,10 @@ const CustomerInvoicePage = () => {
           </div>
 
           <div className="mt-3 border-t-2 border-slate-900 pt-3 text-center">
-            <div className="text-xs italic text-slate-600">
+            <div className="text-xs font-semibold italic text-slate-900">
               Thank you for staying with {RESORT_NAME}. Please visit again.
             </div>
-            <div className="mt-1 text-[10px] text-slate-500">
+            <div className="mt-1 text-[10px] font-semibold text-slate-900">
               This is a computer generated invoice and does not require a physical signature.
             </div>
           </div>
@@ -594,7 +607,7 @@ const CustomerInvoicePage = () => {
 
         {/* ── Pending Payment Section ────────────────────────────── */}
         {String(invoice?.paymentStatus || "Pending").toLowerCase() !== "paid" ? (
-          <div className="rounded-2xl border border-cyan-100 bg-cyan-50/70 p-5">
+          <div className="no-print rounded-2xl border border-cyan-100 bg-cyan-50/70 p-5">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div>
                 <div className="text-sm font-semibold uppercase tracking-wider text-cyan-700">

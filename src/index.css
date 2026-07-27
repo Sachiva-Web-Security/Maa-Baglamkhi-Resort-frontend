@@ -544,9 +544,57 @@ th, td {
 
 /* ─── Print styles ───────────────────────────────────────────────── */
 @media print {
-  body { background: white !important; }
+  @page {
+    size: A4 portrait;
+    margin: 12mm;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  *,
+  *::before,
+  *::after {
+    color: #000000 !important;
+    text-shadow: none !important;
+    box-shadow: none !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
   .no-print, .sidebar, nav { display: none !important; }
   .print-full { width: 100% !important; margin: 0 !important; }
+
+  table,
+  th,
+  td,
+  .invoice-a4-sheet,
+  .invoice-a4-sheet *[class*="border"] {
+    border-color: #000000 !important;
+  }
+
+  th,
+  .invoice-a4-sheet h1,
+  .invoice-a4-sheet h2,
+  .invoice-a4-sheet h3,
+  .invoice-a4-sheet .font-semibold,
+  .invoice-a4-sheet .font-bold,
+  .invoice-a4-sheet .font-black {
+    font-weight: 700 !important;
+  }
+
+  .invoice-a4-sheet {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+  }
 }
 
 /* ─── Toastify position fix on mobile ───────────────────────────── */
