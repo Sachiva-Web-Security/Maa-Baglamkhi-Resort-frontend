@@ -66,6 +66,7 @@ import RestaurantDashboard from "./pages/RestaurantDashboard";
 import RestaurantPOS from "./pages/RestaurantPOS";
 import WaiterNotifications from "./pages/WaiterNotifications";
 import LiveBoard from "./pages/LiveBoard";
+import PrintManagement from "./pages/PrintManagement";
 import StaffDashboard from "./pages/StaffDashboard";
 import User from "./pages/User";
 import AuditReport from "./pages/reports/AuditReport";
@@ -325,7 +326,8 @@ function AppRoutes({ isAuthenticated, setIsAuthenticated, protect }) {
           <Route path="/kitchen" element={protect(<Kitchen />, ROLES.KITCHEN)} />
           <Route path="/waiter-delivery" element={protect(<WaiterDeliveryQueue />, ROLES.RESTAURANT)} />
           <Route path="/user" element={protect(<User />, ROLES.ADMIN_ONLY)} />
-                    <Route path="/invoice/:customerId" element={protect(<CustomerInvoicePage />, ROLES.ALL)} />
+          <Route path="/print" element={protect(<PrintManagement />, ["admin"])} />
+          <Route path="/invoice/:customerId" element={protect(<CustomerInvoicePage />, ROLES.ALL)} />
 
           <Route path="/reports/sales" element={protect(<SalesReport />, ROLES.REPORTS)} />
           <Route

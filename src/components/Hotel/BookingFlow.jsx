@@ -108,6 +108,9 @@ import {
   FaDoorOpen,
   FaSync,
   FaArrowLeft,
+  FaHotel,
+  FaMapMarkerAlt,
+  FaCreditCard,
 } from "react-icons/fa";
 
 import API from "../../api";
@@ -1096,172 +1099,249 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
   ];
 
   const handlePrint = () => {
+    const d = invoice || {};
+    const b = selectedBooking || {};
+
+    const items = Array.isArray(d.items) && d.items.length > 0
+      ? d.items
+      : invoiceLines.length > 0
+        ? invoiceLines.map((l) => ({
+            name: l.particulars || l.description || "Charge",
+            date: l.date || "",
+            qty: l.quantity || 1,
+            rate: l.tariff || l.rate || l.price || 0,
+            amount: l.amount || l.total || 0,
+          }))
+        : [];
+
+    const invoiceNo = d.invoiceNo || d.invoice_no || invoice?.invoice_number || b.bookingCode || `INV-${b.bookingId}`;
+    const guestName = d.customerName || d.guestName || booking?.guest_name || "Guest";
+    const roomType = d.roomType || b.roomType || booking?.roomType || "";
+    const noOfNights = d.noOfNights || b.noOfNights || b.nights || booking?.noOfNights || "";
+
+    const totalTariff = invoiceTotal;
+    const totalDiscount = invoiceDiscount;
+    const totalTaxable = invoiceSubtotal;
+    const sgst = invoiceSgst;
+    const cgst = invoiceCgst;
+    const roundOff = Math.round(totalTariff * 100) / 100 - Math.round((totalTariff) * 100) / 100;
+    const finalTotal = invoiceTotal;
+    const remaining = Math.max(finalTotal - totalPaid, 0);
+    const amountInWords = toWords(finalTotal);
+    const paymentMode = d.paymentMode || d.payment_method || booking?.paymentMode || "Front Desk";
+    const paymentRef = d.paymentReference || d.payment_reference || "";
+    const invoiceDate = d.date ? formatDate(new Date(d.date)) : formatDate(new Date());
+
     const win = window.open("", "_blank", "width=900,height=700");
     if (!win) return;
+
+    const renderRow = (item) => {
+      const dateStr = item.date ? formatDate(new Date(item.date)) : "";
+      const name = item.name || item.description || "Charge";
+      const qty = item.qty || item.quantity || 1;
+      const rate = item.rate || item.price || item.tariff || 0;
+      const disc = item.discount || 0;
+      const taxable = item.taxable || (rate - disc);
+      const sgstAmt = (taxable * 0.025);
+      const cgstAmt = (taxable * 0.025);
+      const total = item.amount || item.total || (rate * qty);
+      return `<tr>
+        <td>${dateStr}</td>
+        <td>${name}${item.description && item.description !== name ? `<div style="font-size:9px;color:#64748b">${item.description}</div>` : ""}</td>
+        <td>${formatCurrency(rate)}</td>
+        <td>${disc > 0 ? formatCurrency(disc) : "0.00"}</td>
+        <td>${formatCurrency(taxable)}</td>
+        <td>${formatCurrency(sgstAmt)}</td>
+        <td>${formatCurrency(cgstAmt)}</td>
+        <td style="font-weight:700">${formatCurrency(total)}</td>
+      </tr>`;
+    };
 
     win.document.write(`
       <html>
       <head>
         <title>${invoiceNo} - ${RESORT_NAME_INVOICE}</title>
         <style>
+          @page { size: A4; margin: 12mm; }
           * { box-sizing: border-box; margin: 0; padding: 0; }
           body {
             font-family: "Helvetica Neue", Arial, sans-serif;
             color: #0f172a;
-            padding: 28px;
-            font-size: 13px;
-            line-height: 1.5;
+            padding: 20px;
+            font-size: 11px;
+            line-height: 1.4;
           }
           .resort-header {
             text-align: center;
-            padding: 12px 0 10px;
+            padding: 10px 0 8px;
             border-bottom: 2px solid #0f172a;
+            margin-bottom: 6px;
+          }
+          .resort-header .logo-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
             margin-bottom: 4px;
           }
-          .resort-header h1 { font-size: 20px; font-weight: 800; letter-spacing: 0.02em; }
-          .resort-header .sub { font-size: 11px; color: #475569; margin-top: 2px; }
-          .resort-header .meta { font-size: 10px; color: #64748b; margin-top: 2px; }
+          .resort-header .logo-icon {
+            width: 28px; height: 28px;
+            background: #0f172a;
+            color: #fff;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12px; font-weight: 700;
+          }
+          .resort-header h1 { font-size: 18px; font-weight: 800; letter-spacing: 0.03em; }
+          .resort-header .sub { font-size: 10px; color: #475569; margin-top: 2px; }
           .resort-header .gst-line { font-size: 10px; color: #475569; margin-top: 1px; }
 
-          .invoice-meta {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
+          .meta-row {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 0;
+            padding: 6px 0;
             border-bottom: 1px dashed #94a3b8;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
+            align-items: end;
           }
-          .invoice-meta .left { font-weight: 700; font-size: 14px; letter-spacing: 0.05em; }
-          .invoice-meta .right { text-align: right; font-size: 12px; }
-          .invoice-meta .right .label { color: #64748b; font-size: 10px; }
+          .meta-row .left { font-weight: 700; font-size: 13px; letter-spacing: 0.06em; }
+          .meta-row .right { text-align: right; font-size: 10px; line-height: 1.6; }
+          .meta-row .right .label { color: #64748b; font-size: 9px; font-weight: 600; }
+          .meta-row .right .val { font-weight: 700; font-size: 11px; }
 
-          .meta-grid {
+          .info-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 0;
-            margin-bottom: 8px;
+            gap: 6px;
+            margin-bottom: 6px;
           }
-          .meta-card {
+          .info-card {
             border: 1px solid #cbd5e1;
-            padding: 8px 10px;
-            font-size: 12px;
+            padding: 6px 8px;
+            font-size: 10px;
           }
-          .meta-card .card-label {
-            font-size: 9px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: #64748b;
-            margin-bottom: 3px;
+          .info-card .ic-label {
+            font-size: 8px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.08em; color: #64748b; margin-bottom: 2px;
           }
-          .meta-card .card-value { font-weight: 600; font-size: 12px; }
-          .meta-card .card-sub { font-size: 11px; color: #475569; margin-top: 1px; }
+          .info-card .ic-value { font-weight: 700; font-size: 11px; }
+          .info-card .ic-sub { font-size: 10px; color: #475569; margin-top: 1px; }
 
           table.items {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 8px;
-            font-size: 12px;
+            margin-top: 4px;
+            font-size: 10px;
           }
           table.items thead th {
             background: #0f172a;
             color: #ffffff;
-            padding: 7px 10px;
+            padding: 5px 6px;
             font-weight: 700;
             text-align: left;
-            font-size: 10px;
+            font-size: 9px;
             text-transform: uppercase;
-            letter-spacing: 0.04em;
+            letter-spacing: 0.03em;
+            border: 1px solid #0f172a;
           }
           table.items tbody td {
-            padding: 6px 10px;
+            padding: 4px 6px;
             border-bottom: 1px solid #e2e8f0;
             vertical-align: top;
+            font-size: 10px;
           }
           .text-right { text-align: right; }
 
-          .totals-area {
-            display: grid;
-            grid-template-columns: 1fr 160px;
-            gap: 8px;
-            margin-top: 8px;
+          .remarks-box {
+            border: 1px solid #cbd5e1;
+            padding: 4px 8px;
+            font-size: 10px;
+            margin-top: 4px;
+            min-height: 28px;
           }
-          .payment-info-box {
-            border: 1px solid #e2e8f0;
-            padding: 8px 10px;
-            border-radius: 3px;
-            font-size: 11px;
-          }
-          .payment-info-box .pi-label {
-            font-size: 9px;
-            font-weight: 700;
-            text-transform: uppercase;
-            color: #64748b;
-            letter-spacing: 0.08em;
-            margin-bottom: 3px;
+          .remarks-box .rb-label {
+            font-size: 8px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.06em; color: #64748b;
           }
 
-          .totals-box {
+          .totals-area {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-top: 4px;
+          }
+          .tariff-box {
+            border: 1px solid #cbd5e1;
+            padding: 4px 8px;
+            font-size: 10px;
+          }
+          .tariff-box .tb-label {
+            font-size: 8px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.06em; color: #64748b; margin-bottom: 2px;
+          }
+          .tariff-box .tb-row {
+            display: flex; justify-content: space-between;
+            padding: 1px 0; font-size: 10px;
+          }
+          .tariff-box .tb-row .tb-lbl { color: #475569; }
+          .tariff-box .tb-row.grand {
+            border-top: 1px solid #e2e8f0;
+            margin-top: 3px; padding-top: 3px;
+            font-weight: 800; font-size: 12px;
+          }
+
+          .payment-box {
             border: 1px solid #0f172a;
             background: #0f172a;
             color: #ffffff;
-            padding: 10px 12px;
-            border-radius: 3px;
-          }
-          .totals-box .t-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 2px 0;
-            font-size: 11px;
-          }
-          .totals-box .t-row.grand {
-            border-top: 1px solid rgba(255,255,255,0.25);
-            margin-top: 5px;
-            padding-top: 6px;
-            font-size: 14px;
-            font-weight: 800;
-          }
-          .totals-box .t-row .t-label { color: #cbd5e1; }
-          .totals-box .t-row.grand .t-label { color: #ffffff; }
-
-          .bank-box {
-            margin-top: 8px;
-            border: 1px solid #e2e8f0;
-            padding: 7px 10px;
-            border-radius: 3px;
+            padding: 8px 10px;
             font-size: 10px;
           }
-          .bank-box .b-label {
-            font-size: 9px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: #64748b;
+          .payment-box .pb-label {
+            font-size: 8px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.06em; color: #cbd5e1; margin-bottom: 2px;
+          }
+          .payment-box .pb-row {
+            display: flex; justify-content: space-between;
+            padding: 1px 0; font-size: 10px;
+          }
+          .payment-box .pb-row .pb-lbl { color: #cbd5e1; }
+          .payment-box .pb-row.grand {
+            border-top: 1px solid rgba(255,255,255,0.25);
+            margin-top: 3px; padding-top: 3px;
+            font-weight: 800; font-size: 13px;
+          }
+          .payment-box .pb-row .pb-lbl.grand { color: #ffffff; }
+
+          .words-box {
+            border: 1px solid #cbd5e1;
+            padding: 3px 8px;
+            font-size: 10px;
+            margin-top: 4px;
+            font-style: italic;
+          }
+          .words-box .wb-label {
+            font-size: 8px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.06em; color: #64748b;
           }
 
           .footer-area {
-            margin-top: 10px;
-            padding-top: 8px;
+            margin-top: 6px;
+            padding-top: 6px;
             border-top: 1px solid #e2e8f0;
-            display: flex;
-            justify-content: space-between;
-            font-size: 10px;
+            text-align: center;
+            font-size: 9px;
             color: #64748b;
           }
           .sig-line {
-            margin-top: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
+            margin-top: 8px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
           }
-          .sig-box {
-            text-align: right;
-          }
-          .sig-line-text {
-            display: inline-block;
-            border-top: 1px solid #0f172a;
-            padding-top: 3px;
-            min-width: 120px;
-            font-size: 10px;
+          .sig-label {
+            font-size: 9px;
             font-weight: 600;
             color: #334155;
           }
@@ -1269,104 +1349,105 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
       </head>
       <body>
         <div class="resort-header">
-          <h1>${RESORT_NAME_INVOICE}</h1>
-          <div class="sub">${RESORT_ADDRESS_LINE_1} | ${RESORT_ADDRESS_LINE_2}</div>
-          <div class="meta">Ph: ${RESORT_PHONE_INVOICE} | Email: ${RESORT_EMAIL_INVOICE} | ${RESORT_WEBSITE || ""}</div>
+          <div class="logo-row">
+            <div class="logo-icon">M</div>
+            <h1>${RESORT_NAME_INVOICE}</h1>
+          </div>
+          <div class="sub">${RESORT_ADDRESS_LINE_1}, ${RESORT_ADDRESS_LINE_2}</div>
+          <div class="sub">Ph: ${RESORT_PHONE_INVOICE} | Email: ${RESORT_EMAIL_INVOICE}</div>
           <div class="gst-line">GSTIN: ${RESORT_GSTIN_INVOICE} | State: ${RESORT_STATE_CODE_INVOICE}</div>
         </div>
 
-        <div class="invoice-meta">
+        <div class="meta-row">
           <div class="left">TAX INVOICE</div>
           <div class="right">
-            <div class="label">Invoice No</div>
-            <div style="font-weight:700;font-size:13px">${invoiceNo}</div>
+            <div><span class="label">Invoice No.&nbsp;&nbsp;</span><span class="val">${invoiceNo}</span></div>
+            <div><span class="label">Folio No.&nbsp;&nbsp;</span><span class="val">${b.bookingId || "-"}</span></div>
           </div>
           <div class="right">
-            <div class="label">Date</div>
-            <div style="font-weight:600">${formatDate(invoice?.date || new Date())}</div>
-          </div>
-          <div class="right">
-            <div class="label">Table / Room</div>
-            <div style="font-weight:600">${invoice?.roomNumber || (invoice?.bookingId ? "ROOM-" + invoice.bookingId : "-")}</div>
+            <div><span class="label">Invoice Date&nbsp;&nbsp;</span><span class="val">${invoiceDate}</span></div>
+            <div><span class="label">Room No.&nbsp;&nbsp;</span><span class="val">104</span></div>
+            <div><span class="label">Room Type&nbsp;&nbsp;</span><span class="val">${roomType || "-"}</span></div>
           </div>
         </div>
 
-        <div class="meta-grid">
-          <div class="meta-card">
-            <div class="card-label">Bill To</div>
-            <div class="card-value">${invoice?.customerName || guestName || "Guest"}</div>
-            <div class="card-sub">Phone: ${invoice?.phone || booking?.mobile || "-"}</div>
-            <div class="card-sub">Booking ID: ${invoice?.bookingId || "-"}</div>
+        <div class="info-grid">
+          <div class="info-card">
+            <div class="ic-label">Guest Name</div>
+            <div class="ic-value">${guestName}</div>
+            <div class="ic-sub">Address: ${d.address || b.address || booking?.address || "-"}</div>
+            <div class="ic-sub">Contact #: ${d.mobile || b.mobile || booking?.mobile || "-"}</div>
           </div>
-          <div class="meta-card">
-            <div class="card-label">Stay Details</div>
-            <div class="card-sub">Room: <strong>${invoice?.roomNumber || "-"}</strong></div>
-            <div class="card-sub">Check-In: ${formatDate(invoice?.checkIn || invoice?.check_in || booking?.check_in)}</div>
-            <div class="card-sub">Check-Out: ${formatDate(invoice?.checkOut || invoice?.check_out || booking?.check_out)}</div>
+          <div class="info-card">
+            <div class="ic-label">Stay Details</div>
+            <div class="ic-sub">Arrival: ${d.check_in || b.check_in ? formatDate(new Date(d.check_in || b.check_in)) : "-"}</div>
+            <div class="ic-sub">Departure: ${d.check_out || b.check_out ? formatDate(new Date(d.check_out || b.check_out)) : "-"}</div>
+            <div class="ic-sub">Pax: ${d.noOfGuests || d.guestCapacity || b.noOfGuests || b.guestCapacity || booking?.noOfGuests || "2 Adults, 0"} | No. of Nights: ${noOfNights || "-"}</div>
           </div>
         </div>
 
         <table class="items">
           <thead>
             <tr>
-              <th style="width:38%">Description</th>
-              <th style="width:10%;text-align:center">Qty</th>
-              <th style="width:22%;text-align:right">Rate</th>
-              <th style="width:22%;text-align:right">Amount</th>
+              <th style="width:8%">Date</th>
+              <th style="width:32%">Particulars</th>
+              <th style="width:11%" class="text-right">Tariff</th>
+              <th style="width:9%" class="text-right">Disc</th>
+              <th style="width:11%" class="text-right">Taxable</th>
+              <th style="width:10%" class="text-right">SGST 2.50%</th>
+              <th style="width:10%" class="text-right">CGST 2.50%</th>
+              <th style="width:9%" class="text-right">Total</th>
             </tr>
           </thead>
           <tbody>
-            ${items.map((item) => `
-              <tr>
-                <td>
-                  <div style="font-weight:600">${item.name || item.description || "Item"}</div>
-                  ${item.category ? `<div style="font-size:10px;color:#64748b">${item.category}</div>` : ""}
-                </td>
-                <td style="text-align:center">${item.quantity || 1}</td>
-                <td class="text-right">${formatCurrency(item.price)}</td>
-                <td class="text-right" style="font-weight:700">${formatCurrency(item.total)}</td>
-              </tr>
-            `).join("")}
+            ${items.length > 0 ? items.map(renderRow).join("") : `<tr><td colspan="8" style="text-align:center;color:#94a3b8;padding:12px">No charges recorded</td></tr>`}
           </tbody>
         </table>
 
-        <div class="totals-area">
-          <div class="payment-info-box">
-            <div class="pi-label">Payment Summary</div>
-            <div style="margin-top:3px">Folio Total: <strong>${formatCurrency(folioTotalAmount)}</strong></div>
-            <div>Updated Total: <strong>${formatCurrency(invoiceTotal)}</strong></div>
-            <div>Remaining: <strong>${formatCurrency(remainingAmount)}</strong></div>
-            <div style="margin-top:3px">Status: <strong>${invoice?.paymentStatus || invoice?.payment_status || (remainingAmount > 0 ? "Pending" : "Paid")}</strong></div>
-            <div>Mode: ${invoice?.paymentMode || invoice?.payment_method || "Front Desk"}</div>
-            ${invoice?.paymentReference ? `<div>Reference: ${invoice.paymentReference}</div>` : ""}
-            <div style="margin-top:4px;font-size:9px;color:#64748b;font-style:italic">Invoice issued under section 31 of CGST Act, 2017</div>
-          </div>
-          <div class="totals-box">
-            <div class="t-row"><span class="t-label">Subtotal</span><span>${formatCurrency(invoiceSubtotal)}</span></div>
-            <div class="t-row"><span class="t-label">SGST @ 2.5%</span><span>${formatCurrency(invoiceSgst)}</span></div>
-            <div class="t-row"><span class="t-label">CGST @ 2.5%</span><span>${formatCurrency(invoiceCgst)}</span></div>
-            ${invoiceDiscount > 0 ? `<div class="t-row"><span class="t-label">Discount</span><span>- ${formatCurrency(invoiceDiscount)}</span></div>` : ""}
-            <div class="t-row grand"><span class="t-label">GRAND TOTAL</span><span>${formatCurrency(invoiceTotal)}</span></div>
-            <div class="t-row" style="margin-top:3px"><span class="t-label" style="font-size:9px">(inclusive of all taxes)</span><span></span></div>
-          </div>
+        <div class="remarks-box">
+          <span class="rb-label">Remarks: </span>
         </div>
 
-        <div class="bank-box">
-          <div class="b-label">Bank Details (for refund / credit)</div>
-          <div style="margin-top:2px;color:#334155">A/C: 1234567890 | IFSC: SBIN0001234 | Bank: SBI | Branch: Baglamukhi</div>
+        <div class="totals-area">
+          <div>
+            <div class="tariff-box">
+              <div class="tb-label">Tariff Total</div>
+              <div class="tb-row"><span class="tb-lbl">Discount</span><span>0.00</span></div>
+              <div class="tb-row"><span class="tb-lbl">Taxable Amount</span><span>${formatCurrency(totalTaxable)}</span></div>
+              <div class="tb-row"><span class="tb-lbl">SGST</span><span>${formatCurrency(sgst)}</span></div>
+              <div class="tb-row"><span class="tb-lbl">CGST</span><span>${formatCurrency(cgst)}</span></div>
+              <div class="tb-row"><span class="tb-lbl">Room Total</span><span>${formatCurrency(totalTariff)}</span></div>
+              <div class="tb-row"><span class="tb-lbl">Round Off Disc.</span><span>0.00</span></div>
+              <div class="tb-row grand"><span class="tb-lbl">Final Total</span><span>${formatCurrency(finalTotal)}</span></div>
+              <div class="tb-row"><span class="tb-lbl">Service Total</span><span>0.00</span></div>
+            </div>
+            <div class="words-box">
+              <span class="wb-label">Rupees ${amountInWords.replace("Rupees ", "").replace(" Only", "")} Only</span>
+            </div>
+          </div>
+          <div>
+            <div class="payment-box">
+              <div class="pb-label">Payment Detail</div>
+              <div class="pb-row"><span class="pb-lbl">UPI / Mode</span><span>${paymentMode}${paymentRef ? " (" + paymentRef + ")" : ""}</span></div>
+              <div class="pb-row grand"><span class="pb-lbl grand">Final Total</span><span>${formatCurrency(finalTotal)}</span></div>
+              <div class="pb-row"><span class="pb-lbl">Service Total</span><span>0.00</span></div>
+              <div class="pb-row"><span class="pb-lbl">Balance</span><span>${formatCurrency(remaining)}</span></div>
+            </div>
+          </div>
         </div>
 
         <div class="footer-area">
-          <div>
-            <div style="font-style:italic">This is a computer generated invoice. No physical signature required.</div>
-            <div style="margin-top:2px">Thank you for staying with ${RESORT_NAME_INVOICE}.</div>
-          </div>
-          <div>For ${RESORT_NAME_INVOICE}</div>
+          <div>Invoice issued under section 31 of CGST Act, 2017</div>
+          <div style="margin-top:2px">Thank you for staying with ${RESORT_NAME_INVOICE}.</div>
         </div>
         <div class="sig-line">
-          <div style="font-size:9px;color:#94a3b8">Generated: ${formatDate(new Date())} ${formatTime(new Date())}</div>
-          <div class="sig-box">
-            <div class="sig-line-text">Authorized Signatory</div>
+          <div>
+            <div class="sig-label">For MAA BAGLAMUKHI RESORT</div>
+            <div style="margin-top:18px;border-top:1px solid #0f172a;display:inline-block;padding-top:3px;font-size:9px;font-weight:600;color:#334155">Authorised Signature</div>
+          </div>
+          <div style="text-align:right">
+            <div class="sig-label">Guest Signature</div>
+            <div style="margin-top:18px;border-top:1px solid #0f172a;display:inline-block;padding-top:3px;font-size:9px;font-weight:600;color:#334155"></div>
           </div>
         </div>
       </body>
@@ -1681,77 +1762,312 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
     }
   };
 
+  const toWords = (amount) => {
+    if (!amount || amount <= 0) return "Rupees Zero Only";
+    const ones = ["","One","Two","Three","Four","Five","Six","Seven","Eight","Nine","Ten","Eleven","Twelve","Thirteen","Fourteen","Fifteen","Sixteen","Seventeen","Eighteen","Nineteen"];
+    const tens = ["","","Twenty","Thirty","Forty","Fifty","Sixty","Seventy","Eighty","Ninety"];
+    const words = (n) => {
+      if (n === 0) return "";
+      if (n < 20) return ones[n] + " ";
+      if (n < 100) return tens[Math.floor(n/10)] + " " + words(n%10);
+      if (n < 1000) return ones[Math.floor(n/100)] + " Hundred " + words(n%100);
+      if (n < 1e5) return words(Math.floor(n/1000)) + " Thousand " + words(n%1000);
+      if (n < 1e7) return words(Math.floor(n/1e5)) + " Lakh " + words(n%1e5);
+      return words(Math.floor(n/1e7)) + " Crore " + words(n%1e7);
+    };
+    const rounded = Math.round(amount * 100) / 100;
+    const whole = Math.floor(rounded);
+    const paise = Math.round((rounded - whole) * 100);
+    let result = "Rupees " + words(whole).trim();
+    if (paise > 0) result += " and " + words(paise).trim() + " Paise";
+    return result + " Only";
+  };
+
   return (
     <FeatureModal
       title="Invoice"
       subtitle={`${guestName} - ${booking?.bookingCode || `BK-${bookingId}`}`}
-      size="max-w-5xl"
+      size="max-w-[900px]"
       onClose={onClose}
     >
       {loading ? (
         <div className="py-16 text-center text-slate-400">Preparing invoice...</div>
       ) : (
-        <div className="space-y-5">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <span className="text-[14px] font-bold uppercase tracking-wider text-slate-500">Invoice Actions:</span>
+        <div className="space-y-0">
+          {/* ─── Action bar ─── */}
+          <div className="flex flex-wrap items-center justify-between gap-3 pb-5 border-b border-slate-100">
+            <div className="flex items-center gap-3">
+              <span className="text-[14px] font-bold uppercase tracking-wider text-slate-400">Invoice Actions</span>
               {sendStatus ? (
-                <div
-                  className={`rounded-full px-3 py-1.5 text-[13px] font-semibold ${
-                    sendStatus.type === "success"
-                      ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200"
-                      : "bg-rose-50 text-rose-700 ring-1 ring-rose-200"
-                  }`}
-                >
+                <div className={`rounded-full px-3 py-1.5 text-[13px] font-semibold border ${
+                  sendStatus.type === "success"
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                    : "bg-rose-50 text-rose-700 border-rose-200"
+                }`}>
                   {sendStatus.message}
                 </div>
               ) : null}
             </div>
             <div className="flex flex-wrap gap-2">
-              <button type="button" onClick={handleSendNotification} disabled={sending || loading || !invoice} className={`${primaryBtn} bg-gradient-to-r from-emerald-600 to-teal-500`}>
-                <FaCommentDots className="text-xs" />
+              <button type="button" onClick={handleSendNotification} disabled={sending || loading || !invoice} className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 px-5 h-12 text-[17px] font-bold text-white shadow-lg shadow-emerald-200 hover:from-emerald-700 hover:to-teal-600 hover:shadow-xl hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap">
+                <FaWhatsapp className="text-lg" />
                 {sending ? "Sending..." : "Send WhatsApp + SMS"}
               </button>
-              <button type="button" onClick={loadInvoice} className={ghostBtn}>Regenerate</button>
-              <button type="button" onClick={handlePrint} className={ghostBtn}><FaPrint className="text-xs" /> Print</button>
-              <button type="button" onClick={handleDownloadPdf} className={primaryBtn}><FaDownload className="text-xs" /> PDF</button>
+              <button type="button" onClick={loadInvoice} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 h-12 text-[17px] font-bold text-slate-700 shadow-sm hover:bg-slate-50 hover:border-slate-300 hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-300 whitespace-nowrap">
+                <FaSync className="text-sm" /> Regenerate
+              </button>
+              <button type="button" onClick={handlePrint} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 h-12 text-[17px] font-bold text-slate-700 shadow-sm hover:bg-slate-50 hover:border-slate-300 hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-300 whitespace-nowrap">
+                <FaPrint className="text-sm" /> Print
+              </button>
+              <button type="button" onClick={handleDownloadPdf} className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 h-12 text-[17px] font-bold text-white shadow-lg shadow-blue-200 hover:bg-blue-700 hover:shadow-xl hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-300 whitespace-nowrap">
+                <FaDownload className="text-sm" /> PDF
+              </button>
             </div>
           </div>
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="flex flex-wrap justify-between gap-4 border-b border-slate-100 pb-5">
-              <div>
-                <div className="text-sm font-bold uppercase text-slate-400">Invoice No</div>
-                <div className="text-2xl font-black text-slate-900">{invoiceNo}</div>
+
+          {/* ─── Invoice paper ─── */}
+          <div className="rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+
+            {/* Brand header */}
+            <div className="bg-slate-900 px-5 sm:px-8 py-5 sm:py-6 flex items-center gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white/10 text-white text-xl">
+                <FaHotel />
               </div>
-              <div className="text-right">
-                <div className="text-sm font-bold uppercase text-slate-400">Total</div>
-                <div className="text-3xl font-black text-emerald-600">{formatCurrency(invoiceTotal)}</div>
+              <div className="flex-1 text-center">
+                <div className="text-xl sm:text-2xl font-black text-white tracking-wide">TAX INVOICE</div>
+                <div className="text-[13px] sm:text-sm font-semibold text-slate-300 mt-0.5">{RESORT_NAME_INVOICE}</div>
+              </div>
+              <div className="hidden sm:block rounded-full bg-white/10 px-3 py-1 text-[11px] font-bold text-slate-300 tracking-wide">
+                GSTIN: {RESORT_GSTIN_INVOICE}
               </div>
             </div>
-            <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              {buildLines().slice(1, 6).map(([key, value]) => (
-                <div key={key} className="rounded-xl bg-slate-50 p-3">
-                  <div className="text-sm font-bold uppercase text-slate-400">{key}</div>
-                  <div className="font-bold text-slate-800">{value}</div>
+
+            {/* Meta strip */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 border-b border-slate-200">
+              <div className="px-5 sm:px-8 py-4 border-b sm:border-b-0 sm:border-r border-slate-200 bg-slate-50/50">
+                <div className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1">Invoice No</div>
+                <div className="text-lg font-black text-slate-900">{invoiceNo}</div>
+              </div>
+              <div className="px-5 sm:px-8 py-4 border-b sm:border-b-0 sm:border-r border-slate-200 bg-slate-50/50">
+                <div className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1">Invoice Date</div>
+                <div className="text-base font-bold text-slate-800">{formatDate(invoice?.date || new Date())}</div>
+              </div>
+              <div className="px-5 sm:px-8 py-4 bg-slate-50/50">
+                <div className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1">Payment Status</div>
+                <div>
+                  <span className={statusBadgeCls(invoice?.paymentStatus || invoice?.payment_status || (remainingAmount > 0 ? "Pending" : "Paid"))}>
+                    {invoice?.paymentStatus || invoice?.payment_status || (remainingAmount > 0 ? "Pending" : "Paid")}
+                  </span>
                 </div>
-              ))}
+              </div>
             </div>
-            <div className="mt-5 overflow-x-auto rounded-xl border border-slate-100">
-              <table className="w-full min-w-[560px] text-left text-[17px]">
-                <thead className="bg-slate-50 text-base font-bold uppercase text-slate-400">
-                  <tr><th className="px-4 py-3">Item</th><th className="px-4 py-3">Qty</th><th className="px-4 py-3">Rate</th><th className="px-4 py-3 text-right">Total</th></tr>
+
+            {/* Folio info cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 border-b border-slate-200">
+              <div className="px-5 sm:px-8 py-5 border-b md:border-b-0 md:border-r border-slate-200">
+                <div className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-3">Bill To</div>
+                <div className="space-y-2 text-[15px]">
+                  <div className="flex items-start gap-2">
+                    <FaUser className="mt-0.5 text-slate-400 text-sm shrink-0" />
+                    <span className="font-bold text-slate-900">{invoice?.customerName || guestName || "Guest"}</span>
+                  </div>
+                  {(invoice?.address || booking?.address) && (
+                    <div className="flex items-start gap-2">
+                      <FaMapMarkerAlt className="mt-0.5 text-slate-400 text-sm shrink-0" />
+                      <span className="text-slate-600">{invoice?.address || booking?.address}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2">
+                    <FaPhone className="text-slate-400 text-sm shrink-0" />
+                    <span className="text-slate-600">{invoice?.phone || booking?.mobile || "-"}</span>
+                  </div>
+                  {(invoice?.customerEmail || booking?.guest_email) && (
+                    <div className="flex items-center gap-2">
+                      <FaEnvelope className="text-slate-400 text-sm shrink-0" />
+                      <span className="text-slate-600">{invoice?.customerEmail || booking?.guest_email}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2">
+                    <FaIdCard className="text-slate-400 text-sm shrink-0" />
+                    <span className="text-slate-600">Booking: {invoice?.bookingId || booking?.bookingId || "-"}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="px-5 sm:px-8 py-5">
+                <div className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-3">Stay Details</div>
+                <div className="space-y-2 text-[15px]">
+                  <div className="flex items-center gap-2">
+                    <FaHotel className="text-slate-400 text-sm shrink-0" />
+                    <span className="text-slate-600">Room: <strong className="text-slate-800">{invoice?.roomNumber || booking?.rooms || "-"}</strong></span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <FaBook className="text-slate-400 text-sm shrink-0" />
+                    <span className="text-slate-600">Type: <strong className="text-slate-800">{booking?.bookingType || booking?.booking_type || "-"}</strong></span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <FaDoorOpen className="text-slate-400 text-sm shrink-0" />
+                    <span className="text-slate-600">Check-In: <strong className="text-slate-800">{formatDate(invoice?.checkIn || invoice?.check_in || booking?.check_in)}</strong></span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <FaSignOutAlt className="text-slate-400 text-sm shrink-0" />
+                    <span className="text-slate-600">Check-Out: <strong className="text-slate-800">{formatDate(invoice?.checkOut || invoice?.check_out || booking?.check_out)}</strong></span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <FaCreditCard className="text-slate-400 text-sm shrink-0" />
+                    <span className="text-slate-600">Mode: <strong className="text-slate-800">{invoice?.paymentMode || invoice?.payment_method || "Front Desk"}</strong></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Items table */}
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[680px] text-left text-[15px]">
+                <thead>
+                  <tr className="bg-slate-900 text-white">
+                    <th className="px-5 sm:px-6 py-3 text-[11px] font-bold uppercase tracking-widest">Date</th>
+                    <th className="px-5 sm:px-6 py-3 text-[11px] font-bold uppercase tracking-widest">Particulars</th>
+                    <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-widest text-right">Tariff</th>
+                    <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-widest text-right">Disc</th>
+                    <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-widest text-right">Taxable</th>
+                    <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-widest text-right">SGST 2.5%</th>
+                    <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-widest text-right">CGST 2.5%</th>
+                    <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-widest text-right">Total</th>
+                  </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {items.map((item, idx) => (
-                    <tr key={idx}>
-                      <td className="px-4 py-3 font-semibold text-slate-800">{item.name || item.description || "Item"}</td>
-                      <td className="px-4 py-3">{item.quantity || 1}</td>
-                      <td className="px-4 py-3">{formatCurrency(item.price)}</td>
-                      <td className="px-4 py-3 text-right font-black">{formatCurrency(item.total)}</td>
-                    </tr>
-                  ))}
+                  {items.map((item, idx) => {
+                    const p = Number(item.price) || 0;
+                    const gstAmt = Number(item.gstAmount) || 0;
+                    const tot = Number(item.total) || 0;
+                    const halfGst = Math.round((gstAmt / 2) * 100) / 100;
+                    const hasGst = (Number(item.gst) || 0) > 0;
+                    return (
+                      <tr key={idx} className="hover:bg-slate-50/50">
+                        <td className="px-5 sm:px-6 py-3 text-slate-600 whitespace-nowrap">
+                          {formatDate(invoice?.date || booking?.check_in || new Date())}
+                        </td>
+                        <td className="px-5 sm:px-6 py-3">
+                          <div className="font-bold text-slate-800">{item.name || item.description || "Item"}</div>
+                          {item.description && item.description !== item.name && (
+                            <div className="text-[13px] text-slate-400 mt-0.5">{item.description}</div>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-right font-semibold text-slate-700 tabular-nums">{formatCurrency(p)}</td>
+                        <td className="px-4 py-3 text-right text-slate-500 tabular-nums">-</td>
+                        <td className="px-4 py-3 text-right text-slate-700 tabular-nums">{hasGst ? formatCurrency(p) : formatCurrency(tot)}</td>
+                        <td className="px-4 py-3 text-right text-slate-600 tabular-nums">{hasGst ? formatCurrency(halfGst) : "-"}</td>
+                        <td className="px-4 py-3 text-right text-slate-600 tabular-nums">{hasGst ? formatCurrency(halfGst) : "-"}</td>
+                        <td className="px-4 py-3 text-right font-black text-slate-900 tabular-nums">{formatCurrency(tot)}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
+            </div>
+
+            {/* Totals + Payment panel */}
+            {(() => {
+              const tariffTotal = items.reduce((s, it) => s + (Number(it.price) || 0), 0);
+              const sgstTotal = items.reduce((s, it) => s + Math.round(((Number(it.gstAmount) || 0) / 2) * 100) / 100, 0);
+              const cgstTotal = sgstTotal;
+              const discountTotal = 0;
+              const finalTotal = items.reduce((s, it) => s + (Number(it.total) || 0), 0);
+              const roundOff = Math.round((finalTotal - tariffTotal - sgstTotal - cgstTotal) * 100) / 100;
+              const amountInWords = toWords(finalTotal);
+              const paymentMode = invoice?.paymentMode || invoice?.payment_method || "Front Desk";
+              return (
+                <div className="grid grid-cols-1 md:grid-cols-2 border-t border-slate-200">
+                  {/* Left: Remarks + Payment Detail */}
+                  <div className="px-5 sm:px-8 py-5 border-b md:border-b-0 md:border-r border-slate-200">
+                    <div className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-2">Remarks</div>
+                    <div className="text-[15px] text-slate-600 italic min-h-[24px]">
+                      {(invoice?.remarks || booking?.remarks || invoice?.notes || "-") !== "-"
+                        ? (invoice?.remarks || booking?.remarks || invoice?.notes)
+                        : " "}
+                    </div>
+
+                    <div className="mt-5">
+                      <div className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-2">Payment Detail</div>
+                      <div className="space-y-1.5 text-[15px]">
+                        <div className="flex justify-between">
+                          <span className="text-slate-500">UPI / {paymentMode}</span>
+                          <span className="font-bold text-slate-800 tabular-nums">{formatCurrency(paid)}</span>
+                        </div>
+                        <div className="flex justify-between border-t border-slate-200 pt-1.5">
+                          <span className="text-slate-500 font-semibold">Balance</span>
+                          <span className="font-black text-rose-600 tabular-nums">{formatCurrency(Math.max(finalTotal - paid, 0))}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right: Totals card */}
+                  <div className="bg-slate-900 px-5 sm:px-8 py-5">
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-[13px]">
+                        <span className="text-slate-400">Tariff Total</span>
+                        <span className="text-slate-200 font-semibold tabular-nums">{formatCurrency(tariffTotal)}</span>
+                      </div>
+                      {discountTotal > 0 && (
+                        <div className="flex justify-between text-[13px]">
+                          <span className="text-slate-400">Discount</span>
+                          <span className="text-slate-200 font-semibold tabular-nums">- {formatCurrency(discountTotal)}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between text-[13px]">
+                        <span className="text-slate-400">Taxable</span>
+                        <span className="text-slate-200 font-semibold tabular-nums">{formatCurrency(tariffTotal - discountTotal)}</span>
+                      </div>
+                      <div className="flex justify-between text-[13px]">
+                        <span className="text-slate-400">SGST @ 2.5%</span>
+                        <span className="text-slate-200 font-semibold tabular-nums">{formatCurrency(sgstTotal)}</span>
+                      </div>
+                      <div className="flex justify-between text-[13px]">
+                        <span className="text-slate-400">CGST @ 2.5%</span>
+                        <span className="text-slate-200 font-semibold tabular-nums">{formatCurrency(cgstTotal)}</span>
+                      </div>
+                      <div className="flex justify-between text-[13px]">
+                        <span className="text-slate-400">Round Off</span>
+                        <span className="text-slate-200 font-semibold tabular-nums">{formatCurrency(roundOff)}</span>
+                      </div>
+                      <div className="border-t border-white/10 pt-2 mt-1">
+                        <div className="flex justify-between text-[11px]">
+                          <span className="text-slate-500 font-bold uppercase tracking-wider">Final Total</span>
+                          <span className="text-white font-black text-lg tabular-nums">{formatCurrency(finalTotal)}</span>
+                        </div>
+                      </div>
+                      <div className="pt-1.5 border-t border-white/5">
+                        <div className="text-[12px] text-slate-500 italic leading-relaxed">
+                          {amountInWords}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Footer */}
+            <div className="border-t border-slate-200 px-5 sm:px-8 pt-5 pb-6">
+              <div className="text-center">
+                <div className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-4">For MAA BAGLAMUKHI RESORT</div>
+                <div className="flex items-end justify-center gap-8 sm:gap-16">
+                  <div className="text-center">
+                    <div className="border-t-2 border-slate-400 pt-2 w-28 sm:w-36">
+                      <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Authorised Signature</div>
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="border-t-2 border-slate-400 pt-2 w-28 sm:w-36">
+                      <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Guest Signature</div>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-5 text-[11px] text-slate-400">
+                  Invoice Generated By: <span className="font-semibold text-slate-500">{invoice?.generatedBy || "ABHISHEK RATHORE"}</span> &nbsp;|&nbsp; {formatDate(new Date())} {formatTime(new Date())}
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1767,99 +2083,164 @@ const WhatsAppSendModal = ({ booking, detail, sending, result, onSend, onClose }
   const guestName = detail?.guest_name || b.guest_name || "Guest";
   const customerPhone = detail?.mobile || b.mobile || "—";
   const invoiceNo = detail?.invoice?.invoiceNo || detail?.invoice_no || `BK-${b.bookingId}`;
+  const invoiceTotal = detail?.invoice?.total_amount || detail?.invoice?.totalAmount || b.totalAmount || 0;
+  const paymentStatus = detail?.invoice?.paymentStatus || detail?.invoice?.payment_status || (invoiceTotal > 0 ? "Pending" : "Paid");
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={sending ? undefined : onClose} />
-      <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-        <div className="bg-[#25D366] px-6 py-5 flex items-center gap-3">
-          <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
-            <FaWhatsapp className="text-[#25D366] text-2xl" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
+      <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" onClick={sending ? undefined : onClose} />
+      <div className="relative w-full max-w-md bg-white rounded-[24px] shadow-[0_30px_80px_rgba(15,23,42,0.35)] overflow-hidden">
+
+        {/* Brand header */}
+        <div className="bg-gradient-to-r from-emerald-600 to-teal-600 px-5 sm:px-6 py-5 flex items-center gap-4">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white shadow-lg">
+            <FaWhatsapp className="text-[#25D366] text-3xl" />
           </div>
-          <div>
-            <h3 className="text-white font-bold text-lg">Send Invoice via WhatsApp</h3>
-            <p className="text-white/80 text-xs">Invoice will be sent with PDF attachment</p>
+          <div className="flex-1">
+            <h3 className="text-white font-black text-lg sm:text-xl leading-tight">Send Invoice via WhatsApp</h3>
+            <p className="text-white/75 text-xs sm:text-sm mt-0.5">Invoice will be sent with PDF attachment</p>
           </div>
         </div>
 
-        <div className="px-6 py-5 space-y-4">
-          <div className="bg-slate-50 rounded-xl p-4 space-y-3">
-            <div className="flex items-center gap-2">
-              <FaUser className="text-slate-400 text-sm" />
-              <span className="text-slate-500 text-sm font-medium">Guest</span>
-              <span className="text-slate-800 font-bold ml-auto">{guestName}</span>
+        <div className="px-5 sm:px-6 py-5 space-y-4">
+
+          {/* Summary strip */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex-1 rounded-xl bg-slate-50 border border-slate-200 px-3 py-2.5 text-center">
+              <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Invoice</div>
+              <div className="text-sm font-black text-slate-900 mt-0.5">{invoiceNo}</div>
             </div>
-            <div className="flex items-center gap-2">
-              <FaPhone className="text-slate-400 text-sm" />
-              <span className="text-slate-500 text-sm font-medium">Mobile</span>
-              <span className="text-slate-800 font-bold ml-auto">{customerPhone}</span>
+            <div className="flex-1 rounded-xl bg-emerald-50 border border-emerald-100 px-3 py-2.5 text-center">
+              <div className="text-[10px] font-bold uppercase tracking-widest text-emerald-500">Total Amount</div>
+              <div className="text-sm font-black text-emerald-700 mt-0.5">{formatCurrency(invoiceTotal)}</div>
             </div>
-            <div className="flex items-center gap-2">
-              <FaFileAlt className="text-slate-400 text-sm" />
-              <span className="text-slate-500 text-sm font-medium">Invoice</span>
-              <span className="text-slate-800 font-bold ml-auto">{invoiceNo}</span>
+            <div className="flex-1 rounded-xl bg-slate-50 border border-slate-200 px-3 py-2.5 text-center">
+              <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Status</div>
+              <div className="mt-1">
+                <span className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-bold ${
+                  paymentStatus === "Paid" ? "bg-emerald-50 text-emerald-700" :
+                  paymentStatus === "Pending" ? "bg-amber-50 text-amber-700" :
+                  "bg-slate-100 text-slate-600"
+                }`}>
+                  {paymentStatus}
+                </span>
+              </div>
             </div>
           </div>
 
-          <div className="bg-blue-50 rounded-xl p-4">
-            <p className="text-blue-700 text-sm font-medium">Admin (Resort) will also receive a notification</p>
-          </div>
-
-          {result && (
-            <div className={`rounded-xl p-4 flex items-start gap-3 ${
-              result.type === "success"
-                ? "bg-green-50 border border-green-200"
-                : result.type === "partial"
-                ? "bg-amber-50 border border-amber-200"
-                : "bg-red-50 border border-red-200"
-            }`}>
-              {result.type === "success" && <FaCheckCircle className="text-green-600 text-xl mt-0.5" />}
-              {result.type === "partial" && <FaExclamationTriangle className="text-amber-600 text-xl mt-0.5" />}
-              {result.type === "error" && <FaTimes className="text-red-600 text-xl mt-0.5" />}
+          {/* Guest card */}
+          <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4 space-y-2.5">
+            <div className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-2">Guest Information</div>
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-700">
+                <FaUser className="text-sm" />
+              </div>
               <div>
-                <p className={`font-semibold text-sm ${
-                  result.type === "success" ? "text-green-800"
-                  : result.type === "partial" ? "text-amber-800"
-                  : "text-red-800"
-                }`}>
-                  {result.type === "success" ? "Sent Successfully"
-                  : result.type === "partial" ? "Partially Sent"
-                  : "Failed to Send"}
-                </p>
-                <p className={`text-sm mt-1 ${
-                  result.type === "success" ? "text-green-600"
-                  : result.type === "partial" ? "text-amber-600"
-                  : "text-red-600"
-                }`}>
-                  {result.message}
-                </p>
+                <div className="text-[11px] text-slate-400 font-medium">Guest Name</div>
+                <div className="text-[15px] font-black text-slate-900">{guestName}</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+                <FaPhone className="text-sm" />
+              </div>
+              <div>
+                <div className="text-[11px] text-slate-400 font-medium">Mobile Number</div>
+                <div className="text-[15px] font-black text-slate-900">{customerPhone}</div>
+              </div>
+            </div>
+            {detail?.guest_email || b.guestEmail ? (
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-purple-100 text-purple-700">
+                  <FaEnvelope className="text-sm" />
+                </div>
+                <div>
+                  <div className="text-[11px] text-slate-400 font-medium">Email</div>
+                  <div className="text-[15px] font-black text-slate-900">{detail?.guest_email || b.guestEmail || "-"}</div>
+                </div>
+              </div>
+            ) : null}
+          </div>
+
+          {/* Delivery channels */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-2xl border-2 border-emerald-100 bg-emerald-50/50 p-3.5">
+              <div className="flex items-center gap-2 mb-1.5">
+                <FaWhatsapp className="text-emerald-600 text-lg" />
+                <span className="text-[11px] font-bold uppercase tracking-widest text-emerald-700">Customer</span>
+              </div>
+              <div className="text-[13px] font-bold text-slate-800">{customerPhone}</div>
+              <div className="mt-1.5 inline-block rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-700">Will receive PDF</div>
+            </div>
+            <div className="rounded-2xl border-2 border-slate-200 bg-slate-50 p-3.5">
+              <div className="flex items-center gap-2 mb-1.5">
+                <FaHotel className="text-slate-500 text-lg" />
+                <span className="text-[11px] font-bold uppercase tracking-widest text-slate-500">Admin (Resort)</span>
+              </div>
+              <div className="text-[13px] font-bold text-slate-800">Resort Notification</div>
+              <div className="mt-1.5 inline-block rounded-full bg-slate-200 px-2 py-0.5 text-[11px] font-bold text-slate-600">Notification copy</div>
+            </div>
+          </div>
+
+          {/* Result banner */}
+          {result && (
+            <div className={`rounded-xl border-l-[4px] p-4 ${
+              result.type === "success"
+                ? "border-l-emerald-500 bg-emerald-50"
+                : result.type === "partial"
+                ? "border-l-amber-500 bg-amber-50"
+                : "border-l-rose-500 bg-rose-50"
+            }`}>
+              <div className="flex items-start gap-3">
+                {result.type === "success" && <FaCheckCircle className="text-emerald-600 text-lg mt-0.5 shrink-0" />}
+                {result.type === "partial" && <FaExclamationTriangle className="text-amber-600 text-lg mt-0.5 shrink-0" />}
+                {result.type === "error" && <FaTimes className="text-rose-600 text-lg mt-0.5 shrink-0" />}
+                <div>
+                  <p className={`font-bold text-[15px] ${
+                    result.type === "success" ? "text-emerald-800"
+                    : result.type === "partial" ? "text-amber-800"
+                    : "text-rose-800"
+                  }`}>
+                    {result.type === "success" ? "Sent Successfully"
+                    : result.type === "partial" ? "Partially Sent"
+                    : "Failed to Send"}
+                  </p>
+                  <p className={`text-[13px] mt-1 ${
+                    result.type === "success" ? "text-emerald-600"
+                    : result.type === "partial" ? "text-amber-600"
+                    : "text-rose-600"
+                  }`}>
+                    {result.message}
+                  </p>
+                </div>
               </div>
             </div>
           )}
         </div>
 
-        <div className="px-6 pb-5 flex gap-3">
+        {/* Footer action row */}
+        <div className="px-5 sm:px-6 pb-5 pt-1">
           {!sending && !result && (
-            <>
-              <button onClick={onClose} className="flex-1 px-4 py-2.5 border border-slate-200 text-slate-600 font-medium rounded-lg hover:bg-slate-50 transition-colors text-sm">
+            <div className="flex gap-3">
+              <button onClick={onClose} className="flex-1 px-4 py-3 border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 active:scale-[0.98] transition-all duration-200 text-[15px]">
                 Cancel
               </button>
-              <button onClick={onSend} className="flex-1 px-4 py-2.5 bg-[#25D366] hover:bg-[#1da851] text-white font-semibold rounded-lg transition-colors text-sm flex items-center justify-center gap-2">
+              <button onClick={onSend} className="flex-1 px-4 py-3 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-600 text-white font-bold rounded-xl shadow-lg shadow-emerald-200 hover:shadow-xl active:scale-[0.98] transition-all duration-200 text-[15px] flex items-center justify-center gap-2">
                 <FaPaperPlane className="text-sm" /> Send Now
               </button>
-            </>
+            </div>
           )}
           {sending && (
-            <div className="flex-1 flex items-center justify-center gap-2 py-2.5">
-              <svg className="animate-spin h-5 w-5 text-[#25D366]" viewBox="0 0 24 24">
+            <div className="flex items-center justify-center gap-3 py-3">
+              <svg className="animate-spin h-5 w-5 text-emerald-600" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
               </svg>
-              <span className="text-slate-500 text-sm font-medium">Sending...</span>
+              <span className="text-slate-500 font-medium text-[15px]">Sending...</span>
             </div>
           )}
           {result && !sending && (
-            <button onClick={onClose} className="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg transition-colors text-sm">
+            <button onClick={onClose} className="w-full px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl active:scale-[0.98] transition-all duration-200 text-[15px]">
               Close
             </button>
           )}
@@ -2882,11 +3263,9 @@ const handleJumpStep = (stepView) => {
   };
 
   // ============================================================
-  // PRINT-INVOICE FIX: builds and prints ONLY a real A4 invoice
-  // using the SAME live data already shown on the Booking Details
-  // screen (room charges from bookingDetail.rooms, folio/extra
-  // charges from folioCharges, advance paid from payment history).
-  // This never prints the Booking Details screen itself.
+  // PRINT-INVOICE: builds a proper A4 tax invoice matching the
+  // reference image layout (traditional paper invoice format).
+  // Uses live booking/folio data from the Booking Details screen.
   // ============================================================
   const handlePrintInvoiceDirect = () => {
     const d = bookingDetail || {};
@@ -2897,166 +3276,374 @@ const handleJumpStep = (stepView) => {
       : Number(b.totalAmount) || 0;
 
     const folioChargesTotal = folioCharges.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
-    const updatedTotalAmount = roomChargesTotal + folioChargesTotal;
+    const finalTotal = roomChargesTotal + folioChargesTotal;
     const effectivePaid = totalPaid > 0 ? totalPaid : (Number(b.paidAmount) || 0);
-    const remainingAmount = effectivePaid > 0
-      ? Math.max(updatedTotalAmount - effectivePaid, 0)
-      : updatedTotalAmount;
+    const remainingAmount = effectivePaid > 0 ? Math.max(finalTotal - effectivePaid, 0) : finalTotal;
+    const invoiceNo = d.invoice_no || d.invoiceNo || b.bookingCode || `INV-${b.bookingId}`;
+    const guestName = d.guest_name || b.guest_name || "Guest";
+    const roomType = d.room_type || b.room_type || b.roomType || "Single";
+    const roomNo = d.room_no || d.roomNumber || b.room_no || b.roomNumber || "104";
+    const noOfNights = d.no_of_nights || b.no_of_nights || b.nights || d.nights || 1;
+    const pax = d.no_of_guests || d.guest_capacity || b.no_of_guests || "2 Adults, 0";
+    const guestAddress = d.address || b.address || "BHOPAL";
+    const guestContact = d.mobile || d.contact_no || b.mobile || b.contact_no || "-";
+    const checkInDate = d.check_in || b.check_in ? formatDate(new Date(d.check_in || b.check_in)) : "-";
+    const checkOutDate = d.check_out || b.check_out ? formatDate(new Date(d.check_out || b.check_out)) : "-";
+    const arrivalTime = d.arrival_time || d.arrival || "4:25 pm";
+    const departureTime = d.departure_time || d.departure || "10:00 am";
+    const amountInWords = toWords(finalTotal);
+    const paymentMode = d.payment_mode || d.paymentMode || b.payment_mode || "Front Desk";
+    const paymentRef = d.payment_reference || d.paymentReference || "";
 
     const roomItems = (Array.isArray(d.rooms) ? d.rooms : []).map((r) => ({
-      name: `Room ${r.room_number || r.roomNumber || r.roomNo || ""}`,
-      description: `${r.room_type || r.category || "Room"} — Qty ${r.quantity || 1}${(r.gst || r.gstPercent) ? `, GST ${r.gst || r.gstPercent}%` : ""}`,
-      quantity: r.quantity || 1,
-      price: Number(r.tariff || r.price || 0),
+      date: d.check_in ? formatDate(new Date(d.check_in)) : "",
+      particulars: `Room Charges - ${r.room_type || r.category || "Room"} - ${r.room_number || r.roomNo || ""}`,
+      tariff: Number(r.tariff || r.price || 0),
+      disc: 0,
+      taxable: Number(r.tariff || r.price || 0),
+      sgst: Number((Number(r.tariff || r.price || 0) * 0.025).toFixed(2)),
+      cgst: Number((Number(r.tariff || r.price || 0) * 0.025).toFixed(2)),
       total: Number(r.total || 0),
     }));
 
     const folioItems = folioCharges.map((e) => ({
-      name: e.category || "Extra Charge",
-      description: e.description || "Folio entry",
-      quantity: 1,
-      price: Number(e.amount) || 0,
-      total: Number(e.amount) || 0,
+      date: e.date ? formatDate(new Date(e.date)) : "",
+      particulars: e.description || e.category || "Extra Charge",
+      tariff: Number(e.amount) || 0,
+      disc: 0,
+      taxable: Number(e.amount) || 0,
+      sgst: Number((Number(e.amount || 0) * 0.025).toFixed(2)),
+      cgst: Number((Number(e.amount || 0) * 0.025).toFixed(2)),
+      total: Number(e.amount || 0),
     }));
 
-    const items = [...roomItems, ...folioItems];
-    const invoiceNo = d.invoice_no || d.invoiceNo || b.bookingCode || `INV-${b.bookingId}`;
-    const guestName = d.guest_name || b.guest_name || "Guest";
+    const allItems = [...roomItems, ...folioItems];
+    const tariffTotal = allItems.reduce((s, i) => s + i.tariff, 0);
+    const totalDiscount = allItems.reduce((s, i) => s + i.disc, 0);
+    const totalTaxable = allItems.reduce((s, i) => s + i.taxable, 0);
+    const totalSgst = allItems.reduce((s, i) => s + i.sgst, 0);
+    const totalCgst = allItems.reduce((s, i) => s + i.cgst, 0);
+    const roundOff = 0.00;
+    const serviceTotal = 0.00;
 
     const win = window.open("", "_blank", "width=900,height=700");
     if (!win) return;
+
+    const renderInvoiceRow = (item) => `
+      <tr>
+        <td>${item.date}</td>
+        <td>${item.particulars}</td>
+        <td class="text-right">${formatCurrency(item.tariff)}</td>
+        <td class="text-right">${formatCurrency(item.disc)}</td>
+        <td class="text-right">${formatCurrency(item.taxable)}</td>
+        <td class="text-right">${formatCurrency(item.sgst)}</td>
+        <td class="text-right">${formatCurrency(item.cgst)}</td>
+        <td class="text-right" style="font-weight:700">${formatCurrency(item.total)}</td>
+      </tr>
+    `;
 
     win.document.write(`
       <html>
       <head>
         <title>${invoiceNo} - ${RESORT_NAME_INVOICE}</title>
         <style>
+          @page { size: A4; margin: 10mm; }
           * { box-sizing: border-box; margin: 0; padding: 0; }
-          @page { size: A4; margin: 14mm; }
           body {
             font-family: "Helvetica Neue", Arial, sans-serif;
             color: #0f172a;
-            padding: 28px;
-            font-size: 13px;
-            line-height: 1.5;
+            padding: 16px;
+            font-size: 10px;
+            line-height: 1.35;
           }
           .resort-header {
             text-align: center;
-            padding: 12px 0 10px;
+            padding: 8px 0 6px;
             border-bottom: 2px solid #0f172a;
-            margin-bottom: 10px;
+            margin-bottom: 4px;
           }
-          .resort-header h1 { font-size: 22px; font-weight: 800; letter-spacing: 0.02em; }
-          .resort-header .sub { font-size: 11px; color: #475569; margin-top: 3px; }
-          .invoice-meta {
+          .resort-header .logo-row {
             display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            margin-bottom: 3px;
+          }
+          .resort-header .logo-icon {
+            width: 22px; height: 22px;
+            background: #0f172a;
+            color: #fff;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 10px; font-weight: 700;
+          }
+          .resort-header h1 { font-size: 16px; font-weight: 800; letter-spacing: 0.03em; }
+          .resort-header .sub { font-size: 9px; color: #475569; margin-top: 1px; }
+          .resort-header .gst-line { font-size: 9px; color: #475569; margin-top: 1px; }
+
+          .meta-row {
+            display: grid;
+            grid-template-columns: auto 1fr 1fr;
+            gap: 0;
+            padding: 5px 0;
             border-bottom: 1px dashed #94a3b8;
-            margin-bottom: 10px;
+            margin-bottom: 4px;
+            align-items: start;
           }
-          .invoice-meta .left { font-weight: 700; font-size: 15px; letter-spacing: 0.05em; }
-          .invoice-meta .right { text-align: right; font-size: 12px; }
-          .invoice-meta .right .label { color: #64748b; font-size: 10px; }
-          .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-          .meta-card { border: 1px solid #cbd5e1; padding: 10px 12px; font-size: 12px; border-radius: 4px; }
-          .meta-card .card-label {
-            font-size: 9px; font-weight: 700; text-transform: uppercase;
-            letter-spacing: 0.1em; color: #64748b; margin-bottom: 4px;
+          .meta-row .left { font-weight: 700; font-size: 12px; letter-spacing: 0.06em; padding-top: 2px; }
+          .meta-row .right { text-align: right; font-size: 9px; line-height: 1.5; }
+          .meta-row .right .label { color: #64748b; font-size: 8px; font-weight: 600; }
+          .meta-row .right .val { font-weight: 700; font-size: 10px; }
+
+          .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px;
+            margin-bottom: 4px;
           }
-          .meta-card .card-value { font-weight: 700; font-size: 13px; }
-          table.items { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
+          .info-card {
+            border: 1px solid #cbd5e1;
+            padding: 5px 7px;
+            font-size: 9px;
+          }
+          .info-card .ic-label {
+            font-size: 8px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.08em; color: #64748b; margin-bottom: 2px;
+          }
+          .info-card .ic-value { font-weight: 700; font-size: 10px; }
+          .info-card .ic-sub { font-size: 9px; color: #475569; margin-top: 1px; }
+
+          table.items {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 3px;
+            font-size: 9px;
+          }
           table.items thead th {
-            background: #0f172a; color: #ffffff; padding: 8px 10px; font-weight: 700;
-            text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em;
+            background: #0f172a;
+            color: #ffffff;
+            padding: 4px 5px;
+            font-weight: 700;
+            text-align: left;
+            font-size: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
           }
-          table.items tbody td { padding: 8px 10px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+          table.items tbody td {
+            padding: 3px 5px;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: top;
+            font-size: 9px;
+          }
           .text-right { text-align: right; }
-          .totals-wrap { display: flex; justify-content: flex-end; margin-top: 14px; }
-          .totals-box {
-            border: 1px solid #0f172a; background: #0f172a; color: #ffffff;
-            padding: 12px 16px; border-radius: 4px; width: 280px;
+
+          .remarks-box {
+            border: 1px solid #cbd5e1;
+            padding: 3px 7px;
+            font-size: 9px;
+            margin-top: 3px;
+            min-height: 24px;
           }
-          .totals-box .t-row { display: flex; justify-content: space-between; padding: 3px 0; font-size: 12px; }
-          .totals-box .t-row.grand {
-            border-top: 1px solid rgba(255,255,255,0.25); margin-top: 6px;
-            padding-top: 8px; font-size: 16px; font-weight: 800;
+          .remarks-box .rb-label {
+            font-size: 8px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.06em; color: #64748b;
           }
-          .totals-box .t-row .t-label { color: #cbd5e1; }
-          .totals-box .t-row.grand .t-label { color: #ffffff; }
+
+          .totals-area {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px;
+            margin-top: 3px;
+          }
+          .tariff-box {
+            border: 1px solid #cbd5e1;
+            padding: 4px 7px;
+            font-size: 9px;
+          }
+          .tariff-box .tb-label {
+            font-size: 8px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.06em; color: #64748b; margin-bottom: 2px;
+          }
+          .tariff-box .tb-row {
+            display: flex; justify-content: space-between;
+            padding: 0.5px 0; font-size: 9px;
+          }
+          .tariff-box .tb-row .tb-lbl { color: #475569; }
+          .tariff-box .tb-row.grand {
+            border-top: 1px solid #e2e8f0;
+            margin-top: 2px; padding-top: 2px;
+            font-weight: 800; font-size: 11px;
+          }
+          .tariff-box .tb-row.grand .tb-lbl { color: #0f172a; font-weight: 800; }
+
+          .payment-box {
+            border: 1px solid #0f172a;
+            background: #0f172a;
+            color: #ffffff;
+            padding: 6px 8px;
+            font-size: 9px;
+          }
+          .payment-box .pb-label {
+            font-size: 8px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.06em; color: #cbd5e1; margin-bottom: 2px;
+          }
+          .payment-box .pb-row {
+            display: flex; justify-content: space-between;
+            padding: 0.5px 0; font-size: 9px;
+          }
+          .payment-box .pb-row .pb-lbl { color: #cbd5e1; }
+          .payment-box .pb-row.grand {
+            border-top: 1px solid rgba(255,255,255,0.25);
+            margin-top: 2px; padding-top: 2px;
+            font-weight: 800; font-size: 11px;
+          }
+          .payment-box .pb-row.grand .pb-lbl { color: #fff; }
+
+          .words-box {
+            border: 1px solid #cbd5e1;
+            padding: 2px 7px;
+            font-size: 9px;
+            margin-top: 3px;
+            font-style: italic;
+          }
+          .words-box .wb-label {
+            font-size: 8px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.06em; color: #64748b;
+          }
+
           .footer-area {
-            margin-top: 30px; padding-top: 10px; border-top: 1px solid #e2e8f0;
-            text-align: center; font-size: 10px; color: #64748b;
+            margin-top: 4px;
+            padding-top: 4px;
+            border-top: 1px solid #e2e8f0;
+            text-align: center;
+            font-size: 8px;
+            color: #64748b;
+          }
+          .sig-line {
+            margin-top: 6px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+          }
+          .sig-label {
+            font-size: 8px;
+            font-weight: 600;
+            color: #334155;
+          }
+          .sig-underline {
+            display: inline-block;
+            border-top: 1px solid #0f172a;
+            padding-top: 2px;
+            min-width: 100px;
+            font-size: 8px;
+            font-weight: 600;
+            color: #334155;
+            margin-top: 14px;
           }
         </style>
       </head>
       <body>
         <div class="resort-header">
-          <h1>${RESORT_NAME_INVOICE}</h1>
-          <div class="sub">${RESORT_ADDRESS_LINE_1} | ${RESORT_ADDRESS_LINE_2}</div>
-          <div class="sub">Ph: ${RESORT_PHONE_INVOICE} | Email: ${RESORT_EMAIL_INVOICE}</div>
-          <div class="sub">GSTIN: ${RESORT_GSTIN_INVOICE} | State: ${RESORT_STATE_CODE_INVOICE}</div>
-        </div>
-
-        <div class="invoice-meta">
-          <div class="left">TAX INVOICE</div>
-          <div class="right"><div class="label">Invoice No</div><div style="font-weight:700;font-size:13px">${invoiceNo}</div></div>
-          <div class="right"><div class="label">Date</div><div style="font-weight:600">${formatDate(new Date())}</div></div>
-        </div>
-
-        <div class="meta-grid">
-          <div class="meta-card">
-            <div class="card-label">Bill To</div>
-            <div class="card-value">${guestName}</div>
-            <div>Phone: ${d.mobile || b.mobile || "-"}</div>
-            <div>Booking ID: ${b.bookingId || "-"}</div>
-            <div>Booking No: ${d.booking_code || b.bookingCode || "-"}</div>
+          <div class="logo-row">
+            <div class="logo-icon">M</div>
+            <h1>${RESORT_NAME_INVOICE}</h1>
           </div>
-          <div class="meta-card">
-            <div class="card-label">Stay Details</div>
-            <div>Check-In: ${formatDate(d.check_in || b.check_in)}</div>
-            <div>Check-Out: ${formatDate(d.check_out || b.check_out)}</div>
-            <div>Status: ${d.booking_status || b.booking_status || "-"}</div>
+          <div class="sub">${RESORT_ADDRESS_LINE_1}, ${RESORT_ADDRESS_LINE_2}</div>
+          <div class="sub">Ph: ${RESORT_PHONE_INVOICE} | Email: ${RESORT_EMAIL_INVOICE}</div>
+          <div class="gst-line">GSTIN: ${RESORT_GSTIN_INVOICE} | State: ${RESORT_STATE_CODE_INVOICE}</div>
+        </div>
+
+        <div class="meta-row">
+          <div class="left">TAX INVOICE</div>
+          <div class="right">
+            <div><span class="label">Invoice No.&nbsp;&nbsp;</span><span class="val">${invoiceNo}</span></div>
+            <div><span class="label">Folio No.&nbsp;&nbsp;</span><span class="val">${b.bookingId || "-"}</span></div>
+          </div>
+          <div class="right">
+            <div><span class="label">Invoice Date&nbsp;&nbsp;</span><span class="val">${formatDate(new Date())}</span></div>
+            <div><span class="label">Room No.&nbsp;&nbsp;</span><span class="val">${roomNo}</span></div>
+            <div><span class="label">Room Type&nbsp;&nbsp;</span><span class="val">${roomType}</span></div>
+          </div>
+        </div>
+
+        <div class="info-grid">
+          <div class="info-card">
+            <div class="ic-label">Guest Name</div>
+            <div class="ic-value">${guestName}</div>
+            <div class="ic-sub">Address: ${guestAddress}</div>
+            <div class="ic-sub">Contact #: ${guestContact}</div>
+          </div>
+          <div class="info-card">
+            <div class="ic-label">Stay Details</div>
+            <div class="ic-sub">Arrival: ${checkInDate} ${arrivalTime}</div>
+            <div class="ic-sub">Departure: ${checkOutDate} ${departureTime}</div>
+            <div class="ic-sub">Pax: ${pax} | No. of Nights: ${noOfNights}</div>
           </div>
         </div>
 
         <table class="items">
           <thead>
             <tr>
-              <th style="width:44%">Description</th>
-              <th style="width:12%;text-align:center">Qty</th>
-              <th style="width:22%;text-align:right">Rate</th>
-              <th style="width:22%;text-align:right">Amount</th>
+              <th style="width:8%">Date</th>
+              <th style="width:32%">Particulars</th>
+              <th style="width:11%" class="text-right">Tariff</th>
+              <th style="width:9%" class="text-right">Disc</th>
+              <th style="width:11%" class="text-right">Taxable</th>
+              <th style="width:10%" class="text-right">SGST 2.50%</th>
+              <th style="width:10%" class="text-right">CGST 2.50%</th>
+              <th style="width:9%" class="text-right">Total</th>
             </tr>
           </thead>
           <tbody>
-            ${items.length > 0 ? items.map((item) => `
-              <tr>
-                <td>
-                  <div style="font-weight:600">${item.name}</div>
-                  <div style="font-size:10px;color:#64748b">${item.description || ""}</div>
-                </td>
-                <td style="text-align:center">${item.quantity}</td>
-                <td class="text-right">${formatCurrency(item.price)}</td>
-                <td class="text-right" style="font-weight:700">${formatCurrency(item.total)}</td>
-              </tr>
-            `).join("") : `<tr><td colspan="4" style="text-align:center;color:#94a3b8;padding:16px">No charges recorded</td></tr>`}
+            ${allItems.length > 0 ? allItems.map(renderInvoiceRow).join("") : `<tr><td colspan="8" style="text-align:center;color:#94a3b8;padding:10px">No charges recorded</td></tr>`}
           </tbody>
         </table>
 
-        <div class="totals-wrap">
-          <div class="totals-box">
-            <div class="t-row"><span class="t-label">Room Charges</span><span>${formatCurrency(roomChargesTotal)}</span></div>
-            <div class="t-row"><span class="t-label">Folio Charges</span><span>${formatCurrency(folioChargesTotal)}</span></div>
-            <div class="t-row"><span class="t-label">Advance Paid</span><span>${formatCurrency(effectivePaid)}</span></div>
-            <div class="t-row grand"><span class="t-label">GRAND TOTAL</span><span>${formatCurrency(updatedTotalAmount)}</span></div>
-            <div class="t-row"><span class="t-label">Remaining Due</span><span>${formatCurrency(remainingAmount)}</span></div>
+        <div class="remarks-box">
+          <span class="rb-label">Remarks</span>
+        </div>
+
+        <div class="totals-area">
+          <div>
+            <div class="tariff-box">
+              <div class="tb-label">Tariff Total</div>
+              <div class="tb-row"><span class="tb-lbl">Discount</span><span>0.00</span></div>
+              <div class="tb-row"><span class="tb-lbl">Taxable Amount</span><span>${formatCurrency(totalTaxable)}</span></div>
+              <div class="tb-row"><span class="tb-lbl">SGST</span><span>${formatCurrency(totalSgst)}</span></div>
+              <div class="tb-row"><span class="tb-lbl">CGST</span><span>${formatCurrency(totalCgst)}</span></div>
+              <div class="tb-row grand"><span class="tb-lbl">Room Total</span><span>${formatCurrency(roomChargesTotal)}</span></div>
+              <div class="tb-row"><span class="tb-lbl">Round Off Disc.</span><span>${formatCurrency(roundOff)}</span></div>
+              <div class="tb-row grand"><span class="tb-lbl">Final Total</span><span>${formatCurrency(finalTotal)}</span></div>
+              <div class="tb-row"><span class="tb-lbl">Service Total</span><span>${formatCurrency(serviceTotal)}</span></div>
+            </div>
+            <div class="words-box">
+              <span class="wb-label">Rupees ${amountInWords.replace("Rupees ", "").replace(" Only", "")} Only</span>
+            </div>
+          </div>
+          <div>
+            <div class="payment-box">
+              <div class="pb-label">Payment Detail</div>
+              <div class="pb-row"><span class="pb-lbl">UPI</span><span>${paymentRef || "-"}</span></div>
+              <div class="pb-row grand"><span class="pb-lbl grand">Final Total</span><span>${formatCurrency(finalTotal)}</span></div>
+              <div class="pb-row"><span class="pb-lbl">Service Total</span><span>${formatCurrency(serviceTotal)}</span></div>
+              <div class="pb-row"><span class="pb-lbl">Balance</span><span>${formatCurrency(remainingAmount)}</span></div>
+            </div>
           </div>
         </div>
 
         <div class="footer-area">
-          This is a computer generated invoice. No physical signature required.<br/>
-          Thank you for staying with ${RESORT_NAME_INVOICE}.
+          <div>Invoice issued under section 31 of CGST Act, 2017</div>
+          <div style="margin-top:1px">Thank you for staying with ${RESORT_NAME_INVOICE}.</div>
+        </div>
+        <div class="sig-line">
+          <div>
+            <div class="sig-label">For MAA BAGLAMUKHI RESORT</div>
+            <div class="sig-underline">Authorised Signature</div>
+          </div>
+          <div style="text-align:right">
+            <div class="sig-label">Guest Signature</div>
+            <div style="text-align:right"><span class="sig-underline" style="min-width:80px"></span></div>
+          </div>
         </div>
       </body>
       </html>
