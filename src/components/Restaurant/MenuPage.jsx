@@ -86,7 +86,7 @@ const buildMenuPlaceholder = (item) => {
   };
 };
 
-const MENU_ITEMS_PAGE_SIZE = 10;
+const MENU_ITEMS_PAGE_SIZE = 24;
 
 const MenuPage = () => {
   const navigate = useNavigate();
@@ -119,6 +119,7 @@ const MenuPage = () => {
   const [quickAddItemId, setQuickAddItemId] = useState("");
   const [showQuickAddSuggestions, setShowQuickAddSuggestions] = useState(false);
   const [menuPage, setMenuPage] = useState(1);
+  const [brokenImageIds, setBrokenImageIds] = useState(() => new Set());
 
   useEffect(() => {
     if (banquetMenuPicker) return;
@@ -311,9 +312,22 @@ const MenuPage = () => {
   };
 
   const buildMenuImageSrc = (imagePath) => {
-    if (!imagePath) return "";
-    if (/^https?:\/\//i.test(imagePath)) return imagePath;
-    return `${getBackendBaseURL()}${imagePath}`;
+    const trimmedPath = String(imagePath || "").trim();
+    if (!trimmedPath) return "";
+    if (/^https?:\/\//i.test(trimmedPath) || trimmedPath.startsWith("data:")) return trimmedPath;
+
+    const backendBase = String(getBackendBaseURL() || "").replace(/\/+$/, "");
+    const normalizedPath = trimmedPath.startsWith("/") ? trimmedPath : `/${trimmedPath}`;
+    return `${backendBase}${normalizedPath}`;
+  };
+
+  const markImageBroken = (itemId) => {
+    setBrokenImageIds((current) => {
+      if (current.has(itemId)) return current;
+      const next = new Set(current);
+      next.add(itemId);
+      return next;
+    });
   };
 
   const subtotal = order.reduce((sum, item) => sum + item.amount, 0);
@@ -538,119 +552,138 @@ const MenuPage = () => {
             ) : null}
 
             {!isLoadingMenu && !menuError && filteredItems.length ? (
-              <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5">
                 {paginatedMenuItems.map((item) => {
                   const effectivePrice = Number(
                     item.effectivePrice ?? item.effective_price ?? item.price ?? 0,
                   );
                   const itemImageSrc = buildMenuImageSrc(item.image_url || item.imageUrl);
+                  const showImage = Boolean(itemImageSrc) && !brokenImageIds.has(item.id);
                   const placeholder = buildMenuPlaceholder(item);
                   const currentTax = Number(taxByItem[item.id] ?? item.tax ?? 5);
+                  const currentQty = Number(qty[item.id] || 0);
                   const adjustTax = (delta) => {
                     const next = Math.max(0, Math.round((currentTax + delta) * 100) / 100);
                     handleTaxChange(item.id, next);
                   };
+                  const decrementQty = () => {
+                    const next = Math.max(0, currentQty - 1);
+                    handleQtyChange(item.id, next > 0 ? String(next) : "");
+                  };
+                  const incrementQty = () => {
+                    handleQtyChange(item.id, String(currentQty + 1));
+                  };
                   return (
                     <div
-  key={item.id}
-  className="group flex min-h-[90px] min-w-0 overflow-hidden rounded-[16px] border border-blue-100 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.05)] transition-all duration-200 sm:min-h-[110px] sm:rounded-[20px] lg:hover:-translate-y-1 lg:hover:border-blue-200 lg:hover:shadow-[0_20px_45px_rgba(15,23,42,0.12)]"
->
-  {/* Image Section (2/5) */}
-  <div className="relative w-2/5 shrink-0 overflow-hidden bg-slate-100">
-    {itemImageSrc ? (
-      <img
-        src={itemImageSrc}
-        alt={item.name}
-        className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
-        loading="lazy"
-      />
-    ) : (
-      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-sky-100 to-blue-100">
-        <span className="text-xl font-black text-blue-600 sm:text-2xl lg:text-3xl">
-          {placeholder.initials}
-        </span>
-      </div>
-    )}
-  </div>
+                      key={item.id}
+                      className="group flex flex-col overflow-hidden rounded-xl border border-blue-100 bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md sm:rounded-2xl"
+                    >
+                      {/* Image strip on top — keeps the card a compact rectangle */}
+                      <div className="relative h-24 w-full shrink-0 overflow-hidden bg-slate-100 sm:h-28">
+                        {showImage ? (
+                          <img
+                            src={itemImageSrc}
+                            alt={item.name}
+                            className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+                            loading="lazy"
+                            decoding="async"
+                            onError={() => markImageBroken(item.id)}
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-sky-100 to-blue-100">
+                            <span className="text-lg font-black text-blue-600 sm:text-xl">
+                              {placeholder.initials}
+                            </span>
+                          </div>
+                        )}
+                        <span className="absolute right-1.5 top-1.5 rounded-full bg-white/90 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-blue-700 shadow-sm sm:text-[10px]">
+                          {placeholder.category}
+                        </span>
+                      </div>
 
-  {/* Content Section (3/5) */}
-  <div className="flex w-3/5 min-w-0 flex-col justify-between p-3 sm:p-4">
-    <div className="min-w-0">
-      <div
-        className="truncate text-base font-bold text-slate-900 sm:text-lg lg:text-xl"
-        title={item.name}
-      >
-        {item.name}
-      </div>
+                      {/* Content */}
+                      <div className="flex flex-1 flex-col gap-1.5 p-2 sm:p-2.5">
+                        <div className="min-w-0">
+                          <div
+                            className="truncate text-[12px] font-bold leading-tight text-slate-900 sm:text-[13px]"
+                            title={item.name}
+                          >
+                            {item.name}
+                          </div>
+                          <div className="mt-0.5 text-[13px] font-extrabold text-emerald-600 sm:text-[14px]">
+                            Rs. {item.price}
+                          </div>
+                        </div>
 
-      <div className="mt-1 truncate text-lg font-extrabold text-emerald-600 sm:mt-2 sm:text-xl lg:text-2xl">
-        Rs. {item.price}
-      </div>
-    </div>
+                        {/* Tax stepper — compact single row */}
+                        <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-1 py-0.5">
+                          <button
+                            type="button"
+                            onClick={() => adjustTax(-0.5)}
+                            className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[13px] font-bold text-slate-600 hover:bg-slate-200"
+                          >
+                            −
+                          </button>
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.1"
+                            value={taxByItem[item.id] ?? item.tax ?? 5}
+                            onChange={(e) => handleTaxChange(item.id, e.target.value)}
+                            className="h-6 w-full min-w-0 bg-transparent text-center text-[11px] font-bold outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                            title="Tax %"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => adjustTax(0.5)}
+                            className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[13px] font-bold text-slate-600 hover:bg-slate-200"
+                          >
+                            +
+                          </button>
+                        </div>
 
-    {/* Tax & Qty */}
-    <div className="mt-3 flex items-center gap-1.5 sm:mt-4 sm:gap-2">
-      <div className="flex h-10 flex-1 min-w-0 items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 px-1 sm:h-11">
-        <button
-          type="button"
-          onClick={() => adjustTax(-0.5)}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-lg font-bold text-slate-600 hover:bg-slate-200"
-        >
-          −
-        </button>
-
-        <input
-          type="number"
-          min="0"
-          step="0.1"
-          value={taxByItem[item.id] ?? item.tax ?? 5}
-          onChange={(e) => handleTaxChange(item.id, e.target.value)}
-          className="h-full w-full min-w-0 bg-transparent text-center text-sm font-bold outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-        />
-
-        <button
-          type="button"
-          onClick={() => adjustTax(0.5)}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-lg font-bold text-slate-600 hover:bg-slate-200"
-        >
-          +
-        </button>
-      </div>
-
-      <input
-        type="number"
-        min="1"
-        value={qty[item.id] || ""}
-        onChange={(e) => handleQtyChange(item.id, e.target.value)}
-        placeholder="Qty"
-        className="h-10 w-14 shrink-0 rounded-xl border border-slate-200 bg-slate-50 text-center text-sm font-semibold outline-none focus:border-blue-400 sm:h-11 sm:w-16"
-      />
-    </div>
-
-    {/* Add Button */}
-    <button
-      onClick={() => handleAdd(item)}
-      className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-full bg-blue-600 text-sm font-bold text-white transition hover:bg-blue-700 sm:mt-4 sm:text-base"
-    >
-      <svg
-        width="16"
-        height="16"
-        viewBox="0 0 24 24"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <circle cx="12" cy="12" r="10" fill="rgba(255,255,255,0.2)" />
-        <path
-          d="M12 8v8M8 12h8"
-          stroke="white"
-          strokeWidth="2"
-          strokeLinecap="round"
-        />
-      </svg>
-      Add
-    </button>
-  </div>
-</div>
+                        {/* Qty stepper + Add row — aligned in one row, equal heights */}
+                        <div className="mt-auto flex items-center gap-1.5">
+                          <div className="flex h-8 shrink-0 items-center rounded-lg border border-slate-200 bg-slate-50">
+                            <button
+                              type="button"
+                              onClick={decrementQty}
+                              disabled={currentQty <= 0}
+                              className="flex h-full w-7 shrink-0 items-center justify-center text-[14px] font-bold text-slate-600 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-40"
+                              aria-label="Decrease quantity"
+                            >
+                              −
+                            </button>
+                            <input
+                              type="number"
+                              min="1"
+                              value={qty[item.id] || ""}
+                              onChange={(e) => handleQtyChange(item.id, e.target.value)}
+                              placeholder="0"
+                              className="h-full w-9 min-w-0 border-x border-slate-200 bg-white text-center text-[12px] font-semibold outline-none focus:border-blue-400 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                            />
+                            <button
+                              type="button"
+                              onClick={incrementQty}
+                              className="flex h-full w-7 shrink-0 items-center justify-center text-[14px] font-bold text-slate-600 transition hover:bg-slate-200"
+                              aria-label="Increase quantity"
+                            >
+                              +
+                            </button>
+                          </div>
+                          <button
+                            onClick={() => handleAdd(item)}
+                            className="flex h-8 flex-1 items-center justify-center gap-1 rounded-lg bg-blue-600 text-[12px] font-bold text-white transition hover:bg-blue-700"
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <circle cx="12" cy="12" r="10" fill="rgba(255,255,255,0.2)" />
+                              <path d="M12 8v8M8 12h8" stroke="white" strokeWidth="2" strokeLinecap="round" />
+                            </svg>
+                            Add
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   );
                 })}
               </div>

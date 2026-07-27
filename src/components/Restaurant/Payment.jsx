@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   FiUser,
   FiCreditCard,
@@ -161,6 +161,9 @@ const buildReceiptHtml = ({
   discountAmount,
   perPersonAmount,
   computedTotal,
+  printLabel = "INVOICE",
+  explicitInvoiceNo = null,
+  explicitTableNo = null,
 }) => {
   const printedAt = invoice?.paidAt || invoice?.printedAt || invoice?.date || new Date().toISOString();
   const sgstAmount = Number(invoice?.gst || 0) / 2;
@@ -171,6 +174,17 @@ const buildReceiptHtml = ({
   const userName = localStorage.getItem("name") || localStorage.getItem("username") || "POS User";
   const entityLabel = String(entityType || invoice?.entityType || "Table").toLowerCase() === "room" ? "Room No" : "Table No";
   const kotNos = invoice?.tokenId ? String(invoice.tokenId) : formatVisitId(invoice?.tokenCode, invoice?.tokenId);
+  const invoiceNoDisplay =
+    explicitInvoiceNo ||
+    buildReceiptInvoiceNo(invoice) ||
+    (invoice?.tokenId ? `TMP-${String(invoice.tokenId).padStart(4, "0")}` : "----");
+  const tableDisplay =
+    explicitTableNo ||
+    invoice?.table ||
+    invoice?.tableNumber ||
+    invoice?.postedRoomNumber ||
+    invoice?.sourceTableNumber ||
+    "--";
   const itemRows = (Array.isArray(invoice?.items) ? invoice.items : [])
     .map((item) => {
       const qty = Number(item?.qty || 0);
@@ -282,15 +296,15 @@ const buildReceiptHtml = ({
         </div>
 
         <div class="separator"></div>
-        <div class="center title">DUPLICATE INVOICE</div>
+        <div class="center title">${escapeReceiptHtml(printLabel)}</div>
         <div class="separator"></div>
 
         <div class="meta-row">
-          <span>Invoice No: ${escapeReceiptHtml(buildReceiptInvoiceNo(invoice))}</span>
+          <span>Invoice No: ${escapeReceiptHtml(invoiceNoDisplay)}</span>
           <span>Date: ${escapeReceiptHtml(formatReceiptDateOnly(printedAt))}</span>
         </div>
         <div class="meta-row">
-          <span>${escapeReceiptHtml(entityLabel)}: ${escapeReceiptHtml(invoice?.table || "--")}</span>
+          <span>${escapeReceiptHtml(entityLabel)}: ${escapeReceiptHtml(tableDisplay)}</span>
           <span>Time: ${escapeReceiptHtml(formatReceiptTimeOnly(printedAt))}</span>
         </div>
         <div class="meta-row">
@@ -1152,9 +1166,51 @@ const Payment = ({
     return true;
   };
 
-  const handlePrint = (overrideInvoice = null) => {
-    const invoiceToPrint = overrideInvoice || invoice;
-    if (!invoiceToPrint) return;
+  const handlePrint = async (overrideInvoice = null) => {
+    const rawInvoice = overrideInvoice || invoice;
+    if (!rawInvoice) return;
+
+    // Hydrate items from the server if the invoice was created without them
+    // (e.g. bill created from token but items not yet attached).
+    let invoiceToPrint = rawInvoice;
+    const tokenId = rawInvoice.tokenId || invoice?.tokenId || null;
+    if (tokenId && (!Array.isArray(invoiceToPrint.items) || !invoiceToPrint.items.length)) {
+      try {
+        const itemsRes = await API.get(`/token/items/${tokenId}`);
+        const tokenItems = Array.isArray(itemsRes.data) ? itemsRes.data : [];
+        if (tokenItems.length) {
+          invoiceToPrint = {
+            ...invoiceToPrint,
+            items: tokenItems.map((item) => ({
+              id: item.id,
+              name: item.item_name || item.name || "Menu Item",
+              qty: Number(item.qty || item.quantity || 0),
+              rate: Number(item.rate || item.price || 0),
+            })),
+          };
+        }
+      } catch {
+        // Proceed without items if the API call fails
+      }
+    }
+
+    // Determine print label: if a bill already exists, show "INVOICE" (original),
+    // otherwise show "COPY" to indicate it's not the final printed version.
+    const hasBill = Number(invoiceToPrint?.billId || 0) > 0;
+    const printLabel = hasBill ? "INVOICE" : "INVOICE COPY";
+
+    // Pull values from React state directly so the receipt is always correct,
+    // even if the invoice object has gaps (e.g. before payment when billId is null).
+    const explicitInvoiceNo = generatedBill?.id
+      ? String(generatedBill.id).padStart(4, "0")
+      : invoiceToPrint?.billId
+        ? String(invoiceToPrint.billId).padStart(4, "0")
+        : invoiceToPrint?.tokenId
+          ? `TMP-${String(invoiceToPrint.tokenId).padStart(4, "0")}`
+          : null;
+    const explicitTableNo =
+      invoiceToPrint?.table || invoiceToPrint?.tableNumber || invoiceToPrint?.postedRoomNumber ||
+      null;
 
     const printHTML = buildReceiptHtml({
       invoice: invoiceToPrint,
@@ -1167,12 +1223,16 @@ const Payment = ({
       discountAmount,
       perPersonAmount,
       computedTotal,
+      printLabel,
+      explicitInvoiceNo,
+      explicitTableNo,
     });
 
     const win = window.open("", "", "width=420,height=760");
     if (!win) return;
     win.document.write(printHTML);
     win.document.close();
+<<<<<<< HEAD
     win.focus();
 
     // FIX: previously this print popup could stay open/focused in the
@@ -1183,6 +1243,9 @@ const Payment = ({
     // window/dialog still had focus. We now auto-close the popup once
     // printing finishes (or after a timeout fallback) and explicitly
     // return focus to the main window.
+=======
+
+>>>>>>> 869a8ee37896cc8a2f334857a143894d390b2b7a
     const returnFocusAndClose = () => {
       try {
         if (win && !win.closed) win.close();
@@ -1192,10 +1255,13 @@ const Payment = ({
 
     win.onafterprint = returnFocusAndClose;
 
+<<<<<<< HEAD
     // Fallback: if onafterprint never fires (varies by browser/OS print
     // flow, e.g. user cancels the dialog in a way that doesn't fire it),
     // force-close the popup and refocus the main window after a few
     // seconds so the app never gets stuck waiting on it.
+=======
+>>>>>>> 869a8ee37896cc8a2f334857a143894d390b2b7a
     const fallbackTimer = window.setTimeout(() => {
       returnFocusAndClose();
     }, 6000);
@@ -1204,9 +1270,12 @@ const Payment = ({
       try {
         win.print();
       } finally {
+<<<<<<< HEAD
         // If print() returns synchronously (most desktop browsers block
         // until the dialog closes), we can clear the fallback and close
         // immediately instead of waiting out the full timeout.
+=======
+>>>>>>> 869a8ee37896cc8a2f334857a143894d390b2b7a
         window.clearTimeout(fallbackTimer);
         returnFocusAndClose();
       }
@@ -1604,37 +1673,16 @@ const Payment = ({
 
           {/* Content */}
           <div className="space-y-4 p-4 sm:p-6">
-            <div className={`rounded-2xl border p-4 ${
-              folioResult.success
-                ? "border-emerald-100 bg-emerald-50/50"
-                : "border-rose-100 bg-rose-50/50"
-            }`}>
-              <p className={`text-[15px] font-semibold sm:text-base ${
-                folioResult.success ? "text-emerald-800" : "text-rose-800"
-              }`}>
-                {folioResult.message}
-              </p>
-            </div>
-
-            {folioResult.success && folioResult.roomNumber && (
-              <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-center">
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 sm:text-xs">Room</p>
-                  <p className="mt-1 text-base font-black text-slate-900 sm:text-lg">{folioResult.roomNumber}</p>
-                </div>
-                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-center">
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 sm:text-xs">Splits</p>
-                  <p className="mt-1 text-base font-black text-slate-900 sm:text-lg">{splitPreview.length}</p>
-                </div>
-              </div>
-            )}
+            <p className="text-[15px] font-medium text-slate-700 sm:text-base">
+              {folioResult.message}
+            </p>
 
             <div className="flex flex-col gap-3 sm:flex-row">
               <button
                 onClick={() => setFolioResult({ ...folioResult, show: false })}
-                className={`flex-1 rounded-full py-3 text-[15px] font-bold shadow-sm transition sm:text-base ${
+                className={`flex-1 rounded-full py-3 text-[15px] font-bold transition ${
                   folioResult.success
-                    ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                    ? "border-2 border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
                     : "bg-rose-600 text-white hover:bg-rose-700"
                 }`}
               >
@@ -1748,16 +1796,30 @@ const Payment = ({
           <div className="px-5 pb-6 sm:px-8 sm:pb-7">
             <button
               onClick={() => setPaymentResult({ ...paymentResult, show: false })}
+<<<<<<< HEAD
               className="mb-3 w-full rounded-2xl border border-slate-200 bg-white py-3.5 text-[15px] font-bold text-slate-600 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 sm:py-4 sm:text-[17px]"
+=======
+              className="mb-3 w-full rounded-2xl border border-slate-200 bg-white py-3.5 text-[15px] font-bold text-slate-600 shadow-sm transition hover:bg-slate-50 hover:border-slate-300 sm:py-4 sm:text-[17px]"
+>>>>>>> 869a8ee37896cc8a2f334857a143894d390b2b7a
             >
               Close
             </button>
             {paymentResult.success && (
               <button
                 onClick={() => setPaymentResult({ ...paymentResult, show: false })}
+<<<<<<< HEAD
                 className="w-full rounded-2xl bg-gradient-to-r from-emerald-600 to-green-500 py-3.5 text-[15px] font-bold text-white shadow-[0_12px_28px_-10px_rgba(16,185,129,0.5)] transition hover:-translate-y-0.5 hover:shadow-[0_16px_34px_-10px_rgba(16,185,129,0.6)] sm:py-4 sm:text-[17px]"
               >
                 Continue
+=======
+                className={`w-full rounded-2xl py-3.5 text-[15px] font-bold shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl sm:py-4 sm:text-[17px] ${
+                  paymentResult.success
+                    ? "bg-gradient-to-r from-emerald-600 to-green-500 text-white shadow-[0_12px_28px_-10px_rgba(16,185,129,0.5)] hover:shadow-[0_16px_34px_-10px_rgba(16,185,129,0.6)]"
+                    : "bg-gradient-to-r from-rose-600 to-red-500 text-white shadow-[0_12px_28px_-10px_rgba(244,63,94,0.5)] hover:shadow-[0_16px_34px_-10px_rgba(244,63,94,0.6)]"
+                }`}
+              >
+                {paymentResult.success ? "Continue" : "OK"}
+>>>>>>> 869a8ee37896cc8a2f334857a143894d390b2b7a
               </button>
             )}
           </div>

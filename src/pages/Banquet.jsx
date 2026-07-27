@@ -342,10 +342,19 @@ function formatBookingDate(dateValue) {
 function resolveBanquetHallImage(image) {
   const raw = String(image || "").trim();
   if (!raw) return null;
+<<<<<<< HEAD
   if (/^https?:\/\//i.test(raw) || raw.startsWith("data:")) {
     return raw;
   }
   return `${getBackendBaseURL()}${raw.startsWith("/") ? raw : `/${raw}`}`;
+=======
+  if (raw.startsWith("http://") || raw.startsWith("https://") || raw.startsWith("data:")) {
+    return raw;
+  }
+  return raw.startsWith("/")
+    ? `${getBackendBaseURL()}${raw}`
+    : `${getBackendBaseURL()}/uploads/${raw}`;
+>>>>>>> 869a8ee37896cc8a2f334857a143894d390b2b7a
 }
 
 function getReservationStatusBadgeClass(status) {
@@ -1742,7 +1751,8 @@ const Banquet = () => {
     setHallFormError("");
 
     try {
-      const requestBody = hallImageFile
+      const usingFormData = !!hallImageFile;
+      const requestBody = usingFormData
         ? (() => {
             const formData = new FormData();
             formData.append("name", payload.name);
@@ -1760,16 +1770,14 @@ const Banquet = () => {
             image: hallImageMode === "url" ? payload.image : "",
           };
 
+      const apiConfig = usingFormData
+        ? { headers: { "Content-Type": "multipart/form-data" } }
+        : {};
+
       if (editingHallId) {
-        await API.put(`/banquet/halls/${editingHallId}`, hallImageFile
-          ? requestBody
-          : {
-              ...requestBody,
-              status: newHall.status || "Available",
-            }
-        );
+        await API.put(`/banquet/halls/${editingHallId}`, requestBody, apiConfig);
       } else {
-        await API.post("/banquet/halls", requestBody);
+        await API.post("/banquet/halls", requestBody, apiConfig);
       }
       const refreshed = await API.get("/banquet");
       if (refreshed.data?.pricingConfig) {

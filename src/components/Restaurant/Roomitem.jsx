@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { FiFileText, FiHome, FiPlusCircle, FiSearch, FiTrendingUp } from "react-icons/fi";
+import { FiFileText, FiHome, FiPlusCircle, FiSearch, FiTrendingUp, FiUser } from "react-icons/fi";
 
 import API from "../../api";
 import RestaurantContext from "../../Context/restaurantContext";
@@ -16,7 +16,7 @@ import {
 
 const ACTIVE_INVOICE_KEY = "restaurant-active-invoice";
 const SAVED_INVOICE_KEY = "restaurant-saved-invoice";
-const ROOM_PAGE_SIZE = 9;
+const ROOM_PAGE_SIZE = 18;
 const normalizeInvoiceStatus = (value) => String(value || "").trim().toLowerCase();
 const isSettledInvoiceStatus = (value) => {
   const normalized = normalizeInvoiceStatus(value);
@@ -34,7 +34,7 @@ const formatShortDate = (value) => {
   if (!value) return "--";
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return String(value).slice(0, 10);
-  return parsed.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  return parsed.toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
 };
 
 const isOccupiedRoomStatus = (room, booking) => {
@@ -588,7 +588,7 @@ const Roomitem = () => {
                 Room Dashboard
               </h2>
               <p className="mt-1 sm:mt-1.5 max-w-xl text-[14px] sm:text-[18px] font-medium leading-snug text-blue-50/90">
-                Every room, its guest, and its running bill — add an add-on and the total updates instantly.
+                Every room, its guest, and its running bill — at a glance.
               </p>
             </div>
           </div>
@@ -653,8 +653,8 @@ const Roomitem = () => {
         </button>
       </div>
 
-      {/* ---------- room card grid ---------- */}
-      <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
+      {/* ---------- room compact card grid — every room on this page renders at once ---------- */}
+      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
         {loading ? (
           <div className="col-span-full rounded-[18px] sm:rounded-[28px] border-2 border-dashed border-blue-200 bg-blue-50/30 p-8 sm:p-12 text-center text-[16px] sm:text-[21px] font-semibold text-blue-900/70">
             Loading hotel rooms...
@@ -675,100 +675,94 @@ const Roomitem = () => {
             const guestName = room.guest || booking?.guestName || "Guest";
             const checkInLabel = formatShortDate(room.checkIn || booking?.checkIn);
             const checkOutLabel = formatShortDate(room.checkOut || booking?.checkOut);
-            const addonForm = addonForms[roomRef] || { open: false, menuItemId: "", qty: 1, submitting: false };
 
             return (
               <div
                 key={`${room.roomId}-${room.roomNo}`}
-                className={`flex h-full min-w-0 flex-col rounded-[18px] sm:rounded-[24px] border bg-white/90 p-4 sm:p-6 shadow-[0_10px_30px_rgba(29,78,216,0.08)] backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(29,78,216,0.14)] ${
-                  isFocused ? "border-blue-400 ring-4 ring-blue-100" : "border-blue-100"
+                className={`group relative flex flex-col overflow-hidden rounded-xl border bg-white p-2.5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md sm:rounded-2xl sm:p-3 ${
+                  isFocused
+                    ? "border-blue-400 ring-2 ring-blue-100"
+                    : occupied
+                    ? "border-amber-200"
+                    : "border-emerald-200"
                 }`}
               >
-                <div className="flex items-start justify-between gap-2">
+                {/* status accent strip */}
+                <span
+                  className={`absolute inset-x-0 top-0 h-1 ${occupied ? "bg-amber-400" : "bg-emerald-400"}`}
+                  aria-hidden="true"
+                />
+
+                {/* Header: room number + status */}
+                <div className="flex items-center justify-between gap-1.5">
                   <div className="min-w-0">
-                    <div className="text-[18px] sm:text-[23px] font-black text-slate-900 break-words">Room {room.roomNo}</div>
-                    <div className="text-[13px] sm:text-[15px] font-medium text-slate-400 break-words">
+                    <div className="truncate text-[15px] font-extrabold text-blue-700 sm:text-[17px]">Room {room.roomNo}</div>
+                    <div className="truncate text-[10px] font-medium text-slate-400 sm:text-[11px]">
                       {room.categoryName || room.roomType || "Hotel Room"}
                     </div>
                   </div>
                   <span
-                    className={`inline-flex shrink-0 items-center rounded-full px-3 sm:px-4 py-1 sm:py-1.5 text-[12px] sm:text-[15px] font-bold ${
-                      occupied ? "bg-amber-50 text-amber-600" : "bg-emerald-50 text-emerald-600"
-                    }`}
-                  >
-                    <span
-                      className={`mr-1.5 h-1.5 w-1.5 rounded-full ${occupied ? "bg-amber-500" : "bg-emerald-500"}`}
-                    />
-                    {occupied ? "Occupied" : "Vacant"}
-                  </span>
+                    className={`inline-flex h-2 w-2 shrink-0 rounded-full ${occupied ? "bg-amber-500" : "bg-emerald-500"}`}
+                    title={occupied ? "Occupied" : "Vacant"}
+                  />
                 </div>
 
                 {occupied ? (
                   <>
-                    <div className="mt-3 sm:mt-4 min-w-0">
-                      <div className="text-[15px] sm:text-[18px] font-bold text-slate-800 break-words">{guestName}</div>
-                      <div className="mt-1 text-[13px] sm:text-[16px] text-slate-500 break-words">
-                        {checkInLabel} → {checkOutLabel}
-                      </div>
+                    <div className="mt-2 flex min-w-0 items-center gap-1 text-[11px] font-bold text-slate-700 sm:text-[12px]">
+                      <FiUser className="shrink-0 text-blue-400" />
+                      <span className="truncate">{guestName}</span>
+                    </div>
+                    <div className="mt-1 truncate text-[10px] text-slate-500 sm:text-[11px]">
+                      {checkInLabel} → {checkOutLabel}
                     </div>
 
-                    <div className="mt-3 sm:mt-4 rounded-2xl border border-blue-100/70 bg-blue-50/50 px-3 sm:px-4 py-3 sm:py-4">
-                      {hasMenuItems ? (
-                        <div className="space-y-2">
-                          {items.map((item) => (
-                            <div key={item.id} className="flex items-center justify-between gap-2 text-[13px] sm:text-[16px] text-slate-700">
-                              <span className="min-w-0 truncate">
-                                {item.item_name} x{item.qty}
-                              </span>
-                              <span className="shrink-0 font-semibold">
-                                {formatCurrency(Number(item.qty || 0) * Number(item.rate || 0))}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="text-[13px] sm:text-[16px] text-slate-400">No items added yet</div>
-                      )}
-                      <div className="mt-3 flex items-center justify-between gap-2 border-t border-dashed border-blue-200 pt-3 text-[14px] sm:text-[17px] font-black text-slate-900">
-                        <span>Total</span>
-                        <span className="truncate">{formatCurrency(itemsTotal)}</span>
-                      </div>
+                    <div className="mt-1.5 flex items-center justify-between gap-1.5 rounded-lg bg-blue-50/70 px-2 py-1">
+                      <span className="truncate text-[10px] text-slate-500 sm:text-[11px]">
+                        {hasMenuItems ? `${items.length} items` : "No items"}
+                      </span>
+                      <span className="shrink-0 text-[11px] font-extrabold text-slate-900 sm:text-[12px]">
+                        {formatCurrency(itemsTotal)}
+                      </span>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => openRoomMenu(room)}
-                      className="mt-3 sm:mt-4 h-auto min-h-[46px] sm:min-h-[52px] w-full rounded-xl border-2 border-blue-200 bg-white px-3 py-2.5 text-center text-[14px] sm:text-[17px] font-bold leading-snug text-blue-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-50 hover:shadow-md"
-                    >
-                      Book Order — Open Menu Card to Add Items
-                    </button>
-
-                    {showPayNow ? (
+                    <div className="mt-2 grid grid-cols-2 gap-1">
                       <button
                         type="button"
-                        onClick={() => openPayNow(room)}
-                        className="mt-2.5 h-[44px] sm:h-[50px] w-full rounded-xl border border-emerald-200 bg-emerald-50 text-[14px] sm:text-[17px] font-bold text-emerald-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-100"
+                        onClick={() => openRoomMenu(room)}
+                        className="col-span-2 rounded-lg bg-slate-900 px-2 py-1.5 text-[11px] font-bold text-white shadow-sm transition-all duration-200 hover:bg-slate-800 sm:text-[12px]"
                       >
-                        Pay Now
+                        Open Menu
                       </button>
-                    ) : null}
 
-                    <div className="mt-3 sm:mt-4 flex flex-wrap flex-1 items-end justify-between gap-2 border-t border-blue-100 pt-3 text-[14px] sm:text-[16px] font-semibold text-blue-500">
-                      <button type="button" onClick={() => openRoomMenu(room)} className="transition hover:text-blue-700">
-                        Open Menu Card
-                      </button>
-                      <button type="button" onClick={() => openRoomInvoice(room)} className="transition hover:text-slate-700">
+                      <button
+                        type="button"
+                        onClick={() => openRoomInvoice(room)}
+                        className="rounded-lg border border-blue-200 bg-white px-2 py-1.5 text-[11px] font-bold text-blue-700 shadow-sm transition-all duration-200 hover:border-blue-300 hover:bg-blue-50 sm:text-[12px]"
+                      >
                         View Bill
                       </button>
+
+                      {showPayNow ? (
+                        <button
+                          type="button"
+                          onClick={() => openPayNow(room)}
+                          className="rounded-lg bg-emerald-500 px-2 py-1.5 text-[11px] font-bold text-white shadow-sm transition-all duration-200 hover:bg-emerald-600 sm:text-[12px]"
+                        >
+                          Pay Now
+                        </button>
+                      ) : (
+                        <span />
+                      )}
                     </div>
                   </>
                 ) : (
-                  <div className="mt-4 sm:mt-5 flex flex-1 flex-col justify-between">
-                    <div className="text-[14px] sm:text-[17px] text-slate-400">Ready for check-in.</div>
+                  <div className="mt-2 flex flex-1 flex-col justify-between">
+                    <div className="text-[10px] text-slate-400 sm:text-[11px]">Ready for check-in.</div>
                     <button
                       type="button"
                       onClick={() => openCheckIn(room)}
-                      className="mt-4 h-[46px] sm:h-[52px] w-full rounded-xl border-2 border-blue-200 bg-white text-[14px] sm:text-[17px] font-bold text-blue-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-50 hover:shadow-md"
+                      className="mt-2 rounded-lg border border-blue-200 bg-white px-2 py-1.5 text-[11px] font-bold text-blue-700 shadow-sm transition-all duration-200 hover:border-blue-300 hover:bg-blue-50 sm:text-[12px]"
                     >
                       Check-in Guest
                     </button>
