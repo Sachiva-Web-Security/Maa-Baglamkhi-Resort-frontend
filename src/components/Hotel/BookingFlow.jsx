@@ -4408,45 +4408,11 @@ const handleJumpStep = (stepView) => {
       </div>
 
       <div className="mt-10 flex justify-center w-full">
-        <div className="grid w-full max-w-xl grid-cols-1 gap-4 sm:grid-cols-2">
-          <button
-            type="button"
-            onClick={() => {
-              // Print Receipt lives on the Booking Confirmed screen but
-              // there's no separate booking loaded there, so fall back to
-              // using the currently selected booking (if any) and the same
-              // dedicated invoice window the Booking Details "Print Invoice"
-              // button uses. This guarantees a clean A4 invoice instead of
-              // printing the entire Booking Confirmed page.
-              if (selectedBooking?.bookingId || bookingDetail) {
-                handlePrintInvoiceDirect();
-              } else {
-                showToast(
-                  "error",
-                  "No booking selected",
-                  "Open a booking from the list, then click Print Invoice from Booking Details.",
-                );
-              }
-            }}
-            className={`${ghostBtn} w-full`}
-          >
-            <FaPrint className="text-lg" />
-            Print Invoice
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleNotify("email")}
-            className={`${ghostBtn} w-full`}
-          >
-            <FaEnvelope className="text-lg" />
-            Send Email
-          </button>
-
+        <div className="grid w-full max-w-xl grid-cols-1 gap-4">
           <button
             type="button"
             onClick={goToList}
-            className={`${primaryBtn} w-full sm:col-span-2`}
+            className={`${primaryBtn} w-full`}
           >
             View All Bookings
           </button>
