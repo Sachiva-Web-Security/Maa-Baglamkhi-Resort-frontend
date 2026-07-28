@@ -388,18 +388,65 @@ const Kitchen = () => {
       .join("");
 
     printWindow.document.write(`
-      <h2>Restaurant Bill</h2>
-      <p>${entityType}: ${ref}</p>
-      <table border="1" style="width:100%">
-        <tr>
-          <th>Item</th>
-          <th>Qty</th>
-          <th>Price</th>
-          <th>Total</th>
-        </tr>
-        ${itemsHTML}
-      </table>
-      <h3>Total: Rs ${total}</h3>
+      <!DOCTYPE html>
+      <html lang="en">
+        <head>
+          <meta charset="UTF-8" />
+          <title>KOT - ${entityType} ${ref}</title>
+          <style>
+            @page { size: 80mm auto; margin: 0; }
+            * { box-sizing: border-box; }
+            html, body { width: 80mm; margin: 0; padding: 3mm; }
+            body {
+              font-family: 'Courier New', Courier, monospace;
+              color: #000;
+              background: #fff;
+            }
+            h1 { font-size: 16px; margin: 0 0 4px; text-align: center; color: #000; }
+            h2 { font-size: 14px; margin: 6px 0; text-align: center; color: #000; }
+            h3 { font-size: 14px; margin: 8px 0; text-align: right; color: #000; font-weight: bold; }
+            p  { font-size: 12px; margin: 4px 0; color: #000; }
+            table { width: 100%; border-collapse: collapse; margin-top: 6px; color: #000; }
+            th, td { padding: 6px 4px; border-bottom: 1px dashed #000; font-size: 13px; color: #000; text-align: left; }
+            th { font-weight: bold; border-bottom: 2px solid #000; }
+            .divider { border-top: 1px dashed #000; margin: 6px 0; }
+            .meta-row { display: flex; justify-content: space-between; font-size: 12px; color: #000; margin-top: 2px; }
+            .meta-row span:first-child { font-weight: bold; }
+            .footer { margin-top: 8px; text-align: center; font-size: 11px; color: #000; }
+            .badge {
+              display: inline-block; background: #000; color: #fff;
+              padding: 2px 6px; font-size: 10px; font-weight: bold; margin-top: 6px;
+            }
+          </style>
+        </head>
+        <body>
+          <h1>KITCHEN ORDER TICKET</h1>
+          <div class="divider"></div>
+          <div class="meta-row"><span>${entityType}:</span><span>${ref || ""}</span></div>
+          <div class="meta-row"><span>Waiter:</span><span>${order.waiter_name || order.waiter || ""}</span></div>
+          <div class="meta-row"><span>Date:</span><span>${new Date().toLocaleDateString("en-IN")}</span></div>
+          <div class="meta-row"><span>Time:</span><span>${new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true })}</span></div>
+          <div class="meta-row"><span>Order #:</span><span>${order.id || ""}</span></div>
+          <div class="divider"></div>
+          <table>
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Qty</th>
+                <th>Price</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>${itemsHTML}</tbody>
+          </table>
+          <div class="divider"></div>
+          <h3>Total: Rs ${total}</h3>
+          <div class="footer">
+            <div>Printed at ${new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true })}</div>
+            <div class="badge">-- KITCHEN COPY --</div>
+          </div>
+        </body>
+      </html>
     `);
 
     printWindow.document.close();

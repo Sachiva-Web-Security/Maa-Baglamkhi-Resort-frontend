@@ -45,10 +45,10 @@ export const printKOT = ({ table, waiter, entityType, items, prepTimeMinutes, pa
     .map(
       (item, idx) => `
       <tr>
-        <td style="padding:6px 4px;border-bottom:1px dashed #bbb;font-size:13px;text-align:center;">${idx + 1}</td>
-        <td style="padding:6px 4px;border-bottom:1px dashed #bbb;font-size:13px;font-weight:600;">${escapeHtml(String(item.name || item.itemName || "Item"))}</td>
-        <td style="padding:6px 4px;border-bottom:1px dashed #bbb;font-size:13px;text-align:center;">${Number(item.qty || item.quantity || 1)}</td>
-        <td style="padding:6px 4px;border-bottom:1px dashed #bbb;font-size:13px;text-align:right;">Rs. ${Number(item.rate || item.price || 0).toFixed(2)}</td>
+        <td style="padding:6px 4px;border-bottom:1px dashed #000;font-size:13px;font-weight:bold;color:#000;text-align:center;">${idx + 1}</td>
+        <td style="padding:6px 4px;border-bottom:1px dashed #000;font-size:13px;font-weight:bold;color:#000;">${escapeHtml(String(item.name || item.itemName || "Item"))}</td>
+        <td style="padding:6px 4px;border-bottom:1px dashed #000;font-size:13px;font-weight:bold;color:#000;text-align:center;">${Number(item.qty || item.quantity || 1)}</td>
+        <td style="padding:6px 4px;border-bottom:1px dashed #000;font-size:13px;font-weight:bold;color:#000;text-align:right;">Rs. ${Number(item.rate || item.price || 0).toFixed(2)}</td>
       </tr>
     `,
     )
@@ -69,54 +69,104 @@ export const printKOT = ({ table, waiter, entityType, items, prepTimeMinutes, pa
         <title>KOT - ${escapeHtml(String(entityType || "Table"))} ${escapeHtml(String(table || ""))}</title>
         <style>
           /*
-           * IMPORTANT: this receipt is meant for a narrow thermal/receipt
-           * printer (58-80mm roll), not A4 paper. Previously the body was
-           * fixed at 210mm (A4) with no @page rule, so the browser silently
-           * scaled the whole A4 layout down to fit the actual narrow paper
-           * — which is why the printed KOT came out tiny / unreadable.
-           * Setting an explicit @page size + a matching body width fixes
-           * that: the browser now prints at native (1:1) scale.
+           * IMPORTANT: this receipt is for a narrow thermal printer (58-80mm).
+           * Every text element uses pure black (#000) and large bold fonts so
+           * nothing is faint or hard to read on either dark or light paper.
            */
           @page {
             size: ${pageWidth} auto;
             margin: 0;
           }
-          * { box-sizing: border-box; }
+          * { box-sizing: border-box; margin: 0; padding: 0; }
           html, body {
             width: ${pageWidth};
           }
           body {
             font-family: 'Courier New', Courier, monospace;
-            margin: 0;
-            padding: 3mm;
             color: #000;
             background: #fff;
+            padding: 3mm;
+            font-size: 14px;
+            font-weight: bold;
+            line-height: 1.5;
           }
-          h1 { font-size: 15px; margin: 0; letter-spacing: 0.5px; }
-          .sub { font-size: 10px; margin-top: 3px; color: #333; }
-          .row { display: flex; justify-content: space-between; font-size: 12px; margin-top: 4px; }
-          .row span:first-child { font-weight: bold; }
-          .divider { border-top: 1px dashed #000; margin: 6px 0; }
-          table { width: 100%; border-collapse: collapse; }
+          h1 {
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            color: #000;
+            margin-bottom: 3px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+          }
+          .sub {
+            font-size: 11px;
+            font-weight: bold;
+            text-align: center;
+            color: #000;
+            margin-bottom: 6px;
+          }
+          .row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            font-weight: bold;
+            color: #000;
+            margin-top: 4px;
+            padding: 0 2px;
+          }
+          .row span:first-child {
+            font-weight: bold;
+          }
+          .divider {
+            border-top: 2px solid #000;
+            margin: 6px 0;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 4px;
+          }
           th {
             text-align: left;
-            font-size: 11px;
-            padding: 3px 2px;
+            font-size: 13px;
+            font-weight: bold;
+            padding: 4px 2px;
             border-bottom: 2px solid #000;
+            color: #000;
           }
-          td { padding: 3px 2px; border-bottom: 1px dashed #bbb; font-size: 12px; word-break: break-word; }
-          th:last-child, td:last-child { text-align: right; }
-          th:nth-child(3), td:nth-child(3) { text-align: center; }
-          th:nth-child(2), td:nth-child(2) { width: 50%; }
-          .footer { margin-top: 10px; text-align: center; font-size: 10px; }
+          td {
+            padding: 5px 2px;
+            border-bottom: 1px dashed #000;
+            font-size: 13px;
+            font-weight: bold;
+            color: #000;
+            word-break: break-word;
+          }
+          th:last-child, td:last-child {
+            text-align: right;
+          }
+          th:nth-child(3), td:nth-child(3) {
+            text-align: center;
+          }
+          th:nth-child(2), td:nth-child(2) {
+            width: 50%;
+          }
+          .footer {
+            margin-top: 10px;
+            text-align: center;
+            font-size: 11px;
+            color: #000;
+          }
           .badge {
             display: inline-block;
             background: #000;
             color: #fff;
-            padding: 2px 6px;
-            font-size: 10px;
+            padding: 3px 8px;
+            font-size: 11px;
             font-weight: bold;
             margin-top: 6px;
+            letter-spacing: 1px;
           }
           @media print {
             html, body { width: ${pageWidth}; }
@@ -144,10 +194,10 @@ export const printKOT = ({ table, waiter, entityType, items, prepTimeMinutes, pa
         <table>
           <thead>
             <tr>
-              <th style="width:6%;text-align:center">#</th>
-              <th style="width:54%">Item</th>
-              <th style="width:15%;text-align:center">Qty</th>
-              <th style="width:25%;text-align:right">Rate</th>
+              <th style="width:6%;text-align:center;color:#000;">#</th>
+              <th style="width:54%;color:#000;">Item</th>
+              <th style="width:15%;text-align:center;color:#000;">Qty</th>
+              <th style="width:25%;text-align:right;color:#000;">Rate</th>
             </tr>
           </thead>
           <tbody>${itemsHtml}</tbody>
@@ -158,7 +208,7 @@ export const printKOT = ({ table, waiter, entityType, items, prepTimeMinutes, pa
         <div class="footer">
           <div>Printed at ${timeStr}</div>
           <div class="badge">-- KITCHEN COPY --</div>
-          <div style="margin-top: 8px; font-size: 10px; color: #555;">
+          <div style="margin-top: 8px; font-size: 11px; color: #000; font-weight: bold;">
             Printed from: ${escapeHtml(window.location.origin || "Hotel POS")}
           </div>
         </div>
