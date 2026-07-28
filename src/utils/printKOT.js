@@ -24,7 +24,10 @@ const getBackendBaseURL = () => {
  * Open a print-ready window for the given order data.
  * Call this as a fallback when backend print might not reach the client.
  */
-export const printKOT = ({ table, waiter, entityType, items, prepTimeMinutes }) => {
+export const printKOT = ({ table, waiter, entityType, items, prepTimeMinutes, paperWidthMm = 80 }) => {
+  // If your printer uses a 58mm roll instead of 80mm, either pass
+  // paperWidthMm: 58 when calling printKOT(...), or change the default above.
+  const pageWidth = `${paperWidthMm}mm`;
   const now = new Date();
   const dateStr = now.toLocaleDateString("en-IN", {
     day: "2-digit",
@@ -65,43 +68,59 @@ export const printKOT = ({ table, waiter, entityType, items, prepTimeMinutes }) 
         <meta charset="UTF-8" />
         <title>KOT - ${escapeHtml(String(entityType || "Table"))} ${escapeHtml(String(table || ""))}</title>
         <style>
+          /*
+           * IMPORTANT: this receipt is meant for a narrow thermal/receipt
+           * printer (58-80mm roll), not A4 paper. Previously the body was
+           * fixed at 210mm (A4) with no @page rule, so the browser silently
+           * scaled the whole A4 layout down to fit the actual narrow paper
+           * — which is why the printed KOT came out tiny / unreadable.
+           * Setting an explicit @page size + a matching body width fixes
+           * that: the browser now prints at native (1:1) scale.
+           */
+          @page {
+            size: ${pageWidth} auto;
+            margin: 0;
+          }
           * { box-sizing: border-box; }
+          html, body {
+            width: ${pageWidth};
+          }
           body {
             font-family: 'Courier New', Courier, monospace;
-            width: 210mm;
             margin: 0;
-            padding: 12mm;
+            padding: 3mm;
             color: #000;
             background: #fff;
           }
-          h1 { font-size: 18px; margin: 0; letter-spacing: 1px; }
-          .sub { font-size: 11px; margin-top: 4px; color: #333; }
-          .row { display: flex; justify-content: space-between; font-size: 13px; margin-top: 6px; }
+          h1 { font-size: 15px; margin: 0; letter-spacing: 0.5px; }
+          .sub { font-size: 10px; margin-top: 3px; color: #333; }
+          .row { display: flex; justify-content: space-between; font-size: 12px; margin-top: 4px; }
           .row span:first-child { font-weight: bold; }
-          .divider { border-top: 1px dashed #000; margin: 10px 0; }
+          .divider { border-top: 1px dashed #000; margin: 6px 0; }
           table { width: 100%; border-collapse: collapse; }
           th {
             text-align: left;
-            font-size: 12px;
-            padding: 6px 4px;
+            font-size: 11px;
+            padding: 3px 2px;
             border-bottom: 2px solid #000;
           }
-          td { padding: 6px 4px; border-bottom: 1px dashed #bbb; font-size: 13px; }
+          td { padding: 3px 2px; border-bottom: 1px dashed #bbb; font-size: 12px; word-break: break-word; }
           th:last-child, td:last-child { text-align: right; }
           th:nth-child(3), td:nth-child(3) { text-align: center; }
-          th:nth-child(2), td:nth-child(2) { width: 55%; }
-          .footer { margin-top: 14px; text-align: center; font-size: 11px; }
+          th:nth-child(2), td:nth-child(2) { width: 50%; }
+          .footer { margin-top: 10px; text-align: center; font-size: 10px; }
           .badge {
             display: inline-block;
             background: #000;
             color: #fff;
-            padding: 3px 8px;
-            font-size: 11px;
+            padding: 2px 6px;
+            font-size: 10px;
             font-weight: bold;
-            margin-top: 8px;
+            margin-top: 6px;
           }
           @media print {
-            body { padding: 10mm; }
+            html, body { width: ${pageWidth}; }
+            body { padding: 2mm; }
             .no-print { display: none !important; }
           }
         </style>
