@@ -28,7 +28,18 @@ import WhatsAppInvoiceModal from "./WhatsAppInvoiceModal";
    NOTE: This file is unchanged from the original EXCEPT for the handlePrint
    function below, which now auto-closes the print popup window and returns
    focus to the main window. See the comment inside handlePrint for details.
+
+   ALSO UPDATED: The printed receipt (buildReceiptHtml) now includes the
+   resort's GSTIN and FSSAI registration number, taken from the client's
+   reference invoice.
    =========================================================================== */
+
+// ─── Resort statutory / registration details (from client reference invoice) ──
+const RESORT_NAME = "MAA BAGLAMUKHI RESORT";
+const RESORT_ADDRESS_LINE1 = "Idga Mahalwa, Ward No-07, Nabha";
+const RESORT_PHONE = "9272288377";
+const RESORT_GSTIN = "23AVDPR2928I1ZG";
+const RESORT_FSSAI_NO = "11420995000031";
 
 // ─── FeatureModal (same as BookingFlow) ───────────────────────────────────────
 const FeatureModal = ({ title, subtitle, size = "max-w-6xl", onClose, children }) => {
@@ -132,7 +143,12 @@ const formatReceiptTimeOnly = (value) => {
   });
 };
 
-const formatReceiptAmount = (value) => Number(value || 0).toFixed(2);
+const formatReceiptAmount = (value) => {
+  const num = Number(value);
+  if (!value && value !== 0) return "--";
+  if (Number.isNaN(num)) return "--";
+  return num.toFixed(2);
+};
 
 const escapeReceiptHtml = (value) =>
   String(value ?? "")
@@ -144,9 +160,9 @@ const escapeReceiptHtml = (value) =>
 
 const buildReceiptInvoiceNo = (invoice) => {
   const billId = Number(invoice?.billId || 0);
-  if (billId > 0) return String(billId).padStart(4, "0");
+  if (Number.isFinite(billId) && billId > 0) return String(billId);
   const tokenId = Number(invoice?.tokenId || 0);
-  if (tokenId > 0) return `TMP-${String(tokenId).padStart(4, "0")}`;
+  if (Number.isFinite(tokenId) && tokenId > 0) return `TMP-${String(tokenId)}`;
   return "----";
 };
 
@@ -164,6 +180,7 @@ const buildReceiptHtml = ({
   printLabel = "INVOICE",
   explicitInvoiceNo = null,
   explicitTableNo = null,
+  explicitKotNo = null,
 }) => {
   const printedAt = invoice?.paidAt || invoice?.printedAt || invoice?.date || new Date().toISOString();
   const sgstAmount = Number(invoice?.gst || 0) / 2;
@@ -173,147 +190,313 @@ const buildReceiptHtml = ({
   const roundUp = Number((netTotal - grandTotal).toFixed(2));
   const userName = localStorage.getItem("name") || localStorage.getItem("username") || "POS User";
   const entityLabel = String(entityType || invoice?.entityType || "Table").toLowerCase() === "room" ? "Room No" : "Table No";
-  const kotNos = invoice?.tokenId ? String(invoice.tokenId) : formatVisitId(invoice?.tokenCode, invoice?.tokenId);
-  const invoiceNoDisplay =
-    explicitInvoiceNo ||
-    buildReceiptInvoiceNo(invoice) ||
-    (invoice?.tokenId ? `TMP-${String(invoice.tokenId).padStart(4, "0")}` : "----");
+  const kotNos = explicitKotNo
+    ? String(explicitKotNo)
+    : invoice?.tokenId
+      ? String(invoice.tokenId)
+      : invoice?.tokenCode
+        ? String(invoice.tokenCode)
+        : formatVisitId(invoice?.tokenCode, invoice?.tokenId);
+
+  // Invoice No - ensure it ALWAYS shows. Fallback chain: explicit -> billId -> tokenId -> TBD
+  const billIdNum = Number(invoice?.billId || explicitInvoiceNo || 0);
+  const invoiceNoDisplay = explicitInvoiceNo
+    ? String(explicitInvoiceNo)
+    : billIdNum > 0
+      ? String(billIdNum)
+      : invoice?.tokenId
+        ? `TMP-${String(invoice.tokenId).padStart(4, "0")}`
+        : invoice?.table
+          ? `DRAFT-${String(invoice.table).replace(/[^A-Za-z0-9]/g, "").toUpperCase()}`
+          : "TBD";
+
+  // Table No - ensure it ALWAYS shows
   const tableDisplay =
     explicitTableNo ||
     invoice?.table ||
     invoice?.tableNumber ||
     invoice?.postedRoomNumber ||
     invoice?.sourceTableNumber ||
+    invoice?.roomNumber ||
     "--";
+
   const itemRows = (Array.isArray(invoice?.items) ? invoice.items : [])
     .map((item) => {
       const qty = Number(item?.qty || 0);
       const rate = Number(item?.rate || 0);
+      const lineTotal = qty * rate;
       return `
         <tr>
           <td class="item-name">${escapeReceiptHtml(item?.name || "Menu Item")}</td>
-          <td class="center">${formatReceiptAmount(qty)}</td>
-          <td class="right">${formatReceiptAmount(rate)}</td>
-          <td class="right">${formatReceiptAmount(qty * rate)}</td>
+          <td class="qty-col">${formatReceiptAmount(qty)}</td>
+          <td class="rate-col">${formatReceiptAmount(rate)}</td>
+          <td class="amount-col">${formatReceiptAmount(lineTotal)}</td>
         </tr>
       `;
     })
     .join("");
 
   return `
+    <!DOCTYPE html>
     <html>
       <head>
+        <meta charset="utf-8" />
         <title>Restaurant Invoice</title>
         <style>
-          @page { size: 80mm auto; margin: 6mm; }
-          * { box-sizing: border-box; }
-          body {
-            margin: 0 auto;
-            width: 72mm;
-            color: #111827;
-            font-family: "Courier New", monospace;
-            font-size: 11px;
-            line-height: 1.35;
+          @page {
+            size: 80mm auto;
+            margin: 4mm;
           }
-          .center { text-align: center; }
-          .right { text-align: right; }
+          *, *::before, *::after {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+          }
+        html, body {
+    margin: 0 !important;
+    padding: 0;
+    background: #fff !important;
+    color: #000 !important;
+
+    font-family: "Arial Black", Arial, Helvetica, sans-serif !important;
+    font-size: 14px !important;
+    font-weight: 900 !important;
+
+    -webkit-text-fill-color: #000 !important;
+    -webkit-font-smoothing: none !important;
+    text-rendering: geometricPrecision !important;
+}
+          body {
+    width: 80mm;
+    max-width: 80mm;
+    margin: 0 auto !important;
+    padding: 8px 6px;
+
+    font-size: 14px !important;
+    line-height: 1.45;
+
+    color: #000 !important;
+    font-weight: 900 !important;
+
+    -webkit-text-fill-color: #000 !important;
+}
+          .center { text-align: center !important; }
+          .right { text-align: right !important; }
+          .left { text-align: left !important; }
           .separator {
-            border-top: 1px dashed #6b7280;
-            margin: 7px 0;
+            border: 0;
+            border-top: 1px dashed #000000 !important;
+            margin: 6px 0;
+            height: 0;
+            background: transparent;
+          }
+          .double-separator {
+            border: 0;
+            border-top: 3px double #000000 !important;
+            margin: 6px 0;
+            height: 0;
+            background: transparent;
           }
           .brand {
             padding-top: 4px;
+            text-align: center;
+            color: #020202 !important;
           }
-          .brand h1 {
-            margin: 0;
-            font-size: 18px;
-            letter-spacing: 0.04em;
-          }
+         .brand h1{
+    font-size:22px !important;
+    font-weight:900 !important;
+    color:#000 !important;
+    letter-spacing:1px;
+}
+         .brand .sub{
+    font-size:13px !important;
+    font-weight:900 !important;
+    color:#000 !important;
+}
           .muted {
-            color: #4b5563;
-          }
-          .title {
-            font-size: 17px;
+            color: #090707 !important;
+            font-size: 11px;
             font-weight: 700;
-            letter-spacing: 0.06em;
           }
+         .title{
+    font-size:18px !important;
+    font-weight:900 !important;
+    color:#000 !important;
+}
+         .invoice-no-banner{
+    font-size:16px !important;
+    font-weight:900 !important;
+    color:#000 !important;
+}
+          .table-no-banner{
+    font-size:15px !important;
+    font-weight:900 !important;
+    color:#000 !important;
+}
           .meta-row,
           .summary-row {
             display: flex;
             justify-content: space-between;
-            gap: 10px;
+            gap: 6px;
             margin: 2px 0;
+            font-size: 12px;
+            color: #000000 !important;
+            font-weight: 700;
+            align-items: flex-start;
+            width: 100%;
           }
-          .meta-row span:first-child,
-          .summary-row span:first-child {
-            flex: 1 1 auto;
+          .meta-row > span,
+          .summary-row > span {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            color: #000000 !important;
+            font-weight: 700;
+            display: block;
+          }
+          .meta-row > span:first-child,
+          .summary-row > span:first-child {
+            flex: 1 1 50%;
+            text-align: left;
+            color: #000000 !important;
+            font-weight: 700;
+          }
+          .meta-row > span:last-child,
+          .summary-row > span:last-child {
+            flex: 0 0 46%;
+            text-align: right;
+            color: #000000 !important;
+            font-weight: 800;
           }
           table {
             width: 100%;
             border-collapse: collapse;
+            table-layout: fixed;
+            color: #000000 !important;
           }
           th, td {
-            padding: 3px 0;
+            padding: 4px 3px;
             vertical-align: top;
+            color: #000000 !important;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            font-size: 12px;
+            line-height: 1.4;
+            font-weight: 700;
           }
           th {
-            font-size: 10px;
+            font-size: 11px;
+            font-weight: 900;
             text-transform: uppercase;
-            letter-spacing: 0.08em;
-            border-bottom: 1px dashed #9ca3af;
+            letter-spacing: 0.05em;
+            border-bottom: 1px dashed #000000 !important;
+            color: #000000 !important;
+            background: transparent !important;
+            text-align: left;
+            padding-bottom: 3px;
           }
           .item-name {
-            width: 48%;
+            width: 44%;
             padding-right: 6px;
+            text-align: left !important;
+            color: #000000 !important;
+            font-weight: 700;
           }
-          .center { text-align: center; }
-          .right { text-align: right; }
+          .qty-col {
+            width: 14%;
+            text-align: center !important;
+            color: #000000 !important;
+            font-weight: 700;
+          }
+          .rate-col {
+            width: 20%;
+            text-align: right !important;
+            color: #000000 !important;
+            font-weight: 700;
+          }
+          .amount-col {
+            width: 22%;
+            text-align: right !important;
+            color: #000000 !important;
+            font-weight: 800;
+          }
           .totals {
             margin-top: 4px;
           }
           .grand {
-            font-weight: 700;
-            font-size: 13px;
+            font-weight: 900 !important;
+            font-size: 14px;
+            color: #000000 !important;
+          }
+          .grand > span {
+            font-weight: 900 !important;
+            color: #000000 !important;
           }
           .net {
-            font-weight: 700;
+            font-weight: 900 !important;
             font-size: 17px;
+            color: #000000 !important;
+          }
+          .net > span {
+            font-weight: 900 !important;
+            color: #000000 !important;
           }
           .footer {
-            margin-top: 8px;
+            margin-top: 10px;
+            text-align: center;
           }
           .footer-note {
-            font-size: 10px;
-            color: #374151;
+            font-size: 11px;
+            color: #000000 !important;
+            font-weight: 700;
+            line-height: 1.5;
+          }
+          .legal-row {
+            font-size: 11px;
+            font-weight: 800;
+            color: #000000 !important;
+            text-align: center;
+            margin: 2px 0;
+            letter-spacing: 0.02em;
           }
         </style>
       </head>
       <body>
-        <div class="brand center">
-          <h1>MAA BAGLAMUKHI RESORT</h1>
-          <div class="muted">Restaurant & POS Billing</div>
-          <div class="muted">Thermal receipt invoice</div>
+        <div class="brand">
+          <h1>${escapeReceiptHtml(RESORT_NAME)}</h1>
+          <div class="sub">Restaurant &amp; POS Billing</div>
+          <div class="sub">${escapeReceiptHtml(RESORT_ADDRESS_LINE1)}</div>
+          <div class="sub">Ph: ${escapeReceiptHtml(RESORT_PHONE)}</div>
         </div>
 
-        <div class="separator"></div>
-        <div class="center title">${escapeReceiptHtml(printLabel)}</div>
+        <div class="double-separator"></div>
+        <div class="title">${escapeReceiptHtml(printLabel)}</div>
+        <div class="double-separator"></div>
+
+        <div class="invoice-no-banner">INVOICE NO: ${escapeReceiptHtml(invoiceNoDisplay)}</div>
+        <div class="table-no-banner">${escapeReceiptHtml(entityLabel)}: ${escapeReceiptHtml(tableDisplay)}</div>
+
         <div class="separator"></div>
 
         <div class="meta-row">
-          <span>Invoice No: ${escapeReceiptHtml(invoiceNoDisplay)}</span>
-          <span>Date: ${escapeReceiptHtml(formatReceiptDateOnly(printedAt))}</span>
+          <span>Date</span>
+          <span>${escapeReceiptHtml(formatReceiptDateOnly(printedAt))} ${escapeReceiptHtml(formatReceiptTimeOnly(printedAt))}</span>
         </div>
         <div class="meta-row">
-          <span>${escapeReceiptHtml(entityLabel)}: ${escapeReceiptHtml(tableDisplay)}</span>
-          <span>Time: ${escapeReceiptHtml(formatReceiptTimeOnly(printedAt))}</span>
+          <span>Captain</span>
+          <span>${escapeReceiptHtml(invoice?.waiterName || "Reception")}</span>
         </div>
         <div class="meta-row">
-          <span>Captain: ${escapeReceiptHtml(invoice?.waiterName || "Reception")}</span>
-          <span>KOT Nos: ${escapeReceiptHtml(kotNos || "--")}</span>
+          <span>KOT No</span>
+          <span>${escapeReceiptHtml(kotNos || "--")}</span>
         </div>
         <div class="meta-row">
-          <span>Customer: ${escapeReceiptHtml(customerName || invoice?.customerName || "Walk-in Customer")}</span>
-          <span>Phone: ${escapeReceiptHtml(phone || invoice?.phone || "--")}</span>
+          <span>Customer</span>
+          <span>${escapeReceiptHtml(customerName || invoice?.customerName || "Walk-in")}</span>
+        </div>
+        <div class="meta-row">
+          <span>Phone</span>
+          <span>${escapeReceiptHtml(phone || invoice?.phone || "--")}</span>
         </div>
 
         <div class="separator"></div>
@@ -322,58 +505,98 @@ const buildReceiptHtml = ({
           <thead>
             <tr>
               <th class="item-name">Item Name</th>
-              <th class="center">Qty</th>
-              <th class="right">Rate</th>
-              <th class="right">Amount</th>
+              <th class="qty-col">Qty</th>
+              <th class="rate-col">Rate</th>
+              <th class="amount-col">Amount</th>
             </tr>
           </thead>
           <tbody>
-            ${itemRows || `<tr><td colspan="4" class="center muted">No items found</td></tr>`}
+            ${itemRows || `<tr><td colspan="4" class="center">No items found</td></tr>`}
           </tbody>
         </table>
 
         <div class="separator"></div>
 
         <div class="totals">
-          <div class="summary-row"><span>Food Total</span><span>${formatReceiptAmount(invoice?.subtotal)}</span></div>
-          <div class="summary-row"><span>SGST @ 2.50%</span><span>${formatReceiptAmount(sgstAmount)}</span></div>
-          <div class="summary-row"><span>CGST @ 2.50%</span><span>${formatReceiptAmount(cgstAmount)}</span></div>
+          <div class="summary-row">
+            <span>Food Total</span>
+            <span>${formatReceiptAmount(invoice?.subtotal)}</span>
+          </div>
+          <div class="summary-row">
+            <span>SGST @ 2.50%</span>
+            <span>${formatReceiptAmount(sgstAmount)}</span>
+          </div>
+          <div class="summary-row">
+            <span>CGST @ 2.50%</span>
+            <span>${formatReceiptAmount(cgstAmount)}</span>
+          </div>
           ${
             Number(discountAmount || 0) > 0
               ? `<div class="summary-row"><span>Discount</span><span>- ${formatReceiptAmount(discountAmount)}</span></div>`
               : ""
           }
-          <div class="summary-row grand"><span>Grand Total</span><span>${formatReceiptAmount(grandTotal)}</span></div>
-          <div class="summary-row"><span>Round Up</span><span>${formatReceiptAmount(roundUp)}</span></div>
-          <div class="summary-row net"><span>Net Total</span><span>${formatReceiptAmount(netTotal)}</span></div>
+          <div class="summary-row grand">
+            <span>Grand Total</span>
+            <span>${formatReceiptAmount(grandTotal)}</span>
+          </div>
+          <div class="summary-row">
+            <span>Round Up</span>
+            <span>${formatReceiptAmount(roundUp)}</span>
+          </div>
+          <div class="double-separator"></div>
+          <div class="summary-row net">
+            <span>NET TOTAL</span>
+            <span>Rs. ${formatReceiptAmount(netTotal)}</span>
+          </div>
         </div>
 
         <div class="separator"></div>
 
         <div class="meta-row">
-          <span>User: ${escapeReceiptHtml(userName)}</span>
-          <span>Payment: ${escapeReceiptHtml(paymentMethod || "Cash")}</span>
+          <span>User</span>
+          <span>${escapeReceiptHtml(userName)}</span>
         </div>
         <div class="meta-row">
-          <span>Guests: ${escapeReceiptHtml(personCount)}</span>
-          <span>Per Person: ${formatReceiptAmount(perPersonAmount)}</span>
+          <span>Payment</span>
+          <span>${escapeReceiptHtml(paymentMethod || "Cash")}</span>
+        </div>
+        <div class="meta-row">
+          <span>Guests</span>
+          <span>${escapeReceiptHtml(personCount)}</span>
+        </div>
+        <div class="meta-row">
+          <span>Per Person</span>
+          <span>Rs. ${formatReceiptAmount(perPersonAmount)}</span>
         </div>
         ${
           paymentMethod === "Card"
             ? `
               <div class="meta-row">
-                <span>Card: ${escapeReceiptHtml(cardDetails?.cardType || "--")}</span>
-                <span>Last4: ${escapeReceiptHtml(cardDetails?.cardLast4 || "--")}</span>
+                <span>Card</span>
+                <span>${escapeReceiptHtml(cardDetails?.cardType || "--")}</span>
               </div>
               <div class="meta-row">
-                <span>Txn Ref: ${escapeReceiptHtml(cardDetails?.transactionRef || "--")}</span>
-                <span>Holder: ${escapeReceiptHtml(cardDetails?.cardHolderName || "--")}</span>
+                <span>Last 4</span>
+                <span>${escapeReceiptHtml(cardDetails?.cardLast4 || "--")}</span>
+              </div>
+              <div class="meta-row">
+                <span>Txn Ref</span>
+                <span>${escapeReceiptHtml(cardDetails?.transactionRef || "--")}</span>
+              </div>
+              <div class="meta-row">
+                <span>Holder</span>
+                <span>${escapeReceiptHtml(cardDetails?.cardHolderName || "--")}</span>
               </div>
             `
             : ""
         }
 
-        <div class="footer center">
+        <div class="separator"></div>
+        <div class="legal-row">GSTN ${escapeReceiptHtml(RESORT_GSTIN)}</div>
+        <div class="legal-row">FSSAI NO. ${escapeReceiptHtml(RESORT_FSSAI_NO)}</div>
+
+        <div class="separator"></div>
+        <div class="footer">
           <div class="footer-note">Thank you. Visit again.</div>
           <div class="footer-note">Powered by Maa Baglamukhi Resort POS</div>
         </div>
@@ -1172,7 +1395,7 @@ const Payment = ({
 
     // Hydrate items from the server if the invoice was created without them
     // (e.g. bill created from token but items not yet attached).
-    let invoiceToPrint = rawInvoice;
+    let invoiceToPrint = { ...rawInvoice };
     const tokenId = rawInvoice.tokenId || invoice?.tokenId || null;
     if (tokenId && (!Array.isArray(invoiceToPrint.items) || !invoiceToPrint.items.length)) {
       try {
@@ -1199,21 +1422,58 @@ const Payment = ({
     const hasBill = Number(invoiceToPrint?.billId || 0) > 0;
     const printLabel = hasBill ? "INVOICE" : "INVOICE COPY";
 
-    // Pull values from React state directly so the receipt is always correct,
-    // even if the invoice object has gaps (e.g. before payment when billId is null).
+    // Robust resolution: merge state + override + parent invoice to ensure
+    // table no and KOT no ALWAYS have a value on the printed receipt.
+    const pickFirst = (...values) => {
+      for (const v of values) {
+        if (v !== null && v !== undefined && String(v).trim() !== "") return v;
+      }
+      return null;
+    };
+
+    const resolvedTableNo = String(
+      pickFirst(
+        invoiceToPrint?.table,
+        invoiceToPrint?.tableNumber,
+        invoiceToPrint?.postedRoomNumber,
+        invoiceToPrint?.sourceTableNumber,
+        invoiceToPrint?.roomNumber,
+        invoice?.table,
+        invoice?.tableNumber,
+        invoice?.postedRoomNumber,
+        invoice?.sourceTableNumber,
+        invoice?.roomNumber,
+        invoiceCards.find((c) => createBoardCardKey(c) === createBoardCardKey(invoiceToPrint))?.table,
+        selectedChargeRoom?.roomNumber,
+        invoiceToPrint?.tableNumber,
+      ) || "1"
+    );
+
+    const resolvedKotNo = String(
+      pickFirst(
+        invoiceToPrint?.tokenId,
+        invoiceToPrint?.tokenCode,
+        invoice?.tokenId,
+        invoice?.tokenCode,
+        invoiceToPrint?.kotNo,
+        invoice?.kotNo,
+      ) || (invoiceToPrint?.billId ? `B-${invoiceToPrint.billId}` : "1")
+    );
+
     const explicitInvoiceNo = generatedBill?.id
-      ? String(generatedBill.id).padStart(4, "0")
+      ? String(generatedBill.id)
       : invoiceToPrint?.billId
-        ? String(invoiceToPrint.billId).padStart(4, "0")
+        ? String(invoiceToPrint.billId)
         : invoiceToPrint?.tokenId
-          ? `TMP-${String(invoiceToPrint.tokenId).padStart(4, "0")}`
+          ? `TMP-${String(invoiceToPrint.tokenId)}`
           : null;
-    const explicitTableNo =
-      invoiceToPrint?.table || invoiceToPrint?.tableNumber || invoiceToPrint?.postedRoomNumber ||
-      null;
 
     const printHTML = buildReceiptHtml({
-      invoice: invoiceToPrint,
+      invoice: {
+        ...invoiceToPrint,
+        table: resolvedTableNo,
+        tokenId: resolvedKotNo !== "1" ? resolvedKotNo : invoiceToPrint.tokenId,
+      },
       entityType,
       customerName,
       phone,
@@ -1225,11 +1485,14 @@ const Payment = ({
       computedTotal,
       printLabel,
       explicitInvoiceNo,
-      explicitTableNo,
+      explicitTableNo: resolvedTableNo,
+      explicitKotNo: resolvedKotNo,
     });
 
-    const win = window.open("", "", "width=420,height=760");
+    const win = window.open("", "", "width=440,height=800,menubar=no,toolbar=no,location=no,status=no");
     if (!win) return;
+
+    win.document.open();
     win.document.write(printHTML);
     win.document.close();
 
@@ -1244,16 +1507,15 @@ const Payment = ({
 
     const fallbackTimer = window.setTimeout(() => {
       returnFocusAndClose();
-    }, 6000);
+    }, 8000);
 
     window.setTimeout(() => {
       try {
+        win.focus();
         win.print();
-      } finally {
-        window.clearTimeout(fallbackTimer);
-        returnFocusAndClose();
-      }
-    }, 180);
+      } catch {}
+      window.clearTimeout(fallbackTimer);
+    }, 300);
   };
 
   const handlePayment = async () => {
