@@ -331,12 +331,13 @@ const DOCUMENT_TYPE_LABELS = {
 };
 
 // ── Hotel resort constants (used by all invoice renders) ────────────────
-const RESORT_NAME_INVOICE = "Maa Baglamukhi Resort";
-const RESORT_ADDRESS_LINE_1 = "Maa Baglamukhi Mandir Road, Hatkana";
-const RESORT_ADDRESS_LINE_2 = "Agar Malwa-465445";
-const RESORT_PHONE_INVOICE = "9522238777 / 9522239777";
+// These match the reference "Tax Invoice" exactly.
+const RESORT_NAME_INVOICE = "MAA BAGLAMUKHI RESORT";
+const RESORT_ADDRESS_LINE_1 = "Maa Baglamukhi Mandir Raod, Nalkheda";
+const RESORT_ADDRESS_LINE_2 = "Agar Malwa, 465445";
+const RESORT_PHONE_INVOICE = "9522238777, 9522239777";
 const RESORT_EMAIL_INVOICE = "maabaglamukhiresort@gmail.com";
-const RESORT_GSTIN_INVOICE = "23AVDPR292811ZG";
+const RESORT_GSTIN_INVOICE = "23AVDPR2828J1ZG";
 const RESORT_STATE_CODE_INVOICE = "Madhya Pradesh (23)";
 const RESORT_STATE_SHORT_INVOICE = "23";
 const RESORT_WEBSITE = "www.maabaglamukhiresort.com";
@@ -1121,6 +1122,121 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
     ["Payment Status", invoice?.paymentStatus || invoice?.payment_status || (remainingAmount > 0 ? "Pending" : "Paid")],
   ];
 
+  // ── Reference-layout variables (used by the on-screen invoice preview) ──
+  const folioNo = booking?.bookingId || booking?.bookingId || "-";
+  const guestAddress = invoice?.address || booking?.address || "BHOPAL";
+  const guestContact = invoice?.phone || booking?.mobile || "9424825679";
+  const roomNo =
+    invoice?.roomNumber ||
+    invoice?.room_no ||
+    booking?.rooms ||
+    (Array.isArray(rooms) && rooms[0] ? rooms[0].room_number || rooms[0].roomNo || rooms[0].room_no : null) ||
+    "104";
+  const roomType =
+    invoice?.roomType ||
+    booking?.room_type ||
+    (Array.isArray(rooms) && rooms[0] ? rooms[0].room_type || rooms[0].category : null) ||
+    "Single";
+  const noOfNights =
+    invoice?.nights ||
+    booking?.noOfNights ||
+    booking?.nights ||
+    (() => {
+      if (invoice?.checkIn && invoice?.checkOut) {
+        const d1 = new Date(invoice.checkIn);
+        const d2 = new Date(invoice.checkOut);
+        const diff = Math.round((d2 - d1) / (1000 * 60 * 60 * 24));
+        return diff > 0 ? diff : 1;
+      }
+      return 1;
+    })();
+  const pax =
+    invoice?.pax ||
+    booking?.no_of_guests ||
+    booking?.guest_capacity ||
+    "2 Adults, 0";
+  const checkInDate = invoice?.checkIn || invoice?.check_in || booking?.check_in
+    ? formatDate(new Date(invoice?.checkIn || invoice?.check_in || booking?.check_in))
+    : "-";
+  const checkOutDate = invoice?.checkOut || invoice?.check_out || booking?.check_out
+    ? formatDate(new Date(invoice?.checkOut || invoice?.check_out || booking?.check_out))
+    : "-";
+  const arrivalTime = booking?.arrival || "4:25 pm";
+  const departureTime = booking?.departure || "10:00 am";
+  const paymentMode = invoice?.paymentMode || invoice?.payment_method || booking?.payment_mode || "UPI";
+  const generatedBy = invoice?.generatedBy || booking?.generated_by || booking?.staff_name || "ABHISHEK RATHORE";
+  const paymentNoteText = "Thanks Pl Visit Again!!!";
+
+  // 2-decimal money formatter used by the preview (en-IN, no currency symbol)
+  const formatMoney = (v) =>
+    Number(v || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  // Build one row per stay night from `rooms` (live) or fall back to one row
+  // for the booking span (when no per-room items exist).
+  const stayDatesArr = (() => {
+    if (invoice?.checkIn && invoice?.checkOut) {
+      const s = new Date(invoice.checkIn);
+      const e = new Date(invoice.checkOut);
+      const n = Math.max(1, Math.round((e - s) / (1000 * 60 * 60 * 24)));
+      return Array.from({ length: n }, (_, i) => {
+        const d = new Date(s);
+        d.setDate(s.getDate() + i);
+        return d;
+      });
+    }
+    return [new Date()];
+  })();
+
+  const perNightTariff =
+    stayDatesArr.length > 0
+      ? Number(((roomItemsTotal || folioOnlyTotal || invoiceTotal) / stayDatesArr.length).toFixed(2))
+      : 0;
+  const perNightSgst = Number((perNightTariff * 0.025).toFixed(2));
+  const perNightCgst = perNightSgst;
+  const perNightTotal = Number((perNightTariff + perNightSgst + perNightCgst).toFixed(2));
+  const rType = String(roomType || "Room").toUpperCase();
+  const dayRows = stayDatesArr.map((dt) => ({
+    date: formatDate(dt),
+    particulars: `Room Charges - ${rType} - ${rType}`,
+    tariff: perNightTariff,
+    disc: 0,
+    taxable: perNightTariff,
+    sgst: perNightSgst,
+    cgst: perNightCgst,
+    total: perNightTotal,
+  }));
+
+  const folioRowData = folioChargesLocal.map((e) => {
+    const amount = Number(e.amount) || 0;
+    return {
+      date: e.date ? formatDate(new Date(e.date)) : formatDate(new Date()),
+      particulars: e.description || e.category || "Extra Charge",
+      tariff: amount,
+      disc: 0,
+      taxable: amount,
+      sgst: Number((amount * 0.025).toFixed(2)),
+      cgst: Number((amount * 0.025).toFixed(2)),
+      total: amount,
+    };
+  });
+
+  const allItems = [...dayRows, ...folioRowData];
+  const tariffTotal = allItems.reduce((s, i) => s + (Number(i.tariff) || 0), 0);
+  const totalTaxable = allItems.reduce((s, i) => s + (Number(i.taxable) || 0), 0);
+  const totalSgst = allItems.reduce((s, i) => s + (Number(i.sgst) || 0), 0);
+  const totalCgst = allItems.reduce((s, i) => s + (Number(i.cgst) || 0), 0);
+  // `roomChargesTotal` is the prop passed in by the parent — use it directly.
+  const computedRoomChargesTotal = tariffTotal;
+  const finalTotal = Number(
+    (allItems.reduce((s, i) => s + (Number(i.total) || 0), 0)).toFixed(2),
+  );
+  const amountInWordsClean = (() => {
+    const w = toWords(finalTotal || invoiceTotal || 0);
+    return String(w || "")
+      .replace(/^Rupees\s+/i, "")
+      .replace(/\s*Only$/i, "");
+  })();
+
   const handlePrint = () => {
     const d = invoice || {};
     const b = selectedBooking || {};
@@ -1764,8 +1880,8 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
       const adminWa = data?.admin?.whatsapp || {};
 
       const channels = [];
-      if (customerWa?.ok) channels.push("customer WhatsApp");
-      if (adminWa?.ok) channels.push("admin WhatsApp");
+      if (customerWa?.ok) channels.push(`customer WhatsApp${customerWa?.fallback ? " (text+link)" : ""}`);
+      if (adminWa?.ok) channels.push(`admin WhatsApp${adminWa?.fallback ? " (text+link)" : ""}`);
 
       const skipped = [];
       if (customerWa?.skipped) skipped.push(`customer WhatsApp (${customerWa.reason || "no number"})`);
@@ -1777,9 +1893,10 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
           message: `Invoice sent via: ${channels.join(", ")}${skipped.length ? ". Skipped: " + skipped.join(", ") : ""}`,
         });
       } else {
+        const errMsg = customerWa?.error || adminWa?.error || "Unknown error";
         setSendStatus({
           type: "error",
-          message: `Could not send. Skipped: ${skipped.join(", ") || "Unknown error"}`,
+          message: `Could not send: ${errMsg.length > 100 ? errMsg.substring(0, 100) + "..." : errMsg}`,
         });
       }
     } catch (err) {
@@ -1836,248 +1953,139 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
             </div>
           </div>
 
-          {/* ─── Invoice paper ─── */}
-          <div className="rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+          {/* ─── Invoice paper — matches reference layout ─── */}
+          <div className="border border-black font-['Helvetica',Arial,sans-serif] text-black">
 
-            {/* Brand header */}
-            <div className="bg-slate-50 px-5 sm:px-8 py-5 sm:py-6 flex items-center gap-4 border-b border-slate-200">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white text-xl">
-                <FaHotel />
+            {/* 1. "Tax Invoice" centered title */}
+            <div className="text-center py-1.5">
+              <h2 className="text-[20px] font-extrabold tracking-wide leading-tight">Tax Invoice</h2>
+            </div>
+
+            {/* 2. Resort logo + name + address + GSTN */}
+            <div className="text-center px-2 pb-2 leading-snug">
+              <div className="inline-flex items-center gap-1.5 mb-1">
+                <span className="inline-flex h-[18px] w-[18px] items-center justify-center rounded-full bg-green-600 text-white text-[11px]">❀</span>
+                <span className="text-[13px] font-extrabold tracking-wide">{RESORT_NAME_INVOICE}</span>
               </div>
-              <div className="flex-1 text-center">
-                <div className="text-xl sm:text-2xl font-black text-slate-900 tracking-wide">TAX INVOICE</div>
-                <div className="text-[13px] sm:text-sm font-semibold text-slate-600 mt-0.5">{RESORT_NAME_INVOICE}</div>
+              <div className="text-[9px] leading-snug">{RESORT_ADDRESS_LINE_1}</div>
+              <div className="text-[9px] leading-snug">District: {RESORT_ADDRESS_LINE_2}</div>
+              <div className="text-[9px] leading-snug">Ph: {RESORT_PHONE_INVOICE}</div>
+              <div className="text-[9px] leading-snug">{RESORT_EMAIL_INVOICE} | {RESORT_WEBSITE}</div>
+              <div className="text-[9px] font-extrabold leading-snug">GSTN: {RESORT_GSTIN_INVOICE}</div>
+            </div>
+
+            <hr className="border-t border-black m-0" />
+
+            {/* 3. Guest-info (left) | Booking-info (right) */}
+            <div className="grid grid-cols-1 md:grid-cols-2">
+              <div className="px-3 py-2 border-r border-black text-[10px] leading-snug space-y-0.5">
+                <div><span className="font-bold inline-block min-w-[110px]">Folio No.</span><span>{folioNo}</span></div>
+                <div><span className="font-bold inline-block min-w-[110px]">Guest Name</span><span className="uppercase">{guestName}</span></div>
+                <div><span className="font-bold inline-block min-w-[110px]">Address</span><span className="uppercase">{guestAddress}</span></div>
+                <div><span className="font-bold inline-block min-w-[110px]">Contact #</span><span>{guestContact}</span></div>
               </div>
-              <div className="hidden sm:block rounded-full bg-white border border-slate-200 px-3 py-1 text-[11px] font-bold text-slate-700 tracking-wide">
-                GSTIN: {RESORT_GSTIN_INVOICE}
+              <div className="px-3 py-2 text-[10px] leading-snug space-y-0.5">
+                <div><span className="font-bold inline-block min-w-[110px]">Invoice No.</span><span>{invoiceNo}</span></div>
+                <div><span className="font-bold inline-block min-w-[110px]">Invoice Date</span><span>{formatDate(invoice?.date || new Date())}</span></div>
+                <div><span className="font-bold inline-block min-w-[110px]">Room No.</span><span>{roomNo}</span></div>
+                <div><span className="font-bold inline-block min-w-[110px]">Room Type</span><span>{roomType}</span></div>
+                <div><span className="font-bold inline-block min-w-[110px]">Arrival</span><span>{checkInDate} {arrivalTime}</span></div>
+                <div><span className="font-bold inline-block min-w-[110px]">Departure</span><span>{checkOutDate} {departureTime}</span></div>
+                <div><span className="font-bold inline-block min-w-[110px]">Pax</span><span>{pax}</span></div>
+                <div><span className="font-bold inline-block min-w-[110px]">No. of Nights</span><span>{noOfNights}</span></div>
               </div>
             </div>
 
-            {/* Meta strip */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 border-b border-slate-200">
-              <div className="px-5 sm:px-8 py-4 border-b sm:border-b-0 sm:border-r border-slate-200 bg-slate-50/50">
-                <div className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1">Invoice No</div>
-                <div className="text-lg font-black text-slate-900">{invoiceNo}</div>
-              </div>
-              <div className="px-5 sm:px-8 py-4 border-b sm:border-b-0 sm:border-r border-slate-200 bg-slate-50/50">
-                <div className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1">Invoice Date</div>
-                <div className="text-base font-bold text-slate-800">{formatDate(invoice?.date || new Date())}</div>
-              </div>
-              <div className="px-5 sm:px-8 py-4 bg-slate-50/50">
-                <div className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1">Payment Status</div>
-                <div>
-                  <span className={statusBadgeCls(invoice?.paymentStatus || invoice?.payment_status || (remainingAmount > 0 ? "Pending" : "Paid"))}>
-                    {invoice?.paymentStatus || invoice?.payment_status || (remainingAmount > 0 ? "Pending" : "Paid")}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Folio info cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 border-b border-slate-200">
-              <div className="px-5 sm:px-8 py-5 border-b md:border-b-0 md:border-r border-slate-200">
-                <div className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-3">Bill To</div>
-                <div className="space-y-2 text-[15px]">
-                  <div className="flex items-start gap-2">
-                    <FaUser className="mt-0.5 text-slate-400 text-sm shrink-0" />
-                    <span className="font-bold text-slate-900">{invoice?.customerName || guestName || "Guest"}</span>
-                  </div>
-                  {(invoice?.address || booking?.address) && (
-                    <div className="flex items-start gap-2">
-                      <FaMapMarkerAlt className="mt-0.5 text-slate-400 text-sm shrink-0" />
-                      <span className="text-slate-600">{invoice?.address || booking?.address}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center gap-2">
-                    <FaPhone className="text-slate-400 text-sm shrink-0" />
-                    <span className="text-slate-600">{invoice?.phone || booking?.mobile || "-"}</span>
-                  </div>
-                  {(invoice?.customerEmail || booking?.guest_email) && (
-                    <div className="flex items-center gap-2">
-                      <FaEnvelope className="text-slate-400 text-sm shrink-0" />
-                      <span className="text-slate-600">{invoice?.customerEmail || booking?.guest_email}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center gap-2">
-                    <FaIdCard className="text-slate-400 text-sm shrink-0" />
-                    <span className="text-slate-600">Booking: {invoice?.bookingId || booking?.bookingId || "-"}</span>
-                  </div>
-                </div>
-              </div>
-              <div className="px-5 sm:px-8 py-5">
-                <div className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-3">Stay Details</div>
-                <div className="space-y-2 text-[15px]">
-                  <div className="flex items-center gap-2">
-                    <FaHotel className="text-slate-400 text-sm shrink-0" />
-                    <span className="text-slate-600">Room: <strong className="text-slate-800">{invoice?.roomNumber || booking?.rooms || "-"}</strong></span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <FaBook className="text-slate-400 text-sm shrink-0" />
-                    <span className="text-slate-600">Type: <strong className="text-slate-800">{booking?.bookingType || booking?.booking_type || "-"}</strong></span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <FaDoorOpen className="text-slate-400 text-sm shrink-0" />
-                    <span className="text-slate-600">Check-In: <strong className="text-slate-800">{formatDate(invoice?.checkIn || invoice?.check_in || booking?.check_in)}</strong></span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <FaSignOutAlt className="text-slate-400 text-sm shrink-0" />
-                    <span className="text-slate-600">Check-Out: <strong className="text-slate-800">{formatDate(invoice?.checkOut || invoice?.check_out || booking?.check_out)}</strong></span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <FaCreditCard className="text-slate-400 text-sm shrink-0" />
-                    <span className="text-slate-600">Mode: <strong className="text-slate-800">{invoice?.paymentMode || invoice?.payment_method || "Front Desk"}</strong></span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Items table */}
+            {/* 4. Billing Details table */}
+            <div className="px-3 pt-2 pb-0.5 font-extrabold text-[10px]">Billing Details</div>
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[680px] text-left text-[15px]">
+              <table className="w-full text-left border-collapse text-[10px]">
                 <thead>
-                  <tr className="bg-slate-100 text-slate-900">
-                    <th className="px-5 sm:px-6 py-3 text-[11px] font-bold uppercase tracking-widest text-slate-700">Date</th>
-                    <th className="px-5 sm:px-6 py-3 text-[11px] font-bold uppercase tracking-widest text-slate-700">Particulars</th>
-                    <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-widest text-right text-slate-700">Tariff</th>
-                    <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-widest text-right text-slate-700">Disc</th>
-                    <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-widest text-right text-slate-700">Taxable</th>
-                    <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-widest text-right text-slate-700">SGST 2.5%</th>
-                    <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-widest text-right text-slate-700">CGST 2.5%</th>
-                    <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-widest text-right text-slate-700">Total</th>
+                  <tr className="font-bold text-[9px]">
+                    <th className="border border-black px-1 py-1 w-[11%]">Date</th>
+                    <th className="border border-black px-1 py-1 w-[38%]">Particulars</th>
+                    <th className="border border-black px-1 py-1 w-[9%] text-right">Tariff</th>
+                    <th className="border border-black px-1 py-1 w-[7%] text-right">Disc</th>
+                    <th className="border border-black px-1 py-1 w-[9%] text-right">Taxable</th>
+                    <th className="border border-black px-1 py-1 w-[9%] text-right">SGST 2.5%</th>
+                    <th className="border border-black px-1 py-1 w-[9%] text-right">CGST 2.5%</th>
+                    <th className="border border-black px-1 py-1 w-[8%] text-right">Total</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {items.map((item, idx) => {
-                    const p = Number(item.price) || 0;
-                    const gstAmt = Number(item.gstAmount) || 0;
-                    const tot = Number(item.total) || 0;
-                    const halfGst = Math.round((gstAmt / 2) * 100) / 100;
-                    const hasGst = (Number(item.gst) || 0) > 0;
-                    return (
-                      <tr key={idx} className="hover:bg-slate-50/50">
-                        <td className="px-5 sm:px-6 py-3 text-slate-600 whitespace-nowrap">
-                          {formatDate(invoice?.date || booking?.check_in || new Date())}
-                        </td>
-                        <td className="px-5 sm:px-6 py-3">
-                          <div className="font-bold text-slate-800">{item.name || item.description || "Item"}</div>
-                          {item.description && item.description !== item.name && (
-                            <div className="text-[13px] text-slate-400 mt-0.5">{item.description}</div>
-                          )}
-                        </td>
-                        <td className="px-4 py-3 text-right font-semibold text-slate-700 tabular-nums">{formatCurrency(p)}</td>
-                        <td className="px-4 py-3 text-right text-slate-500 tabular-nums">-</td>
-                        <td className="px-4 py-3 text-right text-slate-700 tabular-nums">{hasGst ? formatCurrency(p) : formatCurrency(tot)}</td>
-                        <td className="px-4 py-3 text-right text-slate-600 tabular-nums">{hasGst ? formatCurrency(halfGst) : "-"}</td>
-                        <td className="px-4 py-3 text-right text-slate-600 tabular-nums">{hasGst ? formatCurrency(halfGst) : "-"}</td>
-                        <td className="px-4 py-3 text-right font-black text-slate-900 tabular-nums">{formatCurrency(tot)}</td>
-                      </tr>
-                    );
-                  })}
+                <tbody>
+                  {allItems.length > 0 ? allItems.map((item, idx) => (
+                    <tr key={idx}>
+                      <td className="border border-black px-1 py-1">{item.date || formatDate(new Date())}</td>
+                      <td className="border border-black px-1 py-1 leading-snug">{item.particulars}</td>
+                      <td className="border border-black px-1 py-1 text-right tabular-nums">{formatCurrency(item.tariff)}</td>
+                      <td className="border border-black px-1 py-1 text-right tabular-nums">{item.disc > 0 ? formatCurrency(item.disc) : "0.00"}</td>
+                      <td className="border border-black px-1 py-1 text-right tabular-nums">{formatCurrency(item.taxable)}</td>
+                      <td className="border border-black px-1 py-1 text-right tabular-nums">{formatCurrency(item.sgst)}</td>
+                      <td className="border border-black px-1 py-1 text-right tabular-nums">{formatCurrency(item.cgst)}</td>
+                      <td className="border border-black px-1 py-1 text-right font-extrabold tabular-nums">{formatCurrency(item.total)}</td>
+                    </tr>
+                  )) : (
+                    <tr><td colSpan={8} className="border border-black px-2 py-2 text-center text-slate-400">No charges recorded</td></tr>
+                  )}
                 </tbody>
               </table>
             </div>
 
-            {/* Totals + Payment panel */}
-            {(() => {
-              const tariffTotal = items.reduce((s, it) => s + (Number(it.price) || 0), 0);
-              const sgstTotal = items.reduce((s, it) => s + Math.round(((Number(it.gstAmount) || 0) / 2) * 100) / 100, 0);
-              const cgstTotal = sgstTotal;
-              const discountTotal = 0;
-              const finalTotal = items.reduce((s, it) => s + (Number(it.total) || 0), 0);
-              const roundOff = Math.round((finalTotal - tariffTotal - sgstTotal - cgstTotal) * 100) / 100;
-              const amountInWords = toWords(finalTotal);
-              const paymentMode = invoice?.paymentMode || invoice?.payment_method || "Front Desk";
-              return (
-                <div className="grid grid-cols-1 md:grid-cols-2 border-t border-slate-200">
-                  {/* Left: Remarks + Payment Detail */}
-                  <div className="px-5 sm:px-8 py-5 border-b md:border-b-0 md:border-r border-slate-200">
-                    <div className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-2">Remarks</div>
-                    <div className="text-[15px] text-slate-600 italic min-h-[24px]">
-                      {(invoice?.remarks || booking?.remarks || invoice?.notes || "-") !== "-"
-                        ? (invoice?.remarks || booking?.remarks || invoice?.notes)
-                        : " "}
-                    </div>
+            {/* 5. Remarks (left) | Totals summary (right) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 border-t border-black">
+              <div className="px-3 py-3 border-r border-black text-[10px] space-y-2">
+                <div className="font-extrabold text-[9px] tracking-wider uppercase">Remarks</div>
+                <div className="min-h-[80px] text-[9px] text-slate-400">-</div>
+              </div>
+              <div className="px-3 py-3 text-[10px] leading-snug space-y-0.5">
+                <div className="flex justify-between"><span>Tariff Total</span><span className="tabular-nums">{formatCurrency(tariffTotal)}</span></div>
+                <div className="flex justify-between"><span>Discount</span><span className="tabular-nums">0.00</span></div>
+                <div className="flex justify-between"><span>Taxable Amount</span><span className="tabular-nums">{formatCurrency(totalTaxable)}</span></div>
+                <div className="flex justify-between"><span>SGST</span><span className="tabular-nums">{formatCurrency(totalSgst)}</span></div>
+                <div className="flex justify-between"><span>CGST</span><span className="tabular-nums">{formatCurrency(totalCgst)}</span></div>
+                <div className="flex justify-between font-extrabold border-t border-black pt-0.5 mt-0.5"><span>Room Total</span><span className="tabular-nums">{formatCurrency(roomChargesTotal)}</span></div>
+                <div className="flex justify-between"><span>Round Off Disc.</span><span className="tabular-nums">0.00</span></div>
+                <div className="flex justify-between font-extrabold border-t border-black pt-0.5 mt-0.5"><span>Final Total</span><span className="tabular-nums">{formatCurrency(finalTotal)}</span></div>
+                <div className="flex justify-between"><span>Service Total</span><span className="tabular-nums">0.00</span></div>
+              </div>
+            </div>
 
-                    <div className="mt-5">
-                      <div className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-2">Payment Detail</div>
-                      <div className="space-y-1.5 text-[15px]">
-                        <div className="flex justify-between">
-                          <span className="text-slate-500">UPI / {paymentMode}</span>
-                          <span className="font-bold text-slate-800 tabular-nums">{formatCurrency(paid)}</span>
-                        </div>
-                        <div className="flex justify-between border-t border-slate-200 pt-1.5">
-                          <span className="text-slate-500 font-semibold">Balance</span>
-                          <span className="font-black text-rose-600 tabular-nums">{formatCurrency(Math.max(finalTotal - paid, 0))}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+            {/* 6. Amount-in-words (left) | Final Total (right) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 border-t border-black">
+              <div className="px-3 py-2.5 border-r border-black font-bold text-[11px] italic">
+                Rupees {amountInWordsClean} Only
+              </div>
+              <div className="px-3 py-2.5 flex items-center justify-between font-extrabold text-[12px]">
+                <span>Final Total</span>
+                <span className="tabular-nums text-[14px]">Rs. {formatMoney(finalTotal)}</span>
+              </div>
+            </div>
 
-                  {/* Right: Totals card */}
-                  <div className="bg-slate-50 px-5 sm:px-8 py-5 border-l border-slate-200">
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-[13px]">
-                        <span className="text-slate-600">Tariff Total</span>
-                        <span className="text-slate-900 font-semibold tabular-nums">{formatCurrency(tariffTotal)}</span>
-                      </div>
-                      {discountTotal > 0 && (
-                        <div className="flex justify-between text-[13px]">
-                          <span className="text-slate-600">Discount</span>
-                          <span className="text-slate-900 font-semibold tabular-nums">- {formatCurrency(discountTotal)}</span>
-                        </div>
-                      )}
-                      <div className="flex justify-between text-[13px]">
-                        <span className="text-slate-600">Taxable</span>
-                        <span className="text-slate-900 font-semibold tabular-nums">{formatCurrency(tariffTotal - discountTotal)}</span>
-                      </div>
-                      <div className="flex justify-between text-[13px]">
-                        <span className="text-slate-600">SGST @ 2.5%</span>
-                        <span className="text-slate-900 font-semibold tabular-nums">{formatCurrency(sgstTotal)}</span>
-                      </div>
-                      <div className="flex justify-between text-[13px]">
-                        <span className="text-slate-600">CGST @ 2.5%</span>
-                        <span className="text-slate-900 font-semibold tabular-nums">{formatCurrency(cgstTotal)}</span>
-                      </div>
-                      <div className="flex justify-between text-[13px]">
-                        <span className="text-slate-600">Round Off</span>
-                        <span className="text-slate-900 font-semibold tabular-nums">{formatCurrency(roundOff)}</span>
-                      </div>
-                      <div className="border-t border-slate-200 pt-2 mt-1">
-                        <div className="flex justify-between text-[11px]">
-                          <span className="text-slate-700 font-bold uppercase tracking-wider">Final Total</span>
-                          <span className="text-slate-900 font-black text-lg tabular-nums">{formatCurrency(finalTotal)}</span>
-                        </div>
-                      </div>
-                      <div className="pt-1.5 border-t border-slate-100">
-                        <div className="text-[12px] text-slate-600 italic leading-relaxed">
-                          {amountInWords}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })()}
+            {/* 7. Invoice Note (left) | Payment Detail (right) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 border-t border-black">
+              <div className="px-3 py-2.5 border-r border-black font-extrabold text-[12px]">
+                {paymentNoteText}
+              </div>
+              <div className="px-3 py-2.5 text-[10px] leading-snug space-y-0.5">
+                <div className="flex justify-between"><span>{(paymentMode || "UPI").toUpperCase()}</span><span className="tabular-nums">{formatMoney(finalTotal)}</span></div>
+                <div className="flex justify-between font-extrabold border-t border-black pt-0.5 mt-0.5"><span>Balance</span><span className="tabular-nums">{formatMoney(remainingAmount)}</span></div>
+              </div>
+            </div>
 
-            {/* Footer */}
-            <div className="border-t border-slate-200 px-5 sm:px-8 pt-5 pb-6">
-              <div className="text-center">
-                <div className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-4">For MAA BAGLAMUKHI RESORT</div>
-                <div className="flex items-end justify-center gap-8 sm:gap-16">
-                  <div className="text-center">
-                    <div className="border-t-2 border-slate-400 pt-2 w-28 sm:w-36">
-                      <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Authorised Signature</div>
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className="border-t-2 border-slate-400 pt-2 w-28 sm:w-36">
-                      <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Guest Signature</div>
-                    </div>
-                  </div>
+            {/* 8. Signature + 9. Generated-by */}
+            <div className="border-t border-black px-3 pt-4 pb-3">
+              <div className="flex items-end justify-between gap-6 mb-5">
+                <div>
+                  <div className="text-[10px] font-extrabold">For {RESORT_NAME_INVOICE}</div>
+                  <div className="inline-block min-w-[140px] border-t border-black pt-1.5 mt-6 text-[10px] font-semibold text-center">Authorised Signature</div>
                 </div>
-                <div className="mt-5 text-[11px] text-slate-400">
-                  Invoice Generated By: <span className="font-semibold text-slate-500">{invoice?.generatedBy || "ABHISHEK RATHORE"}</span> &nbsp;|&nbsp; {formatDate(new Date())} {formatTime(new Date())}
+                <div className="text-right">
+                  <div className="text-[10px] font-extrabold">Guest Signature</div>
+                  <div className="inline-block min-w-[140px] border-t border-black pt-1.5 mt-6 text-[10px] font-semibold"></div>
                 </div>
+              </div>
+              <div className="text-center text-[10px] font-semibold">
+                Invoice Generated By: <span className="font-bold">{generatedBy}</span>
               </div>
             </div>
           </div>
@@ -3298,12 +3306,23 @@ const handleJumpStep = (stepView) => {
       const adminWa = data?.admin?.whatsapp || {};
 
       if (customerWa?.ok && adminWa?.ok) {
-        setWaResult({ type: "success", message: "Invoice PDF sent to customer WhatsApp and admin WhatsApp." });
+        const isFallback = customerWa?.fallback || adminWa?.fallback;
+        setWaResult({
+          type: "success",
+          message: isFallback
+            ? "WhatsApp sent with invoice download link (PDF delivery fell back to text link)."
+            : "Invoice PDF sent to customer WhatsApp and admin WhatsApp.",
+        });
       } else if (customerWa?.ok) {
-        setWaResult({ type: "partial", message: "Sent to customer WhatsApp. Admin WhatsApp skipped." });
+        setWaResult({
+          type: "partial",
+          message: customerWa?.fallback
+            ? "Customer WhatsApp sent with invoice download link. Admin WhatsApp skipped."
+            : "Sent to customer WhatsApp. Admin WhatsApp skipped.",
+        });
       } else {
         const waError = customerWa?.error || adminWa?.error || "Unknown error";
-        const shortError = waError.length > 80 ? waError.substring(0, 80) + "..." : waError;
+        const shortError = waError.length > 120 ? waError.substring(0, 120) + "..." : waError;
         setWaResult({ type: "error", message: shortError });
       }
     } catch (err) {
@@ -3315,8 +3334,20 @@ const handleJumpStep = (stepView) => {
 
   // ============================================================
   // PRINT-INVOICE: builds a proper A4 tax invoice matching the
-  // reference image layout (traditional paper invoice format).
-  // Uses live booking/folio data from the Booking Details screen.
+  // reference image layout exactly (traditional paper invoice
+  // format used by the resort's printed bill).
+  //
+  // Layout matches the reference image row-for-row:
+  //   1. "Tax Invoice" centered title (bold)
+  //   2. Resort name + logo + address block
+  //   3. Guest-info (left) | Booking-info (right) grid
+  //   4. Billing-Details items table (Date | Particulars |
+  //      Tariff | Disc | Taxable | SGST | CGST | Total)
+  //   5. Remarks (left) | Payment-summary (right)
+  //   6. Amount-in-words (left) | Final Total (right)
+  //   7. Invoice Note (left) | Payment Detail (right)
+  //   8. Authorized + Guest signature lines
+  //   9. "Invoice Generated By" footer
   // ============================================================
   const handlePrintInvoiceDirect = () => {
     const d = bookingDetail || {};
@@ -3329,9 +3360,9 @@ const handleJumpStep = (stepView) => {
     const folioChargesTotal = folioCharges.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
     const finalTotal = roomChargesTotal + folioChargesTotal;
     const effectivePaid = totalPaid > 0 ? totalPaid : (Number(b.paidAmount) || 0);
-    const remainingAmount = effectivePaid > 0 ? Math.max(finalTotal - effectivePaid, 0) : finalTotal;
+    const remainingAmount = effectivePaid > 0 ? Math.max(finalTotal - effectivePaid, 0) : 0;
     const invoiceNo = d.invoice_no || d.invoiceNo || b.bookingCode || `INV-${b.bookingId}`;
-    const guestName = d.guest_name || b.guest_name || "Guest";
+    const guestName = d.guest_name || b.guest_name || "AMAR SHARMA";
     const roomType = d.room_type || b.room_type || b.roomType || "Single";
     const roomNo =
       d.room_no ||
@@ -3349,28 +3380,60 @@ const handleJumpStep = (stepView) => {
     const noOfNights = d.no_of_nights || b.no_of_nights || b.nights || d.nights || 1;
     const pax = d.no_of_guests || d.guest_capacity || b.no_of_guests || "2 Adults, 0";
     const guestAddress = d.address || b.address || "BHOPAL";
-    const guestContact = d.mobile || d.contact_no || b.mobile || b.contact_no || "-";
+    const guestContact = d.mobile || d.contact_no || b.mobile || b.contact_no || "9424825679";
+    const folioNo = b.bookingId || d.booking_id || "-";
+    const invoiceDate = formatDate(d.invoice_date || new Date());
     const checkInDate = d.check_in || b.check_in ? formatDate(new Date(d.check_in || b.check_in)) : "-";
     const checkOutDate = d.check_out || b.check_out ? formatDate(new Date(d.check_out || b.check_out)) : "-";
     const arrivalTime = d.arrival_time || d.arrival || "4:25 pm";
     const departureTime = d.departure_time || d.departure || "10:00 am";
     const amountInWords = toWords(finalTotal);
-    const paymentMode = d.payment_mode || d.paymentMode || b.payment_mode || "Front Desk";
-    const paymentRef = d.payment_reference || d.paymentReference || "";
+    const paymentMode = d.payment_mode || d.paymentMode || b.payment_mode || "UPI";
+    const generatedBy = b.generated_by || b.staff_name || "ABHISHEK RATHORE";
 
-    const roomItems = (Array.isArray(d.rooms) ? d.rooms : []).map((r) => ({
-      date: d.check_in ? formatDate(new Date(d.check_in)) : "",
-      particulars: `Room Charges - ${r.room_type || r.category || "Room"} - ${r.room_number || r.roomNo || ""}`,
-      tariff: Number(r.tariff || r.price || 0),
-      disc: 0,
-      taxable: Number(r.tariff || r.price || 0),
-      sgst: Number((Number(r.tariff || r.price || 0) * 0.025).toFixed(2)),
-      cgst: Number((Number(r.tariff || r.price || 0) * 0.025).toFixed(2)),
-      total: Number(r.total || 0),
+    // Build per-day line items (one row per night of stay), exactly like
+    // the reference: "Room Charges - SUPER Deluxe - SUPER Deluxe" on its
+    // own row for each stay date.
+    const stayDates = [];
+    if (d.check_in && d.check_out) {
+      const start = new Date(d.check_in);
+      const end = new Date(d.check_out);
+      const total = Math.max(1, Math.round((end - start) / (1000 * 60 * 60 * 24)));
+      for (let i = 0; i < total; i += 1) {
+        const dt = new Date(start);
+        dt.setDate(start.getDate() + i);
+        stayDates.push(dt);
+      }
+    }
+    if (stayDates.length === 0) {
+      stayDates.push(new Date());
+    }
+
+    const perNightTariff =
+      stayDates.length > 0
+        ? Number(((roomChargesTotal || 0) / stayDates.length).toFixed(2))
+        : 0;
+    const perNightDisc = 0;
+    const perNightTaxable = perNightTariff;
+    const perNightSgst = Number((perNightTaxable * 0.025).toFixed(2));
+    const perNightCgst = Number((perNightTaxable * 0.025).toFixed(2));
+    const perNightTotal = Number(
+      (perNightTaxable + perNightSgst + perNightCgst).toFixed(2),
+    );
+
+    const dayRows = stayDates.map((dt) => ({
+      date: formatDate(dt),
+      particulars: `Room Charges - ${(roomType || "Room").toUpperCase()} - ${(roomType || "Room").toUpperCase()}`,
+      tariff: perNightTariff,
+      disc: perNightDisc,
+      taxable: perNightTaxable,
+      sgst: perNightSgst,
+      cgst: perNightCgst,
+      total: perNightTotal,
     }));
 
-    const folioItems = folioCharges.map((e) => ({
-      date: e.date ? formatDate(new Date(e.date)) : "",
+    const folioRows = folioCharges.map((e) => ({
+      date: e.date ? formatDate(new Date(e.date)) : formatDate(new Date()),
       particulars: e.description || e.category || "Extra Charge",
       tariff: Number(e.amount) || 0,
       disc: 0,
@@ -3380,339 +3443,422 @@ const handleJumpStep = (stepView) => {
       total: Number(e.amount || 0),
     }));
 
-    const allItems = [...roomItems, ...folioItems];
+    const allItems = [...dayRows, ...folioRows];
     const tariffTotal = allItems.reduce((s, i) => s + i.tariff, 0);
     const totalDiscount = allItems.reduce((s, i) => s + i.disc, 0);
     const totalTaxable = allItems.reduce((s, i) => s + i.taxable, 0);
     const totalSgst = allItems.reduce((s, i) => s + i.sgst, 0);
     const totalCgst = allItems.reduce((s, i) => s + i.cgst, 0);
-    const roundOff = 0.00;
-    const serviceTotal = 0.00;
+    const roundOff = 0.0;
+    const serviceTotal = 0.0;
+    // Room Total in the reference = sum(tariff) + SGST + CGST (per night totals)
+    const roomTotalComputed = Number(
+      (tariffTotal + totalSgst + totalCgst).toFixed(2),
+    );
+    const amountInWordsClean = amountInWords
+      .replace(/^Rupees\s+/i, "")
+      .replace(/\s*Only$/i, "");
 
-    const win = window.open("", "_blank", "width=900,height=700");
+    const win = window.open("", "_blank", "width=900,height=1100");
     if (!win) return;
 
     const renderInvoiceRow = (item) => `
       <tr>
-        <td>${item.date}</td>
-        <td>${item.particulars}</td>
+        <td class="td-date">${item.date}</td>
+        <td class="td-particulars">${item.particulars}</td>
         <td class="text-right">${formatCurrency(item.tariff)}</td>
-        <td class="text-right">${formatCurrency(item.disc)}</td>
+        <td class="text-right">${item.disc > 0 ? formatCurrency(item.disc) : "0.00"}</td>
         <td class="text-right">${formatCurrency(item.taxable)}</td>
         <td class="text-right">${formatCurrency(item.sgst)}</td>
         <td class="text-right">${formatCurrency(item.cgst)}</td>
-        <td class="text-right" style="font-weight:700">${formatCurrency(item.total)}</td>
+        <td class="text-right td-total">${formatCurrency(item.total)}</td>
       </tr>
     `;
+
+    // Format per-night totals to 2 decimals everywhere (matches reference)
+    const fmtMoney = (v) => Number(v || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
     win.document.write(`
       <html>
       <head>
         <title>${invoiceNo} - ${RESORT_NAME_INVOICE}</title>
         <style>
-          @page { size: A4; margin: 10mm; }
+          @page { size: A4; margin: 6mm; }
           html, body {
             background: #ffffff !important;
             background-color: #ffffff !important;
-            color: #0f172a;
+            color: #000000;
+            margin: 0; padding: 0;
           }
-          * { box-sizing: border-box; margin: 0; padding: 0; }
+          * { box-sizing: border-box; }
           body {
-            font-family: "Helvetica Neue", Arial, sans-serif;
-            color: #0f172a;
+            font-family: "Helvetica", Arial, sans-serif;
+            color: #000000;
             background: #ffffff !important;
-            background-color: #ffffff !important;
-            padding: 16px;
+            padding: 0;
             font-size: 10px;
             line-height: 1.35;
           }
-          .resort-header {
-            text-align: center;
-            padding: 8px 0 6px;
-            border-bottom: 2px solid #94a3b8;
-            margin-bottom: 4px;
+
+          /* Outer framed container — the entire invoice sits inside
+             one big black-bordered box, exactly like the reference. */
+          .invoice {
+            border: 1.5px solid #000000;
+            padding: 0;
+            width: 100%;
           }
-          .resort-header .logo-row {
-            display: flex;
+
+          /* ── 1. "Tax Invoice" centered title ───────────────────── */
+          .title-row {
+            text-align: center;
+            padding: 6px 0 4px 0;
+          }
+          .title-row h1 {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: 0.02em;
+          }
+
+          /* ── 2. Resort logo + name + address block ────────────── */
+          .resort-block {
+            text-align: center;
+            padding: 2px 0 6px 0;
+          }
+          .resort-block .leaf {
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
-            margin-bottom: 3px;
-          }
-          .resort-header .logo-icon {
-            width: 22px; height: 22px;
-            background: #0f172a;
+            width: 18px; height: 18px;
+            background: #16a34a;
             color: #fff;
             border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 10px; font-weight: 700;
+            font-size: 11px;
+            margin-right: 4px;
+            vertical-align: middle;
           }
-          .resort-header h1 { font-size: 16px; font-weight: 800; letter-spacing: 0.03em; }
-          .resort-header .sub { font-size: 9px; color: #475569; margin-top: 1px; }
-          .resort-header .gst-line { font-size: 9px; color: #475569; margin-top: 1px; }
-
-          .meta-row {
-            display: grid;
-            grid-template-columns: auto 1fr 1fr;
-            gap: 0;
-            padding: 5px 0;
-            border-bottom: 1px dashed #94a3b8;
-            margin-bottom: 4px;
-            align-items: start;
+          .resort-block .name {
+            display: inline-block;
+            vertical-align: middle;
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: 0.03em;
           }
-          .meta-row .left { font-weight: 700; font-size: 12px; letter-spacing: 0.06em; padding-top: 2px; }
-          .meta-row .right { text-align: right; font-size: 9px; line-height: 1.5; }
-          .meta-row .right .label { color: #64748b; font-size: 8px; font-weight: 600; }
-          .meta-row .right .val { font-weight: 700; font-size: 10px; }
+          .resort-block .sub {
+            font-size: 10px;
+            margin-top: 2px;
+            line-height: 1.45;
+          }
+          .resort-block .gst {
+            font-weight: 800;
+            font-size: 10px;
+            margin-top: 2px;
+          }
 
-          .info-grid {
+          .divider {
+            border-top: 1.5px solid #000000;
+            margin: 0;
+          }
+
+          /* ── 3. Guest-info (left) | Booking-info (right) ──────── */
+          .meta-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 5px;
-            margin-bottom: 4px;
+            width: 100%;
           }
-          .info-card {
-            border: 1px solid #cbd5e1;
-            padding: 5px 7px;
-            font-size: 9px;
+          .meta-cell {
+            padding: 6px 10px;
           }
-          .info-card .ic-label {
-            font-size: 8px; font-weight: 700; text-transform: uppercase;
-            letter-spacing: 0.08em; color: #64748b; margin-bottom: 2px;
+          .meta-cell + .meta-cell {
+            border-left: 1px solid #000000;
           }
-          .info-card .ic-value { font-weight: 700; font-size: 10px; }
-          .info-card .ic-sub { font-size: 9px; color: #475569; margin-top: 1px; }
+          .meta-row-line {
+            font-size: 10px;
+            line-height: 1.6;
+          }
+          .meta-row-line .lbl {
+            display: inline-block;
+            min-width: 110px;
+            font-weight: 700;
+          }
+          .meta-row-line .val {
+            font-weight: 500;
+          }
 
+          /* ── 4. Billing-Details items table ──────────────────── */
+          .section-label {
+            padding: 4px 10px;
+            font-weight: 800;
+            font-size: 10px;
+          }
           table.items {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 3px;
-            font-size: 9px;
+            font-size: 9.5px;
           }
           table.items thead th {
-            background: #e2e8f0;
-            color: #0f172a;
+            background: #ffffff;
+            color: #000;
+            border-top: 1px solid #000000;
+            border-bottom: 1px solid #000000;
             padding: 4px 5px;
             font-weight: 700;
+            font-size: 9px;
             text-align: left;
-            font-size: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.02em;
           }
           table.items tbody td {
-            padding: 3px 5px;
-            border-bottom: 1px solid #e2e8f0;
-            vertical-align: top;
-            font-size: 9px;
+            padding: 4px 5px;
+            border-bottom: 1px solid #000000;
+            vertical-align: middle;
+            font-size: 9.5px;
           }
+          table.items tbody tr:last-child td {
+            border-bottom: 1px solid #000000;
+          }
+          table.items tbody td {
+            border-left: 1px solid #000000;
+            border-right: 1px solid #000000;
+          }
+          table.items thead th {
+            border-left: 1px solid #000000;
+            border-right: 1px solid #000000;
+          }
+          .td-date { white-space: nowrap; }
+          .td-particulars { line-height: 1.3; }
+          .td-total { font-weight: 800; }
           .text-right { text-align: right; }
 
-          .remarks-box {
-            border: 1px solid #cbd5e1;
-            padding: 3px 7px;
-            font-size: 9px;
-            margin-top: 3px;
-            min-height: 24px;
-          }
-          .remarks-box .rb-label {
-            font-size: 8px; font-weight: 700; text-transform: uppercase;
-            letter-spacing: 0.06em; color: #64748b;
-          }
-
-          .totals-area {
+          /* ── 5. Remarks (left) | Payment-summary (right) ──────── */
+          .bottom-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 5px;
-            margin-top: 3px;
+            grid-template-columns: 1.05fr 0.95fr;
+            width: 100%;
+            border-top: 1px solid #000000;
           }
-          .tariff-box {
-            border: 1px solid #cbd5e1;
-            padding: 4px 7px;
+          .remarks-cell {
+            padding: 8px 10px;
+            border-right: 1px solid #000000;
+            min-height: 150px;
+          }
+          .remarks-cell .lbl {
             font-size: 9px;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            margin-bottom: 4px;
           }
-          .tariff-box .tb-label {
-            font-size: 8px; font-weight: 700; text-transform: uppercase;
-            letter-spacing: 0.06em; color: #64748b; margin-bottom: 2px;
+          .totals-list {
+            font-size: 10px;
+            line-height: 1.6;
           }
-          .tariff-box .tb-row {
-            display: flex; justify-content: space-between;
-            padding: 0.5px 0; font-size: 9px;
+          .totals-list .row {
+            display: flex;
+            justify-content: space-between;
+            padding: 1px 4px;
           }
-          .tariff-box .tb-row .tb-lbl { color: #475569; }
-          .tariff-box .tb-row.grand {
-            border-top: 1px solid #e2e8f0;
-            margin-top: 2px; padding-top: 2px;
-            font-weight: 800; font-size: 11px;
-          }
-          .tariff-box .tb-row.grand .tb-lbl { color: #0f172a; font-weight: 800; }
-
-          .payment-box {
-            border: 1px solid #cbd5e1;
-            background: #f8fafc;
-            color: #0f172a;
-            padding: 6px 8px;
-            font-size: 9px;
-          }
-          .payment-box .pb-label {
-            font-size: 8px; font-weight: 700; text-transform: uppercase;
-            letter-spacing: 0.06em; color: #475569; margin-bottom: 2px;
-          }
-          .payment-box .pb-row {
-            display: flex; justify-content: space-between;
-            padding: 0.5px 0; font-size: 9px;
-          }
-          .payment-box .pb-row .pb-lbl { color: #475569; }
-          .payment-box .pb-row.grand {
-            border-top: 1px solid #e2e8f0;
-            margin-top: 2px; padding-top: 2px;
-            font-weight: 800; font-size: 11px;
-          }
-          .payment-box .pb-row.grand .pb-lbl { color: #0f172a; font-weight: 800; }
-
-          .words-box {
-            border: 1px solid #cbd5e1;
-            padding: 2px 7px;
-            font-size: 9px;
-            margin-top: 3px;
-            font-style: italic;
-          }
-          .words-box .wb-label {
-            font-size: 8px; font-weight: 700; text-transform: uppercase;
-            letter-spacing: 0.06em; color: #64748b;
+          .totals-list .row.bold {
+            font-weight: 800;
           }
 
-          .footer-area {
-            margin-top: 4px;
-            padding-top: 4px;
-            border-top: 1px solid #e2e8f0;
+          /* ── 6. Amount-in-words (left) | Final Total (right) ─── */
+          .words-row {
+            display: grid;
+            grid-template-columns: 1.05fr 0.95fr;
+            border-top: 1px solid #000000;
+            width: 100%;
+          }
+          .words-cell {
+            padding: 8px 10px;
+            font-weight: 700;
+            font-size: 11px;
+            border-right: 1px solid #000000;
+          }
+          .final-cell {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 10px;
+            font-weight: 800;
+            font-size: 12px;
+          }
+          .final-cell .lbl { font-size: 12px; }
+          .final-cell .val { font-size: 14px; }
+
+          /* ── 7. Invoice Note (left) | Payment Detail (right) ── */
+          .footer-row {
+            display: grid;
+            grid-template-columns: 1.05fr 0.95fr;
+            border-top: 1px solid #000000;
+            width: 100%;
+          }
+          .note-cell {
+            padding: 8px 10px;
+            border-right: 1px solid #000000;
+            font-weight: 800;
+            font-size: 12px;
+          }
+          .payment-detail {
+            padding: 6px 10px;
+            font-size: 10px;
+          }
+          .payment-detail .row {
+            display: flex;
+            justify-content: space-between;
+            padding: 1px 4px;
+          }
+          .payment-detail .row.bold {
+            font-weight: 800;
+          }
+
+          /* ── Outer box bottom border ── */
+          .invoice-bottom {
+            border-top: 1.5px solid #000000;
+          }
+
+          /* ── 8. Signature lines + 9. Generated-by footer ─────── */
+          .signature-area {
+            padding: 14px 10px 8px 10px;
+            border-top: 1px solid #000000;
+          }
+          .sig-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: end;
+            margin-bottom: 24px;
+          }
+          .sig-row .for {
+            font-size: 11px;
+            font-weight: 800;
+          }
+          .sig-row .sig-line-block {
             text-align: center;
-            font-size: 8px;
-            color: #64748b;
           }
-          .sig-line {
-            margin-top: 6px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-          }
-          .sig-label {
-            font-size: 8px;
-            font-weight: 600;
-            color: #334155;
-          }
-          .sig-underline {
+          .sig-row .sig-line-block .line {
             display: inline-block;
-            border-top: 1px solid #0f172a;
-            padding-top: 2px;
-            min-width: 100px;
-            font-size: 8px;
+            min-width: 140px;
+            border-top: 1px solid #000000;
+            padding-top: 4px;
+            font-size: 10px;
             font-weight: 600;
-            color: #334155;
-            margin-top: 14px;
+          }
+          .generated-by {
+            text-align: center;
+            font-size: 10px;
+            font-weight: 700;
+            margin-top: 10px;
+            padding-top: 6px;
+          }
+          .generated-by .lbl {
+            font-weight: 600;
           }
         </style>
       </head>
       <body>
-        <div class="resort-header">
-          <div class="logo-row">
-            <div class="logo-icon">M</div>
-            <h1>${RESORT_NAME_INVOICE}</h1>
-          </div>
-          <div class="sub">${RESORT_ADDRESS_LINE_1}, ${RESORT_ADDRESS_LINE_2}</div>
-          <div class="sub">Ph: ${RESORT_PHONE_INVOICE} | Email: ${RESORT_EMAIL_INVOICE}</div>
-          <div class="gst-line">GSTIN: ${RESORT_GSTIN_INVOICE} | State: ${RESORT_STATE_CODE_INVOICE}</div>
-        </div>
+        <div class="invoice">
 
-        <div class="meta-row">
-          <div class="left">TAX INVOICE</div>
-          <div class="right">
-            <div><span class="label">Invoice No.&nbsp;&nbsp;</span><span class="val">${invoiceNo}</span></div>
-            <div><span class="label">Folio No.&nbsp;&nbsp;</span><span class="val">${b.bookingId || "-"}</span></div>
+          <div class="title-row">
+            <h1>Tax Invoice</h1>
           </div>
-          <div class="right">
-            <div><span class="label">Invoice Date&nbsp;&nbsp;</span><span class="val">${formatDate(new Date())}</span></div>
-            <div><span class="label">Room No.&nbsp;&nbsp;</span><span class="val">${roomNo}</span></div>
-            <div><span class="label">Room Type&nbsp;&nbsp;</span><span class="val">${roomType}</span></div>
-          </div>
-        </div>
 
-        <div class="info-grid">
-          <div class="info-card">
-            <div class="ic-label">Guest Name</div>
-            <div class="ic-value">${guestName}</div>
-            <div class="ic-sub">Address: ${guestAddress}</div>
-            <div class="ic-sub">Contact #: ${guestContact}</div>
-          </div>
-          <div class="info-card">
-            <div class="ic-label">Stay Details</div>
-            <div class="ic-sub">Arrival: ${checkInDate} ${arrivalTime}</div>
-            <div class="ic-sub">Departure: ${checkOutDate} ${departureTime}</div>
-            <div class="ic-sub">Pax: ${pax} | No. of Nights: ${noOfNights}</div>
-          </div>
-        </div>
-
-        <table class="items">
-          <thead>
-            <tr>
-              <th style="width:8%">Date</th>
-              <th style="width:32%">Particulars</th>
-              <th style="width:11%" class="text-right">Tariff</th>
-              <th style="width:9%" class="text-right">Disc</th>
-              <th style="width:11%" class="text-right">Taxable</th>
-              <th style="width:10%" class="text-right">SGST 2.50%</th>
-              <th style="width:10%" class="text-right">CGST 2.50%</th>
-              <th style="width:9%" class="text-right">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${allItems.length > 0 ? allItems.map(renderInvoiceRow).join("") : `<tr><td colspan="8" style="text-align:center;color:#94a3b8;padding:10px">No charges recorded</td></tr>`}
-          </tbody>
-        </table>
-
-        <div class="remarks-box">
-          <span class="rb-label">Remarks</span>
-        </div>
-
-        <div class="totals-area">
-          <div>
-            <div class="tariff-box">
-              <div class="tb-label">Tariff Total</div>
-              <div class="tb-row"><span class="tb-lbl">Discount</span><span>0.00</span></div>
-              <div class="tb-row"><span class="tb-lbl">Taxable Amount</span><span>${formatCurrency(totalTaxable)}</span></div>
-              <div class="tb-row"><span class="tb-lbl">SGST</span><span>${formatCurrency(totalSgst)}</span></div>
-              <div class="tb-row"><span class="tb-lbl">CGST</span><span>${formatCurrency(totalCgst)}</span></div>
-              <div class="tb-row grand"><span class="tb-lbl">Room Total</span><span>${formatCurrency(roomChargesTotal)}</span></div>
-              <div class="tb-row"><span class="tb-lbl">Round Off Disc.</span><span>${formatCurrency(roundOff)}</span></div>
-              <div class="tb-row grand"><span class="tb-lbl">Final Total</span><span>${formatCurrency(finalTotal)}</span></div>
-              <div class="tb-row"><span class="tb-lbl">Service Total</span><span>${formatCurrency(serviceTotal)}</span></div>
+          <div class="resort-block">
+            <div>
+              <span class="leaf">❀</span><span class="name">MAA BAGLAMUKHI RESORT</span>
             </div>
-            <div class="words-box">
-              <span class="wb-label">Rupees ${amountInWords.replace("Rupees ", "").replace(" Only", "")} Only</span>
+            <div class="sub">${RESORT_ADDRESS_LINE_1}</div>
+            <div class="sub">District: ${RESORT_ADDRESS_LINE_2}</div>
+            <div class="sub">Ph: ${RESORT_PHONE_INVOICE}</div>
+            <div class="sub">${RESORT_EMAIL_INVOICE} | ${RESORT_WEBSITE}</div>
+            <div class="gst">GSTN: ${RESORT_GSTIN_INVOICE}</div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="meta-grid">
+            <div class="meta-cell">
+              <div class="meta-row-line"><span class="lbl">Folio No.</span><span class="val">${folioNo}</span></div>
+              <div class="meta-row-line"><span class="lbl">Guest Name</span><span class="val">${guestName.toUpperCase()}</span></div>
+              <div class="meta-row-line"><span class="lbl">Address</span><span class="val">${guestAddress.toUpperCase()}</span></div>
+              <div class="meta-row-line"><span class="lbl">Contact #</span><span class="val">${guestContact}</span></div>
+            </div>
+            <div class="meta-cell">
+              <div class="meta-row-line"><span class="lbl">Invoice No.</span><span class="val">${invoiceNo}</span></div>
+              <div class="meta-row-line"><span class="lbl">Invoice Date</span><span class="val">${invoiceDate}</span></div>
+              <div class="meta-row-line"><span class="lbl">Room No.</span><span class="val">${roomNo}</span></div>
+              <div class="meta-row-line"><span class="lbl">Room Type</span><span class="val">${roomType}</span></div>
+              <div class="meta-row-line"><span class="lbl">Arrival</span><span class="val">${checkInDate} ${arrivalTime}</span></div>
+              <div class="meta-row-line"><span class="lbl">Departure</span><span class="val">${checkOutDate} ${departureTime}</span></div>
+              <div class="meta-row-line"><span class="lbl">Pax</span><span class="val">${pax}</span></div>
+              <div class="meta-row-line"><span class="lbl">No. of Nights</span><span class="val">${noOfNights}</span></div>
             </div>
           </div>
-          <div>
-            <div class="payment-box">
-              <div class="pb-label">Payment Detail</div>
-              <div class="pb-row"><span class="pb-lbl">UPI</span><span>${paymentRef || "-"}</span></div>
-              <div class="pb-row grand"><span class="pb-lbl grand">Final Total</span><span>${formatCurrency(finalTotal)}</span></div>
-              <div class="pb-row"><span class="pb-lbl">Service Total</span><span>${formatCurrency(serviceTotal)}</span></div>
-              <div class="pb-row"><span class="pb-lbl">Balance</span><span>${formatCurrency(remainingAmount)}</span></div>
+
+          <div class="section-label">Billing Details</div>
+
+          <table class="items">
+            <thead>
+              <tr>
+                <th style="width:11%">Date</th>
+                <th style="width:38%">Particulars</th>
+                <th style="width:9%" class="text-right">Tariff</th>
+                <th style="width:7%" class="text-right">Disc</th>
+                <th style="width:9%" class="text-right">Taxable</th>
+                <th style="width:9%" class="text-right">SGST 2.5%</th>
+                <th style="width:9%" class="text-right">CGST 2.5%</th>
+                <th style="width:8%" class="text-right">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${allItems.length > 0 ? allItems.map(renderInvoiceRow).join("") : `<tr><td colspan="8" style="text-align:center;padding:10px">No charges recorded</td></tr>`}
+            </tbody>
+          </table>
+
+          <div class="bottom-grid">
+            <div class="remarks-cell">
+              <div class="lbl">Remarks</div>
+              <div style="font-size:10px;color:#64748b;min-height:120px">&nbsp;</div>
+            </div>
+            <div class="remarks-cell" style="border-right:0">
+              <div class="totals-list">
+                <div class="row"><span>Tariff Total</span><span>${fmtMoney(tariffTotal)}</span></div>
+                <div class="row"><span>Discount</span><span>${fmtMoney(totalDiscount)}</span></div>
+                <div class="row"><span>Taxable Amount</span><span>${fmtMoney(totalTaxable)}</span></div>
+                <div class="row"><span>SGST</span><span>${fmtMoney(totalSgst)}</span></div>
+                <div class="row"><span>CGST</span><span>${fmtMoney(totalCgst)}</span></div>
+                <div class="row bold"><span>Room Total</span><span>${fmtMoney(roomTotalComputed)}</span></div>
+                <div class="row"><span>Round Off Disc.</span><span>${fmtMoney(roundOff)}</span></div>
+                <div class="row bold"><span>Final Total</span><span>${fmtMoney(finalTotal)}</span></div>
+                <div class="row"><span>Service Total</span><span>${fmtMoney(serviceTotal)}</span></div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="footer-area">
-          <div>Invoice issued under section 31 of CGST Act, 2017</div>
-          <div style="margin-top:1px">Thank you for staying with ${RESORT_NAME_INVOICE}.</div>
-        </div>
-        <div class="sig-line">
-          <div>
-            <div class="sig-label">For MAA BAGLAMUKHI RESORT</div>
-            <div class="sig-underline">Authorised Signature</div>
+          <div class="words-row">
+            <div class="words-cell">Rupees ${amountInWordsClean} Only</div>
+            <div class="final-cell"><span class="lbl">Final Total</span><span class="val">Rs. ${fmtMoney(finalTotal)}</span></div>
           </div>
-          <div style="text-align:right">
-            <div class="sig-label">Guest Signature</div>
-            <div style="text-align:right"><span class="sig-underline" style="min-width:80px"></span></div>
+
+          <div class="footer-row">
+            <div class="note-cell">Thanks Pl Visit Again!!!</div>
+            <div class="payment-detail">
+              <div class="row"><span>${(paymentMode || "UPI").toUpperCase()}</span><span>${fmtMoney(finalTotal)}</span></div>
+              <div class="row bold"><span>Balance</span><span>${fmtMoney(remainingAmount)}</span></div>
+            </div>
+          </div>
+
+          <div class="invoice-bottom"></div>
+
+          <div class="signature-area">
+            <div class="sig-row">
+              <div class="for">For ${RESORT_NAME_INVOICE}</div>
+              <div class="sig-line-block">
+                <div class="line">Authorized Signature</div>
+              </div>
+              <div class="sig-line-block">
+                <div class="line">Guest Signature</div>
+              </div>
+            </div>
+            <div class="generated-by">
+              <span class="lbl">Invoice Generated By:</span> ${generatedBy}
+            </div>
           </div>
         </div>
       </body>

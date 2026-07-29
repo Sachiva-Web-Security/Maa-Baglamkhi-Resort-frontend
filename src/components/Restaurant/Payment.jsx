@@ -36,7 +36,7 @@ import WhatsAppInvoiceModal from "./WhatsAppInvoiceModal";
 
 // ─── Resort statutory / registration details (from client reference invoice) ──
 const RESORT_NAME = "MAA BAGLAMUKHI RESORT";
-const RESORT_ADDRESS_LINE1 = "Near indian oil petrol pump ,HDFC Bank ,Baglamukhi Mandir Road , Nalkheda,Dist.Agar(Malwa)";
+const RESORT_ADDRESS_LINE1 = "Idga Mahalwa, Ward No-07, Nabha";
 const RESORT_PHONE = "9272288377";
 const RESORT_GSTIN = "23AVDPR2928I1ZG";
 const RESORT_FSSAI_NO = "11420995000031";
