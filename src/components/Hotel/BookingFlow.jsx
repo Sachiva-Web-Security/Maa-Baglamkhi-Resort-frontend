@@ -334,9 +334,9 @@ const DOCUMENT_TYPE_LABELS = {
 const RESORT_NAME_INVOICE = "Maa Baglamukhi Resort";
 const RESORT_ADDRESS_LINE_1 = "Maa Baglamukhi Mandir Road, Hatkana";
 const RESORT_ADDRESS_LINE_2 = "Agar Malwa-465445";
-const RESORT_PHONE_INVOICE = "+91-957279272/73";
+const RESORT_PHONE_INVOICE = "9522238777 / 9522239777";
 const RESORT_EMAIL_INVOICE = "maabaglamukhiresort@gmail.com";
-const RESORT_GSTIN_INVOICE = "23AABCM1234A1Z5";
+const RESORT_GSTIN_INVOICE = "23AVDPR292811ZG";
 const RESORT_STATE_CODE_INVOICE = "Madhya Pradesh (23)";
 const RESORT_STATE_SHORT_INVOICE = "23";
 const RESORT_WEBSITE = "www.maabaglamukhiresort.com";
@@ -2932,6 +2932,37 @@ const handleJumpStep = (stepView) => {
       showToast("error", "Invalid dates", "Check-out date cannot be before check-in date.");
       return false;
     }
+    if (!Array.isArray(formData.rooms) || formData.rooms.length === 0) {
+      showToast("error", "Room required", "Please add at least one room tariff row before saving.");
+      return false;
+    }
+    const missingRoomIndex = formData.rooms.findIndex((row) => !row || !String(row.roomNo || "").trim());
+    if (missingRoomIndex !== -1) {
+      showToast(
+        "error",
+        "Room number required",
+        `Row ${missingRoomIndex + 1}: room number select karna mandatory hai. Bina room number ke booking save nahi hogi.`,
+      );
+      return false;
+    }
+    const duplicateRoom = (() => {
+      const seen = new Set();
+      for (let i = 0; i < formData.rooms.length; i += 1) {
+        const key = String(formData.rooms[i]?.roomNo || "").trim();
+        if (!key) continue;
+        if (seen.has(key)) return { index: i, roomNo: key };
+        seen.add(key);
+      }
+      return null;
+    })();
+    if (duplicateRoom) {
+      showToast(
+        "error",
+        "Duplicate room",
+        `Room ${duplicateRoom.roomNo} is already added in row ${duplicateRoom.index + 1}. Please select a different room.`,
+      );
+      return false;
+    }
     return true;
   };
 
@@ -3103,12 +3134,13 @@ const handleJumpStep = (stepView) => {
     }
   };
 
-  const handleLifecycle = async (action) => {
-    if (!selectedBooking?.bookingId) return;
+  const handleLifecycle = async (action, booking = selectedBooking) => {
+    if (!booking?.bookingId) return;
+    const newStatus = action === "check-out" ? "Checked-Out" : "Checked-In";
     try {
-      await API.put(`/hotel/${action}/${selectedBooking.bookingId}`);
+      await API.put(`/hotel/${action}/${booking.bookingId}`);
       if (action === "check-out") {
-        await queueRoomsForCleaning(selectedBooking);
+        await queueRoomsForCleaning(booking);
       }
       showToast(
         "success",
@@ -3118,7 +3150,15 @@ const handleJumpStep = (stepView) => {
           : "Guest has been checked in successfully.",
       );
       await fetchBookings();
-      openManage({ ...selectedBooking, booking_status: action === "check-out" ? "Checked-Out" : "Checked-In" });
+      // Optimistic update: immediately patch the local bookings list
+      // so the Check-In / Check-Out button flips instantly in the UI
+      // even if the server round-trip is slow or cached.
+      setBookings((prev) =>
+        prev.map((b) =>
+          String(b.bookingId) === String(booking.bookingId) ? { ...b, booking_status: newStatus } : b
+        )
+      );
+      setSelectedBooking((prev) => ({ ...(prev || {}), booking_status: newStatus }));
     } catch (err) {
       console.error(err);
       showToast("error", "Action Failed", "We could not update this booking's status. Please try again.");
@@ -3867,6 +3907,32 @@ const handleJumpStep = (stepView) => {
                         <FaIdCard className="text-[18px] sm:text-xl" />
                         <span>Guest Profile</span>
                       </button>
+                      {(b.booking_status === "Pending" || b.booking_status === "Confirmed" || !b.booking_status) && (
+                        <button
+                          title="Check In"
+                          onClick={() => {
+                            setSelectedBooking(b);
+                            handleLifecycle("check-in", b);
+                          }}
+                          className={rowActionBtn("primary")}
+                        >
+                          <FaSignInAlt className="text-[18px] sm:text-xl" />
+                          <span>Check-In</span>
+                        </button>
+                      )}
+                      {(b.booking_status === "Checked-In") && (
+                        <button
+                          title="Check Out"
+                          onClick={() => {
+                            setSelectedBooking(b);
+                            handleLifecycle("check-out", b);
+                          }}
+                          className={rowActionBtn("primary")}
+                        >
+                          <FaSignOutAlt className="text-[18px] sm:text-xl" />
+                          <span>Check-Out</span>
+                        </button>
+                      )}
 
                     </div>
                   </td>
@@ -4658,8 +4724,8 @@ const handleJumpStep = (stepView) => {
               <button
                 type="button"
                 onClick={() => {
-                  if (manageStatus === "Checked-In") handleLifecycle("check-in");
-                  else if (manageStatus === "Checked-Out") handleLifecycle("check-out");
+                  if (manageStatus === "Checked-In") handleLifecycle("check-in", b);
+                  else if (manageStatus === "Checked-Out") handleLifecycle("check-out", b);
                   else if (manageStatus === "Cancelled") setCancelModal({ open: true, reason: "", submitting: false });
                   else showToast("error", "Select a status", "Please choose a status to update to.");
                 }}
@@ -4671,8 +4737,12 @@ const handleJumpStep = (stepView) => {
 
             <div className="mt-5 sm:mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
               <button onClick={() => openEditBooking(b)} className={ghostBtn}><FaEdit className="text-sm" /> Edit Booking</button>
-              <button onClick={() => handleLifecycle("check-in")} className={ghostBtn}><FaSignInAlt className="text-sm" /> Check-In</button>
-              <button onClick={() => handleLifecycle("check-out")} className={ghostBtn}><FaSignOutAlt className="text-sm" /> Check-Out</button>
+              {(b.booking_status === "Pending" || b.booking_status === "Confirmed" || !b.booking_status) && (
+                <button onClick={() => handleLifecycle("check-in", b)} className={ghostBtn}><FaSignInAlt className="text-sm" /> Check-In</button>
+              )}
+              {b.booking_status === "Checked-In" && (
+                <button onClick={() => handleLifecycle("check-out", b)} className={ghostBtn}><FaSignOutAlt className="text-sm" /> Check-Out</button>
+              )}
               <button onClick={() => setCancelModal({ open: true, reason: "", submitting: false })} className={dangerBtn}><FaBan className="text-sm" /> Cancel Booking</button>
             </div>
 
