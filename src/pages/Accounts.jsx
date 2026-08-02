@@ -872,11 +872,25 @@ const Accounts = () => {
     setUpdateLoading(true);
     try {
       await API.put(`/accounts/transactions/${editingRecord.id}`, data);
+
+      // Optimistically update the records state so the UI reflects
+      // the change (e.g. new payment mode) immediately.
+      setRecords((prev) =>
+        prev.map((record) =>
+          String(record.id) === String(editingRecord.id)
+            ? { ...record, ...data }
+            : record,
+        ),
+      );
+
+      // Sync with server to ensure consistency
       await refreshAccountsData();
       setShowEdit(false);
       setEditingRecord(null);
       showToast("Transaction updated successfully");
     } catch (err) {
+      // Revert optimistic changes by re-fetching from server
+      await refreshAccountsData();
       const message = err.response?.data?.message || "Error updating transaction";
       showToast(message, "error");
     } finally {
@@ -893,6 +907,7 @@ const Accounts = () => {
     setDeleteLoadingId(id);
     try {
       await API.delete(`/accounts/transactions/${id}`);
+      setSelectedPaymentMode("all");
       await refreshAccountsData();
       showToast("Transaction deleted successfully");
     } catch (err) {

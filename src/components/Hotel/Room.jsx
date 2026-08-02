@@ -20,6 +20,7 @@ import {
   CheckCircle2,
   BadgeCheck,
   ListChecks,
+  Trash2,
 } from "lucide-react";
 
 import API from "../../api";
@@ -386,9 +387,19 @@ const Room = () => {
 
   const normalize = (val) => val.trim().toLowerCase();
 
+  // Extract numeric part from room strings for duplicate detection
+  // e.g. "101" → 101, "no101" → 101, "A-205" → 205
+  const extractRoomNumber = (str) => {
+    const match = String(str).match(/\d+/);
+    return match ? parseInt(match[0], 10) : null;
+  };
+
   const findExistingRoom = (value) => {
+    const inputNum = extractRoomNumber(value);
+    if (inputNum === null) return null;
+
     for (const [roomId, options] of Object.entries(roomOptions)) {
-      if (options.some((item) => normalize(item) === normalize(value))) {
+      if (options.some((item) => extractRoomNumber(item) === inputNum)) {
         const roomName = roomCatalog.find(
           (room) => room.id === Number(roomId),
         )?.name;
@@ -419,20 +430,85 @@ const Room = () => {
     }
 
     try {
-      await API.post("/hotel/rooms", { categoryId: roomId, roomNumber: value });
-      setRoomOptions((prev) => {
-        const nextRooms = [...(prev[roomId] || []), value];
-        const totalPages = Math.max(1, Math.ceil(nextRooms.length / ROOM_LIST_PAGE_SIZE));
-        setRoomListPages((current) => ({ ...current, [roomId]: totalPages }));
-        return {
-          ...prev,
-          [roomId]: nextRooms,
-        };
-      });
-      setInputValue((prev) => ({ ...prev, [roomId]: "" }));
+      const response = await API.post("/hotel/rooms", { categoryId: roomId, roomNumber: value });
+      const room = response.data.room;
+
+      if (room) {
+        setRoomOptions((prev) => {
+          const current = prev[roomId] || [];
+          if (current.some((r) => r === room.roomNumber)) return prev;
+          const nextRooms = [...current, room.roomNumber];
+          const totalPages = Math.max(1, Math.ceil(nextRooms.length / ROOM_LIST_PAGE_SIZE));
+          setRoomListPages((pages) => ({ ...pages, [roomId]: totalPages }));
+          return {
+            ...prev,
+            [roomId]: nextRooms,
+          };
+        });
+        setInputValue((prev) => ({ ...prev, [roomId]: "" }));
+      } else {
+        showNotice("Unexpected response from server. Room may not have been added.", "Add Room Failed", "error");
+      }
     } catch (err) {
       console.error(err);
-      showNotice(err.response?.data?.message || "Unable to add the room right now.", "Add Room Failed", "error");
+      const message =
+        err.response?.data?.message || "Unable to add the room right now.";
+      showNotice(message, "Add Room Failed", "error");
+    }
+  };
+
+  const handleDeleteRoom = async (roomId, roomNumber) => {
+    const confirmed = window.confirm(
+      `Delete room ${roomNumber} from inventory? This cannot be undone.`,
+    );
+    if (!confirmed) return;
+
+    // Helper: remove room from all relevant UI state
+    const removeFromUI = () => {
+      setRoomOptions((prev) => {
+        const nextRooms = (prev[roomId] || []).filter((r) => r !== roomNumber);
+        const totalPages = Math.max(1, Math.ceil(nextRooms.length / ROOM_LIST_PAGE_SIZE));
+        setRoomListPages((current) => ({ ...current, [roomId]: totalPages }));
+        return { ...prev, [roomId]: nextRooms };
+      });
+      setSelectedRooms((prev) => {
+        const current = prev[roomId] || [];
+        if (!current.includes(roomNumber)) return prev;
+        return { ...prev, [roomId]: current.filter((r) => r !== roomNumber) };
+      });
+      setPickerValues((prev) =>
+        prev[roomId] === roomNumber ? { ...prev, [roomId]: "" } : prev,
+      );
+    };
+
+    try {
+      const response = await API.delete(`/hotel/rooms/${encodeURIComponent(roomNumber)}`);
+
+      // 200 success: room was in DB and is now deleted
+      if (response.data && response.data.room) {
+        removeFromUI();
+        showNotice(`Room ${roomNumber} deleted successfully.`, "Room Deleted", "info");
+        return;
+      }
+    } catch (err) {
+      // 404 "not found": room doesn't exist in DB (phantom room from old bug)
+      // Remove it from UI anyway — it was never in the database
+      if (err.response?.status === 404) {
+        removeFromUI();
+        showNotice(
+          `Room ${roomNumber} removed from view. (It was not found in the database — likely a stale entry.)`,
+          "Room Cleaned Up",
+          "info",
+        );
+        return;
+      }
+
+      // Other errors (500, network): show error, don't touch UI
+      console.error("Delete room error:", err);
+      const message =
+        err.response?.data?.message ||
+        "Unable to delete the room. Please try again.";
+      showNotice(message, "Delete Room Failed", "error");
     }
   };
 
@@ -861,12 +937,14 @@ const Room = () => {
 
                         {(() => {
                           const rooms = roomOptions[room.id] || [];
-                          const totalPages = Math.max(1, Math.ceil(rooms.length / ROOM_LIST_PAGE_SIZE));
+                          // Deduplicate to prevent React key conflicts (e.g. stale data from before the fix)
+                          const uniqueRooms = [...new Set(rooms)];
+                          const totalPages = Math.max(1, Math.ceil(uniqueRooms.length / ROOM_LIST_PAGE_SIZE));
                           const currentPage = Math.min(roomListPages[room.id] || 1, totalPages);
                           const startIndex = (currentPage - 1) * ROOM_LIST_PAGE_SIZE;
-                          const visibleRooms = rooms.slice(startIndex, startIndex + ROOM_LIST_PAGE_SIZE);
-                          const showingFrom = rooms.length ? startIndex + 1 : 0;
-                          const showingTo = Math.min(startIndex + visibleRooms.length, rooms.length);
+                          const visibleRooms = uniqueRooms.slice(startIndex, startIndex + ROOM_LIST_PAGE_SIZE);
+                          const showingFrom = uniqueRooms.length ? startIndex + 1 : 0;
+                          const showingTo = Math.min(startIndex + visibleRooms.length, uniqueRooms.length);
 
                           return (
                             <>
@@ -878,30 +956,46 @@ const Room = () => {
                                   const isLocked = meta.disabled;
 
                                   return (
-                                    <label
+                                    <div
                                       key={item}
-                                      className={`flex max-w-full cursor-pointer items-center gap-2 rounded-2xl border px-4 py-3 text-[14px] font-bold transition duration-300 sm:gap-3 sm:px-5 sm:py-3.5 sm:text-[15px]
-                                        ${isLocked ? "cursor-not-allowed opacity-70" : "hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md"}
+                                      className={`flex max-w-full items-center gap-2 rounded-2xl border px-4 py-3 text-[14px] font-bold transition duration-300 sm:gap-3 sm:px-5 sm:py-3.5 sm:text-[15px]
+                                        ${isLocked ? "opacity-70" : ""}
                                         ${isSelected
                                           ? "border-transparent bg-white shadow-[0_0_0_2px_theme(colors.blue.500),0_10px_28px_rgba(37,99,235,0.22)]"
                                           : `bg-white ${meta.pill}`
                                         }
                                       `}
                                     >
-                                      <input
-                                        type="checkbox"
-                                        checked={isSelected || false}
-                                        disabled={isLocked}
-                                        onChange={() => handleSelect(room.id, item)}
-                                        className="h-[22px] w-[22px] shrink-0 accent-blue-600"
-                                      />
-                                      <span className={`truncate ${isSelected ? "text-blue-700" : "text-slate-900"}`}>{item}</span>
-                                      <span
-                                        className={`shrink-0 rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.16em] ${meta.classes}`}
-                                      >
-                                        {meta.label}
-                                      </span>
-                                    </label>
+                                      <label className="flex flex-1 cursor-pointer items-center gap-2 sm:gap-3 min-w-0">
+                                        <input
+                                          type="checkbox"
+                                          checked={isSelected || false}
+                                          disabled={isLocked}
+                                          onChange={() => handleSelect(room.id, item)}
+                                          className="h-[22px] w-[22px] shrink-0 accent-blue-600"
+                                        />
+                                        <span className={`truncate ${isSelected ? "text-blue-700" : "text-slate-900"}`}>{item}</span>
+                                        <span
+                                          className={`shrink-0 rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.16em] ${meta.classes}`}
+                                        >
+                                          {meta.label}
+                                        </span>
+                                      </label>
+                                      {!isLocked && (
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            handleDeleteRoom(room.id, item);
+                                          }}
+                                          title={`Remove room ${item}`}
+                                          className="shrink-0 flex h-8 w-8 items-center justify-center rounded-xl text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
+                                        >
+                                          <Trash2 size={16} />
+                                        </button>
+                                      )}
+                                    </div>
                                   );
                                 })}
 
