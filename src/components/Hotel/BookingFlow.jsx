@@ -2097,13 +2097,14 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
 
 /* ────────────────── WhatsApp Send Modal Component ─────────────────────────── */
 
-const WhatsAppSendModal = ({ booking, detail, sending, result, onSend, onClose }) => {
+const WhatsAppSendModal = ({ booking, detail, invoice, sending, result, onSend, onClose }) => {
   const b = booking || {};
-  const guestName = detail?.guest_name || b.guest_name || "Guest";
-  const customerPhone = detail?.mobile || b.mobile || "—";
-  const invoiceNo = detail?.invoice?.invoiceNo || detail?.invoice_no || `BK-${b.bookingId}`;
-  const invoiceTotal = detail?.invoice?.total_amount || detail?.invoice?.totalAmount || b.totalAmount || 0;
-  const paymentStatus = detail?.invoice?.paymentStatus || detail?.invoice?.payment_status || (invoiceTotal > 0 ? "Pending" : "Paid");
+  const inv = invoice || detail?.invoice || {};
+  const guestName = inv.customerName || inv.customer_name || detail?.guest_name || b.guest_name || "Guest";
+  const customerPhone = inv.phone || detail?.mobile || b.mobile || "—";
+  const invoiceNo = inv.invoiceNo || inv.invoice_no || `BK-${b.bookingId}`;
+  const invoiceTotal = Number(inv.totalAmount || inv.total_amount || inv.finalTotal || inv.final_total || 0);
+  const paymentStatus = inv.paymentStatus || inv.payment_status || (invoiceTotal > 0 ? "Pending" : "Paid");
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
@@ -2317,6 +2318,33 @@ const BookingFlow = () => {
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
   const [waSending, setWaSending] = useState(false);
   const [waResult, setWaResult] = useState(null);
+  const [waInvoice, setWaInvoice] = useState(null);
+
+  // When the WhatsApp modal opens, fetch the invoice data so the summary
+  // shows the exact same invoice that will be sent.
+  useEffect(() => {
+    if (!showWhatsAppModal) {
+      setWaInvoice(null);
+      return;
+    }
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const existing = await API.get(`/invoice/by-booking/${selectedBooking?.bookingId}`);
+        if (cancelled) return;
+        if (existing.data?.id) {
+          setWaInvoice(existing.data);
+        } else {
+          const generated = await API.get(`/invoice/${selectedBooking?.bookingId}`);
+          if (!cancelled) setWaInvoice(generated.data || null);
+        }
+      } catch {
+        if (!cancelled) setWaInvoice(null);
+      }
+    };
+    load();
+    return () => { cancelled = true; };
+  }, [showWhatsAppModal, selectedBooking?.bookingId]);
 
   const [toast, setToast] = useState({ open: false, type: "success", title: "", message: "" });
   const [cancelModal, setCancelModal] = useState({ open: false, reason: "", submitting: false });
@@ -4828,6 +4856,7 @@ const handleJumpStep = (stepView) => {
           <WhatsAppSendModal
             booking={b}
             detail={d}
+            invoice={waInvoice}
             sending={waSending}
             result={waResult}
             onSend={handleSendWhatsAppFromDetails}

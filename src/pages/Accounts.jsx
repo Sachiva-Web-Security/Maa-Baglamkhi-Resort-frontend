@@ -3,11 +3,14 @@ import { useLocation, useNavigate } from "react-router-dom";
 import {
   FaArrowLeft,
   FaChartLine,
+  FaCheckCircle,
   FaFileInvoiceDollar,
   FaMoneyBillWave,
   FaPlus,
   FaReceipt,
   FaThLarge,
+  FaExclamationCircle,
+  FaTrashAlt,
 } from "react-icons/fa";
 
 import PaymentSettingsManager from "../components/Accounts/PaymentSettingsManager";
@@ -209,10 +212,22 @@ const renderModuleValue = (value, key) => {
 
 const formatInputDate = (value) => {
   if (!value) return "";
-  const text = String(value);
+  const text = String(value).trim();
   if (/^\d{4}-\d{2}-\d{2}$/.test(text)) return text;
-  const match = text.match(/^(\d{4}-\d{2}-\d{2})/);
-  return match ? match[1] : text;
+  // Handle "02 Aug 2026" format from payment_history
+  const months = {
+    Jan: "01", Feb: "02", Mar: "03", Apr: "04",
+    May: "05", Jun: "06", Jul: "07", Aug: "08",
+    Sep: "09", Oct: "10", Nov: "11", Dec: "12",
+  };
+  const match = text.match(/^(\d{2})\s+(\w{3})\s+(\d{4})$/);
+  if (match) {
+    const [, day, mon, year] = match;
+    const month = months[mon];
+    if (month) return `${year}-${month}-${day}`;
+  }
+  const isoMatch = text.match(/(\d{4}-\d{2}-\d{2})/);
+  return isoMatch ? isoMatch[1] : text;
 };
 
 const AccountsModuleCard = ({
@@ -542,7 +557,9 @@ const Accounts = () => {
   const [showExpense, setShowExpense] = useState(false);
   const [showInvoice, setShowInvoice] = useState(false);
   const [showView, setShowView] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
+  const [editingRecord, setEditingRecord] = useState(null);
   const [selectedBillingSource, setSelectedBillingSource] = useState("all");
   const [selectedInvoiceRoom, setSelectedInvoiceRoom] = useState("all");
   const [selectedRestaurantTable, setSelectedRestaurantTable] = useState("all");
@@ -554,11 +571,22 @@ const Accounts = () => {
   const [selectedReconciliationSource, setSelectedReconciliationSource] = useState("all");
   const [selectedReconciliationMatch, setSelectedReconciliationMatch] = useState("all");
 
+  const [toast, setToast] = useState(null);
+  const [updateLoading, setUpdateLoading] = useState(false);
+  const [deleteLoadingId, setDeleteLoadingId] = useState(null);
+
   const refreshTimerRef = useRef(null);
   const refreshInFlightRef = useRef(false);
   const pendingRefreshRef = useRef(false);
   const accountsModuleSectionRef = useRef(null);
+  const toastTimerRef = useRef(null);
   const isAccountsModulesPage = new URLSearchParams(location.search).get("view") === "modules";
+
+  const showToast = (message, tone = "success") => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setToast({ message, tone });
+    toastTimerRef.current = setTimeout(() => setToast(null), 4000);
+  };
 
   const isAbortedRequest = (error) =>
     error?.code === "ERR_CANCELED" ||
@@ -831,6 +859,47 @@ const Accounts = () => {
       setShowExpense(false);
     } catch {
       window.alert("Error adding expense");
+    }
+  };
+
+  const handleEditClick = (record) => {
+    const dateForForm = formatInputDate(record.date);
+    setEditingRecord({ ...record, date: dateForForm });
+    setShowEdit(true);
+  };
+
+  const handleUpdateTransaction = async (data) => {
+    setUpdateLoading(true);
+    try {
+      await API.put(`/accounts/transactions/${editingRecord.id}`, data);
+      await refreshAccountsData();
+      setShowEdit(false);
+      setEditingRecord(null);
+      showToast("Transaction updated successfully");
+    } catch (err) {
+      const message = err.response?.data?.message || "Error updating transaction";
+      showToast(message, "error");
+    } finally {
+      setUpdateLoading(false);
+    }
+  };
+
+  const handleDeleteTransaction = async (id) => {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this transaction? This action cannot be undone.",
+    );
+    if (!confirmed) return;
+
+    setDeleteLoadingId(id);
+    try {
+      await API.delete(`/accounts/transactions/${id}`);
+      await refreshAccountsData();
+      showToast("Transaction deleted successfully");
+    } catch (err) {
+      const message = err.response?.data?.message || "Error deleting transaction";
+      showToast(message, "error");
+    } finally {
+      setDeleteLoadingId(null);
     }
   };
 
@@ -1622,6 +1691,18 @@ const Accounts = () => {
   if (isAccountsModulesPage) {
     return (
       <div className="relative min-h-screen overflow-x-hidden bg-[#F5F8FF] p-3 sm:p-4 md:p-6 xl:p-8">
+        {toast && (
+          <div className={`fixed left-1/2 top-4 z-[60] -translate-x-1/2 rounded-2xl px-5 py-3 text-sm font-bold shadow-2xl transition-all duration-300 ${
+            toast.tone === "error"
+              ? "bg-rose-600 text-white"
+              : "bg-emerald-600 text-white"
+          }`}>
+            <span className="inline-flex items-center gap-2">
+              {toast.tone === "error" ? <FaExclamationCircle /> : <FaCheckCircle />}
+              {toast.message}
+            </span>
+          </div>
+        )}
         <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
           <div className="absolute left-[-8%] top-[-6%] h-72 w-72 rounded-full bg-blue-500/10 blur-3xl sm:h-96 sm:w-96" />
           <div className="absolute right-[-10%] top-[8%] h-72 w-72 rounded-full bg-sky-400/10 blur-3xl sm:h-[28rem] sm:w-[28rem]" />
@@ -1667,6 +1748,18 @@ const Accounts = () => {
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-[#F5F8FF] p-3 sm:p-4 md:p-6 xl:p-8">
+      {toast && (
+        <div className={`fixed left-1/2 top-4 z-[60] -translate-x-1/2 rounded-2xl px-5 py-3 text-sm font-bold shadow-2xl transition-all duration-300 ${
+          toast.tone === "error"
+            ? "bg-rose-600 text-white"
+            : "bg-emerald-600 text-white"
+        }`}>
+          <span className="inline-flex items-center gap-2">
+            {toast.tone === "error" ? <FaExclamationCircle /> : <FaCheckCircle />}
+            {toast.message}
+          </span>
+        </div>
+      )}
       <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute left-[-8%] top-[-6%] h-72 w-72 rounded-full bg-blue-500/10 blur-3xl sm:h-96 sm:w-96" />
         <div className="absolute right-[-10%] top-[8%] h-72 w-72 rounded-full bg-sky-400/10 blur-3xl sm:h-[28rem] sm:w-[28rem]" />
@@ -1940,15 +2033,29 @@ const Accounts = () => {
                     <td className="px-4 py-3.5 text-[15px] font-bold text-slate-900 sm:px-5 sm:py-5 sm:text-[17px]">{formatINR(r.amount)}</td>
                     <td className="px-4 py-3.5 text-[15px] text-slate-500 sm:px-5 sm:py-5 sm:text-[17px]">{r.paymentMode}</td>
                     <td className="px-4 py-3.5 sm:px-5 sm:py-5">
-                      <button
-                        className="rounded-full border border-sky-200 bg-sky-50 px-4 py-2 text-[13px] font-bold text-sky-700 transition-all duration-200 hover:bg-sky-100 hover:shadow-md sm:px-5 sm:py-2.5 sm:text-[15px]"
-                        onClick={() => {
-                          setSelectedRecord(r);
-                          setShowView(true);
-                        }}
-                      >
-                        View
-                      </button>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          className="rounded-full border border-sky-200 bg-sky-50 px-4 py-2 text-[13px] font-bold text-sky-700 transition-all duration-200 hover:bg-sky-100 hover:shadow-md sm:px-5 sm:py-2.5 sm:text-[15px]"
+                          onClick={() => {
+                            setSelectedRecord(r);
+                            setShowView(true);
+                          }}
+                        >
+                          View
+                        </button>
+                        <button
+                          className="rounded-full border border-blue-200 bg-blue-50 px-3.5 py-2 text-[13px] font-bold text-blue-700 transition-all duration-200 hover:bg-blue-100 hover:shadow-md sm:px-4 sm:py-2.5 sm:text-[15px]"
+                          onClick={() => handleEditClick(r)}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className="rounded-full border border-rose-200 bg-rose-50 px-3.5 py-2 text-[13px] font-bold text-rose-600 transition-all duration-200 hover:bg-rose-100 hover:shadow-md sm:px-4 sm:py-2.5 sm:text-[15px]"
+                          onClick={() => handleDeleteTransaction(r.id)}
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -1990,15 +2097,29 @@ const Accounts = () => {
                     <div className="text-[15px] font-bold text-slate-900">{formatINR(r.amount)}</div>
                   </div>
                 </div>
-                <button
-                  className="mt-3.5 w-full rounded-full border border-sky-200 bg-sky-50 px-5 py-2.5 text-[14px] font-bold text-sky-700 transition-all duration-200 hover:bg-sky-100 active:scale-[0.98]"
-                  onClick={() => {
-                    setSelectedRecord(r);
-                    setShowView(true);
-                  }}
-                >
-                  View Details
-                </button>
+                <div className="mt-3.5 flex flex-wrap gap-2">
+                  <button
+                    className="flex-1 rounded-full border border-sky-200 bg-sky-50 px-4 py-2.5 text-[14px] font-bold text-sky-700 transition-all duration-200 hover:bg-sky-100 active:scale-[0.98]"
+                    onClick={() => {
+                      setSelectedRecord(r);
+                      setShowView(true);
+                    }}
+                  >
+                    View
+                  </button>
+                  <button
+                    className="flex-1 rounded-full border border-blue-200 bg-blue-50 px-4 py-2.5 text-[14px] font-bold text-blue-700 transition-all duration-200 hover:bg-blue-100 active:scale-[0.98]"
+                    onClick={() => handleEditClick(r)}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    className="flex-1 rounded-full border border-rose-200 bg-rose-50 px-4 py-2.5 text-[14px] font-bold text-rose-600 transition-all duration-200 hover:bg-rose-100 active:scale-[0.98]"
+                    onClick={() => handleDeleteTransaction(r.id)}
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
             ))}
             {!paginatedTransactionRecords.length ? (
@@ -2627,6 +2748,49 @@ const Accounts = () => {
                     </div>
                   </div>
                 )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showEdit && editingRecord && (
+          <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-slate-950/50 p-0 sm:p-4 backdrop-blur-sm">
+            <div className="flex max-h-[100dvh] w-full max-w-3xl flex-col overflow-hidden rounded-none bg-white shadow-[0_30px_90px_rgba(2,32,71,0.3)] sm:max-h-none sm:rounded-[30px]">
+              <div className="flex-1 overflow-y-auto">
+                <div className="flex flex-col gap-3 border-b border-blue-50 bg-gradient-to-r from-blue-50 to-sky-50 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-5">
+                  <div>
+                    <h3 className="text-lg font-black text-slate-900 sm:text-xl">
+                      Edit Transaction
+                    </h3>
+                    <p className="mt-1 text-[14px] text-slate-500 sm:text-[15px]">
+                      Update the details for transaction #{editingRecord.id}.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setShowEdit(false);
+                      setEditingRecord(null);
+                    }}
+                    className="self-start rounded-full border border-blue-100 bg-white px-4 py-2 text-[14px] font-bold text-slate-700 transition-all duration-200 hover:bg-blue-50 sm:self-auto sm:text-[15px]"
+                  >
+                    Cancel
+                  </button>
+                </div>
+                <TransactionForm
+                  type={editingRecord.type}
+                  initialData={{
+                    date: formatInputDate(editingRecord.date),
+                    description: editingRecord.description || "",
+                    amount: editingRecord.amount || "",
+                    paymentMode: editingRecord.paymentMode || "UPI",
+                    department: editingRecord.department || (editingRecord.type === "Income" ? "Room" : "Other"),
+                  }}
+                  onSubmit={handleUpdateTransaction}
+                  onCancel={() => {
+                    setShowEdit(false);
+                    setEditingRecord(null);
+                  }}
+                />
               </div>
             </div>
           </div>
