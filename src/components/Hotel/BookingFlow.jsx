@@ -1187,20 +1187,35 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
     return [new Date()];
   })();
 
-  const perNightTariff =
-    stayDatesArr.length > 0
-      ? Number(((roomItemsTotal || folioOnlyTotal || invoiceTotal) / stayDatesArr.length).toFixed(2))
-      : 0;
-  const perNightSgst = Number((perNightTariff * 0.025).toFixed(2));
+  // 🐛 FIX: this used to treat the per-night amount as pre-tax and then ADD
+  // an extra flat 5% (2.5% SGST + 2.5% CGST) on top of it — even though
+  // `roomItemsTotal` is already the real, GST-INCLUSIVE amount for the
+  // room(s). A room configured with 0% GST (or any rate other than 5%)
+  // came out inflated (e.g. a real ₹2,000 charge printed as ₹2,100). Now
+  // the actual (quantity-weighted) GST % of the live room items is used to
+  // correctly split the already-inclusive total instead of assuming 5%.
+  const roomGrossTotal = roomItemsTotal || folioOnlyTotal || invoiceTotal;
+  const weightedRoomGstPercent = roomItemsTotal > 0
+    ? items
+        .filter((it) => it.isRoom)
+        .reduce((sum, it) => sum + ((Number(it.total) || 0) / roomItemsTotal) * (Number(it.gst) || 0), 0)
+    : 0;
+  const perNightGrossTotal =
+    stayDatesArr.length > 0 ? Number((roomGrossTotal / stayDatesArr.length).toFixed(2)) : 0;
+  const perNightTaxable = weightedRoomGstPercent > 0
+    ? Number((perNightGrossTotal / (1 + weightedRoomGstPercent / 100)).toFixed(2))
+    : perNightGrossTotal;
+  const perNightSgst = Number(((perNightGrossTotal - perNightTaxable) / 2).toFixed(2));
   const perNightCgst = perNightSgst;
-  const perNightTotal = Number((perNightTariff + perNightSgst + perNightCgst).toFixed(2));
+  const perNightTotal = perNightGrossTotal;
+  const perNightTariff = perNightTaxable;
   const rType = String(roomType || "Room").toUpperCase();
   const dayRows = stayDatesArr.map((dt) => ({
     date: formatDate(dt),
     particulars: `Room Charges - ${rType} - ${rType}`,
-    tariff: perNightTariff,
+    tariff: perNightTaxable,
     disc: 0,
-    taxable: perNightTariff,
+    taxable: perNightTaxable,
     sgst: perNightSgst,
     cgst: perNightCgst,
     total: perNightTotal,
@@ -1214,8 +1229,8 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
       tariff: amount,
       disc: 0,
       taxable: amount,
-      sgst: Number((amount * 0.025).toFixed(2)),
-      cgst: Number((amount * 0.025).toFixed(2)),
+      sgst: 0,
+      cgst: 0,
       total: amount,
     };
   });
@@ -1241,17 +1256,36 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
     const d = invoice || {};
     const b = selectedBooking || {};
 
-    const items = Array.isArray(d.items) && d.items.length > 0
-      ? d.items
-      : invoiceLines.length > 0
-        ? invoiceLines.map((l) => ({
+    // 🐛 FIX: this used to read `d.items` (the raw, possibly-stale invoice
+    // row from the database) FIRST, before ever looking at the live,
+    // correctly-computed `items` (built above from the booking's current
+    // rooms + folio charges). That stale row is only refreshed when a brand
+    // new invoice is generated, so if a booking was later extended to more
+    // nights/rooms, or its tariff changed, the Print Invoice output kept
+    // showing the OLD 1-room/1-night breakdown even though the on-screen
+    // total (which uses live data) was correct. It also referenced an
+    // undefined `invoiceLines` variable in its fallback branch. Fixed by
+    // always preferring the live `items`/`allItems` computed at the top of
+    // this component, and only falling back to `d.items` as a last resort.
+    const printItems = Array.isArray(items) && items.length > 0
+      ? items.map((it) => ({
+          name: it.name || it.description || "Charge",
+          date: it.date || "",
+          qty: it.quantity || 1,
+          rate: it.price || it.tariff || 0,
+          amount: it.total || 0,
+        }))
+      : Array.isArray(allItems) && allItems.length > 0
+        ? allItems.map((l) => ({
             name: l.particulars || l.description || "Charge",
             date: l.date || "",
             qty: l.quantity || 1,
             rate: l.tariff || l.rate || l.price || 0,
             amount: l.amount || l.total || 0,
           }))
-        : [];
+        : Array.isArray(d.items) && d.items.length > 0
+          ? d.items
+          : [];
 
     const invoiceNo = d.invoiceNo || d.invoice_no || invoice?.invoice_number || b.bookingCode || `INV-${b.bookingId}`;
     const guestName = d.customerName || d.guestName || booking?.guest_name || "Guest";
@@ -1546,7 +1580,7 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
             </tr>
           </thead>
           <tbody>
-            ${items.length > 0 ? items.map(renderRow).join("") : `<tr><td colspan="8" style="text-align:center;color:#94a3b8;padding:12px">No charges recorded</td></tr>`}
+            ${printItems.length > 0 ? printItems.map(renderRow).join("") : `<tr><td colspan="8" style="text-align:center;color:#94a3b8;padding:12px">No charges recorded</td></tr>`}
           </tbody>
         </table>
 
@@ -1867,6 +1901,36 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
       const payload = {
         adminNumber: cleanNumber(adminNumber),
         customerNumber: cleanNumber(invoice?.phone || booking?.mobile || ""),
+        // Pass the frontend-computed invoice data so the backend PDF and
+        // WhatsApp message match exactly what the user sees on screen.
+        invoiceData: {
+          invoiceNo: invoiceNo,
+          totalAmount: invoiceTotal,
+          subtotal: invoiceSubtotal || invoiceTotal,
+          tax: invoiceTax,
+          discount: invoiceDiscount,
+          paymentStatus: invoice?.paymentStatus || invoice?.payment_status || (remainingAmount > 0 ? "Pending" : "Paid"),
+          paymentMode: invoice?.paymentMode || invoice?.payment_method || booking?.payment_mode || "Cash",
+          customerName: guestName,
+          phone: invoice?.phone || booking?.mobile || "",
+          roomNumber: roomNo,
+          checkIn: invoice?.checkIn || invoice?.check_in || booking?.check_in || "",
+          checkOut: invoice?.checkOut || invoice?.check_out || booking?.check_out || "",
+          address: guestAddress,
+          items: items.map((it) => ({
+            name: it.name || it.description || "Charge",
+            price: it.price || it.tariff || 0,
+            quantity: it.quantity || 1,
+            // 🐛 FIX: gstPercent wasn't being passed through at all, so the
+            // backend PDF had no way to know this item's real tax rate and
+            // fell back to assuming a flat 5% GST on every line — inflating
+            // the total for rooms configured with a different (or 0%) rate.
+            gstPercent: it.gst ?? it.gstPercent ?? 0,
+            total: it.total || it.price || it.tariff || 0,
+            date: it.date || "",
+            discount: it.disc || it.discount || 0,
+          })),
+        },
       };
       console.log("[Invoice] POST payload:", payload);
 
@@ -3308,25 +3372,127 @@ const handleJumpStep = (stepView) => {
     setWaSending(true);
     setWaResult(null);
     try {
-      let invoiceId = null;
+      let invoice = null;
       try {
         const existing = await API.get(`/invoice/by-booking/${bid}`);
-        if (existing.data?.id) invoiceId = existing.data.id;
+        if (existing.data?.id) invoice = existing.data;
       } catch { /* not found, will generate */ }
 
-      if (!invoiceId) {
+      if (!invoice) {
         const generated = await API.get(`/invoice/${bid}`);
-        if (!generated.data) {
-          setWaResult({ type: "error", message: "Could not generate invoice." });
-          setWaSending(false);
-          return;
-        }
+        invoice = generated.data || null;
+      }
+      if (!invoice) {
+        setWaResult({ type: "error", message: "Could not generate invoice." });
+        setWaSending(false);
+        return;
       }
 
-      const customerMobile = selectedBooking?.mobile || "";
-      const res = await API.post(`/hotel/invoice/send-whatsapp/${bid}`, {
+      const b = selectedBooking || {};
+      const d = bookingDetail || {};
+      // 🐛 FIX: totals were already computed from live data, but
+      // `bookingRooms` was read from `selectedBooking.rooms` (the stale
+      // summary row from the bookings list) and — worse — the `items` sent
+      // to the backend were `invoice.items`, the raw, possibly-outdated
+      // line items saved on the invoice row in the database. Whenever a
+      // booking's stay length or room list changed after the invoice was
+      // first generated (e.g. extended from 1 night to 3-4 nights, or
+      // rooms added), the total shown matched the current booking but the
+      // itemised WhatsApp PDF still showed the OLD 1-room/1-night
+      // breakdown. Fixed by reading rooms from the live `bookingDetail`
+      // (same source the Booking Details page uses for its total) and by
+      // building a fresh `items` array from that live data instead of
+      // reusing `invoice.items`.
+      const bookingRooms = Array.isArray(d.rooms) && d.rooms.length > 0
+        ? d.rooms
+        : Array.isArray(b.rooms) ? b.rooms : [];
+      const roomTotal = bookingRooms.reduce((sum, r) => sum + (Number(r.total) || Number(r.amount) || 0), 0);
+
+      // Try to load folio charges for accurate totals
+      let folioEntries = [];
+      try {
+        const folioRes = await API.get(`/hotel/folio/${bid}`);
+        folioEntries = Array.isArray(folioRes.data) ? folioRes.data : [];
+      } catch { /* best-effort */ }
+      const folioChargeEntries = folioEntries.filter((e) => e.entry_type === "Extra Charge");
+      const folioTotal = folioChargeEntries.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+
+      const computedTotal = roomTotal + folioTotal;
+      // 🐛 FIX: this used to always assume a flat 5% GST ("/ 1.05") when
+      // reversing the tax out of the total. A room configured with 0% GST
+      // (or any rate other than 5%) got the wrong subtotal/tax split, which
+      // then flowed into the PDF as an inflated Final Total (e.g. a real
+      // ₹2,000 room printed as ₹2,100). Now the subtotal is the actual sum
+      // of each room's own taxable amount, computed from its real GST %.
+      const computedSubtotal = bookingRooms.reduce((sum, r) => {
+        const tariff = Number(r.tariff ?? r.price ?? 0);
+        const qty = Number(r.quantity ?? 1);
+        const gstPercent = Number(r.gst ?? r.gstPercent ?? 0);
+        const total = Number(r.total ?? (tariff * qty)) || 0;
+        const taxable = gstPercent > 0 ? total / (1 + gstPercent / 100) : total;
+        return sum + taxable;
+      }, 0) + folioTotal; // folio extra charges are treated as tax-exempt, same as before
+      const computedTax = computedTotal - computedSubtotal;
+
+      // Build the live itemised breakdown (one line per room + one per
+      // folio extra charge) so the WhatsApp PDF matches what the Booking
+      // Details / Generate Invoice screens show. Each room now also carries
+      // its real gstPercent so the backend PDF applies the correct tax
+      // instead of assuming a flat 5%.
+      const liveItems = [
+        ...bookingRooms.map((r) => {
+          const roomNo = r.room_number || r.roomNumber || r.roomNo || "";
+          const roomType = r.roomType || r.room_type || r.category || "Room";
+          const tariff = Number(r.tariff ?? r.price ?? 0);
+          const qty = Number(r.quantity ?? 1);
+          const gstPercent = Number(r.gst ?? r.gstPercent ?? 0);
+          const total = Number(r.total ?? (tariff * qty)) || 0;
+          return {
+            name: `${roomType} - Room ${roomNo}`,
+            price: tariff,
+            quantity: qty,
+            gstPercent,
+            total,
+          };
+        }),
+        ...folioChargeEntries.map((e) => ({
+          name: e.description || e.category || "Extra Charge",
+          price: Number(e.amount) || 0,
+          quantity: 1,
+          gstPercent: 0,
+          total: Number(e.amount) || 0,
+        })),
+      ];
+
+      const customerMobile = b.mobile || d.mobile || "";
+      const payload = {
         customerNumber: customerMobile,
-      });
+        // Override backend invoice with computed totals + items from live
+        // booking data. Live data (b/d) is preferred over `invoice.*`
+        // (a possibly stale, previously-saved snapshot) everywhere below —
+        // this is also what fixes cases where the guest's Arrival/Departure
+        // on the printed invoice didn't match the booking's current dates
+        // after an edit.
+        invoiceData: {
+          totalAmount: computedTotal > 0 ? computedTotal : (Number(invoice.totalAmount) || 0),
+          subtotal: computedTotal > 0 ? computedSubtotal : (Number(invoice.subtotal) || 0),
+          tax: computedTotal > 0 ? computedTax : (Number(invoice.tax) || 0),
+          discount: Number(invoice.discount) || 0,
+          paymentStatus: invoice.paymentStatus || invoice.payment_status || (computedTotal > 0 ? "Pending" : "Paid"),
+          paymentMode: invoice.paymentMode || b.payment_mode || "Cash",
+          customerName: b.guest_name || d.guest_name || invoice.customerName || "Guest",
+          phone: b.mobile || d.mobile || invoice.phone || "",
+          roomNumber:
+            bookingRooms.map((r) => r.room_number || r.roomNumber || r.roomNo).filter(Boolean).join(", ") ||
+            invoice.roomNumber || b.rooms || b.roomNumber || "",
+          checkIn: b.check_in || d.check_in || invoice.checkIn || "",
+          checkOut: b.check_out || d.check_out || invoice.checkOut || "",
+          address: b.address || d.address || invoice.address || "",
+          items: liveItems.length > 0 ? liveItems : (invoice.items || []),
+        },
+      };
+
+      const res = await API.post(`/hotel/invoice/send-whatsapp/${bid}`, payload);
       const data = res.data || {};
       console.log("[WhatsApp-details] full response:", JSON.stringify(data, null, 2));
 
@@ -3437,22 +3603,37 @@ const handleJumpStep = (stepView) => {
       stayDates.push(new Date());
     }
 
-    const perNightTariff =
+    // 🐛 FIX: this used to divide the (already GST-inclusive) roomChargesTotal
+    // evenly across nights and then ADD an extra flat 5% (2.5% SGST + 2.5%
+    // CGST) on top of that — regardless of the room's actual configured GST
+    // rate. A room set up with 0% GST (or any rate other than 5%) therefore
+    // printed an inflated Final Total (e.g. a real ₹2,000 charge became
+    // ₹2,100). Now each room's real GST % (weighted by its share of the
+    // total) is used to correctly split the already-inclusive total into
+    // taxable + SGST + CGST instead of assuming 5%.
+    const weightedGstPercent = roomChargesTotal > 0
+      ? (Array.isArray(d.rooms) ? d.rooms : []).reduce((sum, r) => {
+          const total = Number(r.total) || 0;
+          const gstPercent = Number(r.gst ?? r.gstPercent ?? 0);
+          return sum + (total / roomChargesTotal) * gstPercent;
+        }, 0)
+      : 0;
+    const perNightGrossTotal =
       stayDates.length > 0
         ? Number(((roomChargesTotal || 0) / stayDates.length).toFixed(2))
         : 0;
     const perNightDisc = 0;
-    const perNightTaxable = perNightTariff;
-    const perNightSgst = Number((perNightTaxable * 0.025).toFixed(2));
-    const perNightCgst = Number((perNightTaxable * 0.025).toFixed(2));
-    const perNightTotal = Number(
-      (perNightTaxable + perNightSgst + perNightCgst).toFixed(2),
-    );
+    const perNightTaxable = weightedGstPercent > 0
+      ? Number((perNightGrossTotal / (1 + weightedGstPercent / 100)).toFixed(2))
+      : perNightGrossTotal;
+    const perNightSgst = Number(((perNightGrossTotal - perNightTaxable) / 2).toFixed(2));
+    const perNightCgst = perNightSgst;
+    const perNightTotal = perNightGrossTotal;
 
     const dayRows = stayDates.map((dt) => ({
       date: formatDate(dt),
       particulars: `Room Charges - ${(roomType || "Room").toUpperCase()} - ${(roomType || "Room").toUpperCase()}`,
-      tariff: perNightTariff,
+      tariff: perNightTaxable,
       disc: perNightDisc,
       taxable: perNightTaxable,
       sgst: perNightSgst,
@@ -3466,9 +3647,9 @@ const handleJumpStep = (stepView) => {
       tariff: Number(e.amount) || 0,
       disc: 0,
       taxable: Number(e.amount) || 0,
-      sgst: Number((Number(e.amount || 0) * 0.025).toFixed(2)),
-      cgst: Number((Number(e.amount || 0) * 0.025).toFixed(2)),
-      total: Number(e.amount || 0),
+      sgst: 0,
+      cgst: 0,
+      total: Number(e.amount) || 0,
     }));
 
     const allItems = [...dayRows, ...folioRows];

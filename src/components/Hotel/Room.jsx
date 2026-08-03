@@ -409,6 +409,21 @@ const Room = () => {
     return null;
   };
 
+  const isDuplicateInState = (value) => {
+    const inputStr = String(value).trim().toLowerCase();
+    const inputNum = extractRoomNumber(value);
+    if (inputNum === null) {
+      // No number — check exact string match
+      return Object.values(roomOptions).some((options) =>
+        options.some((r) => String(r).trim().toLowerCase() === inputStr),
+      );
+    }
+    // Check numeric match (handles "101" vs "no101" vs "No-101" etc.)
+    return Object.values(roomOptions).some((options) =>
+      options.some((r) => extractRoomNumber(r) === inputNum),
+    );
+  };
+
   const handleAddOption = async (roomId) => {
     const value = (inputValue[roomId] || "").trim();
     if (!value) return;
@@ -423,9 +438,9 @@ const Room = () => {
       return;
     }
 
-    const existingRoom = findExistingRoom(value);
-    if (existingRoom) {
-      showNotice(`Room ${value} already exists in ${existingRoom}.`, "Duplicate Room", "warning");
+    // Check if already exists in local state (covers duplicate numbers regardless of format)
+    if (isDuplicateInState(value)) {
+      showNotice(`Room ${value} already exists in inventory. Duplicates are not allowed.`, "Duplicate Room", "warning");
       return;
     }
 
@@ -981,20 +996,19 @@ const Room = () => {
                                           {meta.label}
                                         </span>
                                       </label>
-                                      {!isLocked && (
-                                        <button
-                                          type="button"
-                                          onClick={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                            handleDeleteRoom(room.id, item);
-                                          }}
-                                          title={`Remove room ${item}`}
-                                          className="shrink-0 flex h-8 w-8 items-center justify-center rounded-xl text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
-                                        >
-                                          <Trash2 size={16} />
-                                        </button>
-                                      )}
+                                      {/* Delete button — always visible */}
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          handleDeleteRoom(room.id, item);
+                                        }}
+                                        title={`Remove room ${item}`}
+                                        className="shrink-0 flex h-8 w-8 items-center justify-center rounded-xl text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
+                                      >
+                                        <Trash2 size={16} />
+                                      </button>
                                     </div>
                                   );
                                 })}
