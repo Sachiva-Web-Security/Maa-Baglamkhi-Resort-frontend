@@ -500,20 +500,18 @@ const Dashboard = () => {
     return status.includes("occupied") || status.includes("in house") || status.includes("checked in");
   }).length;
   const liveCheckins = selectedBoardDay?.arrivals?.length || apiMetrics.todayCheckins || 0;
-  const liveRevenue = (selectedBoardDay?.arrivals || []).reduce(
-    (sum, booking) => {
-      const paid = Number(booking.paidAmount || 0);
-      if (paid > 0) return sum + paid;
-
-      const total = Number(booking.totalAmount || 0);
-      const remaining = Number(booking.remainingAmount || 0);
-      const collected = Math.max(total - remaining, 0);
-      return sum + collected;
-    },
-    0,
-  );
   const occupancyRate = liveTotalRooms ? `${Math.round((liveOccupiedRooms / liveTotalRooms) * 100)}%` : "0%";
-  const displayRevenue = liveRevenue || apiMetrics.todayRevenue || 0;
+  // "Today's Revenue" must always reflect the authoritative figure computed by
+  // the backend (/dashboard/metrics -> getTodayRevenue), which sums invoices,
+  // restaurant bills, banquet bookings, and room bookings for CURDATE() on the
+  // server. We previously overrode this with a client-side "liveRevenue" that
+  // only summed today's *hotel arrivals* paid/collected amounts for whichever
+  // date happened to be selected in the Stay Overview board (which can silently
+  // fall back to a non-today date, see the stayOverview effect above). That
+  // partial, sometimes wrong-day number is what made the card look "fake" —
+  // it ignored restaurant + banquet revenue entirely and could reflect the
+  // wrong day. Always trust the backend total instead.
+  const displayRevenue = Number(apiMetrics.todayRevenue || 0);
   const totalGeneratedRevenue = Number(apiMetrics.totalRevenueGenerated || 0);
   const metricPanelData = {
     expected_arrivals: {
@@ -2142,5 +2140,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-
-

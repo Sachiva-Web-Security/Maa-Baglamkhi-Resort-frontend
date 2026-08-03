@@ -23,6 +23,7 @@ const AccountsDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [summary, setSummary] = useState({});
+  const [metrics, setMetrics] = useState({});
   const [transactions, setTransactions] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [bookingHistory, setBookingHistory] = useState([]);
@@ -39,6 +40,14 @@ const AccountsDashboard = () => {
       const name = localStorage.getItem("name");
       const results = await Promise.allSettled([
         API.get("/accounts/summary"),
+        // /dashboard/metrics is the same authoritative endpoint used by the
+        // main admin Dashboard and Manager Dashboard — it computes
+        // todayRevenue and totalRevenueGenerated straight from invoices +
+        // restaurant bills + banquet bookings + room bookings in the DB.
+        // The Accounts dashboard previously had no real "today's revenue"
+        // figure at all (only an all-time "Total Payments" number), which is
+        // why it looked like it wasn't showing real data.
+        API.get("/dashboard/metrics"),
         API.get("/accounts/transactions"),
         API.get("/hotel/all-bookings"),
         API.get("/hotel/booking-history"),
@@ -49,9 +58,19 @@ const AccountsDashboard = () => {
         }),
       ]);
 
-      const [summaryRes, transactionRes, bookingRes, historyRes, banquetRes, billsRes, assignmentsRes] = results;
+      const [
+        summaryRes,
+        metricsRes,
+        transactionRes,
+        bookingRes,
+        historyRes,
+        banquetRes,
+        billsRes,
+        assignmentsRes,
+      ] = results;
 
       setSummary(summaryRes.status === "fulfilled" ? summaryRes.value.data || {} : {});
+      setMetrics(metricsRes.status === "fulfilled" ? metricsRes.value.data || {} : {});
       setTransactions(transactionRes.status === "fulfilled" ? transactionRes.value.data || [] : []);
       setBookings(bookingRes.status === "fulfilled" ? bookingRes.value.data || [] : []);
       setBookingHistory(historyRes.status === "fulfilled" ? historyRes.value.data || [] : []);
@@ -119,6 +138,20 @@ const AccountsDashboard = () => {
 
   const stats = useMemo(() => [
     {
+      label: "Today's Revenue",
+      value: formatINR(metrics.todayRevenue),
+      note: "Real-time total across invoices, restaurant, banquet and room bookings for today.",
+      icon: FaMoneyBillWave,
+      tone: "emerald",
+    },
+    {
+      label: "Total Revenue Generated",
+      value: formatINR(metrics.totalRevenueGenerated),
+      note: "Overall billed revenue snapshot across every department.",
+      icon: FaChartLine,
+      tone: "cyan",
+    },
+    {
       label: "Total Payments",
       value: formatINR(summary.income),
       note: "Combined income captured in accounts summary.",
@@ -160,7 +193,7 @@ const AccountsDashboard = () => {
       icon: FaTasks,
       tone: "slate",
     },
-  ], [assignments.length, banquets.length, billableBookings.length, pendingDues, restaurantBills.length, summary.income]);
+  ], [assignments.length, banquets.length, billableBookings.length, metrics.todayRevenue, metrics.totalRevenueGenerated, pendingDues, restaurantBills.length, summary.income]);
 
   const insights = useMemo(() => [
     {

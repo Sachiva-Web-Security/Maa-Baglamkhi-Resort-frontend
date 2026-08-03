@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   FaArrowLeft,
@@ -11,6 +11,7 @@ import {
   FaThLarge,
   FaExclamationCircle,
   FaTrashAlt,
+  FaWallet,
 } from "react-icons/fa";
 
 import PaymentSettingsManager from "../components/Accounts/PaymentSettingsManager";
@@ -1662,6 +1663,93 @@ const Accounts = () => {
     navigate("/accounts?view=modules");
   };
 
+  // Total Income / Total Expense / Net Position — computed directly from
+  // the transaction records instead of trusting totals.income / totals.expense
+  // / totals.net from the backend summary. The backend summary was adding
+  // GST Payable (₹5) on top of both Total Income and Net Position (e.g.
+  // showing ₹5,605 / ₹3,605 instead of the correct ₹5,500 / ₹3,500). Deriving
+  // these straight from `records` guarantees GST never leaks into them and
+  // keeps them perfectly in sync with the Daily Income Breakdown table.
+  const computedTotals = useMemo(() => {
+    const income = (records || []).reduce(
+      (sum, record) => (record.type === "Income" ? sum + toNumber(record.amount) : sum),
+      0,
+    );
+    const expense = (records || []).reduce(
+      (sum, record) => (record.type === "Expense" ? sum + toNumber(record.amount) : sum),
+      0,
+    );
+    return { income, expense, net: income - expense };
+  }, [records]);
+
+  // Daily carry-forward breakdown — computed once here so both the
+  // "Remaining Income" summary card and the breakdown table below use
+  // the exact same numbers (this is the single source of truth now).
+  const dailyBreakdown = useMemo(() => {
+    const parseDailyDate = (text) => {
+      if (!text) return null;
+      const match = String(text).match(/(\d{1,2})\s+([A-Za-z]{3})\s+(\d{4})/);
+      if (!match) return null;
+      const day = Number(match[1]);
+      const month = MONTHS_INDEX[match[2]];
+      const year = Number(match[3]);
+      if (month == null || Number.isNaN(day) || Number.isNaN(year)) return null;
+      return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    };
+
+    const dailyMap = {};
+    (records || []).forEach((record) => {
+      const dateKey = parseDailyDate(record.date);
+      if (!dateKey) return;
+      if (!dailyMap[dateKey]) {
+        dailyMap[dateKey] = { date: dateKey, income: 0, expense: 0 };
+      }
+      // Use the raw stored amount exactly as-is — no GST or any other
+      // charge should ever be added on top of it here. If amount is 500,
+      // it must stay 500.
+      const amount = toNumber(record.amount);
+      if (record.type === "Income") {
+        dailyMap[dateKey].income += amount;
+      } else if (record.type === "Expense") {
+        dailyMap[dateKey].expense += amount;
+      }
+    });
+
+    const sortedDays = Object.values(dailyMap).sort((a, b) =>
+      String(a.date).localeCompare(String(b.date)),
+    );
+
+    let carryForward = 0;
+    const rows = sortedDays.map((day) => {
+      const totalIncome = day.income + carryForward;
+      const remaining = totalIncome - day.expense;
+      const row = {
+        date: day.date,
+        newIncome: day.income,
+        carriedForward: carryForward,
+        totalIncome,
+        expense: day.expense,
+        remaining,
+      };
+      // Only a positive remaining balance carries forward to the next day.
+      carryForward = remaining > 0 ? remaining : 0;
+      return row;
+    });
+
+    const remainingIncome = rows.length > 0 ? rows[rows.length - 1].remaining : 0;
+
+    return { rows, remainingIncome };
+  }, [records]);
+
+  const formatDayDate = (iso) => {
+    if (!iso) return "--";
+    const [y, m, d] = iso.split("-");
+    const date = new Date(Number(y), Number(m) - 1, Number(d));
+    return date.toLocaleDateString("en-GB", {
+      day: "2-digit", month: "short", year: "numeric",
+    });
+  };
+
   const accountsModulesSection = (
     <section ref={accountsModuleSectionRef} className="space-y-6">
       <div className="rounded-[30px] border border-blue-100/70 bg-white p-6 shadow-[0_25px_60px_-15px_rgba(30,64,175,0.15)] sm:p-7">
@@ -1894,7 +1982,7 @@ const Accounts = () => {
 
             <div className="grid grid-cols-2 gap-2 sm:gap-2.5 md:gap-3 xl:grid-cols-2">
               {[
-                { label: "Net Position", value: formatINR(totals.net) },
+                { label: "Net Position", value: formatINR(computedTotals.net) },
                 { label: "GST Payable", value: formatINR(totals.gstPayable) },
               ].map((item) => (
                 <div key={item.label} className="rounded-[14px] border border-white/25 bg-white/95 px-3 py-2.5 shadow-lg shadow-blue-950/10 backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 sm:rounded-[20px] sm:px-4 sm:py-3 md:rounded-[24px] md:px-5 md:py-4 xl:rounded-[24px] xl:px-5 xl:py-4">
@@ -2008,11 +2096,16 @@ const Accounts = () => {
           })}
         </section>
 
+        {/* Total Income / Total Expense / Remaining Income / GST Payable
+            — single copy now. "Remaining Income" uses dailyBreakdown.remainingIncome
+            (income - expense, minus nothing else, carried forward correctly)
+            instead of a plain totals.income - totals.expense so it always
+            matches the Daily Income Breakdown table below. */}
         <section className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-3 md:gap-4 xl:grid-cols-4">
           {[
-            { label: "Total Income", value: formatINR(totals.income), icon: FaMoneyBillWave, tone: "emerald" },
-            { label: "Total Expense", value: formatINR(totals.expense), icon: FaReceipt, tone: "rose" },
-            { label: "Net Profit", value: formatINR(totals.net), icon: FaChartLine, tone: "sky" },
+            { label: "Total Income", value: formatINR(computedTotals.income), icon: FaMoneyBillWave, tone: "emerald" },
+            { label: "Total Expense", value: formatINR(computedTotals.expense), icon: FaReceipt, tone: "rose" },
+            { label: "Remaining Income", value: formatINR(dailyBreakdown.remainingIncome), icon: FaWallet, tone: "sky" },
             { label: "GST Payable", value: formatINR(totals.gstPayable), icon: FaReceipt, tone: "amber" },
           ].map((card) => {
             const Icon = card.icon;
@@ -2041,6 +2134,87 @@ const Accounts = () => {
               </div>
             );
           })}
+        </section>
+
+        {/* Daily Carry-Forward Breakdown */}
+        <section className="rounded-[20px] border border-blue-100/70 bg-white p-3 shadow-[0_20px_50px_-15px_rgba(30,64,175,0.15)] sm:rounded-[24px] sm:p-4 md:p-5 xl:rounded-[30px]">
+          <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <div className="text-[13px] font-bold uppercase tracking-[0.18em] text-sky-600 sm:text-base">
+                Daily Income Breakdown
+              </div>
+              <div className="mt-1 text-base font-medium text-slate-500 sm:text-lg">
+                Remaining income is carried forward to the next day automatically
+              </div>
+            </div>
+            <div className="text-[13px] font-semibold text-slate-400 sm:text-[15px]">
+              {dailyBreakdown.rows.length} day{dailyBreakdown.rows.length !== 1 ? "s" : ""} tracked
+            </div>
+          </div>
+
+          {dailyBreakdown.rows.length === 0 ? (
+            <div className="py-10 text-center text-[15px] font-medium text-slate-400 sm:text-[17px]">
+              No transaction records available for daily breakdown.
+            </div>
+          ) : (
+            <div className="overflow-x-auto rounded-[18px] border border-blue-100/70 shadow-sm sm:rounded-[24px]">
+              <table className="min-w-full text-left text-base">
+                <thead className="bg-gradient-to-r from-blue-950 via-blue-800 to-sky-600 text-[13px] font-bold uppercase tracking-[0.1em] text-white sm:text-[15px] sm:tracking-[0.14em]">
+                  <tr>
+                    <th className="px-3 py-3 sm:px-4 sm:py-4">Date</th>
+                    <th className="px-3 py-3 text-right sm:px-4 sm:py-4">New Income</th>
+                    <th className="px-3 py-3 text-right sm:px-4 sm:py-4">Carried Fwd</th>
+                    <th className="px-3 py-3 text-right sm:px-4 sm:py-4">Total Income</th>
+                    <th className="px-3 py-3 text-right sm:px-4 sm:py-4">Expense</th>
+                    <th className="px-3 py-3 text-right sm:px-4 sm:py-4">Remaining</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dailyBreakdown.rows.map((row, idx) => {
+                    const remainingPositive = row.remaining > 0;
+                    const isLoss = row.remaining < 0;
+                    const remainingColor = isLoss
+                      ? "text-rose-600"
+                      : remainingPositive
+                        ? "text-emerald-600"
+                        : "text-slate-400";
+                    const carriedColor = row.carriedForward > 0 ? "text-amber-600" : "text-slate-400";
+
+                    return (
+                      <tr
+                        key={row.date}
+                        className={`border-t border-blue-50 transition-colors duration-200 hover:bg-sky-50/60 ${
+                          idx % 2 === 1 ? "bg-slate-50/40" : ""
+                        }`}
+                      >
+                        <td className="whitespace-nowrap px-3 py-3 text-[13px] font-bold text-slate-700 sm:px-4 sm:py-4 sm:text-[15px]">
+                          {formatDayDate(row.date)}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-3 text-right text-[13px] font-semibold text-emerald-600 sm:px-4 sm:py-4 sm:text-[15px]">
+                          {formatINR(row.newIncome)}
+                        </td>
+                        <td className={`whitespace-nowrap px-3 py-3 text-right text-[13px] font-semibold sm:px-4 sm:py-4 sm:text-[15px] ${carriedColor}`}>
+                          {row.carriedForward > 0 ? `+${formatINR(row.carriedForward)}` : "--"}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-3 text-right text-[13px] font-bold text-slate-900 sm:px-4 sm:py-4 sm:text-[15px]">
+                          {formatINR(row.totalIncome)}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-3 text-right text-[13px] font-semibold text-rose-500 sm:px-4 sm:py-4 sm:text-[15px]">
+                          {formatINR(row.expense)}
+                        </td>
+                        <td className={`whitespace-nowrap px-3 py-3 text-right text-[13px] font-black sm:px-4 sm:py-4 sm:text-[15px] ${remainingColor}`}>
+                          {isLoss ? "-" : ""}{formatINR(Math.abs(row.remaining))}
+                          {remainingPositive && (
+                            <span className="ml-1 text-[10px] font-semibold text-emerald-500">&#8599;</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </section>
 
         <section className="rounded-[20px] border border-blue-100/70 bg-white p-3 shadow-[0_20px_50px_-15px_rgba(30,64,175,0.15)] sm:rounded-[24px] sm:p-4 md:p-5 xl:rounded-[30px]">
@@ -2225,313 +2399,6 @@ const Accounts = () => {
           ) : null}
         </section>
 
-        {false ? (
-        <section className="rounded-[30px] border border-blue-100/70 bg-white p-6 shadow-[0_20px_50px_-15px_rgba(30,64,175,0.15)]">
-          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <div className="text-base font-semibold uppercase tracking-[0.18em] text-sky-600">
-                Customer Invoices
-              </div>
-              <h2 className="mt-2 text-5xl font-black text-slate-900">
-                Hotel + restaurant + banquet billing records
-              </h2>
-              <p className="mt-2 text-xl text-slate-500">
-        “Hotel invoices, restaurant bills, and banquet invoices are displayed here together so the Accounts team can track source-wise billing, totals, and payment status.”
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="rounded-full bg-blue-50 px-5 py-2.5 text-base font-bold text-slate-500">
-                {combinedBillingRecords.length} billing records
-              </div>
-            </div>
-          </div>
-
-          <div className="mb-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <label className="flex flex-col gap-1">
-                <span className="text-base font-semibold uppercase tracking-[0.16em] text-slate-500">
-                Billing Source
-              </span>
-              <select
-                value={selectedBillingSource}
-                onChange={(event) => setSelectedBillingSource(event.target.value)}
-                className={`${fieldClass} py-3.5 text-lg`}
-              >
-                {billingSourceOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label className="flex flex-col gap-1">
-                <span className="text-base font-semibold uppercase tracking-[0.16em] text-slate-500">
-                Filter By Room
-              </span>
-              <select
-                value={selectedInvoiceRoom}
-                onChange={(event) => setSelectedInvoiceRoom(event.target.value)}
-                className={`${fieldClass} py-3.5 text-lg`}
-              >
-                <option value="all">All Rooms</option>
-                {roomFilterOptions.map((room) => (
-                  <option key={room} value={room}>
-                    Room {room}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label className="flex flex-col gap-1">
-                <span className="text-base font-semibold uppercase tracking-[0.16em] text-slate-500">
-                Filter By Restaurant Table
-              </span>
-              <select
-                value={selectedRestaurantTable}
-                onChange={(event) => setSelectedRestaurantTable(event.target.value)}
-                className={`${fieldClass} py-3.5 text-lg`}
-              >
-                <option value="all">All Tables</option>
-                {restaurantTableOptions.map((tableNo) => (
-                  <option key={tableNo} value={tableNo}>
-                    Table {tableNo}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label className="flex flex-col gap-1">
-                <span className="text-base font-semibold uppercase tracking-[0.16em] text-slate-500">
-                Filter By Banquet Hall
-              </span>
-              <select
-                value={selectedBanquetHall}
-                onChange={(event) => setSelectedBanquetHall(event.target.value)}
-                className={`${fieldClass} py-3.5 text-lg`}
-              >
-                <option value="all">All Halls</option>
-                {banquetHallOptions.map((hallName) => (
-                  <option key={hallName} value={hallName}>
-                    {hallName}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-
-          <div className="mb-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <div className="rounded-[24px] border border-emerald-100 bg-emerald-50/80 p-5">
-              <div className="text-sm font-semibold uppercase tracking-[0.16em] text-emerald-700">
-                Filtered Room Total
-              </div>
-              <div className="mt-2 text-3xl font-black text-emerald-700">
-                {formatINR(filteredBillingTotals.roomAmount)}
-              </div>
-              <div className="mt-1 text-base text-emerald-700/80">
-                {selectedInvoiceRoom === "all"
-                  ? "Room share across all invoice records."
-                  : `Room share for Room ${selectedInvoiceRoom}.`}
-              </div>
-            </div>
-
-            <div className="rounded-[24px] border border-sky-100 bg-sky-50/80 p-5">
-              <div className="text-sm font-semibold uppercase tracking-[0.16em] text-sky-700">
-                Filtered Restaurant Total
-              </div>
-              <div className="mt-2 text-3xl font-black text-sky-800">
-                {formatINR(filteredBillingTotals.restaurantAmount)}
-              </div>
-              <div className="mt-1 text-base text-sky-700/80">
-                Restaurant bills plus room-service order totals.
-              </div>
-            </div>
-
-            <div className="rounded-[24px] border border-violet-100 bg-violet-50/80 p-5">
-              <div className="text-sm font-semibold uppercase tracking-[0.16em] text-violet-700">
-                Filtered Banquet Total
-              </div>
-              <div className="mt-2 text-3xl font-black text-violet-800">
-                {formatINR(filteredBillingTotals.banquetAmount)}
-              </div>
-              <div className="mt-1 text-base text-violet-700/80">
-                Real banquet booking totals from the banquet module.
-              </div>
-            </div>
-
-            <div className="rounded-[24px] border border-blue-100 bg-blue-50/80 p-5">
-              <div className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">
-                Filtered Combined Total
-              </div>
-              <div className="mt-2 text-3xl font-black text-slate-900">
-                {formatINR(filteredBillingTotals.finalAmount)}
-              </div>
-              <div className="mt-1 text-base text-slate-500">
-                Combined billed amount for the current filter.
-              </div>
-            </div>
-          </div>
-
-          <div className="overflow-x-auto rounded-[24px] border border-blue-100/70">
-            <table className="min-w-full text-left text-base">
-              <thead className="bg-gradient-to-r from-blue-950 via-blue-800 to-sky-600 text-sm uppercase tracking-[0.16em] text-white">
-                <tr>
-                  <th className="px-4 py-4">Source</th>
-                  <th className="px-4 py-4">Reference</th>
-                  <th className="px-4 py-4">Customer</th>
-                  <th className="px-4 py-4">Room / Table</th>
-                  <th className="px-4 py-4">Date</th>
-                  <th className="px-4 py-4">Total</th>
-                  <th className="px-4 py-4">Payment Mode</th>
-                  <th className="px-4 py-4">Payment Status</th>
-                  <th className="px-4 py-4">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedBillingRecords.map((record) => (
-                  <tr key={record.id} className="border-t border-blue-50 transition-colors duration-200 hover:bg-sky-50/60">
-                    <td className="px-4 py-4">
-                      <span className={`inline-flex rounded-full border px-4 py-1.5 text-sm font-bold ${
-                        record.source === "Restaurant"
-                          ? "border-sky-200 bg-sky-50 text-sky-700"
-                          : record.source === "Banquet"
-                          ? "border-violet-200 bg-violet-50 text-violet-700"
-                          : "border-emerald-200 bg-emerald-50 text-emerald-700"
-                      }`}>
-                        {record.source}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4 text-lg font-semibold text-slate-900">{record.reference}</td>
-                    <td className="px-4 py-4 text-lg text-slate-800">{record.customerName}</td>
-                    <td className="px-4 py-4 text-lg text-slate-800">{record.locationLabel}</td>
-                    <td className="px-4 py-4 text-lg text-slate-800">{record.date}</td>
-                    <td className="px-4 py-4 text-lg font-bold text-slate-900">{formatINR(record.total)}</td>
-                    <td className="px-4 py-4 text-lg text-slate-800">{record.paymentMode}</td>
-                    <td className="px-4 py-4">
-                      <span className={`inline-flex rounded-full border px-4 py-1.5 text-sm font-bold ${
-                        String(record.paymentStatus).toLowerCase() === "paid"
-                          ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                          : "border-amber-200 bg-amber-50 text-amber-700"
-                      }`}>
-                        {record.paymentStatus}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="flex flex-wrap gap-2">
-                        {record.actionKind === "invoice" ? (
-                          <button
-                            type="button"
-                            onClick={() => navigate(`/invoice/${record.actionId}`)}
-                            className="rounded-full border border-blue-100 bg-white px-4 py-2.5 text-sm font-bold text-slate-800 transition-all duration-200 hover:bg-blue-50"
-                          >
-                            Open Invoice
-                          </button>
-                        ) : record.actionKind === "hotel-booking" ? (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              navigate("/hotel/payment-history", {
-                                state: { bookingId: record.actionId },
-                              })
-                            }
-                            className="rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-bold text-emerald-700 transition-all duration-200 hover:bg-emerald-100"
-                          >
-                            Open Payment History
-                          </button>
-                        ) : record.actionKind === "banquet" ? (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              navigate("/banquet", {
-                                state: {
-                                  focusBookingId: record.actionId,
-                                  openBanquetBill: true,
-                                },
-                              })
-                            }
-                            className="rounded-full border border-violet-200 bg-violet-50 px-4 py-2.5 text-sm font-bold text-violet-700 transition-all duration-200 hover:bg-violet-100"
-                          >
-                            Open Banquet
-                          </button>
-                        ) : (
-                          <span className="inline-flex items-center rounded-full border border-blue-100 bg-white px-4 py-2.5 text-sm font-semibold text-slate-500">
-                            Restaurant bill record
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-                {!combinedBillingRecords.length ? (
-                  <tr>
-                    <td colSpan={9} className="px-4 py-10 text-center text-slate-400">
-                      No hotel, restaurant, or banquet billing records match the current filters.
-                    </td>
-                  </tr>
-                ) : null}
-              </tbody>
-            </table>
-          </div>
-
-          {combinedBillingRecords.length > BILLING_PAGE_SIZE ? (
-            <div className="flex flex-col gap-3 border-t border-blue-50 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="text-sm text-slate-500">
-                Showing{" "}
-                <span className="font-semibold text-slate-900">
-                  {(billingPage - 1) * BILLING_PAGE_SIZE + 1}
-                </span>{" "}
-                to{" "}
-                <span className="font-semibold text-slate-900">
-                  {Math.min(billingPage * BILLING_PAGE_SIZE, combinedBillingRecords.length)}
-                </span>{" "}
-                of{" "}
-                <span className="font-semibold text-slate-900">{combinedBillingRecords.length}</span>{" "}
-                billing records
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setBillingPage((current) => Math.max(1, current - 1))}
-                  disabled={billingPage === 1}
-                  className="rounded-full border border-blue-100 bg-white px-3 py-2 text-xs font-semibold text-slate-500 transition-all duration-200 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  Previous
-                </button>
-
-                {Array.from({ length: billingTotalPages }, (_, index) => {
-                  const page = index + 1;
-                  const isActive = page === billingPage;
-
-                  return (
-                    <button
-                      key={`billing-page-${page}`}
-                      type="button"
-                      onClick={() => setBillingPage(page)}
-                      className={`h-9 min-w-[36px] rounded-full border px-3 text-xs font-bold transition-all duration-200 ${
-                        isActive
-                          ? "border-blue-800 bg-gradient-to-r from-blue-800 to-sky-500 text-white shadow-lg shadow-blue-900/25"
-                          : "border-blue-100 bg-white text-slate-500 hover:bg-blue-50"
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  );
-                })}
-
-                <button
-                  type="button"
-                  onClick={() => setBillingPage((current) => Math.min(billingTotalPages, current + 1))}
-                  disabled={billingPage === billingTotalPages}
-                  className="rounded-full border border-blue-100 bg-white px-3 py-2 text-xs font-semibold text-slate-500 transition-all duration-200 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  Next
-                </button>
-              </div>
-            </div>
-          ) : null}
-        </section>
-        ) : null}
-
         <section className="rounded-[20px] border border-blue-100/70 bg-white p-4 shadow-[0_20px_50px_-15px_rgba(30,64,175,0.15)] sm:rounded-[24px] sm:p-5 md:p-6 xl:rounded-[30px] xl:p-7">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
@@ -2540,7 +2407,7 @@ const Accounts = () => {
               </div>
               <h2 className="mt-2 text-[20px] lg:text-[32px] font-black text-slate-900">Extended accounts controls</h2>
               <p className="mt-2 max-w-3xl text-[12px] leading-6 text-slate-500 lg:text-[17px] lg:leading-7">
-          “Along with the existing transaction and invoice workflow, bank, petty cash, GST, vendor, purchase, payroll, and profit-center entries are also managed within this module.”
+          "Along with the existing transaction and invoice workflow, bank, petty cash, GST, vendor, purchase, payroll, and profit-center entries are also managed within this module."
               </p>
             </div>
             <div className="rounded-[18px] border border-blue-100/70 bg-blue-50/60 px-4 py-3 sm:rounded-[24px] sm:px-5 sm:py-4">

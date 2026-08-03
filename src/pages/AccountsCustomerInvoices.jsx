@@ -376,9 +376,6 @@ const abortController = new AbortController();
       (showHotelSource ? filteredHotelTotals.finalAmount : 0) +
       (showRestaurantSource ? filteredRestaurantBillTotals.finalAmount : 0) +
       (showBanquetSource ? filteredBanquetTotals.finalAmount : 0),
-    totalPaid: combinedBillingRecords.reduce((sum, r) => sum + r.paidAmount, 0),
-    totalDiscount: combinedBillingRecords.reduce((sum, r) => sum + r.discount, 0),
-    totalBalanceDue: combinedBillingRecords.reduce((sum, r) => sum + r.balanceDue, 0),
   };
 
   const combinedBillingRecords = [
@@ -622,8 +619,8 @@ const abortController = new AbortController();
               {[
                 { label: "Billing Records", value: String(combinedBillingRecords.length), tone: "text-cyan-200" },
                 { label: "Total Billed", value: formatINR(filteredBillingTotals.finalAmount), tone: "text-white" },
-                { label: "Amount Paid", value: formatINR(filteredBillingTotals.totalPaid), tone: "text-emerald-200" },
-                { label: "Balance Due", value: formatINR(filteredBillingTotals.totalBalanceDue), tone: "text-amber-200" },
+                { label: "Amount Paid", value: formatINR(combinedBillingRecords.reduce((s, r) => s + r.paidAmount, 0)), tone: "text-emerald-200" },
+                { label: "Balance Due", value: formatINR(combinedBillingRecords.reduce((s, r) => s + r.balanceDue, 0)), tone: "text-amber-200" },
               ].map((item) => (
                 <div
                   key={item.label}
@@ -737,16 +734,16 @@ const abortController = new AbortController();
             </div>
             <div className="rounded-[18px] border border-emerald-200 bg-emerald-50/80 p-3.5 sm:rounded-[22px] sm:p-4">
               <div className="text-sm font-semibold uppercase tracking-[0.16em] text-emerald-700 sm:text-[18px]">Amount Paid</div>
-              <div className="mt-2 text-2xl font-black text-emerald-800 sm:text-3xl">{formatINR(filteredBillingTotals.totalPaid)}</div>
+              <div className="mt-2 text-2xl font-black text-emerald-800 sm:text-3xl">{formatINR(combinedBillingRecords.reduce((s, r) => s + r.paidAmount, 0))}</div>
               <div className="mt-1 text-sm font-semibold text-emerald-700/80 sm:text-[18px]">
-                {filteredBillingTotals.totalDiscount > 0 ? `+ ${formatINR(filteredBillingTotals.totalDiscount)} discount` : "No payments recorded yet"}
+                {combinedBillingRecords.reduce((s, r) => s + r.discount, 0) > 0 ? `+ ${formatINR(combinedBillingRecords.reduce((s, r) => s + r.discount, 0))} discount` : "No payments recorded yet"}
               </div>
             </div>
             <div className="rounded-[18px] border border-amber-200 bg-amber-50/80 p-3.5 sm:rounded-[22px] sm:p-4">
               <div className="text-sm font-semibold uppercase tracking-[0.16em] text-amber-700 sm:text-[18px]">Balance Due</div>
-              <div className="mt-2 text-2xl font-black text-amber-800 sm:text-3xl">{formatINR(filteredBillingTotals.totalBalanceDue)}</div>
+              <div className="mt-2 text-2xl font-black text-amber-800 sm:text-3xl">{formatINR(combinedBillingRecords.reduce((s, r) => s + r.balanceDue, 0))}</div>
               <div className="mt-1 text-sm font-semibold text-amber-700/80 sm:text-[18px]">
-                {filteredBillingTotals.totalBalanceDue > 0 ? "Outstanding across filtered records" : "All bills settled"}
+                {combinedBillingRecords.reduce((s, r) => s + r.balanceDue, 0) > 0 ? "Outstanding across filtered records" : "All bills settled"}
               </div>
             </div>
           </div>
