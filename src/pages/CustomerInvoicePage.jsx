@@ -113,6 +113,11 @@ const CustomerInvoicePage = () => {
   const totalAmount = useMemo(() => toNumber(invoice?.totalAmount), [invoice?.totalAmount]);
   const taxAmount = useMemo(() => toNumber(invoice?.tax), [invoice?.tax]);
   const discount = useMemo(() => toNumber(invoice?.discount), [invoice?.discount]);
+  const paidAmount = useMemo(() => toNumber(invoice?.paidAmount), [invoice?.paidAmount]);
+  const balanceDue = useMemo(() => {
+    const due = toNumber(invoice?.balanceDue);
+    return due > 0 ? due : Math.max(0, totalAmount - paidAmount);
+  }, [invoice?.balanceDue, totalAmount, paidAmount]);
 
   // GST split: 5% total = 2.5% SGST + 2.5% CGST
   const sgstAmount = taxAmount / 2;
@@ -308,6 +313,11 @@ const CustomerInvoicePage = () => {
     if (discount > 0) {
       drawTotalRow("Discount", -discount);
     }
+    if (paidAmount > 0) {
+      drawTotalRow("Amount Paid", paidAmount);
+    }
+    const pdfBalanceDue = balanceDue > 0 ? balanceDue : (totalAmount - paidAmount - discount);
+    drawTotalRow("BALANCE DUE", pdfBalanceDue > 0 ? pdfBalanceDue : 0, pdfBalanceDue > 0);
     drawTotalRow("GRAND TOTAL", totalAmount, true);
 
     y += 5;
@@ -557,6 +567,16 @@ const CustomerInvoicePage = () => {
               {invoice?.paymentReference && (
                 <div className="text-xs font-semibold text-slate-900">Ref: {invoice.paymentReference}</div>
               )}
+              {paidAmount > 0 && (
+                <div className="mt-1 text-xs font-semibold text-emerald-700">
+                  Amount Paid: {formatINR(paidAmount)}
+                </div>
+              )}
+              {discount > 0 && (
+                <div className="text-xs font-semibold text-amber-700">
+                  Discount: {formatINR(discount)}
+                </div>
+              )}
             </div>
             <div className="border-2 border-slate-900 bg-slate-50 p-3">
               <div className="space-y-1 text-xs">
@@ -578,6 +598,18 @@ const CustomerInvoicePage = () => {
                     <span className="font-semibold">-{formatINR(discount)}</span>
                   </div>
                 )}
+                {paidAmount > 0 && (
+                  <div className="flex justify-between border-t border-slate-300 pt-1">
+                    <span>Amount Paid</span>
+                    <span className="font-semibold text-emerald-700">{formatINR(paidAmount)}</span>
+                  </div>
+                )}
+                <div className="border-t-2 border-slate-900 pt-1 text-sm font-black">
+                  <div className="flex justify-between">
+                    <span>BALANCE DUE</span>
+                    <span className={balanceDue > 0 ? "text-rose-600" : "text-emerald-700"}>{formatINR(balanceDue)}</span>
+                  </div>
+                </div>
                 <div className="border-t-2 border-slate-900 pt-1 text-sm font-black">
                   <div className="flex justify-between">
                     <span>GRAND TOTAL</span>
