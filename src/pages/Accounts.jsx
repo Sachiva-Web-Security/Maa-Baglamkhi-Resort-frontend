@@ -741,6 +741,10 @@ const Accounts = () => {
     }
   };
 
+  const refreshSummary = async () => {
+    await fetchSummary();
+  };
+
   const refreshAccountsData = async () => {
     if (refreshInFlightRef.current) {
       pendingRefreshRef.current = true;
@@ -850,7 +854,7 @@ const Accounts = () => {
   const handleAddIncome = async (data) => {
     try {
       await API.post("/accounts/income", data);
-      await refreshAccountsData();
+      await Promise.all([refreshAccountsData(), refreshSummary()]);
       setShowIncome(false);
     } catch {
       window.alert("Error adding income");
@@ -860,7 +864,7 @@ const Accounts = () => {
   const handleAddExpense = async (data) => {
     try {
       await API.post("/accounts/expense", data);
-      await refreshAccountsData();
+      await Promise.all([refreshAccountsData(), refreshSummary()]);
       setShowExpense(false);
     } catch {
       window.alert("Error adding expense");
@@ -902,13 +906,13 @@ const Accounts = () => {
       }
 
       // Sync with server to ensure consistency
-      await refreshAccountsData();
+      await Promise.all([refreshAccountsData(), refreshSummary()]);
       setShowEdit(false);
       setEditingRecord(null);
       showToast("Transaction updated successfully");
     } catch (err) {
       // Revert optimistic changes by re-fetching from server
-      await refreshAccountsData();
+      await Promise.all([refreshAccountsData(), refreshSummary()]);
       const message = err.response?.data?.message || "Error updating transaction";
       showToast(message, "error");
     } finally {
@@ -926,7 +930,7 @@ const Accounts = () => {
     try {
       await API.delete(`/accounts/transactions/${id}`);
       setSelectedPaymentMode("all");
-      await refreshAccountsData();
+      await Promise.all([refreshAccountsData(), refreshSummary()]);
       showToast("Transaction deleted successfully");
     } catch (err) {
       const message = err.response?.data?.message || "Error deleting transaction";

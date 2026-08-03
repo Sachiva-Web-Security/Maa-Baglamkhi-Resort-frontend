@@ -923,12 +923,17 @@ const loadPaymentBoard = async () => {
   normalizedBills.forEach((bill) => {
     const invoice = { ...toBillInvoice(bill), sourceType: "bill" };
     const cardKey = createBoardCardKey(invoice);
-    if (!boardMap.has(cardKey)) {
+    const existing = boardMap.get(cardKey);
+    // If bill is settled (Paid / Posted To Room), replace the live invoice
+    // so it disappears from the Payment board and moves to the Bills section.
+    if (!existing || isSettledInvoice(invoice.invoiceStatus)) {
       boardMap.set(cardKey, invoice);
     }
   });
 
-  return Array.from(boardMap.values()).sort((a, b) => {
+  return Array.from(boardMap.values())
+    .filter((row) => !isSettledInvoice(row.invoiceStatus))
+    .sort((a, b) => {
     const aTime = new Date(a.date || 0).getTime();
     const bTime = new Date(b.date || 0).getTime();
     return bTime - aTime;
