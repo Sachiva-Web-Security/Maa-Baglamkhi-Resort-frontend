@@ -574,6 +574,7 @@ const Accounts = () => {
   const [toast, setToast] = useState(null);
   const [updateLoading, setUpdateLoading] = useState(false);
   const [deleteLoadingId, setDeleteLoadingId] = useState(null);
+  const [summaryError, setSummaryError] = useState(false);
 
   const refreshTimerRef = useRef(null);
   const refreshInFlightRef = useRef(false);
@@ -613,9 +614,13 @@ const Accounts = () => {
         net: Number(res.data?.net) || 0,
         gstPayable: Number(res.data?.gstPayable) || 0,
       });
+      setSummaryError(false);
     } catch (err) {
       if (isAbortedRequest(err)) return;
       console.error("Error loading accounts summary", err);
+      setSummaryError(true);
+      showToast("Failed to refresh account totals. Retrying in 2s…", "error");
+      setTimeout(() => fetchSummary(), 2000);
     }
   };
 
