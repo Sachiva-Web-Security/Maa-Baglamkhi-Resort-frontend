@@ -2757,6 +2757,18 @@ const [selectedBookingId, setSelectedBookingId] = useState(null);
         checkIn: (data.check_in || data.checkIn || "").slice(0, 10),
         checkOut: (data.check_out || data.checkOut || "").slice(0, 10),
         company: data.company_name || data.companyName || "",
+        // 🐛 FIX: the edit form always started from blank/default payment
+        // fields (amount 0, mode "Cash") instead of the booking's actual
+        // saved advance. Combined with the save request not including these
+        // fields at all, editing a booking silently reset its real advance
+        // amount/payment mode back to 0/Cash. Now the form is pre-filled
+        // with what's actually stored, so an edit that doesn't touch
+        // payment info re-submits the SAME (correct) values instead of
+        // wiping them.
+        amount: data.paidAmount || 0,
+        discountAmount: data.discountAmount || 0,
+        paymentMode: data.paymentMode || "Cash",
+        paymentNote: data.paymentRemarks || "",
         rooms: (Array.isArray(data.rooms) ? data.rooms : []).map((r) => {
           const roomNo = r.room_number || r.roomNumber || r.roomNo || "";
           const ownerCategory = categorySetup.find((c) =>
@@ -3143,6 +3155,13 @@ const handleJumpStep = (stepView) => {
 
         await Promise.all(parallelTasks);
       } else {
+        // 🐛 FIX: the Edit Booking form has a working "Payment Mode" dropdown
+        // (bound to formData.paymentMode) and an Amount field, but this save
+        // request never included them — so picking Cash -> UPI/Card looked
+        // fine in the form, but the actual save silently dropped it, and the
+        // backend fell back to its default (Cash / ₹0). That's why a page
+        // refresh always showed the OLD payment mode: it genuinely was never
+        // saved. Now these fields are sent so the edit actually persists.
         await bookingAPI.put(`/hotel/full-booking/${bookingId}`, {
           guest_name: guestFullName,
           mobile: formData.mobile,
@@ -3156,6 +3175,10 @@ const handleJumpStep = (stepView) => {
             quantity: r.quantity,
             total: rowTotal(r, stayNights),
           })),
+          paidAmount: Number(formData.amount) || 0,
+          discountAmount: Number(formData.discountAmount) || 0,
+          paymentMode: formData.paymentMode || "Cash",
+          paymentRemarks: formData.paymentNote || "",
         });
       }
 

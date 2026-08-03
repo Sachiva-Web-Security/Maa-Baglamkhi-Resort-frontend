@@ -883,6 +883,19 @@ const Accounts = () => {
         ),
       );
 
+      // If the payment mode was changed and the current filter no longer
+      // matches the updated record, reset the filter to "all" so the
+      // edited record remains visible instead of disappearing behind
+      // "No transaction records match the selected payment mode."
+      const newPaymentMode = normalizePaymentMode(data.paymentMode);
+      if (
+        selectedPaymentMode !== "all" &&
+        newPaymentMode !== "Unknown" &&
+        newPaymentMode !== selectedPaymentMode
+      ) {
+        setSelectedPaymentMode("all");
+      }
+
       // Sync with server to ensure consistency
       await refreshAccountsData();
       setShowEdit(false);

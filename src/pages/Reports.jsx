@@ -167,20 +167,54 @@ function getInsight(reportType, rows) {
 }
 
 async function loadRoomReportRows() {
-  const response = await API.get("/hotel/all-bookings");
-  const rows = Array.isArray(response.data) ? response.data : [];
+  const [bookingRes, folioRes] = await Promise.all([
+    API.get("/hotel/all-bookings"),
+    API.get("/accounts/hotel-billing"),
+  ]);
 
-  return rows.map((row) => ({
-    id: row.bookingId || row.id,
-    date: normalizeDate(row.check_in || row.date),
-    guest: row.guest_name || row.customerName || "Guest",
-    roomNumber: row.rooms || row.roomNo || row.roomNumber || "-",
-    roomType: row.roomType || row.room_type || row.categoryName || row.category_name || "Room",
-    status: row.booking_status || row.bookingStatus || "Confirmed",
-    paymentMode: normalizePaymentMode(row.paymentMode, "Pending"),
-    revenue: Number(row.totalAmount) || 0,
-    checkOut: normalizeDate(row.check_out),
-  }));
+  const rows = Array.isArray(bookingRes.data) ? bookingRes.data : [];
+  const billingRows = Array.isArray(folioRes.data) ? folioRes.data : [];
+
+  // Build a map of bookingId -> billing data (includes folioCharges, paidAmount, remainingAmount, paymentStatus)
+  const billingMap = new Map();
+  billingRows.forEach((r) => {
+    billingMap.set(String(r.bookingId || r.id), {
+      folioCharges: Number(r.folioCharges) || 0,
+      paidAmount: Number(r.paidAmount) || 0,
+      remainingAmount: Number(r.remainingAmount) || 0,
+      paymentStatus: r.paymentStatus || "Pending",
+      paymentMode: r.paymentMode || "Pending",
+      totalAmount: Number(r.totalAmount) || 0,
+      updatedTotalAmount: Number(r.updatedTotalAmount) || Number(r.totalAmount) || 0,
+    });
+  });
+
+  return rows.map((row) => {
+    const bid = String(row.bookingId || row.id);
+    const b = billingMap.get(bid) || {};
+
+    const roomCharges = Number(row.totalAmount) || 0;
+    const folioCharges = b.folioCharges || 0;
+    const updatedTotal = roomCharges + folioCharges;
+
+    return {
+      id: row.bookingId || row.id,
+      date: normalizeDate(row.check_in || row.date),
+      guest: row.guest_name || row.customerName || "Guest",
+      roomNumber: row.rooms || row.roomNo || row.roomNumber || "-",
+      roomType: row.roomType || row.room_type || row.categoryName || row.category_name || "Room",
+      status: row.booking_status || row.bookingStatus || "Confirmed",
+      paymentMode: normalizePaymentMode(b.paymentMode || row.paymentMode, "Pending"),
+      revenue: updatedTotal,
+      roomCharges,
+      folioCharges,
+      updatedTotalAmount: updatedTotal,
+      advancePaid: b.paidAmount || 0,
+      remainingAmount: b.remainingAmount || updatedTotal,
+      paymentStatus: b.paymentStatus || "Pending",
+      checkOut: normalizeDate(row.check_out),
+    };
+  });
 }
 
 async function loadBanquetReportRows() {
@@ -516,7 +550,207 @@ const Reports = () => {
     downloadText(`report-${reportType}-${todayISO()}.csv`, csv);
   };
 
-  const printReport = () => window.print();
+  const printReport = () => {
+    const rows = filtered;
+    if (!rows.length) {
+      window.alert("No data to print.");
+      return;
+    }
+
+    const reportLabel = reportMeta?.label || reportType;
+    const today = todayISO();
+    const dateRangeText =
+      filters.dateFrom && filters.dateTo
+        ? `${filters.dateFrom} to ${filters.dateTo}`
+        : filters.dateFrom
+          ? `From ${filters.dateFrom}`
+          : filters.dateTo
+            ? `Until ${filters.dateTo}`
+            : "All dates";
+
+    const fmtCurrency = (v) =>
+      `Rs. ${Number(v || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+    // Build columns based on report type
+    let columns = [];
+    if (reportType === "room") {
+      columns = [
+        { key: "date", label: "Date" },
+        { key: "guest", label: "Guest" },
+        { key: "roomNumber", label: "Room No" },
+        { key: "roomType", label: "Room Type" },
+        { key: "status", label: "Status" },
+        { key: "paymentMode", label: "Payment Mode" },
+        { key: "roomCharges", label: "Room Charges", format: fmtCurrency },
+        { key: "folioCharges", label: "Folio Charges", format: fmtCurrency },
+        { key: "updatedTotalAmount", label: "Total Amount", format: fmtCurrency },
+        { key: "advancePaid", label: "Advance Paid", format: fmtCurrency },
+        { key: "remainingAmount", label: "Balance Due", format: fmtCurrency },
+        { key: "paymentStatus", label: "Payment Status" },
+      ];
+    } else if (reportType === "banquet") {
+      columns = [
+        { key: "date", label: "Date" },
+        { key: "hall", label: "Hall" },
+        { key: "status", label: "Status" },
+        { key: "eventType", label: "Event Type" },
+        { key: "guests", label: "Guests" },
+        { key: "amount", label: "Amount", format: fmtCurrency },
+        { key: "paymentMode", label: "Payment Mode" },
+      ];
+    } else if (reportType === "restaurant") {
+      columns = [
+        { key: "date", label: "Date" },
+        { key: "table_number", label: "Table" },
+        { key: "status", label: "Status" },
+        { key: "paymentMode", label: "Payment Mode" },
+        { key: "amount", label: "Amount", format: fmtCurrency },
+      ];
+    } else if (reportType === "housekeeping") {
+      columns = [
+        { key: "date", label: "Date" },
+        { key: "roomNo", label: "Room No" },
+        { key: "roomType", label: "Room Type" },
+        { key: "status", label: "Status" },
+        { key: "assignee", label: "Assignee" },
+        { key: "rooms", label: "Rooms" },
+      ];
+    } else if (reportType === "accounts") {
+      columns = [
+        { key: "date", label: "Date" },
+        { key: "type", label: "Type" },
+        { key: "description", label: "Description" },
+        { key: "amount", label: "Amount", format: fmtCurrency },
+        { key: "paymentMode", label: "Payment Mode" },
+        { key: "status", label: "Status" },
+      ];
+    } else if (reportType === "all-bills") {
+      columns = [
+        { key: "date", label: "Date" },
+        { key: "source", label: "Source" },
+        { key: "billNo", label: "Bill No" },
+        { key: "description", label: "Description" },
+        { key: "amount", label: "Amount", format: fmtCurrency },
+        { key: "paymentMode", label: "Payment Mode" },
+        { key: "status", label: "Status" },
+        { key: "type", label: "Type" },
+      ];
+    }
+
+    // Build table rows
+    const bodyRows = rows
+      .map(
+        (row) =>
+          `<tr>${columns
+            .map(
+              (col) =>
+                `<td class="td-${col.key}">${col.format ? col.format(row[col.key]) : (row[col.key] || "-")}</td>`,
+            )
+            .join("")}</tr>`,
+      )
+      .join("");
+
+    // Compute totals for currency columns
+    const totalsRow =
+      columns.some((c) => c.format) ?
+        `<tr class="totals-row">
+          <td colspan="${columns.findIndex((c) => c.format)}" style="font-weight:800;text-align:right">Total</td>
+          ${columns
+            .filter((c) => c.format)
+            .map(
+              (c) =>
+                `<td style="font-weight:800;text-align:right">${fmtCurrency(rows.reduce((s, r) => s + (Number(r[c.key]) || 0), 0))}</td>`,
+            )
+            .join("")}
+        </tr>` :
+        "";
+
+    const win = window.open("", "_blank", "width=1000,height=700");
+    if (!win) return;
+
+    win.document.write(`<!DOCTYPE html>
+<html>
+<head>
+  <title>${reportLabel} Report</title>
+  <style>
+    @page { size: A4 landscape; margin: 15mm; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Helvetica Neue", Arial, sans-serif;
+      font-size: 11px;
+      color: #1f2937;
+      padding: 20px;
+    }
+    h1 {
+      font-size: 20px;
+      font-weight: 800;
+      text-align: center;
+      margin-bottom: 4px;
+    }
+    .subtitle {
+      text-align: center;
+      font-size: 12px;
+      color: #6b7280;
+      margin-bottom: 2px;
+    }
+    .meta {
+      text-align: center;
+      font-size: 11px;
+      color: #6b7280;
+      margin-bottom: 12px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 10px;
+    }
+    thead th {
+      background: #1e3a8a;
+      color: #ffffff;
+      padding: 6px 8px;
+      font-weight: 700;
+      text-align: left;
+      border: 1px solid #1e3a8a;
+      white-space: nowrap;
+    }
+    tbody td {
+      padding: 5px 8px;
+      border: 1px solid #d1d5db;
+      vertical-align: top;
+    }
+    tbody tr:nth-child(even) {
+      background: #f3f4f6;
+    }
+    .totals-row td {
+      background: #e5e7eb !important;
+      font-weight: 800;
+      border: 1px solid #9ca3af;
+    }
+    .footer {
+      margin-top: 16px;
+      text-align: center;
+      font-size: 10px;
+      color: #9ca3af;
+    }
+  </style>
+</head>
+<body>
+  <h1>${reportLabel} Report</h1>
+  <div class="subtitle">MAA BAGLAMUKHI RESORT</div>
+  <div class="meta">Period: ${dateRangeText} | Generated: ${today} | Total Rows: ${rows.length}</div>
+  <table>
+    <thead>
+      <tr>${columns.map((c) => `<th>${c.label}</th>`).join("")}</tr>
+    </thead>
+    <tbody>${bodyRows}${totalsRow}</tbody>
+  </table>
+  <div class="footer">Generated on ${today} at ${new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true })}</div>
+</body>
+</html>`);
+    win.document.close();
+    win.focus();
+    setTimeout(() => win.print(), 300);
+  };
 
   const applyQuickRange = (days) => {
     const d = new Date();
