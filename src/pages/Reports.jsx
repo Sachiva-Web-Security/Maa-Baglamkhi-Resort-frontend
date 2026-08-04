@@ -7,6 +7,7 @@ import {
   FaPrint,
   FaSearch,
   FaSyncAlt,
+  FaWallet,
 } from "react-icons/fa";
 
 import ReportCharts from "../components/Reports/ReportCharts";
@@ -21,6 +22,7 @@ const REPORT_TYPES = [
   { id: "restaurant", label: "Restaurant", note: "Orders and food sales" },
   { id: "housekeeping", label: "Housekeeping", note: "Room status and staff load" },
   { id: "accounts", label: "Accounts", note: "Income, expense and net flow" },
+  { id: "expense", label: "Expense", note: "Expense breakdown by department and category" },
   { id: "all-bills", label: "All Bills", note: "Combined billing across modules" },
 ];
 
@@ -106,7 +108,7 @@ function getPrimaryValue(reportType, rows) {
   if (reportType === "restaurant") {
     return formatCurrency(rows.reduce((sum, row) => sum + (Number(row.amount) || 0), 0));
   }
-  if (reportType === "accounts" || reportType === "all-bills") {
+  if (reportType === "accounts" || reportType === "all-bills" || reportType === "expense") {
     return formatCurrency(rows.reduce((sum, row) => sum + (Number(row.amount) || 0), 0));
   }
   if (reportType === "housekeeping") {
@@ -146,6 +148,23 @@ function getInsight(reportType, rows) {
       .filter((row) => row.type === "Expense")
       .reduce((sum, row) => sum + (Number(row.amount) || 0), 0);
     return `Net position ${formatCurrency(income - expense)} hai for selected account transactions.`;
+  }
+
+  if (reportType === "expense") {
+    if (!rows.length) {
+      return "Selected period me koi expense record available nahi hai.";
+    }
+    const departmentTotals = new Map();
+    rows.forEach((row) => {
+      const dept = row.department || "Other";
+      departmentTotals.set(dept, (departmentTotals.get(dept) || 0) + (Number(row.amount) || 0));
+    });
+    const topDepartment = Array.from(departmentTotals.entries()).sort(
+      (left, right) => right[1] - left[1],
+    )[0];
+    return topDepartment
+      ? `Top expense department ${topDepartment[0]} hai contributing ${formatCurrency(topDepartment[1])} in selected range.`
+      : "No expense department data available.";
   }
 
   if (reportType === "housekeeping") {
@@ -285,6 +304,24 @@ async function loadAccountsReportRows() {
   }));
 }
 
+async function loadExpenseReportRows() {
+  const response = await API.get("/accounts/transactions");
+  const rows = Array.isArray(response.data) ? response.data : [];
+
+  return rows
+    .filter((row) => (row.type || "").toLowerCase() === "expense")
+    .map((row) => ({
+      id: row.id,
+      date: normalizeDate(row.date),
+      type: row.type || "Expense",
+      description: row.description || "Expense entry",
+      amount: Number(row.amount) || 0,
+      paymentMode: normalizePaymentMode(row.paymentMode, "N/A"),
+      department: row.department || "Other",
+      sourceModule: row.sourceModule || row.source_module || "Accounts",
+    }));
+}
+
 async function loadAllBillsReportRows() {
   const [hotelRes, restaurantRes, banquetRes, accountsRes] = await Promise.all([
     API.get("/accounts/hotel-billing"),
@@ -361,6 +398,7 @@ async function loadReportRows(reportType) {
   if (reportType === "restaurant") return loadRestaurantReportRows();
   if (reportType === "housekeeping") return loadHousekeepingReportRows();
   if (reportType === "accounts") return loadAccountsReportRows();
+  if (reportType === "expense") return loadExpenseReportRows();
   if (reportType === "all-bills") return loadAllBillsReportRows();
   return [];
 }
@@ -423,6 +461,7 @@ const Reports = () => {
     hall: "All",
     roomType: "All",
     paymentMode: "All",
+    department: "All",
   });
 
   const reportMeta = useMemo(
@@ -444,6 +483,9 @@ const Reports = () => {
       const dynamicPaymentModes = Array.from(
         new Set(data.map((row) => row.paymentMode).filter(Boolean)),
       );
+      const dynamicDepartments = Array.from(
+        new Set(data.map((row) => row.department).filter(Boolean)),
+      );
 
       const mergeOptions = (defaults, dynamic) => [
         "All",
@@ -455,6 +497,7 @@ const Reports = () => {
         halls: mergeOptions(HALLS, dynamicHalls),
         roomTypes: mergeOptions([], dynamicRoomTypes),
         paymentModes: mergeOptions(PAYMENT_MODES, dynamicPaymentModes),
+        departments: mergeOptions([], dynamicDepartments),
       };
     },
     [data]
@@ -464,12 +507,14 @@ const Reports = () => {
     () => ({
       hall: reportType === "banquet",
       roomType: reportType === "room" || reportType === "housekeeping",
+      department: reportType === "expense",
       paymentMode:
         reportType === "accounts" ||
         reportType === "restaurant" ||
         reportType === "room" ||
-        reportType === "all-bills",
-      status: true,
+        reportType === "all-bills" ||
+        reportType === "expense",
+      status: reportType === "room" || reportType === "banquet" || reportType === "all-bills",
     }),
     [reportType]
   );
@@ -511,6 +556,13 @@ const Reports = () => {
         filters.paymentMode !== "All" &&
         row.paymentMode &&
         row.paymentMode !== filters.paymentMode
+      ) {
+        return false;
+      }
+      if (
+        filters.department !== "All" &&
+        row.department &&
+        row.department !== filters.department
       ) {
         return false;
       }
@@ -623,6 +675,15 @@ const Reports = () => {
         { key: "amount", label: "Amount", format: fmtCurrency },
         { key: "paymentMode", label: "Payment Mode" },
         { key: "status", label: "Status" },
+      ];
+    } else if (reportType === "expense") {
+      columns = [
+        { key: "date", label: "Date" },
+        { key: "department", label: "Department" },
+        { key: "description", label: "Description" },
+        { key: "amount", label: "Amount", format: fmtCurrency },
+        { key: "paymentMode", label: "Payment Mode" },
+        { key: "sourceModule", label: "Source" },
       ];
     } else if (reportType === "all-bills") {
       columns = [
@@ -769,6 +830,14 @@ const Reports = () => {
     const uniqueDays = new Set(filtered.map((row) => row.date).filter(Boolean)).size;
     const activeStatuses = new Set(filtered.map((row) => row.status).filter(Boolean)).size;
 
+    const totalExpense = filtered.reduce(
+      (sum, row) => sum + (Number(row.amount) || 0),
+      0,
+    );
+    const uniqueDepartments = new Set(
+      filtered.map((row) => row.department).filter(Boolean),
+    ).size;
+
     return [
       {
         label: "Visible Rows",
@@ -777,10 +846,20 @@ const Reports = () => {
         icon: <FaSearch className="text-[16px]" />,
       },
       {
-        label: "Primary Total",
+        label: reportType === "expense" ? "Total Expense" : "Primary Total",
         value: primaryValue,
-        note: reportType === "housekeeping" ? "Total room count in selected rows." : "Overall business total for the selected report type.",
-        icon: <FaChartLine className="text-[16px]" />,
+        note:
+          reportType === "expense"
+            ? "Sum of all expense entries in the selected date range."
+            : reportType === "housekeeping"
+              ? "Total room count in selected rows."
+              : "Overall business total for the selected report type.",
+        icon:
+          reportType === "expense" ? (
+            <FaWallet className="text-[16px]" />
+          ) : (
+            <FaChartLine className="text-[16px]" />
+          ),
       },
       {
         label: "Active Days",
@@ -789,9 +868,12 @@ const Reports = () => {
         icon: <FaCalendarAlt className="text-[16px]" />,
       },
       {
-        label: "Status Mix",
-        value: activeStatuses || "--",
-        note: "Selected rows unique operational statuses.",
+        label: reportType === "expense" ? "Departments" : "Status Mix",
+        value: reportType === "expense" ? uniqueDepartments || "--" : activeStatuses || "--",
+        note:
+          reportType === "expense"
+            ? `${uniqueDepartments} unique department(s) contributing ${formatCurrency(totalExpense)} in selected range.`
+            : "Selected rows unique operational statuses.",
         icon: <FaSyncAlt className="text-[16px]" />,
       },
     ];

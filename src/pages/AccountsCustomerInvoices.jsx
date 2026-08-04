@@ -491,17 +491,24 @@ const abortController = new AbortController();
     }
   }, [billingPage, billingTotalPages]);
 
-  const renderStatusBadge = (status) => (
-    <span
-      className={`inline-flex rounded-full border px-3 py-1 text-[12px] font-bold sm:px-4 sm:py-1.5 sm:text-sm ${
-        String(status).toLowerCase() === "paid"
-          ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-          : "border-amber-200 bg-amber-50 text-amber-700"
-      }`}
-    >
-      {status}
-    </span>
-  );
+  const renderStatusBadge = (status) => {
+    const key = String(status || "Pending").toLowerCase();
+    const cls =
+      key === "paid"
+        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+        : key === "partial"
+          ? "border-sky-200 bg-sky-50 text-sky-700"
+          : key === "generated"
+            ? "border-amber-200 bg-amber-50 text-amber-700"
+            : "border-rose-200 bg-rose-50 text-rose-700";
+    return (
+      <span
+        className={`inline-flex rounded-full border px-3 py-1 text-[12px] font-bold sm:px-4 sm:py-1.5 sm:text-sm ${cls}`}
+      >
+        {status || "Pending"}
+      </span>
+    );
+  };
 
   const renderSourceBadge = (source) => (
     <span

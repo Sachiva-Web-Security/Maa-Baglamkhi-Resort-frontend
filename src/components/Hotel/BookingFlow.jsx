@@ -2414,6 +2414,16 @@ const BookingFlow = () => {
   const [cancelModal, setCancelModal] = useState({ open: false, reason: "", submitting: false });
   const [collectModal, setCollectModal] = useState({ open: false, amount: "", mode: "Cash", submitting: false });
   const [refundModal, setRefundModal] = useState({ open: false, amount: "", submitting: false });
+  // 🐛 RESTRICTION: blocks check-out until any pending balance is collected.
+  // Triggered from handleLifecycle when remaining > 0; the user is asked to
+  // either Collect Payment now (opens the CollectPayment modal pre-filled
+  // with the remaining balance) or cancel the check-out attempt.
+  const [checkoutGuardModal, setCheckoutGuardModal] = useState({
+    open: false,
+    booking: null,
+    remaining: 0,
+    paymentStatus: "Pending",
+  });
   const [manageStatus, setManageStatus] = useState("");
   const [showDocumentUpload, setShowDocumentUpload] = useState(false);
   const [showPaymentHistory, setShowPaymentHistory] = useState(false);
@@ -3257,9 +3267,42 @@ const handleJumpStep = (stepView) => {
     }
   };
 
+  // Compute payment status for a booking from live remaining/paid amounts.
+  // Used by check-out guard and all on-screen payment status badges:
+  // Pending → no payment; Partial → some paid but balance > 0; Paid → fully paid.
+  const computePaymentStatus = (booking) => {
+    if (!booking) return "Pending";
+    const remaining = Number(booking.remainingAmount || booking.balanceAmount || 0);
+    const paid = Number(booking.netPaid || booking.paidAmount || 0);
+    if (remaining <= 0 && paid > 0) return "Paid";
+    if (paid > 0) return "Partial";
+    return "Pending";
+  };
+
   const handleLifecycle = async (action, booking = selectedBooking) => {
     if (!booking?.bookingId) return;
     const newStatus = action === "check-out" ? "Checked-Out" : "Checked-In";
+
+    // 🐛 RESTRICTION: block check-out if a non-zero balance is still pending.
+    // The user must first "Collect Payment" from the Manage Booking screen
+    // (or do a partial settlement) until the booking is fully Paid. If the
+    // user clicks Check-Out while a balance is still due, we open a warning
+    // dialog asking whether to go collect payment first, instead of
+    // silently moving the guest to Checked-Out with money still owed.
+    if (action === "check-out") {
+      const paymentStatus = computePaymentStatus(booking);
+      const remaining = Number(booking.remainingAmount || booking.balanceAmount || 0);
+      if (remaining > 0 && paymentStatus !== "Paid") {
+        setCheckoutGuardModal({
+          open: true,
+          booking,
+          remaining,
+          paymentStatus,
+        });
+        return;
+      }
+    }
+
     try {
       await API.put(`/hotel/${action}/${booking.bookingId}`);
       if (action === "check-out") {
@@ -3325,7 +3368,79 @@ const handleJumpStep = (stepView) => {
       });
       setCollectModal({ open: false, amount: "", mode: "Cash", submitting: false });
       showToast("success", "Payment Collected", `${formatCurrency(amount)} recorded against this booking.`);
+
+      // Re-fetch bookings (and the detail rows) so the booking's paidAmount /
+      // remainingAmount / status update everywhere — booking list, booking
+      // details, manage booking, accounts billing, accounts dashboard, etc.
+      // Without this, the payment status badge kept showing "Pending" even
+      // after a successful collection.
       await fetchBookings();
+
+      // Compute the new payment state from the freshly-fetched booking row.
+      // If the user just settled the final balance, close the checkout guard
+      // (if open) and surface a "Paid" toast.
+      const refreshed = (bookings || []).find(
+        (b) => String(b.bookingId) === String(selectedBooking.bookingId),
+      );
+      const liveBooking = refreshed || selectedBooking;
+      const oldPaid = Number(liveBooking.netPaid || liveBooking.paidAmount || 0);
+      const oldRemaining = Number(liveBooking.remainingAmount || liveBooking.balanceAmount || 0);
+      const newPaid = oldPaid + amount;
+      const newRemaining = Math.max(oldRemaining - amount, 0);
+
+      // Patch selectedBooking with the new totals so the Manage screen's
+      // payment-status badge immediately flips to Paid once balance is zero.
+      setSelectedBooking((prev) => ({
+        ...(prev || {}),
+        ...(liveBooking || {}),
+        netPaid: newPaid,
+        paidAmount: newPaid,
+        remainingAmount: newRemaining,
+        balanceAmount: newRemaining,
+      }));
+
+      // Also patch the bookings list optimistically so other views (Accounts
+      // dashboard billing list, Bookings table, etc.) reflect the new status
+      // without a second round trip.
+      setBookings((prev) =>
+        prev.map((b) =>
+          String(b.bookingId) === String(selectedBooking.bookingId)
+            ? {
+                ...b,
+                netPaid: newPaid,
+                paidAmount: newPaid,
+                remainingAmount: newRemaining,
+                balanceAmount: newRemaining,
+              }
+            : b
+        ),
+      );
+
+      // If the booking just became fully Paid and a checkout-guard dialog
+      // was waiting on this very payment, auto-close the guard and tell the
+      // user they can now proceed to check-out.
+      if (newRemaining <= 0 && oldRemaining > 0) {
+        if (checkoutGuardModal.open) {
+          setCheckoutGuardModal({ open: false, booking: null, remaining: 0, paymentStatus: "Pending" });
+          showToast(
+            "success",
+            "Payment Complete",
+            `Booking ${liveBooking.bookingCode || liveBooking.bookingId} is now fully Paid. You may proceed to Check-Out.`,
+          );
+        } else {
+          showToast(
+            "success",
+            "Fully Paid",
+            `Booking ${liveBooking.bookingCode || liveBooking.bookingId} is now fully Paid.`,
+          );
+        }
+        // Broadcast a global event so Accounts pages re-fetch their
+        // billing / summary when this same browser session is showing them.
+        window.dispatchEvent(new CustomEvent("bookingPaymentUpdated", {
+          detail: { bookingId: selectedBooking.bookingId, paidAmount: newPaid, remainingAmount: newRemaining },
+        }));
+        window.dispatchEvent(new Event("accountsUpdated"));
+      }
     } catch (err) {
       console.error(err);
       setCollectModal((c) => ({ ...c, submitting: false }));
@@ -4210,6 +4325,7 @@ const handleJumpStep = (stepView) => {
               <th className="px-4 sm:px-5 py-3 sm:py-4">Check-Out</th>
               <th className="px-4 sm:px-5 py-3 sm:py-4">Rooms</th>
               <th className="px-4 sm:px-5 py-3 sm:py-4">Amount</th>
+              <th className="px-4 sm:px-5 py-3 sm:py-4">Payment Status</th>
               <th className="px-4 sm:px-5 py-3 sm:py-4">Status</th>
               <th className="px-4 sm:px-5 py-3 sm:py-4">Booking Type</th>
               <th className="px-4 sm:px-5 py-3 sm:py-4 text-right">Action</th>
@@ -4218,13 +4334,13 @@ const handleJumpStep = (stepView) => {
           <tbody className="divide-y divide-slate-100 text-[17px]">
             {loading ? (
               <tr>
-                <td colSpan={9} className="px-4 py-10 text-center text-slate-400">
+                <td colSpan={10} className="px-4 py-10 text-center text-slate-400">
                   Loading bookings...
                 </td>
               </tr>
             ) : pagedBookings.length === 0 ? (
               <tr>
-                <td colSpan={9} className="px-4 py-10 text-center text-slate-400">
+                <td colSpan={10} className="px-4 py-10 text-center text-slate-400">
                   No bookings found.
                 </td>
               </tr>
@@ -4237,6 +4353,30 @@ const handleJumpStep = (stepView) => {
                   <td className="px-4 sm:px-5 py-3 sm:py-4 text-slate-600">{formatDate(b.check_out)}</td>
                   <td className="px-4 sm:px-5 py-3 sm:py-4 text-slate-600">{b.rooms || "-"}</td>
                   <td className="px-4 sm:px-5 py-3 sm:py-4 font-semibold text-slate-800">{formatCurrency(b.totalAmount)}</td>
+                  <td className="px-4 sm:px-5 py-3 sm:py-4">
+                    {(() => {
+                      const status = computePaymentStatus(b);
+                      const remaining = Number(b.remainingAmount || b.balanceAmount || 0);
+                      const cls =
+                        status === "Paid"
+                          ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
+                          : status === "Partial"
+                            ? "bg-sky-50 text-sky-700 ring-1 ring-sky-100"
+                            : "bg-rose-50 text-rose-700 ring-1 ring-rose-100";
+                      return (
+                        <div className="flex flex-col gap-0.5">
+                          <span className={`inline-block rounded-full px-3 py-1 text-sm font-bold ${cls}`}>
+                            {status}
+                          </span>
+                          {status !== "Paid" && remaining > 0 && (
+                            <span className="text-[12px] font-semibold text-rose-600">
+                              Due {formatCurrency(remaining)}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </td>
                   <td className="px-4 sm:px-5 py-3 sm:py-4">
                     <span className={statusBadgeCls(b.booking_status)}>
                       {b.booking_status || "Pending"}
@@ -4911,6 +5051,28 @@ const handleJumpStep = (stepView) => {
             <span className={statusBadgeCls(d.booking_status || b.booking_status)}>
               {d.booking_status || b.booking_status || "Pending"}
             </span>
+            {(() => {
+              // Payment status derived from live remaining / paid amounts.
+              // This stays in sync with the Accounts dashboard because both
+              // read the same `remainingAmount` / `paidAmount` / `netPaid` fields.
+              const paid = Number(d.netPaid || d.paidAmount || b.netPaid || b.paidAmount || 0);
+              const remaining = Number(d.remainingAmount || d.balanceAmount || b.remainingAmount || b.balanceAmount || 0);
+              const pStatus = remaining <= 0 && paid > 0 ? "Paid" : paid > 0 ? "Partial" : "Pending";
+              const pCls =
+                pStatus === "Paid"
+                  ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
+                  : pStatus === "Partial"
+                    ? "bg-sky-50 text-sky-700 ring-1 ring-sky-100"
+                    : "bg-rose-50 text-rose-700 ring-1 ring-rose-100";
+              return (
+                <span className={`inline-block rounded-full px-3 py-1 text-sm font-bold ${pCls}`}>
+                  Payment: {pStatus}
+                  {remaining > 0 && pStatus !== "Paid" && (
+                    <span className="ml-1 text-rose-600">({formatCurrency(remaining)} due)</span>
+                  )}
+                </span>
+              );
+            })()}
             {/*
               PRINT-INVOICE FIX: this button used to call window.print(),
               which printed the whole Booking Details screen. It now calls
@@ -5085,9 +5247,29 @@ const handleJumpStep = (stepView) => {
         <div className="mb-5 sm:mb-6 border-b border-slate-100 pb-4 sm:pb-5">
           <div className="text-sm font-bold uppercase text-slate-400">Managing Booking</div>
           <h2 className={cardTitleCls}>{b.bookingCode || `BK-${b.bookingId}`}</h2>
-          <span className={`mt-2 ${statusBadgeCls(b.booking_status)}`}>
-            {b.booking_status || "Pending"}
-          </span>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <span className={`${statusBadgeCls(b.booking_status)}`}>
+              {b.booking_status || "Pending"}
+            </span>
+            {(() => {
+              const payStatus = computePaymentStatus(b);
+              const remaining = Number(b.remainingAmount || b.balanceAmount || 0);
+              const payCls =
+                payStatus === "Paid"
+                  ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
+                  : payStatus === "Partial"
+                    ? "bg-sky-50 text-sky-700 ring-1 ring-sky-100"
+                    : "bg-rose-50 text-rose-700 ring-1 ring-rose-100";
+              return (
+                <span className={`inline-block rounded-full px-3 py-1 text-sm font-bold ${payCls}`}>
+                  Payment: {payStatus}
+                  {remaining > 0 && payStatus !== "Paid" && (
+                    <span className="ml-1 text-rose-600">({formatCurrency(remaining)} due)</span>
+                  )}
+                </span>
+              );
+            })()}
+          </div>
         </div>
 
         <div className="grid gap-5 sm:gap-6 md:grid-cols-2">
@@ -5201,6 +5383,7 @@ const handleJumpStep = (stepView) => {
                 <th className="px-4 sm:px-5 py-3 sm:py-4">Stay Dates</th>
                 <th className="px-4 sm:px-5 py-3 sm:py-4">Rooms</th>
                 <th className="px-4 sm:px-5 py-3 sm:py-4">Total</th>
+                <th className="px-4 sm:px-5 py-3 sm:py-4">Payment Status</th>
                 <th className="px-4 sm:px-5 py-3 sm:py-4">Remaining</th>
                 <th className="px-4 sm:px-5 py-3 sm:py-4">Status</th>
                 <th className="px-4 sm:px-5 py-3 sm:py-4 text-right">Action</th>
@@ -5209,7 +5392,7 @@ const handleJumpStep = (stepView) => {
             <tbody className="divide-y divide-slate-100 text-[17px]">
               {historyLoading ? (
                 <tr>
-                  <td colSpan={9} className="px-4 py-10 text-center text-slate-400">
+                  <td colSpan={10} className="px-4 py-10 text-center text-slate-400">
                     Loading history...
                   </td>
                 </tr>
@@ -5222,6 +5405,14 @@ const handleJumpStep = (stepView) => {
               ) : (
                 pagedHistory.map((row) => {
                   const remaining = Number(row.remainingAmount || 0);
+                  const paid = Number(row.netPaid || row.paidAmount || 0);
+                  const rowStatus = remaining <= 0 && paid > 0 ? "Paid" : paid > 0 ? "Partial" : "Pending";
+                  const rowStatusCls =
+                    rowStatus === "Paid"
+                      ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
+                      : rowStatus === "Partial"
+                        ? "bg-sky-50 text-sky-700 ring-1 ring-sky-100"
+                        : "bg-rose-50 text-rose-700 ring-1 ring-rose-100";
                   const roomDetails = String(row.roomDetails || row.rooms || "-")
                     .split(" || ")
                     .join(", ");
@@ -5241,6 +5432,11 @@ const handleJumpStep = (stepView) => {
                       </td>
                       <td className="px-4 sm:px-5 py-3 sm:py-4 text-slate-600">{roomDetails}</td>
                       <td className="px-4 sm:px-5 py-3 sm:py-4 font-semibold text-slate-800">{formatCurrency(row.totalAmount)}</td>
+                      <td className="px-4 sm:px-5 py-3 sm:py-4">
+                        <span className={`inline-block rounded-full px-3 py-1 text-sm font-bold ${rowStatusCls}`}>
+                          {rowStatus}
+                        </span>
+                      </td>
                       <td className={`px-4 sm:px-5 py-3 sm:py-4 font-semibold ${remaining > 0 ? "text-rose-600" : "text-emerald-600"}`}>
                         {formatCurrency(row.remainingAmount)}
                       </td>
@@ -5512,6 +5708,85 @@ const handleJumpStep = (stepView) => {
             placeholder="Guest changed mind, wrong date, pricing issue..."
           />
         </label>
+      </Modal>
+
+      {/* 🐛 RESTRICTION: opens from handleLifecycle when the user tries to
+          Check-Out a booking that still has a pending balance. Closes
+          automatically once Collect Payment brings the balance to zero. */}
+      <Modal
+        open={checkoutGuardModal.open}
+        onClose={() =>
+          setCheckoutGuardModal({ open: false, booking: null, remaining: 0, paymentStatus: "Pending" })
+        }
+        icon={FaExclamationTriangle}
+        iconTone="bg-amber-500"
+        title="Payment Pending — Cannot Check-Out"
+        actions={
+          <>
+            <button
+              type="button"
+              onClick={() =>
+                setCheckoutGuardModal({ open: false, booking: null, remaining: 0, paymentStatus: "Pending" })
+              }
+              className={ghostBtn}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                // Pre-fill the Collect Payment modal with the remaining
+                // balance and close the guard so the user can settle it.
+                const remaining = Number(checkoutGuardModal.remaining || 0);
+                setCollectModal({
+                  open: true,
+                  amount: remaining > 0 ? String(remaining.toFixed(2)) : "",
+                  mode: "Cash",
+                  submitting: false,
+                });
+                setCheckoutGuardModal({ open: false, booking: null, remaining: 0, paymentStatus: "Pending" });
+              }}
+              className={primaryBtn}
+            >
+              Collect Payment Now
+            </button>
+          </>
+        }
+      >
+        <div className="space-y-3">
+          <p>
+            Booking{" "}
+            <span className="font-black text-slate-900">
+              {checkoutGuardModal.booking?.bookingCode || `BK-${checkoutGuardModal.booking?.bookingId}`}
+            </span>{" "}
+            cannot be checked out while a payment is still pending.
+          </p>
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+            <div className="text-[13px] font-bold uppercase tracking-wider text-amber-700">
+              Current Payment Status
+            </div>
+            <div className="mt-1 flex items-center justify-between gap-3">
+              <span
+                className={`inline-block rounded-full px-3 py-1 text-sm font-bold ${
+                  checkoutGuardModal.paymentStatus === "Paid"
+                    ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
+                    : checkoutGuardModal.paymentStatus === "Partial"
+                      ? "bg-sky-50 text-sky-700 ring-1 ring-sky-100"
+                      : "bg-rose-50 text-rose-700 ring-1 ring-rose-100"
+                }`}
+              >
+                {checkoutGuardModal.paymentStatus}
+              </span>
+              <span className="text-base font-black text-rose-700">
+                Pending: {formatCurrency(checkoutGuardModal.remaining || 0)}
+              </span>
+            </div>
+          </div>
+          <p className="text-[15px] text-slate-600">
+            Please collect the pending payment first. Once the balance is fully paid, the
+            Check-Out button will be enabled automatically.
+          </p>
+        </div>
       </Modal>
 
       <Modal

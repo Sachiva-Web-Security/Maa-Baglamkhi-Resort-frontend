@@ -2430,6 +2430,178 @@ const Accounts = () => {
           </div>
         </section>
 
+        <section className="rounded-[20px] border border-blue-100/70 bg-white p-3 shadow-[0_20px_50px_-15px_rgba(30,64,175,0.15)] sm:rounded-[24px] sm:p-4 md:p-5 xl:rounded-[30px]">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <div className="text-[13px] font-bold uppercase tracking-[0.18em] text-sky-600 sm:text-base">
+                Customer Billing
+              </div>
+              <p className="mt-1 text-[14px] text-slate-500 sm:text-base">
+                Hotel bookings, invoices, restaurant bills and banquet records — with payment status.
+              </p>
+            </div>
+            <div className="text-[13px] font-semibold text-slate-400 sm:text-[15px]">
+              {combinedBillingRecords.length} record{combinedBillingRecords.length !== 1 ? "s" : ""}
+            </div>
+          </div>
+
+          <div className="hidden md:block overflow-x-auto rounded-xl border border-blue-100/70">
+            <table className="min-w-full text-left text-base">
+              <thead className="bg-gradient-to-r from-blue-950 via-blue-800 to-sky-600 text-[14px] uppercase tracking-[0.1em] text-white">
+                <tr>
+                  <th className="px-3 py-3 sm:px-4 sm:py-4">Source</th>
+                  <th className="px-3 py-3 sm:px-4 sm:py-4">Reference</th>
+                  <th className="px-3 py-3 sm:px-4 sm:py-4">Customer</th>
+                  <th className="px-3 py-3 sm:px-4 sm:py-4">Location</th>
+                  <th className="px-3 py-3 sm:px-4 sm:py-4">Date</th>
+                  <th className="px-3 py-3 sm:px-4 sm:py-4 text-right">Total</th>
+                  <th className="px-3 py-3 sm:px-4 sm:py-4">Payment Mode</th>
+                  <th className="px-3 py-3 sm:px-4 sm:py-4">Payment Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedBillingRecords.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="px-4 py-8 text-center text-[15px] text-slate-400 sm:px-6 sm:py-10">
+                      No billing records found.
+                    </td>
+                  </tr>
+                ) : (
+                  paginatedBillingRecords.map((row) => {
+                    const payStatus = String(row.paymentStatus || "Pending");
+                    const payCls =
+                      payStatus === "Paid"
+                        ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
+                        : payStatus === "Partial"
+                          ? "bg-sky-50 text-sky-700 ring-1 ring-sky-100"
+                          : payStatus === "Generated"
+                            ? "bg-amber-50 text-amber-700 ring-1 ring-amber-100"
+                            : "bg-rose-50 text-rose-700 ring-1 ring-rose-100";
+                    return (
+                      <tr key={row.id} className="border-t border-blue-50 transition-colors duration-200 hover:bg-sky-50/60">
+                        <td className="px-3 py-3 text-[14px] font-bold text-slate-800 sm:px-4 sm:py-4">{row.source}</td>
+                        <td className="px-3 py-3 text-[14px] text-slate-700 sm:px-4 sm:py-4">{row.reference}</td>
+                        <td className="px-3 py-3 text-[14px] text-slate-700 sm:px-4 sm:py-4">{row.customerName}</td>
+                        <td className="px-3 py-3 text-[14px] text-slate-600 sm:px-4 sm:py-4">{row.locationLabel}</td>
+                        <td className="px-3 py-3 text-[14px] text-slate-600 sm:px-4 sm:py-4">{row.date}</td>
+                        <td className="whitespace-nowrap px-3 py-3 text-right text-[14px] font-bold text-slate-900 sm:px-4 sm:py-4">{formatINR(row.total)}</td>
+                        <td className="px-3 py-3 text-[14px] text-slate-600 sm:px-4 sm:py-4">{row.paymentMode}</td>
+                        <td className="px-3 py-3 sm:px-4 sm:py-4">
+                          <span className={`inline-block rounded-full px-3 py-1 text-[13px] font-bold ${payCls}`}>{payStatus}</span>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile card list */}
+          <div className="space-y-3 p-2.5 md:hidden">
+            {paginatedBillingRecords.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-blue-100 bg-blue-50/50 px-4 py-8 text-center text-[15px] text-slate-400">
+                No billing records found.
+              </div>
+            ) : (
+              paginatedBillingRecords.map((row) => {
+                const payStatus = String(row.paymentStatus || "Pending");
+                const payCls =
+                  payStatus === "Paid"
+                    ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
+                    : payStatus === "Partial"
+                      ? "bg-sky-50 text-sky-700 ring-1 ring-sky-100"
+                      : payStatus === "Generated"
+                        ? "bg-amber-50 text-amber-700 ring-1 ring-amber-100"
+                        : "bg-rose-50 text-rose-700 ring-1 ring-rose-100";
+                return (
+                  <div key={row.id} className="rounded-[18px] border border-blue-100/70 bg-white p-4 shadow-[0_10px_30px_-12px_rgba(30,64,175,0.18)]">
+                    <div className="flex items-start justify-between gap-2.5">
+                      <div>
+                        <div className="text-[14px] font-black text-slate-900">{row.billType}</div>
+                        <div className="text-[12px] text-slate-500">{row.source} · {row.reference}</div>
+                      </div>
+                      <span className={`shrink-0 rounded-full px-2.5 py-1 text-[12px] font-bold ${payCls}`}>{payStatus}</span>
+                    </div>
+                    <div className="mt-2.5 grid grid-cols-2 gap-x-3 gap-y-2.5 text-[13px]">
+                      <div>
+                        <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Customer</div>
+                        <div className="text-[13px] font-medium text-slate-700">{row.customerName}</div>
+                      </div>
+                      <div>
+                        <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Location</div>
+                        <div className="text-[13px] font-medium text-slate-700">{row.locationLabel}</div>
+                      </div>
+                      <div>
+                        <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Date</div>
+                        <div className="text-[13px] font-medium text-slate-700">{row.date}</div>
+                      </div>
+                      <div>
+                        <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Total</div>
+                        <div className="text-[14px] font-black text-slate-900">{formatINR(row.total)}</div>
+                      </div>
+                      <div>
+                        <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Mode</div>
+                        <div className="text-[13px] font-medium text-slate-700">{row.paymentMode}</div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          {(combinedBillingRecords.length > BILLING_PAGE_SIZE) && (
+            <div className="mt-4 flex flex-col items-center gap-3 rounded-xl border border-blue-100/70 bg-white px-4 py-3 shadow-sm sm:mt-5 sm:flex-row sm:items-center sm:justify-between sm:rounded-[24px] sm:px-5 sm:py-4">
+              <div className="text-[13px] text-slate-500 sm:text-[15px]">
+                Showing{" "}
+                <span className="font-semibold text-slate-900">{(billingPage - 1) * BILLING_PAGE_SIZE + 1}</span>{" "}
+                to{" "}
+                <span className="font-semibold text-slate-900">{Math.min(billingPage * BILLING_PAGE_SIZE, combinedBillingRecords.length)}</span>{" "}
+                of{" "}
+                <span className="font-semibold text-slate-900">{combinedBillingRecords.length}</span>{" "}
+                records
+              </div>
+              <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
+                <button
+                  type="button"
+                  onClick={() => setBillingPage((current) => Math.max(1, current - 1))}
+                  disabled={billingPage === 1}
+                  className="rounded-full border border-blue-100 bg-white px-3 py-2 text-[13px] font-bold text-slate-500 transition-all duration-200 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:py-2.5 sm:text-[14px]"
+                >
+                  Previous
+                </button>
+                {Array.from({ length: billingTotalPages }, (_, index) => {
+                  const pageNumber = index + 1;
+                  const isActive = pageNumber === billingPage;
+                  return (
+                    <button
+                      key={`accounts-billing-page-${pageNumber}`}
+                      type="button"
+                      onClick={() => setBillingPage(pageNumber)}
+                      className={`h-8 min-w-[32px] rounded-full border px-2.5 text-[13px] font-bold transition-all duration-200 sm:h-9 sm:min-w-[36px] sm:px-3 sm:text-[14px] ${
+                        isActive
+                          ? "border-blue-800 bg-gradient-to-r from-blue-800 to-sky-500 text-white shadow-lg shadow-blue-900/25"
+                          : "border-blue-100 bg-white text-slate-500 hover:bg-blue-50"
+                      }`}
+                    >
+                      {pageNumber}
+                    </button>
+                  );
+                })}
+                <button
+                  type="button"
+                  onClick={() => setBillingPage((current) => Math.min(billingTotalPages, current + 1))}
+                  disabled={billingPage >= billingTotalPages}
+                  className="rounded-full border border-blue-100 bg-white px-3 py-2 text-[13px] font-bold text-slate-500 transition-all duration-200 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:py-2.5 sm:text-[14px]"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+        </section>
+
         {showIncome && (
           <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-slate-950/50 p-0 sm:p-4 backdrop-blur-sm">
             <div className="flex max-h-[100dvh] w-full max-w-3xl flex-col overflow-hidden rounded-none bg-white shadow-[0_30px_90px_rgba(2,32,71,0.3)] sm:max-h-none sm:rounded-[30px]">
