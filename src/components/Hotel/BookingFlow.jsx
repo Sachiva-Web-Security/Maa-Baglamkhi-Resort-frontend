@@ -2699,13 +2699,23 @@ const BookingFlow = () => {
   /* ---------- derived ---------- */
 
   const filteredBookings = useMemo(() => {
+    let list = bookings;
     const q = search.trim().toLowerCase();
-    if (!q) return bookings;
-    return bookings.filter((b) =>
-      [b.guest_name, b.bookingCode, b.bookingId, b.mobile, b.rooms]
-        .filter(Boolean)
-        .some((v) => String(v).toLowerCase().includes(q)),
-    );
+    if (q) {
+      list = list.filter((b) =>
+        [b.guest_name, b.bookingCode, b.bookingId, b.mobile, b.rooms]
+          .filter(Boolean)
+          .some((v) => String(v).toLowerCase().includes(q)),
+      );
+    }
+    // 🐛 FIX: exclude Checked-Out bookings from the "All Bookings" list.
+    // Once a guest is checked out, their booking belongs in Booking History
+    // only — it should NOT still appear in the active All Bookings table.
+    // The checkout restriction (above) already prevents check-out when
+    // payment is pending, so any booking reaching Checked-Out here has
+    // been fully settled.
+    list = list.filter((b) => String(b.booking_status || "").toLowerCase().trim() !== "checked-out");
+    return list;
   }, [bookings, search]);
 
   const totalPages = Math.max(1, Math.ceil(filteredBookings.length / pageSize));
@@ -3315,15 +3325,11 @@ const handleJumpStep = (stepView) => {
           ? "Guest has been checked out. Room moved to Cleaning on the Dashboard."
           : "Guest has been checked in successfully.",
       );
+      // After checkout, re-fetch active bookings (Checked-Out are now
+      // filtered out of the All Bookings list) and also refresh the
+      // booking-history list so the just-checked-out guest appears there.
       await fetchBookings();
-      // Optimistic update: immediately patch the local bookings list
-      // so the Check-In / Check-Out button flips instantly in the UI
-      // even if the server round-trip is slow or cached.
-      setBookings((prev) =>
-        prev.map((b) =>
-          String(b.bookingId) === String(booking.bookingId) ? { ...b, booking_status: newStatus } : b
-        )
-      );
+      await fetchHistory();
       setSelectedBooking((prev) => ({ ...(prev || {}), booking_status: newStatus }));
     } catch (err) {
       console.error(err);
@@ -4341,7 +4347,7 @@ const handleJumpStep = (stepView) => {
             ) : pagedBookings.length === 0 ? (
               <tr>
                 <td colSpan={10} className="px-4 py-10 text-center text-slate-400">
-                  No bookings found.
+                  No active bookings found. Checked-out bookings are available in Booking History.
                 </td>
               </tr>
             ) : (
