@@ -923,12 +923,17 @@ const loadPaymentBoard = async () => {
   normalizedBills.forEach((bill) => {
     const invoice = { ...toBillInvoice(bill), sourceType: "bill" };
     const cardKey = createBoardCardKey(invoice);
-    if (!boardMap.has(cardKey)) {
+    const existing = boardMap.get(cardKey);
+    // If bill is settled (Paid / Posted To Room), replace the live invoice
+    // so it disappears from the Payment board and moves to the Bills section.
+    if (!existing || isSettledInvoice(invoice.invoiceStatus)) {
       boardMap.set(cardKey, invoice);
     }
   });
 
-  return Array.from(boardMap.values()).sort((a, b) => {
+  return Array.from(boardMap.values())
+    .filter((row) => !isSettledInvoice(row.invoiceStatus))
+    .sort((a, b) => {
     const aTime = new Date(a.date || 0).getTime();
     const bTime = new Date(b.date || 0).getTime();
     return bTime - aTime;
@@ -990,6 +995,14 @@ const Payment = ({
         setInvoice((current) => {
           if (current) {
             const matched = rows.find((row) => createBoardCardKey(row) === createBoardCardKey(current));
+            if (matched) {
+              // Preserve local amounts if they exist and server returned zero/empty.
+              // This prevents a board refresh from wiping correct qty-based totals.
+              const serverHasAmounts = Number(matched.subtotal || 0) > 0 || Array.isArray(matched.items) && matched.items.length > 0;
+              if (!serverHasAmounts && (Number(current.subtotal || 0) > 0 || (Array.isArray(current.items) && current.items.length > 0))) {
+                return { ...matched, items: current.items, subtotal: current.subtotal, gst: current.gst, total: current.total };
+              }
+            }
             return matched || current;
           }
           return rows[0] || readStoredInvoice() || null;
@@ -1263,6 +1276,107 @@ const Payment = ({
     setFieldErrors(getCustomerFieldErrors({ customerName, phone: sanitizedValue }));
     saveInvoiceState({ phone: sanitizedValue });
   };
+
+const mergeDuplicateItems = (items) => {
+  if (!Array.isArray(items) || items.length <= 1) return items || [];
+  const mergedMap = new Map();
+  items.forEach((item) => {
+    const key = `${String(item.name || "").trim().toLowerCase()}|${Number(item.rate || 0)}`;
+    const existing = mergedMap.get(key);
+    if (existing) {
+      existing.qty = Number(existing.qty || 0) + Number(item.qty || 0);
+    } else {
+      mergedMap.set(key, {
+        id: item.id,
+        name: item.name || "Menu Item",
+        qty: Number(item.qty || 0),
+        rate: Number(item.rate || 0),
+      });
+    }
+  });
+  return Array.from(mergedMap.values());
+};
+
+const recalculateInvoiceTotals = (items) => {
+  const merged = mergeDuplicateItems(items);
+  const subtotal = merged.reduce((sum, item) => sum + Number(item.qty || 0) * Number(item.rate || 0), 0);
+  const gst = subtotal * 0.05;
+  return { items: merged, subtotal, gst, total: subtotal + gst };
+};
+
+  const handleItemQtyChange = async (itemIndex, newQty) => {
+    if (!invoice || !invoice.items) return;
+    const qty = Math.max(1, Math.floor(newQty));
+    const currentItem = invoice.items[itemIndex];
+    if (!currentItem) return;
+
+    if (qty === 0) return; // don't allow zero, use delete instead
+
+    const updatedItems = invoice.items.map((item, idx) =>
+      idx === itemIndex ? { ...item, qty } : item,
+    );
+
+    const { items: mergedItems, subtotal, gst, total } = recalculateInvoiceTotals(updatedItems);
+
+    // Optimistically update UI
+    const nextInvoice = { ...invoice, items: mergedItems, subtotal, gst, total };
+    setInvoice(nextInvoice);
+    saveInvoiceState({ items: mergedItems, subtotal, gst, total });
+
+    // Persist to backend if token item has an id
+    if (currentItem.id && invoice.tokenId) {
+      try {
+        await restaurantService.updateTokenItem(currentItem.id, { qty, rate: Number(currentItem.rate || 0) });
+        // Don't dispatch tokenUpdated — it triggers a full board reload that
+        // overwrites local state. saveInvoiceState already keeps invoiceCards in sync.
+      } catch (err) {
+        console.warn("Failed to update item quantity on server:", err);
+        // Revert on failure
+        const reverted = recalculateInvoiceTotals(invoice.items);
+        setInvoice((current) => (current ? { ...current, ...reverted } : current));
+        saveInvoiceState(reverted);
+      }
+    }
+  };
+
+  const handleItemDelete = async (itemIndex) => {
+    if (!invoice || !invoice.items) return;
+    const currentItem = invoice.items[itemIndex];
+    if (!currentItem) return;
+
+    const remaining = invoice.items.filter((_, idx) => idx !== itemIndex);
+    if (!remaining.length) return; // don't delete last item via this
+
+    const { items: mergedItems, subtotal, gst, total } = recalculateInvoiceTotals(remaining);
+
+    const nextInvoice = { ...invoice, items: mergedItems, subtotal, gst, total };
+    setInvoice(nextInvoice);
+    saveInvoiceState({ items: mergedItems, subtotal, gst, total });
+
+    if (currentItem.id && invoice.tokenId) {
+      try {
+        await restaurantService.deleteTokenItem(currentItem.id);
+        // Don't dispatch tokenUpdated — it triggers a full board reload.
+        // saveInvoiceState already keeps invoiceCards in sync.
+      } catch (err) {
+        console.warn("Failed to delete item on server:", err);
+        const reverted = recalculateInvoiceTotals(invoice.items);
+        setInvoice((current) => (current ? { ...current, ...reverted } : current));
+        saveInvoiceState(reverted);
+      }
+    }
+  };
+
+  // Apply merge on any items load so duplicates are combined immediately
+  useEffect(() => {
+    if (!invoice?.items?.length) return;
+    const merged = mergeDuplicateItems(invoice.items);
+    if (merged.length !== invoice.items.length) {
+      const { items: finalItems, subtotal, gst, total } = recalculateInvoiceTotals(merged);
+      setInvoice((current) => (current ? { ...current, items: finalItems, subtotal, gst, total } : current));
+      saveInvoiceState({ items: finalItems, subtotal, gst, total });
+    }
+  }, [invoice?.tokenId, invoice?.items?.length]);
 
   const handleDiscountChange = (value) => {
     if (waiterDiscountLocked) return;
@@ -2496,6 +2610,81 @@ const Payment = ({
                     ) : null}
                   </div>
                 </div>
+
+                {/* ─── Order Items with Edit Controls ─────────────────────── */}
+                {invoice.items?.length ? (
+                  <div className={`${glassCard} p-4 sm:p-6`}>
+                    <div className="flex items-center gap-3">
+                      <span className={iconBadge("from-emerald-100", "to-emerald-50", "text-emerald-600")}>
+                        <FiShoppingBag size={17} />
+                      </span>
+                      <h3 className="text-[17px] font-bold text-slate-900 sm:text-[23px]">Order Items</h3>
+                      <span className="ml-auto rounded-full bg-blue-50 px-2.5 py-0.5 text-[12px] font-bold text-blue-600">
+                        {invoice.items.length} {invoice.items.length === 1 ? "item" : "items"}
+                      </span>
+                    </div>
+                    <div className="mt-4 overflow-x-auto">
+                      <table className="min-w-full text-left text-[14px]">
+                        <thead>
+                          <tr className="border-b border-blue-50 text-[12px] font-bold uppercase tracking-[0.06em] text-slate-400">
+                            <th className="pb-2.5 pr-4">Item</th>
+                            <th className="pb-2.5 pr-4 text-center">Qty</th>
+                            <th className="pb-2.5 pr-4 text-right">Rate</th>
+                            <th className="pb-2.5 pr-4 text-right">Amount</th>
+                            <th className="pb-2.5 text-center w-10"></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {invoice.items.map((item, idx) => {
+                            const lineTotal = Number(item.qty || 0) * Number(item.rate || 0);
+                            return (
+                              <tr key={`${item.id || item.name}-${idx}`} className="border-b border-blue-50/60 last:border-0">
+                                <td className="py-3 pr-4 font-semibold text-slate-900">{item.name}</td>
+                                <td className="py-3 pr-4">
+                                  <div className="flex items-center justify-center gap-1">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleItemQtyChange(idx, Number(item.qty || 1) - 1)}
+                                      className="flex h-7 w-7 items-center justify-center rounded-lg border border-blue-100 bg-white text-blue-700 text-sm font-bold transition hover:bg-blue-50 active:scale-95"
+                                    >
+                                      -
+                                    </button>
+                                    <input
+                                      type="number"
+                                      min="1"
+                                      value={item.qty}
+                                      onChange={(e) => handleItemQtyChange(idx, Number(e.target.value))}
+                                      className="h-8 w-12 rounded-lg border border-blue-100 bg-white text-center text-[14px] font-bold text-slate-900 shadow-sm transition focus:outline-none focus:ring-1 focus:ring-blue-400"
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => handleItemQtyChange(idx, Number(item.qty || 0) + 1)}
+                                      className="flex h-7 w-7 items-center justify-center rounded-lg border border-blue-100 bg-white text-blue-700 text-sm font-bold transition hover:bg-blue-50 active:scale-95"
+                                    >
+                                      +
+                                    </button>
+                                  </div>
+                                </td>
+                                <td className="py-3 pr-4 text-right text-slate-600">{formatCurrency(item.rate)}</td>
+                                <td className="py-3 pr-4 text-right font-bold text-slate-900">{formatCurrency(lineTotal)}</td>
+                                <td className="py-3 text-center">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleItemDelete(idx)}
+                                    title="Remove item"
+                                    className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-rose-400 transition hover:bg-rose-50 hover:text-rose-600 active:scale-95"
+                                  >
+                                    <FaTimes size={13} />
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ) : null}
 
                 {/* Payment method + Discount + Split bill — one row, 3 columns */}
                 <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3 items-stretch">

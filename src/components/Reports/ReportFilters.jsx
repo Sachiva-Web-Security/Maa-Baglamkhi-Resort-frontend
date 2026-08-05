@@ -96,6 +96,16 @@ const ReportFilters = ({ value, onChange, visible, options }) => {
             />
           </Field>
         ) : null}
+
+        {visible.department ? (
+          <Field label="Department">
+            <Select
+              value={value.department || "All"}
+              onChange={(selected) => set({ department: selected })}
+              options={options.departments || ["All"]}
+            />
+          </Field>
+        ) : null}
       </div>
     </div>
   );

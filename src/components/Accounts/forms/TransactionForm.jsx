@@ -181,6 +181,7 @@ const TransactionForm = ({ type, onSubmit, onCancel, initialData = {} }) => {
               <option value="Card">Card</option>
               <option value="UPI">UPI</option>
               <option value="Bank Transfer">Bank Transfer</option>
+              <option value="Cheque">Cheque</option>
             </select>
           </div>
         </div>

@@ -1187,20 +1187,35 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
     return [new Date()];
   })();
 
-  const perNightTariff =
-    stayDatesArr.length > 0
-      ? Number(((roomItemsTotal || folioOnlyTotal || invoiceTotal) / stayDatesArr.length).toFixed(2))
-      : 0;
-  const perNightSgst = Number((perNightTariff * 0.025).toFixed(2));
+  // 🐛 FIX: this used to treat the per-night amount as pre-tax and then ADD
+  // an extra flat 5% (2.5% SGST + 2.5% CGST) on top of it — even though
+  // `roomItemsTotal` is already the real, GST-INCLUSIVE amount for the
+  // room(s). A room configured with 0% GST (or any rate other than 5%)
+  // came out inflated (e.g. a real ₹2,000 charge printed as ₹2,100). Now
+  // the actual (quantity-weighted) GST % of the live room items is used to
+  // correctly split the already-inclusive total instead of assuming 5%.
+  const roomGrossTotal = roomItemsTotal || folioOnlyTotal || invoiceTotal;
+  const weightedRoomGstPercent = roomItemsTotal > 0
+    ? items
+        .filter((it) => it.isRoom)
+        .reduce((sum, it) => sum + ((Number(it.total) || 0) / roomItemsTotal) * (Number(it.gst) || 0), 0)
+    : 0;
+  const perNightGrossTotal =
+    stayDatesArr.length > 0 ? Number((roomGrossTotal / stayDatesArr.length).toFixed(2)) : 0;
+  const perNightTaxable = weightedRoomGstPercent > 0
+    ? Number((perNightGrossTotal / (1 + weightedRoomGstPercent / 100)).toFixed(2))
+    : perNightGrossTotal;
+  const perNightSgst = Number(((perNightGrossTotal - perNightTaxable) / 2).toFixed(2));
   const perNightCgst = perNightSgst;
-  const perNightTotal = Number((perNightTariff + perNightSgst + perNightCgst).toFixed(2));
+  const perNightTotal = perNightGrossTotal;
+  const perNightTariff = perNightTaxable;
   const rType = String(roomType || "Room").toUpperCase();
   const dayRows = stayDatesArr.map((dt) => ({
     date: formatDate(dt),
     particulars: `Room Charges - ${rType} - ${rType}`,
-    tariff: perNightTariff,
+    tariff: perNightTaxable,
     disc: 0,
-    taxable: perNightTariff,
+    taxable: perNightTaxable,
     sgst: perNightSgst,
     cgst: perNightCgst,
     total: perNightTotal,
@@ -1214,8 +1229,8 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
       tariff: amount,
       disc: 0,
       taxable: amount,
-      sgst: Number((amount * 0.025).toFixed(2)),
-      cgst: Number((amount * 0.025).toFixed(2)),
+      sgst: 0,
+      cgst: 0,
       total: amount,
     };
   });
@@ -1241,17 +1256,36 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
     const d = invoice || {};
     const b = selectedBooking || {};
 
-    const items = Array.isArray(d.items) && d.items.length > 0
-      ? d.items
-      : invoiceLines.length > 0
-        ? invoiceLines.map((l) => ({
+    // 🐛 FIX: this used to read `d.items` (the raw, possibly-stale invoice
+    // row from the database) FIRST, before ever looking at the live,
+    // correctly-computed `items` (built above from the booking's current
+    // rooms + folio charges). That stale row is only refreshed when a brand
+    // new invoice is generated, so if a booking was later extended to more
+    // nights/rooms, or its tariff changed, the Print Invoice output kept
+    // showing the OLD 1-room/1-night breakdown even though the on-screen
+    // total (which uses live data) was correct. It also referenced an
+    // undefined `invoiceLines` variable in its fallback branch. Fixed by
+    // always preferring the live `items`/`allItems` computed at the top of
+    // this component, and only falling back to `d.items` as a last resort.
+    const printItems = Array.isArray(items) && items.length > 0
+      ? items.map((it) => ({
+          name: it.name || it.description || "Charge",
+          date: it.date || "",
+          qty: it.quantity || 1,
+          rate: it.price || it.tariff || 0,
+          amount: it.total || 0,
+        }))
+      : Array.isArray(allItems) && allItems.length > 0
+        ? allItems.map((l) => ({
             name: l.particulars || l.description || "Charge",
             date: l.date || "",
             qty: l.quantity || 1,
             rate: l.tariff || l.rate || l.price || 0,
             amount: l.amount || l.total || 0,
           }))
-        : [];
+        : Array.isArray(d.items) && d.items.length > 0
+          ? d.items
+          : [];
 
     const invoiceNo = d.invoiceNo || d.invoice_no || invoice?.invoice_number || b.bookingCode || `INV-${b.bookingId}`;
     const guestName = d.customerName || d.guestName || booking?.guest_name || "Guest";
@@ -1546,7 +1580,7 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
             </tr>
           </thead>
           <tbody>
-            ${items.length > 0 ? items.map(renderRow).join("") : `<tr><td colspan="8" style="text-align:center;color:#94a3b8;padding:12px">No charges recorded</td></tr>`}
+            ${printItems.length > 0 ? printItems.map(renderRow).join("") : `<tr><td colspan="8" style="text-align:center;color:#94a3b8;padding:12px">No charges recorded</td></tr>`}
           </tbody>
         </table>
 
@@ -1867,6 +1901,36 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
       const payload = {
         adminNumber: cleanNumber(adminNumber),
         customerNumber: cleanNumber(invoice?.phone || booking?.mobile || ""),
+        // Pass the frontend-computed invoice data so the backend PDF and
+        // WhatsApp message match exactly what the user sees on screen.
+        invoiceData: {
+          invoiceNo: invoiceNo,
+          totalAmount: invoiceTotal,
+          subtotal: invoiceSubtotal || invoiceTotal,
+          tax: invoiceTax,
+          discount: invoiceDiscount,
+          paymentStatus: invoice?.paymentStatus || invoice?.payment_status || (remainingAmount > 0 ? "Pending" : "Paid"),
+          paymentMode: invoice?.paymentMode || invoice?.payment_method || booking?.payment_mode || "Cash",
+          customerName: guestName,
+          phone: invoice?.phone || booking?.mobile || "",
+          roomNumber: roomNo,
+          checkIn: invoice?.checkIn || invoice?.check_in || booking?.check_in || "",
+          checkOut: invoice?.checkOut || invoice?.check_out || booking?.check_out || "",
+          address: guestAddress,
+          items: items.map((it) => ({
+            name: it.name || it.description || "Charge",
+            price: it.price || it.tariff || 0,
+            quantity: it.quantity || 1,
+            // 🐛 FIX: gstPercent wasn't being passed through at all, so the
+            // backend PDF had no way to know this item's real tax rate and
+            // fell back to assuming a flat 5% GST on every line — inflating
+            // the total for rooms configured with a different (or 0%) rate.
+            gstPercent: it.gst ?? it.gstPercent ?? 0,
+            total: it.total || it.price || it.tariff || 0,
+            date: it.date || "",
+            discount: it.disc || it.discount || 0,
+          })),
+        },
       };
       console.log("[Invoice] POST payload:", payload);
 
@@ -2097,13 +2161,14 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
 
 /* ────────────────── WhatsApp Send Modal Component ─────────────────────────── */
 
-const WhatsAppSendModal = ({ booking, detail, sending, result, onSend, onClose }) => {
+const WhatsAppSendModal = ({ booking, detail, invoice, sending, result, onSend, onClose }) => {
   const b = booking || {};
-  const guestName = detail?.guest_name || b.guest_name || "Guest";
-  const customerPhone = detail?.mobile || b.mobile || "—";
-  const invoiceNo = detail?.invoice?.invoiceNo || detail?.invoice_no || `BK-${b.bookingId}`;
-  const invoiceTotal = detail?.invoice?.total_amount || detail?.invoice?.totalAmount || b.totalAmount || 0;
-  const paymentStatus = detail?.invoice?.paymentStatus || detail?.invoice?.payment_status || (invoiceTotal > 0 ? "Pending" : "Paid");
+  const inv = invoice || detail?.invoice || {};
+  const guestName = inv.customerName || inv.customer_name || detail?.guest_name || b.guest_name || "Guest";
+  const customerPhone = inv.phone || detail?.mobile || b.mobile || "—";
+  const invoiceNo = inv.invoiceNo || inv.invoice_no || `BK-${b.bookingId}`;
+  const invoiceTotal = Number(inv.totalAmount || inv.total_amount || inv.finalTotal || inv.final_total || 0);
+  const paymentStatus = inv.paymentStatus || inv.payment_status || (invoiceTotal > 0 ? "Pending" : "Paid");
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
@@ -2317,11 +2382,48 @@ const BookingFlow = () => {
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
   const [waSending, setWaSending] = useState(false);
   const [waResult, setWaResult] = useState(null);
+  const [waInvoice, setWaInvoice] = useState(null);
+
+  // When the WhatsApp modal opens, fetch the invoice data so the summary
+  // shows the exact same invoice that will be sent.
+  useEffect(() => {
+    if (!showWhatsAppModal) {
+      setWaInvoice(null);
+      return;
+    }
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const existing = await API.get(`/invoice/by-booking/${selectedBooking?.bookingId}`);
+        if (cancelled) return;
+        if (existing.data?.id) {
+          setWaInvoice(existing.data);
+        } else {
+          const generated = await API.get(`/invoice/${selectedBooking?.bookingId}`);
+          if (!cancelled) setWaInvoice(generated.data || null);
+        }
+      } catch {
+        if (!cancelled) setWaInvoice(null);
+      }
+    };
+    load();
+    return () => { cancelled = true; };
+  }, [showWhatsAppModal, selectedBooking?.bookingId]);
 
   const [toast, setToast] = useState({ open: false, type: "success", title: "", message: "" });
   const [cancelModal, setCancelModal] = useState({ open: false, reason: "", submitting: false });
   const [collectModal, setCollectModal] = useState({ open: false, amount: "", mode: "Cash", submitting: false });
   const [refundModal, setRefundModal] = useState({ open: false, amount: "", submitting: false });
+  // 🐛 RESTRICTION: blocks check-out until any pending balance is collected.
+  // Triggered from handleLifecycle when remaining > 0; the user is asked to
+  // either Collect Payment now (opens the CollectPayment modal pre-filled
+  // with the remaining balance) or cancel the check-out attempt.
+  const [checkoutGuardModal, setCheckoutGuardModal] = useState({
+    open: false,
+    booking: null,
+    remaining: 0,
+    paymentStatus: "Pending",
+  });
   const [manageStatus, setManageStatus] = useState("");
   const [showDocumentUpload, setShowDocumentUpload] = useState(false);
   const [showPaymentHistory, setShowPaymentHistory] = useState(false);
@@ -2597,13 +2699,23 @@ const BookingFlow = () => {
   /* ---------- derived ---------- */
 
   const filteredBookings = useMemo(() => {
+    let list = bookings;
     const q = search.trim().toLowerCase();
-    if (!q) return bookings;
-    return bookings.filter((b) =>
-      [b.guest_name, b.bookingCode, b.bookingId, b.mobile, b.rooms]
-        .filter(Boolean)
-        .some((v) => String(v).toLowerCase().includes(q)),
-    );
+    if (q) {
+      list = list.filter((b) =>
+        [b.guest_name, b.bookingCode, b.bookingId, b.mobile, b.rooms]
+          .filter(Boolean)
+          .some((v) => String(v).toLowerCase().includes(q)),
+      );
+    }
+    // 🐛 FIX: exclude Checked-Out bookings from the "All Bookings" list.
+    // Once a guest is checked out, their booking belongs in Booking History
+    // only — it should NOT still appear in the active All Bookings table.
+    // The checkout restriction (above) already prevents check-out when
+    // payment is pending, so any booking reaching Checked-Out here has
+    // been fully settled.
+    list = list.filter((b) => String(b.booking_status || "").toLowerCase().trim() !== "checked-out");
+    return list;
   }, [bookings, search]);
 
   const totalPages = Math.max(1, Math.ceil(filteredBookings.length / pageSize));
@@ -2665,6 +2777,18 @@ const [selectedBookingId, setSelectedBookingId] = useState(null);
         checkIn: (data.check_in || data.checkIn || "").slice(0, 10),
         checkOut: (data.check_out || data.checkOut || "").slice(0, 10),
         company: data.company_name || data.companyName || "",
+        // 🐛 FIX: the edit form always started from blank/default payment
+        // fields (amount 0, mode "Cash") instead of the booking's actual
+        // saved advance. Combined with the save request not including these
+        // fields at all, editing a booking silently reset its real advance
+        // amount/payment mode back to 0/Cash. Now the form is pre-filled
+        // with what's actually stored, so an edit that doesn't touch
+        // payment info re-submits the SAME (correct) values instead of
+        // wiping them.
+        amount: data.paidAmount || 0,
+        discountAmount: data.discountAmount || 0,
+        paymentMode: data.paymentMode || "Cash",
+        paymentNote: data.paymentRemarks || "",
         rooms: (Array.isArray(data.rooms) ? data.rooms : []).map((r) => {
           const roomNo = r.room_number || r.roomNumber || r.roomNo || "";
           const ownerCategory = categorySetup.find((c) =>
@@ -3051,6 +3175,13 @@ const handleJumpStep = (stepView) => {
 
         await Promise.all(parallelTasks);
       } else {
+        // 🐛 FIX: the Edit Booking form has a working "Payment Mode" dropdown
+        // (bound to formData.paymentMode) and an Amount field, but this save
+        // request never included them — so picking Cash -> UPI/Card looked
+        // fine in the form, but the actual save silently dropped it, and the
+        // backend fell back to its default (Cash / ₹0). That's why a page
+        // refresh always showed the OLD payment mode: it genuinely was never
+        // saved. Now these fields are sent so the edit actually persists.
         await bookingAPI.put(`/hotel/full-booking/${bookingId}`, {
           guest_name: guestFullName,
           mobile: formData.mobile,
@@ -3064,6 +3195,10 @@ const handleJumpStep = (stepView) => {
             quantity: r.quantity,
             total: rowTotal(r, stayNights),
           })),
+          paidAmount: Number(formData.amount) || 0,
+          discountAmount: Number(formData.discountAmount) || 0,
+          paymentMode: formData.paymentMode || "Cash",
+          paymentRemarks: formData.paymentNote || "",
         });
       }
 
@@ -3075,6 +3210,20 @@ const handleJumpStep = (stepView) => {
         isEdit ? "The booking has been updated successfully." : "Your booking has been created successfully.",
       );
       await fetchBookings();
+
+      // 🐛 NEW: send booking confirmation WhatsApp to customer automatically
+      // as soon as the booking is confirmed. Uses the same backend endpoint
+      // that the "Send Invoice via WhatsApp" button uses — it generates the
+      // invoice PDF and delivers it to the customer's WhatsApp. Fire-and-forget
+      // so a slow PDF/WhatsApp API never blocks the UI.
+      if (!isEdit && bookingId && formData.mobile) {
+        API.post(`/hotel/invoice/send-whatsapp/${bookingId}`, {
+          customerNumber: formData.mobile,
+        }).catch((err) => {
+          console.warn("[WhatsApp] booking confirmation failed:", err.message || err);
+        });
+      }
+
       setView("confirmed");
     } catch (err) {
       console.error(err);
@@ -3142,9 +3291,42 @@ const handleJumpStep = (stepView) => {
     }
   };
 
+  // Compute payment status for a booking from live remaining/paid amounts.
+  // Used by check-out guard and all on-screen payment status badges:
+  // Pending → no payment; Partial → some paid but balance > 0; Paid → fully paid.
+  const computePaymentStatus = (booking) => {
+    if (!booking) return "Pending";
+    const remaining = Number(booking.remainingAmount || booking.balanceAmount || 0);
+    const paid = Number(booking.netPaid || booking.paidAmount || 0);
+    if (remaining <= 0 && paid > 0) return "Paid";
+    if (paid > 0) return "Partial";
+    return "Pending";
+  };
+
   const handleLifecycle = async (action, booking = selectedBooking) => {
     if (!booking?.bookingId) return;
     const newStatus = action === "check-out" ? "Checked-Out" : "Checked-In";
+
+    // 🐛 RESTRICTION: block check-out if a non-zero balance is still pending.
+    // The user must first "Collect Payment" from the Manage Booking screen
+    // (or do a partial settlement) until the booking is fully Paid. If the
+    // user clicks Check-Out while a balance is still due, we open a warning
+    // dialog asking whether to go collect payment first, instead of
+    // silently moving the guest to Checked-Out with money still owed.
+    if (action === "check-out") {
+      const paymentStatus = computePaymentStatus(booking);
+      const remaining = Number(booking.remainingAmount || booking.balanceAmount || 0);
+      if (remaining > 0 && paymentStatus !== "Paid") {
+        setCheckoutGuardModal({
+          open: true,
+          booking,
+          remaining,
+          paymentStatus,
+        });
+        return;
+      }
+    }
+
     try {
       await API.put(`/hotel/${action}/${booking.bookingId}`);
       if (action === "check-out") {
@@ -3157,15 +3339,11 @@ const handleJumpStep = (stepView) => {
           ? "Guest has been checked out. Room moved to Cleaning on the Dashboard."
           : "Guest has been checked in successfully.",
       );
+      // After checkout, re-fetch active bookings (Checked-Out are now
+      // filtered out of the All Bookings list) and also refresh the
+      // booking-history list so the just-checked-out guest appears there.
       await fetchBookings();
-      // Optimistic update: immediately patch the local bookings list
-      // so the Check-In / Check-Out button flips instantly in the UI
-      // even if the server round-trip is slow or cached.
-      setBookings((prev) =>
-        prev.map((b) =>
-          String(b.bookingId) === String(booking.bookingId) ? { ...b, booking_status: newStatus } : b
-        )
-      );
+      await fetchHistory();
       setSelectedBooking((prev) => ({ ...(prev || {}), booking_status: newStatus }));
     } catch (err) {
       console.error(err);
@@ -3210,7 +3388,79 @@ const handleJumpStep = (stepView) => {
       });
       setCollectModal({ open: false, amount: "", mode: "Cash", submitting: false });
       showToast("success", "Payment Collected", `${formatCurrency(amount)} recorded against this booking.`);
+
+      // Re-fetch bookings (and the detail rows) so the booking's paidAmount /
+      // remainingAmount / status update everywhere — booking list, booking
+      // details, manage booking, accounts billing, accounts dashboard, etc.
+      // Without this, the payment status badge kept showing "Pending" even
+      // after a successful collection.
       await fetchBookings();
+
+      // Compute the new payment state from the freshly-fetched booking row.
+      // If the user just settled the final balance, close the checkout guard
+      // (if open) and surface a "Paid" toast.
+      const refreshed = (bookings || []).find(
+        (b) => String(b.bookingId) === String(selectedBooking.bookingId),
+      );
+      const liveBooking = refreshed || selectedBooking;
+      const oldPaid = Number(liveBooking.netPaid || liveBooking.paidAmount || 0);
+      const oldRemaining = Number(liveBooking.remainingAmount || liveBooking.balanceAmount || 0);
+      const newPaid = oldPaid + amount;
+      const newRemaining = Math.max(oldRemaining - amount, 0);
+
+      // Patch selectedBooking with the new totals so the Manage screen's
+      // payment-status badge immediately flips to Paid once balance is zero.
+      setSelectedBooking((prev) => ({
+        ...(prev || {}),
+        ...(liveBooking || {}),
+        netPaid: newPaid,
+        paidAmount: newPaid,
+        remainingAmount: newRemaining,
+        balanceAmount: newRemaining,
+      }));
+
+      // Also patch the bookings list optimistically so other views (Accounts
+      // dashboard billing list, Bookings table, etc.) reflect the new status
+      // without a second round trip.
+      setBookings((prev) =>
+        prev.map((b) =>
+          String(b.bookingId) === String(selectedBooking.bookingId)
+            ? {
+                ...b,
+                netPaid: newPaid,
+                paidAmount: newPaid,
+                remainingAmount: newRemaining,
+                balanceAmount: newRemaining,
+              }
+            : b
+        ),
+      );
+
+      // If the booking just became fully Paid and a checkout-guard dialog
+      // was waiting on this very payment, auto-close the guard and tell the
+      // user they can now proceed to check-out.
+      if (newRemaining <= 0 && oldRemaining > 0) {
+        if (checkoutGuardModal.open) {
+          setCheckoutGuardModal({ open: false, booking: null, remaining: 0, paymentStatus: "Pending" });
+          showToast(
+            "success",
+            "Payment Complete",
+            `Booking ${liveBooking.bookingCode || liveBooking.bookingId} is now fully Paid. You may proceed to Check-Out.`,
+          );
+        } else {
+          showToast(
+            "success",
+            "Fully Paid",
+            `Booking ${liveBooking.bookingCode || liveBooking.bookingId} is now fully Paid.`,
+          );
+        }
+        // Broadcast a global event so Accounts pages re-fetch their
+        // billing / summary when this same browser session is showing them.
+        window.dispatchEvent(new CustomEvent("bookingPaymentUpdated", {
+          detail: { bookingId: selectedBooking.bookingId, paidAmount: newPaid, remainingAmount: newRemaining },
+        }));
+        window.dispatchEvent(new Event("accountsUpdated"));
+      }
     } catch (err) {
       console.error(err);
       setCollectModal((c) => ({ ...c, submitting: false }));
@@ -3280,25 +3530,127 @@ const handleJumpStep = (stepView) => {
     setWaSending(true);
     setWaResult(null);
     try {
-      let invoiceId = null;
+      let invoice = null;
       try {
         const existing = await API.get(`/invoice/by-booking/${bid}`);
-        if (existing.data?.id) invoiceId = existing.data.id;
+        if (existing.data?.id) invoice = existing.data;
       } catch { /* not found, will generate */ }
 
-      if (!invoiceId) {
+      if (!invoice) {
         const generated = await API.get(`/invoice/${bid}`);
-        if (!generated.data) {
-          setWaResult({ type: "error", message: "Could not generate invoice." });
-          setWaSending(false);
-          return;
-        }
+        invoice = generated.data || null;
+      }
+      if (!invoice) {
+        setWaResult({ type: "error", message: "Could not generate invoice." });
+        setWaSending(false);
+        return;
       }
 
-      const customerMobile = selectedBooking?.mobile || "";
-      const res = await API.post(`/hotel/invoice/send-whatsapp/${bid}`, {
+      const b = selectedBooking || {};
+      const d = bookingDetail || {};
+      // 🐛 FIX: totals were already computed from live data, but
+      // `bookingRooms` was read from `selectedBooking.rooms` (the stale
+      // summary row from the bookings list) and — worse — the `items` sent
+      // to the backend were `invoice.items`, the raw, possibly-outdated
+      // line items saved on the invoice row in the database. Whenever a
+      // booking's stay length or room list changed after the invoice was
+      // first generated (e.g. extended from 1 night to 3-4 nights, or
+      // rooms added), the total shown matched the current booking but the
+      // itemised WhatsApp PDF still showed the OLD 1-room/1-night
+      // breakdown. Fixed by reading rooms from the live `bookingDetail`
+      // (same source the Booking Details page uses for its total) and by
+      // building a fresh `items` array from that live data instead of
+      // reusing `invoice.items`.
+      const bookingRooms = Array.isArray(d.rooms) && d.rooms.length > 0
+        ? d.rooms
+        : Array.isArray(b.rooms) ? b.rooms : [];
+      const roomTotal = bookingRooms.reduce((sum, r) => sum + (Number(r.total) || Number(r.amount) || 0), 0);
+
+      // Try to load folio charges for accurate totals
+      let folioEntries = [];
+      try {
+        const folioRes = await API.get(`/hotel/folio/${bid}`);
+        folioEntries = Array.isArray(folioRes.data) ? folioRes.data : [];
+      } catch { /* best-effort */ }
+      const folioChargeEntries = folioEntries.filter((e) => e.entry_type === "Extra Charge");
+      const folioTotal = folioChargeEntries.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+
+      const computedTotal = roomTotal + folioTotal;
+      // 🐛 FIX: this used to always assume a flat 5% GST ("/ 1.05") when
+      // reversing the tax out of the total. A room configured with 0% GST
+      // (or any rate other than 5%) got the wrong subtotal/tax split, which
+      // then flowed into the PDF as an inflated Final Total (e.g. a real
+      // ₹2,000 room printed as ₹2,100). Now the subtotal is the actual sum
+      // of each room's own taxable amount, computed from its real GST %.
+      const computedSubtotal = bookingRooms.reduce((sum, r) => {
+        const tariff = Number(r.tariff ?? r.price ?? 0);
+        const qty = Number(r.quantity ?? 1);
+        const gstPercent = Number(r.gst ?? r.gstPercent ?? 0);
+        const total = Number(r.total ?? (tariff * qty)) || 0;
+        const taxable = gstPercent > 0 ? total / (1 + gstPercent / 100) : total;
+        return sum + taxable;
+      }, 0) + folioTotal; // folio extra charges are treated as tax-exempt, same as before
+      const computedTax = computedTotal - computedSubtotal;
+
+      // Build the live itemised breakdown (one line per room + one per
+      // folio extra charge) so the WhatsApp PDF matches what the Booking
+      // Details / Generate Invoice screens show. Each room now also carries
+      // its real gstPercent so the backend PDF applies the correct tax
+      // instead of assuming a flat 5%.
+      const liveItems = [
+        ...bookingRooms.map((r) => {
+          const roomNo = r.room_number || r.roomNumber || r.roomNo || "";
+          const roomType = r.roomType || r.room_type || r.category || "Room";
+          const tariff = Number(r.tariff ?? r.price ?? 0);
+          const qty = Number(r.quantity ?? 1);
+          const gstPercent = Number(r.gst ?? r.gstPercent ?? 0);
+          const total = Number(r.total ?? (tariff * qty)) || 0;
+          return {
+            name: `${roomType} - Room ${roomNo}`,
+            price: tariff,
+            quantity: qty,
+            gstPercent,
+            total,
+          };
+        }),
+        ...folioChargeEntries.map((e) => ({
+          name: e.description || e.category || "Extra Charge",
+          price: Number(e.amount) || 0,
+          quantity: 1,
+          gstPercent: 0,
+          total: Number(e.amount) || 0,
+        })),
+      ];
+
+      const customerMobile = b.mobile || d.mobile || "";
+      const payload = {
         customerNumber: customerMobile,
-      });
+        // Override backend invoice with computed totals + items from live
+        // booking data. Live data (b/d) is preferred over `invoice.*`
+        // (a possibly stale, previously-saved snapshot) everywhere below —
+        // this is also what fixes cases where the guest's Arrival/Departure
+        // on the printed invoice didn't match the booking's current dates
+        // after an edit.
+        invoiceData: {
+          totalAmount: computedTotal > 0 ? computedTotal : (Number(invoice.totalAmount) || 0),
+          subtotal: computedTotal > 0 ? computedSubtotal : (Number(invoice.subtotal) || 0),
+          tax: computedTotal > 0 ? computedTax : (Number(invoice.tax) || 0),
+          discount: Number(invoice.discount) || 0,
+          paymentStatus: invoice.paymentStatus || invoice.payment_status || (computedTotal > 0 ? "Pending" : "Paid"),
+          paymentMode: invoice.paymentMode || b.payment_mode || "Cash",
+          customerName: b.guest_name || d.guest_name || invoice.customerName || "Guest",
+          phone: b.mobile || d.mobile || invoice.phone || "",
+          roomNumber:
+            bookingRooms.map((r) => r.room_number || r.roomNumber || r.roomNo).filter(Boolean).join(", ") ||
+            invoice.roomNumber || b.rooms || b.roomNumber || "",
+          checkIn: b.check_in || d.check_in || invoice.checkIn || "",
+          checkOut: b.check_out || d.check_out || invoice.checkOut || "",
+          address: b.address || d.address || invoice.address || "",
+          items: liveItems.length > 0 ? liveItems : (invoice.items || []),
+        },
+      };
+
+      const res = await API.post(`/hotel/invoice/send-whatsapp/${bid}`, payload);
       const data = res.data || {};
       console.log("[WhatsApp-details] full response:", JSON.stringify(data, null, 2));
 
@@ -3409,22 +3761,37 @@ const handleJumpStep = (stepView) => {
       stayDates.push(new Date());
     }
 
-    const perNightTariff =
+    // 🐛 FIX: this used to divide the (already GST-inclusive) roomChargesTotal
+    // evenly across nights and then ADD an extra flat 5% (2.5% SGST + 2.5%
+    // CGST) on top of that — regardless of the room's actual configured GST
+    // rate. A room set up with 0% GST (or any rate other than 5%) therefore
+    // printed an inflated Final Total (e.g. a real ₹2,000 charge became
+    // ₹2,100). Now each room's real GST % (weighted by its share of the
+    // total) is used to correctly split the already-inclusive total into
+    // taxable + SGST + CGST instead of assuming 5%.
+    const weightedGstPercent = roomChargesTotal > 0
+      ? (Array.isArray(d.rooms) ? d.rooms : []).reduce((sum, r) => {
+          const total = Number(r.total) || 0;
+          const gstPercent = Number(r.gst ?? r.gstPercent ?? 0);
+          return sum + (total / roomChargesTotal) * gstPercent;
+        }, 0)
+      : 0;
+    const perNightGrossTotal =
       stayDates.length > 0
         ? Number(((roomChargesTotal || 0) / stayDates.length).toFixed(2))
         : 0;
     const perNightDisc = 0;
-    const perNightTaxable = perNightTariff;
-    const perNightSgst = Number((perNightTaxable * 0.025).toFixed(2));
-    const perNightCgst = Number((perNightTaxable * 0.025).toFixed(2));
-    const perNightTotal = Number(
-      (perNightTaxable + perNightSgst + perNightCgst).toFixed(2),
-    );
+    const perNightTaxable = weightedGstPercent > 0
+      ? Number((perNightGrossTotal / (1 + weightedGstPercent / 100)).toFixed(2))
+      : perNightGrossTotal;
+    const perNightSgst = Number(((perNightGrossTotal - perNightTaxable) / 2).toFixed(2));
+    const perNightCgst = perNightSgst;
+    const perNightTotal = perNightGrossTotal;
 
     const dayRows = stayDates.map((dt) => ({
       date: formatDate(dt),
       particulars: `Room Charges - ${(roomType || "Room").toUpperCase()} - ${(roomType || "Room").toUpperCase()}`,
-      tariff: perNightTariff,
+      tariff: perNightTaxable,
       disc: perNightDisc,
       taxable: perNightTaxable,
       sgst: perNightSgst,
@@ -3438,9 +3805,9 @@ const handleJumpStep = (stepView) => {
       tariff: Number(e.amount) || 0,
       disc: 0,
       taxable: Number(e.amount) || 0,
-      sgst: Number((Number(e.amount || 0) * 0.025).toFixed(2)),
-      cgst: Number((Number(e.amount || 0) * 0.025).toFixed(2)),
-      total: Number(e.amount || 0),
+      sgst: 0,
+      cgst: 0,
+      total: Number(e.amount) || 0,
     }));
 
     const allItems = [...dayRows, ...folioRows];
@@ -3978,6 +4345,7 @@ const handleJumpStep = (stepView) => {
               <th className="px-4 sm:px-5 py-3 sm:py-4">Check-Out</th>
               <th className="px-4 sm:px-5 py-3 sm:py-4">Rooms</th>
               <th className="px-4 sm:px-5 py-3 sm:py-4">Amount</th>
+              <th className="px-4 sm:px-5 py-3 sm:py-4">Payment Status</th>
               <th className="px-4 sm:px-5 py-3 sm:py-4">Status</th>
               <th className="px-4 sm:px-5 py-3 sm:py-4">Booking Type</th>
               <th className="px-4 sm:px-5 py-3 sm:py-4 text-right">Action</th>
@@ -3986,14 +4354,14 @@ const handleJumpStep = (stepView) => {
           <tbody className="divide-y divide-slate-100 text-[17px]">
             {loading ? (
               <tr>
-                <td colSpan={9} className="px-4 py-10 text-center text-slate-400">
+                <td colSpan={10} className="px-4 py-10 text-center text-slate-400">
                   Loading bookings...
                 </td>
               </tr>
             ) : pagedBookings.length === 0 ? (
               <tr>
-                <td colSpan={9} className="px-4 py-10 text-center text-slate-400">
-                  No bookings found.
+                <td colSpan={10} className="px-4 py-10 text-center text-slate-400">
+                  No active bookings found. Checked-out bookings are available in Booking History.
                 </td>
               </tr>
             ) : (
@@ -4005,6 +4373,30 @@ const handleJumpStep = (stepView) => {
                   <td className="px-4 sm:px-5 py-3 sm:py-4 text-slate-600">{formatDate(b.check_out)}</td>
                   <td className="px-4 sm:px-5 py-3 sm:py-4 text-slate-600">{b.rooms || "-"}</td>
                   <td className="px-4 sm:px-5 py-3 sm:py-4 font-semibold text-slate-800">{formatCurrency(b.totalAmount)}</td>
+                  <td className="px-4 sm:px-5 py-3 sm:py-4">
+                    {(() => {
+                      const status = computePaymentStatus(b);
+                      const remaining = Number(b.remainingAmount || b.balanceAmount || 0);
+                      const cls =
+                        status === "Paid"
+                          ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
+                          : status === "Partial"
+                            ? "bg-sky-50 text-sky-700 ring-1 ring-sky-100"
+                            : "bg-rose-50 text-rose-700 ring-1 ring-rose-100";
+                      return (
+                        <div className="flex flex-col gap-0.5">
+                          <span className={`inline-block rounded-full px-3 py-1 text-sm font-bold ${cls}`}>
+                            {status}
+                          </span>
+                          {status !== "Paid" && remaining > 0 && (
+                            <span className="text-[12px] font-semibold text-rose-600">
+                              Due {formatCurrency(remaining)}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </td>
                   <td className="px-4 sm:px-5 py-3 sm:py-4">
                     <span className={statusBadgeCls(b.booking_status)}>
                       {b.booking_status || "Pending"}
@@ -4679,6 +5071,28 @@ const handleJumpStep = (stepView) => {
             <span className={statusBadgeCls(d.booking_status || b.booking_status)}>
               {d.booking_status || b.booking_status || "Pending"}
             </span>
+            {(() => {
+              // Payment status derived from live remaining / paid amounts.
+              // This stays in sync with the Accounts dashboard because both
+              // read the same `remainingAmount` / `paidAmount` / `netPaid` fields.
+              const paid = Number(d.netPaid || d.paidAmount || b.netPaid || b.paidAmount || 0);
+              const remaining = Number(d.remainingAmount || d.balanceAmount || b.remainingAmount || b.balanceAmount || 0);
+              const pStatus = remaining <= 0 && paid > 0 ? "Paid" : paid > 0 ? "Partial" : "Pending";
+              const pCls =
+                pStatus === "Paid"
+                  ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
+                  : pStatus === "Partial"
+                    ? "bg-sky-50 text-sky-700 ring-1 ring-sky-100"
+                    : "bg-rose-50 text-rose-700 ring-1 ring-rose-100";
+              return (
+                <span className={`inline-block rounded-full px-3 py-1 text-sm font-bold ${pCls}`}>
+                  Payment: {pStatus}
+                  {remaining > 0 && pStatus !== "Paid" && (
+                    <span className="ml-1 text-rose-600">({formatCurrency(remaining)} due)</span>
+                  )}
+                </span>
+              );
+            })()}
             {/*
               PRINT-INVOICE FIX: this button used to call window.print(),
               which printed the whole Booking Details screen. It now calls
@@ -4828,6 +5242,7 @@ const handleJumpStep = (stepView) => {
           <WhatsAppSendModal
             booking={b}
             detail={d}
+            invoice={waInvoice}
             sending={waSending}
             result={waResult}
             onSend={handleSendWhatsAppFromDetails}
@@ -4852,9 +5267,29 @@ const handleJumpStep = (stepView) => {
         <div className="mb-5 sm:mb-6 border-b border-slate-100 pb-4 sm:pb-5">
           <div className="text-sm font-bold uppercase text-slate-400">Managing Booking</div>
           <h2 className={cardTitleCls}>{b.bookingCode || `BK-${b.bookingId}`}</h2>
-          <span className={`mt-2 ${statusBadgeCls(b.booking_status)}`}>
-            {b.booking_status || "Pending"}
-          </span>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <span className={`${statusBadgeCls(b.booking_status)}`}>
+              {b.booking_status || "Pending"}
+            </span>
+            {(() => {
+              const payStatus = computePaymentStatus(b);
+              const remaining = Number(b.remainingAmount || b.balanceAmount || 0);
+              const payCls =
+                payStatus === "Paid"
+                  ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
+                  : payStatus === "Partial"
+                    ? "bg-sky-50 text-sky-700 ring-1 ring-sky-100"
+                    : "bg-rose-50 text-rose-700 ring-1 ring-rose-100";
+              return (
+                <span className={`inline-block rounded-full px-3 py-1 text-sm font-bold ${payCls}`}>
+                  Payment: {payStatus}
+                  {remaining > 0 && payStatus !== "Paid" && (
+                    <span className="ml-1 text-rose-600">({formatCurrency(remaining)} due)</span>
+                  )}
+                </span>
+              );
+            })()}
+          </div>
         </div>
 
         <div className="grid gap-5 sm:gap-6 md:grid-cols-2">
@@ -4968,6 +5403,7 @@ const handleJumpStep = (stepView) => {
                 <th className="px-4 sm:px-5 py-3 sm:py-4">Stay Dates</th>
                 <th className="px-4 sm:px-5 py-3 sm:py-4">Rooms</th>
                 <th className="px-4 sm:px-5 py-3 sm:py-4">Total</th>
+                <th className="px-4 sm:px-5 py-3 sm:py-4">Payment Status</th>
                 <th className="px-4 sm:px-5 py-3 sm:py-4">Remaining</th>
                 <th className="px-4 sm:px-5 py-3 sm:py-4">Status</th>
                 <th className="px-4 sm:px-5 py-3 sm:py-4 text-right">Action</th>
@@ -4976,7 +5412,7 @@ const handleJumpStep = (stepView) => {
             <tbody className="divide-y divide-slate-100 text-[17px]">
               {historyLoading ? (
                 <tr>
-                  <td colSpan={9} className="px-4 py-10 text-center text-slate-400">
+                  <td colSpan={10} className="px-4 py-10 text-center text-slate-400">
                     Loading history...
                   </td>
                 </tr>
@@ -4989,6 +5425,14 @@ const handleJumpStep = (stepView) => {
               ) : (
                 pagedHistory.map((row) => {
                   const remaining = Number(row.remainingAmount || 0);
+                  const paid = Number(row.netPaid || row.paidAmount || 0);
+                  const rowStatus = remaining <= 0 && paid > 0 ? "Paid" : paid > 0 ? "Partial" : "Pending";
+                  const rowStatusCls =
+                    rowStatus === "Paid"
+                      ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
+                      : rowStatus === "Partial"
+                        ? "bg-sky-50 text-sky-700 ring-1 ring-sky-100"
+                        : "bg-rose-50 text-rose-700 ring-1 ring-rose-100";
                   const roomDetails = String(row.roomDetails || row.rooms || "-")
                     .split(" || ")
                     .join(", ");
@@ -5008,6 +5452,11 @@ const handleJumpStep = (stepView) => {
                       </td>
                       <td className="px-4 sm:px-5 py-3 sm:py-4 text-slate-600">{roomDetails}</td>
                       <td className="px-4 sm:px-5 py-3 sm:py-4 font-semibold text-slate-800">{formatCurrency(row.totalAmount)}</td>
+                      <td className="px-4 sm:px-5 py-3 sm:py-4">
+                        <span className={`inline-block rounded-full px-3 py-1 text-sm font-bold ${rowStatusCls}`}>
+                          {rowStatus}
+                        </span>
+                      </td>
                       <td className={`px-4 sm:px-5 py-3 sm:py-4 font-semibold ${remaining > 0 ? "text-rose-600" : "text-emerald-600"}`}>
                         {formatCurrency(row.remainingAmount)}
                       </td>
@@ -5279,6 +5728,85 @@ const handleJumpStep = (stepView) => {
             placeholder="Guest changed mind, wrong date, pricing issue..."
           />
         </label>
+      </Modal>
+
+      {/* 🐛 RESTRICTION: opens from handleLifecycle when the user tries to
+          Check-Out a booking that still has a pending balance. Closes
+          automatically once Collect Payment brings the balance to zero. */}
+      <Modal
+        open={checkoutGuardModal.open}
+        onClose={() =>
+          setCheckoutGuardModal({ open: false, booking: null, remaining: 0, paymentStatus: "Pending" })
+        }
+        icon={FaExclamationTriangle}
+        iconTone="bg-amber-500"
+        title="Payment Pending — Cannot Check-Out"
+        actions={
+          <>
+            <button
+              type="button"
+              onClick={() =>
+                setCheckoutGuardModal({ open: false, booking: null, remaining: 0, paymentStatus: "Pending" })
+              }
+              className={ghostBtn}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                // Pre-fill the Collect Payment modal with the remaining
+                // balance and close the guard so the user can settle it.
+                const remaining = Number(checkoutGuardModal.remaining || 0);
+                setCollectModal({
+                  open: true,
+                  amount: remaining > 0 ? String(remaining.toFixed(2)) : "",
+                  mode: "Cash",
+                  submitting: false,
+                });
+                setCheckoutGuardModal({ open: false, booking: null, remaining: 0, paymentStatus: "Pending" });
+              }}
+              className={primaryBtn}
+            >
+              Collect Payment Now
+            </button>
+          </>
+        }
+      >
+        <div className="space-y-3">
+          <p>
+            Booking{" "}
+            <span className="font-black text-slate-900">
+              {checkoutGuardModal.booking?.bookingCode || `BK-${checkoutGuardModal.booking?.bookingId}`}
+            </span>{" "}
+            cannot be checked out while a payment is still pending.
+          </p>
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+            <div className="text-[13px] font-bold uppercase tracking-wider text-amber-700">
+              Current Payment Status
+            </div>
+            <div className="mt-1 flex items-center justify-between gap-3">
+              <span
+                className={`inline-block rounded-full px-3 py-1 text-sm font-bold ${
+                  checkoutGuardModal.paymentStatus === "Paid"
+                    ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
+                    : checkoutGuardModal.paymentStatus === "Partial"
+                      ? "bg-sky-50 text-sky-700 ring-1 ring-sky-100"
+                      : "bg-rose-50 text-rose-700 ring-1 ring-rose-100"
+                }`}
+              >
+                {checkoutGuardModal.paymentStatus}
+              </span>
+              <span className="text-base font-black text-rose-700">
+                Pending: {formatCurrency(checkoutGuardModal.remaining || 0)}
+              </span>
+            </div>
+          </div>
+          <p className="text-[15px] text-slate-600">
+            Please collect the pending payment first. Once the balance is fully paid, the
+            Check-Out button will be enabled automatically.
+          </p>
+        </div>
       </Modal>
 
       <Modal

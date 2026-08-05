@@ -379,64 +379,94 @@ const abortController = new AbortController();
   };
 
   const combinedBillingRecords = [
-    ...visibleHotelInvoices.map((invoice) => ({
-      id: `hotel-${invoice.id}`,
-      source: "Hotel",
-      reference: invoice.invoice_no || invoice.invoiceNo || "--",
-      customerName: invoice.customer_name || invoice.customerName || "--",
-      locationLabel: getInvoiceRoomValue(invoice) ? `Room ${getInvoiceRoomValue(invoice)}` : "--",
-      date: invoice.date || "--",
-      total: toNumber(invoice.totalAmount ?? invoice.total_amount ?? invoice.final_total),
-      paymentMode: getInvoicePaymentMode(invoice),
-      paymentStatus: invoice.paymentStatus || invoice.payment_status || invoice.status || "Pending",
-      actionId: invoice.booking_id || invoice.customer_id,
-      actionKind: "invoice",
-    })),
-    ...visibleHotelBookings.map((booking) => ({
-      id: `hotel-booking-${booking.bookingId || booking.id}`,
-      source: "Hotel",
-      reference: getHotelBookingReference(booking) || "--",
-      customerName: booking.guest_name || booking.customerName || "--",
-      locationLabel: getHotelBookingRoomValue(booking) ? `Room ${getHotelBookingRoomValue(booking)}` : "--",
-      date: booking.check_out || booking.checkOut || booking.check_in || booking.checkIn || "--",
-      total: toNumber(
-        booking.totalAmount || booking.total_amount || booking.netPaid || booking.paidAmount,
-      ),
-      paymentMode: getHotelBookingPaymentMode(booking),
-      paymentStatus: getHotelBookingPaymentStatus(booking),
-      actionId: booking.bookingId || booking.id,
-      actionKind: "hotel-booking",
-    })),
-    ...visibleRestaurantBills.map((bill) => ({
-      id: `restaurant-${bill.id}`,
-      source: "Restaurant",
-      reference: bill.reference || `RBILL-${bill.id}`,
-      customerName: bill.customerName || bill.customer_name || "Walk-in",
-      locationLabel: bill.locationLabel || (getRestaurantBillTableValue(bill)
-        ? `Table ${getRestaurantBillTableValue(bill)}`
-        : "--"),
-      date: bill.created_at || bill.date || "--",
-      total: toNumber(bill.total),
-      paymentMode: getRestaurantBillPaymentMode(bill),
-      paymentStatus: bill.paymentStatus || getRestaurantBillStatus(bill),
-      actionId: bill.actionId || bill.id,
-      actionKind: "restaurant-bill",
-    })),
-    ...visibleBanquetBookings.map((booking) => ({
-      id: `banquet-${booking.id}`,
-      source: "Banquet",
-      reference: getBanquetReference(booking) || `BNQ-${booking.id}`,
-      customerName: booking.customerName || booking.customer_name || "--",
-      locationLabel: getBanquetHallValue(booking) || "--",
-      date: booking.date || "--",
-      total: toNumber(
+    ...visibleHotelInvoices.map((invoice) => {
+      const invTotal = toNumber(invoice.totalAmount ?? invoice.total_amount ?? invoice.final_total);
+      const invPaid = toNumber(invoice.paidAmount ?? invoice.netPaid ?? invoice.paid_amount ?? 0);
+      const invDiscount = toNumber(invoice.discount ?? invoice.discount_amount ?? 0);
+      return {
+        id: `hotel-${invoice.id}`,
+        source: "Hotel",
+        reference: invoice.invoice_no || invoice.invoiceNo || "--",
+        customerName: invoice.customer_name || invoice.customerName || "--",
+        locationLabel: getInvoiceRoomValue(invoice) ? `Room ${getInvoiceRoomValue(invoice)}` : "--",
+        date: invoice.date || "--",
+        total: invTotal,
+        paidAmount: invPaid,
+        discount: invDiscount,
+        balanceDue: Math.max(0, invTotal - invPaid - invDiscount),
+        paymentMode: getInvoicePaymentMode(invoice),
+        paymentStatus: invoice.paymentStatus || invoice.payment_status || invoice.status || "Pending",
+        actionId: invoice.booking_id || invoice.customer_id,
+        actionKind: "invoice",
+      };
+    }),
+    ...visibleHotelBookings.map((booking) => {
+      const bkTotal = toNumber(booking.totalAmount || booking.total_amount || booking.netPaid || booking.paidAmount);
+      const bkPaid = toNumber(booking.netPaid || booking.paidAmount || 0);
+      const bkDiscount = toNumber(booking.discountAmount || booking.discount_amount || 0);
+      return {
+        id: `hotel-booking-${booking.bookingId || booking.id}`,
+        source: "Hotel",
+        reference: getHotelBookingReference(booking) || "--",
+        customerName: booking.guest_name || booking.customerName || "--",
+        locationLabel: getHotelBookingRoomValue(booking) ? `Room ${getHotelBookingRoomValue(booking)}` : "--",
+        date: booking.check_out || booking.checkOut || booking.check_in || booking.checkIn || "--",
+        total: bkTotal,
+        paidAmount: bkPaid,
+        discount: bkDiscount,
+        balanceDue: Math.max(0, bkTotal - bkPaid - bkDiscount),
+        paymentMode: getHotelBookingPaymentMode(booking),
+        paymentStatus: getHotelBookingPaymentStatus(booking),
+        actionId: booking.bookingId || booking.id,
+        actionKind: "hotel-booking",
+      };
+    }),
+    ...visibleRestaurantBills.map((bill) => {
+      const rbTotal = toNumber(bill.total);
+      const rbPaid = toNumber(bill.netPaid || bill.paidAmount || bill.paid_amount || 0);
+      const rbDiscount = toNumber(bill.discountAmount || bill.discount_amount || 0);
+      return {
+        id: `restaurant-${bill.id}`,
+        source: "Restaurant",
+        reference: bill.reference || `RBILL-${bill.id}`,
+        customerName: bill.customerName || bill.customer_name || "Walk-in",
+        locationLabel: bill.locationLabel || (getRestaurantBillTableValue(bill)
+          ? `Table ${getRestaurantBillTableValue(bill)}`
+          : "--"),
+        date: bill.created_at || bill.date || "--",
+        total: rbTotal,
+        paidAmount: rbPaid,
+        discount: rbDiscount,
+        balanceDue: Math.max(0, rbTotal - rbPaid - rbDiscount),
+        paymentMode: getRestaurantBillPaymentMode(bill),
+        paymentStatus: bill.paymentStatus || getRestaurantBillStatus(bill),
+        actionId: bill.actionId || bill.id,
+        actionKind: "restaurant-bill",
+      };
+    }),
+    ...visibleBanquetBookings.map((booking) => {
+      const bbTotal = toNumber(
         booking.grandTotal || booking.grand_total || booking.totalAmount || booking.total_amount,
-      ),
-      paymentMode: getBanquetPaymentMode(booking),
-      paymentStatus: getBanquetPaymentStatus(booking),
-      actionId: booking.id,
-      actionKind: "banquet",
-    })),
+      );
+      const bbPaid = toNumber(booking.paidAmount || booking.amountPaid || 0);
+      const bbDiscount = toNumber(booking.discountAmount || booking.discount_amount || 0);
+      return {
+        id: `banquet-${booking.id}`,
+        source: "Banquet",
+        reference: getBanquetReference(booking) || `BNQ-${booking.id}`,
+        customerName: booking.customerName || booking.customer_name || "--",
+        locationLabel: getBanquetHallValue(booking) || "--",
+        date: booking.date || "--",
+        total: bbTotal,
+        paidAmount: bbPaid,
+        discount: bbDiscount,
+        balanceDue: Math.max(0, bbTotal - bbPaid - bbDiscount),
+        paymentMode: getBanquetPaymentMode(booking),
+        paymentStatus: getBanquetPaymentStatus(booking),
+        actionId: booking.id,
+        actionKind: "banquet",
+      };
+    }),
   ].sort((left, right) => String(right.date).localeCompare(String(left.date)));
 
   const billingTotalPages = Math.max(1, Math.ceil(combinedBillingRecords.length / BILLING_PAGE_SIZE));
@@ -461,17 +491,24 @@ const abortController = new AbortController();
     }
   }, [billingPage, billingTotalPages]);
 
-  const renderStatusBadge = (status) => (
-    <span
-      className={`inline-flex rounded-full border px-3 py-1 text-[12px] font-bold sm:px-4 sm:py-1.5 sm:text-sm ${
-        String(status).toLowerCase() === "paid"
-          ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-          : "border-amber-200 bg-amber-50 text-amber-700"
-      }`}
-    >
-      {status}
-    </span>
-  );
+  const renderStatusBadge = (status) => {
+    const key = String(status || "Pending").toLowerCase();
+    const cls =
+      key === "paid"
+        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+        : key === "partial"
+          ? "border-sky-200 bg-sky-50 text-sky-700"
+          : key === "generated"
+            ? "border-amber-200 bg-amber-50 text-amber-700"
+            : "border-rose-200 bg-rose-50 text-rose-700";
+    return (
+      <span
+        className={`inline-flex rounded-full border px-3 py-1 text-[12px] font-bold sm:px-4 sm:py-1.5 sm:text-sm ${cls}`}
+      >
+        {status || "Pending"}
+      </span>
+    );
+  };
 
   const renderSourceBadge = (source) => (
     <span
@@ -588,9 +625,9 @@ const abortController = new AbortController();
             <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
               {[
                 { label: "Billing Records", value: String(combinedBillingRecords.length), tone: "text-cyan-200" },
-                { label: "Combined Total", value: formatINR(filteredBillingTotals.finalAmount), tone: "text-white" },
-                { label: "Room Total", value: formatINR(filteredBillingTotals.roomAmount), tone: "text-emerald-200" },
-                { label: "Restaurant Total", value: formatINR(filteredBillingTotals.restaurantAmount), tone: "text-sky-200" },
+                { label: "Total Billed", value: formatINR(filteredBillingTotals.finalAmount), tone: "text-white" },
+                { label: "Amount Paid", value: formatINR(combinedBillingRecords.reduce((s, r) => s + r.paidAmount, 0)), tone: "text-emerald-200" },
+                { label: "Balance Due", value: formatINR(combinedBillingRecords.reduce((s, r) => s + r.balanceDue, 0)), tone: "text-amber-200" },
               ].map((item) => (
                 <div
                   key={item.label}
@@ -685,28 +722,36 @@ const abortController = new AbortController();
           </div>
 
           {/* TOTALS */}
-          <div className="mb-4 grid grid-cols-1 gap-3 sm:mb-5 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
+          <div className="mb-4 grid grid-cols-2 gap-3 sm:mb-5 sm:grid-cols-3 sm:gap-4 xl:grid-cols-6">
             <div className="rounded-[18px] border border-emerald-100 bg-emerald-50/80 p-3.5 sm:rounded-[22px] sm:p-4">
-              <div className="text-sm font-semibold uppercase tracking-[0.16em] text-emerald-700 sm:text-[18px]">Filtered Room Total</div>
+              <div className="text-sm font-semibold uppercase tracking-[0.16em] text-emerald-700 sm:text-[18px]">Room Total</div>
               <div className="mt-2 text-2xl font-black text-emerald-800 sm:text-3xl">{formatINR(filteredBillingTotals.roomAmount)}</div>
-              <div className="mt-1 text-sm font-semibold text-emerald-700/80 sm:text-[18px]">
-                {selectedInvoiceRoom === "all" ? "Room share across all invoice records." : `Room share for Room ${selectedInvoiceRoom}.`}
-              </div>
             </div>
             <div className="rounded-[18px] border border-cyan-100 bg-cyan-50/80 p-3.5 sm:rounded-[22px] sm:p-4">
-              <div className="text-sm font-semibold uppercase tracking-[0.16em] text-cyan-700 sm:text-[18px]">Filtered Restaurant Total</div>
+              <div className="text-sm font-semibold uppercase tracking-[0.16em] text-cyan-700 sm:text-[18px]">Restaurant Total</div>
               <div className="mt-2 text-2xl font-black text-cyan-800 sm:text-3xl">{formatINR(filteredBillingTotals.restaurantAmount)}</div>
-              <div className="mt-1 text-sm font-semibold text-cyan-700/80 sm:text-[18px]">Restaurant bills plus room-service order totals.</div>
             </div>
             <div className="rounded-[18px] border border-violet-100 bg-violet-50/80 p-3.5 sm:rounded-[22px] sm:p-4">
-              <div className="text-sm font-semibold uppercase tracking-[0.16em] text-violet-700 sm:text-[18px]">Filtered Banquet Total</div>
+              <div className="text-sm font-semibold uppercase tracking-[0.16em] text-violet-700 sm:text-[18px]">Banquet Total</div>
               <div className="mt-2 text-2xl font-black text-violet-800 sm:text-3xl">{formatINR(filteredBillingTotals.banquetAmount)}</div>
-              <div className="mt-1 text-sm font-semibold text-violet-700/80 sm:text-[18px]">Real banquet booking totals from the banquet module.</div>
             </div>
             <div className="rounded-[18px] border border-slate-200 bg-slate-50/90 p-3.5 sm:rounded-[22px] sm:p-4">
-              <div className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-700 sm:text-[18px]">Filtered Combined Total</div>
+              <div className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-700 sm:text-[18px]">Total Billed</div>
               <div className="mt-2 text-2xl font-black text-slate-900 sm:text-3xl">{formatINR(filteredBillingTotals.finalAmount)}</div>
-              <div className="mt-1 text-sm font-semibold text-slate-700 sm:text-[18px]">Combined billed amount for the current filter.</div>
+            </div>
+            <div className="rounded-[18px] border border-emerald-200 bg-emerald-50/80 p-3.5 sm:rounded-[22px] sm:p-4">
+              <div className="text-sm font-semibold uppercase tracking-[0.16em] text-emerald-700 sm:text-[18px]">Amount Paid</div>
+              <div className="mt-2 text-2xl font-black text-emerald-800 sm:text-3xl">{formatINR(combinedBillingRecords.reduce((s, r) => s + r.paidAmount, 0))}</div>
+              <div className="mt-1 text-sm font-semibold text-emerald-700/80 sm:text-[18px]">
+                {combinedBillingRecords.reduce((s, r) => s + r.discount, 0) > 0 ? `+ ${formatINR(combinedBillingRecords.reduce((s, r) => s + r.discount, 0))} discount` : "No payments recorded yet"}
+              </div>
+            </div>
+            <div className="rounded-[18px] border border-amber-200 bg-amber-50/80 p-3.5 sm:rounded-[22px] sm:p-4">
+              <div className="text-sm font-semibold uppercase tracking-[0.16em] text-amber-700 sm:text-[18px]">Balance Due</div>
+              <div className="mt-2 text-2xl font-black text-amber-800 sm:text-3xl">{formatINR(combinedBillingRecords.reduce((s, r) => s + r.balanceDue, 0))}</div>
+              <div className="mt-1 text-sm font-semibold text-amber-700/80 sm:text-[18px]">
+                {combinedBillingRecords.reduce((s, r) => s + r.balanceDue, 0) > 0 ? "Outstanding across filtered records" : "All bills settled"}
+              </div>
             </div>
           </div>
 
@@ -720,7 +765,10 @@ const abortController = new AbortController();
                   <th className="px-4 py-3">Customer</th>
                   <th className="px-4 py-3">Room / Table</th>
                   <th className="px-4 py-3">Date</th>
-                  <th className="px-4 py-3">Total</th>
+                  <th className="px-4 py-3 text-right">Total</th>
+                  <th className="px-4 py-3 text-right">Paid</th>
+                  <th className="px-4 py-3 text-right">Discount</th>
+                  <th className="px-4 py-3 text-right">Balance Due</th>
                   <th className="px-4 py-3">Payment Mode</th>
                   <th className="px-4 py-3">Payment Status</th>
                   <th className="px-4 py-3">Actions</th>
@@ -734,7 +782,12 @@ const abortController = new AbortController();
                     <td className="px-4 py-4 text-lg text-slate-700">{record.customerName}</td>
                     <td className="px-4 py-4 text-lg text-slate-700">{record.locationLabel}</td>
                     <td className="px-4 py-4 text-lg text-slate-700">{record.date}</td>
-                    <td className="px-4 py-4 text-lg font-bold text-slate-900">{formatINR(record.total)}</td>
+                    <td className="px-4 py-4 text-right text-lg font-bold text-slate-900">{formatINR(record.total)}</td>
+                    <td className="px-4 py-4 text-right text-lg font-semibold text-emerald-700">{formatINR(record.paidAmount)}</td>
+                    <td className="px-4 py-4 text-right text-lg font-semibold text-amber-700">{formatINR(record.discount)}</td>
+                    <td className={`px-4 py-4 text-right text-lg font-bold ${record.balanceDue > 0 ? "text-rose-600" : "text-emerald-700"}`}>
+                      {formatINR(record.balanceDue)}
+                    </td>
                     <td className="px-4 py-4 text-lg text-slate-700">{record.paymentMode}</td>
                     <td className="px-4 py-4">{renderStatusBadge(record.paymentStatus)}</td>
                     <td className="px-4 py-4">
@@ -745,7 +798,7 @@ const abortController = new AbortController();
 
                 {!combinedBillingRecords.length ? (
                   <tr>
-                    <td colSpan={9} className="px-4 py-8 text-center text-slate-500">
+                    <td colSpan={12} className="px-4 py-8 text-center text-slate-500">
                       No hotel, restaurant, or banquet billing records match the current filters.
                     </td>
                   </tr>
@@ -790,10 +843,36 @@ const abortController = new AbortController();
                   </div>
                   <div>
                     <div className="text-[13px] font-semibold uppercase tracking-wide text-slate-400 sm:text-sm">
-                      Date
+                      Total
                     </div>
-                    <div className="text-[14px] font-medium text-slate-700 sm:text-[15px]">
-                      {record.date}
+                    <div className="text-[14px] font-bold text-slate-900 sm:text-[15px]">
+                      {formatINR(record.total)}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-[13px] font-semibold uppercase tracking-wide text-slate-400 sm:text-sm">
+                      Paid
+                    </div>
+                    <div className="text-[14px] font-semibold text-emerald-700 sm:text-[15px]">
+                      {formatINR(record.paidAmount)}
+                    </div>
+                  </div>
+                  {record.discount > 0 && (
+                    <div>
+                      <div className="text-[13px] font-semibold uppercase tracking-wide text-slate-400 sm:text-sm">
+                        Discount
+                      </div>
+                      <div className="text-[14px] font-semibold text-amber-700 sm:text-[15px]">
+                        {formatINR(record.discount)}
+                      </div>
+                    </div>
+                  )}
+                  <div>
+                    <div className="text-[13px] font-semibold uppercase tracking-wide text-slate-400 sm:text-sm">
+                      Balance Due
+                    </div>
+                    <div className={`text-[14px] font-bold sm:text-[15px] ${record.balanceDue > 0 ? "text-rose-600" : "text-emerald-700"}`}>
+                      {formatINR(record.balanceDue)}
                     </div>
                   </div>
                   <div>
@@ -804,12 +883,12 @@ const abortController = new AbortController();
                       {record.paymentMode}
                     </div>
                   </div>
-                  <div className="col-span-2">
+                  <div>
                     <div className="text-[13px] font-semibold uppercase tracking-wide text-slate-400 sm:text-sm">
-                      Total
+                      Status
                     </div>
-                    <div className="text-[16px] font-bold text-slate-900 sm:text-lg">
-                      {formatINR(record.total)}
+                    <div className="text-[14px] font-medium text-slate-700 sm:text-[15px]">
+                      {record.paymentStatus}
                     </div>
                   </div>
                 </div>

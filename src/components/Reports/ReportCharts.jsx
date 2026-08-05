@@ -216,6 +216,24 @@ const ReportCharts = ({ reportType, rows }) => {
     );
   }
 
+  if (reportType === "expense") {
+    const data = groupSum(rows, "department", "amount");
+
+    return (
+      <Card title="Expense by Department" subtitle="Department-wise spending breakdown">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data} margin={{ top: 12, right: 16, left: 4, bottom: 12 }} barCategoryGap="30%">
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+            <XAxis dataKey="name" stroke="#64748b" tick={{ fontSize: 12 }} />
+            <YAxis stroke="#64748b" tick={{ fontSize: 12 }} />
+            <Tooltip contentStyle={tooltipStyle} />
+            <Bar dataKey="value" fill="#F43F5E" radius={[12, 12, 0, 0]} maxBarSize={128} />
+          </BarChart>
+        </ResponsiveContainer>
+      </Card>
+    );
+  }
+
   if (reportType === "accounts") {
     const income = rows
       .filter((row) => row.type === "Income")

@@ -215,6 +215,17 @@ export const restaurantService = {
     });
     return response.data;
   },
+
+  // ── Token Item Operations ──────────────────────────────────────────────────
+  async updateTokenItem(itemId, payload) {
+    const response = await API.put("/token/item", { id: itemId, ...payload });
+    return response.data;
+  },
+
+  async deleteTokenItem(itemId) {
+    const response = await API.delete(`/token/item/${itemId}`);
+    return response.data;
+  },
 };
 
 export default restaurantService;

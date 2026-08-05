@@ -71,6 +71,17 @@ const getColumns = (reportType) => {
     ];
   }
 
+  if (reportType === "expense") {
+    return [
+      { key: "date", label: "Date" },
+      { key: "department", label: "Department" },
+      { key: "description", label: "Description" },
+      { key: "paymentMode", label: "Payment Mode" },
+      { key: "amount", label: "Amount" },
+      { key: "sourceModule", label: "Source" },
+    ];
+  }
+
   return [];
 };
 
