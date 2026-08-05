@@ -3210,6 +3210,20 @@ const handleJumpStep = (stepView) => {
         isEdit ? "The booking has been updated successfully." : "Your booking has been created successfully.",
       );
       await fetchBookings();
+
+      // 🐛 NEW: send booking confirmation WhatsApp to customer automatically
+      // as soon as the booking is confirmed. Uses the same backend endpoint
+      // that the "Send Invoice via WhatsApp" button uses — it generates the
+      // invoice PDF and delivers it to the customer's WhatsApp. Fire-and-forget
+      // so a slow PDF/WhatsApp API never blocks the UI.
+      if (!isEdit && bookingId && formData.mobile) {
+        API.post(`/hotel/invoice/send-whatsapp/${bookingId}`, {
+          customerNumber: formData.mobile,
+        }).catch((err) => {
+          console.warn("[WhatsApp] booking confirmation failed:", err.message || err);
+        });
+      }
+
       setView("confirmed");
     } catch (err) {
       console.error(err);
