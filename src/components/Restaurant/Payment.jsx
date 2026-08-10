@@ -32,14 +32,18 @@ import WhatsAppInvoiceModal from "./WhatsAppInvoiceModal";
    ALSO UPDATED: The printed receipt (buildReceiptHtml) now includes the
    resort's GSTIN and FSSAI registration number, taken from the client's
    reference invoice.
+
+   ALSO UPDATED: Added the resort's slogan "आपका विश्वास ही हमारी पूंजी है"
+   below the address/phone in the printed receipt header.
    =========================================================================== */
 
 // ─── Resort statutory / registration details (from client reference invoice) ──
 const RESORT_NAME = "MAA BAGLAMUKHI RESORT";
-const RESORT_ADDRESS_LINE1 = "Idga Mahalwa, Ward No-07, Nabha";
-const RESORT_PHONE = "9272288377";
-const RESORT_GSTIN = "23AVDPR2928I1ZG";
+const RESORT_ADDRESS_LINE1 = "Maa Baglamukhi mandir road  Near iocl petrol pump Nalkheda, District: Agar Malwa 465445";
+const RESORT_PHONE = "9522238777, 9522239777";
+const RESORT_GSTIN = "23AVDPR2928J1ZG";
 const RESORT_FSSAI_NO = "11420995000031";
+const RESORT_SLOGAN = "आपका विश्वास ही हमारी पूंजी है";
 
 // ─── FeatureModal (same as BookingFlow) ───────────────────────────────────────
 const FeatureModal = ({ title, subtitle, size = "max-w-6xl", onClose, children }) => {
@@ -245,7 +249,7 @@ const buildReceiptHtml = ({
         <style>
           @page {
             size: 80mm auto;
-            margin: 4mm;
+            margin: 0;
           }
           *, *::before, *::after {
             box-sizing: border-box;
@@ -313,6 +317,13 @@ const buildReceiptHtml = ({
     font-size:13px !important;
     font-weight:900 !important;
     color:#000 !important;
+}
+         .brand .slogan{
+    font-size:12.5px !important;
+    font-weight:900 !important;
+    font-style: italic;
+    color:#000 !important;
+    margin-top: 2px;
 }
           .muted {
             color: #090707 !important;
@@ -462,11 +473,13 @@ const buildReceiptHtml = ({
         </style>
       </head>
       <body>
+        <div id="receiptRoot">
         <div class="brand">
           <h1>${escapeReceiptHtml(RESORT_NAME)}</h1>
           <div class="sub">Restaurant &amp; POS Billing</div>
           <div class="sub">${escapeReceiptHtml(RESORT_ADDRESS_LINE1)}</div>
           <div class="sub">Ph: ${escapeReceiptHtml(RESORT_PHONE)}</div>
+          <div class="slogan">${escapeReceiptHtml(RESORT_SLOGAN)}</div>
         </div>
 
         <div class="double-separator"></div>
@@ -600,6 +613,52 @@ const buildReceiptHtml = ({
           <div class="footer-note">Thank you. Visit again.</div>
           <div class="footer-note">Powered by Maa Baglamukhi Resort POS</div>
         </div>
+        </div>
+        <script>
+          (function () {
+            // Permanent fix for the "extra blank page after receipt" issue:
+            // measure the ACTUAL rendered height of the receipt content and
+            // set the printed @page height to exactly that (plus a tiny
+            // safety buffer), instead of relying on the browser/printer
+            // driver to guess where the content ends. This works for any
+            // receipt length (short or long) with no manual adjustment.
+            function applyExactPageHeight() {
+              try {
+                var root = document.getElementById("receiptRoot");
+                if (!root) return;
+
+                // Use the taller of scrollHeight / bounding rect so nothing
+                // gets clipped, then convert CSS px -> mm (96 CSS px = 1 inch).
+                var heightPx = Math.max(
+                  root.scrollHeight,
+                  root.getBoundingClientRect().height
+                );
+                var PX_TO_MM = 25.4 / 96;
+                var heightMm = heightPx * PX_TO_MM + 3; // small safety buffer
+
+                var style = document.createElement("style");
+                style.id = "dynamic-receipt-page-size";
+                // Placed after the base <style>, so this rule wins and
+                // overrides the generic "80mm auto" page size with the
+                // exact computed height — this is what stops the printer
+                // from emitting a second, blank page.
+                style.textContent =
+                  "@page { size: 80mm " + heightMm.toFixed(2) + "mm; margin: 0; }" +
+                  "html, body { height: " + heightMm.toFixed(2) + "mm !important; }";
+                document.head.appendChild(style);
+              } catch (err) {
+                // If measurement fails for any reason, silently fall back
+                // to the default "80mm auto" page size already set above.
+              }
+            }
+
+            if (document.readyState === "complete") {
+              applyExactPageHeight();
+            } else {
+              window.addEventListener("load", applyExactPageHeight);
+            }
+          })();
+        </script>
       </body>
     </html>
   `;

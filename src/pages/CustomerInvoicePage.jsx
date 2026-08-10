@@ -5,12 +5,12 @@ import { jsPDF } from "jspdf";
 import API from "../api";
 
 const RESORT_NAME = "Maa Baglamukhi Resort";
-const RESORT_ADDRESS = "Maa Baglamukhi Mandir Road, Hatkana";
-const RESORT_DISTRICT = "Agar Malwa-465445";
-const RESORT_PHONE = "+91-957279272/73";
+const RESORT_ADDRESS = "Maa Baglamukhi mandir road Near iocl petrol pump  Nalkheda  ";
+const RESORT_DISTRICT = "District: Agar Malwa 465445";
+const RESORT_PHONE = "9522238777, 9522239777";
 const RESORT_EMAIL = "maabaglamukhiresort@gmail.com";
 const RESORT_WEBSITE = "www.maabaglamukhiresort.com";
-const RESORT_GSTIN = "23AABCM1234A1Z5";
+const RESORT_GSTIN = "23AVDPR2928J1ZG";
 const RESORT_STATE_CODE = "23"; // Madhya Pradesh
 
 const formatCurrency = (value) =>
@@ -493,7 +493,7 @@ const CustomerInvoicePage = () => {
             Ph: {RESORT_PHONE} | Email: {RESORT_EMAIL} | {RESORT_WEBSITE}
           </div>
           <div className="text-center text-xs font-semibold text-slate-900">
-            GSTIN: {RESORT_GSTIN} | State: ${RESORT_STATE_CODE}
+            GSTIN: {RESORT_GSTIN} | State: {RESORT_STATE_CODE}
           </div>
 
           <div className="mt-3 flex items-center justify-between border-y border-slate-300 py-2">
