@@ -23,6 +23,18 @@
  * hide and nothing else that can leak into the print preview. This also
  * avoids the popup-blocker problems of `window.open()`, since no new
  * window/tab is created — the iframe lives inside the current page.
+ *
+ * FIX (this version):
+ * The iframe used to be sized `width: 0; height: 0;` with `visibility:
+ * hidden`. Chrome/Edge refuse to lay out (render) a zero-size iframe at
+ * all — which meant the print preview came back completely BLANK even
+ * though the KOT HTML/data was written into it correctly. Some browsers
+ * also skip printing content inside a `visibility: hidden` subtree.
+ * The fix is to give the iframe a real on-screen size (so it actually
+ * gets laid out/rendered) and just move it off-screen instead of hiding
+ * it via visibility/zero-size. We also guard against the print being
+ * triggered twice (once from `onload`, once from the fallback timeout),
+ * which was causing the print dialog to pop up more than once.
  */
 
 const getBackendBaseURL = () => {
@@ -202,8 +214,100 @@ const buildPrintDocument = (kotInnerHtml, entityType, table) => `<!DOCTYPE html>
 </html>`;
 
 /**
+ * Show a small, auto-dismissing toast/message popup — used instead of the
+ * browser print dialog when the caller only wants a confirmation message
+ * (e.g. "KOT sent to kitchen") without opening any print UI. No iframe, no
+ * window.print(), nothing else on screen — just this one message box.
+ */
+export const showKOTToast = (options = {}) => {
+  const {
+    table = "",
+    entityType = "Table",
+    message,
+    variant = "success", // "success" | "error"
+    durationMs = 3200,
+  } = options;
+
+  const containerId = "kot-toast-container";
+  let container = document.getElementById(containerId);
+  if (!container) {
+    container = document.createElement("div");
+    container.id = containerId;
+    container.style.position = "fixed";
+    container.style.top = "20px";
+    container.style.right = "20px";
+    container.style.zIndex = "100000";
+    container.style.display = "flex";
+    container.style.flexDirection = "column";
+    container.style.gap = "10px";
+    document.body.appendChild(container);
+  }
+
+  if (!document.getElementById("kot-toast-styles")) {
+    const styleEl = document.createElement("style");
+    styleEl.id = "kot-toast-styles";
+    styleEl.textContent = `
+      .kot-toast {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 260px;
+        max-width: 340px;
+        padding: 12px 16px;
+        border-radius: 12px;
+        box-shadow: 0 12px 30px rgba(0,0,0,0.18);
+        font-family: system-ui, -apple-system, sans-serif;
+        font-size: 14px;
+        font-weight: 600;
+        color: #fff;
+        opacity: 0;
+        transform: translateX(16px);
+        transition: opacity 0.2s ease, transform 0.2s ease;
+      }
+      .kot-toast.kot-toast-show { opacity: 1; transform: translateX(0); }
+      .kot-toast-success { background: #059669; }
+      .kot-toast-error { background: #dc2626; }
+      .kot-toast-icon { flex-shrink: 0; }
+    `;
+    document.head.appendChild(styleEl);
+  }
+
+  const toast = document.createElement("div");
+  toast.className = `kot-toast kot-toast-${variant === "error" ? "error" : "success"}`;
+  const icon =
+    variant === "error"
+      ? '<svg class="kot-toast-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
+      : '<svg class="kot-toast-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+  const text =
+    message ||
+    (variant === "error"
+      ? `KOT print failed for ${entityType} ${table}.`
+      : `KOT sent to kitchen printer — ${entityType} ${table}`);
+
+  toast.innerHTML = `${icon}<span>${escapeHtml(text)}</span>`;
+  container.appendChild(toast);
+
+  // Animate in
+  requestAnimationFrame(() => toast.classList.add("kot-toast-show"));
+
+  // Auto-dismiss
+  setTimeout(() => {
+    toast.classList.remove("kot-toast-show");
+    setTimeout(() => toast.remove(), 200);
+  }, durationMs);
+
+  return { close: () => toast.remove() };
+};
+
+/**
  * Print via a hidden iframe containing only the receipt document.
  * Safe to call repeatedly (reuses the same iframe).
+ *
+ * NOTE: the iframe is given a real, non-zero size (302px ≈ 80mm) and is
+ * simply moved off-screen. Do NOT set width/height to 0 and do NOT use
+ * `visibility: hidden` here — several Chromium/Firefox versions will not
+ * lay out (or will not print) an iframe sized/hidden that way, which is
+ * exactly what was causing the KOT print preview to come back blank.
  */
 const printViaIframe = (kotInnerHtml, entityType, table) => {
   const iframeId = "kot-print-iframe";
@@ -212,22 +316,28 @@ const printViaIframe = (kotInnerHtml, entityType, table) => {
     iframe = document.createElement("iframe");
     iframe.id = iframeId;
     iframe.setAttribute("aria-hidden", "true");
+    iframe.setAttribute("tabindex", "-1");
     iframe.style.position = "fixed";
-    iframe.style.right = "0";
-    iframe.style.bottom = "0";
-    iframe.style.width = "0";
-    iframe.style.height = "0";
+    // Off-screen, NOT zero-size and NOT visibility:hidden — see note above.
+    iframe.style.left = "-10000px";
+    iframe.style.top = "0";
+    iframe.style.width = "302px"; // ~80mm
+    iframe.style.height = "500px";
     iframe.style.border = "0";
-    iframe.style.visibility = "hidden";
+    iframe.style.opacity = "0";
+    iframe.style.pointerEvents = "none";
     document.body.appendChild(iframe);
   }
 
-  const doc = iframe.contentWindow.document;
-  doc.open();
-  doc.write(buildPrintDocument(kotInnerHtml, entityType, table));
-  doc.close();
+  // Guard so a single printKOT() call only ever opens the print dialog once,
+  // even though we listen on both `onload` and a fallback timer.
+  let hasPrinted = false;
+  let fallbackTimerId = null;
 
   const doPrint = () => {
+    if (hasPrinted) return;
+    hasPrinted = true;
+    if (fallbackTimerId) clearTimeout(fallbackTimerId);
     try {
       iframe.contentWindow.focus();
       iframe.contentWindow.print();
@@ -236,10 +346,16 @@ const printViaIframe = (kotInnerHtml, entityType, table) => {
     }
   };
 
-  // Print once the iframe document has actually loaded; also fall back to
-  // a short timeout in case `load` already fired before we attached it.
-  iframe.onload = () => setTimeout(doPrint, 100);
-  setTimeout(doPrint, 400);
+  // Print once the iframe document has actually finished loading; also
+  // keep a short fallback timer in case `load` never fires (older
+  // browsers / edge cases). `doPrint` is idempotent thanks to the guard.
+  iframe.onload = () => setTimeout(doPrint, 150);
+  fallbackTimerId = setTimeout(doPrint, 600);
+
+  const doc = iframe.contentWindow.document;
+  doc.open();
+  doc.write(buildPrintDocument(kotInnerHtml, entityType, table));
+  doc.close();
 };
 
 /**
@@ -259,6 +375,7 @@ export const printKOT = (options = {}) => {
     orderNo,
     dateStr,
     timeStr,
+    autoPrint = true,
   } = options;
 
   const overlayId = "kot-print-overlay";
@@ -406,8 +523,12 @@ export const printKOT = (options = {}) => {
   };
   document.addEventListener("keydown", onKey);
 
-  // Auto-print shortly after showing the overlay.
-  setTimeout(triggerPrint, 600);
+  // Auto-print shortly after showing the overlay. Pass `autoPrint: false`
+  // in options if you only want the on-screen overlay (manual Print
+  // button) without immediately opening the browser print dialog.
+  if (autoPrint) {
+    setTimeout(triggerPrint, 600);
+  }
 
-  return { close: closeOverlay };
+  return { close: closeOverlay, print: triggerPrint };
 };

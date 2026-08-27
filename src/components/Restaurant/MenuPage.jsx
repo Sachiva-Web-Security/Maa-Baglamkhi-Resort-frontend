@@ -5,7 +5,7 @@ import RestaurantContext from "../../Context/restaurantContext";
 import API, { getBackendBaseURL } from "../../api";
 import { restaurantService } from "../../services/restaurantService";
 import { getCurrentActor } from "../../utils/currentActor";
-import { printKOT } from "../../utils/printKOT";
+import { showKOTToast } from "../../utils/printKOT";
 
 const normalizeCategory = (value) => (value || "Other").trim().toLowerCase();
 const normalizeItemName = (value) => String(value || "").trim().toLowerCase();
@@ -398,19 +398,13 @@ const MenuPage = () => {
       });
       console.log("[MenuPage] Kitchen order created:", kitchenResult);
 
-      // Auto-trigger KOT print (frontend fallback + backend handles silent print)
+      // Backend (ThermalPrintService) silently prints the KOT on the kitchen
+      // printer directly — no browser print dialog needed from the frontend.
+      // We just show a small confirmation message popup instead.
       try {
-        console.log("[MenuPage] Triggering frontend KOT print fallback...");
-        printKOT({
-          table,
-          waiter: waiterName,
-          entityType,
-          items: order.map(({ name, qty: quantity, rate: price }) => ({ name, quantity, price })),
-          prepTimeMinutes,
-        });
-        console.log("[MenuPage] Frontend KOT print triggered");
-      } catch (printErr) {
-        console.warn("[MenuPage] KOT frontend print failed:", printErr);
+        showKOTToast({ table, entityType, variant: "success" });
+      } catch (toastErr) {
+        console.warn("[MenuPage] KOT toast failed:", toastErr);
       }
 
       window.dispatchEvent(new Event("kitchenUpdated"));
