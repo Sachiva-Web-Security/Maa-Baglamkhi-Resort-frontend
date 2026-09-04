@@ -1478,6 +1478,21 @@ const recalculateInvoiceTotals = (items) => {
     });
   };
 
+  const round2 = (value) => Number((Number(value || 0)).toFixed(2));
+
+  const handleAddServiceCharge = () => {
+    const subtotal = Number(invoice?.subtotal || 0);
+    const charge = round2(subtotal * 0.05);
+    setServiceCharge(charge);
+    saveInvoiceState({ serviceCharge: charge });
+  };
+
+  const handleServiceChargeChange = (value) => {
+    const charge = round2(Number(value || 0));
+    setServiceCharge(charge);
+    saveInvoiceState({ serviceCharge: charge });
+  };
+
   const handleSplitCountChange = (value) => {
     const normalized = Math.max(1, Number(value || 1));
     setSplitCount(normalized);
@@ -2656,15 +2671,23 @@ const recalculateInvoiceTotals = (items) => {
                           <div className="flex justify-between py-1.5"><span>Tax (5%)</span><span>{formatCurrency(invoice.gst)}</span></div>
                           <div className="flex items-center justify-between py-1.5 gap-2">
                             <span>Service Charge</span>
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-1.5">
                               <input
                                 type="number"
                                 min="0"
                                 step="0.01"
                                 value={serviceCharge}
-                                onChange={(e) => setServiceCharge(Number(e.target.value))}
+                                onChange={(e) => handleServiceChargeChange(e.target.value)}
                                 className="w-20 rounded-lg border border-blue-200 bg-blue-50/60 px-2 py-0.5 text-right text-[13px] font-bold text-slate-900 outline-none focus:border-blue-400 sm:w-24 sm:text-[15px]"
                               />
+                              <button
+                                type="button"
+                                onClick={handleAddServiceCharge}
+                                title="Add 5% service charge on food bill"
+                                className="whitespace-nowrap rounded-lg border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 transition hover:bg-emerald-100 active:scale-95 sm:px-2.5 sm:text-[12px]"
+                              >
+                                +5%
+                              </button>
                             </div>
                           </div>
                           <div className="flex justify-between py-1.5"><span>Discount</span><span>{formatCurrency(discountAmount)}</span></div>
