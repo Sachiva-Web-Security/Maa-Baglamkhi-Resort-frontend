@@ -35,6 +35,17 @@
 //  - Added renderHistory() and renderPayments() below, and wired them into the
 //    final render block so both tabs now actually display their tables.
 // -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+// ID PROOF / ID NUMBER FIELDS (this revision):
+//  - Added "ID Proof Type" (dropdown: Aadhar Card / Driving License / Passport /
+//    Voter ID / PAN Card / Other) and "ID Number" (text input) to the Guest
+//    Information section of the New/Edit Booking form, matching the reference
+//    layout image (row placed right after Phone Number, above Stay Details).
+//  - These are captured in `formData` (idProofType, idNumber), validated on
+//    save, sent to the backend on booking create/edit, and restored when
+//    editing an existing booking.
+// -----------------------------------------------------------------------------
 
 import axios from "axios";
 import { getBackendBaseURL } from "../../api";
@@ -123,7 +134,7 @@ import FolioView from "./FolioView";
 import GroupBooking from "./GroupBooking";
 import OccupancyForecast from "./OccupancyForecast";
 import GuestProfile from "./GuestProfile";
-import Room from "./Room";
+import Room, { DEFAULT_ROOMS } from "./Room";
 
 /* ─────────────────────────── shared style tokens ─────────────────────────── */
 
@@ -329,6 +340,16 @@ const DOCUMENT_TYPE_LABELS = {
   signature: "Signature",
   id_proof: "ID Proof",
 };
+
+// ── ID proof type options (used by the Guest Information form) ──────────
+const ID_PROOF_TYPE_OPTIONS = [
+  "Aadhar Card",
+  "Driving License",
+  "Passport",
+  "Voter ID",
+  "PAN Card",
+  "Other",
+];
 
 // ── Hotel resort constants (used by all invoice renders) ────────────────
 // These match the reference "Tax Invoice" exactly.
@@ -556,6 +577,8 @@ const emptyForm = () => ({
   lastName: "",
   guestEmail: "",
   mobile: "",
+  idProofType: "",
+  idNumber: "",
   checkIn: "",
   checkOut: "",
   arrival: "12:00",
@@ -563,6 +586,7 @@ const emptyForm = () => ({
   bookingType: "Walk-In",
   referralBy: "",
   company: "",
+  gstNumber: "",
   reference: "",
   roomCategory: "",
   noOfRooms: 1,
@@ -1387,8 +1411,9 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
           }
           .meta-row .left { font-weight: 700; font-size: 13px; letter-spacing: 0.06em; }
           .meta-row .right { text-align: right; font-size: 10px; line-height: 1.6; }
-          .meta-row .right .label { color: #64748b; font-size: 9px; font-weight: 600; }
-          .meta-row .right .val { font-weight: 700; font-size: 11px; }
+          .meta-row .right .meta-line { display: flex; justify-content: space-between; gap: 16px; white-space: nowrap; }
+          .meta-row .right .ml { color: #64748b; font-size: 9px; font-weight: 600; }
+          .meta-row .right .mv { font-weight: 700; font-size: 11px; }
 
           .info-grid {
             display: grid;
@@ -1541,13 +1566,15 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
         <div class="meta-row">
           <div class="left">TAX INVOICE</div>
           <div class="right">
-            <div><span class="label">Invoice No.&nbsp;&nbsp;</span><span class="val">${invoiceNo}</span></div>
-            <div><span class="label">Folio No.&nbsp;&nbsp;</span><span class="val">${b.bookingId || "-"}</span></div>
-          </div>
-          <div class="right">
-            <div><span class="label">Invoice Date&nbsp;&nbsp;</span><span class="val">${invoiceDate}</span></div>
-            <div><span class="label">Room No.&nbsp;&nbsp;</span><span class="val">104</span></div>
-            <div><span class="label">Room Type&nbsp;&nbsp;</span><span class="val">${roomType || "-"}</span></div>
+            <div class="meta-line"><span class="ml">Invoice No.</span><span class="mv">${invoiceNo}</span></div>
+            <div class="meta-line"><span class="ml">Folio No.</span><span class="mv">${b.bookingId || "-"}</span></div>
+            <div class="meta-line"><span class="ml">Invoice Date</span><span class="mv">${invoiceDate}</span></div>
+            <div class="meta-line"><span class="ml">Room No.</span><span class="mv">104</span></div>
+            <div class="meta-line"><span class="ml">Room Type</span><span class="mv">${roomType || "-"}</span></div>
+            <div class="meta-line"><span class="ml">Arrival</span><span class="mv">${d.check_in || b.check_in ? formatDate(new Date(d.check_in || b.check_in)) : "-"}</span></div>
+            <div class="meta-line"><span class="ml">Departure</span><span class="mv">${d.check_out || b.check_out ? formatDate(new Date(d.check_out || b.check_out)) : "-"}</span></div>
+            <div class="meta-line"><span class="ml">Pax</span><span class="mv">${d.noOfGuests || d.guestCapacity || b.noOfGuests || b.guestCapacity || booking?.noOfGuests || "2 Adults, 0"}</span></div>
+            <div class="meta-line"><span class="ml">No. of Nights</span><span class="mv">${noOfNights || "-"}</span></div>
           </div>
         </div>
 
@@ -2027,7 +2054,7 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
 
             {/* 2. Resort logo + name + address + GSTN */}
             <div className="text-center px-2 pb-2 leading-snug">
-              <div className="inline-flex items-center gap-1.5 mb-1">
+              <div className="inline-flex items-center justify-center gap-1.5 mb-1">
                 <span className="inline-flex h-[18px] w-[18px] items-center justify-center rounded-full bg-green-600 text-white text-[11px]">❀</span>
                 <span className="text-[13px] font-extrabold tracking-wide">{RESORT_NAME_INVOICE}</span>
               </div>
@@ -2048,7 +2075,7 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
                 <div><span className="font-bold inline-block min-w-[110px]">Address</span><span className="uppercase">{guestAddress}</span></div>
                 <div><span className="font-bold inline-block min-w-[110px]">Contact #</span><span>{guestContact}</span></div>
               </div>
-              <div className="px-3 py-2 text-[10px] leading-snug space-y-0.5">
+              <div className="px-3 py-2 border-l border-black text-[10px] leading-snug space-y-0.5">
                 <div><span className="font-bold inline-block min-w-[110px]">Invoice No.</span><span>{invoiceNo}</span></div>
                 <div><span className="font-bold inline-block min-w-[110px]">Invoice Date</span><span>{formatDate(invoice?.date || new Date())}</span></div>
                 <div><span className="font-bold inline-block min-w-[110px]">Room No.</span><span>{roomNo}</span></div>
@@ -2079,14 +2106,14 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
                 <tbody>
                   {allItems.length > 0 ? allItems.map((item, idx) => (
                     <tr key={idx}>
-                      <td className="border border-black px-1 py-1">{item.date || formatDate(new Date())}</td>
-                      <td className="border border-black px-1 py-1 leading-snug">{item.particulars}</td>
-                      <td className="border border-black px-1 py-1 text-right tabular-nums">{formatCurrency(item.tariff)}</td>
-                      <td className="border border-black px-1 py-1 text-right tabular-nums">{item.disc > 0 ? formatCurrency(item.disc) : "0.00"}</td>
-                      <td className="border border-black px-1 py-1 text-right tabular-nums">{formatCurrency(item.taxable)}</td>
-                      <td className="border border-black px-1 py-1 text-right tabular-nums">{formatCurrency(item.sgst)}</td>
-                      <td className="border border-black px-1 py-1 text-right tabular-nums">{formatCurrency(item.cgst)}</td>
-                      <td className="border border-black px-1 py-1 text-right font-extrabold tabular-nums">{formatCurrency(item.total)}</td>
+                      <td className="border border-black px-1 py-1 align-top whitespace-nowrap">{item.date || formatDate(new Date())}</td>
+                      <td className="border border-black px-1 py-1 leading-snug align-top">{item.particulars}</td>
+                      <td className="border border-black px-1 py-1 text-right tabular-nums align-top">{formatCurrency(item.tariff)}</td>
+                      <td className="border border-black px-1 py-1 text-right tabular-nums align-top">{item.disc > 0 ? formatCurrency(item.disc) : "0.00"}</td>
+                      <td className="border border-black px-1 py-1 text-right tabular-nums align-top">{formatCurrency(item.taxable)}</td>
+                      <td className="border border-black px-1 py-1 text-right tabular-nums align-top">{formatCurrency(item.sgst)}</td>
+                      <td className="border border-black px-1 py-1 text-right tabular-nums align-top">{formatCurrency(item.cgst)}</td>
+                      <td className="border border-black px-1 py-1 text-right font-extrabold tabular-nums align-top">{formatCurrency(item.total)}</td>
                     </tr>
                   )) : (
                     <tr><td colSpan={8} className="border border-black px-2 py-2 text-center text-slate-400">No charges recorded</td></tr>
@@ -2101,16 +2128,21 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
                 <div className="font-extrabold text-[9px] tracking-wider uppercase">Remarks</div>
                 <div className="min-h-[80px] text-[9px] text-slate-400">-</div>
               </div>
-              <div className="px-3 py-3 text-[10px] leading-snug space-y-0.5">
-                <div className="flex justify-between"><span>Tariff Total</span><span className="tabular-nums">{formatCurrency(tariffTotal)}</span></div>
-                <div className="flex justify-between"><span>Discount</span><span className="tabular-nums">0.00</span></div>
-                <div className="flex justify-between"><span>Taxable Amount</span><span className="tabular-nums">{formatCurrency(totalTaxable)}</span></div>
-                <div className="flex justify-between"><span>SGST</span><span className="tabular-nums">{formatCurrency(totalSgst)}</span></div>
-                <div className="flex justify-between"><span>CGST</span><span className="tabular-nums">{formatCurrency(totalCgst)}</span></div>
-                <div className="flex justify-between font-extrabold border-t border-black pt-0.5 mt-0.5"><span>Room Total</span><span className="tabular-nums">{formatCurrency(roomChargesTotal)}</span></div>
-                <div className="flex justify-between"><span>Round Off Disc.</span><span className="tabular-nums">0.00</span></div>
-                <div className="flex justify-between font-extrabold border-t border-black pt-0.5 mt-0.5"><span>Final Total</span><span className="tabular-nums">{formatCurrency(finalTotal)}</span></div>
-                <div className="flex justify-between"><span>Service Total</span><span className="tabular-nums">0.00</span></div>
+              <div className="px-3 py-3 text-[10px] leading-snug">
+                <div className="font-extrabold text-[9px] tracking-wider uppercase mb-1">Payment Summary</div>
+                <table className="w-full border-collapse text-[10px]">
+                  <tbody>
+                    <tr><td className="border border-black px-1.5 py-0.5 text-left">Tariff Total</td><td className="border border-black px-1.5 py-0.5 text-right tabular-nums w-[80px]">{formatCurrency(tariffTotal)}</td></tr>
+                    <tr><td className="border border-black px-1.5 py-0.5 text-left">Discount</td><td className="border border-black px-1.5 py-0.5 text-right tabular-nums">0.00</td></tr>
+                    <tr><td className="border border-black px-1.5 py-0.5 text-left">Taxable Amount</td><td className="border border-black px-1.5 py-0.5 text-right tabular-nums">{formatCurrency(totalTaxable)}</td></tr>
+                    <tr><td className="border border-black px-1.5 py-0.5 text-left">SGST</td><td className="border border-black px-1.5 py-0.5 text-right tabular-nums">{formatCurrency(totalSgst)}</td></tr>
+                    <tr><td className="border border-black px-1.5 py-0.5 text-left">CGST</td><td className="border border-black px-1.5 py-0.5 text-right tabular-nums">{formatCurrency(totalCgst)}</td></tr>
+                    <tr className="bg-slate-50"><td className="border border-black px-1.5 py-0.5 text-left font-extrabold">Room Total</td><td className="border border-black px-1.5 py-0.5 text-right font-extrabold tabular-nums">{formatCurrency(roomChargesTotal)}</td></tr>
+                    <tr><td className="border border-black px-1.5 py-0.5 text-left">Round Off Disc.</td><td className="border border-black px-1.5 py-0.5 text-right tabular-nums">0.00</td></tr>
+                    <tr className="bg-slate-50"><td className="border border-black px-1.5 py-0.5 text-left font-extrabold">Final Total</td><td className="border border-black px-1.5 py-0.5 text-right font-extrabold tabular-nums">{formatCurrency(finalTotal)}</td></tr>
+                    <tr><td className="border border-black px-1.5 py-0.5 text-left">Service Total</td><td className="border border-black px-1.5 py-0.5 text-right tabular-nums">0.00</td></tr>
+                  </tbody>
+                </table>
               </div>
             </div>
 
@@ -2542,7 +2574,29 @@ const BookingFlow = () => {
   useEffect(() => {
     fetchBookings();
     API.get("/hotel/rooms/setup")
-      .then((res) => setCategorySetup(Array.isArray(res.data) ? res.data : []))
+      .then((res) => {
+        const apiData = Array.isArray(res.data) ? res.data : [];
+        if (!apiData.length) {
+          setCategorySetup(DEFAULT_ROOMS);
+          return;
+        }
+        // Merge API data with DEFAULT_ROOMS so every category has rooms +
+        // roomDetails even if the backend didn't return them.
+        const merged = apiData.map((cat) => {
+          const fallback = DEFAULT_ROOMS.find(
+            (d) => String(d.id) === String(cat.id) || normalizeRoomTypeName(d.name) === normalizeRoomTypeName(cat.name),
+          );
+          if (!fallback) return cat;
+          return {
+            ...cat,
+            rooms: Array.isArray(cat.rooms) && cat.rooms.length ? cat.rooms : fallback.rooms,
+            roomDetails: Array.isArray(cat.roomDetails) && cat.roomDetails.length ? cat.roomDetails : fallback.roomDetails,
+            defaultPrice: cat.defaultPrice || fallback.defaultPrice,
+            unitLabel: cat.unitLabel || fallback.unitLabel,
+          };
+        });
+        setCategorySetup(merged);
+      })
       .catch((err) => console.error("Failed to load room categories:", err));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -2622,7 +2676,7 @@ const BookingFlow = () => {
             categoryId,
             roomNo: String(prefillRoomNumber).trim(),
             price: defaultPrice,
-            gst: 0,
+            gst: 5,
             quantity: 1,
           },
         ],
@@ -2774,9 +2828,12 @@ const [selectedBookingId, setSelectedBookingId] = useState(null);
         lastName: nameParts.slice(1).join(" ") || "",
         guestEmail: data.guest_email || data.guestEmail || "",
         mobile: data.mobile || "",
+        idProofType: data.id_proof_type || data.idProofType || "",
+        idNumber: data.id_proof_number || data.idNumber || "",
         checkIn: (data.check_in || data.checkIn || "").slice(0, 10),
         checkOut: (data.check_out || data.checkOut || "").slice(0, 10),
         company: data.company_name || data.companyName || "",
+        gstNumber: data.company_gst || "",
         // 🐛 FIX: the edit form always started from blank/default payment
         // fields (amount 0, mode "Cash") instead of the booking's actual
         // saved advance. Combined with the save request not including these
@@ -2970,7 +3027,7 @@ const handleJumpStep = (stepView) => {
       categoryId: formData.roomCategory || "",
       roomNo: "",
       price: cat ? Number(cat.defaultPrice || 0) : 0,
-      gst: 0,
+      gst: 5,
       quantity: Number(formData.noOfRooms) || 1,
     };
     setFormData((prev) => ({
@@ -2993,6 +3050,11 @@ const handleJumpStep = (stepView) => {
             roomNo: "",
             price: cat ? Number(cat.defaultPrice || 0) : r.price,
           };
+        }
+
+        if (field === "gst") {
+          const numeric = Math.max(5, Number(value) || 5);
+          return { ...r, gst: numeric };
         }
 
         return { ...r, [field]: value };
@@ -3046,6 +3108,14 @@ const handleJumpStep = (stepView) => {
     }
     if (!formData.mobile.trim() || !/^\d{10}$/.test(formData.mobile.trim())) {
       showToast("error", "Mobile number required", "Please enter a valid 10-digit mobile number.");
+      return false;
+    }
+    if (!formData.idProofType || !String(formData.idProofType).trim()) {
+      showToast("error", "ID proof type required", "Please select the guest's ID proof type.");
+      return false;
+    }
+    if (!formData.idNumber || !String(formData.idNumber).trim()) {
+      showToast("error", "ID number required", "Please enter the guest's ID proof number.");
       return false;
     }
     if (!formData.guestCapacity.trim()) {
@@ -3117,6 +3187,9 @@ const handleJumpStep = (stepView) => {
           arrival: formData.arrival,
           departure: formData.departure,
           bookingStatus: "Confirmed",
+          // ID Proof fields now persisted on the guest row.
+          idProofType: formData.idProofType || "",
+          idProofNumber: formData.idNumber || "",
         });
         bookingId = guestRes.data.bookingId;
         bookingCode = guestRes.data.bookingCode || "";
@@ -3150,7 +3223,7 @@ const handleJumpStep = (stepView) => {
           }),
           bookingAPI.post(`/hotel/company/${bookingId}`, {
             companyName: formData.company || "Direct Booking",
-            gst: "",
+            gst: formData.gstNumber || "",
           }),
           bookingAPI.post(`/hotel/pax/${bookingId}`, {
             guestCapacity: formData.guestCapacity,
@@ -3199,6 +3272,9 @@ const handleJumpStep = (stepView) => {
           discountAmount: Number(formData.discountAmount) || 0,
           paymentMode: formData.paymentMode || "Cash",
           paymentRemarks: formData.paymentNote || "",
+          idProofType: formData.idProofType || "",
+          idProofNumber: formData.idNumber || "",
+          gstNumber: formData.gstNumber || "",
         });
       }
 
@@ -3799,16 +3875,29 @@ const handleJumpStep = (stepView) => {
       total: perNightTotal,
     }));
 
-    const folioRows = folioCharges.map((e) => ({
-      date: e.date ? formatDate(new Date(e.date)) : formatDate(new Date()),
-      particulars: e.description || e.category || "Extra Charge",
-      tariff: Number(e.amount) || 0,
-      disc: 0,
-      taxable: Number(e.amount) || 0,
-      sgst: 0,
-      cgst: 0,
-      total: Number(e.amount) || 0,
-    }));
+    const folioRows = folioCharges.map((e) => {
+      const amt = Number(e.amount) || 0;
+      // 🐛 FIX (this revision): Folio entries now carry 5% GST-inclusive amounts
+      // (e.g. Room Service charges from Roomitem.jsx). If the category is
+      // "Room Service" (or "Restaurant"), split the stored total back into
+      // taxable + 5% GST so the printed invoice shows the proper SGST/CGST
+      // columns instead of lumping everything into "tariff" with 0% GST.
+      const isGstCategory = e.category === "Room Service" || e.category === "Restaurant";
+      const gstPercent = isGstCategory ? 5 : 0;
+      const taxable = gstPercent > 0 ? Number((amt / (1 + gstPercent / 100)).toFixed(2)) : amt;
+      const sgst = Number(((amt - taxable) / 2).toFixed(2));
+      const cgst = sgst;
+      return {
+        date: e.date ? formatDate(new Date(e.date)) : formatDate(new Date()),
+        particulars: e.description || e.category || "Extra Charge",
+        tariff: taxable,
+        disc: 0,
+        taxable,
+        sgst,
+        cgst,
+        total: amt,
+      };
+    });
 
     const allItems = [...dayRows, ...folioRows];
     const tariffTotal = allItems.reduce((s, i) => s + i.tariff, 0);
@@ -4188,8 +4277,8 @@ const handleJumpStep = (stepView) => {
                 <div class="row"><span>Tariff Total</span><span>${fmtMoney(tariffTotal)}</span></div>
                 <div class="row"><span>Discount</span><span>${fmtMoney(totalDiscount)}</span></div>
                 <div class="row"><span>Taxable Amount</span><span>${fmtMoney(totalTaxable)}</span></div>
-                <div class="row"><span>SGST</span><span>${fmtMoney(totalSgst)}</span></div>
-                <div class="row"><span>CGST</span><span>${fmtMoney(totalCgst)}</span></div>
+                <div class="row"><span>GST Service Charge (SGST 2.5%)</span><span>${fmtMoney(totalSgst)}</span></div>
+                <div class="row"><span>GST Service Charge (CGST 2.5%)</span><span>${fmtMoney(totalCgst)}</span></div>
                 <div class="row bold"><span>Room Total</span><span>${fmtMoney(roomTotalComputed)}</span></div>
                 <div class="row"><span>Round Off Disc.</span><span>${fmtMoney(roundOff)}</span></div>
                 <div class="row bold"><span>Final Total</span><span>${fmtMoney(finalTotal)}</span></div>
@@ -4259,7 +4348,27 @@ const handleJumpStep = (stepView) => {
   const handleCloseAddRoom = () => {
     setShowAddRoom(false);
     API.get("/hotel/rooms/setup")
-      .then((res) => setCategorySetup(Array.isArray(res.data) ? res.data : []))
+      .then((res) => {
+        const apiData = Array.isArray(res.data) ? res.data : [];
+        if (!apiData.length) {
+          setCategorySetup(DEFAULT_ROOMS);
+          return;
+        }
+        const merged = apiData.map((cat) => {
+          const fallback = DEFAULT_ROOMS.find(
+            (d) => String(d.id) === String(cat.id) || normalizeRoomTypeName(d.name) === normalizeRoomTypeName(cat.name),
+          );
+          if (!fallback) return cat;
+          return {
+            ...cat,
+            rooms: Array.isArray(cat.rooms) && cat.rooms.length ? cat.rooms : fallback.rooms,
+            roomDetails: Array.isArray(cat.roomDetails) && cat.roomDetails.length ? cat.roomDetails : fallback.roomDetails,
+            defaultPrice: cat.defaultPrice || fallback.defaultPrice,
+            unitLabel: cat.unitLabel || fallback.unitLabel,
+          };
+        });
+        setCategorySetup(merged);
+      })
       .catch((err) => console.error("Failed to refresh room categories:", err));
   };
 
@@ -4602,6 +4711,37 @@ const handleJumpStep = (stepView) => {
                   placeholder="Enter phone number"
                 />
               </div>
+
+              {/* ── NEW: ID Proof Type + ID Number (matches reference layout) ── */}
+              <div>
+                <label className={labelCls}>ID Proof Type <span className="text-red-500">*</span></label>
+                <select
+                  name="idProofType"
+                  value={formData.idProofType}
+                  onChange={handleChange}
+                  className={fieldCls}
+                >
+                  <option value="">Select ID Proof Type</option>
+                  {ID_PROOF_TYPE_OPTIONS.map((opt) => (
+                    <option key={opt} value={opt}>{opt}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className={labelCls}>ID Number <span className="text-red-500">*</span></label>
+                <input
+                  name="idNumber"
+                  value={formData.idNumber}
+                  onChange={handleChange}
+                  className={fieldCls}
+                  placeholder="Enter ID number"
+                />
+                <p className="mt-1.5 text-sm text-slate-400">
+                  Enter your valid ID proof number (Aadhar Card, Driving License, Passport, etc.)
+                </p>
+              </div>
+              {/* ── END NEW FIELDS ── */}
             </div>
 
             <div className="mt-5 sm:mt-6 border-t border-slate-200 pt-5 sm:pt-6">
@@ -4696,6 +4836,10 @@ const handleJumpStep = (stepView) => {
               <div>
                 <label className={labelCls}>Company</label>
                 <input name="company" value={formData.company} onChange={handleChange} className={fieldCls} placeholder="Enter company name" />
+              </div>
+              <div>
+                <label className={labelCls}>GST Number</label>
+                <input name="gstNumber" value={formData.gstNumber} onChange={handleChange} className={fieldCls} placeholder="Enter GSTIN" />
               </div>
               <div className="sm:col-span-2">
                 <label className={labelCls}>Reference</label>
@@ -4813,6 +4957,7 @@ const handleJumpStep = (stepView) => {
                         <td className="px-3 py-2">
                           <input
                             type="number"
+                            min={5}
                             value={row.gst}
                             onChange={(e) => updateRoomRow(row.id, "gst", e.target.value)}
                             className="w-16 sm:w-20 rounded-lg border border-slate-200 px-2 py-1.5 text-[17px]"
@@ -5119,21 +5264,16 @@ const handleJumpStep = (stepView) => {
           <div className="py-10 text-center text-lg text-slate-400">Loading booking details...</div>
         ) : (
           <div className="grid gap-5 md:grid-cols-3">
-            <div className={cardTileCls}>
+                       <div className={cardTileCls}>
               <div className={sectionTitleCls}>Guest Information</div>
               <dl className="space-y-2.5 text-[17px]">
                 <div className="flex justify-between gap-3"><dt className="text-slate-500">Name</dt><dd className="font-bold text-slate-800">{d.guest_name || b.guest_name || "-"}</dd></div>
                 <div className="flex justify-between gap-3"><dt className="text-slate-500">Email</dt><dd className="font-bold text-slate-800">{d.guest_email || "-"}</dd></div>
                 <div className="flex justify-between gap-3"><dt className="text-slate-500">Mobile</dt><dd className="font-bold text-slate-800">{d.mobile || b.mobile || "-"}</dd></div>
-              </dl>
-            </div>
-
-            <div className={cardTileCls}>
-              <div className={sectionTitleCls}>Stay Information</div>
-              <dl className="space-y-2.5 text-[17px]">
-                <div className="flex justify-between gap-3"><dt className="text-slate-500">Check-In</dt><dd className="font-bold text-slate-800">{formatDate(d.check_in || b.check_in)}</dd></div>
-                <div className="flex justify-between gap-3"><dt className="text-slate-500">Check-Out</dt><dd className="font-bold text-slate-800">{formatDate(d.check_out || b.check_out)}</dd></div>
-                <div className="flex justify-between gap-3"><dt className="text-slate-500">Rooms</dt><dd className="font-bold text-slate-800">{b.rooms || (d.rooms || []).length || "-"}</dd></div>
+                <div className="flex justify-between gap-3"><dt className="text-slate-500">ID Proof</dt><dd className="font-bold text-slate-800">{d.id_proof_type || d.idProofType || "-"}</dd></div>
+                <div className="flex justify-between gap-3"><dt className="text-slate-500">ID Number</dt><dd className="font-bold text-slate-800">{d.id_proof_number || d.idNumber || "-"}</dd></div>
+                <div className="flex justify-between gap-3"><dt className="text-slate-500">Company Name</dt><dd className="font-bold text-slate-800">{d.company_name || "-"}</dd></div>
+                <div className="flex justify-between gap-3"><dt className="text-slate-500">GST Number</dt><dd className="font-bold text-slate-800">{d.company_gst || "-"}</dd></div>
               </dl>
             </div>
 

@@ -335,7 +335,10 @@ const Roomitem = () => {
       return;
     }
     const qty = Math.max(1, Number(form?.qty || 1));
-    const lineTotal = menuItem.price * qty;
+    const baseAmount = menuItem.price * qty;
+    const gstPercent = 5;
+    const gstAmount = Number((baseAmount * gstPercent / 100).toFixed(2));
+    const lineTotal = Number((baseAmount + gstAmount).toFixed(2));
 
     // Get the active booking so we can post to the folio
     const booking = getBookingForRoom(room);
@@ -381,7 +384,14 @@ const Roomitem = () => {
         },
       }));
 
-      // Also post to the hotel folio so it appears in FolioView.jsx for this guest
+      // Also post to the hotel folio so it appears in FolioView.jsx for this guest.
+      // 🐛 FIX (this revision): the previous version posted `price × qty` (base
+      // amount only) to the folio — the 5% GST was only applied later at the
+      // hotel invoice level, so the on-screen Folio total and the printed
+      // invoice did not match. Now `lineTotal` already INCLUDES the mandatory
+      // 5% GST (`baseAmount + baseAmount * 5%`), and the description makes
+      // this explicit so staff can see why the folio amount is slightly more
+      // than the menu price × qty.
       if (bookingId) {
         try {
           const today = new Date().toISOString().slice(0, 10);
@@ -389,7 +399,7 @@ const Roomitem = () => {
             entry_date: today,
             entry_type: "Extra Charge",
             category: "Room Service",
-            description: `${menuItem.name} x${qty}`,
+            description: `${menuItem.name} x${qty} (incl. 5% GST)`,
             amount: lineTotal,
             created_by: "Room Service",
           });

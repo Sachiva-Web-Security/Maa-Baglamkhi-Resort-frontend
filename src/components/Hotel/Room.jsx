@@ -35,13 +35,13 @@ import {
 } from "./bookingSession";
 
 // ─── Default categories (used as fallback if API is slow) ─────────────────────
-const DEFAULT_ROOMS = [
-  { id: 1, name: "AC ROOM",           defaultPrice: 2000, unitLabel: "PER NIGHT" },
-  { id: 2, name: "NON-AC ROOM",       defaultPrice: 1500, unitLabel: "PER NIGHT" },
-  { id: 3, name: "DELUXE ROOM",       defaultPrice: 3000, unitLabel: "PER NIGHT" },
-  { id: 4, name: "SUPER DELUXE ROOM", defaultPrice: 4000, unitLabel: "PER NIGHT" },
-  { id: 5, name: "SUITE ROOM",        defaultPrice: 5000, unitLabel: "PER NIGHT" },
-  { id: 6, name: "DELUXE DORMITORY",  defaultPrice: 800,  unitLabel: "PER BED"   },
+// Room.jsx
+export const DEFAULT_ROOMS = [
+  { id: 2, name: "NON-AC ROOM",          defaultPrice: 1500, unitLabel: "PER NIGHT" },
+  { id: 3, name: "SUPER DELUXE ROOM",    defaultPrice: 3000, unitLabel: "PER NIGHT" }, // 🔧 changed from "DELUXE ROOM"
+  { id: 4, name: "EXECUTIVE ROOM ",      defaultPrice: 4000, unitLabel: "PER NIGHT" },
+  { id: 5, name: "SUPER EXECUTIVE ROOM", defaultPrice: 5000, unitLabel: "PER NIGHT" },
+  { id: 6, name: "SUITE ROOM",           defaultPrice: 800,  unitLabel: "PER BED"   },
 ];
 
 // ─── Premium field / control classes (Blue & White theme) ─────────────────────

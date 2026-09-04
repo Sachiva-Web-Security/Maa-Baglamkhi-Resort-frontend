@@ -179,6 +179,7 @@ const buildReceiptHtml = ({
   cardDetails,
   personCount,
   discountAmount,
+  serviceCharge,
   perPersonAmount,
   computedTotal,
   printLabel = "INVOICE",
@@ -201,6 +202,13 @@ const buildReceiptHtml = ({
       : invoice?.tokenCode
         ? String(invoice.tokenCode)
         : formatVisitId(invoice?.tokenCode, invoice?.tokenId);
+
+  // Determine paid and balance amounts
+  const isPaid = isPaidInvoice(invoice?.invoiceStatus);
+  const isPosted = isPostedToRoomInvoice(invoice?.invoiceStatus);
+  const totalAmount = Math.max(0, grandTotal);
+  const paidAmount = isPaid || isPosted ? totalAmount : 0;
+  const remainingBalance = Math.max(0, totalAmount - paidAmount);
 
   // Invoice No - ensure it ALWAYS shows. Fallback chain: explicit -> billId -> tokenId -> TBD
   const billIdNum = Number(invoice?.billId || explicitInvoiceNo || 0);
@@ -532,25 +540,33 @@ const buildReceiptHtml = ({
 
         <div class="totals">
           <div class="summary-row">
-            <span>Food Total</span>
+            <span>Food / Restaurant Charges</span>
             <span>${formatReceiptAmount(invoice?.subtotal)}</span>
           </div>
-          <div class="summary-row">
-            <span>SGST @ 2.50%</span>
-            <span>${formatReceiptAmount(sgstAmount)}</span>
-          </div>
-          <div class="summary-row">
-            <span>CGST @ 2.50%</span>
-            <span>${formatReceiptAmount(cgstAmount)}</span>
-          </div>
+          ${
+            Number(invoice?.gst || 0) > 0
+              ? `<div class="summary-row">
+                  <span>GST @ 5%</span>
+                  <span>${formatReceiptAmount(invoice?.gst || 0)}</span>
+                </div>`
+              : ""
+          }
+          ${
+            Number(serviceCharge || 0) > 0
+              ? `<div class="summary-row">
+                  <span>Service Charge</span>
+                  <span>${formatReceiptAmount(serviceCharge)}</span>
+                </div>`
+              : ""
+          }
           ${
             Number(discountAmount || 0) > 0
               ? `<div class="summary-row"><span>Discount</span><span>- ${formatReceiptAmount(discountAmount)}</span></div>`
               : ""
           }
           <div class="summary-row grand">
-            <span>Grand Total</span>
-            <span>${formatReceiptAmount(grandTotal)}</span>
+            <span>Total Amount</span>
+            <span>${formatReceiptAmount(totalAmount)}</span>
           </div>
           <div class="summary-row">
             <span>Round Up</span>
@@ -561,6 +577,18 @@ const buildReceiptHtml = ({
             <span>NET TOTAL</span>
             <span>Rs. ${formatReceiptAmount(netTotal)}</span>
           </div>
+          <div class="summary-row">
+            <span>Paid Amount</span>
+            <span>Rs. ${formatReceiptAmount(paidAmount)}</span>
+          </div>
+          ${
+            remainingBalance > 0
+              ? `<div class="summary-row">
+                  <span style="color:#cc0000;">Remaining Balance</span>
+                  <span style="color:#cc0000;">Rs. ${formatReceiptAmount(remainingBalance)}</span>
+                </div>`
+              : ""
+          }
         </div>
 
         <div class="separator"></div>
@@ -1022,6 +1050,7 @@ const Payment = ({
   const [customerName, setCustomerName] = useState("");
   const [phone, setPhone] = useState("");
   const [discountAmount, setDiscountAmount] = useState(0);
+  const [serviceCharge, setServiceCharge] = useState(0);
   const [cardDetails, setCardDetails] = useState({
     cardHolderName: "",
     cardLast4: "",
@@ -1259,8 +1288,8 @@ const Payment = ({
   }, [discountAmount, invoice, splitCount]);
 
   const computedTotal = useMemo(
-    () => Math.max(0, Number(invoice?.subtotal || 0) + Number(invoice?.gst || 0) - Number(discountAmount || 0)),
-    [discountAmount, invoice],
+    () => Math.max(0, Number(invoice?.subtotal || 0) + Number(invoice?.gst || 0) + Number(serviceCharge || 0) - Number(discountAmount || 0)),
+    [discountAmount, invoice, serviceCharge],
   );
 
   const personCount = useMemo(
@@ -1510,6 +1539,7 @@ const recalculateInvoiceTotals = (items) => {
     cardDetails: paymentMethod === "Card" ? cardDetails : null,
     subtotal: Number(invoice?.subtotal || 0),
     gst: Number(invoice?.gst || 0),
+    serviceCharge: Number(serviceCharge || 0),
     total: computedTotal,
     discountAmount: Number(discountAmount || 0),
     splitCount: personCount,
@@ -1654,6 +1684,7 @@ const recalculateInvoiceTotals = (items) => {
       cardDetails,
       personCount,
       discountAmount,
+      serviceCharge,
       perPersonAmount,
       computedTotal,
       printLabel,
@@ -2553,10 +2584,10 @@ const recalculateInvoiceTotals = (items) => {
                         </div>
                         <div className="min-w-0">
                           <div className="truncate text-[9.5px] font-bold uppercase tracking-[0.06em] text-slate-400 sm:text-[11px] md:text-[13px]">
-                            Service
+                            Service (2%)
                           </div>
                           <div className="mt-0.5 truncate text-[13px] font-bold text-slate-900 sm:mt-1 sm:text-[15px] md:text-[17px]">
-                            {formatCurrency(0)}
+                            {formatCurrency(serviceCharge)}
                           </div>
                         </div>
                       </div>
@@ -2622,7 +2653,20 @@ const recalculateInvoiceTotals = (items) => {
 
                         <div className="rounded-2xl border border-blue-100 bg-white px-3.5 py-3.5 text-[14px] font-medium text-slate-900 sm:px-4 sm:py-4 sm:text-[17px]">
                           <div className="flex justify-between py-1.5"><span>Subtotal</span><span>{formatCurrency(invoice.subtotal)}</span></div>
-                          <div className="flex justify-between py-1.5"><span>Tax</span><span>{formatCurrency(invoice.gst)}</span></div>
+                          <div className="flex justify-between py-1.5"><span>Tax (5%)</span><span>{formatCurrency(invoice.gst)}</span></div>
+                          <div className="flex items-center justify-between py-1.5 gap-2">
+                            <span>Service Charge</span>
+                            <div className="flex items-center gap-1">
+                              <input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={serviceCharge}
+                                onChange={(e) => setServiceCharge(Number(e.target.value))}
+                                className="w-20 rounded-lg border border-blue-200 bg-blue-50/60 px-2 py-0.5 text-right text-[13px] font-bold text-slate-900 outline-none focus:border-blue-400 sm:w-24 sm:text-[15px]"
+                              />
+                            </div>
+                          </div>
                           <div className="flex justify-between py-1.5"><span>Discount</span><span>{formatCurrency(discountAmount)}</span></div>
                           <div className="flex justify-between py-1.5"><span>Per Person</span><span>{formatCurrency(perPersonAmount)}</span></div>
                           <div className="mt-1 flex justify-between border-t border-blue-100 pt-2.5 text-[16px] font-bold sm:text-[19px]">
