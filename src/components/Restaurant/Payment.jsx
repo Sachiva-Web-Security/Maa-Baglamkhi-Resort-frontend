@@ -779,6 +779,7 @@ const toBillInvoice = (bill) => ({
   items: [],
   subtotal: Number(bill.subtotal || 0),
   gst: Number(bill.gst || 0),
+  serviceCharge: Number(bill.serviceCharge || 0),
   total: Number(bill.total || 0),
   discountAmount: Number(bill.discountAmount || 0),
   date: bill.created_at || new Date().toISOString(),
@@ -1116,6 +1117,7 @@ const Payment = ({
     setPhone(invoice.phone || "");
     setPaymentMethod(invoice.paymentMethod || "Cash");
     setDiscountAmount(Number(invoice.discountAmount || 0));
+    setServiceCharge(Number(invoice.serviceCharge || 0));
     setSplitCount(Math.max(1, Number(invoice.splitCount || invoice.personCount || 1)));
     setCardDetails({
       cardHolderName: invoice.cardDetails?.cardHolderName || "",
@@ -1236,6 +1238,7 @@ const Payment = ({
           phone: invoice.phone || "",
           subtotal: Number(invoice.subtotal || 0),
           gst: Number(invoice.gst || 0),
+          serviceCharge: Number(invoice.serviceCharge || 0),
           total: Number(invoice.total || 0),
           discountAmount: Number(invoice.discountAmount || 0),
           splitCount: Number(invoice.splitCount || invoice.personCount || 1),
@@ -1275,7 +1278,8 @@ const Payment = ({
     const count = Math.max(1, Number(splitCount || 1));
     const evenSubtotal = Number(invoice?.subtotal || 0) / count;
     const evenTax = Number(invoice?.gst || 0) / count;
-    const evenTotal = Math.max(0, Number(invoice?.subtotal || 0) + Number(invoice?.gst || 0) - Number(discountAmount || 0)) / count;
+    const evenServiceCharge = Number(serviceCharge || 0) / count;
+    const evenTotal = Math.max(0, Number(invoice?.subtotal || 0) + Number(invoice?.gst || 0) + Number(serviceCharge || 0) - Number(discountAmount || 0)) / count;
 
     return Array.from({ length: count }, (_, index) => ({
       splitLabel: `Split ${index + 1}`,
@@ -1283,9 +1287,10 @@ const Payment = ({
       splitCount: count,
       subtotal: evenSubtotal,
       gst: evenTax,
+      serviceCharge: evenServiceCharge,
       total: evenTotal,
     }));
-  }, [discountAmount, invoice, splitCount]);
+  }, [discountAmount, invoice, serviceCharge, splitCount]);
 
   const computedTotal = useMemo(
     () => Math.max(0, Number(invoice?.subtotal || 0) + Number(invoice?.gst || 0) + Number(serviceCharge || 0) - Number(discountAmount || 0)),
@@ -1470,9 +1475,11 @@ const recalculateInvoiceTotals = (items) => {
     if (waiterDiscountLocked) return;
     const normalized = Math.max(0, Number(value || 0));
     setDiscountAmount(normalized);
+    const newTotal = round2(Math.max(0, Number(invoice?.subtotal || 0) + Number(invoice?.gst || 0) + Number(serviceCharge || 0) - normalized));
     saveInvoiceState({
       discountAmount: normalized,
-      total: Math.max(0, Number(invoice?.subtotal || 0) + Number(invoice?.gst || 0) - normalized),
+      total: newTotal,
+      serviceCharge: Number(serviceCharge || 0),
       personCount,
       splitCount: personCount,
     });
