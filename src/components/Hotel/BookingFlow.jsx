@@ -310,6 +310,16 @@ const formatCurrency = (value) =>
 
 const formatDate = (value) => {
   if (!value) return "-";
+  // Parse YYYY-MM-DD as LOCAL midnight so timezone offsets don't shift the day
+  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const [y, m, d] = value.split("-").map(Number);
+    const date = new Date(y, m - 1, d);
+    return date.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  }
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return String(value).slice(0, 10);
   return d.toLocaleDateString("en-GB", {

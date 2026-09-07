@@ -699,8 +699,12 @@ const EditToken = () => {
                   <span className="font-bold text-slate-900">Rs. {subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex items-center justify-between text-lg text-slate-600">
-                  <span>Tax (5%)</span>
-                  <span className="font-bold text-slate-900">Rs. {tax.toFixed(2)}</span>
+                  <span>SGST (2.5%)</span>
+                  <span className="font-bold text-slate-900">Rs. {(tax / 2).toFixed(2)}</span>
+                </div>
+                <div className="flex items-center justify-between text-lg text-slate-600">
+                  <span>CGST (2.5%)</span>
+                  <span className="font-bold text-slate-900">Rs. {(tax / 2).toFixed(2)}</span>
                 </div>
                 <div className="flex items-center justify-between text-lg font-black text-slate-900">
                   <span>Total</span>

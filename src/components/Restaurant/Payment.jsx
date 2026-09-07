@@ -1491,11 +1491,19 @@ const recalculateInvoiceTotals = (items) => {
 
   const round2 = (value) => Number((Number(value || 0)).toFixed(2));
 
-  const handleAddServiceCharge = () => {
-    const subtotal = Number(invoice?.subtotal || 0);
-    const charge = round2(subtotal * 0.05);
-    setServiceCharge(charge);
-    saveInvoiceState({ serviceCharge: charge });
+  const handleToggleServiceCharge = () => {
+    const isOn = Number(serviceCharge || 0) > 0;
+    if (isOn) {
+      // Toggle OFF — clear service charge
+      setServiceCharge(0);
+      saveInvoiceState({ serviceCharge: 0 });
+    } else {
+      // Toggle ON — add 5% service charge on food bill
+      const subtotal = Number(invoice?.subtotal || 0);
+      const charge = round2(subtotal * 0.05);
+      setServiceCharge(charge);
+      saveInvoiceState({ serviceCharge: charge });
+    }
   };
 
   const handleServiceChargeChange = (value) => {
@@ -2602,10 +2610,18 @@ const recalculateInvoiceTotals = (items) => {
                         </div>
                         <div className="min-w-0">
                           <div className="truncate text-[9.5px] font-bold uppercase tracking-[0.06em] text-slate-400 sm:text-[11px] md:text-[13px]">
-                            Tax (5%)
+                            SGST (2.5%)
                           </div>
                           <div className="mt-0.5 truncate text-[13px] font-bold text-slate-900 sm:mt-1 sm:text-[15px] md:text-[17px]">
-                            {formatCurrency(invoice.gst)}
+                            {formatCurrency(Number(invoice?.gst || 0) / 2)}
+                          </div>
+                        </div>
+                        <div className="min-w-0">
+                          <div className="truncate text-[9.5px] font-bold uppercase tracking-[0.06em] text-slate-400 sm:text-[11px] md:text-[13px]">
+                            CGST (2.5%)
+                          </div>
+                          <div className="mt-0.5 truncate text-[13px] font-bold text-slate-900 sm:mt-1 sm:text-[15px] md:text-[17px]">
+                            {formatCurrency(Number(invoice?.gst || 0) / 2)}
                           </div>
                         </div>
                         <div className="min-w-0">
@@ -2679,7 +2695,8 @@ const recalculateInvoiceTotals = (items) => {
 
                         <div className="rounded-2xl border border-blue-100 bg-white px-3.5 py-3.5 text-[14px] font-medium text-slate-900 sm:px-4 sm:py-4 sm:text-[17px]">
                           <div className="flex justify-between py-1.5"><span>Subtotal</span><span>{formatCurrency(invoice.subtotal)}</span></div>
-                          <div className="flex justify-between py-1.5"><span>Tax (5%)</span><span>{formatCurrency(invoice.gst)}</span></div>
+                          <div className="flex justify-between py-1.5"><span>SGST (2.5%)</span><span>{formatCurrency(Number(invoice?.gst || 0) / 2)}</span></div>
+                          <div className="flex justify-between py-1.5"><span>CGST (2.5%)</span><span>{formatCurrency(Number(invoice?.gst || 0) / 2)}</span></div>
                           <div className="flex items-center justify-between py-1.5 gap-2">
                             <span>Service Charge</span>
                             <div className="flex items-center gap-1.5">
@@ -2693,11 +2710,17 @@ const recalculateInvoiceTotals = (items) => {
                               />
                               <button
                                 type="button"
-                                onClick={handleAddServiceCharge}
-                                title="Add 5% service charge on food bill"
-                                className="whitespace-nowrap rounded-lg border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 transition hover:bg-emerald-100 active:scale-95 sm:px-2.5 sm:text-[12px]"
+                                role="switch"
+                                aria-checked={Number(serviceCharge || 0) > 0}
+                                onClick={handleToggleServiceCharge}
+                                title={Number(serviceCharge || 0) > 0 ? "Click to remove 5% service charge" : "Click to add 5% service charge on food bill"}
+                                className={`whitespace-nowrap rounded-lg border px-2 py-0.5 text-[11px] font-bold transition active:scale-95 sm:px-2.5 sm:text-[12px] ${
+                                  Number(serviceCharge || 0) > 0
+                                    ? "border-emerald-500 bg-emerald-500 text-white shadow-sm hover:bg-emerald-600"
+                                    : "border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                                }`}
                               >
-                                +5%
+                                {Number(serviceCharge || 0) > 0 ? "ON · 5%" : "OFF · +5%"}
                               </button>
                             </div>
                           </div>
