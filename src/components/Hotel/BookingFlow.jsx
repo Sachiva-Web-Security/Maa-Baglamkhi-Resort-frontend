@@ -5374,30 +5374,62 @@ const BookingFlow = () => {
           .final-cell .val { font-size: 14px; }
 
           /* ── 7. Invoice Note (left) | Payment Detail (right) ── */
-          .footer-row {
-            display: grid;
-            grid-template-columns: 1.05fr 0.95fr;
-            border-top: 1px solid #000000;
-            width: 100%;
-          }
-          .note-cell {
-            padding: 8px 10px;
-            border-right: 1px solid #000000;
-            font-weight: 800;
-            font-size: 12px;
-          }
-          .payment-detail {
-            padding: 6px 10px;
-            font-size: 10px;
-          }
-          .payment-detail .row {
-            display: flex;
-            justify-content: space-between;
-            padding: 1px 4px;
-          }
-          .payment-detail .row.bold {
-            font-weight: 800;
-          }
+         .footer-row {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  border-top: 1px solid #000000;
+  width: 100%;
+  min-height: 58px;
+}
+
+.note-cell {
+  border-right: 1px solid #000000;
+  padding: 0;
+  font-size: 10px;
+}
+
+.payment-detail {
+  padding: 0;
+  font-size: 10px;
+}
+
+.footer-row .section-header {
+  height: 22px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-bottom: 1px solid #000000;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.note-content {
+  padding: 7px 10px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.payment-content {
+  padding: 5px 10px;
+  font-size: 9px;
+}
+
+.payment-detail .row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1px 4px;
+}
+
+.payment-detail .row.bold {
+  font-weight: 800;
+}
+
+.payment-detail .divider {
+  border-top: 1px solid #000000;
+  margin: 2px 0;
+}
 
           /* ── Outer box bottom border ── */
           .invoice-bottom {
@@ -5577,13 +5609,40 @@ const BookingFlow = () => {
           </div>
 
           <div class="footer-row">
-            <div class="note-cell">Thanks Pl Visit Again!!!</div>
-            <div class="payment-detail">
-              <div class="row"><span>${(paymentMode || "UPI").toUpperCase()}</span><span>${fmtMoney(finalTotal)}</span></div>
-              <div class="divider"></div>
-              <div class="row bold"><span>Balance</span><span>${fmtMoney(remainingAmount)}</span></div>
-            </div>
-          </div>
+
+  <!-- INVOICE NOTE -->
+  <div class="note-cell">
+    <div class="section-header">
+      INVOICE NOTE
+    </div>
+
+    <div class="note-content">
+      ${paymentNoteText || "Thanks Pl Visit Again!!!"}
+    </div>
+  </div>
+
+  <!-- PAYMENT DETAIL -->
+  <div class="payment-detail">
+    <div class="section-header">
+      PAYMENT DETAIL
+    </div>
+
+    <div class="payment-content">
+      <div class="row">
+        <span>${(paymentMode || "UPI").toUpperCase()}</span>
+        <span>${fmtMoney(finalTotal)}</span>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="row bold">
+        <span>Balance</span>
+        <span>${fmtMoney(remainingAmount)}</span>
+      </div>
+    </div>
+  </div>
+
+</div>
 
           <div class="invoice-bottom"></div>
 
