@@ -5382,7 +5382,7 @@ const BookingFlow = () => {
 
 .signature-area {
   position: relative;
-  height: 110px;
+  height: 160px;
   box-sizing: border-box;
   padding: 8px 10px;
   border-top: 1px solid #000000;
@@ -5410,15 +5410,15 @@ const BookingFlow = () => {
 .sig-row .sig-line-block.authorized {
   position: absolute;
   left: 2px;
-  bottom: 25px;
-  width: 150px;
+  bottom: 35px;
+  width: 180px;
   text-align: center;
 }
 
 .sig-row .sig-line-block.authorized .line {
   display: block;
   border-top: 1px solid #000000;
-  padding-top: 3px;
+  padding-top: 4px;
   font-size: 9px;
   font-weight: 600;
 }
@@ -5428,14 +5428,15 @@ const BookingFlow = () => {
   position: absolute;
   right: 2px;
   top: 0;
-  width: 145px;
+  width: 180px;
   text-align: center;
 }
 
 .sig-row .sig-line-block.guest .line {
   display: block;
+  margin-top: 55px;
   border-top: 1px solid #000000;
-  padding-top: 3px;
+  padding-top: 4px;
   font-size: 9px;
   font-weight: 600;
 }
@@ -5456,7 +5457,7 @@ const BookingFlow = () => {
 .generated-by .lbl {
   font-weight: 600;
 }
-  
+
         </style>
       </head>
       <body>
