@@ -2802,26 +2802,54 @@ const InvoiceModal = ({
               </div>
             </div>
 
-            {/* 7. Invoice Note (left) | Payment Detail (right) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 border-t border-black">
-              <div className="px-3 py-2.5 border-r border-black font-extrabold text-[12px]">
-                {paymentNoteText}
-              </div>
-              <div className="px-3 py-2.5 text-[10px] leading-snug space-y-0.5">
-                <div className="flex justify-between">
-                  <span>{(paymentMode || "UPI").toUpperCase()}</span>
-                  <span className="tabular-nums">
-                    {formatMoney(finalTotal)}
-                  </span>
-                </div>
-                <div className="flex justify-between font-extrabold border-t border-black pt-0.5 mt-0.5">
-                  <span>Balance</span>
-                  <span className="tabular-nums">
-                    {formatMoney(remainingAmount)}
-                  </span>
-                </div>
-              </div>
-            </div>
+           {/* 7. Invoice Note (left) | Payment Detail (right) */}
+<div className="grid grid-cols-1 md:grid-cols-2 border-t border-black">
+
+  {/* LEFT - INVOICE NOTE */}
+  <div className="border-r border-black">
+
+    {/* Header */}
+    <div className="px-3 py-1.5 border-b border-black text-[11px] font-extrabold">
+      INVOICE NOTE
+    </div>
+
+    {/* Content */}
+    <div className="px-3 py-2.5 text-[11px] font-semibold">
+      {paymentNoteText || "Thanks Pl Visit Again!!!"}
+    </div>
+
+  </div>
+
+  {/* RIGHT - PAYMENT DETAIL */}
+  <div>
+
+    {/* Header */}
+    <div className="px-3 py-1.5 border-b border-black text-[11px] font-extrabold text-right">
+      PAYMENT DETAIL
+    </div>
+
+    {/* Payment content */}
+    <div className="px-3 py-1.5 text-[10px] leading-snug">
+
+      <div className="flex justify-between">
+        <span>{(paymentMode || "UPI").toUpperCase()}</span>
+        <span className="tabular-nums">
+          {formatMoney(finalTotal)}
+        </span>
+      </div>
+
+      <div className="flex justify-between border-t border-black pt-1 mt-1 font-extrabold">
+        <span>Balance</span>
+        <span className="tabular-nums">
+          {formatMoney(remainingAmount)}
+        </span>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
 
             {/* 8. Signature + 9. Generated-by */}
             <div className="relative h-[92px] border-t border-black px-3 py-2">
