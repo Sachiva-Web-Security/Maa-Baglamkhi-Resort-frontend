@@ -128,8 +128,13 @@ const OrderSummaryPage = ({ tableNo }) => {
         </div>
 
         <div className="flex justify-between">
-          <span>GST (5%)</span>
-          <span>{formatMoney(totals.gst)}</span>
+          <span>SGST (2.5%)</span>
+          <span>{formatMoney(totals.gst / 2)}</span>
+        </div>
+
+        <div className="flex justify-between">
+          <span>CGST (2.5%)</span>
+          <span>{formatMoney(totals.gst / 2)}</span>
         </div>
 
         <div className="flex justify-between">

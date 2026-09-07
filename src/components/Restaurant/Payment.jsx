@@ -546,8 +546,12 @@ const buildReceiptHtml = ({
           ${
             Number(invoice?.gst || 0) > 0
               ? `<div class="summary-row">
-                  <span>GST @ 5%</span>
-                  <span>${formatReceiptAmount(invoice?.gst || 0)}</span>
+                  <span>SGST @ 2.5%</span>
+                  <span>${formatReceiptAmount(Number(invoice?.gst || 0) / 2)}</span>
+                </div>
+                <div class="summary-row">
+                  <span>CGST @ 2.5%</span>
+                  <span>${formatReceiptAmount(Number(invoice?.gst || 0) / 2)}</span>
                 </div>`
               : ""
           }
