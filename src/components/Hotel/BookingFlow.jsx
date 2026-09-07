@@ -5617,7 +5617,7 @@ const BookingFlow = () => {
     </div>
 
     <div class="note-content">
-      ${paymentNoteText || "Thanks Pl Visit Again!!!"}
+      Thanks Pl Visit Again!!!
     </div>
   </div>
 
