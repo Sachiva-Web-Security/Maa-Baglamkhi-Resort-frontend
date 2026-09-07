@@ -65,12 +65,12 @@ bookingAPI.interceptors.request.use((req) => {
     (req.url?.includes("/login")
       ? "login"
       : method === "delete"
-      ? "delete"
-      : method === "put" || method === "patch"
-      ? "update"
-      : method === "post"
-      ? "create"
-      : "read");
+        ? "delete"
+        : method === "put" || method === "patch"
+          ? "update"
+          : method === "post"
+            ? "create"
+            : "read");
   req.headers["X-Audit-Action"] = inferredAction;
   req.headers["X-Audit-Source"] = "frontend";
   return req;
@@ -127,10 +127,7 @@ import {
 
 import API from "../../api";
 import { todayISO } from "../Dashboard/stayoverUtils";
-import {
-  setStoredBookingId,
-  setStoredBookingCode,
-} from "./bookingSession";
+import { setStoredBookingId, setStoredBookingCode } from "./bookingSession";
 import FolioView from "./FolioView";
 import GroupBooking from "./GroupBooking";
 import OccupancyForecast from "./OccupancyForecast";
@@ -142,11 +139,9 @@ import Room, { DEFAULT_ROOMS } from "./Room";
 const fieldCls =
   "w-full h-[52px] sm:h-[54px] md:h-14 rounded-2xl border border-blue-200 bg-white px-4 sm:px-5 text-[17px] font-medium text-slate-800 shadow-sm transition-all duration-300 placeholder:text-base placeholder:font-medium placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 focus:shadow-lg outline-none";
 
-const labelCls =
-  "mb-2 block text-[17px] font-semibold text-slate-700";
+const labelCls = "mb-2 block text-[17px] font-semibold text-slate-700";
 
-const panelCls =
-  `
+const panelCls = `
 rounded-[24px] sm:rounded-[30px]
 bg-white
 border
@@ -161,8 +156,7 @@ max-w-full
 overflow-hidden
 `;
 
-const sectionTitleCls =
-  `
+const sectionTitleCls = `
 mb-5 sm:mb-6
 flex
 items-center
@@ -184,8 +178,7 @@ const heroTitleCls =
 
 const modalTitleCls = "text-[28px] font-black leading-tight text-slate-900";
 
-const btnBase =
-  `
+const btnBase = `
 inline-flex
 items-center
 justify-center
@@ -207,8 +200,7 @@ disabled:active:scale-100
 whitespace-nowrap
 `;
 
-const primaryBtn =
-  `
+const primaryBtn = `
 ${btnBase}
 bg-gradient-to-r
 from-blue-600
@@ -222,8 +214,7 @@ hover:from-blue-700
 hover:to-blue-800
 `;
 
-const ghostBtn =
-  `
+const ghostBtn = `
 ${btnBase}
 border
 border-blue-200
@@ -235,8 +226,7 @@ hover:border-blue-400
 hover:-translate-y-0.5
 `;
 
-const dangerBtn =
-  `
+const dangerBtn = `
 ${btnBase}
 border
 border-red-200
@@ -251,8 +241,8 @@ const rowActionBtn = (tone = "neutral") => {
     tone === "danger"
       ? "border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100 hover:border-rose-300"
       : tone === "primary"
-      ? "border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 hover:border-blue-300"
-      : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:border-slate-300";
+        ? "border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 hover:border-blue-300"
+        : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:border-slate-300";
   return `
 inline-flex
 items-center
@@ -281,7 +271,8 @@ ${toneCls}
 /* Full-width variant of rowActionBtn used inside mobile card layouts (Booking
    History / Payment History) so every action button in a card footer shares
    equal width. Desktop table rows keep using rowActionBtn(tone) unchanged. */
-const cardActionBtn = (tone = "neutral") => `${rowActionBtn(tone)} flex-1 min-w-[0] justify-center text-[13px] h-10 px-2`;
+const cardActionBtn = (tone = "neutral") =>
+  `${rowActionBtn(tone)} flex-1 min-w-[0] justify-center text-[13px] h-10 px-2`;
 
 const softBtn = (active) =>
   `
@@ -299,11 +290,9 @@ transition-all
 duration-300
 active:scale-[0.98]
 ${
-active
-?
-"bg-blue-600 text-white border-blue-600 shadow-lg"
-:
-"bg-white border border-blue-200 text-blue-700 hover:bg-blue-50"
+  active
+    ? "bg-blue-600 text-white border-blue-600 shadow-lg"
+    : "bg-white border border-blue-200 text-blue-700 hover:bg-blue-50"
 }
 `;
 
@@ -323,7 +312,11 @@ const formatDate = (value) => {
   if (!value) return "-";
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return String(value).slice(0, 10);
-  return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  return d.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 };
 
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -387,16 +380,50 @@ const buildUploadUrl = (value) => {
 // outside InvoiceModal can use it without a scope error.
 const toWords = (amount) => {
   if (!amount || amount <= 0) return "Rupees Zero Only";
-  const ones = ["","One","Two","Three","Four","Five","Six","Seven","Eight","Nine","Ten","Eleven","Twelve","Thirteen","Fourteen","Fifteen","Sixteen","Seventeen","Eighteen","Nineteen"];
-  const tens = ["","","Twenty","Thirty","Forty","Fifty","Sixty","Seventy","Eighty","Ninety"];
+  const ones = [
+    "",
+    "One",
+    "Two",
+    "Three",
+    "Four",
+    "Five",
+    "Six",
+    "Seven",
+    "Eight",
+    "Nine",
+    "Ten",
+    "Eleven",
+    "Twelve",
+    "Thirteen",
+    "Fourteen",
+    "Fifteen",
+    "Sixteen",
+    "Seventeen",
+    "Eighteen",
+    "Nineteen",
+  ];
+  const tens = [
+    "",
+    "",
+    "Twenty",
+    "Thirty",
+    "Forty",
+    "Fifty",
+    "Sixty",
+    "Seventy",
+    "Eighty",
+    "Ninety",
+  ];
   const words = (n) => {
     if (n === 0) return "";
     if (n < 20) return ones[n] + " ";
-    if (n < 100) return tens[Math.floor(n/10)] + " " + words(n%10);
-    if (n < 1000) return ones[Math.floor(n/100)] + " Hundred " + words(n%100);
-    if (n < 1e5) return words(Math.floor(n/1000)) + " Thousand " + words(n%1000);
-    if (n < 1e7) return words(Math.floor(n/1e5)) + " Lakh " + words(n%1e5);
-    return words(Math.floor(n/1e7)) + " Crore " + words(n%1e7);
+    if (n < 100) return tens[Math.floor(n / 10)] + " " + words(n % 10);
+    if (n < 1000)
+      return ones[Math.floor(n / 100)] + " Hundred " + words(n % 100);
+    if (n < 1e5)
+      return words(Math.floor(n / 1000)) + " Thousand " + words(n % 1000);
+    if (n < 1e7) return words(Math.floor(n / 1e5)) + " Lakh " + words(n % 1e5);
+    return words(Math.floor(n / 1e7)) + " Crore " + words(n % 1e7);
   };
   const rounded = Math.round(amount * 100) / 100;
   const whole = Math.floor(rounded);
@@ -415,8 +442,12 @@ const STATUS_STYLES = {
 };
 
 const statusStyle = (status) => {
-  const key = String(status || "").toLowerCase().trim();
-  return STATUS_STYLES[key] || "bg-slate-100 text-slate-600 ring-1 ring-slate-200";
+  const key = String(status || "")
+    .toLowerCase()
+    .trim();
+  return (
+    STATUS_STYLES[key] || "bg-slate-100 text-slate-600 ring-1 ring-slate-200"
+  );
 };
 
 const statusBadgeCls = (status) =>
@@ -453,11 +484,7 @@ const Modal = ({
                 <Icon />
               </span>
             )}
-            {title && (
-              <h3 className={`mt-1 ${modalTitleCls}`}>
-                {title}
-              </h3>
-            )}
+            {title && <h3 className={`mt-1 ${modalTitleCls}`}>{title}</h3>}
             <button
               onClick={onClose}
               className="ml-auto shrink-0 rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
@@ -468,9 +495,13 @@ const Modal = ({
             </button>
           </div>
         )}
-        <div className="text-[17px] leading-relaxed text-slate-600">{children}</div>
+        <div className="text-[17px] leading-relaxed text-slate-600">
+          {children}
+        </div>
         {actions && (
-          <div className="mt-7 sm:mt-8 flex flex-wrap justify-end gap-3">{actions}</div>
+          <div className="mt-7 sm:mt-8 flex flex-wrap justify-end gap-3">
+            {actions}
+          </div>
         )}
       </div>
     </div>
@@ -509,7 +540,7 @@ const FLOW_STEPS = [
     title: "Manage Booking",
     desc: "Edit, Cancel, Check-in / Check-out or Update payment",
   },
-    {
+  {
     view: "list",
     num: 5,
     icon: FaListUl,
@@ -555,7 +586,9 @@ const FlowBar = ({ view, onJump }) => (
               >
                 <Icon />
               </span>
-              <span className={`text-[17px] font-bold leading-snug ${isActive ? "text-sky-700" : "text-slate-700"}`}>
+              <span
+                className={`text-[17px] font-bold leading-snug ${isActive ? "text-sky-700" : "text-slate-700"}`}
+              >
                 {step.num}. {step.title}
               </span>
             </button>
@@ -611,7 +644,8 @@ const emptyForm = () => ({
 });
 
 const rowTotal = (row, nights = 0) => {
-  const base = Number(row.price || 0) * Number(nights || 0) * Number(row.quantity || 0);
+  const base =
+    Number(row.price || 0) * Number(nights || 0) * Number(row.quantity || 0);
   return base + (base * Number(row.gst || 0)) / 100;
 };
 
@@ -657,10 +691,15 @@ const normalizeBooking = (b) => {
     b.source ||
     "";
 
-  let rooms = b.rooms ?? b.room_numbers ?? b.roomNumbers ?? b.room_no ?? b.roomNo ?? "";
+  let rooms =
+    b.rooms ?? b.room_numbers ?? b.roomNumbers ?? b.room_no ?? b.roomNo ?? "";
   if (Array.isArray(rooms)) {
     rooms = rooms
-      .map((r) => (typeof r === "string" ? r : r?.room_number || r?.roomNumber || r?.roomNo || r?.roomId || ""))
+      .map((r) =>
+        typeof r === "string"
+          ? r
+          : r?.room_number || r?.roomNumber || r?.roomNo || r?.roomId || "",
+      )
       .filter(Boolean)
       .join(", ");
   }
@@ -675,7 +714,13 @@ const normalizeBooking = (b) => {
 
 /* ─────────────────────────── main component ─────────────────────────── */
 
-const FeatureModal = ({ title, subtitle, size = "max-w-6xl", onClose, children }) => {
+const FeatureModal = ({
+  title,
+  subtitle,
+  size = "max-w-6xl",
+  onClose,
+  children,
+}) => {
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === "Escape") onClose();
@@ -698,7 +743,9 @@ const FeatureModal = ({ title, subtitle, size = "max-w-6xl", onClose, children }
         <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-slate-100 bg-white/95 px-5 py-4 backdrop-blur">
           <div>
             <h3 className={modalTitleCls}>{title}</h3>
-            {subtitle && <p className="mt-1 text-[17px] text-slate-500">{subtitle}</p>}
+            {subtitle && (
+              <p className="mt-1 text-[17px] text-slate-500">{subtitle}</p>
+            )}
           </div>
           <button
             type="button"
@@ -748,7 +795,13 @@ const PaymentHistoryModal = ({ booking, onClose }) => {
     if (!value) return "-";
     const d = new Date(value);
     if (Number.isNaN(d.getTime())) return String(value).slice(0, 10);
-    return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+    return d.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
   const formatCurrency = (value) =>
@@ -768,13 +821,19 @@ const PaymentHistoryModal = ({ booking, onClose }) => {
       <div className="space-y-4">
         <div className="flex flex-wrap justify-between items-center gap-4">
           <h3 className={cardTitleCls}>All Payment Transactions</h3>
-          <button onClick={loadPaymentHistory} disabled={loading} className={ghostBtn}>
+          <button
+            onClick={loadPaymentHistory}
+            disabled={loading}
+            className={ghostBtn}
+          >
             <FaSync className={loading ? "animate-spin" : ""} /> Refresh
           </button>
         </div>
 
         {loading ? (
-          <div className="py-12 text-center text-slate-400">Loading payment history...</div>
+          <div className="py-12 text-center text-slate-400">
+            Loading payment history...
+          </div>
         ) : history.length === 0 ? (
           <div className="rounded-xl border border-dashed border-slate-200 py-12 text-center text-slate-400">
             No payment history found for this booking.
@@ -795,22 +854,35 @@ const PaymentHistoryModal = ({ booking, onClose }) => {
               <tbody className="divide-y divide-slate-100 text-[17px]">
                 {history.map((payment) => (
                   <tr key={payment.id}>
-                    <td className="px-4 sm:px-5 py-3 text-slate-700">{formatDate(payment.created_at)}</td>
+                    <td className="px-4 sm:px-5 py-3 text-slate-700">
+                      {formatDate(payment.created_at)}
+                    </td>
                     <td className="px-4 sm:px-5 py-3">
-                      <span className={`inline-block rounded-full px-3 py-1 text-sm font-bold ${
-                        payment.payment_type === "Advance" ? "bg-blue-50 text-blue-700" :
-                        payment.payment_type === "Refund" ? "bg-amber-50 text-amber-700" :
-                        "bg-emerald-50 text-emerald-700"
-                      }`}>
+                      <span
+                        className={`inline-block rounded-full px-3 py-1 text-sm font-bold ${
+                          payment.payment_type === "Advance"
+                            ? "bg-blue-50 text-blue-700"
+                            : payment.payment_type === "Refund"
+                              ? "bg-amber-50 text-amber-700"
+                              : "bg-emerald-50 text-emerald-700"
+                        }`}
+                      >
                         {payment.payment_type || "Payment"}
                       </span>
                     </td>
-                    <td className={`px-4 sm:px-5 py-3 font-bold ${
-                      payment.payment_type === "Refund" ? "text-rose-600" : "text-emerald-600"
-                    }`}>
-                      {payment.payment_type === "Refund" ? "-" : "+"}{formatCurrency(payment.amount)}
+                    <td
+                      className={`px-4 sm:px-5 py-3 font-bold ${
+                        payment.payment_type === "Refund"
+                          ? "text-rose-600"
+                          : "text-emerald-600"
+                      }`}
+                    >
+                      {payment.payment_type === "Refund" ? "-" : "+"}
+                      {formatCurrency(payment.amount)}
                     </td>
-                    <td className="px-4 sm:px-5 py-3 text-slate-700">{payment.payment_mode || "-"}</td>
+                    <td className="px-4 sm:px-5 py-3 text-slate-700">
+                      {payment.payment_mode || "-"}
+                    </td>
                     <td className="px-4 sm:px-5 py-3">
                       <span className={statusBadgeCls(payment.payment_status)}>
                         {payment.payment_status || "Pending"}
@@ -822,9 +894,19 @@ const PaymentHistoryModal = ({ booking, onClose }) => {
                   </tr>
                 ))}
                 <tr className="border-t-2 border-slate-200 bg-slate-50/50">
-                  <td className="px-4 sm:px-5 py-3 font-bold text-slate-800" colSpan={2}>Total</td>
+                  <td
+                    className="px-4 sm:px-5 py-3 font-bold text-slate-800"
+                    colSpan={2}
+                  >
+                    Total
+                  </td>
                   <td className="px-4 sm:px-5 py-3 font-black text-xl text-slate-900">
-                    {formatCurrency(history.reduce((sum, p) => sum + (Number(p.amount) || 0), 0))}
+                    {formatCurrency(
+                      history.reduce(
+                        (sum, p) => sum + (Number(p.amount) || 0),
+                        0,
+                      ),
+                    )}
                   </td>
                   <td className="px-4 sm:px-5 py-3" colSpan={3}></td>
                 </tr>
@@ -835,10 +917,13 @@ const PaymentHistoryModal = ({ booking, onClose }) => {
 
         <div className="mt-6 flex flex-wrap justify-between items-center gap-4 pt-4 border-t border-slate-200">
           <div className="text-[17px] text-slate-500">
-            Showing {history.length} transaction{history.length !== 1 ? "s" : ""}
+            Showing {history.length} transaction
+            {history.length !== 1 ? "s" : ""}
           </div>
           <div className="flex gap-2">
-            <button onClick={onClose} className={primaryBtn}>Close</button>
+            <button onClick={onClose} className={primaryBtn}>
+              Close
+            </button>
           </div>
         </div>
       </div>
@@ -851,7 +936,11 @@ const DocumentUploadModal = ({ booking, onClose }) => {
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [form, setForm] = useState({ documentType: "id_proof", notes: "", termsAccepted: true });
+  const [form, setForm] = useState({
+    documentType: "id_proof",
+    notes: "",
+    termsAccepted: true,
+  });
   const [file, setFile] = useState(null);
 
   const loadDocuments = async () => {
@@ -920,10 +1009,17 @@ const DocumentUploadModal = ({ booking, onClose }) => {
               <select
                 className={fieldCls}
                 value={form.documentType}
-                onChange={(event) => setForm((prev) => ({ ...prev, documentType: event.target.value }))}
+                onChange={(event) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    documentType: event.target.value,
+                  }))
+                }
               >
                 {documentTypeOptions.map((option) => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
                 ))}
               </select>
             </div>
@@ -942,7 +1038,9 @@ const DocumentUploadModal = ({ booking, onClose }) => {
                 rows={3}
                 className={fieldCls}
                 value={form.notes}
-                onChange={(event) => setForm((prev) => ({ ...prev, notes: event.target.value }))}
+                onChange={(event) =>
+                  setForm((prev) => ({ ...prev, notes: event.target.value }))
+                }
                 placeholder="Aadhaar, passport, signed check-in form..."
               />
             </div>
@@ -950,12 +1048,23 @@ const DocumentUploadModal = ({ booking, onClose }) => {
               <input
                 type="checkbox"
                 checked={form.termsAccepted}
-                onChange={(event) => setForm((prev) => ({ ...prev, termsAccepted: event.target.checked }))}
+                onChange={(event) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    termsAccepted: event.target.checked,
+                  }))
+                }
               />
               Guest consent / terms accepted
             </label>
-            <button type="button" onClick={handleUpload} disabled={!file || uploading} className={primaryBtn}>
-              <FaFileUpload className="text-xs" /> {uploading ? "Uploading..." : "Upload Document"}
+            <button
+              type="button"
+              onClick={handleUpload}
+              disabled={!file || uploading}
+              className={primaryBtn}
+            >
+              <FaFileUpload className="text-xs" />{" "}
+              {uploading ? "Uploading..." : "Upload Document"}
             </button>
           </div>
         </div>
@@ -963,7 +1072,9 @@ const DocumentUploadModal = ({ booking, onClose }) => {
         <div className="rounded-2xl border border-slate-200 bg-white p-5">
           <div className={sectionTitleCls}>Uploaded Documents</div>
           {loading ? (
-            <div className="py-10 text-center text-slate-400">Loading documents...</div>
+            <div className="py-10 text-center text-slate-400">
+              Loading documents...
+            </div>
           ) : documents.length === 0 ? (
             <div className="rounded-xl border border-dashed border-slate-200 py-10 text-center text-slate-400">
               No documents uploaded yet.
@@ -972,18 +1083,36 @@ const DocumentUploadModal = ({ booking, onClose }) => {
             <div className="space-y-3">
               {documents.map((doc) => {
                 const url = buildUploadUrl(doc.file_url);
-                const label = documentTypeOptions.find((item) => item.value === doc.document_type)?.label || doc.document_type;
+                const label =
+                  documentTypeOptions.find(
+                    (item) => item.value === doc.document_type,
+                  )?.label || doc.document_type;
                 return (
-                  <div key={doc.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50/70 p-4">
+                  <div
+                    key={doc.id}
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50/70 p-4"
+                  >
                     <div>
                       <div className="font-black text-slate-900">{label}</div>
-                      <div className="mt-1 text-[17px] text-slate-500">{doc.notes || "No notes"} - {formatDate(doc.uploaded_at)}</div>
+                      <div className="mt-1 text-[17px] text-slate-500">
+                        {doc.notes || "No notes"} -{" "}
+                        {formatDate(doc.uploaded_at)}
+                      </div>
                     </div>
                     <div className="flex gap-2">
-                      <a href={url} target="_blank" rel="noreferrer" className={ghostBtn}>
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={ghostBtn}
+                      >
                         <FaEye className="text-xs" /> View
                       </a>
-                      <button type="button" onClick={() => handleDelete(doc.id)} className={dangerBtn}>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(doc.id)}
+                        className={dangerBtn}
+                      >
                         <FaTrash className="text-xs" /> Delete
                       </button>
                     </div>
@@ -998,7 +1127,15 @@ const DocumentUploadModal = ({ booking, onClose }) => {
   );
 };
 
-const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAmount = 0, rooms = [], bookingDetail = null, onClose }) => {
+const InvoiceModal = ({
+  booking,
+  roomChargesTotal = 0,
+  folioCharges = [],
+  paidAmount = 0,
+  rooms = [],
+  bookingDetail = null,
+  onClose,
+}) => {
   const bookingId = booking?.bookingId;
   const [invoice, setInvoice] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -1042,7 +1179,9 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
         ]);
         if (cancelled) return;
         const folioEntries = Array.isArray(folioRes.data) ? folioRes.data : [];
-        setFolioChargesLocal(folioEntries.filter((e) => e.entry_type === "Extra Charge"));
+        setFolioChargesLocal(
+          folioEntries.filter((e) => e.entry_type === "Extra Charge"),
+        );
         const history = Array.isArray(phRes.data) ? phRes.data : [];
         const total = history
           .filter((p) => p.payment_type !== "Refund")
@@ -1053,12 +1192,19 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
       }
     };
     load();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [bookingId]);
 
-  const folioChargesTotal = folioChargesLocal.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+  const folioChargesTotal = folioChargesLocal.reduce(
+    (sum, e) => sum + (Number(e.amount) || 0),
+    0,
+  );
 
-  const folioItems = (Array.isArray(folioChargesLocal) ? folioChargesLocal : []).map((e) => ({
+  const folioItems = (
+    Array.isArray(folioChargesLocal) ? folioChargesLocal : []
+  ).map((e) => ({
     name: e.category || "Extra Charge",
     description: e.description || "Folio entry",
     quantity: 1,
@@ -1067,7 +1213,9 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
     isFolio: true,
   }));
 
-  const liveRoomItems = (Array.isArray(rooms) && rooms.length > 0 ? rooms : []).map((r, idx) => {
+  const liveRoomItems = (
+    Array.isArray(rooms) && rooms.length > 0 ? rooms : []
+  ).map((r, idx) => {
     const tariff = Number(r.tariff ?? r.price ?? 0);
     const qty = Number(r.quantity ?? 1);
     const gstPercent = Number(r.gst ?? r.gstPercent ?? 0);
@@ -1091,9 +1239,18 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
   if (liveRoomItems.length > 0) {
     items = [...liveRoomItems, ...folioItems];
   } else {
-    const backendItems = Array.isArray(invoice?.items) && invoice.items.length > 0 ? invoice.items : [
-      { name: "Room Charges", description: "Total room / tariff charges", quantity: 1, price: roomChargesTotal, total: roomChargesTotal },
-    ];
+    const backendItems =
+      Array.isArray(invoice?.items) && invoice.items.length > 0
+        ? invoice.items
+        : [
+            {
+              name: "Room Charges",
+              description: "Total room / tariff charges",
+              quantity: 1,
+              price: roomChargesTotal,
+              total: roomChargesTotal,
+            },
+          ];
     const seenKeys = new Set();
     items = [
       ...backendItems.filter((it) => {
@@ -1112,7 +1269,10 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
     ];
   }
 
-  const itemsTotal = items.reduce((sum, it) => sum + (Number(it.total ?? it.price ?? 0) || 0), 0);
+  const itemsTotal = items.reduce(
+    (sum, it) => sum + (Number(it.total ?? it.price ?? 0) || 0),
+    0,
+  );
 
   const roomItemsTotal = items
     .filter((it) => it.isRoom)
@@ -1121,14 +1281,38 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
     .filter((it) => it.isFolio)
     .reduce((sum, it) => sum + (Number(it.total ?? 0) || 0), 0);
 
-  const invoiceNo = invoice?.invoiceNo || invoice?.invoice_no || `INV-${bookingId}`;
-  const guestName = invoice?.customerName || invoice?.customer_name || booking?.guest_name || bookingDetail?.guest_name || "Guest";
-  const companyName = invoice?.companyName || invoice?.company_name || bookingDetail?.company_name || booking?.company_name || "";
-  const companyGstin = invoice?.companyGstin || invoice?.company_gstin || invoice?.company_gst || bookingDetail?.company_gst || booking?.company_gst || "";
+  const invoiceNo =
+    invoice?.invoiceNo || invoice?.invoice_no || `INV-${bookingId}`;
+  const guestName =
+    invoice?.customerName ||
+    invoice?.customer_name ||
+    booking?.guest_name ||
+    bookingDetail?.guest_name ||
+    "Guest";
+  const companyName =
+    invoice?.companyName ||
+    invoice?.company_name ||
+    bookingDetail?.company_name ||
+    booking?.company_name ||
+    "";
+  const companyGstin =
+    invoice?.companyGstin ||
+    invoice?.company_gstin ||
+    invoice?.company_gst ||
+    bookingDetail?.company_gst ||
+    booking?.company_gst ||
+    "";
   const folioTotalAmount = roomItemsTotal + folioOnlyTotal;
   const invoiceTotal = itemsTotal > 0 ? itemsTotal : folioTotalAmount;
-  const paid = Number(totalPaidLocal ?? paidAmount ?? invoice?.paidAmount ?? invoice?.paid_amount) || 0;
-  const remainingAmount = paid > 0 ? Math.max(invoiceTotal - paid, 0) : invoiceTotal;
+  const paid =
+    Number(
+      totalPaidLocal ??
+        paidAmount ??
+        invoice?.paidAmount ??
+        invoice?.paid_amount,
+    ) || 0;
+  const remainingAmount =
+    paid > 0 ? Math.max(invoiceTotal - paid, 0) : invoiceTotal;
 
   const invoiceSubtotal = toNumber(invoice?.subtotal) || invoiceTotal;
   const invoiceTax = toNumber(invoice?.tax) || 0;
@@ -1141,12 +1325,20 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
     ["Guest", guestName],
     ["Phone", invoice?.phone || booking?.mobile || "-"],
     ["Rooms", invoice?.roomNumber || invoice?.room_no || booking?.rooms || "-"],
-    ["Stay", `${formatDate(invoice?.checkIn || invoice?.check_in || booking?.check_in)} to ${formatDate(invoice?.checkOut || invoice?.check_out || booking?.check_out)}`],
+    [
+      "Stay",
+      `${formatDate(invoice?.checkIn || invoice?.check_in || booking?.check_in)} to ${formatDate(invoice?.checkOut || invoice?.check_out || booking?.check_out)}`,
+    ],
     ["Folio Total Amount", formatCurrency(folioTotalAmount)],
     ["Updated Total Amount", formatCurrency(invoiceTotal)],
     ["Advance Paid", formatCurrency(paid)],
     ["Remaining Amount", formatCurrency(remainingAmount)],
-    ["Payment Status", invoice?.paymentStatus || invoice?.payment_status || (remainingAmount > 0 ? "Pending" : "Paid")],
+    [
+      "Payment Status",
+      invoice?.paymentStatus ||
+        invoice?.payment_status ||
+        (remainingAmount > 0 ? "Pending" : "Paid"),
+    ],
   ];
 
   // ── Reference-layout variables (used by the on-screen invoice preview) ──
@@ -1157,12 +1349,16 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
     invoice?.roomNumber ||
     invoice?.room_no ||
     booking?.rooms ||
-    (Array.isArray(rooms) && rooms[0] ? rooms[0].room_number || rooms[0].roomNo || rooms[0].room_no : null) ||
+    (Array.isArray(rooms) && rooms[0]
+      ? rooms[0].room_number || rooms[0].roomNo || rooms[0].room_no
+      : null) ||
     "104";
   const roomType =
     invoice?.roomType ||
     booking?.room_type ||
-    (Array.isArray(rooms) && rooms[0] ? rooms[0].room_type || rooms[0].category : null) ||
+    (Array.isArray(rooms) && rooms[0]
+      ? rooms[0].room_type || rooms[0].category
+      : null) ||
     "Single";
   const noOfNights =
     invoice?.nights ||
@@ -1182,21 +1378,40 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
     booking?.no_of_guests ||
     booking?.guest_capacity ||
     "2 Adults, 0";
-  const checkInDate = invoice?.checkIn || invoice?.check_in || booking?.check_in
-    ? formatDate(new Date(invoice?.checkIn || invoice?.check_in || booking?.check_in))
-    : "-";
-  const checkOutDate = invoice?.checkOut || invoice?.check_out || booking?.check_out
-    ? formatDate(new Date(invoice?.checkOut || invoice?.check_out || booking?.check_out))
-    : "-";
+  const checkInDate =
+    invoice?.checkIn || invoice?.check_in || booking?.check_in
+      ? formatDate(
+          new Date(invoice?.checkIn || invoice?.check_in || booking?.check_in),
+        )
+      : "-";
+  const checkOutDate =
+    invoice?.checkOut || invoice?.check_out || booking?.check_out
+      ? formatDate(
+          new Date(
+            invoice?.checkOut || invoice?.check_out || booking?.check_out,
+          ),
+        )
+      : "-";
   const arrivalTime = booking?.arrival || "4:25 pm";
   const departureTime = booking?.departure || "10:00 am";
-  const paymentMode = invoice?.paymentMode || invoice?.payment_method || booking?.payment_mode || "UPI";
-  const generatedBy = invoice?.generatedBy || booking?.generated_by || booking?.staff_name || "ABHISHEK RATHORE";
+  const paymentMode =
+    invoice?.paymentMode ||
+    invoice?.payment_method ||
+    booking?.payment_mode ||
+    "UPI";
+  const generatedBy =
+    invoice?.generatedBy ||
+    booking?.generated_by ||
+    booking?.staff_name ||
+    "ABHISHEK RATHORE";
   const paymentNoteText = "Thanks Pl Visit Again!!!";
 
   // 2-decimal money formatter used by the preview (en-IN, no currency symbol)
   const formatMoney = (v) =>
-    Number(v || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    Number(v || 0).toLocaleString("en-IN", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
 
   // Build one row per stay night from `rooms` (live) or fall back to one row
   // for the booking span (when no per-room items exist).
@@ -1222,17 +1437,31 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
   // the actual (quantity-weighted) GST % of the live room items is used to
   // correctly split the already-inclusive total instead of assuming 5%.
   const roomGrossTotal = roomItemsTotal || folioOnlyTotal || invoiceTotal;
-  const weightedRoomGstPercent = roomItemsTotal > 0
-    ? items
-        .filter((it) => it.isRoom)
-        .reduce((sum, it) => sum + ((Number(it.total) || 0) / roomItemsTotal) * (Number(it.gst) || 0), 0)
-    : 0;
+  const weightedRoomGstPercent =
+    roomItemsTotal > 0
+      ? items
+          .filter((it) => it.isRoom)
+          .reduce(
+            (sum, it) =>
+              sum +
+              ((Number(it.total) || 0) / roomItemsTotal) *
+                (Number(it.gst) || 0),
+            0,
+          )
+      : 0;
   const perNightGrossTotal =
-    stayDatesArr.length > 0 ? Number((roomGrossTotal / stayDatesArr.length).toFixed(2)) : 0;
-  const perNightTaxable = weightedRoomGstPercent > 0
-    ? Number((perNightGrossTotal / (1 + weightedRoomGstPercent / 100)).toFixed(2))
-    : perNightGrossTotal;
-  const perNightSgst = Number(((perNightGrossTotal - perNightTaxable) / 2).toFixed(2));
+    stayDatesArr.length > 0
+      ? Number((roomGrossTotal / stayDatesArr.length).toFixed(2))
+      : 0;
+  const perNightTaxable =
+    weightedRoomGstPercent > 0
+      ? Number(
+          (perNightGrossTotal / (1 + weightedRoomGstPercent / 100)).toFixed(2),
+        )
+      : perNightGrossTotal;
+  const perNightSgst = Number(
+    ((perNightGrossTotal - perNightTaxable) / 2).toFixed(2),
+  );
   const perNightCgst = perNightSgst;
   const perNightTotal = perNightGrossTotal;
   const perNightTariff = perNightTaxable;
@@ -1264,13 +1493,16 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
 
   const allItems = [...dayRows, ...folioRowData];
   const tariffTotal = allItems.reduce((s, i) => s + (Number(i.tariff) || 0), 0);
-  const totalTaxable = allItems.reduce((s, i) => s + (Number(i.taxable) || 0), 0);
+  const totalTaxable = allItems.reduce(
+    (s, i) => s + (Number(i.taxable) || 0),
+    0,
+  );
   const totalSgst = allItems.reduce((s, i) => s + (Number(i.sgst) || 0), 0);
   const totalCgst = allItems.reduce((s, i) => s + (Number(i.cgst) || 0), 0);
   // `roomChargesTotal` is the prop passed in by the parent — use it directly.
   const computedRoomChargesTotal = tariffTotal;
   const finalTotal = Number(
-    (allItems.reduce((s, i) => s + (Number(i.total) || 0), 0)).toFixed(2),
+    allItems.reduce((s, i) => s + (Number(i.total) || 0), 0).toFixed(2),
   );
   const amountInWordsClean = (() => {
     const w = toWords(finalTotal || invoiceTotal || 0);
@@ -1294,43 +1526,55 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
     // undefined `invoiceLines` variable in its fallback branch. Fixed by
     // always preferring the live `items`/`allItems` computed at the top of
     // this component, and only falling back to `d.items` as a last resort.
-    const printItems = Array.isArray(items) && items.length > 0
-      ? items.map((it) => ({
-          name: it.name || it.description || "Charge",
-          date: it.date || "",
-          qty: it.quantity || 1,
-          rate: it.price || it.tariff || 0,
-          amount: it.total || 0,
-        }))
-      : Array.isArray(allItems) && allItems.length > 0
-        ? allItems.map((l) => ({
-            name: l.particulars || l.description || "Charge",
-            date: l.date || "",
-            qty: l.quantity || 1,
-            rate: l.tariff || l.rate || l.price || 0,
-            amount: l.amount || l.total || 0,
+    const printItems =
+      Array.isArray(items) && items.length > 0
+        ? items.map((it) => ({
+            name: it.name || it.description || "Charge",
+            date: it.date || "",
+            qty: it.quantity || 1,
+            rate: it.price || it.tariff || 0,
+            amount: it.total || 0,
           }))
-        : Array.isArray(d.items) && d.items.length > 0
-          ? d.items
-          : [];
+        : Array.isArray(allItems) && allItems.length > 0
+          ? allItems.map((l) => ({
+              name: l.particulars || l.description || "Charge",
+              date: l.date || "",
+              qty: l.quantity || 1,
+              rate: l.tariff || l.rate || l.price || 0,
+              amount: l.amount || l.total || 0,
+            }))
+          : Array.isArray(d.items) && d.items.length > 0
+            ? d.items
+            : [];
 
-    const invoiceNo = d.invoiceNo || d.invoice_no || invoice?.invoice_number || b.bookingCode || `INV-${b.bookingId}`;
-    const guestName = d.customerName || d.guestName || booking?.guest_name || "Guest";
+    const invoiceNo =
+      d.invoiceNo ||
+      d.invoice_no ||
+      invoice?.invoice_number ||
+      b.bookingCode ||
+      `INV-${b.bookingId}`;
+    const guestName =
+      d.customerName || d.guestName || booking?.guest_name || "Guest";
     const roomType = d.roomType || b.roomType || booking?.roomType || "";
-    const noOfNights = d.noOfNights || b.noOfNights || b.nights || booking?.noOfNights || "";
+    const noOfNights =
+      d.noOfNights || b.noOfNights || b.nights || booking?.noOfNights || "";
 
     const totalTariff = invoiceTotal;
     const totalDiscount = invoiceDiscount;
     const totalTaxable = invoiceSubtotal;
     const sgst = invoiceSgst;
     const cgst = invoiceCgst;
-    const roundOff = Math.round(totalTariff * 100) / 100 - Math.round((totalTariff) * 100) / 100;
+    const roundOff =
+      Math.round(totalTariff * 100) / 100 - Math.round(totalTariff * 100) / 100;
     const finalTotal = invoiceTotal;
     const remaining = Math.max(finalTotal - totalPaid, 0);
     const amountInWords = toWords(finalTotal);
-    const paymentMode = d.paymentMode || d.payment_method || booking?.paymentMode || "Front Desk";
+    const paymentMode =
+      d.paymentMode || d.payment_method || booking?.paymentMode || "Front Desk";
     const paymentRef = d.paymentReference || d.payment_reference || "";
-    const invoiceDate = d.date ? formatDate(new Date(d.date)) : formatDate(new Date());
+    const invoiceDate = d.date
+      ? formatDate(new Date(d.date))
+      : formatDate(new Date());
 
     const win = window.open("", "_blank", "width=900,height=700");
     if (!win) return;
@@ -1341,10 +1585,10 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
       const qty = item.qty || item.quantity || 1;
       const rate = item.rate || item.price || item.tariff || 0;
       const disc = item.discount || 0;
-      const taxable = item.taxable || (rate - disc);
-      const sgstAmt = (taxable * 0.025);
-      const cgstAmt = (taxable * 0.025);
-      const total = item.amount || item.total || (rate * qty);
+      const taxable = item.taxable || rate - disc;
+      const sgstAmt = taxable * 0.025;
+      const cgstAmt = taxable * 0.025;
+      const total = item.amount || item.total || rate * qty;
       return `<tr>
         <td>${dateStr}</td>
         <td>${name}${item.description && item.description !== name ? `<div style="font-size:9px;color:#64748b">${item.description}</div>` : ""}</td>
@@ -1673,7 +1917,11 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
   const handleDownloadPdf = () => {
     if (!invoice) return;
 
-    const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+    const doc = new jsPDF({
+      unit: "mm",
+      format: "a4",
+      orientation: "portrait",
+    });
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
     const margin = 12;
@@ -1695,9 +1943,24 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
     doc.text(RESORT_NAME_INVOICE, center, y + 9, { align: "center" });
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
-    doc.text(`${RESORT_ADDRESS_LINE_1}  |  ${RESORT_ADDRESS_LINE_2}`, center, y + 14, { align: "center" });
-    doc.text(`Ph: ${RESORT_PHONE_INVOICE}  |  ${RESORT_EMAIL_INVOICE}`, center, y + 18, { align: "center" });
-    doc.text(`GSTIN: ${RESORT_GSTIN_INVOICE}  |  State: ${RESORT_STATE_CODE_INVOICE}`, center, y + 22, { align: "center" });
+    doc.text(
+      `${RESORT_ADDRESS_LINE_1}  |  ${RESORT_ADDRESS_LINE_2}`,
+      center,
+      y + 14,
+      { align: "center" },
+    );
+    doc.text(
+      `Ph: ${RESORT_PHONE_INVOICE}  |  ${RESORT_EMAIL_INVOICE}`,
+      center,
+      y + 18,
+      { align: "center" },
+    );
+    doc.text(
+      `GSTIN: ${RESORT_GSTIN_INVOICE}  |  State: ${RESORT_STATE_CODE_INVOICE}`,
+      center,
+      y + 22,
+      { align: "center" },
+    );
 
     y = 32;
     doc.setTextColor(15, 23, 42);
@@ -1710,7 +1973,12 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
     doc.text(`#${invoiceNo}`, center, y + 5.5, { align: "center" });
-    doc.text(`Date: ${formatDate(invoice?.date || new Date())}`, rightEdge - 3, y + 5.5, { align: "right" });
+    doc.text(
+      `Date: ${formatDate(invoice?.date || new Date())}`,
+      rightEdge - 3,
+      y + 5.5,
+      { align: "right" },
+    );
     y += 12;
 
     const cardW = (pageWidth - margin * 2 - 6) / 2;
@@ -1727,17 +1995,38 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
     doc.text(invoice?.customerName || guestName || "Guest", margin + 3, y + 10);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8.5);
-    doc.text(`Phone: ${invoice?.phone || booking?.mobile || "-"}`, margin + 3, y + 15);
+    doc.text(
+      `Phone: ${invoice?.phone || booking?.mobile || "-"}`,
+      margin + 3,
+      y + 15,
+    );
     doc.text(`Booking ID: ${invoice?.bookingId || "-"}`, margin + 3, y + 19);
-    const pdfCompanyName = invoice?.companyName || invoice?.company_name || booking?.company_name || "";
-    const pdfCompanyGstin = invoice?.companyGstin || invoice?.company_gstin || invoice?.company_gst || booking?.company_gst || "";
+    const pdfCompanyName =
+      invoice?.companyName ||
+      invoice?.company_name ||
+      booking?.company_name ||
+      "";
+    const pdfCompanyGstin =
+      invoice?.companyGstin ||
+      invoice?.company_gstin ||
+      invoice?.company_gst ||
+      booking?.company_gst ||
+      "";
     let pdfBillToExtraLines = 0;
     if (pdfCompanyName) {
-      doc.text(`Company: ${pdfCompanyName}`, margin + 3, y + 23 + pdfBillToExtraLines * 4);
+      doc.text(
+        `Company: ${pdfCompanyName}`,
+        margin + 3,
+        y + 23 + pdfBillToExtraLines * 4,
+      );
       pdfBillToExtraLines++;
     }
     if (pdfCompanyGstin) {
-      doc.text(`GSTIN: ${pdfCompanyGstin}`, margin + 3, y + 23 + pdfBillToExtraLines * 4);
+      doc.text(
+        `GSTIN: ${pdfCompanyGstin}`,
+        margin + 3,
+        y + 23 + pdfBillToExtraLines * 4,
+      );
       pdfBillToExtraLines++;
     }
     if (pdfBillToExtraLines > 0) {
@@ -1766,7 +2055,13 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
     doc.roundedRect(rightX, y, cardW, pdfBillToCardH, 1.5, 1.5);
     y += pdfBillToCardH + 4;
 
-    const colX = [margin + 2, margin + 50, margin + 120, margin + 145, rightEdge - 3];
+    const colX = [
+      margin + 2,
+      margin + 50,
+      margin + 120,
+      margin + 145,
+      rightEdge - 3,
+    ];
     const headerRow = ["#", "Description", "Qty", "Rate", "Amount"];
 
     doc.setFillColor(226, 232, 240);
@@ -1784,7 +2079,10 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
     doc.setFontSize(9);
 
     items.forEach((item, index) => {
-      const nameLines = doc.splitTextToSize(String(item.name || item.description || "Charge"), colX[2] - colX[1] - 2);
+      const nameLines = doc.splitTextToSize(
+        String(item.name || item.description || "Charge"),
+        colX[2] - colX[1] - 2,
+      );
       const rowH = Math.max(7, nameLines.length * 4 + 2);
       ensureSpace(rowH + 3);
 
@@ -1795,9 +2093,15 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
 
       doc.text(String(index + 1), colX[0], y + 3.5);
       doc.text(nameLines, colX[1], y + 3.5);
-      doc.text(String(item.quantity || 1), colX[2], y + 3.5, { align: "center" });
-      doc.text(formatCurrency(item.price), colX[3], y + 3.5, { align: "right" });
-      doc.text(formatCurrency(item.total), colX[4], y + 3.5, { align: "right" });
+      doc.text(String(item.quantity || 1), colX[2], y + 3.5, {
+        align: "center",
+      });
+      doc.text(formatCurrency(item.price), colX[3], y + 3.5, {
+        align: "right",
+      });
+      doc.text(formatCurrency(item.total), colX[4], y + 3.5, {
+        align: "right",
+      });
       y += rowH;
     });
 
@@ -1816,8 +2120,16 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
     doc.setTextColor(50, 50, 50);
     doc.text("Payment Summary", margin, y);
     doc.setFontSize(8);
-    doc.text(`Status: ${invoice?.paymentStatus || invoice?.payment_status || (remainingAmount > 0 ? "Pending" : "Paid")}`, margin, y + 5);
-    doc.text(`Mode: ${invoice?.paymentMode || invoice?.payment_method || "Front Desk"}`, margin, y + 10);
+    doc.text(
+      `Status: ${invoice?.paymentStatus || invoice?.payment_status || (remainingAmount > 0 ? "Pending" : "Paid")}`,
+      margin,
+      y + 5,
+    );
+    doc.text(
+      `Mode: ${invoice?.paymentMode || invoice?.payment_method || "Front Desk"}`,
+      margin,
+      y + 10,
+    );
     if (invoice?.paymentReference) {
       doc.text(`Ref: ${invoice.paymentReference}`, margin, y + 15);
     }
@@ -1846,23 +2158,40 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
 
     if (invoiceDiscount > 0) {
       doc.text("Discount", tx, y + 21);
-      doc.text(`- ${formatCurrency(invoiceDiscount)}`, tv, y + 21, { align: "right" });
+      doc.text(`- ${formatCurrency(invoiceDiscount)}`, tv, y + 21, {
+        align: "right",
+      });
     }
 
     doc.setDrawColor(203, 213, 225);
     doc.setLineWidth(0.3);
-    doc.line(tx, y + (invoiceDiscount > 0 ? 26 : 23), tv, y + (invoiceDiscount > 0 ? 26 : 23));
+    doc.line(
+      tx,
+      y + (invoiceDiscount > 0 ? 26 : 23),
+      tv,
+      y + (invoiceDiscount > 0 ? 26 : 23),
+    );
 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
     doc.setTextColor(15, 23, 42);
     doc.text("GRAND TOTAL", tx, y + (invoiceDiscount > 0 ? 31 : 28));
-    doc.text(formatCurrency(invoiceTotal), tv, y + (invoiceDiscount > 0 ? 31 : 28), { align: "right" });
+    doc.text(
+      formatCurrency(invoiceTotal),
+      tv,
+      y + (invoiceDiscount > 0 ? 31 : 28),
+      { align: "right" },
+    );
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(7);
     doc.setTextColor(100, 116, 139);
-    doc.text("(inclusive of all taxes)", tv, y + (invoiceDiscount > 0 ? 34 : 31), { align: "right" });
+    doc.text(
+      "(inclusive of all taxes)",
+      tv,
+      y + (invoiceDiscount > 0 ? 34 : 31),
+      { align: "right" },
+    );
 
     y += 40;
 
@@ -1872,7 +2201,11 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
     doc.text("Bank Details (for refund / credit):", margin, y);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(7.5);
-    doc.text("A/C: 1234567890  |  IFSC: SBIN0001234  |  Bank: SBI  |  Branch: Baglamukhi", margin, y + 5);
+    doc.text(
+      "A/C: 1234567890  |  IFSC: SBIN0001234  |  Bank: SBI  |  Branch: Baglamukhi",
+      margin,
+      y + 5,
+    );
 
     y += 12;
 
@@ -1884,8 +2217,17 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
     doc.setFont("helvetica", "italic");
     doc.setFontSize(8);
     doc.setTextColor(100, 100, 100);
-    doc.text("This is a computer generated invoice. No physical signature required.", margin, y);
-    doc.text(`Generated: ${formatDate(new Date())} ${formatTime(new Date())}`, rightEdge, y, { align: "right" });
+    doc.text(
+      "This is a computer generated invoice. No physical signature required.",
+      margin,
+      y,
+    );
+    doc.text(
+      `Generated: ${formatDate(new Date())} ${formatTime(new Date())}`,
+      rightEdge,
+      y,
+      { align: "right" },
+    );
 
     y += 6;
     doc.setFont("helvetica", "normal");
@@ -1899,24 +2241,35 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
     doc.setFontSize(8);
     doc.setTextColor(100, 100, 100);
     doc.text("Authorized Signatory", rightEdge, y + 12, { align: "right" });
-    doc.text(`For ${RESORT_NAME_INVOICE}`, rightEdge, y + 16, { align: "right" });
+    doc.text(`For ${RESORT_NAME_INVOICE}`, rightEdge, y + 16, {
+      align: "right",
+    });
 
     doc.save(`${invoiceNo}.pdf`);
   };
 
   const handleSendNotification = async () => {
     if (!bookingId || !invoice) {
-      setSendStatus({ type: "error", message: "Invoice not ready yet. Please wait or Regenerate." });
+      setSendStatus({
+        type: "error",
+        message: "Invoice not ready yet. Please wait or Regenerate.",
+      });
       return;
     }
     setSending(true);
     setSendStatus(null);
-    console.group("[Invoice] Send WhatsApp + SMS", { bookingId, invoiceNo: invoice?.invoiceNo });
+    console.group("[Invoice] Send WhatsApp + SMS", {
+      bookingId,
+      invoiceNo: invoice?.invoiceNo,
+    });
     try {
       let adminNumber = "";
 
       const localStoragePhone = localStorage.getItem("phone") || "";
-      console.log("[Invoice] localStorage phone:", localStoragePhone || "(empty)");
+      console.log(
+        "[Invoice] localStorage phone:",
+        localStoragePhone || "(empty)",
+      );
       if (localStoragePhone) {
         adminNumber = localStoragePhone;
       }
@@ -1925,24 +2278,41 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
         try {
           const meRes = await API.get("/users/me");
           adminNumber = meRes.data?.phone || meRes.data?.user?.phone || "";
-          console.log("[Invoice] /users/me phone:", adminNumber || "(empty)", "full response:", meRes.data);
+          console.log(
+            "[Invoice] /users/me phone:",
+            adminNumber || "(empty)",
+            "full response:",
+            meRes.data,
+          );
         } catch (err) {
           console.warn("[Invoice] /users/me failed:", err.message);
         }
       }
 
-      console.log("[Invoice] Final adminNumber to send:", adminNumber || "(empty — backend will DB-fallback)");
+      console.log(
+        "[Invoice] Final adminNumber to send:",
+        adminNumber || "(empty — backend will DB-fallback)",
+      );
 
       if (!adminNumber) {
         const envAdmin =
-          (import.meta && import.meta.env && import.meta.env.VITE_ADMIN_WHATSAPP_NUMBER) || "";
+          (import.meta &&
+            import.meta.env &&
+            import.meta.env.VITE_ADMIN_WHATSAPP_NUMBER) ||
+          "";
         if (envAdmin) {
           adminNumber = envAdmin;
-          console.log("[Invoice] using VITE_ADMIN_WHATSAPP_NUMBER from env:", envAdmin);
+          console.log(
+            "[Invoice] using VITE_ADMIN_WHATSAPP_NUMBER from env:",
+            envAdmin,
+          );
         }
       }
 
-      console.log("[Invoice] Final adminNumber to send:", adminNumber || "(empty — backend will DB-fallback)");
+      console.log(
+        "[Invoice] Final adminNumber to send:",
+        adminNumber || "(empty — backend will DB-fallback)",
+      );
 
       const cleanNumber = (num) => {
         const digits = String(num || "").replace(/\D/g, "");
@@ -1961,13 +2331,22 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
           subtotal: invoiceSubtotal || invoiceTotal,
           tax: invoiceTax,
           discount: invoiceDiscount,
-          paymentStatus: invoice?.paymentStatus || invoice?.payment_status || (remainingAmount > 0 ? "Pending" : "Paid"),
-          paymentMode: invoice?.paymentMode || invoice?.payment_method || booking?.payment_mode || "Cash",
+          paymentStatus:
+            invoice?.paymentStatus ||
+            invoice?.payment_status ||
+            (remainingAmount > 0 ? "Pending" : "Paid"),
+          paymentMode:
+            invoice?.paymentMode ||
+            invoice?.payment_method ||
+            booking?.payment_mode ||
+            "Cash",
           customerName: guestName,
           phone: invoice?.phone || booking?.mobile || "",
           roomNumber: roomNo,
-          checkIn: invoice?.checkIn || invoice?.check_in || booking?.check_in || "",
-          checkOut: invoice?.checkOut || invoice?.check_out || booking?.check_out || "",
+          checkIn:
+            invoice?.checkIn || invoice?.check_in || booking?.check_in || "",
+          checkOut:
+            invoice?.checkOut || invoice?.check_out || booking?.check_out || "",
           address: guestAddress,
           items: items.map((it) => ({
             name: it.name || it.description || "Charge",
@@ -1986,7 +2365,10 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
       };
       console.log("[Invoice] POST payload:", payload);
 
-      const pdfRes = await API.post(`/hotel/invoice/send-whatsapp/${bookingId}`, payload);
+      const pdfRes = await API.post(
+        `/hotel/invoice/send-whatsapp/${bookingId}`,
+        payload,
+      );
       const data = pdfRes.data || {};
       console.log("[WhatsApp] full response:", JSON.stringify(data, null, 2));
       console.log("[WhatsApp] customer.whatsapp:", data?.customer?.whatsapp);
@@ -1996,12 +2378,20 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
       const adminWa = data?.admin?.whatsapp || {};
 
       const channels = [];
-      if (customerWa?.ok) channels.push(`customer WhatsApp${customerWa?.fallback ? " (text+link)" : ""}`);
-      if (adminWa?.ok) channels.push(`admin WhatsApp${adminWa?.fallback ? " (text+link)" : ""}`);
+      if (customerWa?.ok)
+        channels.push(
+          `customer WhatsApp${customerWa?.fallback ? " (text+link)" : ""}`,
+        );
+      if (adminWa?.ok)
+        channels.push(
+          `admin WhatsApp${adminWa?.fallback ? " (text+link)" : ""}`,
+        );
 
       const skipped = [];
-      if (customerWa?.skipped) skipped.push(`customer WhatsApp (${customerWa.reason || "no number"})`);
-      if (adminWa?.skipped) skipped.push(`admin WhatsApp (${adminWa.reason || "no number"})`);
+      if (customerWa?.skipped)
+        skipped.push(`customer WhatsApp (${customerWa.reason || "no number"})`);
+      if (adminWa?.skipped)
+        skipped.push(`admin WhatsApp (${adminWa.reason || "no number"})`);
 
       if (channels.length > 0) {
         setSendStatus({
@@ -2035,35 +2425,58 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
       onClose={onClose}
     >
       {loading ? (
-        <div className="py-16 text-center text-slate-400">Preparing invoice...</div>
+        <div className="py-16 text-center text-slate-400">
+          Preparing invoice...
+        </div>
       ) : (
         <div className="space-y-0">
           {/* ─── Action bar ─── */}
           <div className="flex flex-wrap items-center justify-between gap-3 pb-5 border-b border-slate-100">
             <div className="flex items-center gap-3">
-              <span className="text-[14px] font-bold uppercase tracking-wider text-slate-400">Invoice Actions</span>
+              <span className="text-[14px] font-bold uppercase tracking-wider text-slate-400">
+                Invoice Actions
+              </span>
               {sendStatus ? (
-                <div className={`rounded-full px-3 py-1.5 text-[13px] font-semibold border ${
-                  sendStatus.type === "success"
-                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                    : "bg-rose-50 text-rose-700 border-rose-200"
-                }`}>
+                <div
+                  className={`rounded-full px-3 py-1.5 text-[13px] font-semibold border ${
+                    sendStatus.type === "success"
+                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                      : "bg-rose-50 text-rose-700 border-rose-200"
+                  }`}
+                >
                   {sendStatus.message}
                 </div>
               ) : null}
             </div>
             <div className="flex flex-wrap gap-2">
-              <button type="button" onClick={handleSendNotification} disabled={sending || loading || !invoice} className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 px-5 h-12 text-[17px] font-bold text-white shadow-lg shadow-emerald-200 hover:from-emerald-700 hover:to-teal-600 hover:shadow-xl hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap">
+              <button
+                type="button"
+                onClick={handleSendNotification}
+                disabled={sending || loading || !invoice}
+                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 px-5 h-12 text-[17px] font-bold text-white shadow-lg shadow-emerald-200 hover:from-emerald-700 hover:to-teal-600 hover:shadow-xl hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+              >
                 <FaWhatsapp className="text-lg" />
                 {sending ? "Sending..." : "Send WhatsApp + SMS"}
               </button>
-              <button type="button" onClick={loadInvoice} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 h-12 text-[17px] font-bold text-slate-700 shadow-sm hover:bg-slate-50 hover:border-slate-300 hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-300 whitespace-nowrap">
+              <button
+                type="button"
+                onClick={loadInvoice}
+                className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 h-12 text-[17px] font-bold text-slate-700 shadow-sm hover:bg-slate-50 hover:border-slate-300 hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-300 whitespace-nowrap"
+              >
                 <FaSync className="text-sm" /> Regenerate
               </button>
-              <button type="button" onClick={handlePrint} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 h-12 text-[17px] font-bold text-slate-700 shadow-sm hover:bg-slate-50 hover:border-slate-300 hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-300 whitespace-nowrap">
+              <button
+                type="button"
+                onClick={handlePrint}
+                className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 h-12 text-[17px] font-bold text-slate-700 shadow-sm hover:bg-slate-50 hover:border-slate-300 hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-300 whitespace-nowrap"
+              >
                 <FaPrint className="text-sm" /> Print
               </button>
-              <button type="button" onClick={handleDownloadPdf} className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 h-12 text-[17px] font-bold text-white shadow-lg shadow-blue-200 hover:bg-blue-700 hover:shadow-xl hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-300 whitespace-nowrap">
+              <button
+                type="button"
+                onClick={handleDownloadPdf}
+                className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 h-12 text-[17px] font-bold text-white shadow-lg shadow-blue-200 hover:bg-blue-700 hover:shadow-xl hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-300 whitespace-nowrap"
+              >
                 <FaDownload className="text-sm" /> PDF
               </button>
             </div>
@@ -2071,23 +2484,38 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
 
           {/* ─── Invoice paper — matches reference layout ─── */}
           <div className="border border-black font-['Helvetica',Arial,sans-serif] text-black">
-
             {/* 1. "Tax Invoice" centered title */}
             <div className="text-center py-1.5">
-              <h2 className="text-[20px] font-extrabold tracking-wide leading-tight">Tax Invoice</h2>
+              <h2 className="text-[20px] font-extrabold tracking-wide leading-tight">
+                Tax Invoice
+              </h2>
             </div>
 
             {/* 2. Resort logo + name + address + GSTN */}
             <div className="text-center px-2 pb-2 leading-snug">
               <div className="inline-flex items-center justify-center gap-1.5 mb-1">
-                <span className="inline-flex h-[18px] w-[18px] items-center justify-center rounded-full bg-green-600 text-white text-[11px]">❀</span>
-                <span className="text-[13px] font-extrabold tracking-wide">{RESORT_NAME_INVOICE}</span>
+                <span className="inline-flex h-[18px] w-[18px] items-center justify-center rounded-full bg-green-600 text-white text-[11px]">
+                  ❀
+                </span>
+                <span className="text-[13px] font-extrabold tracking-wide">
+                  {RESORT_NAME_INVOICE}
+                </span>
               </div>
-              <div className="text-[9px] leading-snug">{RESORT_ADDRESS_LINE_1}</div>
-              <div className="text-[9px] leading-snug">District: {RESORT_ADDRESS_LINE_2}</div>
-              <div className="text-[9px] leading-snug">Ph: {RESORT_PHONE_INVOICE}</div>
-              <div className="text-[9px] leading-snug">{RESORT_EMAIL_INVOICE} | {RESORT_WEBSITE}</div>
-              <div className="text-[9px] font-extrabold leading-snug">GSTN: {RESORT_GSTIN_INVOICE}</div>
+              <div className="text-[9px] leading-snug">
+                {RESORT_ADDRESS_LINE_1}
+              </div>
+              <div className="text-[9px] leading-snug">
+                District: {RESORT_ADDRESS_LINE_2}
+              </div>
+              <div className="text-[9px] leading-snug">
+                Ph: {RESORT_PHONE_INVOICE}
+              </div>
+              <div className="text-[9px] leading-snug">
+                {RESORT_EMAIL_INVOICE} | {RESORT_WEBSITE}
+              </div>
+              <div className="text-[9px] font-extrabold leading-snug">
+                GSTN: {RESORT_GSTIN_INVOICE}
+              </div>
             </div>
 
             <hr className="border-t border-black m-0" />
@@ -2095,55 +2523,176 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
             {/* 3. Guest-info (left) | Booking-info (right) */}
             <div className="grid grid-cols-1 md:grid-cols-2">
               <div className="px-3 py-2 border-r border-black text-[10px] leading-snug space-y-0.5">
-                <div><span className="font-bold inline-block min-w-[110px]">Folio No.</span><span>{folioNo}</span></div>
-                <div><span className="font-bold inline-block min-w-[110px]">Guest Name</span><span className="uppercase">{guestName}</span></div>
-                <div><span className="font-bold inline-block min-w-[110px]">Address</span><span className="uppercase">{guestAddress}</span></div>
-                <div><span className="font-bold inline-block min-w-[110px]">Contact #</span><span>{guestContact}</span></div>
-                {companyName && <div><span className="font-bold inline-block min-w-[110px]">Company</span><span className="uppercase">{companyName}</span></div>}
-                {companyGstin && <div><span className="font-bold inline-block min-w-[110px]">GSTIN</span><span>{companyGstin}</span></div>}
+                <div>
+                  <span className="font-bold inline-block min-w-[110px]">
+                    Folio No.
+                  </span>
+                  <span>{folioNo}</span>
+                </div>
+                <div>
+                  <span className="font-bold inline-block min-w-[110px]">
+                    Guest Name
+                  </span>
+                  <span className="uppercase">{guestName}</span>
+                </div>
+                <div>
+                  <span className="font-bold inline-block min-w-[110px]">
+                    Address
+                  </span>
+                  <span className="uppercase">{guestAddress}</span>
+                </div>
+                <div>
+                  <span className="font-bold inline-block min-w-[110px]">
+                    Contact #
+                  </span>
+                  <span>{guestContact}</span>
+                </div>
+                {companyName && (
+                  <div>
+                    <span className="font-bold inline-block min-w-[110px]">
+                      Company
+                    </span>
+                    <span className="uppercase">{companyName}</span>
+                  </div>
+                )}
+                {companyGstin && (
+                  <div>
+                    <span className="font-bold inline-block min-w-[110px]">
+                      GSTIN
+                    </span>
+                    <span>{companyGstin}</span>
+                  </div>
+                )}
               </div>
               <div className="px-3 py-2 border-l border-black text-[10px] leading-snug space-y-0.5">
-                <div><span className="font-bold inline-block min-w-[110px]">Invoice No.</span><span>{invoiceNo}</span></div>
-                <div><span className="font-bold inline-block min-w-[110px]">Invoice Date</span><span>{formatDate(invoice?.date || new Date())}</span></div>
-                <div><span className="font-bold inline-block min-w-[110px]">Room No.</span><span>{roomNo}</span></div>
-                <div><span className="font-bold inline-block min-w-[110px]">Room Type</span><span>{roomType}</span></div>
-                <div><span className="font-bold inline-block min-w-[110px]">Arrival</span><span>{checkInDate} {arrivalTime}</span></div>
-                <div><span className="font-bold inline-block min-w-[110px]">Departure</span><span>{checkOutDate} {departureTime}</span></div>
-                <div><span className="font-bold inline-block min-w-[110px]">Pax</span><span>{pax}</span></div>
-                <div><span className="font-bold inline-block min-w-[110px]">No. of Nights</span><span>{noOfNights}</span></div>
+                <div>
+                  <span className="font-bold inline-block min-w-[110px]">
+                    Invoice No.
+                  </span>
+                  <span>{invoiceNo}</span>
+                </div>
+                <div>
+                  <span className="font-bold inline-block min-w-[110px]">
+                    Invoice Date
+                  </span>
+                  <span>{formatDate(invoice?.date || new Date())}</span>
+                </div>
+                <div>
+                  <span className="font-bold inline-block min-w-[110px]">
+                    Room No.
+                  </span>
+                  <span>{roomNo}</span>
+                </div>
+                <div>
+                  <span className="font-bold inline-block min-w-[110px]">
+                    Room Type
+                  </span>
+                  <span>{roomType}</span>
+                </div>
+                <div>
+                  <span className="font-bold inline-block min-w-[110px]">
+                    Arrival
+                  </span>
+                  <span>
+                    {checkInDate} {arrivalTime}
+                  </span>
+                </div>
+                <div>
+                  <span className="font-bold inline-block min-w-[110px]">
+                    Departure
+                  </span>
+                  <span>
+                    {checkOutDate} {departureTime}
+                  </span>
+                </div>
+                <div>
+                  <span className="font-bold inline-block min-w-[110px]">
+                    Pax
+                  </span>
+                  <span>{pax}</span>
+                </div>
+                <div>
+                  <span className="font-bold inline-block min-w-[110px]">
+                    No. of Nights
+                  </span>
+                  <span>{noOfNights}</span>
+                </div>
               </div>
             </div>
 
             {/* 4. Billing Details table */}
-            <div className="px-3 pt-2 pb-0.5 font-extrabold text-[10px]">Billing Details</div>
+            <div className="px-3 pt-2 pb-0.5 font-extrabold text-[10px]">
+              Billing Details
+            </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-[10px]">
                 <thead>
                   <tr className="font-bold text-[9px]">
-                    <th className="border border-black px-1 py-1 w-[11%]">Date</th>
-                    <th className="border border-black px-1 py-1 w-[38%]">Particulars</th>
-                    <th className="border border-black px-1 py-1 w-[9%] text-right">Tariff</th>
-                    <th className="border border-black px-1 py-1 w-[7%] text-right">Disc</th>
-                    <th className="border border-black px-1 py-1 w-[9%] text-right">Taxable</th>
-                    <th className="border border-black px-1 py-1 w-[9%] text-right">SGST 2.5%</th>
-                    <th className="border border-black px-1 py-1 w-[9%] text-right">CGST 2.5%</th>
-                    <th className="border border-black px-1 py-1 w-[8%] text-right">Total</th>
+                    <th className="border border-black px-1 py-1 w-[11%]">
+                      Date
+                    </th>
+                    <th className="border border-black px-1 py-1 w-[38%]">
+                      Particulars
+                    </th>
+                    <th className="border border-black px-1 py-1 w-[9%] text-right">
+                      Tariff
+                    </th>
+                    <th className="border border-black px-1 py-1 w-[7%] text-right">
+                      Disc
+                    </th>
+                    <th className="border border-black px-1 py-1 w-[9%] text-right">
+                      Taxable
+                    </th>
+                    <th className="border border-black px-1 py-1 w-[9%] text-right">
+                      SGST 2.5%
+                    </th>
+                    <th className="border border-black px-1 py-1 w-[9%] text-right">
+                      CGST 2.5%
+                    </th>
+                    <th className="border border-black px-1 py-1 w-[8%] text-right">
+                      Total
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {allItems.length > 0 ? allItems.map((item, idx) => (
-                    <tr key={idx}>
-                      <td className="border border-black px-1 py-1 align-top whitespace-nowrap">{item.date || formatDate(new Date())}</td>
-                      <td className="border border-black px-1 py-1 leading-snug align-top">{item.particulars}</td>
-                      <td className="border border-black px-1 py-1 text-right tabular-nums align-top">{formatCurrency(item.tariff)}</td>
-                      <td className="border border-black px-1 py-1 text-right tabular-nums align-top">{item.disc > 0 ? formatCurrency(item.disc) : "0.00"}</td>
-                      <td className="border border-black px-1 py-1 text-right tabular-nums align-top">{formatCurrency(item.taxable)}</td>
-                      <td className="border border-black px-1 py-1 text-right tabular-nums align-top">{formatCurrency(item.sgst)}</td>
-                      <td className="border border-black px-1 py-1 text-right tabular-nums align-top">{formatCurrency(item.cgst)}</td>
-                      <td className="border border-black px-1 py-1 text-right font-extrabold tabular-nums align-top">{formatCurrency(item.total)}</td>
+                  {allItems.length > 0 ? (
+                    allItems.map((item, idx) => (
+                      <tr key={idx}>
+                        <td className="border border-black px-1 py-1 align-top whitespace-nowrap">
+                          {item.date || formatDate(new Date())}
+                        </td>
+                        <td className="border border-black px-1 py-1 leading-snug align-top">
+                          {item.particulars}
+                        </td>
+                        <td className="border border-black px-1 py-1 text-right tabular-nums align-top">
+                          {formatCurrency(item.tariff)}
+                        </td>
+                        <td className="border border-black px-1 py-1 text-right tabular-nums align-top">
+                          {item.disc > 0 ? formatCurrency(item.disc) : "0.00"}
+                        </td>
+                        <td className="border border-black px-1 py-1 text-right tabular-nums align-top">
+                          {formatCurrency(item.taxable)}
+                        </td>
+                        <td className="border border-black px-1 py-1 text-right tabular-nums align-top">
+                          {formatCurrency(item.sgst)}
+                        </td>
+                        <td className="border border-black px-1 py-1 text-right tabular-nums align-top">
+                          {formatCurrency(item.cgst)}
+                        </td>
+                        <td className="border border-black px-1 py-1 text-right font-extrabold tabular-nums align-top">
+                          {formatCurrency(item.total)}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan={8}
+                        className="border border-black px-2 py-2 text-center text-slate-400"
+                      >
+                        No charges recorded
+                      </td>
                     </tr>
-                  )) : (
-                    <tr><td colSpan={8} className="border border-black px-2 py-2 text-center text-slate-400">No charges recorded</td></tr>
                   )}
                 </tbody>
               </table>
@@ -2152,22 +2701,89 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
             {/* 5. Remarks (left) | Totals summary (right) */}
             <div className="grid grid-cols-1 md:grid-cols-2 border-t border-black">
               <div className="px-3 py-3 border-r border-black text-[10px] space-y-2">
-                <div className="font-extrabold text-[9px] tracking-wider uppercase">Remarks</div>
+                <div className="font-extrabold text-[9px] tracking-wider uppercase">
+                  Remarks
+                </div>
                 <div className="min-h-[80px] text-[9px] text-slate-400">-</div>
               </div>
               <div className="px-3 py-3 text-[10px] leading-snug">
-                <div className="font-extrabold text-[9px] tracking-wider uppercase mb-1">Payment Summary</div>
+                <div className="font-extrabold text-[9px] tracking-wider uppercase mb-1">
+                  Payment Summary
+                </div>
                 <table className="w-full border-collapse text-[10px]">
                   <tbody>
-                    <tr><td className="border border-black px-1.5 py-0.5 text-left">Tariff Total</td><td className="border border-black px-1.5 py-0.5 text-right tabular-nums w-[80px]">{formatCurrency(tariffTotal)}</td></tr>
-                    <tr><td className="border border-black px-1.5 py-0.5 text-left">Discount</td><td className="border border-black px-1.5 py-0.5 text-right tabular-nums">0.00</td></tr>
-                    <tr><td className="border border-black px-1.5 py-0.5 text-left">Taxable Amount</td><td className="border border-black px-1.5 py-0.5 text-right tabular-nums">{formatCurrency(totalTaxable)}</td></tr>
-                    <tr><td className="border border-black px-1.5 py-0.5 text-left">SGST</td><td className="border border-black px-1.5 py-0.5 text-right tabular-nums">{formatCurrency(totalSgst)}</td></tr>
-                    <tr><td className="border border-black px-1.5 py-0.5 text-left">CGST</td><td className="border border-black px-1.5 py-0.5 text-right tabular-nums">{formatCurrency(totalCgst)}</td></tr>
-                    <tr className="bg-slate-50"><td className="border border-black px-1.5 py-0.5 text-left font-extrabold">Room Total</td><td className="border border-black px-1.5 py-0.5 text-right font-extrabold tabular-nums">{formatCurrency(roomChargesTotal)}</td></tr>
-                    <tr><td className="border border-black px-1.5 py-0.5 text-left">Round Off Disc.</td><td className="border border-black px-1.5 py-0.5 text-right tabular-nums">0.00</td></tr>
-                    <tr className="bg-slate-50"><td className="border border-black px-1.5 py-0.5 text-left font-extrabold">Final Total</td><td className="border border-black px-1.5 py-0.5 text-right font-extrabold tabular-nums">{formatCurrency(finalTotal)}</td></tr>
-                    <tr><td className="border border-black px-1.5 py-0.5 text-left">Service Total</td><td className="border border-black px-1.5 py-0.5 text-right tabular-nums">0.00</td></tr>
+                    <tr>
+                      <td className="border border-black px-1.5 py-0.5 text-left">
+                        Tariff Total
+                      </td>
+                      <td className="border border-black px-1.5 py-0.5 text-right tabular-nums w-[80px]">
+                        {formatCurrency(tariffTotal)}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="border border-black px-1.5 py-0.5 text-left">
+                        Discount
+                      </td>
+                      <td className="border border-black px-1.5 py-0.5 text-right tabular-nums">
+                        0.00
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="border border-black px-1.5 py-0.5 text-left">
+                        Taxable Amount
+                      </td>
+                      <td className="border border-black px-1.5 py-0.5 text-right tabular-nums">
+                        {formatCurrency(totalTaxable)}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="border border-black px-1.5 py-0.5 text-left">
+                        SGST
+                      </td>
+                      <td className="border border-black px-1.5 py-0.5 text-right tabular-nums">
+                        {formatCurrency(totalSgst)}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="border border-black px-1.5 py-0.5 text-left">
+                        CGST
+                      </td>
+                      <td className="border border-black px-1.5 py-0.5 text-right tabular-nums">
+                        {formatCurrency(totalCgst)}
+                      </td>
+                    </tr>
+                    <tr className="bg-slate-50">
+                      <td className="border border-black px-1.5 py-0.5 text-left font-extrabold">
+                        Room Total
+                      </td>
+                      <td className="border border-black px-1.5 py-0.5 text-right font-extrabold tabular-nums">
+                        {formatCurrency(roomChargesTotal)}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="border border-black px-1.5 py-0.5 text-left">
+                        Round Off Disc.
+                      </td>
+                      <td className="border border-black px-1.5 py-0.5 text-right tabular-nums">
+                        0.00
+                      </td>
+                    </tr>
+                    <tr className="bg-slate-50">
+                      <td className="border border-black px-1.5 py-0.5 text-left font-extrabold">
+                        Final Total
+                      </td>
+                      <td className="border border-black px-1.5 py-0.5 text-right font-extrabold tabular-nums">
+                        {formatCurrency(finalTotal)}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="border border-black px-1.5 py-0.5 text-left">
+                        Service Total
+                      </td>
+                      <td className="border border-black px-1.5 py-0.5 text-right tabular-nums">
+                        0.00
+                      </td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
@@ -2180,7 +2796,9 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
               </div>
               <div className="px-3 py-2.5 flex items-center justify-between font-extrabold text-[12px]">
                 <span>Final Total</span>
-                <span className="tabular-nums text-[14px]">Rs. {formatMoney(finalTotal)}</span>
+                <span className="tabular-nums text-[14px]">
+                  Rs. {formatMoney(finalTotal)}
+                </span>
               </div>
             </div>
 
@@ -2190,8 +2808,18 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
                 {paymentNoteText}
               </div>
               <div className="px-3 py-2.5 text-[10px] leading-snug space-y-0.5">
-                <div className="flex justify-between"><span>{(paymentMode || "UPI").toUpperCase()}</span><span className="tabular-nums">{formatMoney(finalTotal)}</span></div>
-                <div className="flex justify-between font-extrabold border-t border-black pt-0.5 mt-0.5"><span>Balance</span><span className="tabular-nums">{formatMoney(remainingAmount)}</span></div>
+                <div className="flex justify-between">
+                  <span>{(paymentMode || "UPI").toUpperCase()}</span>
+                  <span className="tabular-nums">
+                    {formatMoney(finalTotal)}
+                  </span>
+                </div>
+                <div className="flex justify-between font-extrabold border-t border-black pt-0.5 mt-0.5">
+                  <span>Balance</span>
+                  <span className="tabular-nums">
+                    {formatMoney(remainingAmount)}
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -2199,16 +2827,23 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
             <div className="border-t border-black px-3 pt-4 pb-3">
               <div className="flex items-end justify-between gap-6 mb-5">
                 <div>
-                  <div className="text-[10px] font-extrabold">For {RESORT_NAME_INVOICE}</div>
-                  <div className="inline-block min-w-[140px] border-t border-black pt-1.5 mt-6 text-[10px] font-semibold text-center">Authorised Signature</div>
+                  <div className="text-[10px] font-extrabold">
+                    For {RESORT_NAME_INVOICE}
+                  </div>
+                  <div className="inline-block min-w-[140px] border-t border-black pt-1.5 mt-6 text-[10px] font-semibold text-center">
+                    Authorised Signature
+                  </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-[10px] font-extrabold">Guest Signature</div>
+                  <div className="text-[10px] font-extrabold">
+                    Guest Signature
+                  </div>
                   <div className="inline-block min-w-[140px] border-t border-black pt-1.5 mt-6 text-[10px] font-semibold"></div>
                 </div>
               </div>
               <div className="text-center text-[10px] font-semibold">
-                Invoice Generated By: <span className="font-bold">{generatedBy}</span>
+                Invoice Generated By:{" "}
+                <span className="font-bold">{generatedBy}</span>
               </div>
             </div>
           </div>
@@ -2220,54 +2855,107 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
 
 /* ────────────────── WhatsApp Send Modal Component ─────────────────────────── */
 
-const WhatsAppSendModal = ({ booking, detail, invoice, sending, result, onSend, onClose }) => {
+const WhatsAppSendModal = ({
+  booking,
+  detail,
+  invoice,
+  sending,
+  result,
+  onSend,
+  onClose,
+}) => {
   const b = booking || {};
   const inv = invoice || detail?.invoice || {};
-  const guestName = inv.customerName || inv.customer_name || detail?.guest_name || b.guest_name || "Guest";
+  const guestName =
+    inv.customerName ||
+    inv.customer_name ||
+    detail?.guest_name ||
+    b.guest_name ||
+    "Guest";
   const customerPhone = inv.phone || detail?.mobile || b.mobile || "—";
   const invoiceNo = inv.invoiceNo || inv.invoice_no || `BK-${b.bookingId}`;
-  const invoiceTotal = Number(inv.totalAmount || inv.total_amount || inv.finalTotal || inv.final_total || 0);
-  const paymentStatus = inv.paymentStatus || inv.payment_status || (invoiceTotal > 0 ? "Pending" : "Paid");
-  const advancePaid = Number(inv.paidAmount || inv.paid_amount || b.paidAmount || 0);
+  const invoiceTotal = Number(
+    inv.totalAmount ||
+      inv.total_amount ||
+      inv.finalTotal ||
+      inv.final_total ||
+      0,
+  );
+  const paymentStatus =
+    inv.paymentStatus ||
+    inv.payment_status ||
+    (invoiceTotal > 0 ? "Pending" : "Paid");
+  const advancePaid = Number(
+    inv.paidAmount || inv.paid_amount || b.paidAmount || 0,
+  );
   const balanceDue = Math.max(invoiceTotal - advancePaid, 0);
-  const roomNumber = inv.roomNumber || inv.room_number || (Array.isArray(detail?.rooms) ? detail.rooms.map((r) => r.room_number || r.roomNumber).filter(Boolean).join(", ") : "") || b.rooms || "—";
+  const roomNumber =
+    inv.roomNumber ||
+    inv.room_number ||
+    (Array.isArray(detail?.rooms)
+      ? detail.rooms
+          .map((r) => r.room_number || r.roomNumber)
+          .filter(Boolean)
+          .join(", ")
+      : "") ||
+    b.rooms ||
+    "—";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
-      <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" onClick={sending ? undefined : onClose} />
+      <div
+        className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"
+        onClick={sending ? undefined : onClose}
+      />
       <div className="relative w-full max-w-md bg-white rounded-[24px] shadow-[0_30px_80px_rgba(15,23,42,0.35)] overflow-hidden">
-
         {/* Brand header */}
         <div className="bg-gradient-to-r from-emerald-600 to-teal-600 px-5 sm:px-6 py-5 flex items-center gap-4">
           <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white shadow-lg">
             <FaWhatsapp className="text-[#25D366] text-3xl" />
           </div>
           <div className="flex-1">
-            <h3 className="text-white font-black text-lg sm:text-xl leading-tight">Send Invoice via WhatsApp</h3>
-            <p className="text-white/75 text-xs sm:text-sm mt-0.5">Invoice will be sent with PDF attachment</p>
+            <h3 className="text-white font-black text-lg sm:text-xl leading-tight">
+              Send Invoice via WhatsApp
+            </h3>
+            <p className="text-white/75 text-xs sm:text-sm mt-0.5">
+              Invoice will be sent with PDF attachment
+            </p>
           </div>
         </div>
 
         <div className="px-5 sm:px-6 py-5 space-y-4">
-
           {/* Summary strip */}
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="flex-1 rounded-xl bg-slate-50 border border-slate-200 px-3 py-2.5 text-center">
-              <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Invoice</div>
-              <div className="text-sm font-black text-slate-900 mt-0.5">{invoiceNo}</div>
+              <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                Invoice
+              </div>
+              <div className="text-sm font-black text-slate-900 mt-0.5">
+                {invoiceNo}
+              </div>
             </div>
             <div className="flex-1 rounded-xl bg-emerald-50 border border-emerald-100 px-3 py-2.5 text-center">
-              <div className="text-[10px] font-bold uppercase tracking-widest text-emerald-500">Total Amount</div>
-              <div className="text-sm font-black text-emerald-700 mt-0.5">{formatCurrency(invoiceTotal)}</div>
+              <div className="text-[10px] font-bold uppercase tracking-widest text-emerald-500">
+                Total Amount
+              </div>
+              <div className="text-sm font-black text-emerald-700 mt-0.5">
+                {formatCurrency(invoiceTotal)}
+              </div>
             </div>
             <div className="flex-1 rounded-xl bg-slate-50 border border-slate-200 px-3 py-2.5 text-center">
-              <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Status</div>
+              <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                Status
+              </div>
               <div className="mt-1">
-                <span className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-bold ${
-                  paymentStatus === "Paid" ? "bg-emerald-50 text-emerald-700" :
-                  paymentStatus === "Pending" ? "bg-amber-50 text-amber-700" :
-                  "bg-slate-100 text-slate-600"
-                }`}>
+                <span
+                  className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-bold ${
+                    paymentStatus === "Paid"
+                      ? "bg-emerald-50 text-emerald-700"
+                      : paymentStatus === "Pending"
+                        ? "bg-amber-50 text-amber-700"
+                        : "bg-slate-100 text-slate-600"
+                  }`}
+                >
                   {paymentStatus}
                 </span>
               </div>
@@ -2276,14 +2964,20 @@ const WhatsAppSendModal = ({ booking, detail, invoice, sending, result, onSend, 
 
           {/* Guest card */}
           <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4 space-y-2.5">
-            <div className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-2">Guest Information</div>
+            <div className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-2">
+              Guest Information
+            </div>
             <div className="flex items-center gap-2.5">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-700">
                 <FaUser className="text-sm" />
               </div>
               <div>
-                <div className="text-[11px] text-slate-400 font-medium">Guest Name</div>
-                <div className="text-[15px] font-black text-slate-900">{guestName}</div>
+                <div className="text-[11px] text-slate-400 font-medium">
+                  Guest Name
+                </div>
+                <div className="text-[15px] font-black text-slate-900">
+                  {guestName}
+                </div>
               </div>
             </div>
             <div className="flex items-center gap-2.5">
@@ -2291,8 +2985,12 @@ const WhatsAppSendModal = ({ booking, detail, invoice, sending, result, onSend, 
                 <FaPhone className="text-sm" />
               </div>
               <div>
-                <div className="text-[11px] text-slate-400 font-medium">Mobile Number</div>
-                <div className="text-[15px] font-black text-slate-900">{customerPhone}</div>
+                <div className="text-[11px] text-slate-400 font-medium">
+                  Mobile Number
+                </div>
+                <div className="text-[15px] font-black text-slate-900">
+                  {customerPhone}
+                </div>
               </div>
             </div>
             {detail?.guest_email || b.guestEmail ? (
@@ -2301,8 +2999,12 @@ const WhatsAppSendModal = ({ booking, detail, invoice, sending, result, onSend, 
                   <FaEnvelope className="text-sm" />
                 </div>
                 <div>
-                  <div className="text-[11px] text-slate-400 font-medium">Email</div>
-                  <div className="text-[15px] font-black text-slate-900">{detail?.guest_email || b.guestEmail || "-"}</div>
+                  <div className="text-[11px] text-slate-400 font-medium">
+                    Email
+                  </div>
+                  <div className="text-[15px] font-black text-slate-900">
+                    {detail?.guest_email || b.guestEmail || "-"}
+                  </div>
                 </div>
               </div>
             ) : null}
@@ -2310,14 +3012,24 @@ const WhatsAppSendModal = ({ booking, detail, invoice, sending, result, onSend, 
 
           {/* Room & Payment details preview */}
           <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4 space-y-2.5">
-            <div className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-2">Booking Details</div>
+            <div className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-2">
+              Booking Details
+            </div>
             <div className="flex items-center gap-2.5">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-700">
                 <FaHotel className="text-sm" />
               </div>
               <div className="flex-1">
-                <div className="text-[11px] text-slate-400 font-medium">Room Type</div>
-                <div className="text-[15px] font-black text-slate-900">{detail?.room_category || detail?.roomType || b.roomCategory || b.roomType || "—"}</div>
+                <div className="text-[11px] text-slate-400 font-medium">
+                  Room Type
+                </div>
+                <div className="text-[15px] font-black text-slate-900">
+                  {detail?.room_category ||
+                    detail?.roomType ||
+                    b.roomCategory ||
+                    b.roomType ||
+                    "—"}
+                </div>
               </div>
             </div>
             <div className="flex items-center gap-2.5">
@@ -2325,22 +3037,38 @@ const WhatsAppSendModal = ({ booking, detail, invoice, sending, result, onSend, 
                 <FaKey className="text-sm" />
               </div>
               <div className="flex-1">
-                <div className="text-[11px] text-slate-400 font-medium">Room No</div>
-                <div className="text-[15px] font-black text-slate-900">{roomNumber}</div>
+                <div className="text-[11px] text-slate-400 font-medium">
+                  Room No
+                </div>
+                <div className="text-[15px] font-black text-slate-900">
+                  {roomNumber}
+                </div>
               </div>
             </div>
             <div className="border-t border-slate-200 pt-2.5 mt-2.5 grid grid-cols-3 gap-3">
               <div className="text-center">
-                <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Total</div>
-                <div className="text-sm font-black text-slate-900 mt-0.5">{formatCurrency(invoiceTotal)}</div>
+                <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                  Total
+                </div>
+                <div className="text-sm font-black text-slate-900 mt-0.5">
+                  {formatCurrency(invoiceTotal)}
+                </div>
               </div>
               <div className="text-center">
-                <div className="text-[10px] font-bold uppercase tracking-widest text-emerald-500">Advance</div>
-                <div className="text-sm font-black text-emerald-700 mt-0.5">{formatCurrency(advancePaid)}</div>
+                <div className="text-[10px] font-bold uppercase tracking-widest text-emerald-500">
+                  Advance
+                </div>
+                <div className="text-sm font-black text-emerald-700 mt-0.5">
+                  {formatCurrency(advancePaid)}
+                </div>
               </div>
               <div className="text-center">
-                <div className="text-[10px] font-bold uppercase tracking-widest text-rose-500">Balance</div>
-                <div className="text-sm font-black text-rose-700 mt-0.5">{formatCurrency(balanceDue)}</div>
+                <div className="text-[10px] font-bold uppercase tracking-widest text-rose-500">
+                  Balance
+                </div>
+                <div className="text-sm font-black text-rose-700 mt-0.5">
+                  {formatCurrency(balanceDue)}
+                </div>
               </div>
             </div>
           </div>
@@ -2350,49 +3078,79 @@ const WhatsAppSendModal = ({ booking, detail, invoice, sending, result, onSend, 
             <div className="rounded-2xl border-2 border-emerald-100 bg-emerald-50/50 p-3.5">
               <div className="flex items-center gap-2 mb-1.5">
                 <FaWhatsapp className="text-emerald-600 text-lg" />
-                <span className="text-[11px] font-bold uppercase tracking-widest text-emerald-700">Customer</span>
+                <span className="text-[11px] font-bold uppercase tracking-widest text-emerald-700">
+                  Customer
+                </span>
               </div>
-              <div className="text-[13px] font-bold text-slate-800">{customerPhone}</div>
-              <div className="mt-1.5 inline-block rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-700">Will receive PDF</div>
+              <div className="text-[13px] font-bold text-slate-800">
+                {customerPhone}
+              </div>
+              <div className="mt-1.5 inline-block rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-700">
+                Will receive PDF
+              </div>
             </div>
             <div className="rounded-2xl border-2 border-slate-200 bg-slate-50 p-3.5">
               <div className="flex items-center gap-2 mb-1.5">
                 <FaHotel className="text-slate-500 text-lg" />
-                <span className="text-[11px] font-bold uppercase tracking-widest text-slate-500">Admin (Resort)</span>
+                <span className="text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                  Admin (Resort)
+                </span>
               </div>
-              <div className="text-[13px] font-bold text-slate-800">Resort Notification</div>
-              <div className="mt-1.5 inline-block rounded-full bg-slate-200 px-2 py-0.5 text-[11px] font-bold text-slate-600">Notification copy</div>
+              <div className="text-[13px] font-bold text-slate-800">
+                Resort Notification
+              </div>
+              <div className="mt-1.5 inline-block rounded-full bg-slate-200 px-2 py-0.5 text-[11px] font-bold text-slate-600">
+                Notification copy
+              </div>
             </div>
           </div>
 
           {/* Result banner */}
           {result && (
-            <div className={`rounded-xl border-l-[4px] p-4 ${
-              result.type === "success"
-                ? "border-l-emerald-500 bg-emerald-50"
-                : result.type === "partial"
-                ? "border-l-amber-500 bg-amber-50"
-                : "border-l-rose-500 bg-rose-50"
-            }`}>
+            <div
+              className={`rounded-xl border-l-[4px] p-4 ${
+                result.type === "success"
+                  ? "border-l-emerald-500 bg-emerald-50"
+                  : result.type === "partial"
+                    ? "border-l-amber-500 bg-amber-50"
+                    : "border-l-rose-500 bg-rose-50"
+              }`}
+            >
               <div className="flex items-start gap-3">
-                {result.type === "success" && <FaCheckCircle className="text-emerald-600 text-lg mt-0.5 shrink-0" />}
-                {result.type === "partial" && <FaExclamationTriangle className="text-amber-600 text-lg mt-0.5 shrink-0" />}
-                {result.type === "error" && <FaTimes className="text-rose-600 text-lg mt-0.5 shrink-0" />}
+                {result.type === "success" && (
+                  <FaCheckCircle className="text-emerald-600 text-lg mt-0.5 shrink-0" />
+                )}
+                {result.type === "partial" && (
+                  <FaExclamationTriangle className="text-amber-600 text-lg mt-0.5 shrink-0" />
+                )}
+                {result.type === "error" && (
+                  <FaTimes className="text-rose-600 text-lg mt-0.5 shrink-0" />
+                )}
                 <div>
-                  <p className={`font-bold text-[15px] ${
-                    result.type === "success" ? "text-emerald-800"
-                    : result.type === "partial" ? "text-amber-800"
-                    : "text-rose-800"
-                  }`}>
-                    {result.type === "success" ? "Sent Successfully"
-                    : result.type === "partial" ? "Partially Sent"
-                    : "Failed to Send"}
+                  <p
+                    className={`font-bold text-[15px] ${
+                      result.type === "success"
+                        ? "text-emerald-800"
+                        : result.type === "partial"
+                          ? "text-amber-800"
+                          : "text-rose-800"
+                    }`}
+                  >
+                    {result.type === "success"
+                      ? "Sent Successfully"
+                      : result.type === "partial"
+                        ? "Partially Sent"
+                        : "Failed to Send"}
                   </p>
-                  <p className={`text-[13px] mt-1 ${
-                    result.type === "success" ? "text-emerald-600"
-                    : result.type === "partial" ? "text-amber-600"
-                    : "text-rose-600"
-                  }`}>
+                  <p
+                    className={`text-[13px] mt-1 ${
+                      result.type === "success"
+                        ? "text-emerald-600"
+                        : result.type === "partial"
+                          ? "text-amber-600"
+                          : "text-rose-600"
+                    }`}
+                  >
                     {result.message}
                   </p>
                 </div>
@@ -2405,25 +3163,51 @@ const WhatsAppSendModal = ({ booking, detail, invoice, sending, result, onSend, 
         <div className="px-5 sm:px-6 pb-5 pt-1">
           {!sending && !result && (
             <div className="flex gap-3">
-              <button onClick={onClose} className="flex-1 px-4 py-3 border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 active:scale-[0.98] transition-all duration-200 text-[15px]">
+              <button
+                onClick={onClose}
+                className="flex-1 px-4 py-3 border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 active:scale-[0.98] transition-all duration-200 text-[15px]"
+              >
                 Cancel
               </button>
-              <button onClick={onSend} className="flex-1 px-4 py-3 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-600 text-white font-bold rounded-xl shadow-lg shadow-emerald-200 hover:shadow-xl active:scale-[0.98] transition-all duration-200 text-[15px] flex items-center justify-center gap-2">
+              <button
+                onClick={onSend}
+                className="flex-1 px-4 py-3 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-600 text-white font-bold rounded-xl shadow-lg shadow-emerald-200 hover:shadow-xl active:scale-[0.98] transition-all duration-200 text-[15px] flex items-center justify-center gap-2"
+              >
                 <FaPaperPlane className="text-sm" /> Send Now
               </button>
             </div>
           )}
           {sending && (
             <div className="flex items-center justify-center gap-3 py-3">
-              <svg className="animate-spin h-5 w-5 text-emerald-600" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              <svg
+                className="animate-spin h-5 w-5 text-emerald-600"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                  fill="none"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                />
               </svg>
-              <span className="text-slate-500 font-medium text-[15px]">Sending...</span>
+              <span className="text-slate-500 font-medium text-[15px]">
+                Sending...
+              </span>
             </div>
           )}
           {result && !sending && (
-            <button onClick={onClose} className="w-full px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl active:scale-[0.98] transition-all duration-200 text-[15px]">
+            <button
+              onClick={onClose}
+              className="w-full px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl active:scale-[0.98] transition-all duration-200 text-[15px]"
+            >
               Close
             </button>
           )}
@@ -2450,11 +3234,16 @@ const BookingFlow = () => {
     searchParams.get("category") ||
     "";
   const prefillCheckIn =
-    (location.state && location.state.checkIn) || searchParams.get("checkIn") || today;
+    (location.state && location.state.checkIn) ||
+    searchParams.get("checkIn") ||
+    today;
   const prefillCheckOut =
-    (location.state && location.state.checkOut) || searchParams.get("checkOut") || "";
+    (location.state && location.state.checkOut) ||
+    searchParams.get("checkOut") ||
+    "";
   const shouldResetDraft =
-    (location.state && location.state.resetBookingDraft) || searchParams.get("reset") === "true";
+    (location.state && location.state.resetBookingDraft) ||
+    searchParams.get("reset") === "true";
 
   const [view, setView] = useState(() =>
     location.pathname.includes("guest") ? "form" : "list",
@@ -2493,12 +3282,16 @@ const BookingFlow = () => {
     let cancelled = false;
     const load = async () => {
       try {
-        const existing = await API.get(`/invoice/by-booking/${selectedBooking?.bookingId}`);
+        const existing = await API.get(
+          `/invoice/by-booking/${selectedBooking?.bookingId}`,
+        );
         if (cancelled) return;
         if (existing.data?.id) {
           setWaInvoice(existing.data);
         } else {
-          const generated = await API.get(`/invoice/${selectedBooking?.bookingId}`);
+          const generated = await API.get(
+            `/invoice/${selectedBooking?.bookingId}`,
+          );
           if (!cancelled) setWaInvoice(generated.data || null);
         }
       } catch {
@@ -2506,13 +3299,33 @@ const BookingFlow = () => {
       }
     };
     load();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [showWhatsAppModal, selectedBooking?.bookingId]);
 
-  const [toast, setToast] = useState({ open: false, type: "success", title: "", message: "" });
-  const [cancelModal, setCancelModal] = useState({ open: false, reason: "", submitting: false });
-  const [collectModal, setCollectModal] = useState({ open: false, amount: "", mode: "Cash", submitting: false });
-  const [refundModal, setRefundModal] = useState({ open: false, amount: "", submitting: false });
+  const [toast, setToast] = useState({
+    open: false,
+    type: "success",
+    title: "",
+    message: "",
+  });
+  const [cancelModal, setCancelModal] = useState({
+    open: false,
+    reason: "",
+    submitting: false,
+  });
+  const [collectModal, setCollectModal] = useState({
+    open: false,
+    amount: "",
+    mode: "Cash",
+    submitting: false,
+  });
+  const [refundModal, setRefundModal] = useState({
+    open: false,
+    amount: "",
+    submitting: false,
+  });
   // 🐛 RESTRICTION: blocks check-out until any pending balance is collected.
   // Triggered from handleLifecycle when remaining > 0; the user is asked to
   // either Collect Payment now (opens the CollectPayment modal pre-filled
@@ -2540,7 +3353,8 @@ const BookingFlow = () => {
   const [allPayments, setAllPayments] = useState([]);
   const [paymentsLoading, setPaymentsLoading] = useState(false);
 
-  const showToast = (type, title, message) => setToast({ open: true, type, title, message });
+  const showToast = (type, title, message) =>
+    setToast({ open: true, type, title, message });
   const closeToast = () => setToast((t) => ({ ...t, open: false }));
 
   /* ---------- data loading ---------- */
@@ -2553,7 +3367,11 @@ const BookingFlow = () => {
       setBookings(raw.map(normalizeBooking));
     } catch (err) {
       console.error("Failed to load bookings:", err);
-      showToast("error", "Could not load bookings", "Please check your connection and try again.");
+      showToast(
+        "error",
+        "Could not load bookings",
+        "Please check your connection and try again.",
+      );
     } finally {
       setLoading(false);
     }
@@ -2566,13 +3384,18 @@ const BookingFlow = () => {
     const map = new Map();
     rows.forEach((row) => {
       const key = [
-        String(row.guest_name || "").trim().toLowerCase(),
+        String(row.guest_name || "")
+          .trim()
+          .toLowerCase(),
         String(row.mobile || "").trim(),
         String(row.check_in || "").trim(),
         String(row.check_out || "").trim(),
       ].join("|");
       const current = map.get(key);
-      if (!current || Number(row.bookingId || 0) > Number(current.bookingId || 0)) {
+      if (
+        !current ||
+        Number(row.bookingId || 0) > Number(current.bookingId || 0)
+      ) {
         map.set(key, row);
       }
     });
@@ -2587,7 +3410,11 @@ const BookingFlow = () => {
       setHistoryPage(1);
     } catch (err) {
       console.error("Failed to load booking history:", err);
-      showToast("error", "Could not load history", "Please check your connection.");
+      showToast(
+        "error",
+        "Could not load history",
+        "Please check your connection.",
+      );
     } finally {
       setHistoryLoading(false);
     }
@@ -2606,14 +3433,19 @@ const BookingFlow = () => {
       const results = await Promise.all(
         recent.map((b) =>
           API.get(`/hotel/payment-history/${b.bookingId}`)
-            .then((res) => ({ booking: b, entries: Array.isArray(res.data) ? res.data : [] }))
+            .then((res) => ({
+              booking: b,
+              entries: Array.isArray(res.data) ? res.data : [],
+            }))
             .catch(() => ({ booking: b, entries: [] })),
         ),
       );
 
       const flattened = results.flatMap(({ booking, entries }) =>
         entries.map((entry) => ({
-          id: entry.id || `${booking.bookingId}-${entry.created_at || Math.random()}`,
+          id:
+            entry.id ||
+            `${booking.bookingId}-${entry.created_at || Math.random()}`,
           bookingId: booking.bookingId,
           bookingCode: booking.bookingCode || `BK-${booking.bookingId}`,
           guestName: entry.guest_name || booking.guest_name || "Guest",
@@ -2651,13 +3483,21 @@ const BookingFlow = () => {
         // roomDetails even if the backend didn't return them.
         const merged = apiData.map((cat) => {
           const fallback = DEFAULT_ROOMS.find(
-            (d) => String(d.id) === String(cat.id) || normalizeRoomTypeName(d.name) === normalizeRoomTypeName(cat.name),
+            (d) =>
+              String(d.id) === String(cat.id) ||
+              normalizeRoomTypeName(d.name) === normalizeRoomTypeName(cat.name),
           );
           if (!fallback) return cat;
           return {
             ...cat,
-            rooms: Array.isArray(cat.rooms) && cat.rooms.length ? cat.rooms : fallback.rooms,
-            roomDetails: Array.isArray(cat.roomDetails) && cat.roomDetails.length ? cat.roomDetails : fallback.roomDetails,
+            rooms:
+              Array.isArray(cat.rooms) && cat.rooms.length
+                ? cat.rooms
+                : fallback.rooms,
+            roomDetails:
+              Array.isArray(cat.roomDetails) && cat.roomDetails.length
+                ? cat.roomDetails
+                : fallback.roomDetails,
             defaultPrice: cat.defaultPrice || fallback.defaultPrice,
             unitLabel: cat.unitLabel || fallback.unitLabel,
           };
@@ -2675,7 +3515,9 @@ const BookingFlow = () => {
       try {
         const folioRes = await API.get(`/hotel/folio/${bookingId}`);
         const allEntries = Array.isArray(folioRes.data) ? folioRes.data : [];
-        setFolioCharges(allEntries.filter((e) => e.entry_type === "Extra Charge"));
+        setFolioCharges(
+          allEntries.filter((e) => e.entry_type === "Extra Charge"),
+        );
       } catch (err) {
         console.error("Failed to reload folio charges after update:", err);
         setFolioCharges([]);
@@ -2727,7 +3569,9 @@ const BookingFlow = () => {
     const owningCategory = categorySetup.find(
       (c) => String(c.id) === String(categoryId),
     );
-    const defaultPrice = owningCategory ? Number(owningCategory.defaultPrice || 0) : 0;
+    const defaultPrice = owningCategory
+      ? Number(owningCategory.defaultPrice || 0)
+      : 0;
 
     setFormData((prev) => {
       if (!shouldResetDraft && prev.rooms.length > 0) {
@@ -2774,14 +3618,12 @@ const BookingFlow = () => {
 
       if (focusRoomNo) {
         const byRoom = bookings.find((b) => {
-          const roomTokens = [
-            b.rooms,
-            b.roomNumber,
-            b.roomNo,
-          ]
+          const roomTokens = [b.rooms, b.roomNumber, b.roomNo]
             .filter(Boolean)
             .flatMap((v) =>
-              typeof v === "string" ? v.split(",").map((s) => s.trim()) : [String(v)],
+              typeof v === "string"
+                ? v.split(",").map((s) => s.trim())
+                : [String(v)],
             )
             .filter(Boolean);
           return roomTokens.includes(String(focusRoomNo));
@@ -2791,11 +3633,10 @@ const BookingFlow = () => {
 
       if (guestName) {
         return (
-          bookings.find(
-            (b) =>
-              String(b.guest_name || b.guestName || "")
-                .toLowerCase()
-                .includes(guestName.toLowerCase()),
+          bookings.find((b) =>
+            String(b.guest_name || b.guestName || "")
+              .toLowerCase()
+              .includes(guestName.toLowerCase()),
           ) || null
         );
       }
@@ -2814,8 +3655,13 @@ const BookingFlow = () => {
     setView("list");
     navigate(location.pathname, { replace: true, state: null });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bookings, location.state?.autoManage, location.state?.bookingId, location.state?.focusRoomNo, location.state?.guestName]);
-
+  }, [
+    bookings,
+    location.state?.autoManage,
+    location.state?.bookingId,
+    location.state?.focusRoomNo,
+    location.state?.guestName,
+  ]);
 
   /* ---------- derived ---------- */
 
@@ -2835,12 +3681,20 @@ const BookingFlow = () => {
     // The checkout restriction (above) already prevents check-out when
     // payment is pending, so any booking reaching Checked-Out here has
     // been fully settled.
-    list = list.filter((b) => String(b.booking_status || "").toLowerCase().trim() !== "checked-out");
+    list = list.filter(
+      (b) =>
+        String(b.booking_status || "")
+          .toLowerCase()
+          .trim() !== "checked-out",
+    );
     return list;
   }, [bookings, search]);
 
   const totalPages = Math.max(1, Math.ceil(filteredBookings.length / pageSize));
-  const pagedBookings = filteredBookings.slice((page - 1) * pageSize, page * pageSize);
+  const pagedBookings = filteredBookings.slice(
+    (page - 1) * pageSize,
+    page * pageSize,
+  );
 
   const guestFullName = `${formData.firstName} ${formData.lastName}`.trim();
 
@@ -2853,18 +3707,18 @@ const BookingFlow = () => {
   }, [formData.checkIn, formData.checkOut]);
 
   const grandTotal = useMemo(
-    () => formData.rooms.reduce((sum, row) => sum + rowTotal(row, stayNights), 0),
+    () =>
+      formData.rooms.reduce((sum, row) => sum + rowTotal(row, stayNights), 0),
     [formData.rooms, stayNights],
   );
 
+  const [showFolio, setShowFolio] = useState(false);
+  const [showGroupBooking, setShowGroupBooking] = useState(false);
+  const [showOccupancyForecast, setShowOccupancyForecast] = useState(false);
+  const [showGuestProfile, setShowGuestProfile] = useState(false);
+  const [showAddRoom, setShowAddRoom] = useState(false);
 
-const [showFolio, setShowFolio] = useState(false);
-const [showGroupBooking, setShowGroupBooking] = useState(false);
-const [showOccupancyForecast, setShowOccupancyForecast] = useState(false);
-const [showGuestProfile, setShowGuestProfile] = useState(false);
-const [showAddRoom, setShowAddRoom] = useState(false);
-
-const [selectedBookingId, setSelectedBookingId] = useState(null);
+  const [selectedBookingId, setSelectedBookingId] = useState(null);
 
   /* ---------- navigation between the 5 "screens" (all local state) ---------- */
 
@@ -2886,11 +3740,14 @@ const [selectedBookingId, setSelectedBookingId] = useState(null);
       setStoredBookingId(booking.bookingId);
       const res = await API.get(`/hotel/full-booking/${booking.bookingId}`);
       const data = res.data || {};
-      const nameParts = String(data.guest_name || data.guestName || "").trim().split(" ");
+      const nameParts = String(data.guest_name || data.guestName || "")
+        .trim()
+        .split(" ");
       setFormData({
         ...emptyForm(),
         bookingId: booking.bookingId,
-        bookingCode: data.booking_code || data.bookingCode || booking.bookingCode || "",
+        bookingCode:
+          data.booking_code || data.bookingCode || booking.bookingCode || "",
         firstName: nameParts[0] || "",
         lastName: nameParts.slice(1).join(" ") || "",
         guestEmail: data.guest_email || data.guestEmail || "",
@@ -2916,7 +3773,9 @@ const [selectedBookingId, setSelectedBookingId] = useState(null);
         rooms: (Array.isArray(data.rooms) ? data.rooms : []).map((r) => {
           const roomNo = r.room_number || r.roomNumber || r.roomNo || "";
           const ownerCategory = categorySetup.find((c) =>
-            (Array.isArray(c.rooms) ? c.rooms : []).some((rn) => String(rn).trim() === String(roomNo).trim()),
+            (Array.isArray(c.rooms) ? c.rooms : []).some(
+              (rn) => String(rn).trim() === String(roomNo).trim(),
+            ),
           );
           return {
             id: uid(),
@@ -2932,7 +3791,11 @@ const [selectedBookingId, setSelectedBookingId] = useState(null);
       setView("form");
     } catch (err) {
       console.error(err);
-      showToast("error", "Could not load booking", "We couldn't fetch this booking's details for editing.");
+      showToast(
+        "error",
+        "Could not load booking",
+        "We couldn't fetch this booking's details for editing.",
+      );
     }
   };
 
@@ -2946,7 +3809,10 @@ const [selectedBookingId, setSelectedBookingId] = useState(null);
       const data = res.data || {};
       setBookingDetail(data);
       if (data.mobile) {
-        setSelectedBooking((prev) => ({ ...(prev || {}), mobile: data.mobile }));
+        setSelectedBooking((prev) => ({
+          ...(prev || {}),
+          mobile: data.mobile,
+        }));
       }
     } catch (err) {
       console.error(err);
@@ -2957,7 +3823,9 @@ const [selectedBookingId, setSelectedBookingId] = useState(null);
     try {
       const folioRes = await API.get(`/hotel/folio/${booking.bookingId}`);
       const allEntries = Array.isArray(folioRes.data) ? folioRes.data : [];
-      setFolioCharges(allEntries.filter((e) => e.entry_type === "Extra Charge"));
+      setFolioCharges(
+        allEntries.filter((e) => e.entry_type === "Extra Charge"),
+      );
     } catch (err) {
       console.error("Failed to load folio charges:", err);
       setFolioCharges([]);
@@ -2965,7 +3833,9 @@ const [selectedBookingId, setSelectedBookingId] = useState(null);
       setFolioLoading(false);
     }
     try {
-      const phRes = await API.get(`/hotel/payment-history/${booking.bookingId}`);
+      const phRes = await API.get(
+        `/hotel/payment-history/${booking.bookingId}`,
+      );
       const history = Array.isArray(phRes.data) ? phRes.data : [];
       const total = history
         .filter((p) => p.payment_type !== "Refund")
@@ -2985,102 +3855,104 @@ const [selectedBookingId, setSelectedBookingId] = useState(null);
       const res = await API.get(`/hotel/full-booking/${booking.bookingId}`);
       const data = res.data || {};
       if (data.mobile) {
-        setSelectedBooking((prev) => ({ ...(prev || {}), mobile: data.mobile }));
+        setSelectedBooking((prev) => ({
+          ...(prev || {}),
+          mobile: data.mobile,
+        }));
       }
-    } catch { /* best-effort */ }
+    } catch {
+      /* best-effort */
+    }
   };
-const handleJumpStep = (stepView) => {
-
-  if (stepView === "form") {
-    openNewBooking();
-    return;
-  }
-
-  if (stepView === "list") {
-    goToList();
-    return;
-  }
-
-  if (stepView === "history") {
-    setView("history");
-    fetchHistory();
-    return;
-  }
-
-  if (stepView === "payments") {
-    setView("payments");
-    fetchAllPayments();
-    return;
-  }
-
-  if (stepView === "confirmed") {
-    if (!formData.bookingId) {
-      showToast(
-        "error",
-        "No booking found",
-        "Please create a booking first."
-      );
+  const handleJumpStep = (stepView) => {
+    if (stepView === "form") {
+      openNewBooking();
       return;
     }
 
-    setView("confirmed");
-    return;
-  }
-
-  if (stepView === "group-booking") {
-    setShowGroupBooking(true);
-    return;
-  }
-
-  if (stepView === "guest-booking") {
-    setShowGuestProfile(true);
-    return;
-  }
-
-  if (stepView === "occupancy-forecast") {
-    setShowOccupancyForecast(true);
-    return;
-  }
-
-  if (stepView === "add-room") {
-    setShowAddRoom(true);
-    return;
-  }
-
-  if (stepView === "details") {
-
-    if (!selectedBooking) {
-      showToast(
-        "error",
-        "Select a booking first",
-        "Please select any booking."
-      );
+    if (stepView === "list") {
+      goToList();
       return;
     }
 
-    openDetails(selectedBooking);
-    return;
-  }
-
-  if (stepView === "manage") {
-
-    if (!selectedBooking) {
-      showToast(
-        "error",
-        "Select a booking first",
-        "Please select any booking."
-      );
+    if (stepView === "history") {
+      setView("history");
+      fetchHistory();
       return;
     }
 
-    openManage(selectedBooking);
-  }
+    if (stepView === "payments") {
+      setView("payments");
+      fetchAllPayments();
+      return;
+    }
 
-};
+    if (stepView === "confirmed") {
+      if (!formData.bookingId) {
+        showToast(
+          "error",
+          "No booking found",
+          "Please create a booking first.",
+        );
+        return;
+      }
+
+      setView("confirmed");
+      return;
+    }
+
+    if (stepView === "group-booking") {
+      setShowGroupBooking(true);
+      return;
+    }
+
+    if (stepView === "guest-booking") {
+      setShowGuestProfile(true);
+      return;
+    }
+
+    if (stepView === "occupancy-forecast") {
+      setShowOccupancyForecast(true);
+      return;
+    }
+
+    if (stepView === "add-room") {
+      setShowAddRoom(true);
+      return;
+    }
+
+    if (stepView === "details") {
+      if (!selectedBooking) {
+        showToast(
+          "error",
+          "Select a booking first",
+          "Please select any booking.",
+        );
+        return;
+      }
+
+      openDetails(selectedBooking);
+      return;
+    }
+
+    if (stepView === "manage") {
+      if (!selectedBooking) {
+        showToast(
+          "error",
+          "Select a booking first",
+          "Please select any booking.",
+        );
+        return;
+      }
+
+      openManage(selectedBooking);
+    }
+  };
 
   /* ---------- form field handlers ---------- */
 
-  const setField = (name, value) => setFormData((prev) => ({ ...prev, [name]: value }));
+  const setField = (name, value) =>
+    setFormData((prev) => ({ ...prev, [name]: value }));
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -3088,7 +3960,9 @@ const handleJumpStep = (stepView) => {
   };
 
   const addRoomRow = () => {
-    const cat = categorySetup.find((c) => String(c.id) === String(formData.roomCategory));
+    const cat = categorySetup.find(
+      (c) => String(c.id) === String(formData.roomCategory),
+    );
     const newRow = {
       id: uid(),
       categoryId: formData.roomCategory || "",
@@ -3136,7 +4010,10 @@ const handleJumpStep = (stepView) => {
     const statusByRoom = new Map();
     (Array.isArray(cat.roomDetails) ? cat.roomDetails : []).forEach((rd) => {
       if (rd.roomNumber) {
-        statusByRoom.set(String(rd.roomNumber).trim(), rd.status || "Available");
+        statusByRoom.set(
+          String(rd.roomNumber).trim(),
+          rd.status || "Available",
+        );
       }
     });
 
@@ -3158,54 +4035,99 @@ const handleJumpStep = (stepView) => {
   };
 
   const removeRoomRow = (id) => {
-    setFormData((prev) => ({ ...prev, rooms: prev.rooms.filter((r) => r.id !== id) }));
+    setFormData((prev) => ({
+      ...prev,
+      rooms: prev.rooms.filter((r) => r.id !== id),
+    }));
   };
 
   /* ---------- save booking (creates OR updates, all from this one page) ---------- */
 
   const validateForm = () => {
     if (!formData.firstName.trim() || !formData.lastName.trim()) {
-      showToast("error", "Guest name required", "Please enter the guest's first and last name.");
+      showToast(
+        "error",
+        "Guest name required",
+        "Please enter the guest's first and last name.",
+      );
       return false;
     }
     const email = formData.guestEmail.trim();
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      showToast("error", "Valid email required", "Please enter a valid guest email address.");
+      showToast(
+        "error",
+        "Valid email required",
+        "Please enter a valid guest email address.",
+      );
       return false;
     }
     if (!formData.mobile.trim() || !/^\d{10}$/.test(formData.mobile.trim())) {
-      showToast("error", "Mobile number required", "Please enter a valid 10-digit mobile number.");
+      showToast(
+        "error",
+        "Mobile number required",
+        "Please enter a valid 10-digit mobile number.",
+      );
       return false;
     }
     if (!formData.idProofType || !String(formData.idProofType).trim()) {
-      showToast("error", "ID proof type required", "Please select the guest's ID proof type.");
+      showToast(
+        "error",
+        "ID proof type required",
+        "Please select the guest's ID proof type.",
+      );
       return false;
     }
     if (!formData.idNumber || !String(formData.idNumber).trim()) {
-      showToast("error", "ID number required", "Please enter the guest's ID proof number.");
+      showToast(
+        "error",
+        "ID number required",
+        "Please enter the guest's ID proof number.",
+      );
       return false;
     }
     if (!formData.guestCapacity.trim()) {
-      showToast("error", "Guest capacity required", "Please enter the guest capacity (adults + children).");
+      showToast(
+        "error",
+        "Guest capacity required",
+        "Please enter the guest capacity (adults + children).",
+      );
       return false;
     }
     if (!formData.address.trim()) {
-      showToast("error", "Address required", "Please enter the guest's address.");
+      showToast(
+        "error",
+        "Address required",
+        "Please enter the guest's address.",
+      );
       return false;
     }
     if (!formData.checkIn || !formData.checkOut) {
-      showToast("error", "Stay dates required", "Please select both check-in and check-out dates.");
+      showToast(
+        "error",
+        "Stay dates required",
+        "Please select both check-in and check-out dates.",
+      );
       return false;
     }
     if (formData.checkOut < formData.checkIn) {
-      showToast("error", "Invalid dates", "Check-out date cannot be before check-in date.");
+      showToast(
+        "error",
+        "Invalid dates",
+        "Check-out date cannot be before check-in date.",
+      );
       return false;
     }
     if (!Array.isArray(formData.rooms) || formData.rooms.length === 0) {
-      showToast("error", "Room required", "Please add at least one room tariff row before saving.");
+      showToast(
+        "error",
+        "Room required",
+        "Please add at least one room tariff row before saving.",
+      );
       return false;
     }
-    const missingRoomIndex = formData.rooms.findIndex((row) => !row || !String(row.roomNo || "").trim());
+    const missingRoomIndex = formData.rooms.findIndex(
+      (row) => !row || !String(row.roomNo || "").trim(),
+    );
     if (missingRoomIndex !== -1) {
       showToast(
         "error",
@@ -3243,7 +4165,7 @@ const handleJumpStep = (stepView) => {
       let bookingCode = formData.bookingCode;
 
       if (!isEdit) {
-      const bookedBy = localStorage.getItem("name") || "Front Desk";
+        const bookedBy = localStorage.getItem("name") || "Front Desk";
         const guestRes = await bookingAPI.post("/hotel/guest", {
           agentBooking: false,
           bookingPoint: "",
@@ -3300,7 +4222,10 @@ const handleJumpStep = (stepView) => {
             rooms: formData.rooms,
           }),
           ...formData.rooms.map((row) =>
-            bookingAPI.post(`/hotel/room-tariff/${bookingId}`, buildPayload(row)),
+            bookingAPI.post(
+              `/hotel/room-tariff/${bookingId}`,
+              buildPayload(row),
+            ),
           ),
         ];
 
@@ -3348,11 +4273,18 @@ const handleJumpStep = (stepView) => {
       }
 
       setFormData((prev) => ({ ...prev, bookingId, bookingCode }));
-      setSelectedBooking((prev) => ({ ...(prev || {}), bookingId, bookingCode, guest_name: guestFullName }));
+      setSelectedBooking((prev) => ({
+        ...(prev || {}),
+        bookingId,
+        bookingCode,
+        guest_name: guestFullName,
+      }));
       showToast(
         "success",
         isEdit ? "Booking Updated" : "Booking Confirmed",
-        isEdit ? "The booking has been updated successfully." : "Your booking has been created successfully.",
+        isEdit
+          ? "The booking has been updated successfully."
+          : "Your booking has been created successfully.",
       );
       await fetchBookings();
 
@@ -3369,28 +4301,42 @@ const handleJumpStep = (stepView) => {
               const raw = localStorage.getItem("name");
               return raw ? String(raw).trim() : "Manager";
             })();
-            const roomCategories = [...new Set(
-              (formData.rooms || [])
-                .map((r) => {
-                  const cat = categorySetup.find((c) => String(c.id) === String(r.categoryId || ""));
-                  return cat ? cat.name : "";
-                })
-                .filter(Boolean)
-            )];
+            const roomCategories = [
+              ...new Set(
+                (formData.rooms || [])
+                  .map((r) => {
+                    const cat = categorySetup.find(
+                      (c) => String(c.id) === String(r.categoryId || ""),
+                    );
+                    return cat ? cat.name : "";
+                  })
+                  .filter(Boolean),
+              ),
+            ];
             await API.post(`/hotel/invoice/send-whatsapp/${bookingId}`, {
               sendConfirmation: true,
               customerNumber: cleanNumber(formData.mobile || ""),
               invoiceData: {
                 customerName: guestFullName,
-                roomCategory: roomCategories.join(", ") || (formData.rooms?.[0]?.roomType || formData.roomCategory || ""),
+                roomCategory:
+                  roomCategories.join(", ") ||
+                  formData.rooms?.[0]?.roomType ||
+                  formData.roomCategory ||
+                  "",
                 totalAmount: grandTotal,
                 advancePaid: Number(formData.amount || 0),
-                balanceLeft: Math.max(Number(grandTotal) - Number(formData.amount || 0), 0),
+                balanceLeft: Math.max(
+                  Number(grandTotal) - Number(formData.amount || 0),
+                  0,
+                ),
                 paymentStatus: "Confirmed",
                 paymentMode: formData.paymentMode || "Cash",
                 bookingType: formData.bookingType || "Walk-in",
                 numRooms: formData.rooms?.length || 1,
-                roomNumbers: (formData.rooms || []).map((r) => r.roomNo).filter(Boolean).join(", "),
+                roomNumbers: (formData.rooms || [])
+                  .map((r) => r.roomNo)
+                  .filter(Boolean)
+                  .join(", "),
                 checkIn: formData.checkIn,
                 checkOut: formData.checkOut,
                 arrival: formData.arrival,
@@ -3410,7 +4356,8 @@ const handleJumpStep = (stepView) => {
       showToast(
         "error",
         "Save Failed",
-        err.response?.data?.message || "We could not save this booking. Please check the required fields and try again.",
+        err.response?.data?.message ||
+          "We could not save this booking. Please check the required fields and try again.",
       );
     } finally {
       setSaving(false);
@@ -3450,9 +4397,14 @@ const handleJumpStep = (stepView) => {
       if (!roomKey) continue;
 
       try {
-        await API.put(`/housekeeping/status/${roomKey}`, { status: "Vacant Dirty" });
+        await API.put(`/housekeeping/status/${roomKey}`, {
+          status: "Vacant Dirty",
+        });
       } catch (error) {
-        console.warn(`Failed to mark room ${roomKey} dirty after checkout`, error);
+        console.warn(
+          `Failed to mark room ${roomKey} dirty after checkout`,
+          error,
+        );
       }
 
       try {
@@ -3466,7 +4418,10 @@ const handleJumpStep = (stepView) => {
           dueAt,
         });
       } catch (error) {
-        console.warn(`Failed to create cleaning task message for room ${roomKey}`, error);
+        console.warn(
+          `Failed to create cleaning task message for room ${roomKey}`,
+          error,
+        );
       }
     }
   };
@@ -3476,7 +4431,9 @@ const handleJumpStep = (stepView) => {
   // Pending → no payment; Partial → some paid but balance > 0; Paid → fully paid.
   const computePaymentStatus = (booking) => {
     if (!booking) return "Pending";
-    const remaining = Number(booking.remainingAmount || booking.balanceAmount || 0);
+    const remaining = Number(
+      booking.remainingAmount || booking.balanceAmount || 0,
+    );
     const paid = Number(booking.netPaid || booking.paidAmount || 0);
     if (remaining <= 0 && paid > 0) return "Paid";
     if (paid > 0) return "Partial";
@@ -3495,7 +4452,9 @@ const handleJumpStep = (stepView) => {
     // silently moving the guest to Checked-Out with money still owed.
     if (action === "check-out") {
       const paymentStatus = computePaymentStatus(booking);
-      const remaining = Number(booking.remainingAmount || booking.balanceAmount || 0);
+      const remaining = Number(
+        booking.remainingAmount || booking.balanceAmount || 0,
+      );
       if (remaining > 0 && paymentStatus !== "Paid") {
         setCheckoutGuardModal({
           open: true,
@@ -3524,10 +4483,17 @@ const handleJumpStep = (stepView) => {
       // booking-history list so the just-checked-out guest appears there.
       await fetchBookings();
       await fetchHistory();
-      setSelectedBooking((prev) => ({ ...(prev || {}), booking_status: newStatus }));
+      setSelectedBooking((prev) => ({
+        ...(prev || {}),
+        booking_status: newStatus,
+      }));
     } catch (err) {
       console.error(err);
-      showToast("error", "Action Failed", "We could not update this booking's status. Please try again.");
+      showToast(
+        "error",
+        "Action Failed",
+        "We could not update this booking's status. Please try again.",
+      );
     }
   };
 
@@ -3535,20 +4501,32 @@ const handleJumpStep = (stepView) => {
     if (!selectedBooking?.bookingId) return;
     const reason = cancelModal.reason.trim();
     if (!reason) {
-      showToast("error", "Reason required", "Please enter a cancellation reason.");
+      showToast(
+        "error",
+        "Reason required",
+        "Please enter a cancellation reason.",
+      );
       return;
     }
     try {
       setCancelModal((c) => ({ ...c, submitting: true }));
       await API.put(`/hotel/cancel/${selectedBooking.bookingId}`, { reason });
       setCancelModal({ open: false, reason: "", submitting: false });
-      showToast("success", "Booking Cancelled", `Booking #${selectedBooking.bookingCode || selectedBooking.bookingId} has been cancelled.`);
+      showToast(
+        "success",
+        "Booking Cancelled",
+        `Booking #${selectedBooking.bookingCode || selectedBooking.bookingId} has been cancelled.`,
+      );
       await fetchBookings();
       goToList();
     } catch (err) {
       console.error(err);
       setCancelModal((c) => ({ ...c, submitting: false }));
-      showToast("error", "Cancellation Failed", err.response?.data?.message || "Could not cancel this booking.");
+      showToast(
+        "error",
+        "Cancellation Failed",
+        err.response?.data?.message || "Could not cancel this booking.",
+      );
     }
   };
 
@@ -3556,7 +4534,11 @@ const handleJumpStep = (stepView) => {
     if (!selectedBooking?.bookingId) return;
     const amount = Number(collectModal.amount);
     if (!amount || amount <= 0) {
-      showToast("error", "Enter a valid amount", "Payment amount must be greater than zero.");
+      showToast(
+        "error",
+        "Enter a valid amount",
+        "Payment amount must be greater than zero.",
+      );
       return;
     }
     try {
@@ -3566,8 +4548,17 @@ const handleJumpStep = (stepView) => {
         discount: 0,
         paymentMode: collectModal.mode,
       });
-      setCollectModal({ open: false, amount: "", mode: "Cash", submitting: false });
-      showToast("success", "Payment Collected", `${formatCurrency(amount)} recorded against this booking.`);
+      setCollectModal({
+        open: false,
+        amount: "",
+        mode: "Cash",
+        submitting: false,
+      });
+      showToast(
+        "success",
+        "Payment Collected",
+        `${formatCurrency(amount)} recorded against this booking.`,
+      );
 
       // Re-fetch bookings (and the detail rows) so the booking's paidAmount /
       // remainingAmount / status update everywhere — booking list, booking
@@ -3583,8 +4574,12 @@ const handleJumpStep = (stepView) => {
         (b) => String(b.bookingId) === String(selectedBooking.bookingId),
       );
       const liveBooking = refreshed || selectedBooking;
-      const oldPaid = Number(liveBooking.netPaid || liveBooking.paidAmount || 0);
-      const oldRemaining = Number(liveBooking.remainingAmount || liveBooking.balanceAmount || 0);
+      const oldPaid = Number(
+        liveBooking.netPaid || liveBooking.paidAmount || 0,
+      );
+      const oldRemaining = Number(
+        liveBooking.remainingAmount || liveBooking.balanceAmount || 0,
+      );
       const newPaid = oldPaid + amount;
       const newRemaining = Math.max(oldRemaining - amount, 0);
 
@@ -3612,7 +4607,7 @@ const handleJumpStep = (stepView) => {
                 remainingAmount: newRemaining,
                 balanceAmount: newRemaining,
               }
-            : b
+            : b,
         ),
       );
 
@@ -3621,7 +4616,12 @@ const handleJumpStep = (stepView) => {
       // user they can now proceed to check-out.
       if (newRemaining <= 0 && oldRemaining > 0) {
         if (checkoutGuardModal.open) {
-          setCheckoutGuardModal({ open: false, booking: null, remaining: 0, paymentStatus: "Pending" });
+          setCheckoutGuardModal({
+            open: false,
+            booking: null,
+            remaining: 0,
+            paymentStatus: "Pending",
+          });
           showToast(
             "success",
             "Payment Complete",
@@ -3636,15 +4636,25 @@ const handleJumpStep = (stepView) => {
         }
         // Broadcast a global event so Accounts pages re-fetch their
         // billing / summary when this same browser session is showing them.
-        window.dispatchEvent(new CustomEvent("bookingPaymentUpdated", {
-          detail: { bookingId: selectedBooking.bookingId, paidAmount: newPaid, remainingAmount: newRemaining },
-        }));
+        window.dispatchEvent(
+          new CustomEvent("bookingPaymentUpdated", {
+            detail: {
+              bookingId: selectedBooking.bookingId,
+              paidAmount: newPaid,
+              remainingAmount: newRemaining,
+            },
+          }),
+        );
         window.dispatchEvent(new Event("accountsUpdated"));
       }
     } catch (err) {
       console.error(err);
       setCollectModal((c) => ({ ...c, submitting: false }));
-      showToast("error", "Payment Failed", err.response?.data?.message || "Could not record this payment.");
+      showToast(
+        "error",
+        "Payment Failed",
+        err.response?.data?.message || "Could not record this payment.",
+      );
     }
   };
 
@@ -3652,14 +4662,22 @@ const handleJumpStep = (stepView) => {
     if (!selectedBooking?.bookingId) return;
     const amount = Number(refundModal.amount);
     if (!amount || amount <= 0) {
-      showToast("error", "Enter a valid amount", "Refund amount must be greater than zero.");
+      showToast(
+        "error",
+        "Enter a valid amount",
+        "Refund amount must be greater than zero.",
+      );
       return;
     }
     try {
       setRefundModal((r) => ({ ...r, submitting: true }));
       await API.post(`/hotel/refund/${selectedBooking.bookingId}`, { amount });
       setRefundModal({ open: false, amount: "", submitting: false });
-      showToast("success", "Refund Processed", `${formatCurrency(amount)} has been refunded.`);
+      showToast(
+        "success",
+        "Refund Processed",
+        `${formatCurrency(amount)} has been refunded.`,
+      );
       await fetchBookings();
     } catch (err) {
       console.error(err);
@@ -3668,7 +4686,7 @@ const handleJumpStep = (stepView) => {
     }
   };
 
- const handleOpenFolio = (booking) => {
+  const handleOpenFolio = (booking) => {
     if (!booking?.bookingId) return;
 
     setStoredBookingId(booking.bookingId);
@@ -3714,7 +4732,9 @@ const handleJumpStep = (stepView) => {
       try {
         const existing = await API.get(`/invoice/by-booking/${bid}`);
         if (existing.data?.id) invoice = existing.data;
-      } catch { /* not found, will generate */ }
+      } catch {
+        /* not found, will generate */
+      }
 
       if (!invoice) {
         const generated = await API.get(`/invoice/${bid}`);
@@ -3741,19 +4761,32 @@ const handleJumpStep = (stepView) => {
       // (same source the Booking Details page uses for its total) and by
       // building a fresh `items` array from that live data instead of
       // reusing `invoice.items`.
-      const bookingRooms = Array.isArray(d.rooms) && d.rooms.length > 0
-        ? d.rooms
-        : Array.isArray(b.rooms) ? b.rooms : [];
-      const roomTotal = bookingRooms.reduce((sum, r) => sum + (Number(r.total) || Number(r.amount) || 0), 0);
+      const bookingRooms =
+        Array.isArray(d.rooms) && d.rooms.length > 0
+          ? d.rooms
+          : Array.isArray(b.rooms)
+            ? b.rooms
+            : [];
+      const roomTotal = bookingRooms.reduce(
+        (sum, r) => sum + (Number(r.total) || Number(r.amount) || 0),
+        0,
+      );
 
       // Try to load folio charges for accurate totals
       let folioEntries = [];
       try {
         const folioRes = await API.get(`/hotel/folio/${bid}`);
         folioEntries = Array.isArray(folioRes.data) ? folioRes.data : [];
-      } catch { /* best-effort */ }
-      const folioChargeEntries = folioEntries.filter((e) => e.entry_type === "Extra Charge");
-      const folioTotal = folioChargeEntries.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+      } catch {
+        /* best-effort */
+      }
+      const folioChargeEntries = folioEntries.filter(
+        (e) => e.entry_type === "Extra Charge",
+      );
+      const folioTotal = folioChargeEntries.reduce(
+        (sum, e) => sum + (Number(e.amount) || 0),
+        0,
+      );
 
       const computedTotal = roomTotal + folioTotal;
       // 🐛 FIX: this used to always assume a flat 5% GST ("/ 1.05") when
@@ -3762,14 +4795,16 @@ const handleJumpStep = (stepView) => {
       // then flowed into the PDF as an inflated Final Total (e.g. a real
       // ₹2,000 room printed as ₹2,100). Now the subtotal is the actual sum
       // of each room's own taxable amount, computed from its real GST %.
-      const computedSubtotal = bookingRooms.reduce((sum, r) => {
-        const tariff = Number(r.tariff ?? r.price ?? 0);
-        const qty = Number(r.quantity ?? 1);
-        const gstPercent = Number(r.gst ?? r.gstPercent ?? 0);
-        const total = Number(r.total ?? (tariff * qty)) || 0;
-        const taxable = gstPercent > 0 ? total / (1 + gstPercent / 100) : total;
-        return sum + taxable;
-      }, 0) + folioTotal; // folio extra charges are treated as tax-exempt, same as before
+      const computedSubtotal =
+        bookingRooms.reduce((sum, r) => {
+          const tariff = Number(r.tariff ?? r.price ?? 0);
+          const qty = Number(r.quantity ?? 1);
+          const gstPercent = Number(r.gst ?? r.gstPercent ?? 0);
+          const total = Number(r.total ?? tariff * qty) || 0;
+          const taxable =
+            gstPercent > 0 ? total / (1 + gstPercent / 100) : total;
+          return sum + taxable;
+        }, 0) + folioTotal; // folio extra charges are treated as tax-exempt, same as before
       const computedTax = computedTotal - computedSubtotal;
 
       // Build the live itemised breakdown (one line per room + one per
@@ -3784,7 +4819,7 @@ const handleJumpStep = (stepView) => {
           const tariff = Number(r.tariff ?? r.price ?? 0);
           const qty = Number(r.quantity ?? 1);
           const gstPercent = Number(r.gst ?? r.gstPercent ?? 0);
-          const total = Number(r.total ?? (tariff * qty)) || 0;
+          const total = Number(r.total ?? tariff * qty) || 0;
           return {
             name: `${roomType} - Room ${roomNo}`,
             price: tariff,
@@ -3812,27 +4847,49 @@ const handleJumpStep = (stepView) => {
         // on the printed invoice didn't match the booking's current dates
         // after an edit.
         invoiceData: {
-          totalAmount: computedTotal > 0 ? computedTotal : (Number(invoice.totalAmount) || 0),
-          subtotal: computedTotal > 0 ? computedSubtotal : (Number(invoice.subtotal) || 0),
-          tax: computedTotal > 0 ? computedTax : (Number(invoice.tax) || 0),
+          totalAmount:
+            computedTotal > 0
+              ? computedTotal
+              : Number(invoice.totalAmount) || 0,
+          subtotal:
+            computedTotal > 0
+              ? computedSubtotal
+              : Number(invoice.subtotal) || 0,
+          tax: computedTotal > 0 ? computedTax : Number(invoice.tax) || 0,
           discount: Number(invoice.discount) || 0,
-          paymentStatus: invoice.paymentStatus || invoice.payment_status || (computedTotal > 0 ? "Pending" : "Paid"),
+          paymentStatus:
+            invoice.paymentStatus ||
+            invoice.payment_status ||
+            (computedTotal > 0 ? "Pending" : "Paid"),
           paymentMode: invoice.paymentMode || b.payment_mode || "Cash",
-          customerName: b.guest_name || d.guest_name || invoice.customerName || "Guest",
+          customerName:
+            b.guest_name || d.guest_name || invoice.customerName || "Guest",
           phone: b.mobile || d.mobile || invoice.phone || "",
           roomNumber:
-            bookingRooms.map((r) => r.room_number || r.roomNumber || r.roomNo).filter(Boolean).join(", ") ||
-            invoice.roomNumber || b.rooms || b.roomNumber || "",
+            bookingRooms
+              .map((r) => r.room_number || r.roomNumber || r.roomNo)
+              .filter(Boolean)
+              .join(", ") ||
+            invoice.roomNumber ||
+            b.rooms ||
+            b.roomNumber ||
+            "",
           checkIn: b.check_in || d.check_in || invoice.checkIn || "",
           checkOut: b.check_out || d.check_out || invoice.checkOut || "",
           address: b.address || d.address || invoice.address || "",
-          items: liveItems.length > 0 ? liveItems : (invoice.items || []),
+          items: liveItems.length > 0 ? liveItems : invoice.items || [],
         },
       };
 
-      const res = await API.post(`/hotel/invoice/send-whatsapp/${bid}`, payload);
+      const res = await API.post(
+        `/hotel/invoice/send-whatsapp/${bid}`,
+        payload,
+      );
       const data = res.data || {};
-      console.log("[WhatsApp-details] full response:", JSON.stringify(data, null, 2));
+      console.log(
+        "[WhatsApp-details] full response:",
+        JSON.stringify(data, null, 2),
+      );
 
       const customerWa = data?.customer?.whatsapp || {};
       const adminWa = data?.admin?.whatsapp || {};
@@ -3854,11 +4911,15 @@ const handleJumpStep = (stepView) => {
         });
       } else {
         const waError = customerWa?.error || adminWa?.error || "Unknown error";
-        const shortError = waError.length > 120 ? waError.substring(0, 120) + "..." : waError;
+        const shortError =
+          waError.length > 120 ? waError.substring(0, 120) + "..." : waError;
         setWaResult({ type: "error", message: shortError });
       }
     } catch (err) {
-      setWaResult({ type: "error", message: err.response?.data?.error || err.message || "Send failed." });
+      setWaResult({
+        type: "error",
+        message: err.response?.data?.error || err.message || "Send failed.",
+      });
     } finally {
       setWaSending(false);
     }
@@ -3885,15 +4946,21 @@ const handleJumpStep = (stepView) => {
     const d = bookingDetail || {};
     const b = selectedBooking || {};
 
-    const roomChargesTotal = Array.isArray(d.rooms) && d.rooms.length > 0
-      ? d.rooms.reduce((sum, r) => sum + (Number(r.total) || 0), 0)
-      : Number(b.totalAmount) || 0;
+    const roomChargesTotal =
+      Array.isArray(d.rooms) && d.rooms.length > 0
+        ? d.rooms.reduce((sum, r) => sum + (Number(r.total) || 0), 0)
+        : Number(b.totalAmount) || 0;
 
-    const folioChargesTotal = folioCharges.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+    const folioChargesTotal = folioCharges.reduce(
+      (sum, e) => sum + (Number(e.amount) || 0),
+      0,
+    );
     const finalTotal = roomChargesTotal + folioChargesTotal;
-    const effectivePaid = totalPaid > 0 ? totalPaid : (Number(b.paidAmount) || 0);
-    const remainingAmount = effectivePaid > 0 ? Math.max(finalTotal - effectivePaid, 0) : 0;
-    const invoiceNo = d.invoice_no || d.invoiceNo || b.bookingCode || `INV-${b.bookingId}`;
+    const effectivePaid = totalPaid > 0 ? totalPaid : Number(b.paidAmount) || 0;
+    const remainingAmount =
+      effectivePaid > 0 ? Math.max(finalTotal - effectivePaid, 0) : 0;
+    const invoiceNo =
+      d.invoice_no || d.invoiceNo || b.bookingCode || `INV-${b.bookingId}`;
     const guestName = d.guest_name || b.guest_name || "AMAR SHARMA";
     const printCompanyName = d.company_name || b.company_name || "";
     const printCompanyGstin = d.company_gst || b.company_gst || "";
@@ -3911,18 +4978,28 @@ const handleJumpStep = (stepView) => {
         ? b.rooms[0].room_number || b.rooms[0].roomNo || b.rooms[0].room_no
         : null) ||
       "104";
-    const noOfNights = d.no_of_nights || b.no_of_nights || b.nights || d.nights || 1;
-    const pax = d.no_of_guests || d.guest_capacity || b.no_of_guests || "2 Adults, 0";
+    const noOfNights =
+      d.no_of_nights || b.no_of_nights || b.nights || d.nights || 1;
+    const pax =
+      d.no_of_guests || d.guest_capacity || b.no_of_guests || "2 Adults, 0";
     const guestAddress = d.address || b.address || "BHOPAL";
-    const guestContact = d.mobile || d.contact_no || b.mobile || b.contact_no || "9424825679";
+    const guestContact =
+      d.mobile || d.contact_no || b.mobile || b.contact_no || "9424825679";
     const folioNo = b.bookingId || d.booking_id || "-";
     const invoiceDate = formatDate(d.invoice_date || new Date());
-    const checkInDate = d.check_in || b.check_in ? formatDate(new Date(d.check_in || b.check_in)) : "-";
-    const checkOutDate = d.check_out || b.check_out ? formatDate(new Date(d.check_out || b.check_out)) : "-";
+    const checkInDate =
+      d.check_in || b.check_in
+        ? formatDate(new Date(d.check_in || b.check_in))
+        : "-";
+    const checkOutDate =
+      d.check_out || b.check_out
+        ? formatDate(new Date(d.check_out || b.check_out))
+        : "-";
     const arrivalTime = d.arrival_time || d.arrival || "4:25 pm";
     const departureTime = d.departure_time || d.departure || "10:00 am";
     const amountInWords = toWords(finalTotal);
-    const paymentMode = d.payment_mode || d.paymentMode || b.payment_mode || "UPI";
+    const paymentMode =
+      d.payment_mode || d.paymentMode || b.payment_mode || "UPI";
     const generatedBy = b.generated_by || b.staff_name || "ABHISHEK RATHORE";
 
     // Build per-day line items (one row per night of stay), exactly like
@@ -3932,7 +5009,10 @@ const handleJumpStep = (stepView) => {
     if (d.check_in && d.check_out) {
       const start = new Date(d.check_in);
       const end = new Date(d.check_out);
-      const total = Math.max(1, Math.round((end - start) / (1000 * 60 * 60 * 24)));
+      const total = Math.max(
+        1,
+        Math.round((end - start) / (1000 * 60 * 60 * 24)),
+      );
       for (let i = 0; i < total; i += 1) {
         const dt = new Date(start);
         dt.setDate(start.getDate() + i);
@@ -3951,22 +5031,28 @@ const handleJumpStep = (stepView) => {
     // ₹2,100). Now each room's real GST % (weighted by its share of the
     // total) is used to correctly split the already-inclusive total into
     // taxable + SGST + CGST instead of assuming 5%.
-    const weightedGstPercent = roomChargesTotal > 0
-      ? (Array.isArray(d.rooms) ? d.rooms : []).reduce((sum, r) => {
-          const total = Number(r.total) || 0;
-          const gstPercent = Number(r.gst ?? r.gstPercent ?? 0);
-          return sum + (total / roomChargesTotal) * gstPercent;
-        }, 0)
-      : 0;
+    const weightedGstPercent =
+      roomChargesTotal > 0
+        ? (Array.isArray(d.rooms) ? d.rooms : []).reduce((sum, r) => {
+            const total = Number(r.total) || 0;
+            const gstPercent = Number(r.gst ?? r.gstPercent ?? 0);
+            return sum + (total / roomChargesTotal) * gstPercent;
+          }, 0)
+        : 0;
     const perNightGrossTotal =
       stayDates.length > 0
         ? Number(((roomChargesTotal || 0) / stayDates.length).toFixed(2))
         : 0;
     const perNightDisc = 0;
-    const perNightTaxable = weightedGstPercent > 0
-      ? Number((perNightGrossTotal / (1 + weightedGstPercent / 100)).toFixed(2))
-      : perNightGrossTotal;
-    const perNightSgst = Number(((perNightGrossTotal - perNightTaxable) / 2).toFixed(2));
+    const perNightTaxable =
+      weightedGstPercent > 0
+        ? Number(
+            (perNightGrossTotal / (1 + weightedGstPercent / 100)).toFixed(2),
+          )
+        : perNightGrossTotal;
+    const perNightSgst = Number(
+      ((perNightGrossTotal - perNightTaxable) / 2).toFixed(2),
+    );
     const perNightCgst = perNightSgst;
     const perNightTotal = perNightGrossTotal;
 
@@ -3988,9 +5074,13 @@ const handleJumpStep = (stepView) => {
       // "Room Service" (or "Restaurant"), split the stored total back into
       // taxable + 5% GST so the printed invoice shows the proper SGST/CGST
       // columns instead of lumping everything into "tariff" with 0% GST.
-      const isGstCategory = e.category === "Room Service" || e.category === "Restaurant";
+      const isGstCategory =
+        e.category === "Room Service" || e.category === "Restaurant";
       const gstPercent = isGstCategory ? 5 : 0;
-      const taxable = gstPercent > 0 ? Number((amt / (1 + gstPercent / 100)).toFixed(2)) : amt;
+      const taxable =
+        gstPercent > 0
+          ? Number((amt / (1 + gstPercent / 100)).toFixed(2))
+          : amt;
       const sgst = Number(((amt - taxable) / 2).toFixed(2));
       const cgst = sgst;
       return {
@@ -4038,7 +5128,11 @@ const handleJumpStep = (stepView) => {
     `;
 
     // Format per-night totals to 2 decimals everywhere (matches reference)
-    const fmtMoney = (v) => Number(v || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const fmtMoney = (v) =>
+      Number(v || 0).toLocaleString("en-IN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
 
     win.document.write(`
       <html>
@@ -4276,42 +5370,82 @@ const handleJumpStep = (stepView) => {
             border-top: 1.5px solid #000000;
           }
 
-          /* ── 8. Signature lines + 9. Generated-by footer ─────── */
-          .signature-area {
-            padding: 14px 10px 8px 10px;
-            border-top: 1px solid #000000;
-          }
-          .sig-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: end;
-            margin-bottom: 24px;
-          }
-          .sig-row .for {
-            font-size: 11px;
-            font-weight: 800;
-          }
-          .sig-row .sig-line-block {
-            text-align: center;
-          }
-          .sig-row .sig-line-block .line {
-            display: inline-block;
-            min-width: 140px;
-            border-top: 1px solid #000000;
-            padding-top: 4px;
-            font-size: 10px;
-            font-weight: 600;
-          }
-          .generated-by {
-            text-align: center;
-            font-size: 10px;
-            font-weight: 700;
-            margin-top: 10px;
-            padding-top: 6px;
-          }
-          .generated-by .lbl {
-            font-weight: 600;
-          }
+          /* ── Signature section ───────────────────────────── */
+
+.signature-area {
+  position: relative;
+  height: 92px;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border-top: 1px solid #000000;
+}
+
+/* For MAA BAGLAMUKHI RESORT - top left */
+.sig-row {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+.sig-row .for {
+  position: absolute;
+  top: 0;
+  left: 2px;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+/* Authorized Signature - bottom/left */
+.sig-row .sig-line-block.authorized {
+  position: absolute;
+  left: 2px;
+  bottom: 3px;
+  width: 145px;
+  text-align: center;
+}
+
+.sig-row .sig-line-block.authorized .line {
+  display: block;
+  border-top: 1px solid #000000;
+  padding-top: 3px;
+  font-size: 9px;
+  font-weight: 600;
+}
+
+/* Guest Signature - top/right */
+.sig-row .sig-line-block.guest {
+  position: absolute;
+  right: 2px;
+  top: 0;
+  width: 145px;
+  text-align: center;
+}
+
+.sig-row .sig-line-block.guest .line {
+  display: block;
+  border-top: 1px solid #000000;
+  padding-top: 3px;
+  font-size: 9px;
+  font-weight: 600;
+}
+
+/* Generated By - bottom left */
+.generated-by {
+  position: absolute;
+  left: 12px;
+  bottom: 5px;
+  text-align: left;
+  font-size: 9px;
+  font-weight: 700;
+  margin: 0;
+  padding: 0;
+}
+
+.generated-by .lbl {
+  font-weight: 600;
+}
         </style>
       </head>
       <body>
@@ -4405,6 +5539,7 @@ const handleJumpStep = (stepView) => {
             <div class="note-cell">Thanks Pl Visit Again!!!</div>
             <div class="payment-detail">
               <div class="row"><span>${(paymentMode || "UPI").toUpperCase()}</span><span>${fmtMoney(finalTotal)}</span></div>
+              <div class="divider"></div>
               <div class="row bold"><span>Balance</span><span>${fmtMoney(remainingAmount)}</span></div>
             </div>
           </div>
@@ -4412,19 +5547,30 @@ const handleJumpStep = (stepView) => {
           <div class="invoice-bottom"></div>
 
           <div class="signature-area">
-            <div class="sig-row">
-              <div class="for">For ${RESORT_NAME_INVOICE}</div>
-              <div class="sig-line-block">
-                <div class="line">Authorized Signature</div>
-              </div>
-              <div class="sig-line-block">
-                <div class="line">Guest Signature</div>
-              </div>
-            </div>
-            <div class="generated-by">
-              <span class="lbl">Invoice Generated By:</span> ${generatedBy}
-            </div>
-          </div>
+  <div class="sig-row">
+
+    <div class="for">
+      For ${RESORT_NAME_INVOICE}
+    </div>
+
+    <div class="sig-line-block authorized">
+      <div class="line">
+        Authorized Signature
+      </div>
+    </div>
+
+    <div class="sig-line-block guest">
+      <div class="line">
+        Guest Signature
+      </div>
+    </div>
+
+  </div>
+
+  <div class="generated-by">
+    <span class="lbl">Invoice Generated By:</span> ${generatedBy}
+  </div>
+</div>
         </div>
       </body>
       </html>
@@ -4465,13 +5611,21 @@ const handleJumpStep = (stepView) => {
         }
         const merged = apiData.map((cat) => {
           const fallback = DEFAULT_ROOMS.find(
-            (d) => String(d.id) === String(cat.id) || normalizeRoomTypeName(d.name) === normalizeRoomTypeName(cat.name),
+            (d) =>
+              String(d.id) === String(cat.id) ||
+              normalizeRoomTypeName(d.name) === normalizeRoomTypeName(cat.name),
           );
           if (!fallback) return cat;
           return {
             ...cat,
-            rooms: Array.isArray(cat.rooms) && cat.rooms.length ? cat.rooms : fallback.rooms,
-            roomDetails: Array.isArray(cat.roomDetails) && cat.roomDetails.length ? cat.roomDetails : fallback.roomDetails,
+            rooms:
+              Array.isArray(cat.rooms) && cat.rooms.length
+                ? cat.rooms
+                : fallback.rooms,
+            roomDetails:
+              Array.isArray(cat.roomDetails) && cat.roomDetails.length
+                ? cat.roomDetails
+                : fallback.roomDetails,
             defaultPrice: cat.defaultPrice || fallback.defaultPrice,
             unitLabel: cat.unitLabel || fallback.unitLabel,
           };
@@ -4492,12 +5646,25 @@ const handleJumpStep = (stepView) => {
       );
     } catch (err) {
       console.error(err);
-      showToast("error", "Notification Failed", "This needs a /hotel/notify endpoint on your backend — please add it, or hook this button to your existing notification service.");
+      showToast(
+        "error",
+        "Notification Failed",
+        "This needs a /hotel/notify endpoint on your backend — please add it, or hook this button to your existing notification service.",
+      );
     }
   };
 
   const handleExportCSV = () => {
-    const headers = ["Booking No", "Guest Name", "Check-In", "Check-Out", "Rooms", "Amount", "Status", "Booking Type"];
+    const headers = [
+      "Booking No",
+      "Guest Name",
+      "Check-In",
+      "Check-Out",
+      "Rooms",
+      "Amount",
+      "Status",
+      "Booking Type",
+    ];
     const rows = filteredBookings.map((b) => [
       b.bookingCode || b.bookingId,
       b.guest_name || "",
@@ -4508,7 +5675,9 @@ const handleJumpStep = (stepView) => {
       b.booking_status || "",
       b.bookingType || "",
     ]);
-    const csv = [headers, ...rows].map((r) => r.map((v) => `"${v}"`).join(",")).join("\n");
+    const csv = [headers, ...rows]
+      .map((r) => r.map((v) => `"${v}"`).join(","))
+      .join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -4525,7 +5694,9 @@ const handleJumpStep = (stepView) => {
       <div className="mb-5 sm:mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 className={cardTitleCls}>All Bookings</h2>
-          <p className="mt-1 text-[17px] text-slate-500">View and manage all your hotel reservations</p>
+          <p className="mt-1 text-[17px] text-slate-500">
+            View and manage all your hotel reservations
+          </p>
         </div>
         <button type="button" onClick={openNewBooking} className={primaryBtn}>
           <FaPlus className="text-lg" /> New Booking
@@ -4572,29 +5743,50 @@ const handleJumpStep = (stepView) => {
           <tbody className="divide-y divide-slate-100 text-[17px]">
             {loading ? (
               <tr>
-                <td colSpan={10} className="px-4 py-10 text-center text-slate-400">
+                <td
+                  colSpan={10}
+                  className="px-4 py-10 text-center text-slate-400"
+                >
                   Loading bookings...
                 </td>
               </tr>
             ) : pagedBookings.length === 0 ? (
               <tr>
-                <td colSpan={10} className="px-4 py-10 text-center text-slate-400">
-                  No active bookings found. Checked-out bookings are available in Booking History.
+                <td
+                  colSpan={10}
+                  className="px-4 py-10 text-center text-slate-400"
+                >
+                  No active bookings found. Checked-out bookings are available
+                  in Booking History.
                 </td>
               </tr>
             ) : (
               pagedBookings.map((b) => (
                 <tr key={b.bookingId} className="hover:bg-slate-50/70">
-                  <td className="px-4 sm:px-5 py-3 sm:py-4 font-bold text-slate-800">{b.bookingCode || `BK-${b.bookingId}`}</td>
-                  <td className="px-4 sm:px-5 py-3 sm:py-4 text-slate-700">{b.guest_name || "Walk-in Guest"}</td>
-                  <td className="px-4 sm:px-5 py-3 sm:py-4 text-slate-600">{formatDate(b.check_in)}</td>
-                  <td className="px-4 sm:px-5 py-3 sm:py-4 text-slate-600">{formatDate(b.check_out)}</td>
-                  <td className="px-4 sm:px-5 py-3 sm:py-4 text-slate-600">{b.rooms || "-"}</td>
-                  <td className="px-4 sm:px-5 py-3 sm:py-4 font-semibold text-slate-800">{formatCurrency(b.totalAmount)}</td>
+                  <td className="px-4 sm:px-5 py-3 sm:py-4 font-bold text-slate-800">
+                    {b.bookingCode || `BK-${b.bookingId}`}
+                  </td>
+                  <td className="px-4 sm:px-5 py-3 sm:py-4 text-slate-700">
+                    {b.guest_name || "Walk-in Guest"}
+                  </td>
+                  <td className="px-4 sm:px-5 py-3 sm:py-4 text-slate-600">
+                    {formatDate(b.check_in)}
+                  </td>
+                  <td className="px-4 sm:px-5 py-3 sm:py-4 text-slate-600">
+                    {formatDate(b.check_out)}
+                  </td>
+                  <td className="px-4 sm:px-5 py-3 sm:py-4 text-slate-600">
+                    {b.rooms || "-"}
+                  </td>
+                  <td className="px-4 sm:px-5 py-3 sm:py-4 font-semibold text-slate-800">
+                    {formatCurrency(b.totalAmount)}
+                  </td>
                   <td className="px-4 sm:px-5 py-3 sm:py-4">
                     {(() => {
                       const status = computePaymentStatus(b);
-                      const remaining = Number(b.remainingAmount || b.balanceAmount || 0);
+                      const remaining = Number(
+                        b.remainingAmount || b.balanceAmount || 0,
+                      );
                       const cls =
                         status === "Paid"
                           ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
@@ -4603,7 +5795,9 @@ const handleJumpStep = (stepView) => {
                             : "bg-rose-50 text-rose-700 ring-1 ring-rose-100";
                       return (
                         <div className="flex flex-col gap-0.5">
-                          <span className={`inline-block rounded-full px-3 py-1 text-sm font-bold ${cls}`}>
+                          <span
+                            className={`inline-block rounded-full px-3 py-1 text-sm font-bold ${cls}`}
+                          >
                             {status}
                           </span>
                           {status !== "Paid" && remaining > 0 && (
@@ -4620,7 +5814,9 @@ const handleJumpStep = (stepView) => {
                       {b.booking_status || "Pending"}
                     </span>
                   </td>
-                  <td className="px-4 sm:px-5 py-3 sm:py-4 text-slate-600">{b.bookingType || "-"}</td>
+                  <td className="px-4 sm:px-5 py-3 sm:py-4 text-slate-600">
+                    {b.bookingType || "-"}
+                  </td>
                   <td className="px-4 sm:px-5 py-3 sm:py-4">
                     <div className="flex flex-wrap items-center justify-end gap-2">
                       <button
@@ -4663,7 +5859,9 @@ const handleJumpStep = (stepView) => {
                         <FaIdCard className="text-[18px] sm:text-xl" />
                         <span>Guest Profile</span>
                       </button>
-                      {(b.booking_status === "Pending" || b.booking_status === "Confirmed" || !b.booking_status) && (
+                      {(b.booking_status === "Pending" ||
+                        b.booking_status === "Confirmed" ||
+                        !b.booking_status) && (
                         <button
                           title="Check In"
                           onClick={() => {
@@ -4676,7 +5874,7 @@ const handleJumpStep = (stepView) => {
                           <span>Check-In</span>
                         </button>
                       )}
-                      {(b.booking_status === "Checked-In") && (
+                      {b.booking_status === "Checked-In" && (
                         <button
                           title="Check Out"
                           onClick={() => {
@@ -4689,7 +5887,6 @@ const handleJumpStep = (stepView) => {
                           <span>Check-Out</span>
                         </button>
                       )}
-
                     </div>
                   </td>
                 </tr>
@@ -4701,8 +5898,9 @@ const handleJumpStep = (stepView) => {
 
       <div className="mt-5 flex flex-col sm:flex-row flex-wrap items-center justify-center sm:justify-between gap-3 text-[17px] text-slate-500">
         <span className="text-center sm:text-left">
-          Showing {pagedBookings.length ? (page - 1) * pageSize + 1 : 0}
-          {" "}to {(page - 1) * pageSize + pagedBookings.length} of {filteredBookings.length} entries
+          Showing {pagedBookings.length ? (page - 1) * pageSize + 1 : 0} to{" "}
+          {(page - 1) * pageSize + pagedBookings.length} of{" "}
+          {filteredBookings.length} entries
         </span>
         <div className="flex flex-wrap items-center justify-center gap-2">
           <button
@@ -4712,17 +5910,21 @@ const handleJumpStep = (stepView) => {
           >
             <FaChevronLeft className="text-sm" />
           </button>
-          {Array.from({ length: totalPages }).slice(0, 5).map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setPage(i + 1)}
-              className={`h-10 w-10 sm:h-11 sm:w-11 rounded-lg text-[17px] font-bold transition ${
-                page === i + 1 ? "bg-sky-500 text-white" : "text-slate-500 hover:bg-slate-100"
-              }`}
-            >
-              {i + 1}
-            </button>
-          ))}
+          {Array.from({ length: totalPages })
+            .slice(0, 5)
+            .map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setPage(i + 1)}
+                className={`h-10 w-10 sm:h-11 sm:w-11 rounded-lg text-[17px] font-bold transition ${
+                  page === i + 1
+                    ? "bg-sky-500 text-white"
+                    : "text-slate-500 hover:bg-slate-100"
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
           <button
             disabled={page >= totalPages}
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
@@ -4741,16 +5943,25 @@ const handleJumpStep = (stepView) => {
     <div className={panelCls}>
       <div className="mb-6 sm:mb-8 flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-5 sm:pb-6">
         <div>
-          <h2 className={cardTitleCls}>{isEdit ? "Edit Booking" : "New Booking"}</h2>
+          <h2 className={cardTitleCls}>
+            {isEdit ? "Edit Booking" : "New Booking"}
+          </h2>
           <p className="mt-1 text-[17px] text-slate-500">
-            {isEdit ? "Update the booking details below." : "Fill all details below to create a new booking — everything happens on this one page."}
+            {isEdit
+              ? "Update the booking details below."
+              : "Fill all details below to create a new booking — everything happens on this one page."}
           </p>
         </div>
         <div className="flex gap-2 sm:gap-3">
           <button type="button" onClick={goToList} className={ghostBtn}>
             Cancel
           </button>
-          <button type="button" onClick={handleSaveBooking} disabled={saving} className={primaryBtn}>
+          <button
+            type="button"
+            onClick={handleSaveBooking}
+            disabled={saving}
+            className={primaryBtn}
+          >
             {saving ? "Saving..." : "Save Booking"}
           </button>
         </div>
@@ -4777,7 +5988,9 @@ const handleJumpStep = (stepView) => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
               <div>
-                <label className={labelCls}>First Name <span className="text-red-500">*</span></label>
+                <label className={labelCls}>
+                  First Name <span className="text-red-500">*</span>
+                </label>
                 <input
                   name="firstName"
                   value={formData.firstName}
@@ -4788,7 +6001,9 @@ const handleJumpStep = (stepView) => {
               </div>
 
               <div>
-                <label className={labelCls}>Last Name <span className="text-red-500">*</span></label>
+                <label className={labelCls}>
+                  Last Name <span className="text-red-500">*</span>
+                </label>
                 <input
                   name="lastName"
                   value={formData.lastName}
@@ -4799,7 +6014,9 @@ const handleJumpStep = (stepView) => {
               </div>
 
               <div className="sm:col-span-2">
-                <label className={labelCls}>Email Address <span className="text-red-500">*</span></label>
+                <label className={labelCls}>
+                  Email Address <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="email"
                   name="guestEmail"
@@ -4811,7 +6028,9 @@ const handleJumpStep = (stepView) => {
               </div>
 
               <div className="sm:col-span-2">
-                <label className={labelCls}>Phone Number <span className="text-red-500">*</span></label>
+                <label className={labelCls}>
+                  Phone Number <span className="text-red-500">*</span>
+                </label>
                 <input
                   name="mobile"
                   value={formData.mobile}
@@ -4823,7 +6042,9 @@ const handleJumpStep = (stepView) => {
 
               {/* ── NEW: ID Proof Type + ID Number (matches reference layout) ── */}
               <div>
-                <label className={labelCls}>ID Proof Type <span className="text-red-500">*</span></label>
+                <label className={labelCls}>
+                  ID Proof Type <span className="text-red-500">*</span>
+                </label>
                 <select
                   name="idProofType"
                   value={formData.idProofType}
@@ -4832,13 +6053,17 @@ const handleJumpStep = (stepView) => {
                 >
                   <option value="">Select ID Proof Type</option>
                   {ID_PROOF_TYPE_OPTIONS.map((opt) => (
-                    <option key={opt} value={opt}>{opt}</option>
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label className={labelCls}>ID Number <span className="text-red-500">*</span></label>
+                <label className={labelCls}>
+                  ID Number <span className="text-red-500">*</span>
+                </label>
                 <input
                   name="idNumber"
                   value={formData.idNumber}
@@ -4847,7 +6072,8 @@ const handleJumpStep = (stepView) => {
                   placeholder="Enter ID number"
                 />
                 <p className="mt-1.5 text-sm text-slate-400">
-                  Enter your valid ID proof number (Aadhar Card, Driving License, Passport, etc.)
+                  Enter your valid ID proof number (Aadhar Card, Driving
+                  License, Passport, etc.)
                 </p>
               </div>
               {/* ── END NEW FIELDS ── */}
@@ -4915,17 +6141,28 @@ const handleJumpStep = (stepView) => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
               <div>
                 <label className={labelCls}>Booking No</label>
-                <input disabled value={formData.bookingCode || "Auto-generated on save"} className={`${fieldCls} bg-slate-100 text-slate-500`} />
+                <input
+                  disabled
+                  value={formData.bookingCode || "Auto-generated on save"}
+                  className={`${fieldCls} bg-slate-100 text-slate-500`}
+                />
               </div>
               <div>
                 <label className={labelCls}>Booking Date</label>
-                <input disabled value={formatDate(today)} className={`${fieldCls} bg-slate-100 text-slate-500`} />
+                <input
+                  disabled
+                  value={formatDate(today)}
+                  className={`${fieldCls} bg-slate-100 text-slate-500`}
+                />
               </div>
               <div className="sm:col-span-2">
                 <label className={labelCls}>Booking Type</label>
                 <div className="flex flex-wrap gap-4 sm:gap-5 pt-1">
                   {["Walk-In", "VIA", "Online"].map((t) => (
-                    <label key={t} className="flex items-center gap-2 text-[17px] font-semibold text-slate-700">
+                    <label
+                      key={t}
+                      className="flex items-center gap-2 text-[17px] font-semibold text-slate-700"
+                    >
                       <input
                         type="radio"
                         name="bookingType"
@@ -4940,19 +6177,43 @@ const handleJumpStep = (stepView) => {
               </div>
               <div>
                 <label className={labelCls}>Referral By</label>
-                <input name="referralBy" value={formData.referralBy} onChange={handleChange} className={fieldCls} placeholder="Enter referral name" />
+                <input
+                  name="referralBy"
+                  value={formData.referralBy}
+                  onChange={handleChange}
+                  className={fieldCls}
+                  placeholder="Enter referral name"
+                />
               </div>
               <div>
                 <label className={labelCls}>Company</label>
-                <input name="company" value={formData.company} onChange={handleChange} className={fieldCls} placeholder="Enter company name" />
+                <input
+                  name="company"
+                  value={formData.company}
+                  onChange={handleChange}
+                  className={fieldCls}
+                  placeholder="Enter company name"
+                />
               </div>
               <div>
                 <label className={labelCls}>GST Number</label>
-                <input name="gstNumber" value={formData.gstNumber} onChange={handleChange} className={fieldCls} placeholder="Enter GSTIN" />
+                <input
+                  name="gstNumber"
+                  value={formData.gstNumber}
+                  onChange={handleChange}
+                  className={fieldCls}
+                  placeholder="Enter GSTIN"
+                />
               </div>
               <div className="sm:col-span-2">
                 <label className={labelCls}>Reference</label>
-                <input name="reference" value={formData.reference} onChange={handleChange} className={fieldCls} placeholder="Enter reference details" />
+                <input
+                  name="reference"
+                  value={formData.reference}
+                  onChange={handleChange}
+                  className={fieldCls}
+                  placeholder="Enter reference details"
+                />
               </div>
             </div>
           </div>
@@ -4962,7 +6223,12 @@ const handleJumpStep = (stepView) => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
               <div>
                 <label className={labelCls}>Room Category</label>
-                <select name="roomCategory" value={formData.roomCategory} onChange={handleChange} className={fieldCls}>
+                <select
+                  name="roomCategory"
+                  value={formData.roomCategory}
+                  onChange={handleChange}
+                  className={fieldCls}
+                >
                   <option value="">Select Category</option>
                   {categorySetup.map((c) => (
                     <option key={c.id} value={c.id}>
@@ -4982,26 +6248,59 @@ const handleJumpStep = (stepView) => {
                     onChange={handleChange}
                     className={fieldCls}
                   />
-                  <button type="button" onClick={addRoomRow} className="shrink-0 h-[52px] sm:h-[54px] md:h-14 rounded-xl bg-sky-500 px-4 sm:px-5 text-[17px] font-bold text-white transition hover:bg-sky-600 active:scale-95">
+                  <button
+                    type="button"
+                    onClick={addRoomRow}
+                    className="shrink-0 h-[52px] sm:h-[54px] md:h-14 rounded-xl bg-sky-500 px-4 sm:px-5 text-[17px] font-bold text-white transition hover:bg-sky-600 active:scale-95"
+                  >
                     + Add
                   </button>
                 </div>
               </div>
               <div>
-                <label className={labelCls}>Guest Capacity <span className="text-red-500">*</span></label>
-                <input name="guestCapacity" value={formData.guestCapacity} onChange={handleChange} className={fieldCls} placeholder="Adults + Children" />
+                <label className={labelCls}>
+                  Guest Capacity <span className="text-red-500">*</span>
+                </label>
+                <input
+                  name="guestCapacity"
+                  value={formData.guestCapacity}
+                  onChange={handleChange}
+                  className={fieldCls}
+                  placeholder="Adults + Children"
+                />
               </div>
               <div>
                 <label className={labelCls}>Mobile Number</label>
-                <input name="roomMobile" value={formData.roomMobile} onChange={handleChange} className={fieldCls} placeholder="Primary mobile number" />
+                <input
+                  name="roomMobile"
+                  value={formData.roomMobile}
+                  onChange={handleChange}
+                  className={fieldCls}
+                  placeholder="Primary mobile number"
+                />
               </div>
               <div>
                 <label className={labelCls}>Owner</label>
-                <input name="owner" value={formData.owner} onChange={handleChange} className={fieldCls} placeholder="Enter owner name" />
+                <input
+                  name="owner"
+                  value={formData.owner}
+                  onChange={handleChange}
+                  className={fieldCls}
+                  placeholder="Enter owner name"
+                />
               </div>
               <div className="sm:col-span-2">
-                <label className={labelCls}>Address <span className="text-red-500">*</span></label>
-                <textarea name="address" value={formData.address} onChange={handleChange} rows={2} className={`${fieldCls} h-auto py-3`} placeholder="Enter address" />
+                <label className={labelCls}>
+                  Address <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  name="address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  rows={2}
+                  className={`${fieldCls} h-auto py-3`}
+                  placeholder="Enter address"
+                />
               </div>
             </div>
 
@@ -5025,29 +6324,49 @@ const handleJumpStep = (stepView) => {
                         <td className="px-3 py-2">
                           <select
                             value={row.categoryId || ""}
-                            onChange={(e) => updateRoomRow(row.id, "categoryId", e.target.value)}
+                            onChange={(e) =>
+                              updateRoomRow(
+                                row.id,
+                                "categoryId",
+                                e.target.value,
+                              )
+                            }
                             className="w-28 sm:w-32 rounded-lg border border-slate-200 px-2 py-1.5 text-[17px]"
                           >
                             <option value="">Select category</option>
                             {categorySetup.map((c) => (
-                              <option key={c.id} value={c.id}>{c.name}</option>
+                              <option key={c.id} value={c.id}>
+                                {c.name}
+                              </option>
                             ))}
                           </select>
                         </td>
                         <td className="px-3 py-2">
                           <select
                             value={row.roomNo}
-                            onChange={(e) => updateRoomRow(row.id, "roomNo", e.target.value)}
+                            onChange={(e) =>
+                              updateRoomRow(row.id, "roomNo", e.target.value)
+                            }
                             disabled={!row.categoryId}
                             className="w-24 sm:w-28 rounded-lg border border-slate-200 px-2 py-1.5 text-[17px] disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
                           >
                             <option value="">
-                              {row.categoryId ? "Select room" : "Pick category first"}
+                              {row.categoryId
+                                ? "Select room"
+                                : "Pick category first"}
                             </option>
-                            {getRoomNumbersForCategory(row.categoryId, row.roomNo).map((r) => (
-                              <option key={r.roomNo} value={r.roomNo} disabled={r.alreadyPicked}>
+                            {getRoomNumbersForCategory(
+                              row.categoryId,
+                              row.roomNo,
+                            ).map((r) => (
+                              <option
+                                key={r.roomNo}
+                                value={r.roomNo}
+                                disabled={r.alreadyPicked}
+                              >
                                 {r.roomNo}
-                                {r.status && r.status.toLowerCase() !== "available"
+                                {r.status &&
+                                r.status.toLowerCase() !== "available"
                                   ? ` (${r.status})`
                                   : ""}
                                 {r.alreadyPicked ? " — already added" : ""}
@@ -5059,7 +6378,9 @@ const handleJumpStep = (stepView) => {
                           <input
                             type="number"
                             value={row.price}
-                            onChange={(e) => updateRoomRow(row.id, "price", e.target.value)}
+                            onChange={(e) =>
+                              updateRoomRow(row.id, "price", e.target.value)
+                            }
                             className="w-20 sm:w-24 rounded-lg border border-slate-200 px-2 py-1.5 text-[17px]"
                           />
                         </td>
@@ -5068,7 +6389,9 @@ const handleJumpStep = (stepView) => {
                             type="number"
                             min={5}
                             value={row.gst}
-                            onChange={(e) => updateRoomRow(row.id, "gst", e.target.value)}
+                            onChange={(e) =>
+                              updateRoomRow(row.id, "gst", e.target.value)
+                            }
                             className="w-16 sm:w-20 rounded-lg border border-slate-200 px-2 py-1.5 text-[17px]"
                           />
                         </td>
@@ -5077,13 +6400,20 @@ const handleJumpStep = (stepView) => {
                             type="number"
                             min={1}
                             value={row.quantity}
-                            onChange={(e) => updateRoomRow(row.id, "quantity", e.target.value)}
+                            onChange={(e) =>
+                              updateRoomRow(row.id, "quantity", e.target.value)
+                            }
                             className="w-16 sm:w-20 rounded-lg border border-slate-200 px-2 py-1.5 text-[17px]"
                           />
                         </td>
-                        <td className="px-3 py-2 font-semibold text-slate-700">{formatCurrency(rowTotal(row, stayNights))}</td>
+                        <td className="px-3 py-2 font-semibold text-slate-700">
+                          {formatCurrency(rowTotal(row, stayNights))}
+                        </td>
                         <td className="px-3 py-2">
-                          <button onClick={() => removeRoomRow(row.id)} className="text-rose-500 transition hover:text-rose-700 active:scale-95">
+                          <button
+                            onClick={() => removeRoomRow(row.id)}
+                            className="text-rose-500 transition hover:text-rose-700 active:scale-95"
+                          >
                             <FaTimes className="text-lg" />
                           </button>
                         </td>
@@ -5098,9 +6428,7 @@ const handleJumpStep = (stepView) => {
 
         <div className="space-y-5 sm:space-y-6">
           <div id="sec-other" className={cardTileCls}>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5"></div>
           </div>
 
           <div id="sec-payment" className={cardTileCls}>
@@ -5108,11 +6436,23 @@ const handleJumpStep = (stepView) => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
               <div>
                 <label className={labelCls}>Amount (₹)</label>
-                <input type="number" name="amount" value={formData.amount} onChange={handleChange} className={fieldCls} placeholder="0.00" />
+                <input
+                  type="number"
+                  name="amount"
+                  value={formData.amount}
+                  onChange={handleChange}
+                  className={fieldCls}
+                  placeholder="0.00"
+                />
               </div>
               <div>
                 <label className={labelCls}>Payment Mode</label>
-                <select name="paymentMode" value={formData.paymentMode} onChange={handleChange} className={fieldCls}>
+                <select
+                  name="paymentMode"
+                  value={formData.paymentMode}
+                  onChange={handleChange}
+                  className={fieldCls}
+                >
                   <option value="">Select Mode</option>
                   <option>Cash</option>
                   <option>Card</option>
@@ -5122,7 +6462,12 @@ const handleJumpStep = (stepView) => {
               </div>
               <div>
                 <label className={labelCls}>Payment Status</label>
-                <select name="paymentStatus" value={formData.paymentStatus} onChange={handleChange} className={fieldCls}>
+                <select
+                  name="paymentStatus"
+                  value={formData.paymentStatus}
+                  onChange={handleChange}
+                  className={fieldCls}
+                >
                   <option value="">Select Status</option>
                   <option>Paid</option>
                   <option>Partial</option>
@@ -5131,11 +6476,24 @@ const handleJumpStep = (stepView) => {
               </div>
               <div>
                 <label className={labelCls}>Paid By</label>
-                <input name="paidBy" value={formData.paidBy} onChange={handleChange} className={fieldCls} placeholder="Enter paid by name" />
+                <input
+                  name="paidBy"
+                  value={formData.paidBy}
+                  onChange={handleChange}
+                  className={fieldCls}
+                  placeholder="Enter paid by name"
+                />
               </div>
               <div className="sm:col-span-2">
                 <label className={labelCls}>Payment Note</label>
-                <textarea name="paymentNote" value={formData.paymentNote} onChange={handleChange} rows={2} className={`${fieldCls} h-auto py-3`} placeholder="Enter payment note (optional)" />
+                <textarea
+                  name="paymentNote"
+                  value={formData.paymentNote}
+                  onChange={handleChange}
+                  rows={2}
+                  className={`${fieldCls} h-auto py-3`}
+                  placeholder="Enter payment note (optional)"
+                />
               </div>
             </div>
           </div>
@@ -5145,29 +6503,53 @@ const handleJumpStep = (stepView) => {
       <div className="mt-6 sm:mt-8 flex flex-wrap items-center justify-between gap-5 sm:gap-6 rounded-2xl border border-slate-200 bg-slate-50 px-5 sm:px-6 py-4 sm:py-5">
         <div className="flex flex-wrap gap-6 sm:gap-8 text-[17px]">
           <div>
-            <div className="text-sm font-bold uppercase text-slate-400">Guest Name</div>
-            <div className="font-bold text-slate-800">{guestFullName || "-"}</div>
+            <div className="text-sm font-bold uppercase text-slate-400">
+              Guest Name
+            </div>
+            <div className="font-bold text-slate-800">
+              {guestFullName || "-"}
+            </div>
           </div>
           <div>
-            <div className="text-sm font-bold uppercase text-slate-400">Stay Duration</div>
-            <div className="font-bold text-slate-800">{stayNights} Night{stayNights === 1 ? "" : "s"}</div>
+            <div className="text-sm font-bold uppercase text-slate-400">
+              Stay Duration
+            </div>
+            <div className="font-bold text-slate-800">
+              {stayNights} Night{stayNights === 1 ? "" : "s"}
+            </div>
           </div>
           <div>
-            <div className="text-sm font-bold uppercase text-slate-400">Check-In</div>
-            <div className="font-bold text-slate-800">{formData.checkIn ? formatDate(formData.checkIn) : "-"}</div>
+            <div className="text-sm font-bold uppercase text-slate-400">
+              Check-In
+            </div>
+            <div className="font-bold text-slate-800">
+              {formData.checkIn ? formatDate(formData.checkIn) : "-"}
+            </div>
           </div>
           <div>
-            <div className="text-sm font-bold uppercase text-slate-400">Check-Out</div>
-            <div className="font-bold text-slate-800">{formData.checkOut ? formatDate(formData.checkOut) : "-"}</div>
+            <div className="text-sm font-bold uppercase text-slate-400">
+              Check-Out
+            </div>
+            <div className="font-bold text-slate-800">
+              {formData.checkOut ? formatDate(formData.checkOut) : "-"}
+            </div>
           </div>
           <div>
-            <div className="text-sm font-bold uppercase text-slate-400">Total Rooms</div>
-            <div className="font-bold text-slate-800">{formData.rooms.length || "-"}</div>
+            <div className="text-sm font-bold uppercase text-slate-400">
+              Total Rooms
+            </div>
+            <div className="font-bold text-slate-800">
+              {formData.rooms.length || "-"}
+            </div>
           </div>
         </div>
         <div className="text-right">
-          <div className="text-sm font-bold uppercase text-slate-400">Total Amount</div>
-          <div className="text-2xl sm:text-3xl font-black text-emerald-600">{formatCurrency(grandTotal)}</div>
+          <div className="text-sm font-bold uppercase text-slate-400">
+            Total Amount
+          </div>
+          <div className="text-2xl sm:text-3xl font-black text-emerald-600">
+            {formatCurrency(grandTotal)}
+          </div>
         </div>
       </div>
     </div>
@@ -5196,9 +6578,7 @@ const handleJumpStep = (stepView) => {
         <FaCheckCircle />
       </div>
 
-      <h2 className={`mt-5 ${heroTitleCls} text-center`}>
-        Booking Confirmed!
-      </h2>
+      <h2 className={`mt-5 ${heroTitleCls} text-center`}>Booking Confirmed!</h2>
 
       <p className="mt-2 text-[17px] sm:text-lg text-slate-500 text-center">
         Your booking has been confirmed successfully.
@@ -5229,7 +6609,10 @@ const handleJumpStep = (stepView) => {
             Room Type
           </div>
           <div className="text-lg sm:text-xl font-bold text-slate-800 wrap-break-word">
-            {formData.rooms[0]?.roomType || formData.roomCategory || formData.roomType || "—"}
+            {formData.rooms[0]?.roomType ||
+              formData.roomCategory ||
+              formData.roomType ||
+              "—"}
           </div>
         </div>
 
@@ -5277,7 +6660,9 @@ const handleJumpStep = (stepView) => {
           <div className="mt-1 text-2xl sm:text-3xl font-black text-blue-700">
             {formatCurrency(grandTotal)}
             <div className="text-[17px] text-emerald-600">
-              ({formData.rooms.length} room{formData.rooms.length > 1 ? 's' : ''} × {stayNights} night{stayNights > 1 ? 's' : ''})
+              ({formData.rooms.length} room
+              {formData.rooms.length > 1 ? "s" : ""} × {stayNights} night
+              {stayNights > 1 ? "s" : ""})
             </div>
           </div>
         </div>
@@ -5303,53 +6688,78 @@ const handleJumpStep = (stepView) => {
     const d = bookingDetail || {};
     const b = selectedBooking || {};
 
-    const roomChargesTotal = Array.isArray(d.rooms) && d.rooms.length > 0
-      ? d.rooms.reduce((sum, r) => sum + (Number(r.total) || 0), 0)
-      : Number(b.totalAmount) || 0;
+    const roomChargesTotal =
+      Array.isArray(d.rooms) && d.rooms.length > 0
+        ? d.rooms.reduce((sum, r) => sum + (Number(r.total) || 0), 0)
+        : Number(b.totalAmount) || 0;
 
-    const folioChargesTotal = folioCharges.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+    const folioChargesTotal = folioCharges.reduce(
+      (sum, e) => sum + (Number(e.amount) || 0),
+      0,
+    );
 
     const updatedTotalAmount = roomChargesTotal + folioChargesTotal;
 
-    const advancePaid = Number(
-      d.paidAmount ??
-        d.paid_amount ??
-        d.advancePaid ??
-        d.advance_paid ??
-        d.amountPaid ??
-        d.amount_paid ??
-        d.totalPaid ??
-        d.total_paid ??
-        b.paidAmount ??
-        b.paid_amount ??
-        b.advancePaid ??
-        b.advance_paid ??
-        0,
-    ) || 0;
+    const advancePaid =
+      Number(
+        d.paidAmount ??
+          d.paid_amount ??
+          d.advancePaid ??
+          d.advance_paid ??
+          d.amountPaid ??
+          d.amount_paid ??
+          d.totalPaid ??
+          d.total_paid ??
+          b.paidAmount ??
+          b.paid_amount ??
+          b.advancePaid ??
+          b.advance_paid ??
+          0,
+      ) || 0;
 
     const effectivePaid = totalPaid > 0 ? totalPaid : advancePaid;
-    const remainingAmount = effectivePaid > 0
-      ? Math.max(updatedTotalAmount - effectivePaid, 0)
-      : updatedTotalAmount;
+    const remainingAmount =
+      effectivePaid > 0
+        ? Math.max(updatedTotalAmount - effectivePaid, 0)
+        : updatedTotalAmount;
 
     return (
       <div className={panelCls}>
         <div className="mb-5 sm:mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4 sm:pb-5">
           <div>
-            <div className="text-sm font-bold uppercase text-slate-400">Booking Reference</div>
-            <h2 className={cardTitleCls}>{d.booking_code || b.bookingCode || `BK-${b.bookingId}`}</h2>
+            <div className="text-sm font-bold uppercase text-slate-400">
+              Booking Reference
+            </div>
+            <h2 className={cardTitleCls}>
+              {d.booking_code || b.bookingCode || `BK-${b.bookingId}`}
+            </h2>
           </div>
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-            <span className={statusBadgeCls(d.booking_status || b.booking_status)}>
+            <span
+              className={statusBadgeCls(d.booking_status || b.booking_status)}
+            >
               {d.booking_status || b.booking_status || "Pending"}
             </span>
             {(() => {
               // Payment status derived from live remaining / paid amounts.
               // This stays in sync with the Accounts dashboard because both
               // read the same `remainingAmount` / `paidAmount` / `netPaid` fields.
-              const paid = Number(d.netPaid || d.paidAmount || b.netPaid || b.paidAmount || 0);
-              const remaining = Number(d.remainingAmount || d.balanceAmount || b.remainingAmount || b.balanceAmount || 0);
-              const pStatus = remaining <= 0 && paid > 0 ? "Paid" : paid > 0 ? "Partial" : "Pending";
+              const paid = Number(
+                d.netPaid || d.paidAmount || b.netPaid || b.paidAmount || 0,
+              );
+              const remaining = Number(
+                d.remainingAmount ||
+                  d.balanceAmount ||
+                  b.remainingAmount ||
+                  b.balanceAmount ||
+                  0,
+              );
+              const pStatus =
+                remaining <= 0 && paid > 0
+                  ? "Paid"
+                  : paid > 0
+                    ? "Partial"
+                    : "Pending";
               const pCls =
                 pStatus === "Paid"
                   ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
@@ -5357,10 +6767,14 @@ const handleJumpStep = (stepView) => {
                     ? "bg-sky-50 text-sky-700 ring-1 ring-sky-100"
                     : "bg-rose-50 text-rose-700 ring-1 ring-rose-100";
               return (
-                <span className={`inline-block rounded-full px-3 py-1 text-sm font-bold ${pCls}`}>
+                <span
+                  className={`inline-block rounded-full px-3 py-1 text-sm font-bold ${pCls}`}
+                >
                   Payment: {pStatus}
                   {remaining > 0 && pStatus !== "Paid" && (
-                    <span className="ml-1 text-rose-600">({formatCurrency(remaining)} due)</span>
+                    <span className="ml-1 text-rose-600">
+                      ({formatCurrency(remaining)} due)
+                    </span>
                   )}
                 </span>
               );
@@ -5378,46 +6792,119 @@ const handleJumpStep = (stepView) => {
             <button onClick={() => openEditBooking(b)} className={ghostBtn}>
               <FaEdit className="text-sm" /> Edit
             </button>
-            <button onClick={() => setShowInvoiceModal(true)} className={primaryBtn}>
+            <button
+              onClick={() => setShowInvoiceModal(true)}
+              className={primaryBtn}
+            >
               <FaFileAlt className="text-sm" /> Generate Invoice
             </button>
-            <button onClick={() => { setWaResult(null); setShowWhatsAppModal(true); }} className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#25D366] hover:bg-[#1da851] text-white font-semibold rounded-lg shadow-md transition-all duration-200 hover:shadow-lg text-sm">
+            <button
+              onClick={() => {
+                setWaResult(null);
+                setShowWhatsAppModal(true);
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#25D366] hover:bg-[#1da851] text-white font-semibold rounded-lg shadow-md transition-all duration-200 hover:shadow-lg text-sm"
+            >
               <FaWhatsapp className="text-lg" /> Send Invoice via WhatsApp
             </button>
           </div>
         </div>
 
         {detailLoading ? (
-          <div className="py-10 text-center text-lg text-slate-400">Loading booking details...</div>
+          <div className="py-10 text-center text-lg text-slate-400">
+            Loading booking details...
+          </div>
         ) : (
           <div className="grid gap-5 md:grid-cols-3">
-                       <div className={cardTileCls}>
+            <div className={cardTileCls}>
               <div className={sectionTitleCls}>Guest Information</div>
               <dl className="space-y-2.5 text-[17px]">
-                <div className="flex justify-between gap-3"><dt className="text-slate-500">Name</dt><dd className="font-bold text-slate-800">{d.guest_name || b.guest_name || "-"}</dd></div>
-                <div className="flex justify-between gap-3"><dt className="text-slate-500">Email</dt><dd className="font-bold text-slate-800">{d.guest_email || "-"}</dd></div>
-                <div className="flex justify-between gap-3"><dt className="text-slate-500">Mobile</dt><dd className="font-bold text-slate-800">{d.mobile || b.mobile || "-"}</dd></div>
-                <div className="flex justify-between gap-3"><dt className="text-slate-500">ID Proof</dt><dd className="font-bold text-slate-800">{d.id_proof_type || d.idProofType || "-"}</dd></div>
-                <div className="flex justify-between gap-3"><dt className="text-slate-500">ID Number</dt><dd className="font-bold text-slate-800">{d.id_proof_number || d.idNumber || "-"}</dd></div>
-                <div className="flex justify-between gap-3"><dt className="text-slate-500">Company Name</dt><dd className="font-bold text-slate-800">{d.company_name || "-"}</dd></div>
-                <div className="flex justify-between gap-3"><dt className="text-slate-500">GST Number</dt><dd className="font-bold text-slate-800">{d.company_gst || "-"}</dd></div>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-slate-500">Name</dt>
+                  <dd className="font-bold text-slate-800">
+                    {d.guest_name || b.guest_name || "-"}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-slate-500">Email</dt>
+                  <dd className="font-bold text-slate-800">
+                    {d.guest_email || "-"}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-slate-500">Mobile</dt>
+                  <dd className="font-bold text-slate-800">
+                    {d.mobile || b.mobile || "-"}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-slate-500">ID Proof</dt>
+                  <dd className="font-bold text-slate-800">
+                    {d.id_proof_type || d.idProofType || "-"}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-slate-500">ID Number</dt>
+                  <dd className="font-bold text-slate-800">
+                    {d.id_proof_number || d.idNumber || "-"}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-slate-500">Company Name</dt>
+                  <dd className="font-bold text-slate-800">
+                    {d.company_name || "-"}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-slate-500">GST Number</dt>
+                  <dd className="font-bold text-slate-800">
+                    {d.company_gst || "-"}
+                  </dd>
+                </div>
               </dl>
             </div>
 
             <div className={cardTileCls}>
               <div className={sectionTitleCls}>Payment Information</div>
               <dl className="space-y-2.5 text-[17px]">
-                <div className="flex justify-between gap-3"><dt className="text-slate-500">Room Charges</dt><dd className="font-bold text-slate-800">{formatCurrency(roomChargesTotal)}</dd></div>
-                <div className="flex justify-between gap-3"><dt className="text-slate-500">Folio Charges</dt><dd className="font-bold text-slate-800">{formatCurrency(folioChargesTotal)}</dd></div>
-                <div className="flex justify-between gap-3"><dt className="text-slate-500">Total (Room + Folio)</dt><dd className="font-bold text-slate-800">{formatCurrency(updatedTotalAmount)}</dd></div>
-                <div className="flex justify-between gap-3"><dt className="text-slate-500">Advance Paid</dt><dd className="font-bold text-emerald-600">{formatCurrency(effectivePaid)}</dd></div>
-                <div className="flex justify-between gap-3"><dt className="text-slate-500">Remaining (incl. Folio)</dt><dd className="font-bold text-rose-600">{formatCurrency(remainingAmount)}</dd></div>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-slate-500">Room Charges</dt>
+                  <dd className="font-bold text-slate-800">
+                    {formatCurrency(roomChargesTotal)}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-slate-500">Folio Charges</dt>
+                  <dd className="font-bold text-slate-800">
+                    {formatCurrency(folioChargesTotal)}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-slate-500">Total (Room + Folio)</dt>
+                  <dd className="font-bold text-slate-800">
+                    {formatCurrency(updatedTotalAmount)}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-slate-500">Advance Paid</dt>
+                  <dd className="font-bold text-emerald-600">
+                    {formatCurrency(effectivePaid)}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-slate-500">Remaining (incl. Folio)</dt>
+                  <dd className="font-bold text-rose-600">
+                    {formatCurrency(remainingAmount)}
+                  </dd>
+                </div>
               </dl>
             </div>
 
             {Array.isArray(d.rooms) && d.rooms.length > 0 && (
               <div className={`md:col-span-3 ${cardTileCls}`}>
-                <div className={sectionTitleCls}>Room &amp; Tariff Information</div>
+                <div className={sectionTitleCls}>
+                  Room &amp; Tariff Information
+                </div>
                 <div className="max-w-full overflow-x-auto">
                   <table className="w-full min-w-[460px] text-left">
                     <thead className="text-base font-bold uppercase text-slate-400">
@@ -5432,11 +6919,19 @@ const handleJumpStep = (stepView) => {
                     <tbody className="divide-y divide-slate-200 text-[17px]">
                       {d.rooms.map((r, i) => (
                         <tr key={i}>
-                          <td className="py-2 pr-4 font-semibold text-slate-800">{r.room_number || r.roomNumber || r.roomNo}</td>
-                          <td className="py-2 pr-4">{formatCurrency(r.tariff || r.price)}</td>
-                          <td className="py-2 pr-4">{r.gst || r.gstPercent || 0}%</td>
+                          <td className="py-2 pr-4 font-semibold text-slate-800">
+                            {r.room_number || r.roomNumber || r.roomNo}
+                          </td>
+                          <td className="py-2 pr-4">
+                            {formatCurrency(r.tariff || r.price)}
+                          </td>
+                          <td className="py-2 pr-4">
+                            {r.gst || r.gstPercent || 0}%
+                          </td>
                           <td className="py-2 pr-4">{r.quantity || 1}</td>
-                          <td className="py-2 font-semibold">{formatCurrency(r.total)}</td>
+                          <td className="py-2 font-semibold">
+                            {formatCurrency(r.total)}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -5448,9 +6943,13 @@ const handleJumpStep = (stepView) => {
             <div className={`md:col-span-3 ${cardTileCls}`}>
               <div className={sectionTitleCls}>Folio (Extra) Charges</div>
               {folioLoading ? (
-                <div className="py-6 text-center text-slate-400">Loading folio charges...</div>
+                <div className="py-6 text-center text-slate-400">
+                  Loading folio charges...
+                </div>
               ) : folioCharges.length === 0 ? (
-                <div className="py-6 text-center text-slate-400">No extra folio charges added for this booking.</div>
+                <div className="py-6 text-center text-slate-400">
+                  No extra folio charges added for this booking.
+                </div>
               ) : (
                 <div className="max-w-full overflow-x-auto">
                   <table className="w-full min-w-[460px] text-left">
@@ -5464,16 +6963,29 @@ const handleJumpStep = (stepView) => {
                     <tbody className="divide-y divide-slate-200 text-[17px]">
                       {folioCharges.map((entry) => (
                         <tr key={entry.id}>
-                          <td className="py-2 pr-4 font-semibold text-slate-800">{entry.category || "Extra Charge"}</td>
-                          <td className="py-2 pr-4 text-slate-600">{entry.description || "-"}</td>
-                          <td className="py-2 font-semibold">{formatCurrency(entry.amount)}</td>
+                          <td className="py-2 pr-4 font-semibold text-slate-800">
+                            {entry.category || "Extra Charge"}
+                          </td>
+                          <td className="py-2 pr-4 text-slate-600">
+                            {entry.description || "-"}
+                          </td>
+                          <td className="py-2 font-semibold">
+                            {formatCurrency(entry.amount)}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
                     <tfoot>
                       <tr className="border-t-2 border-slate-200">
-                        <td className="py-2 pr-4 font-bold text-slate-800" colSpan={2}>Folio Charges Total</td>
-                        <td className="py-2 font-bold text-slate-900">{formatCurrency(folioChargesTotal)}</td>
+                        <td
+                          className="py-2 pr-4 font-bold text-slate-800"
+                          colSpan={2}
+                        >
+                          Folio Charges Total
+                        </td>
+                        <td className="py-2 font-bold text-slate-900">
+                          {formatCurrency(folioChargesTotal)}
+                        </td>
                       </tr>
                     </tfoot>
                   </table>
@@ -5481,14 +6993,24 @@ const handleJumpStep = (stepView) => {
               )}
             </div>
 
-            <div className={`md:col-span-3 ${cardTileCls} flex flex-wrap items-center justify-between gap-4`}>
+            <div
+              className={`md:col-span-3 ${cardTileCls} flex flex-wrap items-center justify-between gap-4`}
+            >
               <div>
-                <div className={sectionTitleCls + " !mb-0 !border-none !pb-0"}>Updated Total Amount</div>
-                <div className="text-2xl sm:text-3xl font-black text-emerald-600">{formatCurrency(updatedTotalAmount)}</div>
+                <div className={sectionTitleCls + " !mb-0 !border-none !pb-0"}>
+                  Updated Total Amount
+                </div>
+                <div className="text-2xl sm:text-3xl font-black text-emerald-600">
+                  {formatCurrency(updatedTotalAmount)}
+                </div>
               </div>
               <div className="text-right">
-                <div className="text-sm font-bold uppercase text-slate-400">Remaining Charge</div>
-                <div className="text-2xl sm:text-3xl font-black text-rose-600">{formatCurrency(remainingAmount)}</div>
+                <div className="text-sm font-bold uppercase text-slate-400">
+                  Remaining Charge
+                </div>
+                <div className="text-2xl sm:text-3xl font-black text-rose-600">
+                  {formatCurrency(remainingAmount)}
+                </div>
               </div>
             </div>
           </div>
@@ -5514,13 +7036,19 @@ const handleJumpStep = (stepView) => {
             sending={waSending}
             result={waResult}
             onSend={handleSendWhatsAppFromDetails}
-            onClose={() => { if (!waSending) setShowWhatsAppModal(false); }}
+            onClose={() => {
+              if (!waSending) setShowWhatsAppModal(false);
+            }}
           />
         )}
 
         <div className="mt-6 sm:mt-8 flex flex-wrap justify-end gap-2 sm:gap-3 border-t border-slate-100 pt-5 sm:pt-6">
-          <button onClick={goToList} className={ghostBtn}>Back to All Bookings</button>
-          <button onClick={() => openManage(b)} className={primaryBtn}>Manage This Booking</button>
+          <button onClick={goToList} className={ghostBtn}>
+            Back to All Bookings
+          </button>
+          <button onClick={() => openManage(b)} className={primaryBtn}>
+            Manage This Booking
+          </button>
         </div>
       </div>
     );
@@ -5533,15 +7061,21 @@ const handleJumpStep = (stepView) => {
     return (
       <div className={panelCls}>
         <div className="mb-5 sm:mb-6 border-b border-slate-100 pb-4 sm:pb-5">
-          <div className="text-sm font-bold uppercase text-slate-400">Managing Booking</div>
-          <h2 className={cardTitleCls}>{b.bookingCode || `BK-${b.bookingId}`}</h2>
+          <div className="text-sm font-bold uppercase text-slate-400">
+            Managing Booking
+          </div>
+          <h2 className={cardTitleCls}>
+            {b.bookingCode || `BK-${b.bookingId}`}
+          </h2>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <span className={`${statusBadgeCls(b.booking_status)}`}>
               {b.booking_status || "Pending"}
             </span>
             {(() => {
               const payStatus = computePaymentStatus(b);
-              const remaining = Number(b.remainingAmount || b.balanceAmount || 0);
+              const remaining = Number(
+                b.remainingAmount || b.balanceAmount || 0,
+              );
               const payCls =
                 payStatus === "Paid"
                   ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
@@ -5549,10 +7083,14 @@ const handleJumpStep = (stepView) => {
                     ? "bg-sky-50 text-sky-700 ring-1 ring-sky-100"
                     : "bg-rose-50 text-rose-700 ring-1 ring-rose-100";
               return (
-                <span className={`inline-block rounded-full px-3 py-1 text-sm font-bold ${payCls}`}>
+                <span
+                  className={`inline-block rounded-full px-3 py-1 text-sm font-bold ${payCls}`}
+                >
                   Payment: {payStatus}
                   {remaining > 0 && payStatus !== "Paid" && (
-                    <span className="ml-1 text-rose-600">({formatCurrency(remaining)} due)</span>
+                    <span className="ml-1 text-rose-600">
+                      ({formatCurrency(remaining)} due)
+                    </span>
                   )}
                 </span>
               );
@@ -5564,7 +7102,11 @@ const handleJumpStep = (stepView) => {
           <div className={cardTileCls}>
             <div className={sectionTitleCls}>Update Status</div>
             <div className="flex flex-col sm:flex-row gap-3">
-              <select value={manageStatus} onChange={(e) => setManageStatus(e.target.value)} className={fieldCls}>
+              <select
+                value={manageStatus}
+                onChange={(e) => setManageStatus(e.target.value)}
+                className={fieldCls}
+              >
                 <option value="">Select New Status</option>
                 <option value="Checked-In">Checked-In</option>
                 <option value="Checked-Out">Checked-Out</option>
@@ -5573,10 +7115,22 @@ const handleJumpStep = (stepView) => {
               <button
                 type="button"
                 onClick={() => {
-                  if (manageStatus === "Checked-In") handleLifecycle("check-in", b);
-                  else if (manageStatus === "Checked-Out") handleLifecycle("check-out", b);
-                  else if (manageStatus === "Cancelled") setCancelModal({ open: true, reason: "", submitting: false });
-                  else showToast("error", "Select a status", "Please choose a status to update to.");
+                  if (manageStatus === "Checked-In")
+                    handleLifecycle("check-in", b);
+                  else if (manageStatus === "Checked-Out")
+                    handleLifecycle("check-out", b);
+                  else if (manageStatus === "Cancelled")
+                    setCancelModal({
+                      open: true,
+                      reason: "",
+                      submitting: false,
+                    });
+                  else
+                    showToast(
+                      "error",
+                      "Select a status",
+                      "Please choose a status to update to.",
+                    );
                 }}
                 className={primaryBtn}
               >
@@ -5585,14 +7139,35 @@ const handleJumpStep = (stepView) => {
             </div>
 
             <div className="mt-5 sm:mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <button onClick={() => openEditBooking(b)} className={ghostBtn}><FaEdit className="text-sm" /> Edit Booking</button>
-              {(b.booking_status === "Pending" || b.booking_status === "Confirmed" || !b.booking_status) && (
-                <button onClick={() => handleLifecycle("check-in", b)} className={ghostBtn}><FaSignInAlt className="text-sm" /> Check-In</button>
+              <button onClick={() => openEditBooking(b)} className={ghostBtn}>
+                <FaEdit className="text-sm" /> Edit Booking
+              </button>
+              {(b.booking_status === "Pending" ||
+                b.booking_status === "Confirmed" ||
+                !b.booking_status) && (
+                <button
+                  onClick={() => handleLifecycle("check-in", b)}
+                  className={ghostBtn}
+                >
+                  <FaSignInAlt className="text-sm" /> Check-In
+                </button>
               )}
               {b.booking_status === "Checked-In" && (
-                <button onClick={() => handleLifecycle("check-out", b)} className={ghostBtn}><FaSignOutAlt className="text-sm" /> Check-Out</button>
+                <button
+                  onClick={() => handleLifecycle("check-out", b)}
+                  className={ghostBtn}
+                >
+                  <FaSignOutAlt className="text-sm" /> Check-Out
+                </button>
               )}
-              <button onClick={() => setCancelModal({ open: true, reason: "", submitting: false })} className={dangerBtn}><FaBan className="text-sm" /> Cancel Booking</button>
+              <button
+                onClick={() =>
+                  setCancelModal({ open: true, reason: "", submitting: false })
+                }
+                className={dangerBtn}
+              >
+                <FaBan className="text-sm" /> Cancel Booking
+              </button>
             </div>
 
             <div className="mt-5 sm:mt-6 border-t border-slate-200 pt-5 sm:pt-6">
@@ -5601,10 +7176,16 @@ const handleJumpStep = (stepView) => {
                 <button onClick={() => handleOpenFolio(b)} className={ghostBtn}>
                   <FaBook className="text-sm" /> Guest Folio
                 </button>
-                <button onClick={() => setShowDocumentUpload(true)} className={ghostBtn}>
+                <button
+                  onClick={() => setShowDocumentUpload(true)}
+                  className={ghostBtn}
+                >
                   <FaFileUpload className="text-sm" /> Upload Document
                 </button>
-                <button onClick={() => handleOpenPaymentHistory(b)} className={ghostBtn}>
+                <button
+                  onClick={() => handleOpenPaymentHistory(b)}
+                  className={ghostBtn}
+                >
                   <FaHistory className="text-sm" /> Payment History
                 </button>
               </div>
@@ -5615,21 +7196,40 @@ const handleJumpStep = (stepView) => {
             <div className={cardTileCls}>
               <div className={sectionTitleCls}>Payment Actions</div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <button onClick={() => setCollectModal({ open: true, amount: "", mode: "Cash", submitting: false })} className={ghostBtn}>
+                <button
+                  onClick={() =>
+                    setCollectModal({
+                      open: true,
+                      amount: "",
+                      mode: "Cash",
+                      submitting: false,
+                    })
+                  }
+                  className={ghostBtn}
+                >
                   <FaMoneyBillWave className="text-sm" /> Collect Payment
                 </button>
-                <button onClick={() => setRefundModal({ open: true, amount: "", submitting: false })} className={ghostBtn}>
+                <button
+                  onClick={() =>
+                    setRefundModal({
+                      open: true,
+                      amount: "",
+                      submitting: false,
+                    })
+                  }
+                  className={ghostBtn}
+                >
                   <FaUndo className="text-sm" /> Refund Payment
                 </button>
               </div>
             </div>
-
-
           </div>
         </div>
 
         <div className="mt-6 sm:mt-8 flex justify-end border-t border-slate-100 pt-5 sm:pt-6">
-          <button onClick={goToList} className={ghostBtn}>Back to All Bookings</button>
+          <button onClick={goToList} className={ghostBtn}>
+            Back to All Bookings
+          </button>
         </div>
       </div>
     );
@@ -5643,7 +7243,10 @@ const handleJumpStep = (stepView) => {
   /* existing history / historyLoading / historyPage / HISTORY_PAGE_SIZE state.*/
 
   const renderHistory = () => {
-    const totalHistoryPages = Math.max(1, Math.ceil(history.length / HISTORY_PAGE_SIZE));
+    const totalHistoryPages = Math.max(
+      1,
+      Math.ceil(history.length / HISTORY_PAGE_SIZE),
+    );
     const pagedHistory = history.slice(
       (historyPage - 1) * HISTORY_PAGE_SIZE,
       historyPage * HISTORY_PAGE_SIZE,
@@ -5654,9 +7257,16 @@ const handleJumpStep = (stepView) => {
         <div className="mb-5 sm:mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4 sm:pb-5">
           <div>
             <h2 className={cardTitleCls}>Booking History</h2>
-            <p className="mt-1 text-[17px] text-slate-500">Checked-out bookings archive</p>
+            <p className="mt-1 text-[17px] text-slate-500">
+              Checked-out bookings archive
+            </p>
           </div>
-          <button type="button" onClick={fetchHistory} disabled={historyLoading} className={ghostBtn}>
+          <button
+            type="button"
+            onClick={fetchHistory}
+            disabled={historyLoading}
+            className={ghostBtn}
+          >
             <FaSync className={historyLoading ? "animate-spin" : ""} /> Refresh
           </button>
         </div>
@@ -5680,13 +7290,19 @@ const handleJumpStep = (stepView) => {
             <tbody className="divide-y divide-slate-100 text-[17px]">
               {historyLoading ? (
                 <tr>
-                  <td colSpan={10} className="px-4 py-10 text-center text-slate-400">
+                  <td
+                    colSpan={10}
+                    className="px-4 py-10 text-center text-slate-400"
+                  >
                     Loading history...
                   </td>
                 </tr>
               ) : pagedHistory.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-4 py-10 text-center text-slate-400">
+                  <td
+                    colSpan={9}
+                    className="px-4 py-10 text-center text-slate-400"
+                  >
                     No checked-out bookings yet.
                   </td>
                 </tr>
@@ -5694,42 +7310,67 @@ const handleJumpStep = (stepView) => {
                 pagedHistory.map((row) => {
                   const remaining = Number(row.remainingAmount || 0);
                   const paid = Number(row.netPaid || row.paidAmount || 0);
-                  const rowStatus = remaining <= 0 && paid > 0 ? "Paid" : paid > 0 ? "Partial" : "Pending";
+                  const rowStatus =
+                    remaining <= 0 && paid > 0
+                      ? "Paid"
+                      : paid > 0
+                        ? "Partial"
+                        : "Pending";
                   const rowStatusCls =
                     rowStatus === "Paid"
                       ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
                       : rowStatus === "Partial"
                         ? "bg-sky-50 text-sky-700 ring-1 ring-sky-100"
                         : "bg-rose-50 text-rose-700 ring-1 ring-rose-100";
-                  const roomDetails = String(row.roomDetails || row.rooms || "-")
+                  const roomDetails = String(
+                    row.roomDetails || row.rooms || "-",
+                  )
                     .split(" || ")
                     .join(", ");
                   return (
                     <tr key={row.bookingId} className="hover:bg-slate-50/70">
                       <td className="px-4 sm:px-5 py-3 sm:py-4 font-bold text-slate-800">
                         {row.bookingCode || `BK-${row.bookingId}`}
-                        <div className="text-[13px] font-normal text-slate-400">{row.company_name || "Direct booking"}</div>
+                        <div className="text-[13px] font-normal text-slate-400">
+                          {row.company_name || "Direct booking"}
+                        </div>
                       </td>
-                      <td className="px-4 sm:px-5 py-3 sm:py-4 text-slate-700">{row.guest_name || "Walk-in Guest"}</td>
+                      <td className="px-4 sm:px-5 py-3 sm:py-4 text-slate-700">
+                        {row.guest_name || "Walk-in Guest"}
+                      </td>
                       <td className="px-4 sm:px-5 py-3 sm:py-4 text-slate-600">
                         {row.mobile || "-"}
-                        <div className="text-[13px] text-slate-400 wrap-break-word max-w-50">{row.guest_email || "-"}</div>
+                        <div className="text-[13px] text-slate-400 wrap-break-word max-w-50">
+                          {row.guest_email || "-"}
+                        </div>
                       </td>
                       <td className="px-4 sm:px-5 py-3 sm:py-4 text-slate-600">
                         {formatDate(row.check_in)} → {formatDate(row.check_out)}
                       </td>
-                      <td className="px-4 sm:px-5 py-3 sm:py-4 text-slate-600">{roomDetails}</td>
-                      <td className="px-4 sm:px-5 py-3 sm:py-4 font-semibold text-slate-800">{formatCurrency(row.totalAmount)}</td>
+                      <td className="px-4 sm:px-5 py-3 sm:py-4 text-slate-600">
+                        {roomDetails}
+                      </td>
+                      <td className="px-4 sm:px-5 py-3 sm:py-4 font-semibold text-slate-800">
+                        {formatCurrency(row.totalAmount)}
+                      </td>
                       <td className="px-4 sm:px-5 py-3 sm:py-4">
-                        <span className={`inline-block rounded-full px-3 py-1 text-sm font-bold ${rowStatusCls}`}>
+                        <span
+                          className={`inline-block rounded-full px-3 py-1 text-sm font-bold ${rowStatusCls}`}
+                        >
                           {rowStatus}
                         </span>
                       </td>
-                      <td className={`px-4 sm:px-5 py-3 sm:py-4 font-semibold ${remaining > 0 ? "text-rose-600" : "text-emerald-600"}`}>
+                      <td
+                        className={`px-4 sm:px-5 py-3 sm:py-4 font-semibold ${remaining > 0 ? "text-rose-600" : "text-emerald-600"}`}
+                      >
                         {formatCurrency(row.remainingAmount)}
                       </td>
                       <td className="px-4 sm:px-5 py-3 sm:py-4">
-                        <span className={statusBadgeCls(row.booking_status || "Checked-Out")}>
+                        <span
+                          className={statusBadgeCls(
+                            row.booking_status || "Checked-Out",
+                          )}
+                        >
                           {row.booking_status || "Checked-Out"}
                         </span>
                       </td>
@@ -5767,8 +7408,12 @@ const handleJumpStep = (stepView) => {
         {history.length > 0 && (
           <div className="mt-5 flex flex-col sm:flex-row flex-wrap items-center justify-center sm:justify-between gap-3 text-[17px] text-slate-500">
             <span className="text-center sm:text-left">
-              Showing {pagedHistory.length ? (historyPage - 1) * HISTORY_PAGE_SIZE + 1 : 0}
-              {" "}to {(historyPage - 1) * HISTORY_PAGE_SIZE + pagedHistory.length} of {history.length} records
+              Showing{" "}
+              {pagedHistory.length
+                ? (historyPage - 1) * HISTORY_PAGE_SIZE + 1
+                : 0}{" "}
+              to {(historyPage - 1) * HISTORY_PAGE_SIZE + pagedHistory.length}{" "}
+              of {history.length} records
             </span>
             <div className="flex flex-wrap items-center justify-center gap-2">
               <button
@@ -5783,7 +7428,9 @@ const handleJumpStep = (stepView) => {
                   key={i}
                   onClick={() => setHistoryPage(i + 1)}
                   className={`h-10 w-10 sm:h-11 sm:w-11 rounded-lg text-[17px] font-bold transition ${
-                    historyPage === i + 1 ? "bg-sky-500 text-white" : "text-slate-500 hover:bg-slate-100"
+                    historyPage === i + 1
+                      ? "bg-sky-500 text-white"
+                      : "text-slate-500 hover:bg-slate-100"
                   }`}
                 >
                   {i + 1}
@@ -5791,7 +7438,9 @@ const handleJumpStep = (stepView) => {
               ))}
               <button
                 disabled={historyPage >= totalHistoryPages}
-                onClick={() => setHistoryPage((p) => Math.min(totalHistoryPages, p + 1))}
+                onClick={() =>
+                  setHistoryPage((p) => Math.min(totalHistoryPages, p + 1))
+                }
                 className="flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition disabled:opacity-40"
               >
                 <FaChevronRight className="text-sm" />
@@ -5801,7 +7450,9 @@ const handleJumpStep = (stepView) => {
         )}
 
         <div className="mt-6 sm:mt-8 flex justify-end border-t border-slate-100 pt-5 sm:pt-6">
-          <button onClick={goToList} className={ghostBtn}>Back to All Bookings</button>
+          <button onClick={goToList} className={ghostBtn}>
+            Back to All Bookings
+          </button>
         </div>
       </div>
     );
@@ -5818,9 +7469,16 @@ const handleJumpStep = (stepView) => {
       <div className="mb-5 sm:mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4 sm:pb-5">
         <div>
           <h2 className={cardTitleCls}>Payment History</h2>
-          <p className="mt-1 text-[17px] text-slate-500">Recent payment transactions across bookings</p>
+          <p className="mt-1 text-[17px] text-slate-500">
+            Recent payment transactions across bookings
+          </p>
         </div>
-        <button type="button" onClick={fetchAllPayments} disabled={paymentsLoading} className={ghostBtn}>
+        <button
+          type="button"
+          onClick={fetchAllPayments}
+          disabled={paymentsLoading}
+          className={ghostBtn}
+        >
           <FaSync className={paymentsLoading ? "animate-spin" : ""} /> Refresh
         </button>
       </div>
@@ -5842,27 +7500,46 @@ const handleJumpStep = (stepView) => {
           <tbody className="divide-y divide-slate-100 text-[17px]">
             {paymentsLoading ? (
               <tr>
-                <td colSpan={8} className="px-4 py-10 text-center text-slate-400">
+                <td
+                  colSpan={8}
+                  className="px-4 py-10 text-center text-slate-400"
+                >
                   Loading payments...
                 </td>
               </tr>
             ) : allPayments.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-4 py-10 text-center text-slate-400">
+                <td
+                  colSpan={8}
+                  className="px-4 py-10 text-center text-slate-400"
+                >
                   No payment transactions found.
                 </td>
               </tr>
             ) : (
               allPayments.map((p) => (
                 <tr key={p.id} className="hover:bg-slate-50/70">
-                  <td className="px-4 sm:px-5 py-3 sm:py-4 font-bold text-slate-800">{p.bookingCode}</td>
-                  <td className="px-4 sm:px-5 py-3 sm:py-4 text-slate-700">{p.guestName}</td>
-                  <td className="px-4 sm:px-5 py-3 sm:py-4 text-slate-600">{p.rooms}</td>
-                  <td className={`px-4 sm:px-5 py-3 sm:py-4 font-semibold ${p.paymentType === "Refund" ? "text-rose-600" : "text-emerald-600"}`}>
-                    {p.paymentType === "Refund" ? "-" : "+"}{formatCurrency(p.amount)}
+                  <td className="px-4 sm:px-5 py-3 sm:py-4 font-bold text-slate-800">
+                    {p.bookingCode}
                   </td>
-                  <td className="px-4 sm:px-5 py-3 sm:py-4 text-slate-600">{p.paymentMode}</td>
-                  <td className="px-4 sm:px-5 py-3 sm:py-4 text-slate-600">{p.paymentType}</td>
+                  <td className="px-4 sm:px-5 py-3 sm:py-4 text-slate-700">
+                    {p.guestName}
+                  </td>
+                  <td className="px-4 sm:px-5 py-3 sm:py-4 text-slate-600">
+                    {p.rooms}
+                  </td>
+                  <td
+                    className={`px-4 sm:px-5 py-3 sm:py-4 font-semibold ${p.paymentType === "Refund" ? "text-rose-600" : "text-emerald-600"}`}
+                  >
+                    {p.paymentType === "Refund" ? "-" : "+"}
+                    {formatCurrency(p.amount)}
+                  </td>
+                  <td className="px-4 sm:px-5 py-3 sm:py-4 text-slate-600">
+                    {p.paymentMode}
+                  </td>
+                  <td className="px-4 sm:px-5 py-3 sm:py-4 text-slate-600">
+                    {p.paymentType}
+                  </td>
                   <td className="px-4 sm:px-5 py-3 sm:py-4 text-slate-600">
                     {p.createdAt ? new Date(p.createdAt).toLocaleString() : "-"}
                   </td>
@@ -5877,7 +7554,9 @@ const handleJumpStep = (stepView) => {
       </div>
 
       <div className="mt-6 sm:mt-8 flex justify-end border-t border-slate-100 pt-5 sm:pt-6">
-        <button onClick={goToList} className={ghostBtn}>Back to All Bookings</button>
+        <button onClick={goToList} className={ghostBtn}>
+          Back to All Bookings
+        </button>
       </div>
     </div>
   );
@@ -5889,7 +7568,7 @@ const handleJumpStep = (stepView) => {
       className="min-h-screen w-full max-w-full overflow-x-hidden bg-gradient-to-br from-blue-50 via-white to-blue-100 space-y-6 sm:space-y-8 p-3 sm:p-6 md:p-8 lg:p-10 xl:p-12"
       style={{ fontFamily: '"Segoe UI", "Helvetica Neue", Arial, sans-serif' }}
     >
-    <div className="flex items-center gap-3 mb-2">
+      <div className="flex items-center gap-3 mb-2">
         <button
           onClick={() => navigate("/hotel")}
           className="flex items-center gap-2 rounded-lg bg-white/80 px-4 py-2 text-sm font-medium text-slate-700 shadow-sm ring-1 ring-slate-200 hover:bg-white hover:text-blue-700 active:scale-[0.98] transition"
@@ -5911,25 +7590,42 @@ const handleJumpStep = (stepView) => {
       {view === "payments" && renderPayments()}
 
       {showFolio && (
-        <FeatureModal title="Guest Folio" size="max-w-[95vw]" onClose={handleCloseFolio}>
+        <FeatureModal
+          title="Guest Folio"
+          size="max-w-[95vw]"
+          onClose={handleCloseFolio}
+        >
           <FolioView bookingId={selectedBookingId} onClose={handleCloseFolio} />
         </FeatureModal>
       )}
 
       {showGroupBooking && (
         <FeatureModal title="Group Booking" onClose={handleCloseGroupBooking}>
-          <GroupBooking bookingId={selectedBookingId} onClose={handleCloseGroupBooking} />
+          <GroupBooking
+            bookingId={selectedBookingId}
+            onClose={handleCloseGroupBooking}
+          />
         </FeatureModal>
       )}
 
       {showGuestProfile && (
-        <FeatureModal title="Guest Profile" size="max-w-[95vw]" onClose={handleCloseGuestProfile}>
-          <GuestProfile bookingId={selectedBookingId} onClose={handleCloseGuestProfile} />
+        <FeatureModal
+          title="Guest Profile"
+          size="max-w-[95vw]"
+          onClose={handleCloseGuestProfile}
+        >
+          <GuestProfile
+            bookingId={selectedBookingId}
+            onClose={handleCloseGuestProfile}
+          />
         </FeatureModal>
       )}
 
       {showOccupancyForecast && (
-        <FeatureModal title="Occupancy Forecast" onClose={handleCloseOccupancyForecast}>
+        <FeatureModal
+          title="Occupancy Forecast"
+          onClose={handleCloseOccupancyForecast}
+        >
           <OccupancyForecast onClose={handleCloseOccupancyForecast} />
         </FeatureModal>
       )}
@@ -5954,7 +7650,6 @@ const handleJumpStep = (stepView) => {
         </FeatureModal>
       )}
 
-
       <Modal
         open={toast.open}
         onClose={closeToast}
@@ -5972,25 +7667,42 @@ const handleJumpStep = (stepView) => {
 
       <Modal
         open={cancelModal.open}
-        onClose={() => setCancelModal({ open: false, reason: "", submitting: false })}
+        onClose={() =>
+          setCancelModal({ open: false, reason: "", submitting: false })
+        }
         icon={FaBan}
         iconTone="bg-rose-500"
         title="Cancel this booking?"
         actions={
           <>
-            <button onClick={() => setCancelModal({ open: false, reason: "", submitting: false })} className={ghostBtn}>Close</button>
-            <button onClick={handleConfirmCancel} disabled={cancelModal.submitting} className={dangerBtn}>
+            <button
+              onClick={() =>
+                setCancelModal({ open: false, reason: "", submitting: false })
+              }
+              className={ghostBtn}
+            >
+              Close
+            </button>
+            <button
+              onClick={handleConfirmCancel}
+              disabled={cancelModal.submitting}
+              className={dangerBtn}
+            >
               {cancelModal.submitting ? "Cancelling..." : "Confirm Cancel"}
             </button>
           </>
         }
       >
-        <p>This will release the assigned room(s). This action cannot be undone.</p>
+        <p>
+          This will release the assigned room(s). This action cannot be undone.
+        </p>
         <label className="mt-4 block text-left">
           <span className={labelCls}>Cancellation Reason</span>
           <textarea
             value={cancelModal.reason}
-            onChange={(e) => setCancelModal((c) => ({ ...c, reason: e.target.value }))}
+            onChange={(e) =>
+              setCancelModal((c) => ({ ...c, reason: e.target.value }))
+            }
             rows={3}
             className={`${fieldCls} h-auto py-3`}
             placeholder="Guest changed mind, wrong date, pricing issue..."
@@ -6004,7 +7716,12 @@ const handleJumpStep = (stepView) => {
       <Modal
         open={checkoutGuardModal.open}
         onClose={() =>
-          setCheckoutGuardModal({ open: false, booking: null, remaining: 0, paymentStatus: "Pending" })
+          setCheckoutGuardModal({
+            open: false,
+            booking: null,
+            remaining: 0,
+            paymentStatus: "Pending",
+          })
         }
         icon={FaExclamationTriangle}
         iconTone="bg-amber-500"
@@ -6014,7 +7731,12 @@ const handleJumpStep = (stepView) => {
             <button
               type="button"
               onClick={() =>
-                setCheckoutGuardModal({ open: false, booking: null, remaining: 0, paymentStatus: "Pending" })
+                setCheckoutGuardModal({
+                  open: false,
+                  booking: null,
+                  remaining: 0,
+                  paymentStatus: "Pending",
+                })
               }
               className={ghostBtn}
             >
@@ -6032,7 +7754,12 @@ const handleJumpStep = (stepView) => {
                   mode: "Cash",
                   submitting: false,
                 });
-                setCheckoutGuardModal({ open: false, booking: null, remaining: 0, paymentStatus: "Pending" });
+                setCheckoutGuardModal({
+                  open: false,
+                  booking: null,
+                  remaining: 0,
+                  paymentStatus: "Pending",
+                });
               }}
               className={primaryBtn}
             >
@@ -6045,7 +7772,8 @@ const handleJumpStep = (stepView) => {
           <p>
             Booking{" "}
             <span className="font-black text-slate-900">
-              {checkoutGuardModal.booking?.bookingCode || `BK-${checkoutGuardModal.booking?.bookingId}`}
+              {checkoutGuardModal.booking?.bookingCode ||
+                `BK-${checkoutGuardModal.booking?.bookingId}`}
             </span>{" "}
             cannot be checked out while a payment is still pending.
           </p>
@@ -6071,22 +7799,45 @@ const handleJumpStep = (stepView) => {
             </div>
           </div>
           <p className="text-[15px] text-slate-600">
-            Please collect the pending payment first. Once the balance is fully paid, the
-            Check-Out button will be enabled automatically.
+            Please collect the pending payment first. Once the balance is fully
+            paid, the Check-Out button will be enabled automatically.
           </p>
         </div>
       </Modal>
 
       <Modal
         open={collectModal.open}
-        onClose={() => setCollectModal({ open: false, amount: "", mode: "Cash", submitting: false })}
+        onClose={() =>
+          setCollectModal({
+            open: false,
+            amount: "",
+            mode: "Cash",
+            submitting: false,
+          })
+        }
         icon={FaMoneyBillWave}
         iconTone="bg-emerald-500"
         title="Collect Payment"
         actions={
           <>
-            <button onClick={() => setCollectModal({ open: false, amount: "", mode: "Cash", submitting: false })} className={ghostBtn}>Close</button>
-            <button onClick={handleCollectPayment} disabled={collectModal.submitting} className={primaryBtn}>
+            <button
+              onClick={() =>
+                setCollectModal({
+                  open: false,
+                  amount: "",
+                  mode: "Cash",
+                  submitting: false,
+                })
+              }
+              className={ghostBtn}
+            >
+              Close
+            </button>
+            <button
+              onClick={handleCollectPayment}
+              disabled={collectModal.submitting}
+              className={primaryBtn}
+            >
               {collectModal.submitting ? "Saving..." : "Collect"}
             </button>
           </>
@@ -6098,14 +7849,22 @@ const handleJumpStep = (stepView) => {
             <input
               type="number"
               value={collectModal.amount}
-              onChange={(e) => setCollectModal((c) => ({ ...c, amount: e.target.value }))}
+              onChange={(e) =>
+                setCollectModal((c) => ({ ...c, amount: e.target.value }))
+              }
               className={fieldCls}
               placeholder="0.00"
             />
           </div>
           <div>
             <label className={labelCls}>Payment Mode</label>
-            <select value={collectModal.mode} onChange={(e) => setCollectModal((c) => ({ ...c, mode: e.target.value }))} className={fieldCls}>
+            <select
+              value={collectModal.mode}
+              onChange={(e) =>
+                setCollectModal((c) => ({ ...c, mode: e.target.value }))
+              }
+              className={fieldCls}
+            >
               <option>Cash</option>
               <option>Card</option>
               <option>UPI</option>
@@ -6117,14 +7876,27 @@ const handleJumpStep = (stepView) => {
 
       <Modal
         open={refundModal.open}
-        onClose={() => setRefundModal({ open: false, amount: "", submitting: false })}
+        onClose={() =>
+          setRefundModal({ open: false, amount: "", submitting: false })
+        }
         icon={FaUndo}
         iconTone="bg-blue-500"
         title="Refund Payment"
         actions={
           <>
-            <button onClick={() => setRefundModal({ open: false, amount: "", submitting: false })} className={ghostBtn}>Close</button>
-            <button onClick={handleRefund} disabled={refundModal.submitting} className={primaryBtn}>
+            <button
+              onClick={() =>
+                setRefundModal({ open: false, amount: "", submitting: false })
+              }
+              className={ghostBtn}
+            >
+              Close
+            </button>
+            <button
+              onClick={handleRefund}
+              disabled={refundModal.submitting}
+              className={primaryBtn}
+            >
               {refundModal.submitting ? "Processing..." : "Refund"}
             </button>
           </>
@@ -6135,7 +7907,9 @@ const handleJumpStep = (stepView) => {
           <input
             type="number"
             value={refundModal.amount}
-            onChange={(e) => setRefundModal((r) => ({ ...r, amount: e.target.value }))}
+            onChange={(e) =>
+              setRefundModal((r) => ({ ...r, amount: e.target.value }))
+            }
             className={fieldCls}
             placeholder="0.00"
           />
