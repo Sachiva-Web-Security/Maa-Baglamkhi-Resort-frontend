@@ -705,17 +705,7 @@ const Accounts = () => {
 
   const loadExpandedAccounts = async () => {
     try {
-      const [
-        extendedSummaryRes,
-        bankLedgerRes,
-        pettyCashRes,
-        gstReturnsRes,
-        vendorPaymentsRes,
-        purchaseOrdersRes,
-        payrollRes,
-        profitCentersRes,
-        paymentSettingsRes,
-      ] = await Promise.all([
+      const results = await Promise.allSettled([
         API.get("/accounts/extended-summary"),
         API.get("/accounts/bank-ledger"),
         API.get("/accounts/petty-cash"),
@@ -727,15 +717,24 @@ const Accounts = () => {
         API.get("/accounts/payment-settings"),
       ]);
 
-      setExtendedSummary(extendedSummaryRes.data || {});
-      setBankLedger(bankLedgerRes.data || []);
-      setPettyCashEntries(pettyCashRes.data || []);
-      setGstReturns(gstReturnsRes.data || []);
-      setVendorPayments(vendorPaymentsRes.data || []);
-      setPurchaseOrders(purchaseOrdersRes.data || []);
-      setPayrollRecords(payrollRes.data || []);
-      setProfitCenters(profitCentersRes.data || []);
-      setPaymentSettings(paymentSettingsRes.data || []);
+      const [extR, bankR, pettyR, gstR, vendorR, poR, payrollR, profitR, payR] = results;
+
+      setExtendedSummary(extR.status === "fulfilled" ? (extR.value.data || {}) : {});
+      setBankLedger(bankR.status === "fulfilled" ? (bankR.value.data || []) : []);
+      setPettyCashEntries(pettyR.status === "fulfilled" ? (pettyR.value.data || []) : []);
+      setGstReturns(gstR.status === "fulfilled" ? (gstR.value.data || []) : []);
+      setVendorPayments(vendorR.status === "fulfilled" ? (vendorR.value.data || []) : []);
+      setPurchaseOrders(poR.status === "fulfilled" ? (poR.value.data || []) : []);
+      setPayrollRecords(payrollR.status === "fulfilled" ? (payrollR.value.data || []) : []);
+      setProfitCenters(profitR.status === "fulfilled" ? (profitR.value.data || []) : []);
+      setPaymentSettings(payR.status === "fulfilled" ? (payR.value.data || []) : []);
+
+      const failed = results
+        .map((r, i) => (r.status === "rejected" ? i : -1))
+        .filter((i) => i >= 0);
+      if (failed.length) {
+        console.error("Some expanded accounts endpoints failed:", failed);
+      }
     } catch (err) {
       if (isAbortedRequest(err)) return;
       console.error("Error loading expanded accounts data", err);
@@ -758,7 +757,7 @@ const Accounts = () => {
       do {
         pendingRefreshRef.current = false;
 
-        await Promise.all([
+        const results = await Promise.allSettled([
           fetchRecords(),
           fetchSummary(),
           loadExpandedAccounts(),
@@ -768,6 +767,13 @@ const Accounts = () => {
           fetchBanquetBookings(),
           fetchReconciliationData(),
         ]);
+
+        const failed = results
+          .map((r, i) => (r.status === "rejected" ? i : -1))
+          .filter((i) => i >= 0);
+        if (failed.length) {
+          console.error("Some refresh endpoints failed (indices):", failed);
+        }
       } while (pendingRefreshRef.current);
     } finally {
       refreshInFlightRef.current = false;
