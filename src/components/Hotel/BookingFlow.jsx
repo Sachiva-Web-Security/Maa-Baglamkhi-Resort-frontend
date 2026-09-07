@@ -998,7 +998,7 @@ const DocumentUploadModal = ({ booking, onClose }) => {
   );
 };
 
-const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAmount = 0, rooms = [], onClose }) => {
+const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAmount = 0, rooms = [], bookingDetail = null, onClose }) => {
   const bookingId = booking?.bookingId;
   const [invoice, setInvoice] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -1122,7 +1122,9 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
     .reduce((sum, it) => sum + (Number(it.total ?? 0) || 0), 0);
 
   const invoiceNo = invoice?.invoiceNo || invoice?.invoice_no || `INV-${bookingId}`;
-  const guestName = invoice?.customerName || invoice?.customer_name || booking?.guest_name || "Guest";
+  const guestName = invoice?.customerName || invoice?.customer_name || booking?.guest_name || bookingDetail?.guest_name || "Guest";
+  const companyName = invoice?.companyName || invoice?.company_name || bookingDetail?.company_name || booking?.company_name || "";
+  const companyGstin = invoice?.companyGstin || invoice?.company_gstin || invoice?.company_gst || bookingDetail?.company_gst || booking?.company_gst || "";
   const folioTotalAmount = roomItemsTotal + folioOnlyTotal;
   const invoiceTotal = itemsTotal > 0 ? itemsTotal : folioTotalAmount;
   const paid = Number(totalPaidLocal ?? paidAmount ?? invoice?.paidAmount ?? invoice?.paid_amount) || 0;
@@ -1585,6 +1587,8 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
             <div class="ic-value">${guestName}</div>
             <div class="ic-sub">Address: ${d.address || b.address || booking?.address || "-"}</div>
             <div class="ic-sub">Contact #: ${d.mobile || b.mobile || booking?.mobile || "-"}</div>
+            ${companyName ? `<div class="ic-sub">Company: ${companyName}</div>` : ""}
+            ${companyGstin ? `<div class="ic-sub">GSTIN: ${companyGstin}</div>` : ""}
           </div>
           <div class="info-card">
             <div class="ic-label">Stay Details</div>
@@ -1725,10 +1729,24 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
     doc.setFontSize(8.5);
     doc.text(`Phone: ${invoice?.phone || booking?.mobile || "-"}`, margin + 3, y + 15);
     doc.text(`Booking ID: ${invoice?.bookingId || "-"}`, margin + 3, y + 19);
-    doc.text(`Guest Email: ${invoice?.customerEmail || invoice?.guestEmail || booking?.guest_email || "-"}`, margin + 3, y + 23);
+    const pdfCompanyName = invoice?.companyName || invoice?.company_name || booking?.company_name || "";
+    const pdfCompanyGstin = invoice?.companyGstin || invoice?.company_gstin || invoice?.company_gst || booking?.company_gst || "";
+    let pdfBillToExtraLines = 0;
+    if (pdfCompanyName) {
+      doc.text(`Company: ${pdfCompanyName}`, margin + 3, y + 23 + pdfBillToExtraLines * 4);
+      pdfBillToExtraLines++;
+    }
+    if (pdfCompanyGstin) {
+      doc.text(`GSTIN: ${pdfCompanyGstin}`, margin + 3, y + 23 + pdfBillToExtraLines * 4);
+      pdfBillToExtraLines++;
+    }
+    if (pdfBillToExtraLines > 0) {
+      // Also adjust the right card to match height if needed (left card grew)
+    }
 
     const rightX = margin + cardW + 6;
-    doc.roundedRect(rightX, y, cardW, cardH, 1.5, 1.5);
+    const pdfBillToCardH = cardH + pdfBillToExtraLines * 4;
+    doc.roundedRect(margin, y, cardW, pdfBillToCardH, 1.5, 1.5);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(8);
     doc.setTextColor(100, 116, 139);
@@ -1736,11 +1754,17 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
     doc.setTextColor(15, 23, 42);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8.5);
-    doc.text(`Room: ${invoice?.roomNumber || "-"}`, rightX + 3, y + 10);
-    doc.text(`Check-In: ${formatDate(invoice?.checkIn || invoice?.check_in || booking?.check_in)}`, rightX + 3, y + 15);
-    doc.text(`Check-Out: ${formatDate(invoice?.checkOut || invoice?.check_out || booking?.check_out)}`, rightX + 3, y + 19);
-    doc.text(`Payment Mode: ${invoice?.paymentMode || invoice?.payment_method || "Front Desk"}`, rightX + 3, y + 23);
-    y += cardH + 4;
+    const stayLines = [
+      `Room: ${invoice?.roomNumber || "-"}`,
+      `Check-In: ${formatDate(invoice?.checkIn || invoice?.check_in || booking?.check_in)}`,
+      `Check-Out: ${formatDate(invoice?.checkOut || invoice?.check_out || booking?.check_out)}`,
+      `Payment Mode: ${invoice?.paymentMode || invoice?.payment_method || "Front Desk"}`,
+    ];
+    stayLines.forEach((line, idx) => {
+      doc.text(line, rightX + 3, y + 10 + idx * 4);
+    });
+    doc.roundedRect(rightX, y, cardW, pdfBillToCardH, 1.5, 1.5);
+    y += pdfBillToCardH + 4;
 
     const colX = [margin + 2, margin + 50, margin + 120, margin + 145, rightEdge - 3];
     const headerRow = ["#", "Description", "Qty", "Rate", "Amount"];
@@ -3869,6 +3893,8 @@ const handleJumpStep = (stepView) => {
     const remainingAmount = effectivePaid > 0 ? Math.max(finalTotal - effectivePaid, 0) : 0;
     const invoiceNo = d.invoice_no || d.invoiceNo || b.bookingCode || `INV-${b.bookingId}`;
     const guestName = d.guest_name || b.guest_name || "AMAR SHARMA";
+    const printCompanyName = d.company_name || b.company_name || "";
+    const printCompanyGstin = d.company_gst || b.company_gst || "";
     const roomType = d.room_type || b.room_type || b.roomType || "Single";
     const roomNo =
       d.room_no ||
@@ -4312,6 +4338,8 @@ const handleJumpStep = (stepView) => {
               <div class="meta-row-line"><span class="lbl">Guest Name</span><span class="val">${guestName.toUpperCase()}</span></div>
               <div class="meta-row-line"><span class="lbl">Address</span><span class="val">${guestAddress.toUpperCase()}</span></div>
               <div class="meta-row-line"><span class="lbl">Contact #</span><span class="val">${guestContact}</span></div>
+              ${printCompanyName ? `<div class="meta-row-line"><span class="lbl">Company</span><span class="val">${printCompanyName.toUpperCase()}</span></div>` : ""}
+              ${printCompanyGstin ? `<div class="meta-row-line"><span class="lbl">GSTIN</span><span class="val">${printCompanyGstin.toUpperCase()}</span></div>` : ""}
             </div>
             <div class="meta-cell">
               <div class="meta-row-line"><span class="lbl">Invoice No.</span><span class="val">${invoiceNo}</span></div>
@@ -4324,6 +4352,7 @@ const handleJumpStep = (stepView) => {
               <div class="meta-row-line"><span class="lbl">No. of Nights</span><span class="val">${noOfNights}</span></div>
             </div>
           </div>
+          <div class="divider"></div>
 
           <div class="section-label">Billing Details</div>
 
@@ -5470,6 +5499,7 @@ const handleJumpStep = (stepView) => {
             folioCharges={folioCharges}
             paidAmount={effectivePaid}
             rooms={d.rooms || []}
+            bookingDetail={d}
             onClose={() => setShowInvoiceModal(false)}
           />
         )}
