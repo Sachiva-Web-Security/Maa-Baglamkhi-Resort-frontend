@@ -243,7 +243,19 @@ const CustomerInvoicePage = () => {
     doc.setTextColor(60, 60, 60);
     doc.text(`Phone: ${invoice?.phone || "--"}`, margin + 3, y + 16);
     doc.text(`Booking ID: ${invoice?.bookingId || "--"}`, margin + 3, y + 21);
-    y += 26;
+    const companyNamePdf = invoice?.companyName;
+    const companyGstinPdf = invoice?.companyGstin;
+    const billToTextLines = [
+      `Guest: ${invoice?.customerName || "Guest"}`,
+      `Phone: ${invoice?.phone || "--"}`,
+      `Booking ID: ${invoice?.bookingId || "--"}`,
+      companyNamePdf ? `Company: ${companyNamePdf}` : null,
+      companyGstinPdf ? `Company GSTIN: ${companyGstinPdf}` : null,
+    ].filter(Boolean);
+    billToTextLines.forEach((line, idx) => {
+      doc.text(line, margin + 3, y + 7 + idx * 5);
+    });
+    y += Math.max(26, 7 + billToTextLines.length * 5);
 
     // ── Items table ─────────────────────────────────────────────
     doc.setFillColor(240, 242, 245);
@@ -508,6 +520,12 @@ const CustomerInvoicePage = () => {
               <div className="mt-1 text-sm font-bold text-slate-900">{invoice?.customerName || "Guest"}</div>
               <div className="text-xs font-semibold text-slate-900">Phone: {invoice?.phone || "--"}</div>
               <div className="text-xs font-semibold text-slate-900">Booking: {invoice?.bookingId || "--"}</div>
+              {invoice?.companyName && (
+                <div className="text-xs font-semibold text-slate-900">Company: {invoice.companyName}</div>
+              )}
+              {invoice?.companyGstin && (
+                <div className="text-xs font-semibold text-slate-900">GSTIN: {invoice.companyGstin}</div>
+              )}
             </div>
             <div>
               <div className="text-xs font-bold uppercase tracking-wider text-slate-900">Room Details</div>
