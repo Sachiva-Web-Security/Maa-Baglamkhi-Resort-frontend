@@ -122,6 +122,7 @@ import {
   FaHotel,
   FaMapMarkerAlt,
   FaCreditCard,
+  FaKey,
 } from "react-icons/fa";
 
 import API from "../../api";
@@ -2201,6 +2202,9 @@ const WhatsAppSendModal = ({ booking, detail, invoice, sending, result, onSend, 
   const invoiceNo = inv.invoiceNo || inv.invoice_no || `BK-${b.bookingId}`;
   const invoiceTotal = Number(inv.totalAmount || inv.total_amount || inv.finalTotal || inv.final_total || 0);
   const paymentStatus = inv.paymentStatus || inv.payment_status || (invoiceTotal > 0 ? "Pending" : "Paid");
+  const advancePaid = Number(inv.paidAmount || inv.paid_amount || b.paidAmount || 0);
+  const balanceDue = Math.max(invoiceTotal - advancePaid, 0);
+  const roomNumber = inv.roomNumber || inv.room_number || (Array.isArray(detail?.rooms) ? detail.rooms.map((r) => r.room_number || r.roomNumber).filter(Boolean).join(", ") : "") || b.rooms || "—";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
@@ -2276,6 +2280,43 @@ const WhatsAppSendModal = ({ booking, detail, invoice, sending, result, onSend, 
                 </div>
               </div>
             ) : null}
+          </div>
+
+          {/* Room & Payment details preview */}
+          <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4 space-y-2.5">
+            <div className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-2">Booking Details</div>
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-700">
+                <FaHotel className="text-sm" />
+              </div>
+              <div className="flex-1">
+                <div className="text-[11px] text-slate-400 font-medium">Room Type</div>
+                <div className="text-[15px] font-black text-slate-900">{detail?.room_category || detail?.roomType || b.roomCategory || b.roomType || "—"}</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-indigo-700">
+                <FaKey className="text-sm" />
+              </div>
+              <div className="flex-1">
+                <div className="text-[11px] text-slate-400 font-medium">Room No</div>
+                <div className="text-[15px] font-black text-slate-900">{roomNumber}</div>
+              </div>
+            </div>
+            <div className="border-t border-slate-200 pt-2.5 mt-2.5 grid grid-cols-3 gap-3">
+              <div className="text-center">
+                <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Total</div>
+                <div className="text-sm font-black text-slate-900 mt-0.5">{formatCurrency(invoiceTotal)}</div>
+              </div>
+              <div className="text-center">
+                <div className="text-[10px] font-bold uppercase tracking-widest text-emerald-500">Advance</div>
+                <div className="text-sm font-black text-emerald-700 mt-0.5">{formatCurrency(advancePaid)}</div>
+              </div>
+              <div className="text-center">
+                <div className="text-[10px] font-bold uppercase tracking-widest text-rose-500">Balance</div>
+                <div className="text-sm font-black text-rose-700 mt-0.5">{formatCurrency(balanceDue)}</div>
+              </div>
+            </div>
           </div>
 
           {/* Delivery channels */}
@@ -3176,6 +3217,7 @@ const handleJumpStep = (stepView) => {
       let bookingCode = formData.bookingCode;
 
       if (!isEdit) {
+      const bookedBy = localStorage.getItem("name") || "Front Desk";
         const guestRes = await bookingAPI.post("/hotel/guest", {
           agentBooking: false,
           bookingPoint: "",
@@ -3187,6 +3229,7 @@ const handleJumpStep = (stepView) => {
           arrival: formData.arrival,
           departure: formData.departure,
           bookingStatus: "Confirmed",
+          bookedBy,
           // ID Proof fields now persisted on the guest row.
           idProofType: formData.idProofType || "",
           idProofNumber: formData.idNumber || "",
@@ -3287,17 +3330,52 @@ const handleJumpStep = (stepView) => {
       );
       await fetchBookings();
 
-      // 🐛 NEW: send booking confirmation WhatsApp to customer automatically
-      // as soon as the booking is confirmed. Uses the same backend endpoint
-      // that the "Send Invoice via WhatsApp" button uses — it generates the
-      // invoice PDF and delivers it to the customer's WhatsApp. Fire-and-forget
-      // so a slow PDF/WhatsApp API never blocks the UI.
+      // Auto-send booking confirmation WhatsApp to customer + admin
       if (!isEdit && bookingId && formData.mobile) {
-        API.post(`/hotel/invoice/send-whatsapp/${bookingId}`, {
-          customerNumber: formData.mobile,
-        }).catch((err) => {
-          console.warn("[WhatsApp] booking confirmation failed:", err.message || err);
-        });
+        (async () => {
+          try {
+            const cleanNumber = (num) => {
+              const digits = String(num || "").replace(/\D/g, "");
+              if (!digits) return "";
+              return digits.length > 10 ? digits : `91${digits}`;
+            };
+            const confirmedBy = (() => {
+              const raw = localStorage.getItem("name");
+              return raw ? String(raw).trim() : "Manager";
+            })();
+            const roomCategories = [...new Set(
+              (formData.rooms || [])
+                .map((r) => {
+                  const cat = categorySetup.find((c) => String(c.id) === String(r.categoryId || ""));
+                  return cat ? cat.name : "";
+                })
+                .filter(Boolean)
+            )];
+            await API.post(`/hotel/invoice/send-whatsapp/${bookingId}`, {
+              sendConfirmation: true,
+              customerNumber: cleanNumber(formData.mobile || ""),
+              invoiceData: {
+                customerName: guestFullName,
+                roomCategory: roomCategories.join(", ") || (formData.rooms?.[0]?.roomType || formData.roomCategory || ""),
+                totalAmount: grandTotal,
+                advancePaid: Number(formData.amount || 0),
+                balanceLeft: Math.max(Number(grandTotal) - Number(formData.amount || 0), 0),
+                paymentStatus: "Confirmed",
+                paymentMode: formData.paymentMode || "Cash",
+                bookingType: formData.bookingType || "Walk-in",
+                numRooms: formData.rooms?.length || 1,
+                roomNumbers: (formData.rooms || []).map((r) => r.roomNo).filter(Boolean).join(", "),
+                checkIn: formData.checkIn,
+                checkOut: formData.checkOut,
+                arrival: formData.arrival,
+                departure: formData.departure,
+                confirmedBy,
+              },
+            });
+          } catch {
+            // silent — don't block the booking flow
+          }
+        })();
       }
 
       setView("confirmed");
@@ -5110,17 +5188,35 @@ const handleJumpStep = (stepView) => {
           <div className="text-sm font-semibold uppercase tracking-wide text-slate-400">
             Guest Name
           </div>
-          <div className="text-lg sm:text-xl font-bold text-slate-800 break-words">
+          <div className="text-lg sm:text-xl font-bold text-slate-800 wrap-break-word">
             {guestFullName}
           </div>
         </div>
 
         <div>
           <div className="text-sm font-semibold uppercase tracking-wide text-slate-400">
-            Rooms
+            Room Type
           </div>
-          <div className="text-lg sm:text-xl font-bold text-slate-800 break-words">
-            {formData.rooms.length}
+          <div className="text-lg sm:text-xl font-bold text-slate-800 wrap-break-word">
+            {formData.rooms[0]?.roomType || formData.roomCategory || formData.roomType || "—"}
+          </div>
+        </div>
+
+        <div>
+          <div className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+            Advance Paid
+          </div>
+          <div className="text-lg sm:text-xl font-bold text-emerald-600 wrap-break-word">
+            {formatCurrency(formData.amount)}
+          </div>
+        </div>
+
+        <div>
+          <div className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+            Balance Due
+          </div>
+          <div className="text-lg sm:text-xl font-bold text-rose-600 wrap-break-word">
+            {formatCurrency(Math.max(grandTotal - formData.amount, 0))}
           </div>
         </div>
 
@@ -5128,7 +5224,7 @@ const handleJumpStep = (stepView) => {
           <div className="text-sm font-semibold uppercase tracking-wide text-slate-400">
             Check-In
           </div>
-          <div className="text-lg sm:text-xl font-bold text-slate-800 break-words">
+          <div className="text-lg sm:text-xl font-bold text-slate-800 wrap-break-word">
             {formatDate(formData.checkIn)}
           </div>
         </div>
@@ -5137,7 +5233,7 @@ const handleJumpStep = (stepView) => {
           <div className="text-sm font-semibold uppercase tracking-wide text-slate-400">
             Check-Out
           </div>
-          <div className="text-lg sm:text-xl font-bold text-slate-800 break-words">
+          <div className="text-lg sm:text-xl font-bold text-slate-800 wrap-break-word">
             {formatDate(formData.checkOut)}
           </div>
         </div>
@@ -5585,7 +5681,7 @@ const handleJumpStep = (stepView) => {
                       <td className="px-4 sm:px-5 py-3 sm:py-4 text-slate-700">{row.guest_name || "Walk-in Guest"}</td>
                       <td className="px-4 sm:px-5 py-3 sm:py-4 text-slate-600">
                         {row.mobile || "-"}
-                        <div className="text-[13px] text-slate-400 break-words max-w-[200px]">{row.guest_email || "-"}</div>
+                        <div className="text-[13px] text-slate-400 wrap-break-word max-w-50">{row.guest_email || "-"}</div>
                       </td>
                       <td className="px-4 sm:px-5 py-3 sm:py-4 text-slate-600">
                         {formatDate(row.check_in)} → {formatDate(row.check_out)}
