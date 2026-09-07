@@ -2099,6 +2099,8 @@ const InvoiceModal = ({ booking, roomChargesTotal = 0, folioCharges = [], paidAm
                 <div><span className="font-bold inline-block min-w-[110px]">Guest Name</span><span className="uppercase">{guestName}</span></div>
                 <div><span className="font-bold inline-block min-w-[110px]">Address</span><span className="uppercase">{guestAddress}</span></div>
                 <div><span className="font-bold inline-block min-w-[110px]">Contact #</span><span>{guestContact}</span></div>
+                {companyName && <div><span className="font-bold inline-block min-w-[110px]">Company</span><span className="uppercase">{companyName}</span></div>}
+                {companyGstin && <div><span className="font-bold inline-block min-w-[110px]">GSTIN</span><span>{companyGstin}</span></div>}
               </div>
               <div className="px-3 py-2 border-l border-black text-[10px] leading-snug space-y-0.5">
                 <div><span className="font-bold inline-block min-w-[110px]">Invoice No.</span><span>{invoiceNo}</span></div>
