@@ -3790,6 +3790,7 @@ const BookingFlow = () => {
       setFormData({
         ...emptyForm(),
         bookingId: booking.bookingId,
+        bookingType: data.bookingType || "Walk-In",
         bookingCode:
           data.booking_code || data.bookingCode || booking.bookingCode || "",
         firstName: nameParts[0] || "",
