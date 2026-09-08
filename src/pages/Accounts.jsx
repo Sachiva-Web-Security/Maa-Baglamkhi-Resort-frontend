@@ -1627,6 +1627,36 @@ const Accounts = () => {
     }));
   };
 
+  const groupedTransactions = useMemo(() => {
+    const map = new Map();
+    (records || []).forEach((record) => {
+      const name = extractPartyName(record);
+      const key = name || '__ungrouped';
+      if (!map.has(key)) {
+        map.set(key, {
+          name: name || 'Other',
+          key,
+          records: [],
+          income: 0,
+          expense: 0,
+        });
+      }
+      const group = map.get(key);
+      group.records.push(record);
+      const amount = toNumber(record.amount);
+      if (record.type === 'Income') {
+        group.income += amount;
+      } else {
+        group.expense += amount;
+      }
+    });
+    return Array.from(map.values()).sort((a, b) => {
+      if (a.key === '__ungrouped') return 1;
+      if (b.key === '__ungrouped') return -1;
+      return a.name.localeCompare(a.name, undefined, { sensitivity: 'base' });
+    });
+  }, [records]);
+
   const expandAllGroups = () => {
     const allNames = groupedTransactions.map((g) => g.name);
     const next = {};
@@ -1640,35 +1670,6 @@ const Accounts = () => {
 
   const allExpanded = groupedTransactions.length > 0 && groupedTransactions.every((g) => expandedGroups[g.name]);
 
-  const groupedTransactions = useMemo(() => {
-    const map = new Map();
-    (records || []).forEach((record) => {
-      const name = extractPartyName(record);
-      const key = name || "__ungrouped";
-      if (!map.has(key)) {
-        map.set(key, {
-          name: name || "Other",
-          key,
-          records: [],
-          income: 0,
-          expense: 0,
-        });
-      }
-      const group = map.get(key);
-      group.records.push(record);
-      const amount = toNumber(record.amount);
-      if (record.type === "Income") {
-        group.income += amount;
-      } else {
-        group.expense += amount;
-      }
-    });
-    return Array.from(map.values()).sort((a, b) => {
-      if (a.key === "__ungrouped") return 1;
-      if (b.key === "__ungrouped") return -1;
-      return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
-    });
-  }, [records]);
 
   const filteredGroupedTransactions = useMemo(() => {
     if (selectedPaymentMode === "all") return groupedTransactions;
