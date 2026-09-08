@@ -1,3 +1,4 @@
+import React from "react";
 import './RecordRow.css';
 
 const formatINR = (amount) =>

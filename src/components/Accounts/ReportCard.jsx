@@ -1,3 +1,4 @@
+import React from "react";
 import './ReportCard.css';
 
 const ReportCard = ({ title, subtitle, variant = 'blue', onClick }) => {
