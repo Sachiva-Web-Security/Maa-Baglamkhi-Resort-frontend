@@ -571,6 +571,7 @@ const Accounts = () => {
   const [bankLedgerStatusFilter, setBankLedgerStatusFilter] = useState("all");
   const [selectedReconciliationSource, setSelectedReconciliationSource] = useState("all");
   const [selectedReconciliationMatch, setSelectedReconciliationMatch] = useState("all");
+  const [expandedGroups, setExpandedGroups] = useState({});
 
   const [toast, setToast] = useState(null);
   const [updateLoading, setUpdateLoading] = useState(false);
@@ -1333,11 +1334,6 @@ const Accounts = () => {
     selectedPaymentMode === "all"
       ? records
       : records.filter((record) => normalizePaymentMode(record.paymentMode) === selectedPaymentMode);
-  const transactionTotalPages = Math.max(1, Math.ceil(filteredRecords.length / TRANSACTION_PAGE_SIZE));
-  const paginatedTransactionRecords = filteredRecords.slice(
-    (transactionPage - 1) * TRANSACTION_PAGE_SIZE,
-    transactionPage * TRANSACTION_PAGE_SIZE,
-  );
   const roomFilterOptions = Array.from(
     new Set(
       [
@@ -1590,12 +1586,114 @@ const Accounts = () => {
     const text = String(record.description || "");
     const match = text.match(/Booking\s*#\s*(\d+)/i);
     if (match) return match[1];
-    // Fallback: sourceModule == hotel-payment rows have synthetic ids like hotel-payment-7
     if (record.id && String(record.id).startsWith("hotel-payment-")) {
       return String(record.id).replace("hotel-payment-", "");
     }
     return null;
   };
+
+  const extractPartyName = (record) => {
+    if (!record) return null;
+    const text = String(record.description || "").trim();
+    if (!text) return null;
+
+    // Pattern 1: "Hotel payment received - Booking #5 - Rahul Sharma"
+    // Pattern 2: "Booking cancellation refund - Booking #5 - Rahul Sharma"
+    const dashMatch = text.match(/-\s*([^-]+)\s*$/);
+    if (dashMatch) {
+      const candidate = dashMatch[1].trim();
+      // Skip if the last segment is just a number (e.g. "Booking #5")
+      if (candidate && !/^[\d\s]+$/.test(candidate) && candidate.length > 1) {
+        return candidate;
+      }
+    }
+
+    // Pattern 3: "Staff salary paid - Rahul" or "Vendor payment - Mahesh Electronics"
+    const altMatch = text.match(/-\s*(.+)$/);
+    if (altMatch) {
+      const candidate = altMatch[1].trim();
+      if (candidate && !/^[\d\s]+$/.test(candidate) && candidate.length > 1) {
+        return candidate;
+      }
+    }
+
+    return null;
+  };
+
+  const toggleGroup = (name) => {
+    setExpandedGroups((prev) => ({
+      ...prev,
+      [name]: !prev[name],
+    }));
+  };
+
+  const expandAllGroups = () => {
+    const allNames = groupedTransactions.map((g) => g.name);
+    const next = {};
+    allNames.forEach((n) => { next[n] = true; });
+    setExpandedGroups(next);
+  };
+
+  const collapseAllGroups = () => {
+    setExpandedGroups({});
+  };
+
+  const allExpanded = groupedTransactions.length > 0 && groupedTransactions.every((g) => expandedGroups[g.name]);
+
+  const groupedTransactions = useMemo(() => {
+    const map = new Map();
+    (records || []).forEach((record) => {
+      const name = extractPartyName(record);
+      const key = name || "__ungrouped";
+      if (!map.has(key)) {
+        map.set(key, {
+          name: name || "Other",
+          key,
+          records: [],
+          income: 0,
+          expense: 0,
+        });
+      }
+      const group = map.get(key);
+      group.records.push(record);
+      const amount = toNumber(record.amount);
+      if (record.type === "Income") {
+        group.income += amount;
+      } else {
+        group.expense += amount;
+      }
+    });
+    return Array.from(map.values()).sort((a, b) => {
+      if (a.key === "__ungrouped") return 1;
+      if (b.key === "__ungrouped") return -1;
+      return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+    });
+  }, [records]);
+
+  const filteredGroupedTransactions = useMemo(() => {
+    if (selectedPaymentMode === "all") return groupedTransactions;
+    return groupedTransactions
+      .map((group) => {
+        const filteredRecords = group.records.filter((record) =>
+          normalizePaymentMode(record.paymentMode) === selectedPaymentMode,
+        );
+        if (filteredRecords.length === 0) return null;
+        const income = filteredRecords
+          .filter((r) => r.type === "Income")
+          .reduce((sum, r) => sum + toNumber(r.amount), 0);
+        const expense = filteredRecords
+          .filter((r) => r.type === "Expense")
+          .reduce((sum, r) => sum + toNumber(r.amount), 0);
+        return { ...group, records: filteredRecords, income, expense };
+      })
+      .filter(Boolean);
+  }, [groupedTransactions, selectedPaymentMode]);
+
+  const transactionTotalPages = Math.max(1, Math.ceil(filteredGroupedTransactions.length / TRANSACTION_PAGE_SIZE));
+  const paginatedTransactionRecords = filteredGroupedTransactions.slice(
+    (transactionPage - 1) * TRANSACTION_PAGE_SIZE,
+    transactionPage * TRANSACTION_PAGE_SIZE,
+  );
 
   const selectedBookingId = selectedRecord ? extractBookingId(selectedRecord) : null;
   const bookingPaymentGroups = selectedBookingId
@@ -2229,124 +2327,229 @@ const Accounts = () => {
             <table className="min-w-full text-left">
               <thead className="bg-gradient-to-r from-blue-950 via-blue-800 to-sky-600 text-[16px] uppercase tracking-[0.18em] text-white">
                 <tr>
-                  <th className="px-4 py-4 font-bold sm:px-5 sm:py-5">Date</th>
+                  <th className="px-4 py-4 font-bold sm:px-5 sm:py-5">Name / Description</th>
                   <th className="px-4 py-4 font-bold sm:px-5 sm:py-5">Type</th>
-                  <th className="px-4 py-4 font-bold sm:px-5 sm:py-5">Description</th>
-                  <th className="px-4 py-4 font-bold sm:px-5 sm:py-5">Amount</th>
-                  <th className="px-4 py-4 font-bold sm:px-5 sm:py-5">Payment Mode</th>
+                  <th className="px-4 py-4 font-bold text-right sm:px-5 sm:py-5">Income</th>
+                  <th className="px-4 py-4 font-bold text-right sm:px-5 sm:py-5">Expense</th>
+                  <th className="px-4 py-4 font-bold text-right sm:px-5 sm:py-5">Net</th>
                   <th className="px-4 py-4 font-bold sm:px-5 sm:py-5">Action</th>
                 </tr>
               </thead>
               <tbody>
-                {paginatedTransactionRecords.map((r) => (
-                  <tr key={r.id} className="border-t border-blue-50 transition-colors duration-200 hover:bg-sky-50/60">
-                    <td className="px-4 py-3.5 text-[15px] text-slate-500 sm:px-5 sm:py-5 sm:text-[17px]">{r.date}</td>
-                    <td className="px-4 py-3.5 sm:px-5 sm:py-5">
-                      <span className={`inline-flex rounded-full border px-3 py-1.5 text-[13px] font-bold sm:px-4 sm:py-2 sm:text-[15px] ${r.type === "Income" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-rose-200 bg-rose-50 text-rose-600"}`}>
-                        {r.type}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3.5 text-[15px] text-slate-600 sm:px-5 sm:py-5 sm:text-[17px]">{r.description}</td>
-                    <td className="px-4 py-3.5 text-[15px] font-bold text-slate-900 sm:px-5 sm:py-5 sm:text-[17px]">{formatINR(r.amount)}</td>
-                    <td className="px-4 py-3.5 text-[15px] text-slate-500 sm:px-5 sm:py-5 sm:text-[17px]">{r.paymentMode}</td>
-                    <td className="px-4 py-3.5 sm:px-5 sm:py-5">
-                      <div className="flex flex-wrap gap-2">
-                        <button
-                          className="rounded-full border border-sky-200 bg-sky-50 px-4 py-2 text-[13px] font-bold text-sky-700 transition-all duration-200 hover:bg-sky-100 hover:shadow-md sm:px-5 sm:py-2.5 sm:text-[15px]"
-                          onClick={() => {
-                            setSelectedRecord(r);
-                            setShowView(true);
-                          }}
-                        >
-                          View
-                        </button>
-                        <button
-                          className="rounded-full border border-blue-200 bg-blue-50 px-3.5 py-2 text-[13px] font-bold text-blue-700 transition-all duration-200 hover:bg-blue-100 hover:shadow-md sm:px-4 sm:py-2.5 sm:text-[15px]"
-                          onClick={() => handleEditClick(r)}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          className="rounded-full border border-rose-200 bg-rose-50 px-3.5 py-2 text-[13px] font-bold text-rose-600 transition-all duration-200 hover:bg-rose-100 hover:shadow-md sm:px-4 sm:py-2.5 sm:text-[15px]"
-                          onClick={() => handleDeleteTransaction(r.id)}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-                {!filteredRecords.length ? (
+                {paginatedTransactionRecords.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-4 py-8 text-center text-[18px] text-slate-400 sm:px-6 sm:py-10 sm:text-[21px]">
                       No transaction records match the selected payment mode.
                     </td>
                   </tr>
-                ) : null}
+                ) : (
+                  paginatedTransactionRecords.map((group) => {
+                    const isOpen = expandedGroups[group.key];
+                    return (
+                      <React.Fragment key={group.key}>
+                        <tr className="border-t border-blue-50 transition-colors duration-200 hover:bg-sky-50/60">
+                          <td className="px-4 py-3.5 sm:px-5 sm:py-5">
+                            <div className="flex items-center gap-2">
+                              {group.key !== "__ungrouped" ? (
+                                <button
+                                  type="button"
+                                  onClick={() => toggleGroup(group.key)}
+                                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-blue-200 bg-blue-50 text-[12px] font-bold text-blue-700 transition-all duration-200 hover:bg-blue-100"
+                                >
+                                  {isOpen ? "−" : "+"}
+                                </button>
+                              ) : (
+                                <span className="inline-block h-7 w-7 shrink-0" />
+                              )}
+                              <span className="text-[15px] font-bold text-slate-900 sm:text-[17px]">
+                                {group.name}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3.5 sm:px-5 sm:py-5">
+                            <div className="flex flex-wrap gap-1.5">
+                              {group.income > 0 ? (
+                                <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-[13px] font-bold text-emerald-700 sm:px-4 sm:py-2 sm:text-[15px]">
+                                  Income
+                                </span>
+                              ) : null}
+                              {group.expense > 0 ? (
+                                <span className="inline-flex rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-[13px] font-bold text-rose-600 sm:px-4 sm:py-2 sm:text-[15px]">
+                                  Expense
+                                </span>
+                              ) : null}
+                              {group.income === 0 && group.expense === 0 ? (
+                                <span className="text-[13px] text-slate-400">None</span>
+                              ) : null}
+                            </div>
+                          </td>
+                          <td className="whitespace-nowrap px-4 py-3.5 text-right text-[15px] font-semibold text-emerald-600 sm:px-5 sm:py-5 sm:text-[17px]">
+                            {group.income > 0 ? formatINR(group.income) : "--"}
+                          </td>
+                          <td className="whitespace-nowrap px-4 py-3.5 text-right text-[15px] font-semibold text-rose-500 sm:px-5 sm:py-5 sm:text-[17px]">
+                            {group.expense > 0 ? formatINR(group.expense) : "--"}
+                          </td>
+                          <td className="whitespace-nowrap px-4 py-3.5 text-right text-[15px] font-black text-slate-900 sm:px-5 sm:py-5 sm:text-[17px]">
+                            {formatINR(group.income - group.expense)}
+                          </td>
+                          <td className="px-4 py-3.5 sm:px-5 sm:py-5">
+                            <button
+                              className="rounded-full border border-sky-200 bg-sky-50 px-4 py-2 text-[13px] font-bold text-sky-700 transition-all duration-200 hover:bg-sky-100 hover:shadow-md sm:px-5 sm:py-2.5 sm:text-[15px]"
+                              onClick={() => {
+                                if (group.key !== "__ungrouped") {
+                                  toggleGroup(group.key);
+                                }
+                              }}
+                            >
+                              {isOpen ? "Hide" : "View"}
+                            </button>
+                          </td>
+                        </tr>
+                        {isOpen && group.key !== "__ungrouped" ? (
+                          group.records.map((r) => (
+                            <tr key={r.id} className="border-t border-blue-50 bg-slate-50/40 transition-colors duration-200">
+                              <td className="pl-14 pr-4 py-3 text-[14px] text-slate-600 sm:pl-16 sm:pr-5 sm:text-[16px]">{r.description}</td>
+                              <td className="px-4 py-3 sm:px-5 sm:py-5">
+                                <span className={`inline-flex rounded-full border px-3 py-1.5 text-[13px] font-bold sm:px-4 sm:py-2 sm:text-[15px] ${r.type === "Income" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-rose-200 bg-rose-50 text-rose-600"}`}>
+                                  {r.type}
+                                </span>
+                              </td>
+                              <td className="whitespace-nowrap px-4 py-3 text-right text-[14px] font-semibold text-emerald-600 sm:px-5 sm:py-3 sm:text-[16px]">
+                                {r.type === "Income" ? formatINR(r.amount) : "--"}
+                              </td>
+                              <td className="whitespace-nowrap px-4 py-3 text-right text-[14px] font-semibold text-rose-500 sm:px-5 sm:py-3 sm:text-[16px]">
+                                {r.type === "Expense" ? formatINR(r.amount) : "--"}
+                              </td>
+                              <td className="whitespace-nowrap px-4 py-3 text-right text-[14px] font-black text-slate-900 sm:px-5 sm:py-3 sm:text-[16px]">
+                                {formatINR(r.type === "Income" ? r.amount : -r.amount)}
+                              </td>
+                              <td className="px-4 py-3 sm:px-5 sm:py-3">
+                                <div className="flex flex-wrap gap-2">
+                                  <button
+                                    className="rounded-full border border-sky-200 bg-sky-50 px-3.5 py-2 text-[13px] font-bold text-sky-700 transition-all duration-200 hover:bg-sky-100 hover:shadow-md sm:px-4 sm:py-2.5 sm:text-[15px]"
+                                    onClick={() => {
+                                      setSelectedRecord(r);
+                                      setShowView(true);
+                                    }}
+                                  >
+                                    View
+                                  </button>
+                                  <button
+                                    className="rounded-full border border-blue-200 bg-blue-50 px-3.5 py-2 text-[13px] font-bold text-blue-700 transition-all duration-200 hover:bg-blue-100 hover:shadow-md sm:px-4 sm:py-2.5 sm:text-[15px]"
+                                    onClick={() => handleEditClick(r)}
+                                  >
+                                    Edit
+                                  </button>
+                                  <button
+                                    className="rounded-full border border-rose-200 bg-rose-50 px-3.5 py-2 text-[13px] font-bold text-rose-600 transition-all duration-200 hover:bg-rose-100 hover:shadow-md sm:px-4 sm:py-2.5 sm:text-[15px]"
+                                    onClick={() => handleDeleteTransaction(r.id)}
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                        ) : null}
+                      </React.Fragment>
+                    );
+                  })
+                )}
               </tbody>
             </table>
           </div>
 
-          {/* Mobile card list (<768px) — same data, same handlers, card layout */}
+          {/* Mobile card list (<768px) — grouped by name */}
           <div className="space-y-3 p-2.5 md:hidden">
-            {paginatedTransactionRecords.map((r) => (
-              <div
-                key={r.id}
-                className="rounded-[20px] border border-blue-100/70 bg-white p-4 shadow-[0_10px_30px_-12px_rgba(30,64,175,0.18)] transition-all duration-200"
-              >
-                <div className="flex items-start justify-between gap-2.5">
-                  <div className="text-[14px] font-bold text-slate-900">{r.description}</div>
-                  <span className={`shrink-0 rounded-full border px-2.5 py-1 text-[12px] font-bold ${r.type === "Income" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-rose-200 bg-rose-50 text-rose-600"}`}>
-                    {r.type}
-                  </span>
-                </div>
-                <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2.5">
-                  <div>
-                    <div className="text-[12px] font-semibold uppercase tracking-wide text-slate-400">Date</div>
-                    <div className="text-[14px] font-medium text-slate-700">{r.date}</div>
-                  </div>
-                  <div>
-                    <div className="text-[12px] font-semibold uppercase tracking-wide text-slate-400">Payment Mode</div>
-                    <div className="text-[14px] font-medium text-slate-700">{r.paymentMode}</div>
-                  </div>
-                  <div className="col-span-2">
-                    <div className="text-[12px] font-semibold uppercase tracking-wide text-slate-400">Amount</div>
-                    <div className="text-[15px] font-bold text-slate-900">{formatINR(r.amount)}</div>
-                  </div>
-                </div>
-                <div className="mt-3.5 flex flex-wrap gap-2">
-                  <button
-                    className="flex-1 rounded-full border border-sky-200 bg-sky-50 px-4 py-2.5 text-[14px] font-bold text-sky-700 transition-all duration-200 hover:bg-sky-100 active:scale-[0.98]"
-                    onClick={() => {
-                      setSelectedRecord(r);
-                      setShowView(true);
-                    }}
-                  >
-                    View
-                  </button>
-                  <button
-                    className="flex-1 rounded-full border border-blue-200 bg-blue-50 px-4 py-2.5 text-[14px] font-bold text-blue-700 transition-all duration-200 hover:bg-blue-100 active:scale-[0.98]"
-                    onClick={() => handleEditClick(r)}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    className="flex-1 rounded-full border border-rose-200 bg-rose-50 px-4 py-2.5 text-[14px] font-bold text-rose-600 transition-all duration-200 hover:bg-rose-100 active:scale-[0.98]"
-                    onClick={() => handleDeleteTransaction(r.id)}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ))}
-            {!paginatedTransactionRecords.length ? (
+            {paginatedTransactionRecords.length === 0 ? (
               <div className="rounded-[20px] border border-dashed border-blue-100 bg-blue-50/50 px-4 py-8 text-center text-[15px] text-slate-400">
                 No transaction records match the selected payment mode.
               </div>
-            ) : null}
+            ) : (
+              paginatedTransactionRecords.map((group) => {
+                const isOpen = expandedGroups[group.key];
+                return (
+                  <div
+                    key={group.key}
+                    className="rounded-[20px] border border-blue-100/70 bg-white p-4 shadow-[0_10px_30px_-12px_rgba(30,64,175,0.18)] transition-all duration-200"
+                  >
+                    <div className="flex items-center justify-between gap-2.5">
+                      <div className="flex items-center gap-2">
+                        {group.key !== "__ungrouped" ? (
+                          <button
+                            type="button"
+                            onClick={() => toggleGroup(group.key)}
+                            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-blue-200 bg-blue-50 text-[12px] font-bold text-blue-700 transition-all duration-200 hover:bg-blue-100"
+                          >
+                            {isOpen ? "−" : "+"}
+                          </button>
+                        ) : (
+                          <span className="inline-block h-7 w-7 shrink-0" />
+                        )}
+                        <span className="text-[14px] font-black text-slate-900">{group.name}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {group.income > 0 && (
+                          <span className="text-[13px] font-bold text-emerald-600">+{formatINR(group.income)}</span>
+                        )}
+                        {group.expense > 0 && (
+                          <span className="text-[13px] font-bold text-rose-500">-{formatINR(group.expense)}</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {isOpen && group.key !== "__ungrouped" ? (
+                      <div className="mt-3 space-y-2.5">
+                        {group.records.map((r) => (
+                          <div key={r.id} className="rounded-2xl border border-blue-100/60 bg-slate-50/40 p-3">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className={`shrink-0 rounded-full border px-2.5 py-1 text-[12px] font-bold ${r.type === "Income" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-rose-200 bg-rose-50 text-rose-600"}`}>
+                                {r.type}
+                              </span>
+                              <span className="text-[14px] font-black text-slate-900">{formatINR(r.amount)}</span>
+                            </div>
+                            <div className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-[13px]">
+                              <span className="font-semibold uppercase tracking-wide text-slate-400">Desc</span>
+                              <span className="font-medium text-slate-700">{r.description}</span>
+                              <span className="font-semibold uppercase tracking-wide text-slate-400">Date</span>
+                              <span className="font-medium text-slate-700">{r.date}</span>
+                              <span className="font-semibold uppercase tracking-wide text-slate-400">Mode</span>
+                              <span className="font-medium text-slate-700">{r.paymentMode}</span>
+                            </div>
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              <button
+                                className="flex-1 rounded-full border border-sky-200 bg-sky-50 px-4 py-2.5 text-[14px] font-bold text-sky-700 transition-all duration-200 hover:bg-sky-100 active:scale-[0.98]"
+                                onClick={() => {
+                                  setSelectedRecord(r);
+                                  setShowView(true);
+                                }}
+                              >
+                                View
+                              </button>
+                              <button
+                                className="flex-1 rounded-full border border-blue-200 bg-blue-50 px-4 py-2.5 text-[14px] font-bold text-blue-700 transition-all duration-200 hover:bg-blue-100 active:scale-[0.98]"
+                                onClick={() => handleEditClick(r)}
+                              >
+                                Edit
+                              </button>
+                              <button
+                                className="flex-1 rounded-full border border-rose-200 bg-rose-50 px-4 py-2.5 text-[14px] font-bold text-rose-600 transition-all duration-200 hover:bg-rose-100 active:scale-[0.98]"
+                                onClick={() => handleDeleteTransaction(r.id)}
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              })
+            )}
           </div>
 
-          {filteredRecords.length > TRANSACTION_PAGE_SIZE ? (
+          {filteredGroupedTransactions.length > TRANSACTION_PAGE_SIZE ? (
             <div className="flex flex-col items-center gap-3 border-t border-blue-50 px-3 py-4 sm:px-4 sm:py-4 md:flex-row md:items-center md:justify-between">
               <div className="text-[13px] text-slate-500 sm:text-[15px]">
                 Showing{" "}
@@ -2355,11 +2558,11 @@ const Accounts = () => {
                 </span>{" "}
                 to{" "}
                 <span className="font-semibold text-slate-900">
-                  {Math.min(transactionPage * TRANSACTION_PAGE_SIZE, filteredRecords.length)}
+                  {Math.min(transactionPage * TRANSACTION_PAGE_SIZE, filteredGroupedTransactions.length)}
                 </span>{" "}
                 of{" "}
-                <span className="font-semibold text-slate-900">{filteredRecords.length}</span>{" "}
-                records
+                <span className="font-semibold text-slate-900">{filteredGroupedTransactions.length}</span>{" "}
+                groups
               </div>
 
               <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
