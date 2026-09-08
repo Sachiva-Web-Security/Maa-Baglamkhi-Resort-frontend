@@ -69,7 +69,7 @@ const RoomOccupancyChart = () => {
             className="relative mx-auto flex w-full max-w-[210px] items-center justify-center"
             style={{ minHeight: `${CHART_MIN_HEIGHT}px` }}
           >
-            <ResponsiveContainer width="100%" height={CHART_MIN_HEIGHT}>
+            <ResponsiveContainer width="100%" height={CHART_MIN_HEIGHT} minHeight={CHART_MIN_HEIGHT}>
               <PieChart margin={{ top: 12, right: 12, bottom: 12, left: 12 }}>
                 <Pie
                   data={normalizedData}
