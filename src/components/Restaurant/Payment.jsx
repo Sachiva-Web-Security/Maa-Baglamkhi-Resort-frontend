@@ -199,10 +199,9 @@ const buildReceiptHtml = ({
   const gst = Number(invoice?.gst || 0) > 0 ? Number(invoice.gst) : computedSubtotal * 0.05;
   const sgstAmount = Number((gst / 2).toFixed(2));
   const cgstAmount = Number((gst / 2).toFixed(2));
-  const grandTotal = Number(computedTotal || 0);
-  if (grandTotal <= 0 && computedSubtotal > 0) {
-    // Recompute grandTotal from components if not provided
-  }
+  // Recompute grandTotal from components if computedTotal is 0 but we have items
+  const localTotal = Math.max(0, computedSubtotal + gst + Number(serviceCharge || 0) - Number(discountAmount || 0));
+  const grandTotal = Number(computedTotal || 0) > 0 ? Number(computedTotal) : localTotal;
   const netTotal = Math.round(grandTotal);
   const roundUp = Number((netTotal - grandTotal).toFixed(2));
   const userName = localStorage.getItem("name") || localStorage.getItem("username") || "POS User";
