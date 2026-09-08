@@ -4314,6 +4314,8 @@ const BookingFlow = () => {
           idProofType: formData.idProofType || "",
           idProofNumber: formData.idNumber || "",
           gstNumber: formData.gstNumber || "",
+          bookingType: formData.bookingType,
+          bookingSource: formData.bookingType,
         });
       }
 
