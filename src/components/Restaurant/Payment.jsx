@@ -188,9 +188,21 @@ const buildReceiptHtml = ({
   explicitKotNo = null,
 }) => {
   const printedAt = invoice?.paidAt || invoice?.printedAt || invoice?.date || new Date().toISOString();
-  const sgstAmount = Number(invoice?.gst || 0) / 2;
-  const cgstAmount = Number(invoice?.gst || 0) / 2;
+  // Fallback: derive subtotal/gst from items if invoice doesn't have them
+  const computedSubtotal = (() => {
+    if (Number(invoice?.subtotal || 0) > 0) return Number(invoice.subtotal);
+    if (Array.isArray(invoice?.items) && invoice.items.length) {
+      return invoice.items.reduce((s, it) => s + Number(it.qty || 0) * Number(it.rate || 0), 0);
+    }
+    return 0;
+  })();
+  const gst = Number(invoice?.gst || 0) > 0 ? Number(invoice.gst) : computedSubtotal * 0.05;
+  const sgstAmount = Number((gst / 2).toFixed(2));
+  const cgstAmount = Number((gst / 2).toFixed(2));
   const grandTotal = Number(computedTotal || 0);
+  if (grandTotal <= 0 && computedSubtotal > 0) {
+    // Recompute grandTotal from components if not provided
+  }
   const netTotal = Math.round(grandTotal);
   const roundUp = Number((netTotal - grandTotal).toFixed(2));
   const userName = localStorage.getItem("name") || localStorage.getItem("username") || "POS User";
@@ -541,17 +553,17 @@ const buildReceiptHtml = ({
         <div class="totals">
           <div class="summary-row">
             <span>Food / Restaurant Charges</span>
-            <span>${formatReceiptAmount(invoice?.subtotal)}</span>
+            <span>${formatReceiptAmount(computedSubtotal || invoice?.subtotal)}</span>
           </div>
           ${
-            Number(invoice?.gst || 0) > 0
+            gst > 0
               ? `<div class="summary-row">
                   <span>SGST @ 2.5%</span>
-                  <span>${formatReceiptAmount(Number(invoice?.gst || 0) / 2)}</span>
+                  <span>${formatReceiptAmount(sgstAmount)}</span>
                 </div>
                 <div class="summary-row">
                   <span>CGST @ 2.5%</span>
-                  <span>${formatReceiptAmount(Number(invoice?.gst || 0) / 2)}</span>
+                  <span>${formatReceiptAmount(cgstAmount)}</span>
                 </div>`
               : ""
           }
