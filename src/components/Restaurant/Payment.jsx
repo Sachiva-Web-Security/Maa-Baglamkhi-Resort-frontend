@@ -294,7 +294,7 @@ const buildReceiptHtml = ({
     width: 80mm;
     max-width: 80mm;
     margin: 0 auto !important;
-    padding: 8px 6px;
+    padding: 2px 6px;
 
     font-size: 14px !important;
     line-height: 1.45;
