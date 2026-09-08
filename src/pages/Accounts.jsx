@@ -566,6 +566,7 @@ const Accounts = () => {
   const [selectedRestaurantTable, setSelectedRestaurantTable] = useState("all");
   const [selectedBanquetHall, setSelectedBanquetHall] = useState("all");
   const [selectedPaymentMode, setSelectedPaymentMode] = useState("all");
+  const [nameSearch, setNameSearch] = useState("");
   const [transactionPage, setTransactionPage] = useState(1);
   const [billingPage, setBillingPage] = useState(1);
   const [bankLedgerStatusFilter, setBankLedgerStatusFilter] = useState("all");
@@ -1690,8 +1691,34 @@ const Accounts = () => {
       .filter(Boolean);
   }, [groupedTransactions, selectedPaymentMode]);
 
-  const transactionTotalPages = Math.max(1, Math.ceil(filteredGroupedTransactions.length / TRANSACTION_PAGE_SIZE));
-  const paginatedTransactionRecords = filteredGroupedTransactions.slice(
+  const searchTerm = String(nameSearch || "").trim().toLowerCase();
+  const searchMatchedKeys = useMemo(() => {
+    if (!searchTerm) return null;
+    const matched = new Set();
+    (records || []).forEach((record) => {
+      const name = extractPartyName(record);
+      const key = name || "__ungrouped";
+      if (!matched.has(key)) {
+        const text = String(name || "Other").toLowerCase();
+        if (text.includes(searchTerm)) {
+          matched.add(key);
+        }
+      }
+    });
+    return matched;
+  }, [records, searchTerm]);
+
+  const searchFilteredGroupedTransactions = useMemo(() => {
+    if (!searchMatchedKeys) return filteredGroupedTransactions;
+    return filteredGroupedTransactions.filter((group) => searchMatchedKeys.has(group.key));
+  }, [filteredGroupedTransactions, searchMatchedKeys]);
+
+  React.useEffect(() => {
+    setTransactionPage(1);
+  }, [searchTerm, selectedPaymentMode]);
+
+  const transactionTotalPages = Math.max(1, Math.ceil(searchFilteredGroupedTransactions.length / TRANSACTION_PAGE_SIZE));
+  const paginatedTransactionRecords = searchFilteredGroupedTransactions.slice(
     (transactionPage - 1) * TRANSACTION_PAGE_SIZE,
     transactionPage * TRANSACTION_PAGE_SIZE,
   );
@@ -2066,6 +2093,17 @@ const Accounts = () => {
                   <FaFileInvoiceDollar className="text-white" />
                   Customer Invoices
                 </button>
+                <label className="w-full rounded-2xl border border-white/25 bg-white/95 px-3.5 py-2.5 text-left shadow-lg shadow-blue-950/10 backdrop-blur-md transition-all duration-200 focus-within:border-sky-400 focus-within:ring-4 focus-within:ring-sky-100 sm:w-auto sm:min-w-[180px] md:min-w-[220px]">
+                  <span className="block text-[12px] font-semibold uppercase tracking-[0.14em] text-slate-500 sm:text-[13px] sm:tracking-[0.18em]">
+                    Search by Name
+                  </span>
+                  <input
+                    value={nameSearch}
+                    onChange={(event) => setNameSearch(event.target.value)}
+                    placeholder="e.g. Rahul Sharma"
+                    className="mt-1 w-full bg-transparent text-[14px] font-semibold text-slate-900 outline-none sm:text-[15px] md:text-lg"
+                  />
+                </label>
                 <label className="w-full rounded-2xl border border-white/25 bg-white/95 px-3.5 py-2.5 text-left shadow-lg shadow-blue-950/10 backdrop-blur-md transition-all duration-200 focus-within:border-sky-400 focus-within:ring-4 focus-within:ring-sky-100 sm:w-auto sm:min-w-[180px] md:min-w-[220px]">
                   <span className="block text-[12px] font-semibold uppercase tracking-[0.14em] text-slate-500 sm:text-[13px] sm:tracking-[0.18em]">
                     Payment Filter
@@ -2550,7 +2588,7 @@ const Accounts = () => {
             )}
           </div>
 
-          {filteredGroupedTransactions.length > TRANSACTION_PAGE_SIZE ? (
+          {searchFilteredGroupedTransactions.length > TRANSACTION_PAGE_SIZE ? (
             <div className="flex flex-col items-center gap-3 border-t border-blue-50 px-3 py-4 sm:px-4 sm:py-4 md:flex-row md:items-center md:justify-between">
               <div className="text-[13px] text-slate-500 sm:text-[15px]">
                 Showing{" "}
@@ -2559,10 +2597,10 @@ const Accounts = () => {
                 </span>{" "}
                 to{" "}
                 <span className="font-semibold text-slate-900">
-                  {Math.min(transactionPage * TRANSACTION_PAGE_SIZE, filteredGroupedTransactions.length)}
+                  {Math.min(transactionPage * TRANSACTION_PAGE_SIZE, searchFilteredGroupedTransactions.length)}
                 </span>{" "}
                 of{" "}
-                <span className="font-semibold text-slate-900">{filteredGroupedTransactions.length}</span>{" "}
+                <span className="font-semibold text-slate-900">{searchFilteredGroupedTransactions.length}</span>{" "}
                 groups
               </div>
 
