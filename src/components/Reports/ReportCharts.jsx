@@ -132,7 +132,7 @@ const ReportCharts = ({ reportType, rows }) => {
 
     return (
       <Card title="All Bills by Source" subtitle="Combined amount grouped by billing module">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" minHeight={200}>
           <BarChart data={data} margin={{ top: 12, right: 16, left: 4, bottom: 12 }} barCategoryGap="32%">
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             <XAxis dataKey="name" stroke="#64748b" tick={{ fontSize: 12 }} />
@@ -150,7 +150,7 @@ const ReportCharts = ({ reportType, rows }) => {
 
     return (
       <Card title="Banquet Revenue by Hall" subtitle="See which hall is generating the highest revenue">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" minHeight={200}>
           <BarChart data={data} margin={{ top: 12, right: 16, left: 4, bottom: 12 }} barCategoryGap="30%">
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             <XAxis dataKey="name" stroke="#64748b" tick={{ fontSize: 12 }} />
@@ -168,7 +168,7 @@ const ReportCharts = ({ reportType, rows }) => {
 
     return (
       <Card title="Restaurant Sales Trend" subtitle="Track selected date range food billing movement">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" minHeight={200}>
           {data.length <= 1 ? (
             <BarChart data={data} margin={{ top: 12, right: 16, left: 4, bottom: 12 }} barCategoryGap="35%">
               <CartesianGrid strokeDasharray="3 3" stroke="#dbe4f0" />
@@ -203,7 +203,7 @@ const ReportCharts = ({ reportType, rows }) => {
 
     return (
       <Card title="Housekeeping Status Mix" subtitle="Room condition distribution for selected rows">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" minHeight={200}>
           <BarChart data={data} margin={{ top: 12, right: 16, left: 4, bottom: 12 }} barCategoryGap="30%">
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             <XAxis dataKey="name" stroke="#64748b" tick={{ fontSize: 12 }} />
@@ -221,7 +221,7 @@ const ReportCharts = ({ reportType, rows }) => {
 
     return (
       <Card title="Expense by Department" subtitle="Department-wise spending breakdown">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" minHeight={200}>
           <BarChart data={data} margin={{ top: 12, right: 16, left: 4, bottom: 12 }} barCategoryGap="30%">
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             <XAxis dataKey="name" stroke="#64748b" tick={{ fontSize: 12 }} />
@@ -249,7 +249,7 @@ const ReportCharts = ({ reportType, rows }) => {
 
     return (
       <Card title="Accounts Overview" subtitle="Income vs expense vs net impact">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" minHeight={200}>
           <BarChart data={data} margin={{ top: 12, right: 16, left: 4, bottom: 12 }} barCategoryGap="30%">
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             <XAxis dataKey="name" stroke="#64748b" tick={{ fontSize: 12 }} />
