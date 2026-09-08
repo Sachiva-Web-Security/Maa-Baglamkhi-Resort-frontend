@@ -4332,35 +4332,6 @@ const BookingFlow = () => {
       );
       await fetchBookings();
 
-      // Auto-send booking confirmation WhatsApp to customer + admin
-      if (!isEdit && bookingId && formData.mobile) {
-        (async () => {
-          try {
-            const cleanNumber = (num) => {
-              const digits = String(num || "").replace(/\D/g, "");
-              if (!digits) return "";
-              return digits.length > 10 ? digits : `91${digits}`;
-            };
-            const confirmedBy = (() => {
-              const raw = localStorage.getItem("name");
-              return raw ? String(raw).trim() : "Manager";
-            })();
-            const roomCategories = [
-              ...new Set(
-                (formData.rooms || [])
-                  .map((r) => {
-                    const cat = categorySetup.find(
-                      (c) => String(c.id) === String(r.categoryId || ""),
-                    );
-                    return cat ? cat.name : "";
-                  })
-                  .filter(Boolean),
-              ),
-            ];
-            await fetchBookings();
-        })();
-      }
-
       setView("confirmed");
     } catch (err) {
       console.error(err);
