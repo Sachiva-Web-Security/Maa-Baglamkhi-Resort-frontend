@@ -2374,11 +2374,7 @@ const InvoiceModal = ({
         },
       };
       console.log("[Invoice] POST payload:", payload);
-
-      const pdfRes = await API.post(
-        `/hotel/invoice/send-whatsapp/${bookingId}`,
-        payload,
-      );
+      const pdfRes = await API.post(`/hotel/invoice/pdf`, payload);
       const data = pdfRes.data || {};
       console.log("[WhatsApp] full response:", JSON.stringify(data, null, 2));
       console.log("[WhatsApp] customer.whatsapp:", data?.customer?.whatsapp);
@@ -4361,40 +4357,7 @@ const BookingFlow = () => {
                   .filter(Boolean),
               ),
             ];
-            await API.post(`/hotel/invoice/send-whatsapp/${bookingId}`, {
-              sendConfirmation: true,
-              customerNumber: cleanNumber(formData.mobile || ""),
-              invoiceData: {
-                customerName: guestFullName,
-                roomCategory:
-                  roomCategories.join(", ") ||
-                  formData.rooms?.[0]?.roomType ||
-                  formData.roomCategory ||
-                  "",
-                totalAmount: grandTotal,
-                advancePaid: Number(formData.amount || 0),
-                balanceLeft: Math.max(
-                  Number(grandTotal) - Number(formData.amount || 0),
-                  0,
-                ),
-                paymentStatus: "Confirmed",
-                paymentMode: formData.paymentMode || "Cash",
-                bookingType: formData.bookingType || "Walk-in",
-                numRooms: formData.rooms?.length || 1,
-                roomNumbers: (formData.rooms || [])
-                  .map((r) => r.roomNo)
-                  .filter(Boolean)
-                  .join(", "),
-                checkIn: formData.checkIn,
-                checkOut: formData.checkOut,
-                arrival: formData.arrival,
-                departure: formData.departure,
-                confirmedBy,
-              },
-            });
-          } catch {
-            // silent — don't block the booking flow
-          }
+            await fetchBookings();
         })();
       }
 
@@ -4886,83 +4849,10 @@ const BookingFlow = () => {
       ];
 
       const customerMobile = b.mobile || d.mobile || "";
-      const payload = {
-        customerNumber: customerMobile,
-        // Override backend invoice with computed totals + items from live
-        // booking data. Live data (b/d) is preferred over `invoice.*`
-        // (a possibly stale, previously-saved snapshot) everywhere below —
-        // this is also what fixes cases where the guest's Arrival/Departure
-        // on the printed invoice didn't match the booking's current dates
-        // after an edit.
-        invoiceData: {
-          totalAmount:
-            computedTotal > 0
-              ? computedTotal
-              : Number(invoice.totalAmount) || 0,
-          subtotal:
-            computedTotal > 0
-              ? computedSubtotal
-              : Number(invoice.subtotal) || 0,
-          tax: computedTotal > 0 ? computedTax : Number(invoice.tax) || 0,
-          discount: Number(invoice.discount) || 0,
-          paymentStatus:
-            invoice.paymentStatus ||
-            invoice.payment_status ||
-            (computedTotal > 0 ? "Pending" : "Paid"),
-          paymentMode: invoice.paymentMode || b.payment_mode || "Cash",
-          customerName:
-            b.guest_name || d.guest_name || invoice.customerName || "Guest",
-          phone: b.mobile || d.mobile || invoice.phone || "",
-          roomNumber:
-            bookingRooms
-              .map((r) => r.room_number || r.roomNumber || r.roomNo)
-              .filter(Boolean)
-              .join(", ") ||
-            invoice.roomNumber ||
-            b.rooms ||
-            b.roomNumber ||
-            "",
-          checkIn: b.check_in || d.check_in || invoice.checkIn || "",
-          checkOut: b.check_out || d.check_out || invoice.checkOut || "",
-          address: b.address || d.address || invoice.address || "",
-          items: liveItems.length > 0 ? liveItems : invoice.items || [],
-        },
-      };
-
-      const res = await API.post(
-        `/hotel/invoice/send-whatsapp/${bid}`,
-        payload,
-      );
-      const data = res.data || {};
-      console.log(
-        "[WhatsApp-details] full response:",
-        JSON.stringify(data, null, 2),
-      );
-
-      const customerWa = data?.customer?.whatsapp || {};
-      const adminWa = data?.admin?.whatsapp || {};
-
-      if (customerWa?.ok && adminWa?.ok) {
-        const isFallback = customerWa?.fallback || adminWa?.fallback;
-        setWaResult({
-          type: "success",
-          message: isFallback
-            ? "WhatsApp sent with invoice download link (PDF delivery fell back to text link)."
-            : "Invoice PDF sent to customer WhatsApp and admin WhatsApp.",
-        });
-      } else if (customerWa?.ok) {
-        setWaResult({
-          type: "partial",
-          message: customerWa?.fallback
-            ? "Customer WhatsApp sent with invoice download link. Admin WhatsApp skipped."
-            : "Sent to customer WhatsApp. Admin WhatsApp skipped.",
-        });
-      } else {
-        const waError = customerWa?.error || adminWa?.error || "Unknown error";
-        const shortError =
-          waError.length > 120 ? waError.substring(0, 120) + "..." : waError;
-        setWaResult({ type: "error", message: shortError });
-      }
+      setWaResult({
+        type: "info",
+        message: "WhatsApp send is disabled. Use the Print Invoice button to download the PDF.",
+      });
     } catch (err) {
       setWaResult({
         type: "error",

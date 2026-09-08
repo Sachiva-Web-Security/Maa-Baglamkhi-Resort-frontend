@@ -465,40 +465,13 @@ const AllBooking = () => {
       onClick: () => navigate("/hotel/payment-history", { state: { bookingId: booking.bookingId } }),
     });
 
-    // Admin-only: edit phone & send invoice via WhatsApp
+    // Admin-only: edit phone
     if (isAdmin) {
       items.push({
         key: "editPhone",
         label: "Edit Phone",
         className: `${actionButtonCls} border border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100`,
         onClick: () => setPhoneEditModal({ open: true, booking, mobile: booking.mobile || "", saving: false }),
-      });
-      items.push({
-        key: "sendWhatsapp",
-        label: "Send Invoice",
-        className: `${actionButtonCls} bg-emerald-600 text-white hover:bg-emerald-700`,
-        onClick: async () => {
-          try {
-            const res = await API.post(`/hotel/invoice/send-whatsapp/${booking.bookingId}`);
-            const customerOk = res.data?.customer?.result?.ok;
-            const adminOk = res.data?.admin?.result?.ok;
-            const ok = customerOk && (adminOk || res.data?.admin?.result?.skipped);
-            openFeedbackModal(
-              ok ? "success" : "error",
-              ok ? "Invoice sent" : "Send failed",
-              ok
-                ? "Invoice PDF was sent to the customer's WhatsApp and admin."
-                : "Could not send the invoice via WhatsApp. Check the admin number under WhatsApp Settings.",
-            );
-          } catch (err) {
-            console.error(err);
-            openFeedbackModal(
-              "error",
-              "Send Failed",
-              err.response?.data?.error || "Could not send invoice via WhatsApp.",
-            );
-          }
-        },
       });
     }
 
