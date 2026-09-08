@@ -6605,6 +6605,40 @@ const BookingFlow = () => {
                   placeholder="Enter payment note (optional)"
                 />
               </div>
+
+              <div className="sm:col-span-2 mt-2 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:p-5">
+                <div className="text-sm font-bold uppercase tracking-wide text-slate-500 mb-3">
+                  Payment Summary
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+                  <div>
+                    <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                      Total Amount
+                    </div>
+                    <div className="text-xl sm:text-2xl font-black text-blue-700">
+                      {formatCurrency(grandTotal)}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                      Advance Paid
+                    </div>
+                    <div className="text-lg sm:text-xl font-bold text-emerald-600">
+                      {formatCurrency(formData.amount)}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                      Balance Due
+                    </div>
+                    <div className="text-lg sm:text-xl font-bold text-rose-600">
+                      {formatCurrency(
+                        Math.max(grandTotal - Number(formData.amount || 0), 0),
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
