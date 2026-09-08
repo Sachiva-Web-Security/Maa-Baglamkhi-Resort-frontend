@@ -4222,6 +4222,7 @@ const BookingFlow = () => {
           departure: formData.departure,
           bookingStatus: "Confirmed",
           bookedBy,
+          bookingType: formData.bookingType,
           // ID Proof fields now persisted on the guest row.
           idProofType: formData.idProofType || "",
           idProofNumber: formData.idNumber || "",
