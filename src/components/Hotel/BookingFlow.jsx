@@ -5468,8 +5468,8 @@ const BookingFlow = () => {
                 <div class="row"><span>Tariff Total</span><span>${fmtMoney(tariffTotal)}</span></div>
                 <div class="row"><span>Discount</span><span>${fmtMoney(totalDiscount)}</span></div>
                 <div class="row"><span>Taxable Amount</span><span>${fmtMoney(totalTaxable)}</span></div>
-                <div class="row"><span>GST Service Charge (SGST 2.5%)</span><span>${fmtMoney(totalSgst)}</span></div>
-                <div class="row"><span>GST Service Charge (CGST 2.5%)</span><span>${fmtMoney(totalCgst)}</span></div>
+                <div class="row"><span>GST (SGST 2.5%)</span><span>${fmtMoney(totalSgst)}</span></div>
+                <div class="row"><span>GST (CGST 2.5%)</span><span>${fmtMoney(totalCgst)}</span></div>
                 <div class="row bold"><span>Room Total</span><span>${fmtMoney(roomTotalComputed)}</span></div>
                 <div class="row"><span>Round Off Disc.</span><span>${fmtMoney(roundOff)}</span></div>
                 <div class="row bold"><span>Final Total</span><span>${fmtMoney(finalTotal)}</span></div>
