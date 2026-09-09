@@ -23,6 +23,7 @@ import {
   FaUndoAlt,
   FaChevronDown,
   FaChevronRight,
+  FaPrint,
 } from "react-icons/fa";
 
 import PaymentSettingsManager from "../components/Accounts/PaymentSettingsManager";
@@ -984,6 +985,538 @@ const Accounts = () => {
     }
   };
 
+  const handlePrintGroup = async (group) => {
+    const customer = getGroupCustomer(group);
+    const now = new Date().toLocaleString("en-IN");
+
+    // Build a combined timeline from ledger records
+    const ledgerItems = (group.records || [])
+      .filter((r) => r.id && !String(r.id).startsWith("hotel-payment-"))
+      .map((r) => {
+        const isIncome = r.type === "Income";
+        return {
+          id: r.id,
+          date: r.date || "",
+          sortDate: r.sortDate || r.date || "",
+          description: r.description || "-",
+          narration: r.narration || "",
+          mode: r.paymentMode || "-",
+          type: r.type,
+          amount: Number(r.amount || 0),
+          debit: isIncome ? 0 : Number(r.amount || 0),
+          credit: isIncome ? Number(r.amount || 0) : 0,
+          source: r.sourceModule || "accounts",
+        };
+      });
+
+    // Fetch payment history — filter by customer mobile/name if available
+    let paymentItems = [];
+    let hotelBillingItems = [];
+    let restaurantBillingItems = [];
+
+    try {
+      const [paymentRes, hotelRes, restaurantRes] = await Promise.all([
+        API.get("/accounts/payment-history"),
+        API.get("/accounts/hotel-billing"),
+        API.get("/accounts/restaurant-billing"),
+      ]);
+
+      const allPayments = Array.isArray(paymentRes.data) ? paymentRes.data : [];
+      const allHotelBills = Array.isArray(hotelRes.data) ? hotelRes.data : [];
+      const allRestaurantBills = Array.isArray(restaurantRes.data) ? restaurantRes.data : [];
+
+      // Collect all customer identifiers from this group's records
+      const groupMobiles = new Set();
+      const groupNames = new Set();
+      const groupBookings = new Set();
+
+      (group.records || []).forEach((r) => {
+        if (r.customerMobile) groupMobiles.add(String(r.customerMobile).trim().toLowerCase());
+        if (r.customerName) groupNames.add(String(r.customerName).trim().toLowerCase());
+
+        // Extract booking id from description like "Booking #15"
+        const bookingMatch = (r.description || "").match(/Booking\s*#(\d+)/i);
+        if (bookingMatch) groupBookings.add(bookingMatch[1]);
+      });
+
+      paymentItems = allPayments
+        .filter((p) => {
+          if (groupBookings.size > 0 && p.booking_id && groupBookings.has(String(p.booking_id))) return true;
+          if (groupMobiles.size > 0 && p.mobile && groupMobiles.has(String(p.mobile).trim().toLowerCase())) return true;
+          if (groupNames.size > 0 && p.guest_name && groupNames.has(String(p.guest_name).trim().toLowerCase())) return true;
+          return false;
+        })
+        .map((p) => {
+          const createdAt = new Date(p.created_at);
+          return {
+            id: `ph-${p.id}`,
+            date: createdAt.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
+            sortDate: p.created_at || "",
+            description: `Payment #${p.id} — ${p.guest_name || "Guest"}${p.booking_id ? ` (Booking #${p.booking_id})` : ""}`,
+            narration: "",
+            mode: p.payment_mode || "Cash",
+            type: "Income",
+            amount: Number(p.amount || 0),
+            debit: 0,
+            credit: Number(p.amount || 0),
+            source: "payment_history",
+            discount: Number(p.discount_amount || 0),
+            status: p.status || "Completed",
+          };
+        });
+
+      // Filter hotel billing by customer name or booking reference
+      hotelBillingItems = allHotelBills
+        .filter((bill) => {
+          const billRef = String(bill.invoice_no || bill.invoiceNo || bill.booking_id || "").toLowerCase();
+          const billCustomer = String(bill.customer_name || bill.customerName || "").toLowerCase();
+          const billMobile = String(bill.mobile || "").toLowerCase();
+          if (groupBookings.size > 0 && billRef && groupBookings.has(billRef.replace(/\D/g, ""))) return true;
+          if (groupMobiles.size > 0 && billMobile && groupMobiles.has(billMobile)) return true;
+          if (groupNames.size > 0 && billCustomer && groupNames.has(billCustomer)) return true;
+          // Match by description containing booking number
+          if (groupBookings.size > 0) {
+            for (const bk of groupBookings) {
+              if (billRef.includes(bk) || bill.description?.toLowerCase().includes(`booking #${bk}`)) return true;
+            }
+          }
+          return false;
+        })
+        .map((bill) => ({
+          id: `hotel-${bill.id}`,
+          date: bill.date || bill.created_at || "",
+          sortDate: bill.date || bill.created_at || "",
+          description: `Hotel Invoice ${bill.invoice_no || bill.invoiceNo || `#${bill.id}`}${bill.customer_name ? ` — ${bill.customer_name}` : ""}`,
+          mode: bill.payment_mode || bill.paymentMode || "-",
+          type: bill.payment_status === "Paid" ? "Income" : bill.payment_status === "Cancelled" ? "Expense" : "Income",
+          amount: Number(bill.total_amount || bill.totalAmount || bill.final_total || bill.total || 0),
+          debit: bill.payment_status === "Cancelled" ? Number(bill.total_amount || bill.totalAmount || bill.final_total || bill.total || 0) : 0,
+          credit: bill.payment_status !== "Cancelled" ? Number(bill.total_amount || bill.totalAmount || bill.final_total || bill.total || 0) : 0,
+          source: "hotel-billing",
+          status: bill.payment_status || bill.status || "Pending",
+        }));
+
+      // Filter restaurant bills by customer name or table/booking reference
+      restaurantBillingItems = allRestaurantBills
+        .filter((bill) => {
+          const billCustomer = String(bill.customerName || bill.customer_name || "").toLowerCase();
+          const billMobile = String(bill.mobile || "").toLowerCase();
+          const billRef = String(bill.reference || bill.id || "").toLowerCase();
+          if (groupMobiles.size > 0 && billMobile && groupMobiles.has(billMobile)) return true;
+          if (groupNames.size > 0 && billCustomer && groupNames.has(billCustomer)) return true;
+          // Match by description containing booking number or customer name
+          if (groupNames.size > 0) {
+            for (const nm of groupNames) {
+              if ((bill.description || "").toLowerCase().includes(nm) || billCustomer.includes(nm)) return true;
+            }
+          }
+          return false;
+        })
+        .map((bill) => ({
+          id: `rest-${bill.id}`,
+          date: bill.created_at || bill.date || "",
+          sortDate: bill.created_at || bill.date || "",
+          description: `Restaurant Bill ${bill.reference || `#${bill.id}`}${bill.customerName && bill.customerName !== "Walk-in" ? ` — ${bill.customerName}` : ""}`,
+          mode: bill.payment_mode || bill.paymentMode || "-",
+          type: "Income",
+          amount: Number(bill.total || 0),
+          debit: 0,
+          credit: Number(bill.total || 0),
+          source: "restaurant-billing",
+          status: bill.paymentStatus || bill.status || "Pending",
+        }));
+    } catch (err) {
+      console.error("Failed to load billing data for print:", err);
+    }
+
+    // Combine all items and sort by date descending (newest first)
+    const allItems = [...ledgerItems, ...paymentItems, ...hotelBillingItems, ...restaurantBillingItems].sort((a, b) => {
+      const da = new Date(a.sortDate || 0);
+      const db = new Date(b.sortDate || 0);
+      return db - da;
+    });
+
+    // Calculate totals including all sources
+    const totalCredit = allItems.reduce((s, i) => s + i.credit, 0);
+    const totalDebit = allItems.reduce((s, i) => s + i.debit, 0);
+    const totalDiscount = paymentItems.reduce((s, i) => s + i.discount, 0);
+    const netBalance = totalCredit - totalDebit;
+
+    const hotelTotal = hotelBillingItems.reduce((s, i) => s + i.amount, 0);
+    const restaurantTotal = restaurantBillingItems.reduce((s, i) => s + i.amount, 0);
+
+    // Build table rows
+    const rows = allItems
+      .map(
+        (item) => `
+        <tr>
+          <td>${escapeHtml(item.date)}</td>
+          <td>${escapeHtml(item.description)}</td>
+          <td>${escapeHtml(item.narration)}</td>
+          <td>${escapeHtml(item.mode)}</td>
+          <td style="text-align:right">${item.type === "Income" ? formatINR(item.amount) : "-"}</td>
+          <td style="text-align:right">${item.type === "Expense" ? formatINR(item.amount) : "-"}</td>
+          <td style="text-align:right">${item.discount > 0 ? `-${formatINR(item.discount)}` : "-"}</td>
+          <td>${escapeHtml(item.status || "-")}</td>
+          <td style="font-size:10px;color:#6b7280;">${escapeHtml(item.source)}</td>
+        </tr>
+      `,
+      )
+      .join("");
+
+    const emptyMsg = allItems.length === 0 ? `<tr><td colspan="9" style="text-align:center;padding:24px;color:#9ca3af;">No transactions found</td></tr>` : "";
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Customer Statement - ${escapeHtml(customer || group.name)}</title>
+        <style>
+          * { box-sizing: border-box; margin: 0; padding: 0; }
+          body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 24px;
+            color: #111827;
+            font-size: 13px;
+            max-width: 100%;
+            overflow-x: hidden;
+          }
+          .header {
+            text-align: center;
+            padding-bottom: 14px;
+            border-bottom: 3px solid #0f172a;
+            margin-bottom: 16px;
+          }
+          .header h1 {
+            font-size: 22px;
+            font-weight: 800;
+            color: #0f172a;
+            margin: 0;
+          }
+          .header .subtitle {
+            font-size: 13px;
+            color: #475569;
+            margin-top: 3px;
+          }
+          .header .meta {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-top: 4px;
+          }
+
+          .top-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 14px;
+          }
+          .info-box {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px 16px;
+            background: #f8fafc;
+          }
+          .info-box .label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #64748b;
+            font-weight: 700;
+            margin-bottom: 2px;
+          }
+          .info-box .value {
+            font-size: 15px;
+            font-weight: 700;
+            color: #0f172a;
+          }
+          .info-box .sub {
+            font-size: 11px;
+            color: #64748b;
+            margin-top: 1px;
+          }
+
+          .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+          }
+          .summary-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 12px 14px;
+            text-align: center;
+          }
+          .summary-card .label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #6b7280;
+            font-weight: 700;
+          }
+          .summary-card .value {
+            font-size: 16px;
+            font-weight: 800;
+            margin-top: 4px;
+          }
+          .value-income { color: #059669; }
+          .value-expense { color: #dc2626; }
+          .value-discount { color: #d97706; }
+          .value-net { color: #111827; }
+          .value-green { color: #059669; }
+          .val-dark { color: #0f172a; }
+
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+          }
+          th {
+            background: #0f172a;
+            color: #fff;
+            text-align: left;
+            padding: 10px 12px;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 700;
+          }
+          td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e5e7eb;
+            vertical-align: top;
+            font-size: 12px;
+            line-height: 1.4;
+          }
+          tr:nth-child(even) { background: #f9fafb; }
+          .section-title {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #475569;
+            margin-top: 18px;
+            margin-bottom: 6px;
+            padding: 6px 10px;
+            background: #f1f5f9;
+            border-radius: 6px;
+          }
+
+          .footer {
+            margin-top: 24px;
+            text-align: center;
+            font-size: 11px;
+            color: #9ca3af;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 12px;
+          }
+          .no-print { margin-top: 20px; text-align: center; }
+          .no-print button {
+            padding: 10px 28px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            margin: 0 4px;
+          }
+          .btn-print {
+            background: #0f172a;
+            color: #fff;
+            border: none;
+          }
+          .btn-close {
+            background: #fff;
+            color: #374151;
+            border: 1px solid #d1d5db;
+          }
+          .text-right { text-align: right; }
+          .text-green { color: #059669; font-weight: 600; }
+          .text-red { color: #dc2626; font-weight: 600; }
+          .text-muted { color: #94a3b8; font-size: 11px; }
+          @media print {
+            body { padding: 0; }
+            .no-print { display: none; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>Customer Statement</h1>
+          <div class="subtitle">${escapeHtml(customer || group.name)}</div>
+          <div class="meta">Generated ${now} · ${allItems.length} transaction${allItems.length !== 1 ? "s" : ""}</div>
+        </div>
+
+        <div class="top-row">
+          <div class="info-box">
+            <div class="label">Customer / Party</div>
+            <div class="value">${escapeHtml(customer || group.name)}</div>
+            <div class="sub">${escapeHtml(group.name)}</div>
+          </div>
+          <div class="info-box">
+            <div class="label">Net Balance</div>
+            <div class="value" style="color:${netBalance >= 0 ? '#059669' : '#dc2626'};">
+              ${formatINR(Math.abs(netBalance))} ${netBalance >= 0 ? '(Cr)' : '(Dr)'}
+            </div>
+            <div class="sub">${totalCredit > 0 ? 'Total In: ' + formatINR(totalCredit) : ''}${totalCredit > 0 && totalDebit > 0 ? ' · ' : ''}${totalDebit > 0 ? 'Total Out: ' + formatINR(totalDebit) : ''}</div>
+          </div>
+        </div>
+
+        <div class="summary-grid">
+          <div class="summary-card">
+            <div class="label">Payments In</div>
+            <div class="value value-green">${formatINR(totalCredit)}</div>
+          </div>
+          <div class="summary-card">
+            <div class="label">Hotel Bills</div>
+            <div class="value val-dark">${hotelBillingItems.length > 0 ? formatINR(hotelTotal) : '-'}</div>
+          </div>
+          <div class="summary-card">
+            <div class="label">Restaurant Bills</div>
+            <div class="value val-dark">${restaurantBillingItems.length > 0 ? formatINR(restaurantTotal) : '-'}</div>
+          </div>
+          <div class="summary-card">
+            <div class="label">Net Balance</div>
+            <div class="value value-net">${formatINR(Math.abs(netBalance))}</div>
+          </div>
+        </div>
+
+        ${paymentItems.length > 0 ? `
+        <div class="section-title">Payment History (${paymentItems.length})</div>
+        <table>
+          <thead>
+            <tr>
+              <th style="width:12%">Date</th>
+              <th style="width:34%">Description</th>
+              <th style="width:12%">Mode</th>
+              <th style="text-align:right">Amount</th>
+              <th style="text-align:right">Discount</th>
+              <th style="text-align:center">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${paymentItems.map(p => {
+              const badge = p.status === 'Completed' ? 'badge-ok' : p.status === 'Cancelled' ? 'badge-cancel' : 'badge-pending';
+              return `
+              <tr>
+                <td>${escapeHtml(p.date)}</td>
+                <td>${escapeHtml(p.description)}</td>
+                <td>${escapeHtml(p.mode)}</td>
+                <td class="text-right text-green">+${formatINR(p.amount)}</td>
+                <td class="text-right" style="color:#d97706;">${p.discount > 0 ? formatINR(p.discount) : '-'}</td>
+                <td class="text-center"><span class="badge ${badge}">${escapeHtml(p.status)}</span></td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+        ` : ''}
+
+        ${ledgerItems.length > 0 ? `
+        <div class="section-title">Ledger Transactions (${ledgerItems.length})</div>
+        <table>
+          <thead>
+            <tr>
+              <th style="width:12%">Date</th>
+              <th style="width:38%">Description</th>
+              <th style="width:10%">Type</th>
+              <th style="text-align:right">Amount</th>
+              <th style="text-align:center">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${ledgerItems.map(item => `
+              <tr>
+                <td>${escapeHtml(item.date)}</td>
+                <td>${escapeHtml(item.description)}</td>
+                <td>${item.type}</td>
+                <td class="text-right ${item.type === 'Income' ? 'text-green' : 'text-red'}">${formatINR(item.amount)}</td>
+                <td class="text-center">${escapeHtml(item.status || '-')}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        ` : ''}
+
+        ${hotelBillingItems.length > 0 ? `
+        <div class="section-title">Hotel Bills (${hotelBillingItems.length})</div>
+        <table>
+          <thead>
+            <tr>
+              <th style="width:12%">Date</th>
+              <th style="width:38%">Description</th>
+              <th style="width:12%">Type</th>
+              <th style="text-align:right">Amount</th>
+              <th style="text-align:center">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${hotelBillingItems.map(item => `
+              <tr>
+                <td>${escapeHtml(item.date)}</td>
+                <td>${escapeHtml(item.description)}</td>
+                <td>${item.type}</td>
+                <td class="text-right ${item.type === 'Income' ? 'text-green' : 'text-red'}">${formatINR(item.amount)}</td>
+                <td class="text-center">${escapeHtml(item.status || '-')}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        ` : ''}
+
+        ${restaurantBillingItems.length > 0 ? `
+        <div class="section-title">Restaurant Bills (${restaurantBillingItems.length})</div>
+        <table>
+          <thead>
+            <tr>
+              <th style="width:12%">Date</th>
+              <th style="width:38%">Description</th>
+              <th style="width:12%">Type</th>
+              <th style="text-align:right">Amount</th>
+              <th style="text-align:center">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${restaurantBillingItems.map(item => `
+              <tr>
+                <td>${escapeHtml(item.date)}</td>
+                <td>${escapeHtml(item.description)}</td>
+                <td>${item.type}</td>
+                <td class="text-right ${item.type === 'Income' ? 'text-green' : 'text-red'}">${formatINR(item.amount)}</td>
+                <td class="text-center">${escapeHtml(item.status || '-')}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        ` : ''}
+
+        <div class="footer">
+          Maa Baglamkhi Resort — Customer Statement &middot; Printed ${now}
+        </div>
+
+        <div class="no-print">
+          <button class="btn-print" onclick="window.print()">Print Statement</button>
+          <button class="btn-close" onclick="window.close()">Close</button>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const printWindow = window.open("", "_blank", "width=1000,height=800");
+    if (printWindow) {
+      printWindow.document.open();
+      printWindow.document.write(html);
+      printWindow.document.close();
+    } else {
+      showToast("Please allow popups to print", "error");
+    }
+  };
+
+  const escapeHtml = (text) => {
+    if (!text) return "";
+    const div = document.createElement("div");
+    div.textContent = String(text);
+    return div.innerHTML;
+  };
+
   const handleGenerateInvoice = async (invoice) => {
     try {
       await API.post("/invoices/create", invoice);
@@ -1505,6 +2038,8 @@ const Accounts = () => {
       locationLabel: getInvoiceRoomValue(invoice) ? `Room ${getInvoiceRoomValue(invoice)}` : "--",
       date: invoice.date || "--",
       total: toNumber(invoice.totalAmount ?? invoice.total_amount ?? invoice.final_total),
+      paidAmount: toNumber(invoice.paidAmount || invoice.paid_amount || invoice.amount_paid || 0),
+      remainingAmount: toNumber(invoice.remainingAmount || invoice.balanceAmount || invoice.remaining_amount || 0),
       paymentMode: getInvoicePaymentMode(invoice),
       paymentStatus: invoice.paymentStatus || invoice.payment_status || invoice.status || "Pending",
       actionId: invoice.booking_id || invoice.customer_id,
@@ -1524,6 +2059,7 @@ const Accounts = () => {
       ),
       paymentMode: getHotelBookingPaymentMode(booking),
       paymentStatus: getHotelBookingPaymentStatus(booking),
+      remainingAmount: toNumber(booking.remainingAmount || booking.balanceAmount || 0),
       actionId: booking.bookingId || booking.id,
       actionKind: "hotel-booking",
       raw: booking,
@@ -1539,6 +2075,8 @@ const Accounts = () => {
         : "--"),
       date: bill.created_at || bill.date || "--",
       total: toNumber(bill.total),
+      paidAmount: toNumber(bill.paidAmount || bill.paid_amount || bill.amount_paid || 0),
+      remainingAmount: toNumber(bill.remainingAmount || bill.balanceAmount || bill.remaining_amount || 0),
       paymentMode: getRestaurantBillPaymentMode(bill),
       paymentStatus: bill.paymentStatus || getRestaurantBillStatus(bill),
       actionId: bill.actionId || bill.id,
@@ -1556,6 +2094,8 @@ const Accounts = () => {
       total: toNumber(
         booking.grandTotal || booking.grand_total || booking.totalAmount || booking.total_amount,
       ),
+      paidAmount: toNumber(booking.paidAmount || booking.paid_amount || booking.amount_paid || 0),
+      remainingAmount: toNumber(booking.remainingAmount || booking.balanceAmount || 0),
       paymentMode: getBanquetPaymentMode(booking),
       paymentStatus: getBanquetPaymentStatus(booking),
       actionId: booking.id,
@@ -2670,15 +3210,28 @@ const Accounts = () => {
                               {formatINR(group.income - group.expense)}
                             </td>
                             <td className="px-4 py-3 text-center">
-                              {group.key !== "__ungrouped" && (
-                                <button
-                                  type="button"
-                                  className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 shadow-2xs transition-colors"
-                                  onClick={() => toggleGroup(group.key)}
-                                >
-                                  {isOpen ? "Hide Items" : "View Items"}
-                                </button>
-                              )}
+                              <div className="flex flex-wrap justify-center gap-1.5">
+                                {group.key !== "__ungrouped" && (
+                                  <>
+                                    <button
+                                      type="button"
+                                      className="inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1 text-[11px] font-bold text-blue-700 hover:bg-blue-100 transition-colors"
+                                      onClick={() => handlePrintGroup(group)}
+                                      title="Print this group"
+                                    >
+                                      <FaPrint className="text-[10px]" />
+                                      Print
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 shadow-2xs transition-colors"
+                                      onClick={() => toggleGroup(group.key)}
+                                    >
+                                      {isOpen ? "Hide Items" : "View Items"}
+                                    </button>
+                                  </>
+                                )}
+                              </div>
                             </td>
                           </tr>
 
@@ -2782,13 +3335,25 @@ const Accounts = () => {
                             </div>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <div className="text-xs font-bold text-slate-900">
-                            {formatINR(group.income - group.expense)}
-                          </div>
-                          <div className="flex items-center gap-1.5 text-[10px] font-semibold">
-                            {group.income > 0 && <span className="text-emerald-600">+{formatINR(group.income)}</span>}
-                            {group.expense > 0 && <span className="text-rose-500">-{formatINR(group.expense)}</span>}
+                        <div className="flex items-center gap-1.5">
+                          {group.key !== "__ungrouped" && (
+                            <button
+                              type="button"
+                              onClick={() => handlePrintGroup(group)}
+                              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-blue-200 bg-blue-50 text-blue-700"
+                              title="Print"
+                            >
+                              <FaPrint className="text-[10px]" />
+                            </button>
+                          )}
+                          <div className="text-right">
+                            <div className="text-xs font-bold text-slate-900">
+                              {formatINR(group.income - group.expense)}
+                            </div>
+                            <div className="flex items-center gap-1.5 text-[10px] font-semibold">
+                              {group.income > 0 && <span className="text-emerald-600">+{formatINR(group.income)}</span>}
+                              {group.expense > 0 && <span className="text-rose-500">-{formatINR(group.expense)}</span>}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -2984,6 +3549,8 @@ const Accounts = () => {
                     <th className="px-4 py-3">Location</th>
                     <th className="px-4 py-3">Date</th>
                     <th className="px-4 py-3 text-right">Total</th>
+                    <th className="px-4 py-3 text-right">Paid</th>
+                    <th className="px-4 py-3 text-right">Remaining</th>
                     <th className="px-4 py-3">Payment Mode</th>
                     <th className="px-4 py-3 text-center">Payment Status</th>
                   </tr>
@@ -2991,7 +3558,7 @@ const Accounts = () => {
                 <tbody className="divide-y divide-slate-100">
                   {paginatedBillingRecords.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="px-4 py-12 text-center text-sm font-medium text-slate-400">
+                      <td colSpan={10} className="px-4 py-12 text-center text-sm font-medium text-slate-400">
                         No billing records found.
                       </td>
                     </tr>
@@ -3019,6 +3586,8 @@ const Accounts = () => {
                           <td className="px-4 py-3 text-xs text-slate-500">{row.locationLabel}</td>
                           <td className="px-4 py-3 text-xs text-slate-500">{row.date}</td>
                           <td className="whitespace-nowrap px-4 py-3 text-right font-black text-slate-900">{formatINR(row.total)}</td>
+                          <td className="whitespace-nowrap px-4 py-3 text-right font-semibold text-emerald-600">{formatINR(row.paidAmount)}</td>
+                          <td className="whitespace-nowrap px-4 py-3 text-right font-semibold text-rose-500">{formatINR(row.remainingAmount)}</td>
                           <td className="px-4 py-3 text-xs font-semibold text-slate-600">{row.paymentMode}</td>
                           <td className="px-4 py-3 text-center">
                             <span className={`inline-block rounded-full px-2.5 py-0.5 text-[11px] font-bold ${payCls}`}>
@@ -3071,12 +3640,16 @@ const Accounts = () => {
                           <div className="font-medium text-slate-700 truncate">{row.locationLabel}</div>
                         </div>
                         <div>
-                          <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Date</div>
-                          <div className="font-medium text-slate-700">{row.date}</div>
-                        </div>
-                        <div>
                           <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Total</div>
                           <div className="font-black text-slate-900">{formatINR(row.total)}</div>
+                        </div>
+                        <div>
+                          <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Paid</div>
+                          <div className="font-semibold text-emerald-600">{formatINR(row.paidAmount)}</div>
+                        </div>
+                        <div>
+                          <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Remaining</div>
+                          <div className="font-semibold text-rose-500">{formatINR(row.remainingAmount)}</div>
                         </div>
                         <div className="col-span-2">
                           <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Mode</div>
