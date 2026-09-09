@@ -29,6 +29,9 @@ const TransactionForm = ({ type, onSubmit, onCancel, initialData = {} }) => {
   const [form, setForm] = useState({
     date: initialData.date || todayISO(),
     description: initialData.description || "",
+    narration: initialData.narration || "",
+    customerName: initialData.customerName || "",
+    customerMobile: initialData.customerMobile || "",
     amount: initialData.amount ?? "",
     paymentMode: initialData.paymentMode || "UPI",
     department:
@@ -59,6 +62,9 @@ const TransactionForm = ({ type, onSubmit, onCancel, initialData = {} }) => {
       type,
       date: form.date,
       description: form.description.trim(),
+      narration: form.narration.trim() || undefined,
+      customerName: form.customerName.trim() || undefined,
+      customerMobile: form.customerMobile.trim() || undefined,
       amount: amountNumber,
       paymentMode: form.paymentMode,
       department: form.department,
@@ -147,6 +153,53 @@ const TransactionForm = ({ type, onSubmit, onCancel, initialData = {} }) => {
               <option key={suggestion} value={suggestion} />
             ))}
           </datalist>
+        </div>
+
+        <div className="accounts-form__field">
+          <label className="accounts-form__label" htmlFor="narration">
+            Narration / Notes
+          </label>
+          <textarea
+            id="narration"
+            name="narration"
+            className="accounts-form__input accounts-form__input--textarea"
+            value={form.narration}
+            onChange={handleChange}
+            placeholder="Add detailed notes, reference numbers, or context for this entry..."
+            rows={3}
+          />
+        </div>
+
+        <div className="accounts-form__row">
+          <div className="accounts-form__field">
+            <label className="accounts-form__label" htmlFor="customerName">
+              Customer Name
+            </label>
+            <input
+              id="customerName"
+              name="customerName"
+              type="text"
+              className="accounts-form__input"
+              value={form.customerName}
+              onChange={handleChange}
+              placeholder="e.g. Rahul Sharma"
+            />
+          </div>
+
+          <div className="accounts-form__field">
+            <label className="accounts-form__label" htmlFor="customerMobile">
+              Mobile Number
+            </label>
+            <input
+              id="customerMobile"
+              name="customerMobile"
+              type="tel"
+              className="accounts-form__input"
+              value={form.customerMobile}
+              onChange={handleChange}
+              placeholder="e.g. 9876543210"
+            />
+          </div>
         </div>
 
         <div className="accounts-form__row">

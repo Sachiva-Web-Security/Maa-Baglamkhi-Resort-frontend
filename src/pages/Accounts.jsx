@@ -2362,22 +2362,52 @@ const Accounts = () => {
 
         <section className="rounded-[20px] border border-blue-100/70 bg-white p-3 shadow-[0_20px_50px_-15px_rgba(30,64,175,0.15)] sm:rounded-[24px] sm:p-4 md:p-5 xl:rounded-[30px]">
           {/* Desktop / tablet table (≥768px) — unchanged structure and data */}
+          <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <div className="text-[13px] font-bold uppercase tracking-[0.18em] text-sky-600 sm:text-base">
+                Accounts Ledger
+              </div>
+              <div className="mt-1 text-base font-medium text-slate-500 sm:text-lg">
+                All income and expense transactions grouped by name
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <label className="relative w-full sm:w-auto">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                    <path fillRule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clipRule="evenodd" />
+                  </svg>
+                </span>
+                <input
+                  value={nameSearch}
+                  onChange={(event) => setNameSearch(event.target.value)}
+                  placeholder="Search by name or number..."
+                  className="w-full rounded-xl border border-blue-100 bg-slate-50 pl-9 pr-3 py-2 text-[14px] font-semibold text-slate-900 outline-none transition-all duration-200 focus:border-sky-400 focus:ring-4 focus:ring-sky-100 sm:w-64 sm:text-[15px]"
+                />
+              </label>
+              <span className="text-[13px] font-semibold text-slate-400 sm:text-[15px]">
+                {paginatedTransactionRecords.length} group{paginatedTransactionRecords.length !== 1 ? "s" : ""} shown
+              </span>
+            </div>
+          </div>
           <div className="hidden overflow-x-auto md:block">
             <table className="min-w-full text-left">
-              <thead className="bg-gradient-to-r from-blue-950 via-blue-800 to-sky-600 text-[16px] uppercase tracking-[0.18em] text-white">
+              <thead className="bg-gradient-to-r from-blue-950 via-blue-800 to-sky-600 text-[13px] uppercase tracking-[0.1em] text-white">
                 <tr>
-                  <th className="px-4 py-4 font-bold sm:px-5 sm:py-5">Name / Description</th>
-                  <th className="px-4 py-4 font-bold sm:px-5 sm:py-5">Type</th>
-                  <th className="px-4 py-4 font-bold text-right sm:px-5 sm:py-5">Income</th>
-                  <th className="px-4 py-4 font-bold text-right sm:px-5 sm:py-5">Expense</th>
-                  <th className="px-4 py-4 font-bold text-right sm:px-5 sm:py-5">Net</th>
-                  <th className="px-4 py-4 font-bold sm:px-5 sm:py-5">Action</th>
+                  <th className="px-3 py-4 font-bold sm:px-4 sm:py-5">Name / Description</th>
+                  <th className="px-3 py-4 font-bold sm:px-4 sm:py-5">Narration</th>
+                  <th className="px-3 py-4 font-bold sm:px-4 sm:py-5">Mobile / Customer</th>
+                  <th className="px-3 py-4 font-bold sm:px-4 sm:py-5">Type</th>
+                  <th className="px-3 py-4 font-bold text-right sm:px-4 sm:py-5">Income</th>
+                  <th className="px-3 py-4 font-bold text-right sm:px-4 sm:py-5">Expense</th>
+                  <th className="px-3 py-4 font-bold text-right sm:px-4 sm:py-5">Net</th>
+                  <th className="px-3 py-4 font-bold sm:px-4 sm:py-5">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {paginatedTransactionRecords.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-[18px] text-slate-400 sm:px-6 sm:py-10 sm:text-[21px]">
+                    <td colSpan={8} className="px-4 py-8 text-center text-[18px] text-slate-400 sm:px-6 sm:py-10 sm:text-[21px]">
                       No transaction records match the selected payment mode.
                     </td>
                   </tr>
@@ -2386,8 +2416,8 @@ const Accounts = () => {
                     const isOpen = expandedGroups[group.key];
                     return (
                       <React.Fragment key={group.key}>
-                        <tr className="border-t border-blue-50 transition-colors duration-200 hover:bg-sky-50/60">
-                          <td className="px-4 py-3.5 sm:px-5 sm:py-5">
+                        <tr>
+                          <td colSpan={8} className="px-4 py-2.5 sm:px-5 sm:py-3">
                             <div className="flex items-center gap-2">
                               {group.key !== "__ungrouped" ? (
                                 <button
@@ -2400,10 +2430,22 @@ const Accounts = () => {
                               ) : (
                                 <span className="inline-block h-7 w-7 shrink-0" />
                               )}
-                              <span className="text-[15px] font-bold text-slate-900 sm:text-[17px]">
+                              <span className="text-[16px] font-black tracking-wide text-slate-900 sm:text-[18px]">
                                 {group.name}
                               </span>
+                              <span className="text-[12px] font-semibold text-slate-400">
+                                ({group.records.length} record{group.records.length !== 1 ? "s" : ""})
+                              </span>
                             </div>
+                          </td>
+                        </tr>
+                        <tr className="border-t border-blue-50 transition-colors duration-200 hover:bg-sky-50/60">
+                          <td className="px-4 py-3.5 sm:px-5 sm:py-5" />
+                          <td className="px-4 py-3.5 text-[13px] text-slate-500 sm:px-5 sm:py-5 sm:text-[15px]">
+                            {group.records[0]?.narration || group.records[0]?.customerMobile || group.records[0]?.customerName || "--"}
+                          </td>
+                          <td className="px-4 py-3.5 text-[13px] text-slate-500 sm:px-5 sm:py-5 sm:text-[15px]">
+                            {group.records[0]?.customerMobile || group.records[0]?.customerName || "--"}
                           </td>
                           <td className="px-4 py-3.5 sm:px-5 sm:py-5">
                             <div className="flex flex-wrap gap-1.5">
@@ -2448,6 +2490,12 @@ const Accounts = () => {
                           group.records.map((r) => (
                             <tr key={r.id} className="border-t border-blue-50 bg-slate-50/40 transition-colors duration-200">
                               <td className="pl-14 pr-4 py-3 text-[14px] text-slate-600 sm:pl-16 sm:pr-5 sm:text-[16px]">{r.description}</td>
+                              <td className="px-4 py-3 text-[13px] text-slate-500 sm:px-5 sm:py-3 sm:text-[15px]">
+                                {r.narration ? <span className="line-clamp-2">{r.narration}</span> : "--"}
+                              </td>
+                              <td className="px-4 py-3 text-[13px] text-slate-500 sm:px-5 sm:py-3 sm:text-[15px]">
+                                {r.customerMobile || r.customerName || "--"}
+                              </td>
                               <td className="px-4 py-3 sm:px-5 sm:py-5">
                                 <span className={`inline-flex rounded-full border px-3 py-1.5 text-[13px] font-bold sm:px-4 sm:py-2 sm:text-[15px] ${r.type === "Income" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-rose-200 bg-rose-50 text-rose-600"}`}>
                                   {r.type}
@@ -2500,6 +2548,28 @@ const Accounts = () => {
 
           {/* Mobile card list (<768px) — grouped by name */}
           <div className="space-y-3 p-2.5 md:hidden">
+            <div className="mb-1 flex items-center justify-between px-1">
+              <div>
+                <div className="text-[13px] font-bold uppercase tracking-[0.18em] text-sky-600">Accounts Ledger</div>
+                <div className="text-[13px] font-medium text-slate-500">Grouped by name</div>
+              </div>
+              <div className="text-[12px] font-semibold text-slate-400">
+                {paginatedTransactionRecords.length} group{paginatedTransactionRecords.length !== 1 ? "s" : ""}
+              </div>
+            </div>
+            <label className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                  <path fillRule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clipRule="evenodd" />
+                </svg>
+              </span>
+              <input
+                value={nameSearch}
+                onChange={(event) => setNameSearch(event.target.value)}
+                placeholder="Search by name or number..."
+                className="w-full rounded-xl border border-blue-100 bg-slate-50 pl-9 pr-3 py-2 text-[14px] font-semibold text-slate-900 outline-none transition-all duration-200 focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
+              />
+            </label>
             {paginatedTransactionRecords.length === 0 ? (
               <div className="rounded-[20px] border border-dashed border-blue-100 bg-blue-50/50 px-4 py-8 text-center text-[15px] text-slate-400">
                 No transaction records match the selected payment mode.
@@ -2508,37 +2578,33 @@ const Accounts = () => {
               paginatedTransactionRecords.map((group) => {
                 const isOpen = expandedGroups[group.key];
                 return (
-                  <div
-                    key={group.key}
-                    className="rounded-[20px] border border-blue-100/70 bg-white p-4 shadow-[0_10px_30px_-12px_rgba(30,64,175,0.18)] transition-all duration-200"
-                  >
-                    <div className="flex items-center justify-between gap-2.5">
-                      <div className="flex items-center gap-2">
-                        {group.key !== "__ungrouped" ? (
-                          <button
-                            type="button"
-                            onClick={() => toggleGroup(group.key)}
-                            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-blue-200 bg-blue-50 text-[12px] font-bold text-blue-700 transition-all duration-200 hover:bg-blue-100"
-                          >
-                            {isOpen ? "−" : "+"}
-                          </button>
-                        ) : (
-                          <span className="inline-block h-7 w-7 shrink-0" />
-                        )}
-                        <span className="text-[14px] font-black text-slate-900">{group.name}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
+                  <div key={group.key}>
+                    <div className="mb-1.5 flex items-center gap-2 px-1 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => toggleGroup(group.key)}
+                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-blue-200 bg-blue-50 text-[12px] font-bold text-blue-700"
+                      >
+                        {isOpen ? "−" : "+"}
+                      </button>
+                      <span className="text-[16px] font-black tracking-wide text-slate-900">
+                        {group.name}
+                      </span>
+                      <span className="text-[12px] font-semibold text-slate-400">
+                        ({group.records.length} record{group.records.length !== 1 ? "s" : ""})
+                      </span>
+                      <span className="ml-auto flex items-center gap-2">
                         {group.income > 0 && (
                           <span className="text-[13px] font-bold text-emerald-600">+{formatINR(group.income)}</span>
                         )}
                         {group.expense > 0 && (
                           <span className="text-[13px] font-bold text-rose-500">-{formatINR(group.expense)}</span>
                         )}
-                      </div>
+                      </span>
                     </div>
-
-                    {isOpen && group.key !== "__ungrouped" ? (
-                      <div className="mt-3 space-y-2.5">
+                    <div>
+                      {isOpen && group.key !== "__ungrouped" ? (
+                        <div className="mt-3 space-y-2.5">
                         {group.records.map((r) => (
                           <div key={r.id} className="rounded-2xl border border-blue-100/60 bg-slate-50/40 p-3">
                             <div className="flex items-center justify-between gap-2">
@@ -2550,6 +2616,10 @@ const Accounts = () => {
                             <div className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-[13px]">
                               <span className="font-semibold uppercase tracking-wide text-slate-400">Desc</span>
                               <span className="font-medium text-slate-700">{r.description}</span>
+                              <span className="font-semibold uppercase tracking-wide text-slate-400">Narration</span>
+                              <span className="font-medium text-slate-700">{r.narration ? <span className="line-clamp-2">{r.narration}</span> : "--"}</span>
+                              <span className="font-semibold uppercase tracking-wide text-slate-400">Customer</span>
+                              <span className="font-medium text-slate-700">{r.customerMobile || r.customerName || "--"}</span>
                               <span className="font-semibold uppercase tracking-wide text-slate-400">Date</span>
                               <span className="font-medium text-slate-700">{r.date}</span>
                               <span className="font-semibold uppercase tracking-wide text-slate-400">Mode</span>
@@ -2580,8 +2650,9 @@ const Accounts = () => {
                             </div>
                           </div>
                         ))}
-                      </div>
-                    ) : null}
+                        </div>
+                      ) : null}
+                    </div>
                   </div>
                 );
               })
@@ -3066,6 +3137,7 @@ const Accounts = () => {
                       <p><strong>Date:</strong> {selectedRecord.date}</p>
                       <p><strong>Type:</strong> {selectedRecord.type}</p>
                       <p><strong>Description:</strong> {selectedRecord.description}</p>
+                      <p><strong>Customer:</strong> {selectedRecord.customerMobile || selectedRecord.customerName || "-"}</p>
                       <p><strong>Amount:</strong> {formatINR(selectedRecord.amount)}</p>
                       <p><strong>Payment Mode:</strong> {selectedRecord.paymentMode}</p>
                       <p><strong>Source Module:</strong> {selectedRecord.sourceModule || "-"}</p>
@@ -3105,6 +3177,9 @@ const Accounts = () => {
                   initialData={{
                     date: formatInputDate(editingRecord.date),
                     description: editingRecord.description || "",
+                    narration: editingRecord.narration || "",
+                    customerName: editingRecord.customerName || "",
+                    customerMobile: editingRecord.customerMobile || "",
                     amount: editingRecord.amount || "",
                     paymentMode: editingRecord.paymentMode || "UPI",
                     department: editingRecord.department || (editingRecord.type === "Income" ? "Room" : "Other"),

@@ -146,6 +146,11 @@
   color: #64748b;
 }
 
+.accounts-form__input--textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
 .accounts-form__actions {
   display: flex;
   justify-content: flex-end;
