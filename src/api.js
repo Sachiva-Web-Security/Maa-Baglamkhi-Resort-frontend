@@ -32,18 +32,33 @@ API.interceptors.request.use((req) => {
 
   req.headers["X-Audit-Action"] = inferredAction;
   req.headers["X-Audit-Source"] = "frontend";
+  req.headers["X-Audit-User-Email"] = localStorage.getItem("email") || null;
 
   return req;
 });
 
 // Retry on transient backend-down errors (ECONNREFUSED / proxy 502/503/504)
+// Also handle 401 in the same interceptor so both behaviors run together
 API.interceptors.response.use(
   (res) => res,
   (err) => {
+    // 401: clear auth state
+    if (err.response?.status === 401 && !err.config?.skipAuthRedirect) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("role");
+      localStorage.removeItem("name");
+      localStorage.removeItem("email");
+      localStorage.removeItem("isAuthenticated");
+
+      if (window.location.pathname !== "/login") {
+        window.location.assign(`${window.location.origin}/login`);
+      }
+    }
+
     const isTimeout = err.code === "ECONNABORTED" || err.message?.includes("timeout");
     const shouldRetry =
       !err.config?.skipRetry &&
-      err.response?.status !== 401 && // never retry auth failures
+      err.response?.status !== 401 &&
       (err.code === "ERR_NETWORK" ||
         err.message?.includes("ECONNREFUSED") ||
         err.message?.includes("ECONNRESET") ||
@@ -61,26 +76,6 @@ API.interceptors.response.use(
     return new Promise((resolve) => {
       setTimeout(() => resolve(API.request(err.config)), delay);
     });
-  }
-);
-
-// On 401 (expired/invalid token), clear auth state. Do NOT redirect here —
-// let React Router (ProtectedRoute / RoleHomeRedirect) handle navigation.
-API.interceptors.response.use(
-  (res) => res,
-  (err) => {
-    if (err.response?.status === 401 && !err.config?.skipAuthRedirect) {
-      localStorage.removeItem("token");
-      localStorage.removeItem("role");
-      localStorage.removeItem("name");
-      localStorage.removeItem("email");
-      localStorage.removeItem("isAuthenticated");
-
-      if (window.location.pathname !== "/login") {
-        window.location.assign(`${window.location.origin}/login`);
-      }
-    }
-    return Promise.reject(err);
   }
 );
 

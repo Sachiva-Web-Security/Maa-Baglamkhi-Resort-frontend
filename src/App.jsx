@@ -38,6 +38,7 @@ import BankReconciliation from "./pages/BankReconciliation";
 import ReconciliationDataPage from "./pages/ReconciliationDataPage";
 import AccountsCustomerInvoices from "./pages/AccountsCustomerInvoices";
 import AccountsDashboard from "./pages/AccountsDashboard";
+import AuditLogs from "./pages/AuditLogs";
 import Assignment from "./pages/Assignments";
 import AssignmentNotification from "./pages/assignmentnotification";
 import Attendance from "./pages/Attendance";
@@ -296,6 +297,7 @@ function AppRoutes({ isAuthenticated, setIsAuthenticated, protect }) {
             path="/accounts/customer-invoices"
             element={protect(<AccountsCustomerInvoices />, ROLES.ACCOUNTS)}
           />
+          <Route path="/audit-logs" element={protect(<AuditLogs />, ROLES.AUDIT)} />
           <Route path="/inventory" element={protect(<InventoryHubPage />, ROLES.INVENTORY)} />
           <Route path="/inventory/items" element={protect(<InventoryItemsPage />, ROLES.INVENTORY)} />
           <Route path="/inventory/categories" element={protect(<InventoryCategoriesPage />, ROLES.INVENTORY)} />
