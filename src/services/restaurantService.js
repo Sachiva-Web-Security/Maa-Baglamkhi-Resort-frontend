@@ -125,34 +125,34 @@ export const restaurantService = {
 
   // ── Room Service Delivery ─────────────────────────────────────────────────
   async assignWaiter(payload) {
-    const response = await API.post("/room-service-delivery/assign-waiter", payload);
+    const response = await API.post("/room-service/assign-waiter", payload);
     return response.data;
   },
 
   async getWaiterDeliveryQueue(waiterName) {
-    const response = await API.get("/room-service-delivery/waiter-queue", {
+    const response = await API.get("/room-service/waiter-queue", {
       params: { waiterName },
     });
     return response.data;
   },
 
   async markDelivered(assignmentId) {
-    const response = await API.post(`/room-service-delivery/mark-delivered/${assignmentId}`);
+    const response = await API.post(`/room-service/mark-delivered/${assignmentId}`);
     return response.data;
   },
 
   async cancelRoomServiceOrder(payload) {
-    const response = await API.post("/room-service-delivery/cancel", payload);
+    const response = await API.post("/room-service/cancel-assignment", payload);
     return response.data;
   },
 
   async getReadyRoomOrders() {
-    const response = await API.get("/room-service-delivery/ready-room-orders");
+    const response = await API.get("/room-service/ready-room-orders");
     return response.data;
   },
 
   async getCancellationLog(kitchenOrderId) {
-    const response = await API.get(`/room-service-delivery/cancellation-log/${kitchenOrderId}`);
+    const response = await API.get(`/room-service/cancellation-log/${kitchenOrderId}`);
     return response.data;
   },
 

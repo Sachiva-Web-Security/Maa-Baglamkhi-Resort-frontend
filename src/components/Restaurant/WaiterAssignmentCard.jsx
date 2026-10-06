@@ -59,7 +59,7 @@ export default function WaiterAssignmentCard({ order, onAssigned, onDelivered, a
     setAssigning(true);
     setError("");
     try {
-      const res = await API.post("/room-service-delivery/assign-waiter", {
+      const res = await API.post("/room-service/assign-waiter", {
         kitchenOrderId: order.id,
         waiterName: waiter,
         deliveryEtaMinutes: Number(eta),
@@ -82,11 +82,30 @@ export default function WaiterAssignmentCard({ order, onAssigned, onDelivered, a
     setDelivering(true);
     setError("");
     try {
-      const res = await API.post(`/room-service-delivery/mark-delivered/${assignmentId}`);
+      const res = await API.post(`/room-service/mark-delivered/${assignmentId}`);
       setIsDelivered(true);
       onDelivered?.(order.id, res.data);
     } catch (err) {
       const msg = err.response?.data?.message || "Delivery confirmation failed";
+      setError(msg);
+    } finally {
+      setDelivering(false);
+    }
+  };
+
+  const handleCancel = async () => {
+    if (!assignmentId || delivering) return;
+    setDelivering(true);
+    setError("");
+    try {
+      const res = await API.post("/room-service/cancel-assignment", {
+        assignmentId,
+      });
+      setIsAssigned(false);
+      setAssignmentId(null);
+      onDelivered?.(order.id, res.data);
+    } catch (err) {
+      const msg = err.response?.data?.message || "Cancellation failed";
       setError(msg);
     } finally {
       setDelivering(false);
@@ -128,23 +147,33 @@ export default function WaiterAssignmentCard({ order, onAssigned, onDelivered, a
               </p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={handleMarkDelivered}
-            disabled={delivering}
-            className="inline-flex items-center gap-2 rounded-[14px] bg-emerald-500 px-5 py-3 text-lg font-bold text-white shadow-md transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {delivering ? (
-              <>
-                <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                Confirming...
-              </>
-            ) : (
-              <>
-                <FaCheckCircle /> Mark Delivered
-              </>
-            )}
-          </button>
+          <div className="flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={handleCancel}
+              disabled={delivering}
+              className="inline-flex items-center gap-2 rounded-[14px] border border-slate-300 bg-white px-4 py-3 text-base font-bold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleMarkDelivered}
+              disabled={delivering}
+              className="inline-flex items-center gap-2 rounded-[14px] bg-emerald-500 px-5 py-3 text-lg font-bold text-white shadow-md transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {delivering ? (
+                <>
+                  <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                  Confirming...
+                </>
+              ) : (
+                <>
+                  <FaCheckCircle /> Mark Delivered
+                </>
+              )}
+            </button>
+          </div>
         </div>
         {error && (
           <div className="mt-3 flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-lg text-rose-700">

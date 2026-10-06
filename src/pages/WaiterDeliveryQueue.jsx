@@ -27,7 +27,7 @@ export default function WaiterDeliveryQueue() {
       return;
     }
     try {
-      const res = await API.get("/room-service-delivery/waiter-queue", {
+      const res = await API.get("/room-service/waiter-queue", {
         params: { waiterName },
       });
       setOrders(Array.isArray(res.data) ? res.data : []);
