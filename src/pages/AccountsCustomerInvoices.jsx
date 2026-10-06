@@ -204,10 +204,8 @@ const AccountsCustomerInvoices = () => {
 
   useEffect(() => {
     let active = true;
-const abortController = new AbortController();
     const runRefresh = async () => {
       if (!active) return;
-       if (abortController.signal.aborted) return;
       await refreshData();
     };
 
@@ -226,7 +224,6 @@ const abortController = new AbortController();
 
     return () => {
       active = false;
-      abortController.abort();
       if (refreshTimerRef.current) {
         window.clearInterval(refreshTimerRef.current);
       }

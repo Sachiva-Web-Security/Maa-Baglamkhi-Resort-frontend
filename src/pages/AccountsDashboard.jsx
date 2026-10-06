@@ -78,7 +78,14 @@ const AccountsDashboard = () => {
       setRestaurantBills(billsRes.status === "fulfilled" ? billsRes.value.data || [] : []);
       setAssignments(assignmentsRes.status === "fulfilled" ? assignmentsRes.value.data || [] : []);
 
-      if (summaryRes.status !== "fulfilled" && transactionRes.status !== "fulfilled") {
+      const failed = results
+        .filter((r) => r.status === "rejected")
+        .map((r) => r.reason?.response?.status || r.reason?.message || "unknown");
+      if (failed.length) {
+        console.warn("Dashboard endpoints failed:", failed);
+      }
+
+      if (summaryRes.status !== "fulfilled" || transactionRes.status !== "fulfilled") {
         setError("Accounts dashboard data load nahi ho pa raha.");
       }
     } finally {

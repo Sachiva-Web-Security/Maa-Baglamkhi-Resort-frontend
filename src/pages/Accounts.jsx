@@ -616,6 +616,7 @@ const Accounts = () => {
   const refreshTimerRef = useRef(null);
   const refreshInFlightRef = useRef(false);
   const pendingRefreshRef = useRef(false);
+  const summaryRetryRef = useRef(0);
   const accountsModuleSectionRef = useRef(null);
   const toastTimerRef = useRef(null);
   const isAccountsModulesPage = new URLSearchParams(location.search).get("view") === "modules";
@@ -656,8 +657,17 @@ const Accounts = () => {
       if (isAbortedRequest(err)) return;
       console.error("Error loading accounts summary", err);
       setSummaryError(true);
-      showToast("Failed to refresh account totals. Retrying in 2s…", "error");
-      setTimeout(() => fetchSummary(), 2000);
+      if (!summaryRetryRef.current) {
+        summaryRetryRef.current = 0;
+      }
+      if (summaryRetryRef.current < 5) {
+        summaryRetryRef.current += 1;
+        const delay = Math.min(1000 * Math.pow(2, summaryRetryRef.current - 1), 16000);
+        showToast(`Failed to load totals. Retrying in ${delay / 1000}s… (attempt ${summaryRetryRef.current}/5)`, "error");
+        setTimeout(() => fetchSummary(), delay);
+      } else {
+        showToast("Unable to load account totals. Please check your connection.", "error");
+      }
     }
   };
 
@@ -803,7 +813,6 @@ const Accounts = () => {
           fetchHotelBookings(),
           fetchRestaurantBills(),
           fetchBanquetBookings(),
-          fetchReconciliationData(),
         ]);
 
         const failed = results
@@ -927,37 +936,11 @@ const Accounts = () => {
     try {
       await API.put(`/accounts/transactions/${editingRecord.id}`, data);
 
-      // Optimistically update the records state so the UI reflects
-      // the change (e.g. new payment mode) immediately.
-      setRecords((prev) =>
-        prev.map((record) =>
-          String(record.id) === String(editingRecord.id)
-            ? { ...record, ...data }
-            : record,
-        ),
-      );
-
-      // If the payment mode was changed and the current filter no longer
-      // matches the updated record, reset the filter to "all" so the
-      // edited record remains visible instead of disappearing behind
-      // "No transaction records match the selected payment mode."
-      const newPaymentMode = normalizePaymentMode(data.paymentMode);
-      if (
-        selectedPaymentMode !== "all" &&
-        newPaymentMode !== "Unknown" &&
-        newPaymentMode !== selectedPaymentMode
-      ) {
-        setSelectedPaymentMode("all");
-      }
-
-      // Sync with server to ensure consistency
-      await Promise.all([refreshAccountsData(), refreshSummary()]);
+      showToast("Transaction updated successfully");
       setShowEdit(false);
       setEditingRecord(null);
-      showToast("Transaction updated successfully");
-    } catch (err) {
-      // Revert optimistic changes by re-fetching from server
       await Promise.all([refreshAccountsData(), refreshSummary()]);
+    } catch (err) {
       const message = err.response?.data?.message || "Error updating transaction";
       showToast(message, "error");
     } finally {
@@ -2232,9 +2215,8 @@ const Accounts = () => {
   const getGroupCustomer = (group) => {
     if (!group?.records?.length) return null;
     for (const r of group.records) {
-      if (r.customerMobile || r.customerName) {
-        return r.customerMobile || r.customerName;
-      }
+      if (r.customerName) return r.customerName;
+      if (r.customerMobile) return r.customerMobile;
     }
     return null;
   };
@@ -2380,10 +2362,6 @@ const Accounts = () => {
         },
       ]
     : [];
-
-  useEffect(() => {
-    setTransactionPage(1);
-  }, [selectedPaymentMode]);
 
   useEffect(() => {
     setBillingPage(1);
