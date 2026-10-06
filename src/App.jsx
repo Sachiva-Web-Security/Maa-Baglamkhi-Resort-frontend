@@ -299,6 +299,10 @@ function AppRoutes({ isAuthenticated, setIsAuthenticated, protect }) {
             element={protect(<AccountsCustomerInvoices />, ROLES.ACCOUNTS)}
           />
           <Route
+            path="/accounts/customer"
+            element={protect(<CustomerAccountPage />, ROLES.ACCOUNTS)}
+          />
+          <Route
             path="/accounts/customer/:identifier"
             element={protect(<CustomerAccountPage />, ROLES.ACCOUNTS)}
           />
