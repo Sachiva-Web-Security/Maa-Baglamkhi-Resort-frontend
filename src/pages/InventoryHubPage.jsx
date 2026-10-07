@@ -13,6 +13,7 @@ import {
   FaWarehouse, FaUtensils, FaClipboardList, FaShoppingCart,
   FaChartBar, FaPlus, FaSearch, FaExclamationTriangle,
   FaCheckCircle, FaArrowRight, FaBell, FaChevronRight,
+  FaPlusCircle,
 } from "react-icons/fa";
 
 import API from "../api";
@@ -43,6 +44,9 @@ const InventoryHubPage = () => {
   const [recentPurchases, setRecentPurchases] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [activeStockId, setActiveStockId] = useState(null);
+  const [stockInputs, setStockInputs] = useState({});
+  const [stockLoading, setStockLoading] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -96,6 +100,36 @@ const InventoryHubPage = () => {
     };
     load();
   }, []);
+
+  const handleAddStock = async (item) => {
+    const qty = Number(stockInputs[item.id]);
+    if (!qty || qty <= 0) {
+      window.alert("Please enter a valid quantity to add.");
+      return;
+    }
+    setStockLoading(true);
+    try {
+      const currentQty = Number(item.stock_qty ?? item.stockQty ?? item.quantity ?? 0);
+      await API.put(`/inventory/${item.id}`, {
+        stock: currentQty + qty,
+        adjustmentReason: `Restocked +${qty} from low stock alert`,
+      });
+      setLowStock((prev) =>
+        prev.map((it) =>
+          it.id === item.id
+            ? { ...it, stock_qty: currentQty + qty, stockQty: currentQty + qty, quantity: currentQty + qty }
+            : it,
+        ),
+      );
+      setStockInputs((prev) => ({ ...prev, [item.id]: "" }));
+      setActiveStockId(null);
+      window.alert(`Added ${qty} to ${item.name || item.item_name}.`);
+    } catch (err) {
+      window.alert(err.response?.data?.message || "Failed to add stock.");
+    } finally {
+      setStockLoading(false);
+    }
+  };
 
   const filteredCards = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -316,27 +350,76 @@ const InventoryHubPage = () => {
                 {lowStock.map((item) => (
                   <div
                     key={item.id}
-                    className="flex items-center justify-between"
+                    className="flex flex-col gap-2"
                     style={{ padding: "12px 2px", borderBottom: `1px solid ${c.line}` }}
                   >
-                    <div className="min-w-0 pr-3">
-                      <div className="font-semibold break-words" style={{ fontSize: "14.5px", color: c.text }}>
-                        {item.name || item.item_name || "-"}
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="min-w-0 pr-3">
+                        <div className="font-semibold break-words" style={{ fontSize: "14.5px", color: c.text }}>
+                          {item.name || item.item_name || "-"}
+                        </div>
+                        <div style={{ fontSize: "12.5px", color: c.muted }}>{item.category || ""}</div>
                       </div>
-                      <div style={{ fontSize: "12.5px", color: c.muted }}>{item.category || ""}</div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span
+                          className="font-semibold"
+                          style={{
+                            fontSize: "12.5px",
+                            color: "#DC2626",
+                            background: "#FEF2F2",
+                            padding: "4px 10px",
+                            borderRadius: "999px",
+                          }}
+                        >
+                          {Number(item.stock_qty ?? item.stockQty ?? item.quantity ?? 0)} left
+                        </span>
+                        {activeStockId === item.id ? (
+                          <span className="text-xs font-bold" style={{ color: "#16A34A" }}>
+                            {Number(stockInputs[item.id] || 0).toFixed(1)}
+                          </span>
+                        ) : null}
+                      </div>
                     </div>
-                    <span
-                      className="font-semibold shrink-0"
-                      style={{
-                        fontSize: "12.5px",
-                        color: "#DC2626",
-                        background: "#FEF2F2",
-                        padding: "4px 10px",
-                        borderRadius: "999px",
-                      }}
-                    >
-                      {Number(item.stock_qty ?? item.stockQty ?? item.quantity ?? 0)} left
-                    </span>
+                    {activeStockId === item.id ? (
+                      <div className="flex items-center gap-2 mt-1">
+                        <input
+                          type="number"
+                          min="1"
+                          step="any"
+                          placeholder="Qty to add"
+                          value={stockInputs[item.id] || ""}
+                          onChange={(e) => setStockInputs((prev) => ({ ...prev, [item.id]: e.target.value }))}
+                          className="w-24 rounded-lg border px-2.5 py-1.5 text-[13px] outline-none focus:border-[#2563EB]"
+                          style={{ borderColor: c.line }}
+                          autoFocus
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleAddStock(item)}
+                          disabled={stockLoading}
+                          className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400 px-3.5 py-1.5 text-[13px] font-bold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md disabled:opacity-60"
+                        >
+                          <FaPlusCircle />
+                          Add
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { setActiveStockId(null); setStockInputs((prev) => ({ ...prev, [item.id]: "" })); }}
+                          className="text-[12px] font-semibold px-2 py-1.5 rounded-full text-slate-500 hover:text-slate-700"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setActiveStockId(item.id)}
+                        className="inline-flex items-center gap-1.5 self-start rounded-full bg-gradient-to-r from-sky-500 to-blue-400 px-3.5 py-1.5 text-[12.5px] font-bold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+                      >
+                        <FaPlus />
+                        Add Stock
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
