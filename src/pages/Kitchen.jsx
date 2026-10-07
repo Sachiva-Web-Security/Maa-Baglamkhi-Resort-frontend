@@ -888,14 +888,20 @@ const Kitchen = () => {
                             />
                           ) : null}
                           */}
-                          <button
-                            type="button"
-                            onClick={() => openCancelOrderModal(order)}
-                            className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-rose-600 to-rose-500 px-4 py-2.5 text-[16px] font-bold text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
-                          >
-                            <FiXCircle />
-                            Cancel Order
-                          </button>
+                          {status !== "Cancelled" &&
+                          status !== "Complete" &&
+                          status !== "Completed" &&
+                          status !== "Served" &&
+                          status !== "Saved" ? (
+                            <button
+                              type="button"
+                              onClick={() => openCancelOrderModal(order)}
+                              className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-rose-600 to-rose-500 px-4 py-2.5 text-[16px] font-bold text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+                            >
+                              <FiXCircle />
+                              Cancel Order
+                            </button>
+                          ) : null}
                           <button
                             type="button"
                             onClick={() => printBill(order)}

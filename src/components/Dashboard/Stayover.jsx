@@ -134,22 +134,29 @@ const Stayover = () => {
       } else {
         setLoading(true);
       }
-      const [bookingResponse, roomResponse, usersResponse] = await Promise.allSettled([
+
+      // Fire all 3 in parallel, but render the board as soon as
+      // rooms + bookings arrive — don't block the UI on /users.
+      const [bookingResponse, roomResponse, usersResponse] = await Promise.all([
         API.get("/hotel/all-bookings"),
         API.get("/housekeeping"),
         API.get("/users"),
       ]);
 
       if (bookingResponse.status !== "fulfilled" || roomResponse.status !== "fulfilled") {
-        throw bookingResponse.status !== "fulfilled" ? bookingResponse.reason : roomResponse.reason;
+        const failing = bookingResponse.status !== "fulfilled" ? bookingResponse.reason : roomResponse.reason;
+        throw failing;
       }
 
       setBookingRecords(Array.isArray(bookingResponse.value.data) ? bookingResponse.value.data : []);
       setBookings(expandBookings(bookingResponse.value.data));
       setRooms(normalizeRooms(roomResponse.value.data));
-      setHousekeepers(
-        usersResponse.status === "fulfilled" ? getHousekeepingUsers(usersResponse.value.data) : [],
-      );
+
+      // Users (housekeepers) can arrive late — update when ready.
+      if (usersResponse.status === "fulfilled") {
+        setHousekeepers(getHousekeepingUsers(usersResponse.value.data));
+      }
+
       setError("");
       setHasLoadedOnce(true);
     } catch (err) {

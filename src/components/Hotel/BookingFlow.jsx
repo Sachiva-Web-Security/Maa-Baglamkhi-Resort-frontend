@@ -4820,10 +4820,46 @@ const BookingFlow = () => {
       ];
 
       const customerMobile = b.mobile || d.mobile || "";
-      setWaResult({
-        type: "info",
-        message: "WhatsApp send is disabled. Use the Print Invoice button to download the PDF.",
+      const paidFromInvoice = Number(invoice?.paidAmount || invoice?.netPaid || 0);
+      const remainingFromInvoice = Number(invoice?.remainingAmount ?? invoice?.balance ?? 0);
+      const paymentStatus =
+        invoice?.paymentStatus || (remainingFromInvoice <= 0 && paidFromInvoice > 0 ? "Paid" : "Pending");
+
+      const res = await API.post("/invoice/pdf", {
+        bookingId: bid,
+        customerNumber: customerMobile,
+        invoiceData: {
+          invoiceNo: invoice?.invoiceNo || d.invoice_no || d.invoiceNo || b.bookingCode,
+          totalAmount: computedTotal,
+          subtotal: computedSubtotal,
+          tax: computedTax,
+          discount: Number(invoice?.discount || 0),
+          paymentStatus,
+          paymentMode: invoice?.paymentMode || b.paymentMode || "Cash",
+          customerName: d.guest_name || b.guest_name || "",
+          phone: customerMobile,
+          roomNumber: d.room_no || d.roomNumber || b.roomNumber || "",
+          checkIn: d.check_in || b.check_in,
+          checkOut: d.check_out || b.check_out,
+          address: d.address || "",
+          items: liveItems,
+          roomCharge: roomTotal,
+          extraCharge: folioTotal,
+        },
       });
+
+      const waStatus = res.data || {};
+      const parts = [];
+      if (waStatus.customer?.whatsapp?.ok) parts.push("customer WhatsApp sent");
+      else if (waStatus.customer?.whatsapp?.skipped) parts.push("customer WhatsApp skipped");
+      if (waStatus.admin?.whatsapp?.ok) parts.push("admin WhatsApp sent");
+      else if (waStatus.admin?.whatsapp?.skipped) parts.push("admin WhatsApp skipped");
+
+      if (parts.length) {
+        setWaResult({ type: "success", message: `Invoice sent: ${parts.join(", ")}.` });
+      } else {
+        setWaResult({ type: "warning", message: waStatus.message || "Invoice processed but WhatsApp delivery unclear." });
+      }
     } catch (err) {
       setWaResult({
         type: "error",
@@ -7169,14 +7205,18 @@ const BookingFlow = () => {
                   <FaSignOutAlt className="text-sm" /> Check-Out
                 </button>
               )}
-              <button
-                onClick={() =>
-                  setCancelModal({ open: true, reason: "", submitting: false })
-                }
-                className={dangerBtn}
-              >
-                <FaBan className="text-sm" /> Cancel Booking
-              </button>
+              {(b.booking_status === "Pending" ||
+                b.booking_status === "Confirmed" ||
+                !b.booking_status) && (
+                <button
+                  onClick={() =>
+                    setCancelModal({ open: true, reason: "", submitting: false })
+                  }
+                  className={dangerBtn}
+                >
+                  <FaBan className="text-sm" /> Cancel Booking
+                </button>
+              )}
             </div>
 
             <div className="mt-5 sm:mt-6 border-t border-slate-200 pt-5 sm:pt-6">

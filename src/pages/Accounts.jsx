@@ -2261,7 +2261,18 @@ const Accounts = () => {
     return Array.from(map.values()).sort((a, b) => {
       if (a.key === '__ungrouped') return 1;
       if (b.key === '__ungrouped') return -1;
-      return a.key.localeCompare(b.key, undefined, { sensitivity: 'base' });
+      // Sort groups by most recent activity (first record = newest, since
+      // records arrive newest-first from the backend). Newest groups first.
+      const aDate = a.records[0]?.date || "";
+      const bDate = b.records[0]?.date || "";
+      if (aDate !== bDate) return bDate.localeCompare(aDate);
+      // Tie-break: numeric comparison of the bill/booking number so #16
+      // sorts before #15 rather than alphabetically (#1 before #10).
+      const aNum = a.key.match(/\d+/);
+      const bNum = b.key.match(/\d+/);
+      const aN = aNum ? Number(aNum[0]) : 0;
+      const bN = bNum ? Number(bNum[0]) : 0;
+      return bN - aN;
     });
   }, [records]);
 

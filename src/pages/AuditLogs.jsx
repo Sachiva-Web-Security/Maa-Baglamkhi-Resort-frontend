@@ -26,7 +26,7 @@ const AuditLogs = () => {
       if (actionFilter !== "all") params.action = actionFilter;
 
       const res = await API.get("/audit-logs", { params });
-      setLogs(res.data.logs || res.data || []);
+      setLogs((res.data && res.data.rows) || res.data.logs || []);
     } catch (err) {
       console.error("Failed to load audit logs:", err);
     } finally {

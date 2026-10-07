@@ -71,7 +71,6 @@ const resolveSource = (source) => {
 const CustomerAccountPage = () => {
   const { identifier } = useParams();
   const navigate = useNavigate();
-  const location = useLocation();
 
   const [query, setQuery] = useState(() => String(identifier || "").trim());
   const [by, setBy] = useState("auto");
@@ -80,6 +79,16 @@ const CustomerAccountPage = () => {
   const [data, setData] = useState(null);
   const [statementPage, setStatementPage] = useState(1);
   const abortRef = useRef(null);
+
+  // All-customers list state
+  const [customers, setCustomers] = useState([]);
+  const [custLoading, setCustLoading] = useState(false);
+  const [custError, setCustError] = useState("");
+  const [custPage, setCustPage] = useState(1);
+  const [custTotalPages, setCustTotalPages] = useState(1);
+  const [custSearch, setCustSearch] = useState("");
+  const [custTotal, setCustTotal] = useState(0);
+  const custAbortRef = useRef(null);
 
   const fetchStatement = async (value, lookupBy, replaceHistory = false) => {
     const trimmed = String(value || "").trim();
@@ -130,8 +139,48 @@ const CustomerAccountPage = () => {
   useEffect(() => {
     return () => {
       if (abortRef.current) abortRef.current.abort();
+      if (custAbortRef.current) custAbortRef.current.abort();
     };
   }, []);
+
+  const fetchCustomers = async (page = 1, search = "") => {
+    setCustLoading(true);
+    setCustError("");
+    if (custAbortRef.current) custAbortRef.current.abort();
+    const controller = new AbortController();
+    custAbortRef.current = controller;
+
+    try {
+      const res = await API.get("/accounts/customers", {
+        signal: controller.signal,
+        params: { page, limit: 20, search },
+      });
+      if (!controller.signal.aborted) {
+        setCustomers(res.data.customers || []);
+        setCustTotal(res.data.total || 0);
+        setCustPage(res.data.page || 1);
+        setCustTotalPages(res.data.totalPages || 1);
+      }
+    } catch (err) {
+      if (!controller.signal.aborted) {
+        setCustError(err?.response?.data?.message || "Unable to load customers");
+        setCustomers([]);
+      }
+    } finally {
+      if (!controller.signal.aborted) setCustLoading(false);
+    }
+  };
+
+  // Load all customers on mount if no identifier in URL
+  useEffect(() => {
+    const raw = String(identifier || "").trim();
+    if (raw) {
+      fetchStatement(raw, by, false);
+    } else {
+      fetchCustomers(1, "");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [identifier]);
 
   const customerName = useMemo(() => {
     if (!data?.customer) return query || "Customer";
@@ -257,6 +306,149 @@ const CustomerAccountPage = () => {
             </div>
           </div>
         </section>
+
+        {/* ALL CUSTOMERS LIST */}
+        {!data && !error && (
+          <div className="space-y-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <div className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-700 sm:text-base">
+                  All Customers
+                </div>
+                <p className="mt-1 text-[15px] font-semibold text-slate-500">
+                  {custTotal} customer{custTotal !== 1 ? "s" : ""} in the system — click any row to view their full statement
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="search"
+                  value={custSearch}
+                  onChange={(e) => { setCustSearch(e.target.value); setCustPage(1); }}
+                  onKeyDown={(e) => { if (e.key === "Enter") fetchCustomers(1, custSearch); }}
+                  placeholder="Filter customers..."
+                  className="h-10 rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm outline-none focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
+                />
+                <button
+                  type="button"
+                  onClick={() => fetchCustomers(1, custSearch)}
+                  className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-slate-900 px-5 text-sm font-bold text-white transition hover:bg-slate-800"
+                >
+                  <FaSearch />
+                  Search
+                </button>
+              </div>
+            </div>
+
+            {/* DESKTOP TABLE */}
+            <div className="hidden overflow-x-auto rounded-[22px] border border-slate-200 xl:block">
+              <table className="min-w-full text-left text-base">
+                <thead className="bg-slate-50 text-sm uppercase tracking-[0.16em] text-slate-500">
+                  <tr>
+                    <th className="px-4 py-3">#</th>
+                    <th className="px-4 py-3">Name</th>
+                    <th className="px-4 py-3">Mobile</th>
+                    <th className="px-4 py-3">Email</th>
+                    <th className="px-4 py-3 text-right">Payments</th>
+                    <th className="px-4 py-3 text-right">Restaurant Spend</th>
+                    <th className="px-4 py-3 text-right">Transactions</th>
+                    <th className="px-4 py-3">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {custLoading ? (
+                    <tr><td colSpan={8} className="px-4 py-8 text-center text-slate-500">Loading customers...</td></tr>
+                  ) : custError ? (
+                    <tr><td colSpan={8} className="px-4 py-8 text-center text-rose-600">{custError}</td></tr>
+                  ) : customers.length === 0 ? (
+                    <tr><td colSpan={8} className="px-4 py-8 text-center text-slate-500">No customers found.</td></tr>
+                  ) : (
+                    customers.map((c, i) => (
+                      <tr
+                        key={c.id}
+                        onClick={() => navigate(`/accounts/customer/${encodeURIComponent(c.mobile || c.guest_name)}`)}
+                        className="cursor-pointer border-t border-slate-200 transition hover:bg-sky-50/60"
+                      >
+                        <td className="px-4 py-4 text-lg text-slate-500">{(custPage - 1) * 20 + i + 1}</td>
+                        <td className="px-4 py-4 text-lg font-bold text-slate-900">{c.guest_name || "--"}</td>
+                        <td className="px-4 py-4 text-lg text-slate-700">{c.mobile || "--"}</td>
+                        <td className="px-4 py-4 text-lg text-slate-700">{c.guest_email || "--"}</td>
+                        <td className="px-4 py-4 text-right text-lg text-emerald-700 font-semibold">{formatINR(c.total_payments)}</td>
+                        <td className="px-4 py-4 text-right text-lg text-sky-700 font-semibold">{formatINR(c.total_restaurant_spend)}</td>
+                        <td className="px-4 py-4 text-right text-lg text-slate-700">{c.transaction_count || 0}</td>
+                        <td className="px-4 py-4">
+                          <span className={`inline-flex rounded-full border px-3 py-1 text-[12px] font-bold sm:px-4 sm:py-1.5 sm:text-sm ${c.booking_status === 'checked_in' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : c.booking_status === 'checked_out' ? 'border-slate-200 bg-slate-50 text-slate-700' : 'border-amber-200 bg-amber-50 text-amber-700'}`}>
+                            {c.booking_status || "N/A"}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* MOBILE / TABLET CARDS */}
+            <div className="space-y-3 xl:hidden">
+              {custLoading ? (
+                <div className="rounded-[18px] border border-slate-200 bg-white p-6 text-center text-slate-500">Loading customers...</div>
+              ) : custError ? (
+                <div className="rounded-[18px] border border-rose-200 bg-rose-50 p-6 text-center text-rose-700">{custError}</div>
+              ) : customers.length === 0 ? (
+                <div className="rounded-[18px] border border-slate-200 bg-white p-6 text-center text-slate-500">No customers found.</div>
+              ) : (
+                customers.map((c, i) => (
+                  <div
+                    key={c.id}
+                    onClick={() => navigate(`/accounts/customer/${encodeURIComponent(c.mobile || c.guest_name)}`)}
+                    className="cursor-pointer rounded-[18px] border border-slate-200 bg-white p-4 shadow-sm transition hover:border-sky-200 hover:shadow-md"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <div className="text-base font-bold text-slate-900">{(custPage - 1) * 20 + i + 1}. {c.guest_name || "--"}</div>
+                        <div className="mt-1 text-sm text-slate-500">{c.mobile} {c.guest_email && `· ${c.guest_email}`}</div>
+                      </div>
+                      <span className={`inline-flex rounded-full border px-3 py-1 text-[12px] font-bold ${c.booking_status === 'checked_in' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : c.booking_status === 'checked_out' ? 'border-slate-200 bg-slate-50 text-slate-700' : 'border-amber-200 bg-amber-50 text-amber-700'}`}>
+                        {c.booking_status || "N/A"}
+                      </span>
+                    </div>
+                    <div className="mt-3 flex flex-wrap items-center gap-3 text-sm font-semibold text-slate-600">
+                      <span className="text-emerald-600">{formatINR(c.total_payments)} paid</span>
+                      <span className="text-slate-300">·</span>
+                      <span className="text-sky-600">{formatINR(c.total_restaurant_spend)} restaurant</span>
+                      <span className="text-slate-300">·</span>
+                      <span>{c.transaction_count || 0} txns</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* CUSTOMER PAGINATION */}
+            {!custLoading && !custError && customers.length > 0 && custTotalPages > 1 ? (
+              <div className="flex items-center justify-between rounded-[20px] border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700">
+                <span>Page {custPage} of {custTotalPages}</span>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => { setCustPage((p) => Math.max(1, p - 1)); fetchCustomers(Math.max(1, custPage - 1), custSearch); }}
+                    disabled={custPage <= 1}
+                    className="rounded-full border border-slate-200 px-3 py-1 disabled:opacity-50"
+                  >
+                    Previous
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setCustPage((p) => Math.min(custTotalPages, p + 1)); fetchCustomers(Math.min(custTotalPages, custPage + 1), custSearch); }}
+                    disabled={custPage >= custTotalPages}
+                    className="rounded-full border border-slate-200 px-3 py-1 disabled:opacity-50"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        )}
 
         {/* ERROR */}
         {error ? (
