@@ -193,10 +193,14 @@ const CustomerAccountPage = () => {
   }, [data]);
 
   const totals = useMemo(() => {
-    if (data?.totals) return data.totals;
+    if (data?.totals) {
+      const income = toNumber(data.totals.income);
+      const expense = toNumber(data.totals.expense);
+      return { income, expense, net: income - expense, total: income + expense, paid: income, remaining: expense };
+    }
     const income = transactions.reduce((s, row) => s + (String(row.flow_type || "").toLowerCase() === "income" ? toNumber(row.amount) : 0), 0);
     const expense = transactions.reduce((s, row) => s + (String(row.flow_type || "").toLowerCase() === "expense" ? toNumber(row.amount) : 0), 0);
-    return { income, expense, net: income - expense };
+    return { income, expense, net: income - expense, total: income + expense, paid: income, remaining: expense };
   }, [data, transactions]);
 
   const paginated = useMemo(() => {
@@ -277,16 +281,16 @@ const CustomerAccountPage = () => {
     <div class="meta"><strong>Printed on:</strong> ${new Date().toLocaleString("en-IN")}</div>
     <div class="summary">
       <div class="summary-box">
-        <div class="label">Total Income</div>
-        <div class="value" style="color:#065f46;">+${formatINR(totals.income)}</div>
+        <div class="label">Total Amount</div>
+        <div class="value" style="color:#111827;">${formatINR(totals.total)}</div>
       </div>
       <div class="summary-box">
-        <div class="label">Total Expense</div>
-        <div class="value" style="color:#991b1b;">−${formatINR(totals.expense)}</div>
+        <div class="label">Paid</div>
+        <div class="value" style="color:#065f46;">${formatINR(totals.paid)}</div>
       </div>
       <div class="summary-box">
-        <div class="label">Net Position</div>
-        <div class="value" style="color:#111827;">${formatINR(totals.net)}</div>
+        <div class="label">Remaining</div>
+        <div class="value" style="color:#991b1b;">${formatINR(totals.remaining)}</div>
       </div>
       <div class="summary-box">
         <div class="label">Transactions</div>
@@ -386,9 +390,9 @@ const CustomerAccountPage = () => {
 
             <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
               {[
-                { label: "Total Income", value: formatINR(totals.income), tone: "text-emerald-200" },
-                { label: "Total Expense", value: formatINR(totals.expense), tone: "text-rose-200" },
-                { label: "Net Position", value: formatINR(totals.net), tone: "text-white" },
+                { label: "Total Amount", value: formatINR(totals.total), tone: "text-white" },
+                { label: "Paid", value: formatINR(totals.paid), tone: "text-emerald-200" },
+                { label: "Remaining", value: formatINR(totals.remaining), tone: "text-amber-200" },
                 { label: "Transactions", value: String(transactions.length), tone: "text-cyan-200" },
               ].map((item) => (
                 <div
