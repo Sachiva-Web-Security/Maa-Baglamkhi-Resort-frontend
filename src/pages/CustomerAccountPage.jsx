@@ -216,7 +216,105 @@ const CustomerAccountPage = () => {
     if (event.key === "Enter") doSearch();
   };
 
-  const print = () => window.print();
+  const printStatement = () => {
+    if (!data) return;
+    const win = window.open("", "_blank", "width=900,height=700");
+    if (!win) {
+      alert("Please allow popups to print the statement.");
+      return;
+    }
+
+    const rowsHtml = paginated.map((row) => {
+      const flow = String(row.flow_type || "Income").trim();
+      const isIncome = flow.toLowerCase() === "income";
+      const sign = isIncome ? "+" : "−";
+      const amountClass = isIncome ? "color:#065f46;font-weight:700;" : "color:#991b1b;font-weight:700;";
+      const modeCls = resolveModeClass(row.mode);
+      const source = resolveSource(row.source);
+
+      return `<tr>
+        <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;font-size:13px;color:#374151;">${row.date || "--"}</td>
+        <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;font-size:13px;color:#374151;">${flow}</td>
+        <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;font-size:13px;color:#374151;">${row.department || "--"}</td>
+        <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;font-size:13px;color:#374151;">${row.description || "--"}${row.narration ? `<br/><span style="color:#6b7280;font-size:12px;">${row.narration}</span>` : ""}</td>
+        <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;font-size:14px;text-align:right;${amountClass}">${sign} ${formatINR(row.amount)}</td>
+        <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;font-size:13px;color:#374151;">${row.mode || "Cash"}</td>
+        <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;font-size:13px;color:#374151;">${source.label}</td>
+      </tr>`;
+    }).join("");
+
+    win.document.write(`<!DOCTYPE html>
+<html>
+<head>
+  <title>Customer Statement - ${customerName}</title>
+  <style>
+    @page { size: A4 portrait; margin: 14mm; }
+    body { font-family: Arial, Helvetica, sans-serif; color: #000; margin: 0; padding: 0; }
+    .sheet { max-width: 800px; margin: 0 auto; padding: 20px; }
+    .brand { text-align: center; margin-bottom: 18px; }
+    .brand h1 { font-size: 20px; margin: 0 0 4px; letter-spacing: 0.5px; }
+    .brand p { font-size: 12px; color: #555; margin: 0; }
+    .section-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: #1e40af; margin: 18px 0 6px; }
+    .meta { font-size: 13px; color: #374151; margin-bottom: 4px; }
+    .summary { display: flex; gap: 18px; margin: 14px 0; }
+    .summary-box { flex: 1; border: 1px solid #d1d5db; border-radius: 8px; padding: 10px 12px; }
+    .summary-box .label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #6b7280; }
+    .summary-box .value { font-size: 18px; font-weight: 800; margin-top: 4px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+    th { background: #f3f4f6; padding: 9px 10px; text-align: left; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #374151; border-bottom: 2px solid #9ca3af; }
+    td { padding: 8px 10px; border-bottom: 1px solid #e5e7eb; font-size: 13px; color: #374151; vertical-align: top; }
+    tr:nth-child(even) td { background: #f9fafb; }
+    .footer { margin-top: 24px; font-size: 11px; color: #9ca3af; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="sheet">
+    <div class="brand">
+      <h1>Maa Baglamukhi Resort</h1>
+      <p>Customer Account Statement</p>
+    </div>
+    <div class="meta"><strong>Customer:</strong> ${customerName}</div>
+    <div class="meta"><strong>Printed on:</strong> ${new Date().toLocaleString("en-IN")}</div>
+    <div class="summary">
+      <div class="summary-box">
+        <div class="label">Total Income</div>
+        <div class="value" style="color:#065f46;">+${formatINR(totals.income)}</div>
+      </div>
+      <div class="summary-box">
+        <div class="label">Total Expense</div>
+        <div class="value" style="color:#991b1b;">−${formatINR(totals.expense)}</div>
+      </div>
+      <div class="summary-box">
+        <div class="label">Net Position</div>
+        <div class="value" style="color:#111827;">${formatINR(totals.net)}</div>
+      </div>
+      <div class="summary-box">
+        <div class="label">Transactions</div>
+        <div class="value" style="color:#1e40af;">${transactions.length}</div>
+      </div>
+    </div>
+    <div class="section-title">Statement</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Type</th>
+          <th>Department</th>
+          <th>Description</th>
+          <th style="text-align:right;">Amount</th>
+          <th>Mode</th>
+          <th>Source</th>
+        </tr>
+      </thead>
+      <tbody>${rowsHtml}</tbody>
+    </table>
+    ${transactions.length > STATEMENT_PAGE_SIZE ? `<div class="footer">Showing ${paginated.length} of ${transactions.length} transactions (page ${statementPage} of ${statementTotalPages}). Full list available in the app.</div>` : `<div class="footer">Generated from Maa Baglamukhi Resort · ${transactions.length} transactions</div>`}
+  </div>
+  <script>setTimeout(() => { window.print(); window.close(); }, 300);</script>
+</body>
+</html>`);
+    win.document.close();
+  };
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-[linear-gradient(135deg,#f5fbff_0%,#f3f8f4_28%,#fff8f1_58%,#f8fafc_100%)] p-3 sm:p-6 lg:p-8">
@@ -474,7 +572,7 @@ const CustomerAccountPage = () => {
               </div>
               <button
                 type="button"
-                onClick={print}
+                onClick={printStatement}
                 className="w-fit rounded-full border border-slate-200 bg-white px-4 py-2.5 text-[13px] font-bold text-slate-700 sm:text-sm"
               >
                 <FaPrint className="mr-2 inline text-slate-500" />
