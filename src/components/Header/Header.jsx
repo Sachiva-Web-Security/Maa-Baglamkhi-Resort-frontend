@@ -248,6 +248,7 @@ const Header = ({
             {notificationMenuOpen && renderPortal(
               <div
                 className="fixed left-1/2 top-[90px] z-[99999] w-[min(94vw,360px)] -translate-x-1/2 overflow-hidden rounded-[22px] border border-white/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(249,247,255,0.94)_100%)] p-3 shadow-[0_24px_58px_rgba(15,23,42,0.14)] backdrop-blur-xl sm:left-auto sm:right-4 sm:top-[92px] sm:w-[min(94vw,420px)] sm:-translate-x-0 sm:rounded-[26px] sm:p-4 md:w-[min(94vw,520px)] md:rounded-[30px]"
+                onMouseDown={(e) => e.stopPropagation()}
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="mb-3 flex items-center justify-between sm:mb-4">
@@ -343,6 +344,7 @@ const Header = ({
             {profileMenuOpen && renderPortal(
               <div
                 className="fixed left-1/2 top-[90px] z-[99999] w-[min(88vw,15rem)] -translate-x-1/2 overflow-hidden rounded-[20px] border border-slate-200/80 bg-white/98 p-2 shadow-[0_22px_55px_rgba(15,23,42,0.16)] backdrop-blur-xl sm:left-auto sm:right-4 sm:top-[92px] sm:-translate-x-0 sm:rounded-[24px]"
+                onMouseDown={(e) => e.stopPropagation()}
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="mb-2 rounded-[16px] bg-slate-50 px-3 py-3 sm:rounded-[18px] sm:px-4">
