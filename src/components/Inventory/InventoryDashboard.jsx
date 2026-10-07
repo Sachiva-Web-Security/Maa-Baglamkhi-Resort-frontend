@@ -2926,7 +2926,7 @@ function PurchaseOrderSection({
       setOpsTab("inward-list");
       await Promise.all([refreshVendorInwards(), refreshStockLedger(), refreshStockFlowReport(), refreshInventoryItems(), refreshPurchaseOrders()]);
     } catch (err) {
-      alert(err.response?.data?.message || "Vendor inward save nahi ho paaya.");
+      alert(err.response?.data?.message || "Vendor inward could not be saved.");
     }
   };
 
@@ -2950,7 +2950,7 @@ function PurchaseOrderSection({
       setOpsTab("payment-list");
       await refreshVendorPayments();
     } catch (err) {
-      alert(err.response?.data?.message || "Vendor payment save nahi ho paaya.");
+      alert(err.response?.data?.message || "Vendor payment could not be saved.");
     }
   };
 
@@ -3208,7 +3208,7 @@ function PurchaseOrderSection({
                                 refreshPurchaseOrders(),
                               ]);
                             } catch (err) {
-                              alert(err.response?.data?.message || "Vendor inward delete nahi ho paaya.");
+                              alert(err.response?.data?.message || "Vendor inward could not be deleted.");
                             }
                           }}
                           className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-600"
@@ -3311,7 +3311,7 @@ function PurchaseOrderSection({
                               await API.delete(`/inventory/vendor-payments/${row.id}`);
                               await refreshVendorPayments();
                             } catch (err) {
-                              alert(err.response?.data?.message || "Vendor payment delete nahi ho paaya.");
+                              alert(err.response?.data?.message || "Vendor payment could not be deleted.");
                             }
                           }}
                           className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-600"
@@ -4722,7 +4722,7 @@ export default function InventoryDashboard({ procurementOnly = false }) {
         setEditingMasterId(null);
         return true;
       } catch (err) {
-        alert(err.response?.data?.message || "Record save nahi ho paaya.");
+        alert(err.response?.data?.message || "Record could not be saved.");
         return false;
       }
     };
@@ -4777,7 +4777,7 @@ export default function InventoryDashboard({ procurementOnly = false }) {
           }));
         }
       } catch (err) {
-        alert(err.response?.data?.message || "Record delete nahi ho paaya.");
+        alert(err.response?.data?.message || "Record could not be deleted.");
       }
     };
 
@@ -4802,7 +4802,7 @@ export default function InventoryDashboard({ procurementOnly = false }) {
       alert(response.data?.message || "Audit submitted successfully.");
       return true;
     } catch (err) {
-      alert(err.response?.data?.message || "Audit submit nahi ho paaya.");
+      alert(err.response?.data?.message || "Audit could not be submitted.");
       return false;
     } finally {
       setIsSubmittingAudit(false);
@@ -4881,7 +4881,7 @@ export default function InventoryDashboard({ procurementOnly = false }) {
         setEditingMenuId(null);
         return true;
       } catch (err) {
-        alert(err.response?.data?.message || "Menu item save nahi ho paaya.");
+        alert(err.response?.data?.message || "Menu item could not be saved.");
         return false;
       }
     };
@@ -4905,7 +4905,7 @@ export default function InventoryDashboard({ procurementOnly = false }) {
         await API.delete(`/restaurant/menu/${id}`);
         setMenuItemsData((cur) => cur.filter((item) => item.id !== id));
       } catch (err) {
-        alert(err.response?.data?.message || "Menu item delete nahi ho paaya.");
+        alert(err.response?.data?.message || "Menu item could not be deleted.");
       }
     };
     run();

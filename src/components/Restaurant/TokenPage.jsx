@@ -63,7 +63,7 @@ const TokenPage = () => {
         state: { entityType, roomData },
       });
     } catch (error) {
-      alert(error.response?.data?.message || "Token create nahi ho paaya.");
+      alert(error.response?.data?.message || "Token could not be created.");
     }
   };
 

@@ -52,7 +52,7 @@ const ManagerDashboard = () => {
         bookingsRes.status !== "fulfilled" &&
         inventoryRes.status !== "fulfilled"
       ) {
-        setError("Manager dashboard data load nahi ho pa raha.");
+        setError("Manager dashboard data could not be loaded.");
       }
     } finally {
       if (!silent) setLoading(false);

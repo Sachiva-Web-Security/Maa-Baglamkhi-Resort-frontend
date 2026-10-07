@@ -243,7 +243,7 @@ const TablePage = () => {
       });
       await loadTables();
     } catch (error) {
-      alert(error.response?.data?.message || "Person count update nahi ho paaya.");
+      alert(error.response?.data?.message || "Person count could not be updated.");
     } finally {
       setSavingSeatId(null);
     }
@@ -403,7 +403,7 @@ const TablePage = () => {
       window.dispatchEvent(new Event("tokenUpdated"));
       navigate("/restaurant/payment", { state: persistedInvoice });
     } catch (error) {
-      alert(error.response?.data?.message || "Invoice create nahi ho paaya.");
+      alert(error.response?.data?.message || "Invoice could not be created.");
     }
   };
 

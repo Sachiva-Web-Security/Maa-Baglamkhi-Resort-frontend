@@ -255,7 +255,7 @@ const AllBooking = () => {
       fetchBookings();
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.message || "Booking cancel nahi ho paayi.");
+      alert(err.response?.data?.message || "Booking could not be cancelled.");
       setCancelModal((current) => ({ ...current, submitting: false }));
     }
   };

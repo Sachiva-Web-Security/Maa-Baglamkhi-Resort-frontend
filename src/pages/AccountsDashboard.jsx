@@ -79,7 +79,7 @@ const AccountsDashboard = () => {
       setAssignments(assignmentsRes.status === "fulfilled" ? assignmentsRes.value.data || [] : []);
 
       if (summaryRes.status !== "fulfilled" && transactionRes.status !== "fulfilled") {
-        setError("Accounts dashboard data load nahi ho pa raha.");
+        setError("Accounts dashboard data could not be loaded.");
       }
     } finally {
       if (!silent) setLoading(false);

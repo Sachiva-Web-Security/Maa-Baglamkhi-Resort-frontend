@@ -293,7 +293,7 @@ const EditToken = () => {
       await API.delete(`/token/item/${id}`);
       setItems((current) => current.filter((item) => item.id !== id));
     } catch (error) {
-      showAlert(error.response?.data?.message || "Item delete nahi ho paaya.", "error");
+      showAlert(error.response?.data?.message || "Item could not be deleted.", "error");
     }
   };
 
@@ -324,7 +324,7 @@ const EditToken = () => {
       showAlert("Token updated successfully!", "success");
       window.dispatchEvent(new Event("tokenUpdated"));
     } catch (error) {
-      const errorMsg = error?.response?.data?.message || error.message || "Token update nahi ho paaya.";
+      const errorMsg = error?.response?.data?.message || error.message || "Token could not be updated.";
       showAlert(errorMsg, "error");
     }
   };
@@ -408,7 +408,7 @@ const EditToken = () => {
           setActionRequests((rows || []).filter((row) => String(row.table_number || "") === String(table)));
           showAlert(`${actionType} request sent for manager approval.`, "success");
         } catch (error) {
-          showAlert(error.response?.data?.message || "Request send nahi ho paayi.", "error");
+          showAlert(error.response?.data?.message || "Request could not be sent.", "error");
         }
       },
     });
@@ -451,7 +451,7 @@ const EditToken = () => {
           const rows = await restaurantService.getItemActionRequests();
           setActionRequests((rows || []).filter((row) => String(row.table_number || "") === String(table)));
         } catch (error) {
-          showAlert(error.response?.data?.message || "Review save nahi ho paaya.", "error");
+          showAlert(error.response?.data?.message || "Review could not be saved.", "error");
         }
       },
     });

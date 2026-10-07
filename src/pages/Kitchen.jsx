@@ -281,7 +281,7 @@ const Kitchen = () => {
       showNotice("success", "Order ready marked. Waiter notified.");
     } catch (err) {
       console.error(err);
-      showNotice("error", "Order ready mark nahi ho paaya.");
+      showNotice("error", "Order could not be marked as ready.");
     }
   };
 
@@ -333,7 +333,7 @@ const Kitchen = () => {
       showNotice("success", `Order is now being prepared. Waiter notified. ETA: ${etaMinutes} minutes.`);
     } catch (err) {
       console.error(err);
-      showNotice("error", "Order preparing mark nahi ho paaya.");
+      showNotice("error", "Order could not be marked as preparing.");
     }
   };
 
@@ -977,7 +977,7 @@ const Kitchen = () => {
                       Total: <span className="text-[20px] font-black text-slate-900">Rs. {total}</span>
                     </div>
                     <div className="mt-2 text-[15px] font-semibold text-rose-500">
-                      Cancelled orders ka amount accounts me add nahi hota.
+                      Cancelled order amounts are not added to accounts.
                     </div>
                     <div className="mt-4">
                       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">

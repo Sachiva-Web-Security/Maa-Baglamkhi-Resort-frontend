@@ -208,7 +208,7 @@ const AssignmentNotification = () => {
       await API.put(`/assignments/${item.id}`, { status: "Completed" });
     } catch {
       setAllAssignments(previous);
-      setError("Task complete update nahi ho paaya. Please retry.");
+      setError("Task completion could not be updated. Please retry.");
     } finally {
       setActionId(null);
     }

@@ -78,7 +78,7 @@ const CustomerInvoicePage = () => {
         }
       } catch (err) {
         if (!ignore) {
-          setError(err.response?.data?.error || "Invoice load nahi ho paya.");
+          setError(err.response?.data?.error || "Invoice could not be loaded.");
         }
       } finally {
         if (!ignore) setLoading(false);

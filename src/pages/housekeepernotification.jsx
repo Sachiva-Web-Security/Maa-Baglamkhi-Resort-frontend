@@ -77,7 +77,7 @@ export default function HousekeeperNotification() {
       setNotifications(filtered.map(normalizeNotification));
       setCurrentPage(1);
     } catch {
-      setError("Housekeeping notifications load nahi ho paaye.");
+      setError("Housekeeping notifications could not be loaded.");
       setNotifications([]);
     } finally {
       setLoading(false);
@@ -126,7 +126,7 @@ export default function HousekeeperNotification() {
       await fetchNotifications();
     } catch {
       setNotifications(previous);
-      setError("Task complete update nahi ho paaya. Please retry.");
+      setError("Task completion could not be updated. Please retry.");
     }
   };
 

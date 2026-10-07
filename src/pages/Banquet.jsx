@@ -1373,7 +1373,7 @@ const Banquet = () => {
 
     if (Number(wizard.refundAmount || 0) > Number(wizard.advance || 0)) {
       setReservationError(
-        "Refund amount payment received se zyada nahi ho sakta."
+        "Refund amount cannot exceed payment received."
       );
       return;
     }
@@ -1490,7 +1490,7 @@ const Banquet = () => {
       resetWizard();
     } catch (error) {
       setReservationError(
-        error.response?.data?.message || "Reservation save nahi ho paayi."
+        error.response?.data?.message || "Reservation could not be saved."
       );
     } finally {
       setIsSavingReservation(false);

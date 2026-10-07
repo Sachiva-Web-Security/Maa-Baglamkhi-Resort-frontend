@@ -101,7 +101,7 @@ export default function RoomCostingModal({ rooms, onClose, apiBase }) {
         open: true,
         type: "error",
         title: "Save Failed",
-        message: "Room cleaning cost abhi save nahi ho paayi. Please dobara try kijiye.",
+        message: "Room cleaning cost could not be saved. Please try again.",
       });
     }
     setSaving(false);

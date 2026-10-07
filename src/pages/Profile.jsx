@@ -117,7 +117,7 @@ const Profile = () => {
         video.play();
       }
     } catch {
-      setCameraError("Camera open nahi ho pa rahi. Permission allow karein.");
+      setCameraError("Camera could not be opened. Please allow permission.");
     }
   };
 

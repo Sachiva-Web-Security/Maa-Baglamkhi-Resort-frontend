@@ -117,12 +117,12 @@ const EditBooking = ({
         .slice(-1)[0] || minCheckIn;
 
       if (!data.checkIn || data.checkIn < minCheckIn) {
-        alert("Check-in date existing booking date ya aaj se piche nahi ho sakti.");
+        alert("Check-in date cannot be before existing booking date or today.");
         return;
       }
 
       if (!data.checkOut || data.checkOut < minCheckOut) {
-        alert("Check-out date existing booking date aur selected check-in se piche nahi ho sakti.");
+        alert("Check-out date cannot be before existing booking date or selected check-in.");
         return;
       }
 

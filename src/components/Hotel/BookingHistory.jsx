@@ -57,7 +57,7 @@ const BookingHistory = () => {
         setRows(dedupeBookings(Array.isArray(response.data) ? response.data : []));
       } catch (error) {
         console.error(error);
-        alert("Booking history load nahi ho paayi.");
+        alert("Booking history could not be loaded.");
       }
     };
 

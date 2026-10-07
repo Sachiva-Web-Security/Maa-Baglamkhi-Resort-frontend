@@ -154,7 +154,7 @@ const Stayover = () => {
       setHasLoadedOnce(true);
     } catch (err) {
       console.error(err);
-      setError("Stay overview load nahi ho paaya.");
+      setError("Stay overview could not be loaded.");
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -517,7 +517,7 @@ const Stayover = () => {
       await loadData(true);
     } catch (err) {
       console.error(err);
-      showActionPopup("error", "Room status update nahi ho paaya.");
+      showActionPopup("error", "Room status could not be updated.");
     }
   };
 
@@ -634,12 +634,12 @@ const Stayover = () => {
     }
 
     if (nextCheckIn < bookingDateLimits.minCheckIn) {
-      showActionPopup("error", "Check-in date existing booking date ya aaj se piche nahi ho sakti.");
+      showActionPopup("error", "Check-in date cannot be before existing booking date or today.");
       return;
     }
 
     if (nextCheckOut < bookingDateLimits.minCheckOut) {
-      showActionPopup("error", "Check-out date existing booking date aur selected check-in se piche nahi ho sakti.");
+      showActionPopup("error", "Check-out date cannot be before existing booking date or selected check-in.");
       return;
     }
 
@@ -682,7 +682,7 @@ const Stayover = () => {
       showActionPopup("success", "Booking dates updated.");
     } catch (error) {
       console.error(error);
-      showActionPopup("error", "Booking dates update nahi ho paaya.");
+      showActionPopup("error", "Booking dates could not be updated.");
     } finally {
       setSavingBookingDates(false);
     }
@@ -751,7 +751,7 @@ const Stayover = () => {
       );
     } catch (err) {
       console.error(err);
-      showActionPopup("error", "Cleaning assign nahi ho paaya.");
+      showActionPopup("error", "Cleaning could not be assigned.");
     } finally {
       setAssigningCleaning(false);
     }
@@ -847,7 +847,7 @@ const Stayover = () => {
       showActionPopup("success", mode === "block" ? "Room blocked successfully." : "Room unblocked successfully.");
     } catch (error) {
       console.error(error);
-      showActionPopup("error", mode === "block" ? "Room block nahi ho paaya." : "Room unblock nahi ho paaya.");
+      showActionPopup("error", mode === "block" ? "Room could not be blocked." : "Room could not be unblocked.");
     }
   };
 
@@ -897,7 +897,7 @@ const Stayover = () => {
     } catch (error) {
       console.error(error);
       setCancelBookingModal((current) => ({ ...current, submitting: false }));
-      showActionPopup("error", error.response?.data?.message || "Booking cancel nahi ho paayi.");
+      showActionPopup("error", error.response?.data?.message || "Booking could not be cancelled.");
     }
   };
 

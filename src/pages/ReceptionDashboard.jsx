@@ -36,7 +36,7 @@ const ReceptionDashboard = () => {
       setRooms(roomsRes.status === "fulfilled" ? roomsRes.value.data || [] : []);
 
       if (bookingsRes.status !== "fulfilled" && roomsRes.status !== "fulfilled") {
-        setError("Reception dashboard data load nahi ho pa raha.");
+        setError("Reception dashboard data could not be loaded.");
       }
     } finally {
       if (!silent) setLoading(false);

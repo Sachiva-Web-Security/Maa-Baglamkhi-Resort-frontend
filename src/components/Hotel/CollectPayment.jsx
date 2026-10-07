@@ -52,7 +52,7 @@ const CollectPayment = () => {
 
   const handleApplyDiscount = () => {
     if (enteredDiscount < 0) {
-      alert("Discount negative nahi ho sakta");
+      alert("Discount cannot be negative");
       return;
     }
 
@@ -66,7 +66,7 @@ const CollectPayment = () => {
     }
 
     if (enteredAmount + safeDiscount > safeRemaining) {
-      alert("Payment + discount remaining balance se zyada nahi ho sakta");
+      alert("Payment + discount cannot exceed remaining balance");
       return;
     }
 

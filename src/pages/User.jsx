@@ -97,7 +97,7 @@ const User = () => {
 
     const id = user.id || user._id;
     if (!id) {
-      setError("User id missing hai, delete nahi ho pa raha.");
+      setError("User ID is missing. Delete failed.");
       return;
     }
 
@@ -127,7 +127,7 @@ const User = () => {
         );
         setDeleteMessage(`${user.name || user.fullName || "User"} deleted successfully`);
       } else {
-        setError(err.response?.data?.message || "User delete nahi ho paaya.");
+        setError(err.response?.data?.message || "User could not be deleted.");
       }
     }
   };
@@ -194,7 +194,7 @@ const User = () => {
 
     const id = editingUser.id || editingUser._id;
     if (!id) {
-      setEditError("User id missing hai, update nahi ho pa raha.");
+      setEditError("User ID is missing. Update failed.");
       return;
     }
 
@@ -237,7 +237,7 @@ const User = () => {
       } else if (status === 401) {
         setEditError("Session expire ho gayi hai ya token missing hai.");
       } else {
-        setEditError(err.response?.data?.message || "User update nahi ho paaya.");
+        setEditError(err.response?.data?.message || "User could not be updated.");
       }
     } finally {
       setIsUpdatingUser(false);

@@ -35,7 +35,7 @@ const RestaurantDashboard = () => {
       setOrders(Array.isArray(ordersData) ? ordersData : []);
       setKitchenOrders(Array.isArray(kitchenData) ? kitchenData : []);
     } catch (err) {
-      setError("Restaurant dashboard data load nahi ho pa raha.");
+      setError("Restaurant dashboard data could not be loaded.");
     } finally {
       if (!silent) setLoading(false);
     }

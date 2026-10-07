@@ -64,7 +64,7 @@ export default function MenuRecipeManager() {
       );
       setSelectedMenuItemId((current) => current || fallbackMenuId);
     } catch (err) {
-      setError(err.response?.data?.message || "Menu recipe module load nahi ho paaya.");
+      setError(err.response?.data?.message || "Menu recipe module could not be loaded.");
     } finally {
       setLoading(false);
     }
@@ -97,7 +97,7 @@ export default function MenuRecipeManager() {
       );
       setPreviewRows([]);
     } catch (err) {
-      setError(err.response?.data?.message || "Recipe rows load nahi ho paaye.");
+      setError(err.response?.data?.message || "Recipe rows could not be loaded.");
       setRecipeRows([createEmptyRow()]);
     }
   };
@@ -196,7 +196,7 @@ export default function MenuRecipeManager() {
       await Promise.all([loadRecipe(selectedMenuItemId), loadBaseData(selectedMenuItemId)]);
       setNotice("Recipe save ho gayi.");
     } catch (err) {
-      setError(err.response?.data?.message || "Recipe save nahi ho paayi.");
+      setError(err.response?.data?.message || "Recipe could not be saved.");
     } finally {
       setSaving(false);
     }

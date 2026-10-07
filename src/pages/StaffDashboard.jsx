@@ -38,7 +38,7 @@ const StaffDashboard = () => {
       setAssignments(assignmentRes.status === "fulfilled" ? assignmentRes.value.data || [] : []);
 
       if (attendanceRes.status !== "fulfilled" && assignmentRes.status !== "fulfilled") {
-        setError("Staff dashboard data load nahi ho pa raha.");
+        setError("Staff dashboard data could not be loaded.");
       }
     } finally {
       if (!silent) setLoading(false);

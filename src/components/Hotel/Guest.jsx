@@ -320,7 +320,7 @@ const Guest = () => {
       } catch (error) {
         console.error(error);
         setCancelFlowModal((current) => ({ ...current, submitting: false }));
-        showPopup("error", "Cancellation Failed", error.response?.data?.message || "Booking cancel nahi ho paayi.");
+        showPopup("error", "Cancellation Failed", error.response?.data?.message || "Booking could not be cancelled.");
         return;
       }
     }

@@ -22,7 +22,7 @@ const KitchenDashboard = () => {
       const data = await restaurantService.getKitchenOrders();
       setOrders(Array.isArray(data) ? data : []);
     } catch (err) {
-      setError("Kitchen dashboard data load nahi ho pa raha.");
+      setError("Kitchen dashboard data could not be loaded.");
     } finally {
       if (!silent) setLoading(false);
     }

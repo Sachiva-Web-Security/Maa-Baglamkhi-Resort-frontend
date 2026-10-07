@@ -77,7 +77,7 @@ export default function InventoryMastersManager() {
       try {
         await Promise.all(INVENTORY_MASTER_SECTIONS.map((section) => loadSection(section.key)));
       } catch (err) {
-        setError(err.response?.data?.message || "Inventory masters load nahi ho paaye.");
+        setError(err.response?.data?.message || "Inventory masters could not be loaded.");
       } finally {
         setLoading(false);
       }
@@ -130,7 +130,7 @@ export default function InventoryMastersManager() {
       await loadSection(activeKey);
       handleReset();
     } catch (err) {
-      setError(err.response?.data?.message || "Save nahi ho paaya.");
+      setError(err.response?.data?.message || "Could not be saved.");
     } finally {
       setSaving(false);
     }
@@ -147,7 +147,7 @@ export default function InventoryMastersManager() {
       }
       setMessage(`${activeSection.label} record deleted.`);
     } catch (err) {
-      setError(err.response?.data?.message || "Delete nahi ho paaya.");
+      setError(err.response?.data?.message || "Could not be deleted.");
     }
   };
 

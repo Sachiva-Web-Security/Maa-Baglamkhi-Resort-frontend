@@ -867,7 +867,7 @@ const Accounts = () => {
       return true;
     } catch (error) {
       console.error(`Error saving ${endpoint}`, error);
-      window.alert("Entry save nahi ho payi.");
+      window.alert("Entry could not be saved.");
       return false;
     }
   };

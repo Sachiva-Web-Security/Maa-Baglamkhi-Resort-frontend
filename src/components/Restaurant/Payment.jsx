@@ -1911,7 +1911,7 @@ const recalculateInvoiceTotals = (items) => {
       setPaymentResult({
         show: true,
         success: false,
-        message: error.response?.data?.message || "Payment backend se save nahi ho paaya.",
+        message: error.response?.data?.message || "Payment could not be saved.",
         billId: null,
         total: 0,
         method: "",

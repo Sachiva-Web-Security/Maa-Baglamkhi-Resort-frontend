@@ -76,7 +76,7 @@ const Roomitem = () => {
       setBookings(expandBookings(bookingsResponse.data));
     } catch (error) {
       console.error(error);
-      alert("Hotel room data load nahi ho paaya.");
+      alert("Hotel room data could not be loaded.");
       setRooms([]);
       setBookings([]);
     } finally {
@@ -294,7 +294,7 @@ const Roomitem = () => {
       loadRooms();
     } catch (error) {
       console.error(error);
-      alert(error.response?.data?.message || "Room add nahi ho paaya.");
+      alert(error.response?.data?.message || "Room could not be added.");
     }
   };
 
@@ -359,7 +359,7 @@ const Roomitem = () => {
       }
 
       if (!tokenId) {
-        throw new Error("Token create nahi ho paaya.");
+        throw new Error("Token could not be created.");
       }
 
       // NOTE: adjust this endpoint/payload if your backend's add-item route differs.
@@ -415,7 +415,7 @@ const Roomitem = () => {
       window.dispatchEvent(new Event("tokenUpdated"));
     } catch (error) {
       console.error(error);
-      alert(error.response?.data?.message || error.message || "Add-on add nahi ho paaya.");
+      alert(error.response?.data?.message || error.message || "Add-on could not be added.");
       updateAddonForm(roomRef, { submitting: false });
     }
   };
@@ -506,7 +506,7 @@ const Roomitem = () => {
       window.dispatchEvent(new Event("tokenUpdated"));
       navigate("/restaurant/payment", { state: persistedInvoice });
     } catch (error) {
-      alert(error.response?.data?.message || "Invoice create nahi ho paaya.");
+      alert(error.response?.data?.message || "Invoice could not be created.");
     }
   };
 

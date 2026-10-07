@@ -4173,7 +4173,7 @@ const BookingFlow = () => {
       showToast(
         "error",
         "Room number required",
-        `Row ${missingRoomIndex + 1}: room number select karna mandatory hai. Bina room number ke booking save nahi hogi.`,
+        `Row ${missingRoomIndex + 1}: Room number is mandatory. Booking cannot be saved without a room number.`,
       );
       return false;
     }

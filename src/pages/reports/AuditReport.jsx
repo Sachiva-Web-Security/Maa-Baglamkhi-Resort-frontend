@@ -210,7 +210,7 @@ export default function AuditReport() {
         ...(res.data?.pagination || {}),
       }));
     } catch (err) {
-      setError(err.response?.data?.message || "Audit logs load nahi ho paaye.");
+      setError(err.response?.data?.message || "Audit logs could not be loaded.");
     } finally {
       setLoading(false);
     }

@@ -583,7 +583,7 @@ const Communication = () => {
       openFeedbackModal(
         "error",
         "Upload failed",
-        error.response?.data?.message || "Guest document upload nahi ho paaya. Please try again.",
+        error.response?.data?.message || "Guest document could not be uploaded. Please try again.",
       );
     } finally {
       setDocumentSubmitting(false);

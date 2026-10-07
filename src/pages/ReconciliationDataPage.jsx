@@ -497,7 +497,7 @@ const ReconciliationDataPage = () => {
       return true;
     } catch (error) {
       console.error("Error saving bank ledger", error);
-      window.alert("Bank entry save nahi ho payi.");
+      window.alert("Bank entry could not be saved.");
       return false;
     }
   };

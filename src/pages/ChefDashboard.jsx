@@ -23,7 +23,7 @@ const ChefDashboard = () => {
       setOrders(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Failed to load chef orders", err);
-      setError("Kitchen orders load nahi ho pa rahe.");
+      setError("Kitchen orders could not be loaded.");
       if (!silent) setLoading(false);
     } finally {
       if (!silent) setLoading(false);

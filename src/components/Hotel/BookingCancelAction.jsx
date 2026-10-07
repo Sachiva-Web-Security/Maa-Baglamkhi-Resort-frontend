@@ -47,7 +47,7 @@ const BookingCancelAction = ({
         setModal((current) => ({
           ...current,
           submitting: false,
-          error: error.response?.data?.message || "Booking cancel nahi ho paayi.",
+          error: error.response?.data?.message || "Booking could not be cancelled.",
         }));
         return;
       }

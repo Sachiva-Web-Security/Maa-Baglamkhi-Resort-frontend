@@ -244,7 +244,7 @@ const Dashboard = () => {
       } catch (error) {
         console.error(error);
         if (isMounted) {
-          toast.error("Dashboard data load nahi ho paaya.", {
+          toast.error("Dashboard data could not be loaded.", {
             position: "bottom-right",
           });
         }
@@ -1219,7 +1219,7 @@ const Dashboard = () => {
       );
     } catch (error) {
       console.error(error);
-      toast.error("Housekeeping assignment save nahi ho paaya.");
+      toast.error("Housekeeping assignment could not be saved.");
     } finally {
       setAssigningCleaning(false);
     }
@@ -1264,7 +1264,7 @@ const Dashboard = () => {
       toast.success(mode === "block" ? "Room blocked successfully." : "Room unblocked successfully.");
     } catch (error) {
       console.error(error);
-      toast.error(mode === "block" ? "Room block nahi ho paaya." : "Room unblock nahi ho paaya.");
+      toast.error(mode === "block" ? "Room could not be blocked." : "Room could not be unblocked.");
     }
   };
 
