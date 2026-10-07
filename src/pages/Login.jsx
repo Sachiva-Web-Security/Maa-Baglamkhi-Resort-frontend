@@ -60,18 +60,29 @@ const Login = ({ setIsAuthenticated }) => {
     setError("");
     setLoading(true);
 
+    console.log("[LOGIN DEBUG] Frontend: submitting login", { email, passwordLength: password.length });
+
     try {
       const normalizedEmail = String(email || "").trim().toLowerCase();
       const loginBody = { email: normalizedEmail, password };
+      console.log("[LOGIN DEBUG] Frontend: normalizedEmail:", normalizedEmail, "loginBody:", loginBody);
 
       let res;
       try {
+        console.log("[LOGIN DEBUG] Frontend: sending POST to /auth/login (first attempt)");
         res = await API.post(
           "/auth/login",
           loginBody,
           withAudit("login"),
         );
+        console.log("[LOGIN DEBUG] Frontend: first attempt response status:", res?.status, "data:", res?.data);
       } catch (err) {
+        console.log("[LOGIN DEBUG] Frontend: first attempt failed", {
+          status: err.response?.status,
+          data: err.response?.data,
+          message: err.message,
+          code: err.code,
+        });
         const aliasEmail = LOGIN_EMAIL_ALIASES[normalizedEmail];
         const shouldRetryWithAlias =
           aliasEmail &&
@@ -79,17 +90,21 @@ const Login = ({ setIsAuthenticated }) => {
          /invalid email/i.test(String(err.response?.data?.message || "").toLowerCase());
 
         if (!shouldRetryWithAlias) {
+          console.log("[LOGIN DEBUG] Frontend: not retrying with alias, throwing");
           throw err;
         }
 
+        console.log("[LOGIN DEBUG] Frontend: retrying with alias email:", aliasEmail);
         res = await API.post(
           "/auth/login",
           { email: aliasEmail, password },
           withAudit("login"),
         );
+        console.log("[LOGIN DEBUG] Frontend: alias attempt response status:", res?.status, "data:", res?.data);
       }
 
       const data = res.data;
+      console.log("[LOGIN DEBUG] Frontend: login success, data:", { token: data.token ? "present" : "missing", role: data.role, name: data.name, email: data.email });
 
       // Save auth state for RoleHomeRedirect and ProtectedRoute
       if (setIsAuthenticated) setIsAuthenticated(true);
@@ -99,6 +114,12 @@ const Login = ({ setIsAuthenticated }) => {
       if (data.email) localStorage.setItem("email", data.email);
       navigate(getRoleHome(data.role), { replace: true });
     } catch (err) {
+      console.log("[LOGIN DEBUG] Frontend: final error", {
+        status: err.response?.status,
+        data: err.response?.data,
+        message: err.message,
+        code: err.code,
+      });
       const base =
         (import.meta.env.VITE_API_URL || "/api").replace(/\/api\/?$/, "") ||
         "backend";
