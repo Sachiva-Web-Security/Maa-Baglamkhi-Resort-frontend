@@ -1,5 +1,4 @@
 // src/pages/Login.jsx
-// FIXED: Responsive login with proper field handling + error display
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
@@ -7,13 +6,6 @@ import API from "../api";
 import { getRoleHome } from "../utils/roleHome";
 import { withAudit } from "../utils/auditAction";
 
-// NOTE: Previously this imported "../assets/bg.jpg" directly, but that file
-// doesn't exist in the project, which crashed the whole app at build time
-// (blank white/dark screen, nothing rendered). We now reference it from the
-// /public folder instead, so the app works with or without the image.
-// To use a real background image: drop a file at `public/bg.jpg` in your
-// project root (not src/assets). If it's missing, the gradient below is
-// used as a fallback and nothing breaks.
 const bgImage = "/bg.jpg";
 
 const ROLE_LOGIN_HINTS = [
@@ -60,29 +52,18 @@ const Login = ({ setIsAuthenticated }) => {
     setError("");
     setLoading(true);
 
-    console.log("[LOGIN DEBUG] Frontend: submitting login", { email, passwordLength: password.length });
-
     try {
       const normalizedEmail = String(email || "").trim().toLowerCase();
       const loginBody = { email: normalizedEmail, password };
-      console.log("[LOGIN DEBUG] Frontend: normalizedEmail:", normalizedEmail, "loginBody:", loginBody);
 
       let res;
       try {
-        console.log("[LOGIN DEBUG] Frontend: sending POST to /auth/login (first attempt)");
         res = await API.post(
           "/auth/login",
           loginBody,
           withAudit("login"),
         );
-        console.log("[LOGIN DEBUG] Frontend: first attempt response status:", res?.status, "data:", res?.data);
       } catch (err) {
-        console.log("[LOGIN DEBUG] Frontend: first attempt failed", {
-          status: err.response?.status,
-          data: err.response?.data,
-          message: err.message,
-          code: err.code,
-        });
         const aliasEmail = LOGIN_EMAIL_ALIASES[normalizedEmail];
         const shouldRetryWithAlias =
           aliasEmail &&
@@ -90,23 +71,18 @@ const Login = ({ setIsAuthenticated }) => {
          /invalid email/i.test(String(err.response?.data?.message || "").toLowerCase());
 
         if (!shouldRetryWithAlias) {
-          console.log("[LOGIN DEBUG] Frontend: not retrying with alias, throwing");
           throw err;
         }
 
-        console.log("[LOGIN DEBUG] Frontend: retrying with alias email:", aliasEmail);
         res = await API.post(
           "/auth/login",
           { email: aliasEmail, password },
           withAudit("login"),
         );
-        console.log("[LOGIN DEBUG] Frontend: alias attempt response status:", res?.status, "data:", res?.data);
       }
 
       const data = res.data;
-      console.log("[LOGIN DEBUG] Frontend: login success, data:", { token: data.token ? "present" : "missing", role: data.role, name: data.name, email: data.email });
 
-      // Save auth state for RoleHomeRedirect and ProtectedRoute
       if (setIsAuthenticated) setIsAuthenticated(true);
       if (data.token) localStorage.setItem("token", data.token);
       if (data.role) localStorage.setItem("role", data.role);
@@ -114,12 +90,6 @@ const Login = ({ setIsAuthenticated }) => {
       if (data.email) localStorage.setItem("email", data.email);
       navigate(getRoleHome(data.role), { replace: true });
     } catch (err) {
-      console.log("[LOGIN DEBUG] Frontend: final error", {
-        status: err.response?.status,
-        data: err.response?.data,
-        message: err.message,
-        code: err.code,
-      });
       const base =
         (import.meta.env.VITE_API_URL || "/api").replace(/\/api\/?$/, "") ||
         "backend";
@@ -154,13 +124,10 @@ const Login = ({ setIsAuthenticated }) => {
         minHeight: "100vh",
       }}
     >
-      {/* Overlay */}
       <div className="pointer-events-none absolute inset-0 bg-slate-900/45 backdrop-blur-[2px]" />
 
       <div className="relative z-10 w-full max-w-md">
-        {/* Card */}
         <div className="overflow-hidden rounded-3xl border border-white/20 bg-white shadow-[0_32px_80px_rgba(15,23,42,0.3)]">
-          {/* Header stripe */}
           <div className="bg-gradient-to-r from-slate-900 via-blue-900 to-teal-800 px-8 py-7 text-center text-white">
             <div className="text-2xl font-black tracking-wide">
               Maa BAGLAMUKHI RESORT
@@ -175,10 +142,9 @@ const Login = ({ setIsAuthenticated }) => {
               Staff Login
             </h2>
 
-            {/* Error banner */}
             {error && (
               <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
-                ⚠️ {error}
+                {error}
               </div>
             )}
 
@@ -236,7 +202,6 @@ const Login = ({ setIsAuthenticated }) => {
               </button>
             </form>
 
-            {/* Role email shortcuts */}
             <div className="mt-6">
               <p className="mb-2.5 text-center text-[10px] font-bold uppercase tracking-widest text-slate-400">
                 Role Email Shortcuts

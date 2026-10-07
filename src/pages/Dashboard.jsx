@@ -174,7 +174,7 @@ const Dashboard = () => {
     try {
       if (silent) setRefreshingDashboard(true);
 
-      const [metricsRes, roomsRes, roomsSetupRes, bookingsRes, usersRes] = await Promise.all([
+      const results = await Promise.allSettled([
         API.get("/dashboard/metrics"),
         API.get("/housekeeping"),
         API.get("/hotel/rooms/setup"),
@@ -182,22 +182,39 @@ const Dashboard = () => {
         API.get("/users"),
       ]);
 
-      setApiMetrics({
-        totalRooms: metricsRes.data.totalRooms || 0,
-        occupiedRooms: metricsRes.data.occupiedRooms || 0,
-        todayRevenue: metricsRes.data.todayRevenue || 0,
-        todayCheckins: metricsRes.data.todayCheckins || 0,
-        expectedArrivals: metricsRes.data.expectedArrivals || 0,
-        expectedCheckouts: metricsRes.data.expectedCheckouts || 0,
-        totalRevenueGenerated: metricsRes.data.totalRevenueGenerated || 0,
-        expectedArrivalDetails: metricsRes.data.expectedArrivalDetails || [],
-        expectedCheckoutDetails: metricsRes.data.expectedCheckoutDetails || [],
-        todayCheckinDetails: metricsRes.data.todayCheckinDetails || [],
-      });
-      setRooms(normalizeRooms(roomsRes.data));
-      setRoomsSetup(Array.isArray(roomsSetupRes.data) ? roomsSetupRes.data : []);
-      setBookings(expandBookings(bookingsRes.data));
-      setHousekeepers(getHousekeepingUsers(usersRes.data));
+      const [metricsResult, roomsResult, roomsSetupResult, bookingsResult, usersResult] = results;
+
+      if (metricsResult.status === "fulfilled") {
+        const d = metricsResult.value.data || {};
+        setApiMetrics({
+          totalRooms: d.totalRooms || 0,
+          occupiedRooms: d.occupiedRooms || 0,
+          todayRevenue: d.todayRevenue || 0,
+          todayCheckins: d.todayCheckins || 0,
+          expectedArrivals: d.expectedArrivals || 0,
+          expectedCheckouts: d.expectedCheckouts || 0,
+          totalRevenueGenerated: d.totalRevenueGenerated || 0,
+          expectedArrivalDetails: d.expectedArrivalDetails || [],
+          expectedCheckoutDetails: d.expectedCheckoutDetails || [],
+          todayCheckinDetails: d.todayCheckinDetails || [],
+        });
+      }
+
+      if (roomsResult.status === "fulfilled") {
+        setRooms(normalizeRooms(roomsResult.value.data));
+      }
+
+      if (roomsSetupResult.status === "fulfilled") {
+        setRoomsSetup(Array.isArray(roomsSetupResult.value.data) ? roomsSetupResult.value.data : []);
+      }
+
+      if (bookingsResult.status === "fulfilled") {
+        setBookings(expandBookings(bookingsResult.value.data));
+      }
+
+      if (usersResult.status === "fulfilled") {
+        setHousekeepers(getHousekeepingUsers(usersResult.value.data));
+      }
     } finally {
       if (silent) setRefreshingDashboard(false);
     }
