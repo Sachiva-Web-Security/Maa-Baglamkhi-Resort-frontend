@@ -42,7 +42,7 @@ API.interceptors.request.use((req) => {
 API.interceptors.response.use(
   (res) => res,
   (err) => {
-    // 401: clear auth state
+    // 401: clear auth state and notify the app without a hard page redirect
     if (err.response?.status === 401 && !err.config?.skipAuthRedirect) {
       localStorage.removeItem("token");
       localStorage.removeItem("role");
@@ -50,9 +50,7 @@ API.interceptors.response.use(
       localStorage.removeItem("email");
       localStorage.removeItem("isAuthenticated");
 
-      if (window.location.pathname !== "/login") {
-        window.location.assign(`${window.location.origin}/login`);
-      }
+      window.dispatchEvent(new CustomEvent("auth:unauthorized"));
     }
 
     const isTimeout = err.code === "ECONNABORTED" || err.message?.includes("timeout");
