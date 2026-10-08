@@ -1,4 +1,5 @@
 import React from "react";
+import { createPortal } from "react-dom";
 
 const AddTableModal = ({
   open,
@@ -10,9 +11,12 @@ const AddTableModal = ({
 }) => {
   if (!open) return null;
 
-  return (
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-950/45 p-4">
-      <div className="w-full max-w-md rounded-[28px] bg-white p-6 shadow-[0_30px_80px_rgba(15,23,42,0.32)]">
+  return createPortal(
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-950/45 p-4" onClick={onClose}>
+      <div
+        className="w-full max-w-md rounded-[28px] bg-white p-6 shadow-[0_30px_80px_rgba(15,23,42,0.32)]"
+        onClick={(event) => event.stopPropagation()}
+      >
         <div className="text-[11px] uppercase tracking-[0.26em] text-blue-700">Add Table</div>
         <div className="mt-2 text-3xl font-black text-slate-900">Create a new table</div>
 
@@ -79,7 +83,8 @@ const AddTableModal = ({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 };
 
