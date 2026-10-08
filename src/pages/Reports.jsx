@@ -275,13 +275,17 @@ async function loadRestaurantReportRows() {
     const rows = Array.isArray(response.data) ? response.data : [];
 
     return rows.map((row) => ({
-    id: row.id,
-    date: normalizeDate(row.date),
-    table_number: row.locationLabel || row.tableNumber || row.table_number || row.reference || "-",
-    status: row.paymentStatus || row.status || "Pending",
-    paymentMode: normalizePaymentMode(row.paymentMode, "Pending"),
-    amount: Number(row.total) || 0,
-  }));
+      id: row.id,
+      date: normalizeDate(row.date),
+      table_number: row.locationLabel || row.tableNumber || row.table_number || row.reference || "-",
+      status: row.paymentStatus || row.status || "Pending",
+      paymentMode: normalizePaymentMode(row.paymentMode, "Pending"),
+      amount: Number(row.total) || 0,
+    }));
+  } catch (err) {
+    console.error("loadRestaurantReportRows failed", err);
+    return [];
+  }
 }
 
 async function loadHousekeepingReportRows() {
