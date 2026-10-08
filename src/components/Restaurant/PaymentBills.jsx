@@ -221,7 +221,10 @@ const PaymentBills = () => {
           <div className="relative flex max-h-[90vh] w-full max-w-[460px] flex-col overflow-hidden rounded-[18px] border border-white/40 bg-white/95 shadow-[0_28px_80px_rgba(15,23,42,0.32)] sm:rounded-[22px]">
             <button
               type="button"
-              onClick={closeBillDetail}
+              onClick={(event) => {
+                event.stopPropagation();
+                closeBillDetail();
+              }}
               className="absolute right-3 top-3 z-10 rounded-lg bg-white/15 px-2.5 py-1.5 text-[12px] font-bold text-white backdrop-blur-sm ring-1 ring-white/30 transition hover:bg-white/25"
             >
               Close
@@ -285,7 +288,10 @@ const PaymentBills = () => {
 
                 <button
                   type="button"
-                  onClick={closeBillDetail}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    closeBillDetail();
+                  }}
                   className="mt-3 w-full rounded-xl border border-blue-200 bg-white px-4 py-2.5 text-[13px] font-bold text-blue-700 shadow-sm transition hover:bg-blue-50 md:hidden"
                 >
                   Close

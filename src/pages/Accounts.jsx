@@ -24,6 +24,7 @@ import {
   FaChevronDown,
   FaChevronRight,
   FaPrint,
+  FaDownload,
 } from "react-icons/fa";
 
 import PaymentSettingsManager from "../components/Accounts/PaymentSettingsManager";
@@ -243,6 +244,37 @@ const formatInputDate = (value) => {
   return isoMatch ? isoMatch[1] : text;
 };
 
+const exportToCSV = (rows, columns, title) => {
+  if (!rows || rows.length === 0) {
+    alert("No data to export.");
+    return;
+  }
+  const header = columns.map((c) => `"${c.label}"`).join(",");
+  const dataRows = rows.map((row) =>
+    columns
+      .map((col) => {
+        const raw = row[col.key];
+        const val = raw === null || raw === undefined ? "" : String(raw);
+        const escaped = val.includes(",") || val.includes('"') || val.includes("\n")
+          ? `"${val.replace(/"/g, '""')}"`
+          : val;
+        return escaped;
+      })
+      .join(",")
+  );
+  const csv = [header, ...dataRows].join("\n");
+  const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  const safeTitle = (title || "export").replace(/[^a-zA-Z0-9_-]/g, "_");
+  link.download = `${safeTitle}_${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
+
 const AccountsModuleCard = ({
   title,
   subtitle,
@@ -338,6 +370,15 @@ const AccountsModuleCard = ({
               {(rows || []).length} Recorded Entries
             </span>
           )}
+          <button
+            type="button"
+            onClick={() => exportToCSV(rows, columns, title)}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700 hover:bg-emerald-100 transition-colors"
+            title="Export to CSV"
+          >
+            <FaDownload className="text-xs" />
+            Export
+          </button>
         </div>
       </div>
 
@@ -1119,35 +1160,32 @@ const Accounts = () => {
       return db - da;
     });
 
-    // Calculate totals including all sources
-    const totalCredit = allItems.reduce((s, i) => s + i.credit, 0);
-    const totalDebit = allItems.reduce((s, i) => s + i.debit, 0);
+    // Calculate totals
+    const totalIn = allItems.reduce((s, i) => s + i.credit, 0);
+    const totalOut = allItems.reduce((s, i) => s + i.debit, 0);
     const totalDiscount = paymentItems.reduce((s, i) => s + i.discount, 0);
-    const netBalance = totalCredit - totalDebit;
+    const netBalance = totalIn - totalOut;
 
-    const hotelTotal = hotelBillingItems.reduce((s, i) => s + i.amount, 0);
-    const restaurantTotal = restaurantBillingItems.reduce((s, i) => s + i.amount, 0);
-
-    // Build table rows
+    // Build unified table rows with running balance
+    let runningBalance = 0;
     const rows = allItems
       .map(
-        (item) => `
-        <tr>
+        (item) => {
+          runningBalance += item.credit - item.debit;
+          return `<tr>
           <td>${escapeHtml(item.date)}</td>
           <td>${escapeHtml(item.description)}</td>
           <td>${escapeHtml(item.narration)}</td>
           <td>${escapeHtml(item.mode)}</td>
-          <td style="text-align:right">${item.type === "Income" ? formatINR(item.amount) : "-"}</td>
-          <td style="text-align:right">${item.type === "Expense" ? formatINR(item.amount) : "-"}</td>
-          <td style="text-align:right">${item.discount > 0 ? `-${formatINR(item.discount)}` : "-"}</td>
-          <td>${escapeHtml(item.status || "-")}</td>
-          <td style="font-size:10px;color:#6b7280;">${escapeHtml(item.source)}</td>
-        </tr>
-      `,
+          <td style="text-align:right;color:#059669;font-weight:600;">${item.credit > 0 ? formatINR(item.credit) : "-"}</td>
+          <td style="text-align:right;color:#dc2626;font-weight:600;">${item.debit > 0 ? formatINR(item.debit) : "-"}</td>
+          <td style="text-align:right;font-weight:700;">${formatINR(Math.abs(runningBalance))} ${runningBalance >= 0 ? "(Cr)" : "(Dr)"}</td>
+        </tr>`;
+        },
       )
       .join("");
 
-    const emptyMsg = allItems.length === 0 ? `<tr><td colspan="9" style="text-align:center;padding:24px;color:#9ca3af;">No transactions found</td></tr>` : "";
+    const emptyMsg = allItems.length === 0 ? `<tr><td colspan="7" style="text-align:center;padding:32px;color:#9ca3af;font-size:14px;">No transactions found for this customer</td></tr>` : "";
 
     const html = `
       <!DOCTYPE html>
@@ -1340,22 +1378,22 @@ const Accounts = () => {
             <div class="value" style="color:${netBalance >= 0 ? '#059669' : '#dc2626'};">
               ${formatINR(Math.abs(netBalance))} ${netBalance >= 0 ? '(Cr)' : '(Dr)'}
             </div>
-            <div class="sub">${totalCredit > 0 ? 'Total In: ' + formatINR(totalCredit) : ''}${totalCredit > 0 && totalDebit > 0 ? ' · ' : ''}${totalDebit > 0 ? 'Total Out: ' + formatINR(totalDebit) : ''}</div>
+            <div class="sub">${totalIn > 0 ? 'Total Paid: ' + formatINR(totalIn) : ''}${totalIn > 0 && totalOut > 0 ? ' · ' : ''}${totalOut > 0 ? 'Total Out: ' + formatINR(totalOut) : ''}</div>
           </div>
         </div>
 
         <div class="summary-grid">
           <div class="summary-card">
-            <div class="label">Payments In</div>
-            <div class="value value-green">${formatINR(totalCredit)}</div>
+            <div class="label">Total Amount</div>
+            <div class="value val-total">${formatINR(totalIn + totalOut)}</div>
           </div>
           <div class="summary-card">
-            <div class="label">Hotel Bills</div>
-            <div class="value val-dark">${hotelBillingItems.length > 0 ? formatINR(hotelTotal) : '-'}</div>
+            <div class="label">Total Paid</div>
+            <div class="value val-in">${formatINR(totalIn)}</div>
           </div>
           <div class="summary-card">
-            <div class="label">Restaurant Bills</div>
-            <div class="value val-dark">${restaurantBillingItems.length > 0 ? formatINR(restaurantTotal) : '-'}</div>
+            <div class="label">Remaining</div>
+            <div class="value val-out">${formatINR(totalOut)}</div>
           </div>
           <div class="summary-card">
             <div class="label">Net Balance</div>
@@ -1363,116 +1401,23 @@ const Accounts = () => {
           </div>
         </div>
 
-        ${paymentItems.length > 0 ? `
-        <div class="section-title">Payment History (${paymentItems.length})</div>
         <table>
           <thead>
             <tr>
-              <th style="width:12%">Date</th>
-              <th style="width:34%">Description</th>
-              <th style="width:12%">Mode</th>
-              <th style="text-align:right">Amount</th>
-              <th style="text-align:right">Discount</th>
-              <th style="text-align:center">Status</th>
+              <th style="width:10%">Date</th>
+              <th style="width:28%">Description</th>
+              <th style="width:18%">Narration</th>
+              <th style="width:10%">Mode</th>
+              <th style="width:12%;text-align:right">In (+)</th>
+              <th style="width:12%;text-align:right">Out (-)</th>
+              <th style="width:10%;text-align:right">Balance</th>
             </tr>
           </thead>
-          <tbody>
-            ${paymentItems.map(p => {
-              const badge = p.status === 'Completed' ? 'badge-ok' : p.status === 'Cancelled' ? 'badge-cancel' : 'badge-pending';
-              return `
-              <tr>
-                <td>${escapeHtml(p.date)}</td>
-                <td>${escapeHtml(p.description)}</td>
-                <td>${escapeHtml(p.mode)}</td>
-                <td class="text-right text-green">+${formatINR(p.amount)}</td>
-                <td class="text-right" style="color:#d97706;">${p.discount > 0 ? formatINR(p.discount) : '-'}</td>
-                <td class="text-center"><span class="badge ${badge}">${escapeHtml(p.status)}</span></td>
-              </tr>`;
-            }).join('')}
-          </tbody>
+          <tbody>${rows || emptyMsg}</tbody>
         </table>
-        ` : ''}
-
-        ${ledgerItems.length > 0 ? `
-        <div class="section-title">Ledger Transactions (${ledgerItems.length})</div>
-        <table>
-          <thead>
-            <tr>
-              <th style="width:12%">Date</th>
-              <th style="width:38%">Description</th>
-              <th style="width:10%">Type</th>
-              <th style="text-align:right">Amount</th>
-              <th style="text-align:center">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${ledgerItems.map(item => `
-              <tr>
-                <td>${escapeHtml(item.date)}</td>
-                <td>${escapeHtml(item.description)}</td>
-                <td>${item.type}</td>
-                <td class="text-right ${item.type === 'Income' ? 'text-green' : 'text-red'}">${formatINR(item.amount)}</td>
-                <td class="text-center">${escapeHtml(item.status || '-')}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-        ` : ''}
-
-        ${hotelBillingItems.length > 0 ? `
-        <div class="section-title">Hotel Bills (${hotelBillingItems.length})</div>
-        <table>
-          <thead>
-            <tr>
-              <th style="width:12%">Date</th>
-              <th style="width:38%">Description</th>
-              <th style="width:12%">Type</th>
-              <th style="text-align:right">Amount</th>
-              <th style="text-align:center">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${hotelBillingItems.map(item => `
-              <tr>
-                <td>${escapeHtml(item.date)}</td>
-                <td>${escapeHtml(item.description)}</td>
-                <td>${item.type}</td>
-                <td class="text-right ${item.type === 'Income' ? 'text-green' : 'text-red'}">${formatINR(item.amount)}</td>
-                <td class="text-center">${escapeHtml(item.status || '-')}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-        ` : ''}
-
-        ${restaurantBillingItems.length > 0 ? `
-        <div class="section-title">Restaurant Bills (${restaurantBillingItems.length})</div>
-        <table>
-          <thead>
-            <tr>
-              <th style="width:12%">Date</th>
-              <th style="width:38%">Description</th>
-              <th style="width:12%">Type</th>
-              <th style="text-align:right">Amount</th>
-              <th style="text-align:center">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${restaurantBillingItems.map(item => `
-              <tr>
-                <td>${escapeHtml(item.date)}</td>
-                <td>${escapeHtml(item.description)}</td>
-                <td>${item.type}</td>
-                <td class="text-right ${item.type === 'Income' ? 'text-green' : 'text-red'}">${formatINR(item.amount)}</td>
-                <td class="text-center">${escapeHtml(item.status || '-')}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-        ` : ''}
 
         <div class="footer">
-          Maa Baglamkhi Resort — Customer Statement &middot; Printed ${now}
+          Maa Baglamukhi Resort · Printed ${now} · ${allItems.length} transactions
         </div>
 
         <div class="no-print">
@@ -1483,7 +1428,6 @@ const Accounts = () => {
       </html>
     `;
 
-    const printWindow = window.open("", "_blank", "width=1000,height=800");
     if (printWindow) {
       printWindow.document.open();
       printWindow.document.write(html);
@@ -2627,7 +2571,7 @@ const Accounts = () => {
   }
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-[#F5F8FF] p-3 sm:p-4 md:p-6 xl:p-8">
+    <div className="full-scale-page relative min-h-screen overflow-x-hidden bg-[#F5F8FF] p-3 sm:p-4 md:p-6 xl:p-8">
       {toast && (
         <div className={`fixed left-1/2 top-4 z-[60] -translate-x-1/2 rounded-2xl px-5 py-3 text-sm font-bold shadow-2xl transition-all duration-300 ${
           toast.tone === "error"
@@ -2674,7 +2618,7 @@ const Accounts = () => {
             {/* Main Title & Description */}
             <div>
               <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black leading-tight tracking-tight text-white">
-                Accounts workspace in dashboard style
+                Accounts workspace
               </h1>
               <p className="mt-2.5 max-w-3xl text-sm sm:text-base md:text-lg leading-relaxed text-blue-100/80">
                 Manage income, expenses, invoices, and transaction records from one attractive and responsive finance dashboard.
@@ -2901,23 +2845,23 @@ const Accounts = () => {
         <div className="rounded-2xl border border-slate-200/80 bg-white px-5 py-3.5 shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs sm:text-sm">
           <div className="flex items-center gap-2">
             <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
-            <span className="font-bold text-slate-800">Today's Pulse:</span>
-            <span className="text-slate-500">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Today</span>
+            <span className="text-xs sm:text-sm font-medium text-slate-600">
               {todayStats.count ? `${todayStats.count} transaction${todayStats.count === 1 ? "" : "s"} logged today` : "No transactions logged yet today"}
             </span>
           </div>
-          <div className="flex flex-wrap items-center gap-4">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
             <div className="flex items-center gap-1.5">
-              <span className="text-slate-400 font-semibold">Total:</span>
-              <span className="font-bold text-slate-900">{formatINR(todayStats.total)}</span>
+              <span className="text-xs font-semibold text-slate-400">Total:</span>
+              <span className="text-sm font-black text-slate-900">{formatINR(todayStats.total)}</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="text-emerald-500 font-bold">In:</span>
-              <span className="font-bold text-emerald-600">+{formatINR(todayStats.income)}</span>
+              <span className="text-xs font-semibold text-emerald-500">In:</span>
+              <span className="text-sm font-bold text-emerald-600">+{formatINR(todayStats.income)}</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="text-rose-500 font-bold">Out:</span>
-              <span className="font-bold text-rose-600">-{formatINR(todayStats.expense)}</span>
+              <span className="text-xs font-semibold text-rose-500">Out:</span>
+              <span className="text-sm font-bold text-rose-600">-{formatINR(todayStats.expense)}</span>
             </div>
           </div>
         </div>
@@ -2947,7 +2891,7 @@ const Accounts = () => {
                 <span>{tab.label}</span>
                 {tab.count !== null && (
                   <span
-                    className={`rounded-full px-2 py-0.5 text-[11px] font-extrabold ${
+                    className={`rounded-full px-2 py-0.5 text-xs font-extrabold ${
                       activeViewSection === tab.id ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"
                     }`}
                   >
@@ -2970,19 +2914,19 @@ const Accounts = () => {
         {/* Daily Carry-Forward Breakdown */}
         {(activeViewSection === "all" || activeViewSection === "daily") && (
           <section className="rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-6 shadow-xs">
-            <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+            <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between border-b border-slate-100 pb-4">
               <div>
                 <div className="text-xs font-bold uppercase tracking-wider text-slate-500">
                   Cash Flow Continuity
                 </div>
-                <h3 className="text-lg sm:text-xl font-black text-slate-900 mt-0.5">
+                <h3 className="text-xl sm:text-2xl font-black text-slate-900 mt-0.5">
                   Daily Income Breakdown
                 </h3>
                 <div className="text-xs sm:text-sm font-medium text-slate-500">
                   Remaining balance is automatically carried forward day-over-day
                 </div>
               </div>
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600">
                 <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
                 {dailyBreakdown.rows.length} day{dailyBreakdown.rows.length !== 1 ? "s" : ""} tracked
               </div>
@@ -2994,8 +2938,8 @@ const Accounts = () => {
               </div>
             ) : (
               <div className="overflow-x-auto rounded-xl border border-slate-200/80">
-                <table className="min-w-full text-left text-xs sm:text-sm">
-                  <thead className="bg-slate-900 text-slate-200 uppercase tracking-wider text-[11px] font-bold">
+                <table className="min-w-full text-left text-sm">
+                  <thead className="bg-slate-900 text-slate-200 uppercase tracking-wider text-sm font-bold">
                     <tr>
                       <th className="px-4 py-3">Date</th>
                       <th className="px-4 py-3 text-right">New Income</th>
@@ -3041,7 +2985,7 @@ const Accounts = () => {
                           <td className={`whitespace-nowrap px-4 py-3 text-right font-black ${remainingColor}`}>
                             {isLoss ? "-" : ""}{formatINR(Math.abs(row.remaining))}
                             {remainingPositive && (
-                              <span className="ml-1 text-[10px] font-semibold text-emerald-500">&#8599;</span>
+                              <span className="ml-1 text-xs font-semibold text-emerald-500">&#8599;</span>
                             )}
                           </td>
                         </tr>
@@ -3058,12 +3002,12 @@ const Accounts = () => {
         {(activeViewSection === "all" || activeViewSection === "ledger") && (
           <section className="rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-6 shadow-xs">
             {/* Ledger Header & Search */}
-            <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-4">
+            <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between border-b border-slate-100 pb-4">
               <div>
                 <div className="text-xs font-bold uppercase tracking-wider text-slate-500">
                   Transactions & Reconciliation
                 </div>
-                <h3 className="text-lg sm:text-xl font-black text-slate-900 mt-0.5">
+                <h3 className="text-xl sm:text-2xl font-black text-slate-900 mt-0.5">
                   Accounts Ledger
                 </h3>
                 <div className="text-xs sm:text-sm font-medium text-slate-500">
@@ -3103,8 +3047,8 @@ const Accounts = () => {
 
             {/* Desktop Table */}
             <div className="hidden overflow-x-auto rounded-xl border border-slate-200/80 md:block">
-              <table className="min-w-full text-left text-xs sm:text-sm">
-                <thead className="bg-slate-900 text-slate-200 uppercase tracking-wider text-[11px] font-bold">
+              <table className="min-w-full text-left text-sm">
+                <thead className="bg-slate-900 text-slate-200 uppercase tracking-wider text-sm font-bold">
                   <tr>
                     <th className="px-4 py-3 font-bold">Name / Description</th>
                     <th className="px-4 py-3 font-bold">Narration</th>
@@ -3136,7 +3080,7 @@ const Accounts = () => {
                                     <button
                                       type="button"
                                       onClick={() => toggleGroup(group.key)}
-                                      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-white text-xs font-bold text-slate-700 shadow-2xs hover:bg-slate-100 transition-colors"
+                                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-300 bg-white text-base font-bold text-slate-700 shadow-sm hover:bg-slate-100 transition-colors"
                                       aria-label={isOpen ? "Collapse group" : "Expand group"}
                                     >
                                       {isOpen ? "−" : "+"}
@@ -3147,11 +3091,11 @@ const Accounts = () => {
                                   <span className="text-sm font-black text-slate-900">
                                     {group.name}
                                   </span>
-                                  <span className="rounded-full bg-slate-200/70 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
+                                  <span className="rounded-full bg-slate-200/70 px-2.5 py-1 text-sm font-semibold text-slate-600">
                                     {group.records.length} record{group.records.length !== 1 ? "s" : ""}
                                   </span>
                                 </div>
-                                <div className="flex items-center gap-4 text-xs font-semibold">
+                                <div className="flex items-center gap-3 text-sm font-semibold">
                                   {group.income > 0 && (
                                     <span className="text-emerald-600 font-bold">+{formatINR(group.income)}</span>
                                   )}
@@ -3165,27 +3109,27 @@ const Accounts = () => {
 
                           {/* Group Summary Row */}
                           <tr className="transition-colors hover:bg-slate-50/50">
-                            <td className="px-4 py-3 pl-12 text-xs text-slate-400 font-medium">Summary Group</td>
-                            <td className="px-4 py-3 text-xs text-slate-500">
+                            <td className="px-4 py-3 pl-12 text-sm text-slate-400 font-medium">Summary Group</td>
+                            <td className="px-4 py-3 text-sm text-slate-500">
                               {getGroupCustomerNarration(group)}
                             </td>
-                            <td className="px-4 py-3 text-xs text-slate-600">
+                            <td className="px-4 py-3 text-sm text-slate-600">
                               {getGroupCustomer(group) || "--"}
                             </td>
                             <td className="px-4 py-3">
                               <div className="flex flex-wrap gap-1">
                                 {group.income > 0 && (
-                                  <span className="inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 ring-1 ring-emerald-200/60">
+                                  <span className="inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-sm font-bold text-emerald-700 ring-1 ring-emerald-200/60">
                                     Income
                                   </span>
                                 )}
                                 {group.expense > 0 && (
-                                  <span className="inline-flex rounded-full bg-rose-50 px-2 py-0.5 text-[11px] font-bold text-rose-700 ring-1 ring-rose-200/60">
+                                  <span className="inline-flex rounded-full bg-rose-50 px-2.5 py-1 text-sm font-bold text-rose-700 ring-1 ring-rose-200/60">
                                     Expense
                                   </span>
                                 )}
                                 {group.income === 0 && group.expense === 0 && (
-                                  <span className="text-xs text-slate-400">None</span>
+                                  <span className="text-sm text-slate-400">None</span>
                                 )}
                               </div>
                             </td>
@@ -3199,21 +3143,21 @@ const Accounts = () => {
                               {formatINR(group.income - group.expense)}
                             </td>
                             <td className="px-4 py-3 text-center">
-                              <div className="flex flex-wrap justify-center gap-1.5">
+                              <div className="flex flex-wrap justify-center gap-2">
                                 {group.key !== "__ungrouped" && (
                                   <>
                                     <button
                                       type="button"
-                                      className="inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1 text-[11px] font-bold text-blue-700 hover:bg-blue-100 transition-colors"
+                                      className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-sm font-bold text-blue-700 hover:bg-blue-100 transition-colors"
                                       onClick={() => handlePrintGroup(group)}
                                       title="Print this group"
                                     >
-                                      <FaPrint className="text-[10px]" />
+                                      <FaPrint className="text-sm" />
                                       Print
                                     </button>
                                     <button
                                       type="button"
-                                      className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 shadow-2xs transition-colors"
+                                      className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 shadow-sm transition-colors"
                                       onClick={() => toggleGroup(group.key)}
                                     >
                                       {isOpen ? "Hide Items" : "View Items"}
@@ -3232,14 +3176,14 @@ const Accounts = () => {
                                   <span className="mr-2 text-slate-300">↳</span>
                                   {r.description}
                                 </td>
-                                <td className="px-4 py-2.5 text-xs text-slate-500">
+                                <td className="px-4 py-2.5 text-sm text-slate-500">
                                   {r.narration ? <span className="line-clamp-1">{r.narration}</span> : "--"}
                                 </td>
-                                <td className="px-4 py-2.5 text-xs text-slate-500">
+                                <td className="px-4 py-2.5 text-sm text-slate-500">
                                   {r.customerMobile || r.customerName || "--"}
                                 </td>
                                 <td className="px-4 py-2.5">
-                                  <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-bold ${
+                                  <span className={`inline-flex rounded-full px-2.5 py-1 text-sm font-bold ${
                                     r.type === "Income"
                                       ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/60"
                                       : "bg-rose-50 text-rose-700 ring-1 ring-rose-200/60"
@@ -3257,10 +3201,10 @@ const Accounts = () => {
                                   {formatINR(r.type === "Income" ? r.amount : -r.amount)}
                                 </td>
                                 <td className="px-4 py-2.5 text-center">
-                                  <div className="flex items-center justify-center gap-1.5">
+                                  <div className="flex items-center justify-center gap-2">
                                     <button
                                       type="button"
-                                      className="rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-100 shadow-2xs transition-colors"
+                                      className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-bold text-slate-700 hover:bg-slate-100 shadow-sm transition-colors"
                                       onClick={() => {
                                         setSelectedRecord(r);
                                         setShowView(true);
@@ -3270,14 +3214,14 @@ const Accounts = () => {
                                     </button>
                                     <button
                                       type="button"
-                                      className="rounded-md border border-blue-200 bg-blue-50 px-2 py-1 text-[11px] font-bold text-blue-700 hover:bg-blue-100 shadow-2xs transition-colors"
+                                      className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-sm font-bold text-blue-700 hover:bg-blue-100 shadow-sm transition-colors"
                                       onClick={() => handleEditClick(r)}
                                     >
                                       Edit
                                     </button>
                                     <button
                                       type="button"
-                                      className="rounded-md border border-rose-200 bg-rose-50 px-2 py-1 text-[11px] font-bold text-rose-600 hover:bg-rose-100 shadow-2xs transition-colors"
+                                      className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-sm font-bold text-rose-600 hover:bg-rose-100 shadow-sm transition-colors"
                                       onClick={() => handleDeleteTransaction(r.id)}
                                     >
                                       Delete
@@ -3319,7 +3263,7 @@ const Accounts = () => {
                           )}
                           <div>
                             <div className="text-sm font-bold text-slate-900">{group.name}</div>
-                            <div className="text-[11px] text-slate-400">
+                            <div className="text-xs text-slate-400">
                               {group.records.length} record{group.records.length !== 1 ? "s" : ""}
                             </div>
                           </div>
@@ -3332,14 +3276,14 @@ const Accounts = () => {
                               className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-blue-200 bg-blue-50 text-blue-700"
                               title="Print"
                             >
-                              <FaPrint className="text-[10px]" />
+                              <FaPrint className="text-xs" />
                             </button>
                           )}
                           <div className="text-right">
                             <div className="text-xs font-bold text-slate-900">
                               {formatINR(group.income - group.expense)}
                             </div>
-                            <div className="flex items-center gap-1.5 text-[10px] font-semibold">
+                            <div className="flex items-center gap-1.5 text-xs font-semibold">
                               {group.income > 0 && <span className="text-emerald-600">+{formatINR(group.income)}</span>}
                               {group.expense > 0 && <span className="text-rose-500">-{formatINR(group.expense)}</span>}
                             </div>
@@ -3352,7 +3296,7 @@ const Accounts = () => {
                           {group.records.map((r) => (
                             <div key={r.id} className="rounded-lg border border-slate-200/80 bg-slate-50/50 p-2.5">
                               <div className="flex items-center justify-between gap-2">
-                                <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                                <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${
                                   r.type === "Income"
                                     ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/60"
                                     : "bg-rose-50 text-rose-700 ring-1 ring-rose-200/60"
@@ -3367,7 +3311,7 @@ const Accounts = () => {
                                 {(r.customerMobile || r.customerName) && (
                                   <div><span className="font-semibold text-slate-400">Customer:</span> {r.customerMobile || r.customerName}</div>
                                 )}
-                                <div className="flex items-center justify-between text-[11px] text-slate-400">
+                                <div className="flex items-center justify-between text-xs text-slate-400">
                                   <span>{r.date}</span>
                                   <span>{r.paymentMode}</span>
                                 </div>
@@ -3462,64 +3406,68 @@ const Accounts = () => {
 
         {/* Full Accounts Flow & Profit Centers */}
         {(activeViewSection === "all" || activeViewSection === "centers") && (
-          <section className="rounded-2xl border border-slate-200/80 bg-white p-5 sm:p-6 shadow-xs">
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-              <div className="max-w-2xl">
+          <section className="rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-6 shadow-xs">
+            <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between border-b border-slate-100 pb-4">
+              <div>
                 <div className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                  Full Accounts Flow
+                  Financial Overview
                 </div>
-                <h3 className="mt-1 text-lg sm:text-2xl font-black text-slate-900">
-                  Extended accounts controls
+                <h3 className="text-xl sm:text-2xl font-black text-slate-900 mt-0.5">
+                  Profit Centers
                 </h3>
-                <p className="mt-2 text-xs sm:text-sm leading-relaxed text-slate-500">
-                  Along with the existing transaction and invoice workflow, bank, petty cash, GST, vendor, purchase, payroll, and profit-center entries are also managed within this module.
-                </p>
+                <div className="text-xs sm:text-sm font-medium text-slate-500">
+                  Net balance by department and revenue center
+                </div>
               </div>
-
-              <div className="w-full lg:w-96 rounded-xl border border-slate-200/80 bg-slate-50/70 p-4 sm:p-5">
-                <div className="flex items-center justify-between border-b border-slate-200/80 pb-2.5">
-                  <div className="text-xs font-bold uppercase tracking-wider text-slate-600">
-                    Profit Center Net
-                  </div>
-                  <span className="text-[11px] font-semibold text-slate-400">
-                    {(extendedSummary.profitCenters || []).length} Centers
-                  </span>
-                </div>
-                <div className="mt-3 space-y-2 text-xs sm:text-sm">
-                  {(extendedSummary.profitCenters || []).length ? (
-                    extendedSummary.profitCenters.map((center) => (
-                      <div key={center.centerName} className="flex items-center justify-between gap-3 py-1 border-b border-slate-100 last:border-b-0">
-                        <span className="font-semibold text-slate-700">{center.centerName}</span>
-                        <span className={`font-black ${center.net >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
-                          {formatINR(center.net)}
-                        </span>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="py-2 text-center text-xs font-medium text-slate-400">
-                      No profit center breakdown yet.
-                    </div>
-                  )}
-                </div>
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600">
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                {(extendedSummary.profitCenters || []).length} center{(extendedSummary.profitCenters || []).length !== 1 ? "s" : ""}
               </div>
             </div>
+
+            {(extendedSummary.profitCenters || []).length === 0 ? (
+              <div className="py-12 text-center text-sm font-medium text-slate-400">
+                No profit center breakdown yet.
+              </div>
+            ) : (
+              <div className="overflow-x-auto rounded-xl border border-slate-200/80">
+                <table className="min-w-full text-left text-sm">
+                  <thead className="bg-slate-900 text-slate-200 uppercase tracking-wider text-sm font-bold">
+                    <tr>
+                      <th className="px-4 py-3">Center Name</th>
+                      <th className="px-4 py-3 text-right">Net Balance</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {(extendedSummary.profitCenters || []).map((center) => (
+                      <tr key={center.centerName} className="transition-colors hover:bg-slate-50/80">
+                        <td className="px-4 py-3 font-bold text-slate-800">{center.centerName}</td>
+                        <td className={`px-4 py-3 text-right font-black ${Number(center.net) >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                          {formatINR(center.net)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </section>
         )}
 
         {/* Customer Billing Section */}
         {(activeViewSection === "all" || activeViewSection === "billing") && (
           <section className="rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-6 shadow-xs">
-            <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
+            <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between border-b border-slate-100 pb-4">
               <div>
                 <div className="text-xs font-bold uppercase tracking-wider text-slate-500">
                   Revenue Channels
                 </div>
-                <h3 className="text-lg sm:text-xl font-black text-slate-900 mt-0.5">
+                <h3 className="text-xl sm:text-2xl font-black text-slate-900 mt-0.5">
                   Customer Billing
                 </h3>
-                <p className="text-xs sm:text-sm font-medium text-slate-500">
+                <div className="text-xs sm:text-sm font-medium text-slate-500">
                   Hotel bookings, invoices, restaurant bills and banquet records — with payment status.
-                </p>
+                </div>
               </div>
               <div className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600">
                 <span className="h-1.5 w-1.5 rounded-full bg-sky-500" />
@@ -3529,8 +3477,8 @@ const Accounts = () => {
 
             {/* Desktop Table */}
             <div className="hidden overflow-x-auto rounded-xl border border-slate-200/80 md:block">
-              <table className="min-w-full text-left text-xs sm:text-sm">
-                <thead className="bg-slate-900 text-slate-200 uppercase tracking-wider text-[11px] font-bold">
+              <table className="min-w-full text-left text-sm">
+                <thead className="bg-slate-900 text-slate-200 uppercase tracking-wider text-sm font-bold">
                   <tr>
                     <th className="px-4 py-3">Source</th>
                     <th className="px-4 py-3">Reference</th>
@@ -3570,16 +3518,16 @@ const Accounts = () => {
                           }`}
                         >
                           <td className="px-4 py-3 font-bold text-slate-800">{row.source}</td>
-                          <td className="px-4 py-3 font-mono text-xs text-slate-600">{row.reference}</td>
+                          <td className="px-4 py-3 font-mono text-slate-600">{row.reference}</td>
                           <td className="px-4 py-3 font-medium text-slate-700">{row.customerName}</td>
-                          <td className="px-4 py-3 text-xs text-slate-500">{row.locationLabel}</td>
-                          <td className="px-4 py-3 text-xs text-slate-500">{row.date}</td>
+                          <td className="px-4 py-3 text-slate-500">{row.locationLabel}</td>
+                          <td className="px-4 py-3 text-slate-500">{row.date}</td>
                           <td className="whitespace-nowrap px-4 py-3 text-right font-black text-slate-900">{formatINR(row.total)}</td>
                           <td className="whitespace-nowrap px-4 py-3 text-right font-semibold text-emerald-600">{formatINR(row.paidAmount)}</td>
                           <td className="whitespace-nowrap px-4 py-3 text-right font-semibold text-rose-500">{formatINR(row.remainingAmount)}</td>
-                          <td className="px-4 py-3 text-xs font-semibold text-slate-600">{row.paymentMode}</td>
+                          <td className="px-4 py-3 text-sm font-semibold text-slate-600">{row.paymentMode}</td>
                           <td className="px-4 py-3 text-center">
-                            <span className={`inline-block rounded-full px-2.5 py-0.5 text-[11px] font-bold ${payCls}`}>
+                            <span className={`inline-block rounded-full px-2.5 py-0.5 text-sm font-bold ${payCls}`}>
                               {payStatus}
                             </span>
                           </td>
@@ -3613,35 +3561,35 @@ const Accounts = () => {
                       <div className="flex items-start justify-between gap-2.5">
                         <div>
                           <div className="text-sm font-bold text-slate-900">{row.billType}</div>
-                          <div className="text-[11px] text-slate-400">{row.source} · {row.reference}</div>
+                          <div className="text-xs text-slate-400">{row.source} · {row.reference}</div>
                         </div>
-                        <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-bold ${payCls}`}>
+                        <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-bold ${payCls}`}>
                           {payStatus}
                         </span>
                       </div>
                       <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
                         <div>
-                          <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Customer</div>
+                          <div className="text-xs font-semibold uppercase tracking-wider text-slate-400">Customer</div>
                           <div className="font-medium text-slate-700 truncate">{row.customerName}</div>
                         </div>
                         <div>
-                          <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Location</div>
+                          <div className="text-xs font-semibold uppercase tracking-wider text-slate-400">Location</div>
                           <div className="font-medium text-slate-700 truncate">{row.locationLabel}</div>
                         </div>
                         <div>
-                          <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Total</div>
+                          <div className="text-xs font-semibold uppercase tracking-wider text-slate-400">Total</div>
                           <div className="font-black text-slate-900">{formatINR(row.total)}</div>
                         </div>
                         <div>
-                          <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Paid</div>
+                          <div className="text-xs font-semibold uppercase tracking-wider text-slate-400">Paid</div>
                           <div className="font-semibold text-emerald-600">{formatINR(row.paidAmount)}</div>
                         </div>
                         <div>
-                          <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Remaining</div>
+                          <div className="text-xs font-semibold uppercase tracking-wider text-slate-400">Remaining</div>
                           <div className="font-semibold text-rose-500">{formatINR(row.remainingAmount)}</div>
                         </div>
                         <div className="col-span-2">
-                          <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Mode</div>
+                          <div className="text-xs font-semibold uppercase tracking-wider text-slate-400">Mode</div>
                           <div className="font-medium text-slate-700">{row.paymentMode}</div>
                         </div>
                       </div>
@@ -3703,32 +3651,28 @@ const Accounts = () => {
         {/* Payment History */}
         {(activeViewSection === "all" || activeViewSection === "payments") && (
           <section className="rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-6 shadow-xs">
-            <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
+            <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between border-b border-slate-100 pb-4">
               <div>
                 <div className="text-xs font-bold uppercase tracking-wider text-slate-500">
                   Complete Payment Log
                 </div>
-                <h3 className="text-lg sm:text-xl font-black text-slate-900 mt-0.5">
+                <h3 className="text-xl sm:text-2xl font-black text-slate-900 mt-0.5">
                   Payment History
                 </h3>
-                <p className="text-xs text-slate-500 mt-1">
+                <div className="text-xs sm:text-sm font-medium text-slate-500">
                   Every payment recorded in the system — verify any transaction by date, time, mode, and customer.
-                </p>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1 rounded-full bg-sky-50 border border-sky-200 px-3 py-1.5 text-xs font-bold text-sky-700">
-                  Total: {formatINR(paymentHistory.reduce((sum, p) => sum + Number(p.amount || 0), 0))}
-                </span>
-                <span className="text-xs font-semibold text-slate-500">
-                  {paymentHistory.length} payment{paymentHistory.length !== 1 ? "s" : ""}
-                </span>
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                {paymentHistory.length} payment{paymentHistory.length !== 1 ? "s" : ""}
               </div>
             </div>
 
             {/* Desktop Table */}
             <div className="hidden overflow-x-auto rounded-xl border border-slate-200/80 md:block">
-              <table className="min-w-full text-left text-xs sm:text-sm">
-                <thead className="bg-slate-900 text-slate-200 uppercase tracking-wider text-[11px] font-bold">
+              <table className="min-w-full text-left text-sm">
+                <thead className="bg-slate-900 text-slate-200 uppercase tracking-wider text-sm font-bold">
                   <tr>
                     <th className="px-4 py-3">Payment ID</th>
                     <th className="px-4 py-3">Booking ID</th>
@@ -3765,12 +3709,12 @@ const Accounts = () => {
                           <td className="px-4 py-3 text-right font-bold text-slate-900">{formatINR(payment.amount)}</td>
                           <td className="px-4 py-3 text-right text-amber-600">{Number(payment.discount_amount) > 0 ? `-${formatINR(payment.discount_amount)}` : "-"}</td>
                           <td className="px-4 py-3">
-                            <span className="inline-flex rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-[11px] font-bold text-slate-700">
+                            <span className="inline-flex rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-700">
                               {payment.payment_mode || "Cash"}
                             </span>
                           </td>
                           <td className="px-4 py-3">
-                            <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold ${
+                            <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold ${
                               isCancelled
                                 ? "border border-rose-200 bg-rose-50 text-rose-600"
                                 : "border border-emerald-200 bg-emerald-50 text-emerald-700"
@@ -3805,7 +3749,7 @@ const Accounts = () => {
                     <div key={payment.id} className={`rounded-2xl border p-4 ${isCancelled ? "border-rose-200 bg-rose-50/40" : "border-slate-200 bg-white"}`}>
                       <div className="flex items-center justify-between gap-2 mb-3">
                         <span className="text-sm font-black text-slate-900">{payment.reference}</span>
-                        <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold ${
+                        <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold ${
                           isCancelled
                             ? "border border-rose-200 bg-rose-50 text-rose-600"
                             : "border border-emerald-200 bg-emerald-50 text-emerald-700"
@@ -3843,7 +3787,7 @@ const Accounts = () => {
 
         {showIncome && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-3 sm:p-4 backdrop-blur-xs">
-            <div className="accounts-form-modal relative flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-2xl border border-slate-200">
+            <div className="accounts-form-modal relative flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl border border-slate-200">
               <TransactionForm type="Income" onSubmit={handleAddIncome} onCancel={() => setShowIncome(false)} />
             </div>
           </div>
@@ -3851,7 +3795,7 @@ const Accounts = () => {
 
         {showExpense && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-3 sm:p-4 backdrop-blur-xs">
-            <div className="accounts-form-modal relative flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-2xl border border-slate-200">
+            <div className="accounts-form-modal relative flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl border border-slate-200">
               <TransactionForm type="Expense" onSubmit={handleAddExpense} onCancel={() => setShowExpense(false)} />
             </div>
           </div>
@@ -4067,7 +4011,7 @@ const Accounts = () => {
 
         {showEdit && editingRecord && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-3 sm:p-4 backdrop-blur-xs">
-            <div className="accounts-form-modal relative flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-2xl border border-slate-200">
+            <div className="accounts-form-modal relative flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl border border-slate-200">
               <TransactionForm
                 type={editingRecord.type}
                 initialData={{

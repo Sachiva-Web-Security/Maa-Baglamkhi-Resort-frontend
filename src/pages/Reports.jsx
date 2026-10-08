@@ -186,13 +186,17 @@ function getInsight(reportType, rows) {
 }
 
 async function loadRoomReportRows() {
-  const [bookingRes, folioRes] = await Promise.all([
-    API.get("/hotel/all-bookings"),
-    API.get("/accounts/hotel-billing"),
-  ]);
+  try {
+    const [bookingRes, folioRes] = await Promise.all([
+      API.get("/hotel/all-bookings"),
+      API.get("/accounts/hotel-billing"),
+    ]).catch((e) => {
+      console.error("Parallel room report fetch error", e);
+      return [null, null];
+    });
 
-  const rows = Array.isArray(bookingRes.data) ? bookingRes.data : [];
-  const billingRows = Array.isArray(folioRes.data) ? folioRes.data : [];
+    const rows = Array.isArray(bookingRes?.data) ? bookingRes.data : [];
+    const billingRows = Array.isArray(folioRes?.data) ? folioRes.data : [];
 
   // Build a map of bookingId -> billing data (includes folioCharges, paidAmount, remainingAmount, paymentStatus)
   const billingMap = new Map();
@@ -237,34 +241,40 @@ async function loadRoomReportRows() {
 }
 
 async function loadBanquetReportRows() {
-  const response = await API.get("/banquet");
-  const halls = Array.isArray(response.data?.halls) ? response.data.halls : [];
-  const bookings = Array.isArray(response.data?.bookings) ? response.data.bookings : [];
-  const hallLookup = new Map(
-    halls.map((hall) => [String(hall.id), hall.name || hall.hallName || `Hall ${hall.id}`]),
-  );
+  try {
+    const response = await API.get("/banquet");
+    const halls = Array.isArray(response.data?.halls) ? response.data.halls : [];
+    const bookings = Array.isArray(response.data?.bookings) ? response.data.bookings : [];
+    const hallLookup = new Map(
+      halls.map((hall) => [String(hall.id), hall.name || hall.hallName || `Hall ${hall.id}`]),
+    );
 
-  return bookings.map((row) => ({
-    id: row.id,
-    date: normalizeDate(row.date),
-    hall:
-      row.hallName ||
-      row.hall ||
-      hallLookup.get(String(row.hallId || row.hall_id || "")) ||
-      "Banquet Hall",
-    status: row.status || "Confirmed",
-    eventType: row.eventType || row.event_type || row.eventTitle || "Banquet Event",
-    guests: Number(row.guests) || 0,
-    amount: toAmount(row.grandTotal, row.totalAmount, row.total, row.amount, row.advance),
-    paymentMode: normalizePaymentMode(row.paymentMode || row.paymentStatus),
-  }));
+    return bookings.map((row) => ({
+      id: row.id,
+      date: normalizeDate(row.date),
+      hall:
+        row.hallName ||
+        row.hall ||
+        hallLookup.get(String(row.hallId || row.hall_id || "")) ||
+        "Banquet Hall",
+      status: row.status || "Confirmed",
+      eventType: row.eventType || row.event_type || row.eventTitle || "Banquet Event",
+      guests: Number(row.guests) || 0,
+      amount: toAmount(row.grandTotal, row.totalAmount, row.total, row.amount, row.advance),
+      paymentMode: normalizePaymentMode(row.paymentMode || row.paymentStatus),
+    }));
+  } catch (err) {
+    console.error("loadBanquetReportRows failed", err);
+    return [];
+  }
 }
 
 async function loadRestaurantReportRows() {
-  const response = await API.get("/accounts/restaurant-billing");
-  const rows = Array.isArray(response.data) ? response.data : [];
+  try {
+    const response = await API.get("/accounts/restaurant-billing");
+    const rows = Array.isArray(response.data) ? response.data : [];
 
-  return rows.map((row) => ({
+    return rows.map((row) => ({
     id: row.id,
     date: normalizeDate(row.date),
     table_number: row.locationLabel || row.tableNumber || row.table_number || row.reference || "-",
@@ -275,55 +285,71 @@ async function loadRestaurantReportRows() {
 }
 
 async function loadHousekeepingReportRows() {
-  const response = await API.get("/housekeeping");
-  const rows = Array.isArray(response.data) ? response.data : [];
+  try {
+    const response = await API.get("/housekeeping");
+    const rows = Array.isArray(response.data) ? response.data : [];
 
-  return rows.map((row) => ({
-    id: row.id,
-    date: normalizeDate(row.updated_at || row.created_at || row.date),
-    roomNo: row.roomNo || row.room_number || "-",
-    roomType: row.roomType || row.room_type || row.categoryName || row.category_name || "Room",
-    status: row.status || "Pending",
-    assignee: row.assignee || "Unassigned",
-    rooms: 1,
-  }));
+    return rows.map((row) => ({
+      id: row.id,
+      date: normalizeDate(row.updated_at || row.created_at || row.date),
+      roomNo: row.roomNo || row.room_number || "-",
+      roomType: row.roomType || row.room_type || row.categoryName || row.category_name || "Room",
+      status: row.status || "Pending",
+      assignee: row.assignee || "Unassigned",
+      rooms: 1,
+    }));
+  } catch (err) {
+    console.error("loadHousekeepingReportRows failed", err);
+    return [];
+  }
 }
 
 async function loadAccountsReportRows() {
-  const response = await API.get("/accounts/transactions");
-  const rows = Array.isArray(response.data) ? response.data : [];
+  try {
+    const response = await API.get("/accounts/transactions");
+    const rows = Array.isArray(response.data) ? response.data : [];
 
-  return rows.map((row) => ({
-    id: row.id,
-    date: normalizeDate(row.date),
-    type: row.type || "Income",
-    description: row.description || "Accounts transaction",
-    amount: Number(row.amount) || 0,
-    paymentMode: normalizePaymentMode(row.paymentMode, "N/A"),
-    status: "Posted",
-  }));
+    return rows.map((row) => ({
+      id: row.id,
+      date: normalizeDate(row.date),
+      type: row.type || "Income",
+      description: row.description || "Accounts transaction",
+      amount: Number(row.amount) || 0,
+      paymentMode: normalizePaymentMode(row.paymentMode, "N/A"),
+      status: "Posted",
+    }));
+  } catch (err) {
+    console.error("loadAccountsReportRows failed", err);
+    return [];
+  }
 }
 
 async function loadExpenseReportRows() {
-  const response = await API.get("/accounts/transactions");
-  const rows = Array.isArray(response.data) ? response.data : [];
+  try {
+    const response = await API.get("/accounts/transactions");
+    const rows = Array.isArray(response.data) ? response.data : [];
 
-  return rows
-    .filter((row) => (row.type || "").toLowerCase() === "expense")
-    .map((row) => ({
-      id: row.id,
-      date: normalizeDate(row.date),
-      type: row.type || "Expense",
-      description: row.description || "Expense entry",
-      amount: Number(row.amount) || 0,
-      paymentMode: normalizePaymentMode(row.paymentMode, "N/A"),
-      department: row.department || "Other",
-      sourceModule: row.sourceModule || row.source_module || "Accounts",
-    }));
+    return rows
+      .filter((row) => (row.type || "").toLowerCase() === "expense")
+      .map((row) => ({
+        id: row.id,
+        date: normalizeDate(row.date),
+        type: row.type || "Expense",
+        description: row.description || "Expense entry",
+        amount: Number(row.amount) || 0,
+        paymentMode: normalizePaymentMode(row.paymentMode, "N/A"),
+        department: row.department || "Other",
+        sourceModule: row.sourceModule || row.source_module || "Accounts",
+      }));
+  } catch (err) {
+    console.error("loadExpenseReportRows failed", err);
+    return [];
+  }
 }
 
 async function loadAllBillsReportRows() {
-  const [hotelRes, restaurantRes, banquetRes, accountsRes] = await Promise.all([
+  try {
+    const [hotelRes, restaurantRes, banquetRes, accountsRes] = await Promise.all([
     API.get("/accounts/hotel-billing"),
     API.get("/accounts/restaurant-billing"),
     API.get("/banquet"),
@@ -582,12 +608,13 @@ const Reports = () => {
       setLastFetchedAt(new Date());
     } catch (err) {
       console.error("Error fetching report data", err);
+      const msg = err?.response?.data?.message || err?.message || "Network or server error";
+      setError(`Failed to load ${reportMeta?.label || reportType} report: ${msg}. Check console for details.`);
       setData([]);
-      setError("Unable to load report data right now. Please refresh and try again.");
     } finally {
       setLoading(false);
     }
-  }, [reportType]);
+  }, [reportType, reportMeta]);
 
   useEffect(() => {
     fetchData();
@@ -880,7 +907,7 @@ const Reports = () => {
   }, [filtered, reportType]);
 
   return (
-    <div className="min-h-screen w-full overflow-x-hidden bg-[#F8FAFC]">
+    <div className="full-scale-page min-h-screen w-full overflow-x-hidden bg-[#F8FAFC]">
       <div className="w-full space-y-6 px-3 py-4 sm:space-y-7 sm:px-5 sm:py-6 md:px-8 md:py-8 lg:px-10 xl:px-12">
         {/* ---------------------------------------------------------- */}
         {/* Hero                                                       */}

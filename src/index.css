@@ -316,12 +316,13 @@ html, body {
 }
 
 :root {
-  --desktop-ui-scale: 0.72;
+  --desktop-ui-scale: 0.75;
 }
 
 .desktop-scale-shell {
   width: 100%;
   min-height: 100vh;
+  background: #f8fafc;
 }
 
 .desktop-scale-content {
@@ -338,6 +339,11 @@ html, body {
 @media (min-width: 1024px) {
   .desktop-scale-content {
     zoom: var(--desktop-ui-scale);
+  }
+
+  .full-scale-page {
+    zoom: calc(1 / var(--desktop-ui-scale));
+    transform-origin: top left;
   }
 
   .auth-route-content {
