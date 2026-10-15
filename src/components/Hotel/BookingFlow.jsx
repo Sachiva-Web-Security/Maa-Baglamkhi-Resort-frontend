@@ -356,6 +356,35 @@ const ID_PROOF_TYPE_OPTIONS = [
   "Other",
 ];
 
+// The backend stores the enum member (guest_identifications.id_type), not the
+// human label the dropdown shows — so "Aadhar Card" comes back as "aadhaar",
+// "Voter ID" as "voter_id", etc. Guest Information renders whatever it gets
+// straight from the API, so without this map the panel displayed the raw enum
+// ("aadhaar") instead of the option the user picked ("Aadhar Card").
+const ID_PROOF_LABEL_BY_ENUM = {
+  aadhaar: "Aadhar Card",
+  aadhaarcard: "Aadhar Card",
+  passport: "Passport",
+  driving_license: "Driving License",
+  drivinglicence: "Driving License",
+  voter_id: "Voter ID",
+  voterid: "Voter ID",
+  pan: "PAN Card",
+  pancard: "PAN Card",
+  other: "Other",
+};
+
+// Accepts either the stored enum member or a label, and returns the label.
+// `emptyFallback` is used when there is nothing stored: display sites want
+// "-", but a <select value="..."> needs "" so it lands on the placeholder
+// option rather than on a non-existent one.
+const idProofLabel = (value, emptyFallback = "-") => {
+  const raw = String(value ?? "").trim();
+  if (!raw) return emptyFallback;
+  const key = raw.toLowerCase().replace(/[\s_-]+/g, "");
+  return ID_PROOF_LABEL_BY_ENUM[key] || raw;
+};
+
 // ── Hotel resort constants (used by all invoice renders) ────────────────
 // These match the reference "Tax Invoice" exactly.
 const RESORT_NAME_INVOICE = "MAA BAGLAMUKHI RESORT";
@@ -3776,7 +3805,13 @@ const BookingFlow = () => {
         lastName: nameParts.slice(1).join(" ") || "",
         guestEmail: data.guest_email || data.guestEmail || "",
         mobile: data.mobile || "",
-        idProofType: data.id_proof_type || data.idProofType || "",
+        // The API returns the stored enum member (aadhaar / voter_id /
+        // driving_license), but the dropdown options are the human labels from
+        // ID_PROOF_TYPE_OPTIONS. Feeding a raw enum into `value` matches no
+        // <option>, so the select silently renders as blank/"Select ID Proof
+        // Type" — which is why a saved ID proof looked like it was never
+        // entered. Normalise to the label before it reaches formData.
+        idProofType: idProofLabel(data.id_proof_type || data.idProofType, ""),
         idNumber: data.id_proof_number || data.idNumber || "",
         checkIn: (data.check_in || data.checkIn || "").slice(0, 10),
         checkOut: (data.check_out || data.checkOut || "").slice(0, 10),
@@ -6865,7 +6900,7 @@ const BookingFlow = () => {
                 <div className="flex justify-between gap-3">
                   <dt className="text-slate-500">ID Proof</dt>
                   <dd className="font-bold text-slate-800">
-                    {d.id_proof_type || d.idProofType || "-"}
+                    {idProofLabel(d.id_proof_type || d.idProofType)}
                   </dd>
                 </div>
                 <div className="flex justify-between gap-3">
