@@ -233,22 +233,35 @@ const Room = () => {
         const response   = await API.get("/hotel/rooms/setup");
         const setupRows  = Array.isArray(response.data) ? response.data : [];
 
-        // Update catalog prices from backend
-        setRoomCatalog((prev) =>
-          prev.map((room) => {
-            const backendCat = setupRows.find(
-              (item) =>
-                Number(item.id) === Number(room.id) || item.name === room.name,
-            );
-            return backendCat
-              ? {
-                  ...room,
-                  defaultPrice: Number(backendCat.defaultPrice || room.defaultPrice),
-                  unitLabel:    backendCat.unitLabel || room.unitLabel,
-                }
-              : room;
-          }),
-        );
+        // ROOT CAUSE (issue 2): the cards used to be driven by the hard-coded
+        // DEFAULT_ROOMS ids (2, 3, 4, 5, 6), which do not exist in the
+        // `room_categories` table — the real ids are 1 and 9003..9008. Two
+        // things followed from that:
+        //   * roomOptions is keyed by the BACKEND id, so a card looking up
+        //     roomOptions[2] got undefined and rendered zero rooms;
+        //   * handleAddOption() POSTs { categoryId: room.id }, so adding a room
+        //     under one of those cards hit the rooms.category_id foreign key
+        //     and failed with "Failed to add room".
+        // Net effect: no room type showed its rooms and none could be added to.
+        //
+        // The catalog is now built from the live categories themselves, always
+        // using the backend's own id — never a remembered one, because a card
+        // that keeps a stale id stays un-addable. DEFAULT_ROOMS is kept purely
+        // as a price/unit fallback for a category the backend left blank.
+        setRoomCatalog((prev) => {
+          if (!setupRows.length) return prev;
+          return setupRows.map((category) => {
+            const fallback = DEFAULT_ROOMS.find((d) => d.name === category.name);
+            return {
+              id: Number(category.id),
+              name: category.name,
+              defaultPrice: Number(
+                category.defaultPrice ?? fallback?.defaultPrice ?? 0,
+              ),
+              unitLabel: category.unitLabel || fallback?.unitLabel || "PER NIGHT",
+            };
+          });
+        });
 
         const mappedOptions = {};
         const mappedPrices  = {};
@@ -282,8 +295,13 @@ const Room = () => {
           }
         });
 
-        setRoomOptions((prev) => ({ ...mappedOptions, ...prev }));
-        setPriceInputs((prev) => ({ ...mappedPrices,  ...prev }));
+        // Live data must win over any restored draft. The old spread order
+        // (`{ ...mappedOptions, ...prev }`) let a persisted draft keyed by the
+        // stale DEFAULT_ROOMS ids shadow the real categories, so a room added
+        // on another machine appeared to vanish here. Take the fresh values
+        // first and only fall back to the draft for ids the response omitted.
+        setRoomOptions((prev) => ({ ...prev, ...mappedOptions }));
+        setPriceInputs((prev) => ({ ...prev, ...mappedPrices }));
         setInventoryStatusMap(statusMap);
       } catch (err) {
         console.error("Failed to load room setup", err);

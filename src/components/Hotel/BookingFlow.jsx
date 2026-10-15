@@ -133,6 +133,7 @@ import GroupBooking from "./GroupBooking";
 import OccupancyForecast from "./OccupancyForecast";
 import GuestProfile from "./GuestProfile";
 import Room, { DEFAULT_ROOMS } from "./Room";
+import { normalizeRoomCategories } from "../../utils/roomCategories";
 
 /* ─────────────────────────── shared style tokens ─────────────────────────── */
 
@@ -3510,40 +3511,22 @@ const BookingFlow = () => {
     }
   };
 
+  // Shared by the initial load and by handleCloseAddRoom. Kept as one helper
+  // so both paths always normalise the backend payload identically — see
+  // src/utils/roomCategories.js for why every category must end up with real
+  // `rooms` / `roomDetails` arrays (a room type with no rooms yet previously
+  // came back as `undefined`, which rendered a permanently empty room
+  // dropdown and made the booking unsaveable).
+  const loadCategorySetup = (res) => {
+    setCategorySetup(
+      normalizeRoomCategories(res.data, DEFAULT_ROOMS),
+    );
+  };
+
   useEffect(() => {
     fetchBookings();
     API.get("/hotel/rooms/setup")
-      .then((res) => {
-        const apiData = Array.isArray(res.data) ? res.data : [];
-        if (!apiData.length) {
-          setCategorySetup(DEFAULT_ROOMS);
-          return;
-        }
-        // Merge API data with DEFAULT_ROOMS so every category has rooms +
-        // roomDetails even if the backend didn't return them.
-        const merged = apiData.map((cat) => {
-          const fallback = DEFAULT_ROOMS.find(
-            (d) =>
-              String(d.id) === String(cat.id) ||
-              normalizeRoomTypeName(d.name) === normalizeRoomTypeName(cat.name),
-          );
-          if (!fallback) return cat;
-          return {
-            ...cat,
-            rooms:
-              Array.isArray(cat.rooms) && cat.rooms.length
-                ? cat.rooms
-                : fallback.rooms,
-            roomDetails:
-              Array.isArray(cat.roomDetails) && cat.roomDetails.length
-                ? cat.roomDetails
-                : fallback.roomDetails,
-            defaultPrice: cat.defaultPrice || fallback.defaultPrice,
-            unitLabel: cat.unitLabel || fallback.unitLabel,
-          };
-        });
-        setCategorySetup(merged);
-      })
+      .then(loadCategorySetup)
       .catch((err) => console.error("Failed to load room categories:", err));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -4258,11 +4241,11 @@ const BookingFlow = () => {
             companyName: formData.company || "Direct Booking",
             gst: formData.gstNumber || "",
           }),
-          bookingAPI.post(`/hotel/pax/${bookingId}`, {
-            guestCapacity: formData.guestCapacity,
-            owner: formData.owner,
-            rooms: formData.rooms,
-          }),
+          // Room lines must be created BEFORE pax counts can be written to
+          // them: /hotel/room-tariff upserts the booking_rooms row, and
+          // /hotel/pax then UPDATEs that row's adults/children. Firing pax in
+          // the same batch loses the counts to a 404 "No room line found", so
+          // pax is deliberately sequenced after the tariffs below.
           ...formData.rooms.map((row) =>
             bookingAPI.post(
               `/hotel/room-tariff/${bookingId}`,
@@ -4282,7 +4265,65 @@ const BookingFlow = () => {
           );
         }
 
-        await Promise.all(parallelTasks);
+        // The room-tariff writes are the ones that actually matter: they create
+        // the booking_rooms rows the booking is priced from. Every task is
+        // therefore settled independently — an individual secondary failure
+        // (company, reference) is logged instead of rejecting the whole batch,
+        // which previously discarded the room lines too.
+        const results = await Promise.allSettled(parallelTasks);
+        const tariffFailures = results.filter(
+          (r) =>
+            r.status === "rejected" &&
+            r.reason?.config?.url?.includes("/room-tariff/"),
+        );
+        if (tariffFailures.length) {
+          throw tariffFailures[0].reason;
+        }
+        results.forEach((r) => {
+          if (
+            r.status === "rejected" &&
+            !r.reason?.config?.url?.includes("/room-tariff/")
+          ) {
+            console.warn(
+              "Booking sub-save failed:",
+              r.reason?.config?.url,
+              r.reason?.response?.data,
+            );
+          }
+        });
+
+        // Pax counts run strictly AFTER the room lines exist. /hotel/pax/:id
+        // takes a SINGLE room number (room_number / roomNumber) and UPDATEs the
+        // matching booking_rooms row — it never accepted the
+        // { guestCapacity, owner, rooms: [...] } object the old code sent, so
+        // it always answered 400 "Room number required" and took the whole save
+        // down with it. Send one call per room row now that the rows exist.
+        const capacity = Number(formData.guestCapacity) || 0;
+        const totalRooms = formData.rooms.length || 1;
+        const adultsPerRoom = capacity
+          ? Math.max(1, Math.floor(capacity / totalRooms))
+          : 1;
+
+        await Promise.all(
+          formData.rooms.map((row) =>
+            bookingAPI
+              .post(`/hotel/pax/${bookingId}`, {
+                roomNumber: row.roomNo,
+                adults: adultsPerRoom,
+                children: 0,
+                guestCapacity: formData.guestCapacity,
+                owner: formData.owner,
+              })
+              .catch((err) => {
+                // Pax is metadata, not a room line — never fail the save for it.
+                console.warn(
+                  "Pax save failed for room",
+                  row.roomNo,
+                  err.response?.data,
+                );
+              }),
+          ),
+        );
       } else {
         // 🐛 FIX: the Edit Booking form has a working "Payment Mode" dropdown
         // (bound to formData.paymentMode) and an Amount field, but this save
@@ -5577,36 +5618,11 @@ const BookingFlow = () => {
 
   const handleCloseAddRoom = () => {
     setShowAddRoom(false);
+    // Refetch so a room just added in the Add Room modal shows up in the
+    // New Booking room-type dropdowns immediately. Same normalisation as the
+    // initial load, so empty categories keep rendering a usable dropdown.
     API.get("/hotel/rooms/setup")
-      .then((res) => {
-        const apiData = Array.isArray(res.data) ? res.data : [];
-        if (!apiData.length) {
-          setCategorySetup(DEFAULT_ROOMS);
-          return;
-        }
-        const merged = apiData.map((cat) => {
-          const fallback = DEFAULT_ROOMS.find(
-            (d) =>
-              String(d.id) === String(cat.id) ||
-              normalizeRoomTypeName(d.name) === normalizeRoomTypeName(cat.name),
-          );
-          if (!fallback) return cat;
-          return {
-            ...cat,
-            rooms:
-              Array.isArray(cat.rooms) && cat.rooms.length
-                ? cat.rooms
-                : fallback.rooms,
-            roomDetails:
-              Array.isArray(cat.roomDetails) && cat.roomDetails.length
-                ? cat.roomDetails
-                : fallback.roomDetails,
-            defaultPrice: cat.defaultPrice || fallback.defaultPrice,
-            unitLabel: cat.unitLabel || fallback.unitLabel,
-          };
-        });
-        setCategorySetup(merged);
-      })
+      .then(loadCategorySetup)
       .catch((err) => console.error("Failed to refresh room categories:", err));
   };
 
