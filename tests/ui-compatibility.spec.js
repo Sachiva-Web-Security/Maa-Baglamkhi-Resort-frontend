@@ -33,8 +33,8 @@ async function loginAsManager(page) {
   const networkErrorText = page.getByText(/Cannot reach server/i);
 
   for (let attempt = 1; attempt <= 3; attempt += 1) {
-    await emailField.fill("manager@test.com");
-    await passwordField.fill("Manager@123");
+    await emailField.fill("manager@resort.com");
+    await passwordField.fill("password");
     await signInButton.click();
 
     try {

@@ -2,8 +2,8 @@ import { expect, test } from "playwright/test";
 
 async function loginAsReception(page) {
   await page.goto("/login");
-  await page.locator('input[type="email"]').fill("reception@test.com");
-  await page.locator('input[type="password"]').fill("Staff@123");
+  await page.locator('input[type="email"]').fill("reception@resort.com");
+  await page.locator('input[type="password"]').fill("password");
   await page.getByRole("button", { name: "Sign In" }).click();
   await page.waitForURL(/\/reception-dashboard$/, { timeout: 30_000 });
 }

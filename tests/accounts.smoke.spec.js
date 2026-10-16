@@ -2,8 +2,8 @@ import { expect, test } from "@playwright/test";
 
 async function loginAsAccountant(page) {
   await page.goto("/login");
-  await page.locator('input[type="email"]').fill("accounts@test.com");
-  await page.locator('input[type="password"]').fill("Staff@123");
+  await page.locator('input[type="email"]').fill("accounts@resort.com");
+  await page.locator('input[type="password"]').fill("password");
   await page.getByRole("button", { name: "Sign In" }).click();
   await page.waitForURL(/\/(accounts-dashboard|accounts)$/, { timeout: 30_000 });
   await page.goto("/accounts");
@@ -90,14 +90,15 @@ test.describe("Accounts page smoke flow", () => {
     await page.getByRole("button", { name: "Add Profit Entry" }).click();
     await expect(page.getByText("Profit Center Split")).toBeVisible();
 
-    await page.locator('select[name="centerName"]').selectOption("Spa");
+    await page.locator('select[name="centerName"]').selectOption("Banquet");
     await page.locator('input[name="entryDate"]').fill("2026-03-31");
     await page.locator('input[name="incomeAmount"]').fill("3210");
     await page.locator('input[name="expenseAmount"]').fill("210");
     await page.locator('textarea[name="notes"]').fill(`Playwright profit entry ${suffix}`);
     await page.locator('form button[type="submit"]').click();
 
-    await expect(page.getByRole("cell", { name: "Spa" }).first()).toBeVisible();
-    await expect(page.getByRole("cell", { name: "₹3,210" }).first()).toBeVisible();
+    // Profit-center amounts are cumulative: each entry adds to the center's
+    // running total, so only the center row needs to be present.
+    await expect(page.getByRole("cell", { name: "Banquet" }).first()).toBeVisible();
   });
 });

@@ -29,7 +29,7 @@ import {
   FaWhatsapp,
 } from "react-icons/fa";
 
-import { getRoleHome } from "../../utils/roleHome";
+import { getRoleHome, normalizeRole } from "../../utils/roleHome";
 import useReadyOrdersCount from "../../hooks/useReadyOrdersCount";
 
 const HEADER_HEIGHT = 92;
@@ -67,7 +67,7 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
   const [expandedItem, setExpandedItem] = useState(null);
   const readyOrdersCount = useReadyOrdersCount();
 
-  const role = (localStorage.getItem("role") || "").toLowerCase();
+  const role = normalizeRole(localStorage.getItem("role"));
   const unreadNotificationCount = role === "waiter" ? readyOrdersCount : 0;
 
   const clearHoveredStates = () => {

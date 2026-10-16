@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 
 import API from "../api";
-import { getRoleHome } from "../utils/roleHome";
+import { getRoleHome, hasRole, normalizeRole } from "../utils/roleHome";
 
 function isValidSession(data) {
   return Boolean(
@@ -52,9 +52,9 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     return <Navigate to="/login" replace />;
   }
 
-  const role = String(session.role || "").toLowerCase().trim();
+  const role = normalizeRole(session.role);
 
-  if (allowedRoles && allowedRoles.length > 0 && !allowedRoles.includes(role)) {
+  if (!hasRole(role, allowedRoles)) {
     return <Navigate to={getRoleHome(role)} replace />;
   }
 
