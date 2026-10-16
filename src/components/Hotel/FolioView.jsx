@@ -13,6 +13,7 @@ import {
   CalendarDays,
   BedDouble,
   ReceiptText,
+  Undo2,
 } from "lucide-react";
 import API from "../../api";
 import { getStoredBookingCode, getStoredBookingId } from "./bookingSession";
@@ -32,6 +33,49 @@ const formatDate = (d) => {
     year: "numeric",
   });
 };
+
+// Two decimals matter: the backend taxes at 5% of the charges, so a ₹250 charge
+// carries ₹12.50 of tax and a ₹500 payment leaves −₹237.50 net. Rounding the
+// display to whole rupees (maximumFractionDigits: 0) showed ₹13 and ₹238, which
+// stopped the folio reading reconciling with the generated invoice — the exact
+// discrepancy this page was rewritten to remove. showFractionalDigitsOnInteger
+// keeps whole-rupee figures clean (₹800, not ₹800.00) while still showing the
+// paise whenever an amount actually has them.
+const CURRENCY = {
+  style: "currency",
+  currency: "INR",
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 2,
+  showFractionalDigitsOnInteger: false,
+};
+
+const formatAmount = (value) => new Intl.NumberFormat("en-IN", CURRENCY).format(value);
+
+// Deductions (discounts / refunds / payments) are stored as non-negative
+// magnitudes and the sign is implied by the bucket, so render them with an
+// explicit leading minus so the ledger reads as a real cash flow.
+const formatDeduction = (value) => `− ${formatAmount(Math.abs(Number(value) || 0))}`;
+
+const round2 = (value) => {
+  const n = Number(value);
+  return Number.isFinite(n) ? Math.round(Math.abs(n) * 100 + Number.EPSILON) / 100 * Math.sign(n) : 0;
+};
+
+// Both folio tables are supported: 'Room Charge' and 'room_charge' are the same
+// bucket, so the client-side fallback normalises entry_type the same way the
+// backend's canonicalFolioType() does.
+const canonicalFolioType = (raw) =>
+  String(raw ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_-]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+
+const CHARGE_TYPES = ["room_charge", "extra_charge", "adjustment"];
+
+// Discount, Refund and Payment all reduce what the guest owes, so all three are
+// rendered with a leading minus in the ledger rows.
+const DEDUCTION_TYPES = new Set(["discount", "refund", "payment"]);
 
 const TYPE_COLORS = {
   "Room Charge":  "bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 border-blue-200",
@@ -245,19 +289,33 @@ const FolioView = ({
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
   const [filterType, setFilterType] = useState("All");
+  const [totalsApi, setTotalsApi] = useState(null);
 
   const load = useCallback(async () => {
     if (!bookingId) return;
     setLoading(true);
     try {
-      const [bookingRes, folioRes] = await Promise.all([
+      const [bookingRes, folioRes, totalsRes] = await Promise.all([
         API.get(`/hotel/full-booking/${bookingId}`),
         API.get(`/hotel/folio/${bookingId}`),
+        API.get(`/hotel/folio/${bookingId}/totals`),
       ]);
       setBooking(bookingRes.data || null);
       setEntries(Array.isArray(folioRes.data) ? folioRes.data : []);
+      // Server totals are the single source of truth: they add room rent from
+      // booking_rooms and the booking advance, and the refund sign is fixed there.
+      const body = totalsRes.data;
+      const net = Number(body?.netAmount ?? body?.netBalance);
+      setTotalsApi(
+        body && body.charges !== undefined && Number.isFinite(net)
+          ? { ...body, netAmount: net }
+          : null,
+      );
     } catch (err) {
-      console.error(err);
+      // The /totals endpoint is optional — on failure the page falls back to
+      // recomputing from the entries that were loaded in the same request.
+      console.error("[folio] load error:", err);
+      setTotalsApi(null);
     } finally {
       setLoading(false);
     }
@@ -302,23 +360,59 @@ const FolioView = ({
     return Object.entries(map).sort(([a], [b]) => b.localeCompare(a));
   }, [filteredEntries]);
 
-  const totals = useMemo(() => {
-    return entries.reduce(
-      (acc, e) => {
-        const amt = Number(e.amount || 0);
-        if (["Room Charge", "Extra Charge", "Adjustment"].includes(e.entry_type))
-          acc.charges += amt;
-        if (e.entry_type === "Discount") acc.discounts += amt;
-        if (e.entry_type === "Payment") acc.payments += amt;
-        if (e.entry_type === "Refund") acc.refunds += amt;
-        return acc;
-      },
-      { charges: 0, discounts: 0, payments: 0, refunds: 0 },
-    );
+  // Fallback used only when GET /hotel/folio/:bookingId/totals fails. It mirrors
+  // the canonical money contract but necessarily ignores room rent (booking_rooms)
+  // and the booking advance, so those buckets understate the server figures.
+  const totalsFallback = useMemo(() => {
+    const buckets = { charges: 0, discounts: 0, refunds: 0, payments: 0 };
+    for (const entry of entries) {
+      const amt = Math.abs(Number(entry?.amount || 0)) || 0;
+      const type = canonicalFolioType(entry?.entry_type);
+      if (CHARGE_TYPES.includes(type)) buckets.charges += amt;
+      else if (type === "discount") buckets.discounts += amt;
+      else if (type === "refund") buckets.refunds += amt;
+      else if (type === "payment") buckets.payments += amt;
+    }
+    return {
+      charges: round2(buckets.charges),
+      discounts: round2(buckets.discounts),
+      refunds: round2(buckets.refunds),
+      payments: round2(buckets.payments),
+    };
   }, [entries]);
 
-  const netBalance =
-    totals.charges - totals.discounts - totals.payments + totals.refunds;
+  // Server totals win; the fallback keeps the page rendering if the endpoint is
+  // down. `tax` is carried through so the arithmetic line below shows exactly
+  // how the net was reached.
+  const totals = totalsApi
+    ? {
+        charges: round2(totalsApi.charges),
+        tax: round2(totalsApi.tax),
+        discounts: round2(totalsApi.discounts),
+        refunds: round2(totalsApi.refunds),
+        payments: round2(totalsApi.payments),
+      }
+    : { ...totalsFallback, tax: 0 };
+
+  // Net amount comes from the server whenever it is available. The backend and
+  // InvoiceModel both fold GST into netAmount so the folio and the generated
+  // invoice reconcile; recomputing it here without the tax line would silently
+  // diverge from both. The fallback reproduces the contract minus tax, which is
+  // the most it can do without the room rent / advance / tax figures.
+  //
+  //   netAmount = charges + tax − discounts − refunds − payments
+  //
+  // Refunds SUBTRACT: a refund reverses money the resort had already counted as
+  // received, so it LOWERS what the guest still owes. An earlier version added
+  // refunds — that was the sign error being fixed here.
+  const netAmount =
+    totalsApi && Number.isFinite(Number(totalsApi.netAmount))
+      ? round2(totalsApi.netAmount)
+      : round2(
+          totals.charges - totals.discounts - totals.refunds - totals.payments,
+        );
+  const netLabel =
+    netAmount > 0 ? "Payable" : netAmount < 0 ? "Refundable" : "Settled";
 
   if (!bookingId) {
     return (
@@ -337,11 +431,58 @@ const FolioView = ({
     navigate("/hotel/all-bookings");
   };
 
+  // Same five buckets are shown in the hero banner and in the footer grid.
+  // Deductions are rendered visibly negative with a leading minus.
+  //
+  // Colours come from a literal map, NOT from string interpolation like
+  // `bg-${color}-600`. Tailwind's JIT scans the source for complete class
+  // names; an interpolated name never appears as a literal token, so it is
+  // never generated and the element silently renders with no background or
+  // text colour. This is why the Net Amount card was unstyled.
+  const netPalette =
+    netAmount < 0
+      ? { iconBg: "bg-emerald-600", valueColor: "text-emerald-700", badge: "bg-emerald-100 text-emerald-800" }
+      : netAmount > 0
+        ? { iconBg: "bg-rose-600", valueColor: "text-rose-700", badge: "bg-rose-100 text-rose-800" }
+        : { iconBg: "bg-sky-600", valueColor: "text-sky-700", badge: "bg-sky-100 text-sky-800" };
+  const netMoney = Math.abs(netAmount);
+
   const heroStats = [
-    { label: "Total Charges", value: totals.charges, icon: CreditCard, iconBg: "bg-blue-600" },
-    { label: "Discounts", value: totals.discounts, icon: Tag, iconBg: "bg-violet-600" },
-    { label: "Payments", value: totals.payments, icon: Wallet, iconBg: "bg-emerald-600" },
-    { label: "Net Balance", value: netBalance, icon: PiggyBank, iconBg: netBalance > 0 ? "bg-rose-600" : "bg-sky-600" },
+    {
+      label: "Total Charges",
+      display: formatAmount(totals.charges),
+      icon: CreditCard,
+      iconBg: "bg-blue-600",
+      valueColor: "text-slate-900",
+    },
+    {
+      label: "Total Discounts",
+      display: formatDeduction(totals.discounts),
+      icon: Tag,
+      iconBg: "bg-amber-500",
+      valueColor: "text-amber-700",
+    },
+    {
+      label: "Total Refunds",
+      display: formatDeduction(totals.refunds),
+      icon: Undo2,
+      iconBg: "bg-rose-500",
+      valueColor: "text-rose-700",
+    },
+    {
+      label: "Total Payments",
+      display: formatDeduction(totals.payments),
+      icon: Wallet,
+      iconBg: "bg-emerald-600",
+      valueColor: "text-emerald-700",
+    },
+    {
+      label: "Net Amount",
+      display: `${netAmount < 0 ? "−" : ""} ${formatAmount(netMoney)}`,
+      icon: PiggyBank,
+      iconBg: netPalette.iconBg,
+      valueColor: netPalette.valueColor,
+    },
   ];
 
   return (
@@ -420,7 +561,7 @@ const FolioView = ({
                   </p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 sm:gap-3.5 lg:gap-4">
+                <div className="grid grid-cols-2 gap-3 sm:gap-3.5 md:grid-cols-3 lg:gap-4">
                   {heroStats.map((s) => {
                     const Icon = s.icon;
                     return (
@@ -437,8 +578,8 @@ const FolioView = ({
                             <div className="truncate text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
                               {s.label}
                             </div>
-                            <div className="mt-1 truncate text-2xl font-black text-slate-900">
-                              {formatCurrency(s.value)}
+                            <div className={`mt-1 truncate text-2xl font-black ${s.valueColor}`}>
+                              {s.display}
                             </div>
                           </div>
                         </div>
@@ -546,13 +687,16 @@ const FolioView = ({
               ) : (
                 <div className="divide-y divide-slate-100">
                   {groupedByDate.map(([date, dayEntries]) => {
-                    const dayTotal = dayEntries
-                      .filter((e) =>
-                        ["Room Charge", "Extra Charge", "Adjustment"].includes(
-                          e.entry_type,
+                    const dayTotal = round2(
+                      dayEntries
+                        .filter((e) =>
+                          CHARGE_TYPES.includes(canonicalFolioType(e.entry_type)),
+                        )
+                        .reduce(
+                          (s, e) => s + (Math.abs(Number(e.amount || 0)) || 0),
+                          0,
                         ),
-                      )
-                      .reduce((s, e) => s + Number(e.amount || 0), 0);
+                    );
 
                     return (
                       <div key={date} className="px-3 py-4 sm:px-5 sm:py-5 lg:px-7">
@@ -619,17 +763,13 @@ const FolioView = ({
                                   </td>
                                   <td
                                     className={`px-5 py-3.5 text-right font-black ${
-                                      ["Payment", "Discount", "Refund"].includes(
-                                        entry.entry_type,
-                                      )
+                                      DEDUCTION_TYPES.has(canonicalFolioType(entry.entry_type))
                                         ? "text-emerald-600"
                                         : "text-slate-900"
                                     }`}
                                   >
-                                    {["Payment", "Discount"].includes(
-                                      entry.entry_type,
-                                    )
-                                      ? "−"
+                                    {DEDUCTION_TYPES.has(canonicalFolioType(entry.entry_type))
+                                      ? "− "
                                       : ""}
                                     {formatCurrency(entry.amount)}
                                   </td>
@@ -648,9 +788,11 @@ const FolioView = ({
               )}
             </section>
 
-            {/* Balance Summary Footer */}
+            {/* Balance Summary Footer — same five buckets as the hero banner.
+                Formula: netAmount = charges − discounts − refunds − payments.
+                Refunds SUBTRACT. */}
             <div className="rounded-2xl border border-blue-100 bg-white p-4 shadow-[0_14px_40px_rgba(15,23,42,0.06)] sm:rounded-[28px] sm:p-6 lg:p-7">
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-5">
                 <div className="min-w-0 rounded-2xl bg-gradient-to-br from-blue-50 to-white p-3 text-center shadow-sm sm:rounded-[22px] sm:p-5">
                   <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md sm:h-12 sm:w-12 sm:rounded-2xl">
                     <CreditCard size={22} strokeWidth={2.1} className="sm:hidden" />
@@ -660,7 +802,7 @@ const FolioView = ({
                     Total Charges
                   </div>
                   <div className="mt-2 truncate text-3xl font-black text-slate-900">
-                    {formatCurrency(totals.charges)}
+                    {formatAmount(totals.charges)}
                   </div>
                 </div>
 
@@ -670,10 +812,23 @@ const FolioView = ({
                     <Tag size={26} strokeWidth={2.1} className="hidden sm:block" />
                   </div>
                   <div className="mt-3 text-[16px] font-bold uppercase tracking-wide text-amber-600">
-                    Discounts
+                    Total Discounts
                   </div>
-                  <div className="mt-2 truncate text-3xl font-black text-amber-800">
-                    − {formatCurrency(totals.discounts)}
+                  <div className="mt-2 truncate text-3xl font-black text-amber-700">
+                    {formatDeduction(totals.discounts)}
+                  </div>
+                </div>
+
+                <div className="min-w-0 rounded-2xl bg-gradient-to-br from-rose-50 to-white p-3 text-center shadow-sm sm:rounded-[22px] sm:p-5">
+                  <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-rose-500 text-white shadow-md sm:h-12 sm:w-12 sm:rounded-2xl">
+                    <Undo2 size={22} strokeWidth={2.1} className="sm:hidden" />
+                    <Undo2 size={26} strokeWidth={2.1} className="hidden sm:block" />
+                  </div>
+                  <div className="mt-3 text-[16px] font-bold uppercase tracking-wide text-rose-600">
+                    Total Refunds
+                  </div>
+                  <div className="mt-2 truncate text-3xl font-black text-rose-700">
+                    {formatDeduction(totals.refunds)}
                   </div>
                 </div>
 
@@ -683,44 +838,75 @@ const FolioView = ({
                     <Wallet size={26} strokeWidth={2.1} className="hidden sm:block" />
                   </div>
                   <div className="mt-3 text-[16px] font-bold uppercase tracking-wide text-emerald-600">
-                    Payments
+                    Total Payments
                   </div>
-                  <div className="mt-2 truncate text-3xl font-black text-emerald-800">
-                    − {formatCurrency(totals.payments)}
+                  <div className="mt-2 truncate text-3xl font-black text-emerald-700">
+                    {formatDeduction(totals.payments)}
                   </div>
                 </div>
 
                 <div
                   className={`min-w-0 rounded-2xl p-3 text-center shadow-sm sm:rounded-[22px] sm:p-5 ${
-                    netBalance > 0
-                      ? "bg-gradient-to-br from-rose-50 to-white"
-                      : "bg-gradient-to-br from-sky-50 to-white"
+                    netAmount < 0
+                      ? "bg-gradient-to-br from-emerald-50 to-white ring-1 ring-emerald-200"
+                      : netAmount > 0
+                        ? "bg-gradient-to-br from-rose-50 to-white ring-1 ring-rose-200"
+                        : "bg-gradient-to-br from-sky-50 to-white ring-1 ring-sky-200"
                   }`}
                 >
                   <div
                     className={`mx-auto flex h-10 w-10 items-center justify-center rounded-xl text-white shadow-md sm:h-12 sm:w-12 sm:rounded-2xl ${
-                      netBalance > 0 ? "bg-rose-600" : "bg-sky-600"
+                      netPalette.iconBg
                     }`}
                   >
                     <PiggyBank size={22} strokeWidth={2.1} className="sm:hidden" />
                     <PiggyBank size={26} strokeWidth={2.1} className="hidden sm:block" />
                   </div>
-                  <div
-                    className={`mt-3 text-[16px] font-bold uppercase tracking-wide ${
-                      netBalance > 0 ? "text-rose-600" : "text-emerald-600"
-                    }`}
-                  >
-                    Net Balance
+                  <div className="mt-3 text-[16px] font-bold uppercase tracking-wide text-slate-600">
+                    Net Amount
                   </div>
                   <div
                     className={`mt-2 truncate text-3xl font-black ${
-                      netBalance > 0 ? "text-rose-800" : "text-emerald-800"
+                      netPalette.valueColor
                     }`}
                   >
-                    {formatCurrency(netBalance)}
+                    {netAmount < 0 ? "− " : ""}
+                    {formatAmount(netMoney)}
+                  </div>
+                  <div
+                    className={`mt-2 inline-block rounded-full px-3 py-1 text-[13px] font-bold uppercase tracking-wide ${
+                      netPalette.badge
+                    }`}
+                  >
+                    {netLabel}
                   </div>
                 </div>
               </div>
+
+              {/* Explicit arithmetic line, so the user can see exactly how the
+                  net amount was reached rather than trusting a bare number.
+                  Matches the backend/invoice formula, GST included. */}
+              <p className="mt-4 text-center text-[14px] font-semibold text-slate-500 sm:text-[15px]">
+                {formatAmount(totals.charges)} charges
+                {totals.tax > 0 ? ` + ${formatAmount(totals.tax)} GST` : ""}
+                {totals.discounts > 0 ? ` − ${formatAmount(totals.discounts)} discount` : ""}
+                {totals.refunds > 0 ? ` − ${formatAmount(totals.refunds)} refund` : ""}
+                {totals.payments > 0 ? ` − ${formatAmount(totals.payments)} paid` : ""}
+                {" = "}
+                <span
+                  className={`font-black ${netPalette.valueColor}`}
+                >
+                  {formatAmount(netAmount)}
+                </span>{" "}
+                {netLabel}
+              </p>
+
+              {totalsApi === null && !loading && (
+                <p className="mt-2 text-center text-[13px] font-semibold text-amber-600">
+                  Server totals unavailable — showing entry-only totals. Room rent and
+                  advance payments are not included.
+                </p>
+              )}
             </div>
           </div>
         </div>

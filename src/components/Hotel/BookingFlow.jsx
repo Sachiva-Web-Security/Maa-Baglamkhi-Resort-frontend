@@ -683,10 +683,18 @@ const emptyForm = () => ({
   paymentNote: "",
 });
 
+// Base amount ONLY — deliberately NO GST applied here.
+//
+// ROOT CAUSE: this function used to add GST into the row total itself, then the
+// backend invoice builder (InvoiceModel.buildInvoicePayload) applied GST again on
+// the subtotal it built from these row totals. Room rent of ₹800 was therefore
+// charged as ₹840 at booking time and taxed AGAIN on the invoice, so the guest
+// was billed tax twice. The tax now lives in exactly one place — the invoice
+// builder's `subtotal * GST_RATE` step — and this helper returns the pre-tax base.
 const rowTotal = (row, nights = 0) => {
   const base =
     Number(row.price || 0) * Number(nights || 0) * Number(row.quantity || 0);
-  return base + (base * Number(row.gst || 0)) / 100;
+  return base;
 };
 
 const normalizeBooking = (b) => {
