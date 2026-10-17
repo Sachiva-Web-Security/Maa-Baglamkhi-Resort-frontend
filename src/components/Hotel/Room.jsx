@@ -36,13 +36,38 @@ import {
 
 // ─── Default categories (used as fallback if API is slow) ─────────────────────
 // Room.jsx
+//
+// ROOT CAUSE (issues 1 & 2 — "Room number required" on save, and rooms that
+// can't be added): this list is the fallback used whenever GET
+// /hotel/rooms/setup is slow or fails. It used to carry ids 2..6 that exist in
+// no database, names that do not match the real categories, and — critically —
+// no `rooms` / `roomDetails` keys at all. Whenever the fallback was in play
+// every room dropdown rendered zero options (nothing to select, so the booking
+// validated as "Room number required") and "Add Room" posted one of those dead
+// ids, which the rooms.category_id foreign key rejected.
+//
+// The list now mirrors the categories the backend actually seeds, and every
+// entry carries empty arrays so the dropdowns render exactly the same shape as
+// a live response. These entries are marked `isFallback` and carry id 0: they
+// exist to keep the page legible while setup loads, and no room may ever be
+// added against them (a guessed id would file the room under the wrong type).
+// The real rows replace them the moment /hotel/rooms/setup answers.
 export const DEFAULT_ROOMS = [
-  { id: 2, name: "NON-AC ROOM",          defaultPrice: 1500, unitLabel: "PER NIGHT" },
-  { id: 3, name: "SUPER DELUXE ROOM",    defaultPrice: 3000, unitLabel: "PER NIGHT" }, // 🔧 changed from "DELUXE ROOM"
-  { id: 4, name: "EXECUTIVE ROOM ",      defaultPrice: 4000, unitLabel: "PER NIGHT" },
-  { id: 5, name: "SUPER EXECUTIVE ROOM", defaultPrice: 5000, unitLabel: "PER NIGHT" },
-  { id: 6, name: "SUITE ROOM",           defaultPrice: 800,  unitLabel: "PER BED"   },
-];
+  { name: "AC ROOM",            defaultPrice: 2000, unitLabel: "PER NIGHT" },
+  { name: "NON-AC ROOM",        defaultPrice: 1500, unitLabel: "PER NIGHT" },
+  { name: "DELUXE ROOM",        defaultPrice: 3000, unitLabel: "PER NIGHT" },
+  { name: "SUPER DELUXE ROOM",  defaultPrice: 4000, unitLabel: "PER NIGHT" },
+  { name: "SUITE ROOM",         defaultPrice: 5000, unitLabel: "PER NIGHT" },
+  { name: "DELUXE DORMITORY",   defaultPrice: 800,  unitLabel: "PER BED"   },
+].map((category, index) => ({
+  ...category,
+  // Negative ids keep React keys unique and can never collide with a real
+  // room_categories id, so an accidental POST against one is caught server-side.
+  id: -(index + 1),
+  rooms: [],
+  roomDetails: [],
+  isFallback: true,
+}));
 
 // ─── Premium field / control classes (Blue & White theme) ─────────────────────
 const fieldCls =
@@ -405,46 +430,67 @@ const Room = () => {
 
   const normalize = (val) => val.trim().toLowerCase();
 
-  // Extract numeric part from room strings for duplicate detection
-  // e.g. "101" → 101, "no101" → 101, "A-205" → 205
-  const extractRoomNumber = (str) => {
-    const match = String(str).match(/\d+/);
-    return match ? parseInt(match[0], 10) : null;
-  };
+  // Compare room numbers the same way the database does.
+  //
+  // ROOT CAUSE (issue 2 — "can't add rooms under Duplex / Classic / other
+  // types"): the old duplicate check stripped every room number down to its
+  // digits and compared ACROSS ALL categories. This inventory genuinely holds
+  // T101 (AC ROOM), N101 (NON-AC ROOM) and 101 (Deluxe) side by side, so all
+  // three collapsed to the number 101 and any new room whose digits matched a
+  // room in a *different* type was rejected as "already exists in inventory".
+  // That made most room types look un-addable.
+  //
+  // `rooms` carries UNIQUE KEY uniq_room_number on room_number alone, so the
+  // real rule is: the whole identifier is unique across the entire inventory.
+  // Checking exact strings globally mirrors that exactly — "N104" no longer
+  // collides with "T104", while "104" twice is still correctly rejected.
+  const normalizeRoomKey = (val) => String(val ?? "").trim().toLowerCase();
 
+  // Every room number known across all categories, from live state.
+  const allRoomKeys = useMemo(
+    () =>
+      new Set(
+        Object.values(roomOptions)
+          .flat()
+          .map((r) => normalizeRoomKey(r))
+          .filter(Boolean),
+      ),
+    [roomOptions],
+  );
+
+  // Which category owns a given room number, or null when it is free.
   const findExistingRoom = (value) => {
-    const inputNum = extractRoomNumber(value);
-    if (inputNum === null) return null;
-
-    for (const [roomId, options] of Object.entries(roomOptions)) {
-      if (options.some((item) => extractRoomNumber(item) === inputNum)) {
-        const roomName = roomCatalog.find(
-          (room) => room.id === Number(roomId),
-        )?.name;
-        return roomName;
+    const key = normalizeRoomKey(value);
+    if (!key) return null;
+    for (const [id, options] of Object.entries(roomOptions)) {
+      if (options.some((r) => normalizeRoomKey(r) === key)) {
+        return roomCatalog.find((room) => String(room.id) === String(id))?.name;
       }
     }
     return null;
   };
 
   const isDuplicateInState = (value) => {
-    const inputStr = String(value).trim().toLowerCase();
-    const inputNum = extractRoomNumber(value);
-    if (inputNum === null) {
-      // No number — check exact string match
-      return Object.values(roomOptions).some((options) =>
-        options.some((r) => String(r).trim().toLowerCase() === inputStr),
-      );
-    }
-    // Check numeric match (handles "101" vs "no101" vs "No-101" etc.)
-    return Object.values(roomOptions).some((options) =>
-      options.some((r) => extractRoomNumber(r) === inputNum),
-    );
+    const key = normalizeRoomKey(value);
+    if (!key) return false;
+    return allRoomKeys.has(key);
   };
 
   const handleAddOption = async (roomId) => {
     const value = (inputValue[roomId] || "").trim();
     if (!value) return;
+
+    // Never file a room under a placeholder row. These only appear when
+    // /hotel/rooms/setup has not answered (or failed); posting one would put the
+    // room under the wrong type, so ask for a reload instead.
+    if (String(roomId).startsWith("-")) {
+      showNotice(
+        "Room types are still loading. Please wait a moment and try again.",
+        "Room Types Loading",
+        "warning",
+      );
+      return;
+    }
 
     const roomState = getRoomState(value);
     if (roomState === "blocked") {
@@ -456,9 +502,17 @@ const Room = () => {
       return;
     }
 
-    // Check if already exists in local state (covers duplicate numbers regardless of format)
+    // Room numbers are unique across the whole inventory (see the note on
+    // normalizeRoomKey above), so the check is global but exact.
     if (isDuplicateInState(value)) {
-      showNotice(`Room ${value} already exists in inventory. Duplicates are not allowed.`, "Duplicate Room", "warning");
+      const owner = findExistingRoom(value);
+      showNotice(
+        owner
+          ? `Room ${value} already exists under ${owner}. Room numbers must be unique.`
+          : `Room ${value} already exists in inventory. Duplicates are not allowed.`,
+        "Duplicate Room",
+        "warning",
+      );
       return;
     }
 

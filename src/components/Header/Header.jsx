@@ -1,3 +1,4 @@
+import API from "../../api";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
@@ -24,6 +25,7 @@ const Header = ({
 }) => {
   const navigate = useNavigate();
   const headerActionsRef = useRef(null);
+const profileMenuRef = useRef(null);
   const [notifications, setNotifications] = useState([]);
   const [notificationMenuOpen, setNotificationMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
@@ -66,11 +68,17 @@ const Header = ({
 
   useEffect(() => {
     const handleOutsideClick = (event) => {
-      if (headerActionsRef.current && !headerActionsRef.current.contains(event.target)) {
-        setNotificationMenuOpen(false);
-        setProfileMenuOpen(false);
-      }
-    };
+  const clickedInsideHeader =
+    headerActionsRef.current?.contains(event.target);
+
+  const clickedInsideProfileMenu =
+    profileMenuRef.current?.contains(event.target);
+
+  if (!clickedInsideHeader && !clickedInsideProfileMenu) {
+    setNotificationMenuOpen(false);
+    setProfileMenuOpen(false);
+  }
+};
 
     const handleEscape = (event) => {
       if (event.key === "Escape") {
@@ -88,7 +96,15 @@ const Header = ({
     };
   }, []);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+  setProfileMenuOpen(false);
+  setNotificationMenuOpen(false);
+
+  try {
+    await API.post("/auth/logout");
+  } catch (error) {
+    console.error("Backend logout failed:", error);
+  } finally {
     localStorage.removeItem("token");
     localStorage.removeItem("role");
     localStorage.removeItem("name");
@@ -96,12 +112,10 @@ const Header = ({
     localStorage.removeItem("isAuthenticated");
     localStorage.removeItem("avatarUrl");
 
-    if (setIsAuthenticated) {
-      setIsAuthenticated(false);
-    }
-
-    navigate("/login");
-  };
+    setIsAuthenticated?.(false);
+    navigate("/login", { replace: true });
+  }
+};
 
   const handleMenuAction = (path, options) => {
     setNotificationMenuOpen(false);
@@ -342,6 +356,7 @@ const Header = ({
 
             {profileMenuOpen && renderPortal(
               <div
+              ref={profileMenuRef}
                 className="fixed left-1/2 top-[90px] z-[99999] w-[min(88vw,15rem)] -translate-x-1/2 overflow-hidden rounded-[20px] border border-slate-200/80 bg-white/98 p-2 shadow-[0_22px_55px_rgba(15,23,42,0.16)] backdrop-blur-xl sm:left-auto sm:right-4 sm:top-[92px] sm:-translate-x-0 sm:rounded-[24px]"
                 onClick={(e) => e.stopPropagation()}
               >
