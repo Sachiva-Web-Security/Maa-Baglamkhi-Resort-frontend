@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { FaTimes, FaWhatsapp } from "react-icons/fa";
-import { FiCheckCircle, FiAlertCircle, FiInfo, FiPhone, FiUser } from "react-icons/fi";
+import { FiCheckCircle, FiAlertCircle, FiInfo, FiPhone, FiUser, FiLink } from "react-icons/fi";
 import { restaurantService } from "../../services/restaurantService";
+import API from "../../api";
 
 const STATUS = {
   IDLE: "idle",
@@ -70,6 +71,30 @@ const WhatsAppInvoiceModal = ({ invoice, generatedBill, onClose, onSuccess }) =>
   const [status, setStatus] = useState(STATUS.IDLE);
   const [statusMessage, setStatusMessage] = useState("");
   const [responseData, setResponseData] = useState(null);
+
+  // ── Connection health probe (GET /api/settings/whatsapp/health) ──────────
+  // Lets the operator confirm the Wasend key + gateway are actually live
+  // before attempting a send, instead of discovering it on the first failure.
+  const [health, setHealth] = useState(null);
+  const [checking, setChecking] = useState(false);
+
+  const runHealthCheck = async () => {
+    setChecking(true);
+    setHealth(null);
+    try {
+      const res = await API.get("/settings/whatsapp/health");
+      setHealth(res.data || null);
+    } catch (err) {
+      setHealth({ ok: false, reason: err.message || "health check failed" });
+    } finally {
+      setChecking(false);
+    }
+  };
+
+  useEffect(() => {
+    runHealthCheck();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Re-sync when invoice prop changes (e.g. user opens modal for a different bill)
   useEffect(() => {
@@ -190,6 +215,19 @@ const WhatsAppInvoiceModal = ({ invoice, generatedBill, onClose, onSuccess }) =>
       hasError ? "border-rose-300 bg-rose-50/60 focus:ring-rose-300" : "border-blue-100 bg-white focus:ring-blue-400"
     } px-3.5 text-[15px] text-slate-800 placeholder:text-[14px] placeholder:text-slate-400 shadow-[inset_0_1px_2px_rgba(15,23,42,0.03)] transition focus:outline-none focus:ring-2 focus:border-blue-300 sm:px-4 sm:text-[17px] sm:placeholder:text-[16px]`;
 
+  const healthTone = health
+    ? health.ok
+      ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+      : "bg-rose-50 border-rose-200 text-rose-700"
+    : "bg-slate-50 border-slate-200 text-slate-600";
+  const healthLabel = checking
+    ? "Checking gateway..."
+    : health
+      ? health.ok
+        ? "Gateway reachable"
+        : health.reason || "Gateway unreachable"
+      : "Click to test";
+
   return (
     <div
       className="fixed inset-0 z-[970] flex items-center justify-center bg-slate-950/70 px-3 py-4 backdrop-blur-sm sm:px-6"
@@ -223,6 +261,23 @@ const WhatsAppInvoiceModal = ({ invoice, generatedBill, onClose, onSuccess }) =>
             <FaTimes />
           </button>
         </div>
+
+        {/* Gateway health indicator */}
+        <button
+          type="button"
+          onClick={runHealthCheck}
+          className={`flex w-full items-center gap-2.5 border-b px-5 py-3 text-left text-[13px] font-semibold transition ${healthTone}`}
+        >
+          <FiLink className="shrink-0" />
+          <span className="flex-1 truncate">{healthLabel}</span>
+          {checking ? (
+            <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+          ) : health?.ok ? (
+            <FiCheckCircle className="shrink-0" />
+          ) : health ? (
+            <FiAlertCircle className="shrink-0" />
+          ) : null}
+        </button>
 
         {/* Body */}
         <div className="space-y-4 p-4 sm:p-5">

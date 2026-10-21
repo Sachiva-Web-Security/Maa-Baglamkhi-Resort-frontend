@@ -2420,6 +2420,8 @@ const InvoiceModal = ({
 
       const customerWa = data?.customer?.whatsapp || {};
       const adminWa = data?.admin?.whatsapp || {};
+      const customerSms = data?.customer?.sms || {};
+      const adminSms = data?.admin?.sms || {};
 
       const channels = [];
       if (customerWa?.ok)
@@ -2430,12 +2432,20 @@ const InvoiceModal = ({
         channels.push(
           `admin WhatsApp${adminWa?.fallback ? " (text+link)" : ""}`,
         );
+      // Previously silent — the Wasend "type=sms" path can fail while
+      // WhatsApp succeeds, and the status line hid it.
+      if (customerSms?.ok) channels.push("customer SMS");
+      if (adminSms?.ok) channels.push("admin SMS");
 
       const skipped = [];
       if (customerWa?.skipped)
         skipped.push(`customer WhatsApp (${customerWa.reason || "no number"})`);
       if (adminWa?.skipped)
         skipped.push(`admin WhatsApp (${adminWa.reason || "no number"})`);
+      if (customerSms?.error)
+        skipped.push(`customer SMS (${customerSms.error})`);
+      if (adminSms?.error)
+        skipped.push(`admin SMS (${adminSms.error})`);
 
       if (channels.length > 0) {
         setSendStatus({
@@ -2500,7 +2510,7 @@ const InvoiceModal = ({
                 className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 px-5 h-12 text-[17px] font-bold text-white shadow-lg shadow-emerald-200 hover:from-emerald-700 hover:to-teal-600 hover:shadow-xl hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
               >
                 <FaWhatsapp className="text-lg" />
-                {sending ? "Sending..." : "Send WhatsApp + SMS"}
+                {sending ? "Sending..." : "Send Invoice via WhatsApp"}
               </button>
               <button
                 type="button"
