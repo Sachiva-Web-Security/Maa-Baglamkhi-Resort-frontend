@@ -64,14 +64,52 @@ export default function ChefInventoryPage() {
         chefService.getInventoryItems(),
         chefService.getChefIssues({ chefName: loggedInName }),
       ]);
-      const itemsList = Array.isArray(itemsRes)
-        ? itemsRes
-        : Array.isArray(itemsRes?.items)
-          ? itemsRes.items
-          : Array.isArray(itemsRes?.data)
-            ? itemsRes.data
-            : [];
-      setItems(itemsList);
+      // Support different inventory API response formats.
+const itemsList = Array.isArray(itemsRes)
+  ? itemsRes
+  : Array.isArray(itemsRes?.items)
+    ? itemsRes.items
+    : Array.isArray(itemsRes?.data)
+      ? itemsRes.data
+      : Array.isArray(itemsRes?.data?.items)
+        ? itemsRes.data.items
+        : Array.isArray(itemsRes?.data?.data)
+          ? itemsRes.data.data
+          : [];
+
+setItems(
+  itemsList
+    .map((item) => ({
+      ...item,
+      id:
+        item.id ??
+        item.itemId ??
+        item.item_id ??
+        item.inventoryId ??
+        item.inventory_id,
+      name:
+        item.name ??
+        item.itemName ??
+        item.item_name ??
+        item.title ??
+        "",
+      stock:
+        item.stock ??
+        item.quantityAvailable ??
+        item.quantity_available ??
+        item.quantity ??
+        0,
+      unit:
+        item.unit ??
+        item.unitName ??
+        item.unit_name ??
+        "",
+    }))
+    .filter(
+      (item) =>
+        item.id != null && String(item.name).trim()
+    )
+);
       setIssues(Array.isArray(issuesRes) ? issuesRes : []);
     } catch (err) {
       setError(err?.response?.data?.message || err?.message || "Failed to load inventory.");
@@ -87,25 +125,42 @@ export default function ChefInventoryPage() {
 
   // ── Request item ───────────────────────────────────────────────────────────
   const handleItemSelect = (e) => {
-    const id = e.target.value;
-    const found = items.find((it) => String(it.id) === String(id));
-    setRequestDraft((c) => ({
-      ...c,
-      itemId: id,
-      itemName: found?.name || "",
-      unit: found?.unit || "",
-    }));
-  };
+  const id = String(e.target.value || "");
+
+  const selectedItem = items.find(
+    (item) => String(item.id) === id
+  );
+
+  setRequestDraft((current) => ({
+    ...current,
+    itemId: id,
+    itemName: selectedItem?.name || "",
+    unit: selectedItem?.unit || "",
+  }));
+
+  setError("");
+};
 
   const handleRequest = async (e) => {
     e.preventDefault();
     setError("");
     setSuccess("");
-    if (!requestDraft.itemId) return setError("Select an inventory item.");
-    const qty = Number(requestDraft.quantityIssued);
+    const selectedItem = items.find(
+  (item) =>
+    String(item.id) === String(requestDraft.itemId)
+);
+
+if (!requestDraft.itemId || !selectedItem) {
+  return setError(
+    items.length
+      ? "Select an inventory item from the dropdown."
+      : "No inventory items are available. Please ask the manager to add inventory stock."
+  );
+}
+
+const qty = Number(requestDraft.quantityIssued);
     if (!qty || qty <= 0) return setError("Quantity must be greater than zero.");
-    const selectedItem = items.find((it) => String(it.id) === String(requestDraft.itemId));
-    if (selectedItem && Number(selectedItem.stock || 0) < qty) {
+    if (Number(selectedItem.stock || 0) < qty) {
       return setError(`Insufficient stock. Available: ${selectedItem.stock} ${selectedItem.unit || ""}`);
     }
     setSubmitting(true);
