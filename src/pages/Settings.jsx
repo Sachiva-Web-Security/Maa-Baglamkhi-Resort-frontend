@@ -114,10 +114,6 @@ const Settings = () => {
     }
   };
 
-  /* After a successful save, re-scan ports so the admin can see whether the
-     machine's USB-serial bridge got a new COM number (Windows reassigns them
-     on every plug/unplug — this is the #1 reason a config stops working). */
-
   useEffect(() => {
     refreshPorts();
   }, []);
@@ -153,7 +149,7 @@ const Settings = () => {
         "✓ Settings saved and poller restarted — it now runs on " +
           (esslForm.enabled
             ? isTcp
-              ? `TCP ${esslForm.host}:${esslForm.tcpPort}.`
+              ? `TCP ${esslForm.host}:${esslForm.tcpPort} (${esslForm.protocol}).`
               : `port ${esslForm.portName || "(none)"}.`
             : "the disabled state.")
       );
@@ -208,7 +204,7 @@ const Settings = () => {
     }
   };
 
-  /* ── run every diagnostic check at once ────────────────────────── */
+  /* ── run every diagnostic check at once ───────────────────────────── */
   const handleDiagnose = async () => {
     setDiagnosing(true);
     setDiagnoseResult(null);
@@ -288,7 +284,7 @@ const Settings = () => {
         );
       else
         setTestMsg(
-          "✓ Backend reachable. Set the COM port above, save, and restart the backend."
+          "✓ Backend reachable. Set the target above, save, and poll."
         );
     } catch (err) {
       setTestMsg("✗ " + (err.response?.data?.error || err.message));
@@ -360,9 +356,11 @@ const Settings = () => {
               </p>
             </div>
             <div>
-              <p className="text-[10px] font-bold uppercase text-slate-400">Port</p>
+              <p className="text-[10px] font-bold uppercase text-slate-400">Target</p>
               <p className="mt-0.5 font-mono font-semibold text-slate-700">
-                {essl.config?.portName || "not set"}
+                {essl.connection === "TCP"
+                  ? `${essl.config?.host || "not set"}:${essl.config?.tcpPort || ""}`
+                  : essl.config?.portName || "not set"}
               </p>
             </div>
             <div>
@@ -624,13 +622,11 @@ const Settings = () => {
                   : "border-red-200 bg-red-50"
               }`}
             >
-              <div className="mb-3 flex items-center justify-between">
-                <h3 className={`text-sm font-bold ${diagnoseResult.allOk ? "text-green-800" : "text-red-800"}`}>
-                  {diagnoseResult.allOk
-                    ? "✓ All checks passed — the eSSL is connected and ready."
-                    : `${diagnoseResult.passing}/${diagnoseResult.total} checks passed — see below.`}
-                </h3>
-              </div>
+              <h3 className={`mb-3 text-sm font-bold ${diagnoseResult.allOk ? "text-green-800" : "text-red-800"}`}>
+                {diagnoseResult.allOk
+                  ? "✓ All checks passed — the eSSL is connected and ready."
+                  : `${diagnoseResult.passing}/${diagnoseResult.total} checks passed — see below.`}
+              </h3>
               <div className="space-y-1.5">
                 {diagnoseResult.checks.map((c) => (
                   <div
@@ -653,7 +649,7 @@ const Settings = () => {
           )}
 
           {/* Detected ports strip — only relevant for COM connections */}
-          {serialPorts.length > 0 && (
+          {serialPorts.length > 0 && esslForm.connection === "COM" && (
             <div className="rounded-lg bg-violet-50 border border-violet-100 p-3">
               <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-violet-500">
                 {serialPorts.length} COM port{serialPorts.length > 1 ? "s" : ""} detected on this computer
