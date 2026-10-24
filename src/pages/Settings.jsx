@@ -6,6 +6,10 @@ import {
   FaTrashAlt,
   FaBolt,
   FaUserPlus,
+  FaSync,
+  FaListUl,
+  FaCheckCircle,
+  FaSpinner,
 } from "react-icons/fa";
 import API from "../api";
 
@@ -42,14 +46,19 @@ const Settings = () => {
   const [saving, setSaving] = useState(false);
   const [testMsg, setTestMsg] = useState("");
   const [loading, setLoading] = useState(true);
+  const [serialPorts, setSerialPorts] = useState([]);
+  const [portsLoading, setPortsLoading] = useState(false);
+  const [employees, setEmployees] = useState([]);
+  const [polling, setPolling] = useState(false);
 
   useEffect(() => {
     const load = async () => {
       setLoading(true);
       try {
-        const [statusRes, devRes] = await Promise.all([
+        const [statusRes, devRes, empRes] = await Promise.all([
           API.get("/attendance/essl/status"),
           API.get("/attendance/essl/devices"),
+          API.get("/users").catch(() => ({ data: [] })),
         ]);
 
         setEssl(statusRes.data);
@@ -62,6 +71,7 @@ const Settings = () => {
           deviceType: cfg.deviceType || "eSSL01",
         });
         setMappings(devRes.data || []);
+        setEmployees(Array.isArray(empRes.data) ? empRes.data : []);
       } catch (err) {
         console.error("Failed to load eSSL settings", err);
       } finally {
@@ -71,7 +81,29 @@ const Settings = () => {
     load();
   }, []);
 
-  /* ── save port config ────────────────────────────────────────────── */
+  /* Detect the serial ports visible on this PC so the admin doesn't have
+     to dig through Windows Device Manager to find the eSSL port. */
+  const refreshPorts = async () => {
+    setPortsLoading(true);
+    try {
+      const res = await API.get("/attendance/essl/ports");
+      if (res.data?.ok) {
+        setSerialPorts(res.data.ports || []);
+      } else if (res.data?.error) {
+        setTestMsg("⚠ " + res.data.error);
+      }
+    } catch (err) {
+      setTestMsg("⚠ Could not list ports: " + (err.response?.data?.error || err.message));
+    } finally {
+      setPortsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    refreshPorts();
+  }, []);
+
+  /* ── save port config + restart the poller with the new values ─────── */
   const handleSaveConfig = async () => {
     setSaving(true);
     setTestMsg("");
@@ -85,14 +117,38 @@ const Settings = () => {
           deviceType: esslForm.deviceType,
         },
       });
-      // refresh status
-      const res = await API.get("/attendance/essl/status");
+      const res = await API.post("/attendance/essl/restart");
       setEssl(res.data);
-      setTestMsg("✓ Settings saved. The poller will pick up the new port on its next cycle.");
+      setTestMsg(
+        "✓ Settings saved and poller restarted — it now runs on " +
+          (esslForm.enabled ? `port ${esslForm.portName || "(none)"}.` : "the disabled state.")
+      );
     } catch (err) {
       setTestMsg("✗ " + (err.response?.data?.error || err.message));
     } finally {
       setSaving(false);
+    }
+  };
+
+  /* ── pull one batch from the machine right now ─────────────────────── */
+  const handlePollNow = async () => {
+    setPolling(true);
+    setTestMsg("Pulling attendance from the machine…");
+    try {
+      const res = await API.post("/attendance/essl/poll");
+      const d = res.data;
+      if (d.ok) {
+        setTestMsg(
+          "✓ Polled. " +
+            (d.imported ? `${d.imported} new record${d.imported > 1 ? "s" : ""} imported.` : "No new records in the machine buffer.")
+        );
+      } else {
+        setTestMsg("⚠ " + (d.error || "poll failed"));
+      }
+    } catch (err) {
+      setTestMsg("✗ " + (err.response?.data?.error || err.message));
+    } finally {
+      setPolling(false);
     }
   };
 
@@ -206,6 +262,36 @@ const Settings = () => {
           </div>
         </div>
 
+        {/* Live poller strip */}
+        {essl && (
+          <div className="grid grid-cols-2 gap-3 border-b border-violet-50 px-6 py-3 text-xs sm:grid-cols-4">
+            <div>
+              <p className="text-[10px] font-bold uppercase text-slate-400">Last sync</p>
+              <p className="mt-0.5 font-semibold text-slate-700">
+                {essl.lastPollAt ? new Date(essl.lastPollAt).toLocaleString() : "never"}
+              </p>
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase text-slate-400">Last import</p>
+              <p className="mt-0.5 font-semibold text-slate-700">
+                {essl.lastImportCount != null ? essl.lastImportCount + " record(s)" : "—"}
+              </p>
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase text-slate-400">Port</p>
+              <p className="mt-0.5 font-mono font-semibold text-slate-700">
+                {essl.config?.portName || "not set"}
+              </p>
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase text-slate-400">Health</p>
+              <p className={`mt-0.5 font-semibold ${essl.lastError ? "text-amber-600" : "text-green-600"}`}>
+                {essl.lastError ? essl.lastError : "OK"}
+              </p>
+            </div>
+          </div>
+        )}
+
         <div className="space-y-5 p-6">
           {/* Toggle */}
           <label className="flex cursor-pointer items-center gap-3">
@@ -226,15 +312,41 @@ const Settings = () => {
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             <div>
               <label className={labelCls}>Serial Port</label>
-              <input
-                type="text"
-                className={inputCls}
-                placeholder="COM3"
-                value={esslForm.portName}
-                onChange={(e) =>
-                  setEsslForm({ ...esslForm, portName: e.target.value })
-                }
-              />
+              <div className="flex gap-2">
+                <select
+                  className={inputCls + " flex-1"}
+                  value={serialPorts.some((p) => p.path === esslForm.portName) ? esslForm.portName : esslForm.portName ? "__custom__" : ""}
+                  onChange={(e) =>
+                    setEsslForm({
+                      ...esslForm,
+                      portName: e.target.value === "__custom__" ? esslForm.portName : e.target.value,
+                    })
+                  }
+                >
+                  <option value="">— detect port —</option>
+                  {serialPorts.map((p) => (
+                    <option key={p.path} value={p.path}>
+                      {p.path}
+                      {p.manufacturer ? ` — ${p.manufacturer}` : ""}
+                      {p.productName ? ` (${p.productName})` : ""}
+                    </option>
+                  ))}
+                  {esslForm.portName && !serialPorts.some((p) => p.path === esslForm.portName) && (
+                    <option value="__custom__">{esslForm.portName} (manual)</option>
+                  )}
+                </select>
+                <button
+                  onClick={refreshPorts}
+                  disabled={portsLoading}
+                  title="Detect serial ports on this computer"
+                  className="flex w-10 shrink-0 items-center justify-center rounded-lg border border-violet-300 bg-violet-50 text-violet-700 transition hover:bg-violet-100 disabled:opacity-50"
+                >
+                  {portsLoading ? <FaSpinner spin /> : <FaListUl size={13} />}
+                </button>
+              </div>
+              <p className="mt-1 text-[10px] text-slate-400">
+                Plug in the machine, then click the list icon to detect its COM port.
+              </p>
             </div>
             <div>
               <label className={labelCls}>Baud Rate</label>
@@ -288,10 +400,17 @@ const Settings = () => {
               <FaPlug /> Save &amp; Apply
             </button>
             <button
-              onClick={handleTest}
-              className="flex items-center gap-2 rounded-lg border border-violet-300 bg-violet-50 px-5 py-2 text-sm font-bold text-violet-700 transition hover:bg-violet-100"
+              onClick={handlePollNow}
+              disabled={polling}
+              className="flex items-center gap-2 rounded-lg border border-violet-300 bg-violet-50 px-5 py-2 text-sm font-bold text-violet-700 transition hover:bg-violet-100 disabled:opacity-50"
             >
-              <FaBolt /> Test Connection
+              {polling ? <FaSpinner spin /> : <FaSync />} Poll Now
+            </button>
+            <button
+              onClick={handleTest}
+              className="flex items-center gap-2 rounded-lg border border-slate-300 bg-slate-50 px-5 py-2 text-sm font-bold text-slate-600 transition hover:bg-slate-100"
+            >
+              <FaCheckCircle size={14} /> Check Status
             </button>
           </div>
 
@@ -364,17 +483,32 @@ const Settings = () => {
                 />
               </div>
               <div>
-                <label className={labelCls}>Employee Email</label>
+                <label className={labelCls}>Employee</label>
+                <select
+                  className={inputCls}
+                  value={
+                    employees.some((u) => u.email === mappingForm.employeeEmail)
+                      ? mappingForm.employeeEmail
+                      : ""
+                  }
+                  onChange={(e) =>
+                    setMappingForm({ ...mappingForm, employeeEmail: e.target.value })
+                  }
+                >
+                  <option value="">— pick employee —</option>
+                  {employees.map((u) => (
+                    <option key={u.id} value={u.email}>
+                      {u.name || u.full_name || u.email} ({u.email})
+                    </option>
+                  ))}
+                </select>
                 <input
                   type="email"
-                  className={inputCls}
-                  placeholder="employee@resort.com"
-                  value={mappingForm.employeeEmail}
+                  className={inputCls + " mt-2"}
+                  placeholder="or type email manually"
+                  value={employees.some((u) => u.email === mappingForm.employeeEmail) ? "" : mappingForm.employeeEmail}
                   onChange={(e) =>
-                    setMappingForm({
-                      ...mappingForm,
-                      employeeEmail: e.target.value,
-                    })
+                    setMappingForm({ ...mappingForm, employeeEmail: e.target.value })
                   }
                 />
               </div>
