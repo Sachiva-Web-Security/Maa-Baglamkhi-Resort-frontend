@@ -32,7 +32,10 @@ const Settings = () => {
   const [essl, setEssl] = useState(null);
   const [esslForm, setEsslForm] = useState({
     enabled: true,
+    connection: "COM",
     portName: "",
+    host: "192.168.1.201",
+    tcpPort: 4350,
     baudRate: 9600,
     pollIntervalMs: 30000,
     deviceType: "eSSL01",
@@ -65,7 +68,10 @@ const Settings = () => {
         const cfg = statusRes.data?.config || {};
         setEsslForm({
           enabled: cfg.enabled !== false,
+          connection: cfg.connection || "COM",
           portName: cfg.portName || "",
+          host: cfg.host || "192.168.1.201",
+          tcpPort: cfg.tcpPort || 4350,
           baudRate: cfg.baudRate || 9600,
           pollIntervalMs: cfg.pollIntervalMs || 30000,
           deviceType: cfg.deviceType || "eSSL01",
@@ -112,10 +118,14 @@ const Settings = () => {
     setSaving(true);
     setTestMsg("");
     try {
+      const isTcp = esslForm.connection === "TCP";
       await API.put("/settings", {
         esslDevice: {
           enabled: esslForm.enabled,
-          portName: esslForm.portName,
+          connection: esslForm.connection,
+          portName: isTcp ? "" : esslForm.portName,
+          host: isTcp ? esslForm.host : "",
+          tcpPort: Number(esslForm.tcpPort) || 4350,
           baudRate: Number(esslForm.baudRate) || 9600,
           pollIntervalMs: Number(esslForm.pollIntervalMs) || 30000,
           deviceType: esslForm.deviceType,
@@ -123,11 +133,17 @@ const Settings = () => {
       });
       const res = await API.post("/attendance/essl/restart");
       setEssl(res.data);
-      // Re-scan so the detected-ports strip below reflects any new COM number.
-      await refreshPorts();
+      if (!isTcp) {
+        // Re-scan so the detected-ports strip below reflects any new COM number.
+        await refreshPorts();
+      }
       setTestMsg(
         "✓ Settings saved and poller restarted — it now runs on " +
-          (esslForm.enabled ? `port ${esslForm.portName || "(none)"}.` : "the disabled state.")
+          (esslForm.enabled
+            ? isTcp
+              ? `TCP ${esslForm.host}:${esslForm.tcpPort}.`
+              : `port ${esslForm.portName || "(none)"}.`
+            : "the disabled state.")
       );
     } catch (err) {
       setTestMsg("✗ " + (err.response?.data?.error || err.message));
@@ -155,6 +171,28 @@ const Settings = () => {
       setTestMsg("✗ " + (err.response?.data?.error || err.message));
     } finally {
       setPolling(false);
+    }
+  };
+
+  /* ── test a TCP/IP connection to the eSSL machine ────────────────── */
+  const [testTcpLoading, setTestTcpLoading] = useState(false);
+  const handleTestTcp = async () => {
+    setTestTcpLoading(true);
+    setTestMsg("Contacting " + esslForm.host + ":" + esslForm.tcpPort + "…");
+    try {
+      const res = await API.post("/attendance/essl/test-tcp");
+      const d = res.data;
+      if (d.reached && d.ok) {
+        setTestMsg("✓ Reached device at " + esslForm.host + ":" + esslForm.tcpPort + ". Response: " + (d.response || "(no reply)"));
+      } else if (d.reached && !d.ok) {
+        setTestMsg("⚠ Reached " + esslForm.host + ":" + esslForm.tcpPort + " but got: " + (d.response || d.error));
+      } else {
+        setTestMsg("✗ Could not reach " + esslForm.host + ":" + esslForm.tcpPort + ". " + (d.error || "Check IP and that the eSSL has networking enabled."));
+      }
+    } catch (err) {
+      setTestMsg("✗ " + (err.response?.data?.error || err.message));
+    } finally {
+      setTestTcpLoading(false);
     }
   };
 
@@ -314,7 +352,28 @@ const Settings = () => {
             </span>
           </label>
 
+          {/* Connection type */}
+          <div>
+            <label className={labelCls}>Connection Type</label>
+            <div className="flex gap-2">
+              {[{ v: "COM", label: "COM / USB serial" }, { v: "TCP", label: "TCP/IP (network)" }].map((opt) => (
+                <button
+                  key={opt.v}
+                  onClick={() => setEsslForm({ ...esslForm, connection: opt.v })}
+                  className={`flex-1 rounded-lg border px-3 py-2 text-sm font-semibold transition ${
+                    esslForm.connection === opt.v
+                      ? "border-violet-400 bg-violet-600 text-white shadow-sm"
+                      : "border-violet-200 bg-white text-violet-700 hover:bg-violet-50"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Port fields */}
+          {esslForm.connection === "COM" ? (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             <div>
               <label className={labelCls}>Serial Port</label>
@@ -395,8 +454,60 @@ const Settings = () => {
               </select>
             </div>
           </div>
+          ) : (
+          /* TCP/IP fields — machine is on the network, no COM port needed */
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            <div>
+              <label className={labelCls}>Host / IP</label>
+              <input
+                type="text"
+                className={inputCls}
+                placeholder="192.168.1.201"
+                value={esslForm.host}
+                onChange={(e) => setEsslForm({ ...esslForm, host: e.target.value })}
+              />
+              <p className="mt-1 text-[10px] text-slate-400">
+                The IP shown in eSSL timeTrackLite under “IP Address”.
+              </p>
+            </div>
+            <div>
+              <label className={labelCls}>TCP Port</label>
+              <input
+                type="number"
+                min={1}
+                max={65535}
+                className={inputCls}
+                value={esslForm.tcpPort}
+                onChange={(e) => setEsslForm({ ...esslForm, tcpPort: e.target.value })}
+              />
+              <p className="mt-1 text-[10px] text-slate-400">Default eSSL01 Telnet port is 4350.</p>
+            </div>
+            <div>
+              <label className={labelCls}>Poll Interval (ms)</label>
+              <input
+                type="number"
+                min={5000}
+                step={1000}
+                className={inputCls}
+                value={esslForm.pollIntervalMs}
+                onChange={(e) => setEsslForm({ ...esslForm, pollIntervalMs: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className={labelCls}>Device Model</label>
+              <select
+                className={inputCls}
+                value={esslForm.deviceType}
+                onChange={(e) => setEsslForm({ ...esslForm, deviceType: e.target.value })}
+              >
+                <option value="eSSL01">eSSL01</option>
+                <option value="Securoid">Securoid</option>
+              </select>
+            </div>
+          </div>
+          )}
 
-          {/* Detected ports strip */}
+          {/* Detected ports strip — only relevant for COM connections */}
           {serialPorts.length > 0 && (
             <div className="rounded-lg bg-violet-50 border border-violet-100 p-3">
               <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-violet-500">
@@ -449,13 +560,23 @@ const Settings = () => {
             >
               <FaCheckCircle size={14} /> Check Status
             </button>
-            <button
-              onClick={refreshPorts}
-              disabled={portsLoading}
-              className="flex items-center gap-2 rounded-lg border border-violet-300 bg-violet-50 px-5 py-2 text-sm font-bold text-violet-700 transition hover:bg-violet-100 disabled:opacity-50"
-            >
-              {portsLoading ? <FaSpinner spin /> : <FaListUl />} Detect COM Ports
-            </button>
+            {esslForm.connection === "TCP" ? (
+              <button
+                onClick={handleTestTcp}
+                disabled={testTcpLoading}
+                className="flex items-center gap-2 rounded-lg border border-violet-300 bg-violet-50 px-5 py-2 text-sm font-bold text-violet-700 transition hover:bg-violet-100 disabled:opacity-50"
+              >
+                {testTcpLoading ? <FaSpinner spin /> : <FaBolt />} Test TCP Connection
+              </button>
+            ) : (
+              <button
+                onClick={refreshPorts}
+                disabled={portsLoading}
+                className="flex items-center gap-2 rounded-lg border border-violet-300 bg-violet-50 px-5 py-2 text-sm font-bold text-violet-700 transition hover:bg-violet-100 disabled:opacity-50"
+              >
+                {portsLoading ? <FaSpinner spin /> : <FaListUl />} Detect COM Ports
+              </button>
+            )}
           </div>
 
           {testMsg && (
