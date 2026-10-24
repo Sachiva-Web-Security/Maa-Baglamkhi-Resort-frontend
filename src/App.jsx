@@ -64,6 +64,7 @@ import ReceptionDashboard from "./pages/ReceptionDashboard";
 import Register from "./pages/Register";
 import Reports from "./pages/Reports";
 import RestaurantDashboard from "./pages/RestaurantDashboard";
+import Settings from "./pages/Settings";
 import RestaurantPOS from "./pages/RestaurantPOS";
 import WaiterNotifications from "./pages/WaiterNotifications";
 import LiveBoard from "./pages/LiveBoard";
@@ -328,6 +329,7 @@ function AppRoutes({ isAuthenticated, setIsAuthenticated, protect }) {
           <Route path="/kitchen" element={protect(<Kitchen />, ROLES.KITCHEN)} />
           <Route path="/waiter-delivery" element={protect(<WaiterDeliveryQueue />, ROLES.RESTAURANT)} />
           <Route path="/user" element={protect(<User />, ROLES.ADMIN_ONLY)} />
+          <Route path="/settings" element={protect(<Settings />, ["admin"])} />
           <Route path="/print" element={protect(<PrintManagement />, ["admin"])} />
           <Route path="/invoice/:customerId" element={protect(<CustomerInvoicePage />, ROLES.ALL)} />
 

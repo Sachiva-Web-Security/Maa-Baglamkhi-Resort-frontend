@@ -1,4 +1,4 @@
-import { FaCalendarAlt, FaSearch, FaUserPlus } from "react-icons/fa";
+import { FaCalendarAlt, FaSearch, FaUserPlus, FaFingerprint, FaCog } from "react-icons/fa";
 
 /* Premium field styles for filter inputs
    Mobile-first sizing, scaling up through tablet/iPad, landing on the
@@ -55,7 +55,9 @@ const FiltersSection = ({
   onRoleChange,
   onSearchChange,
   onAddManualEntry,
+  onOpenEsslPanel,
   showAddButton = true,
+  esslOpen = false,
 }) => {
   return (
     <section
@@ -121,8 +123,9 @@ const FiltersSection = ({
             </p>
           </div>
 
-          {/* Right Side - Add Button */}
-          {showAddButton && (
+          {/* Right Side - Buttons */}
+          <div className="flex w-full flex-col gap-3 xl:w-auto xl:flex-row">
+            {showAddButton && (
             <button
               onClick={onAddManualEntry}
               className="
@@ -171,7 +174,59 @@ const FiltersSection = ({
               <FaUserPlus className="text-lg md:text-xl shrink-0" />
               Add Manual Entry
             </button>
-          )}
+            )}
+
+            {showAddButton && onOpenEsslPanel && (
+            <button
+              onClick={onOpenEsslPanel}
+              className="
+              inline-flex
+              items-center
+              justify-center
+              gap-2.5
+              md:gap-3
+
+              w-full
+              xl:w-auto
+
+              rounded-[16px]
+              md:rounded-[18px]
+              xl:rounded-[20px]
+
+              bg-gradient-to-r
+              from-violet-600
+              via-purple-500
+              to-fuchsia-500
+
+              px-6
+              md:px-7
+              xl:px-8
+
+              h-[50px]
+              md:h-[54px]
+              xl:h-[58px]
+
+              text-[14px]
+              md:text-[16px]
+              xl:text-[18px]
+              font-bold
+              text-white
+
+              shadow-[0_10px_28px_rgba(124,58,237,0.3)]
+              xl:shadow-[0_20px_45px_rgba(124,58,237,0.35)]
+
+              transition-all
+              duration-300
+
+              hover:-translate-y-1
+              hover:scale-[1.03]
+            "
+            >
+              <FaFingerprint className="text-lg md:text-xl shrink-0" />
+              eSSL Device
+            </button>
+            )}
+          </div>
         </div>
 
         {/* Filters Grid */}

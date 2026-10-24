@@ -6,11 +6,13 @@ import {
   FaUserCheck,
   FaUserPlus,
   FaUsers,
+  FaFingerprint,
 } from "react-icons/fa";
 
 import AttendanceForm from "../components/Attendance/AttendanceForm";
 import AttendanceRow from "../components/Attendance/AttendanceRow";
 import FiltersSection from "../components/Attendance/FiltersSection";
+import EsslDevicePanel from "../components/Attendance/EsslDevicePanel";
 import SummaryCard from "../components/Attendance/SummaryCard";
 import API from "../api";
 
@@ -30,6 +32,7 @@ const Attendance = () => {
   const [roleFilter, setRoleFilter] = useState("All Roles");
   const [searchQuery, setSearchQuery] = useState("");
   const [showManualEntry, setShowManualEntry] = useState(false);
+  const [showEsslPanel, setShowEsslPanel] = useState(false);
   const [employees, setEmployees] = useState([]);
 
   // Pagination
@@ -38,18 +41,23 @@ const Attendance = () => {
 
   /* ================= FETCH ================= */
 
+  const fetchAttendance = async () => {
+    try {
+      const res = await API.get("/attendance", { params: { date } });
+      const data = Array.isArray(res.data) ? res.data : [];
+      setEmployees(data);
+    } catch (err) {
+      console.error("Error loading attendance", err);
+    }
+  };
+
   useEffect(() => {
-    const fetchAttendance = async () => {
-      try {
-        const res = await API.get("/attendance", { params: { date } });
-        const data = Array.isArray(res.data) ? res.data : [];
-        setEmployees(data);
-      } catch (err) {
-        console.error("Error loading attendance", err);
-      }
-    };
 
     fetchAttendance();
+
+    // Auto-refresh every 15 s so eSSL-imported records appear without a manual reload
+    const interval = setInterval(fetchAttendance, 15000);
+    return () => clearInterval(interval);
   }, [date]);
 
   /* ================= FILTER ================= */
@@ -152,8 +160,13 @@ const Attendance = () => {
         onRoleChange={setRoleFilter}
         onSearchChange={setSearchQuery}
         onAddManualEntry={() => setShowManualEntry(true)}
+        onOpenEsslPanel={() => setShowEsslPanel(true)}
         showAddButton={isAdmin}
+        esslOpen={showEsslPanel}
       />
+
+      {/* eSSL device panel — admin only */}
+      {isAdmin && <EsslDevicePanel open={showEsslPanel} onClose={() => setShowEsslPanel(false)} onConfigChanged={() => fetchAttendance()} />}
 
       {/* Summary cards */}
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">

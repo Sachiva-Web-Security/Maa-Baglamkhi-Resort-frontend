@@ -24,12 +24,19 @@ import {
   FaChevronDown,
   FaChevronRight,
   FaPrint,
+  FaFileAlt,
+  FaFilePdf,
+  FaDownload,
+  FaExternalLinkAlt,
+  FaEye,
 } from "react-icons/fa";
 
 import PaymentSettingsManager from "../components/Accounts/PaymentSettingsManager";
 import InvoiceForm from "../components/Accounts/forms/InvoiceForm";
 import TransactionForm from "../components/Accounts/forms/TransactionForm";
 import API from "../api";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 const formatINR = (amount) =>
   new Intl.NumberFormat("en-IN", {
@@ -612,6 +619,9 @@ const Accounts = () => {
   const [updateLoading, setUpdateLoading] = useState(false);
   const [deleteLoadingId, setDeleteLoadingId] = useState(null);
   const [summaryError, setSummaryError] = useState(false);
+
+  /* PDF viewer state — replaces the old window.print() flow */
+  const [pdfModal, setPdfModal] = useState(null); // { reportId, title, blobUrl, fileName, generating }
 
   const refreshTimerRef = useRef(null);
   const refreshInFlightRef = useRef(false);
@@ -1515,6 +1525,1272 @@ const Accounts = () => {
     const div = document.createElement("div");
     div.textContent = String(text);
     return div.innerHTML;
+  };
+
+  /* ----------------------------------------------------------------
+     PRINTABLE REPORTS — one builder per report type on this page.
+     Each returns a full HTML document ready for window.print().
+  ---------------------------------------------------------------- */
+
+  const REPORT_TYPES = [
+    {
+      id: "ledger",
+      label: "Accounts Ledger",
+      icon: FaFileAlt,
+      description: "All income & expense transactions with running balance",
+    },
+    {
+      id: "daily",
+      label: "Daily Income Breakdown",
+      icon: FaChartLine,
+      description: "Day-wise carry-forward cash flow",
+    },
+    {
+      id: "billing",
+      label: "Customer Billing",
+      icon: FaReceipt,
+      description: "Hotel, restaurant & banquet invoices/bills",
+    },
+    {
+      id: "petty-cash",
+      label: "Petty Cash Register",
+      icon: FaMoneyBillWave,
+      description: "All petty cash entries",
+    },
+    {
+      id: "gst",
+      label: "GST Return Tracker",
+      icon: FaFileAlt,
+      description: "GST filing status and payable amounts",
+    },
+    {
+      id: "vendor-payments",
+      label: "Vendor Payments",
+      icon: FaMoneyBillWave,
+      description: "Supplier invoice payments",
+    },
+    {
+      id: "purchase-orders",
+      label: "Purchase Orders",
+      icon: FaFileAlt,
+      description: "All PO records with status",
+    },
+    {
+      id: "payroll",
+      label: "Payroll Register",
+      icon: FaMoneyBillWave,
+      description: "Staff salary sheets by month",
+    },
+    {
+      id: "profit-centers",
+      label: "Profit Center Split",
+      icon: FaLayerGroup,
+      description: "Income/expense by revenue center",
+    },
+    {
+      id: "bank-ledger",
+      label: "Bank Ledger",
+      icon: FaBuilding,
+      description: "Bank transaction entries & reconciliation status",
+    },
+    {
+      id: "reconciliation",
+      label: "Bank Reconciliation",
+      icon: FaChartLine,
+      description: "Matched/unmatched bank vs accounts items",
+    },
+    {
+      id: "all",
+      label: "Full Accounts Report",
+      icon: FaFilePdf,
+      description: "Every section combined into one document",
+    },
+  ];
+
+  /* Receipt-style CSS — narrow thermal-paper look for bills/invoices */
+  const RECEIPT_CSS = `
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    body {
+      font-family: 'Courier New', 'Consolas', monospace;
+      color: #111;
+      background: #fff;
+      font-size: 12px;
+      line-height: 1.5;
+      padding: 16px;
+    }
+    .receipt {
+      width: 280px;
+      margin: 0 auto;
+      padding: 18px 14px;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      font-size: 12px;
+    }
+    @media print {
+      body { padding: 0; background: #fff; }
+      .receipt { border: none; box-shadow: none; margin: 0 auto; }
+      @page { size: 80mm auto; margin: 4mm; }
+    }
+
+    /* Receipt header */
+    .receipt-header {
+      text-align: center;
+      padding-bottom: 10px;
+      border-bottom: 2px dashed #94a3b8;
+      margin-bottom: 12px;
+    }
+    .receipt-header .store {
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .receipt-header .tagline {
+      font-size: 10px;
+      color: #475569;
+      margin-top: 2px;
+    }
+    .receipt-header .meta {
+      font-size: 10px;
+      color: #64748b;
+      margin-top: 6px;
+      line-height: 1.4;
+    }
+
+    /* Sections */
+    .receipt-section { margin-bottom: 12px; }
+    .receipt-section .sec-title {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 3px 8px;
+      background: #f1f5f9;
+      border-radius: 3px;
+      margin-bottom: 6px;
+    }
+    .receipt-section .divider {
+      border-top: 1px dashed #cbd5e1;
+      margin: 6px 0;
+    }
+
+    /* Line items */
+    .line-item {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 2px 0;
+      font-size: 11.5px;
+    }
+    .line-item .li-label { flex: 1; }
+    .line-item .li-amount { font-weight: 700; text-align: right; min-width: 60px; }
+    .line-item.sub { font-size: 10.5px; color: #475569; }
+    .line-item.total {
+      font-size: 14px;
+      font-weight: 800;
+      padding-top: 6px;
+      margin-top: 4px;
+      border-top: 2px solid #0f172a;
+    }
+    .line-item.subtotal { font-weight: 700; font-size: 12.5px; }
+
+    /* KPI row in receipt */
+    .receipt-kpi {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 11px;
+      margin: 4px 0;
+    }
+    .receipt-kpi .kpi-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 4px 6px;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      flex: 1;
+    }
+    .receipt-kpi .kpi-label { font-size: 9px; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
+    .receipt-kpi .kpi-value { font-size: 12px; font-weight: 800; margin-top: 1px; }
+
+    /* Footer */
+    .receipt-footer {
+      margin-top: 14px;
+      padding-top: 10px;
+      border-top: 2px dashed #94a3b8;
+      text-align: center;
+      font-size: 11px;
+      color: #475569;
+    }
+    .receipt-footer .thank { font-weight: 800; font-size: 13px; margin-bottom: 2px; }
+
+    /* Table in receipt context (for multi-column summary) */
+    .receipt table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+    .receipt table th {
+      background: #f1f5f9;
+      font-size: 9px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      text-align: left;
+      padding: 4px 6px;
+      border-bottom: 2px solid #94a3b8;
+    }
+    .receipt table td {
+      padding: 4px 6px;
+      border-bottom: 1px solid #f1f5f9;
+      vertical-align: top;
+    }
+    .receipt table td.num { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .receipt table td.green { color: #059669; }
+    .receipt table td.red { color: #dc2626; }
+
+    .no-print { margin-bottom: 14px; text-align: center; }
+    .no-print button {
+      padding: 8px 20px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; margin: 0 4px;
+    }
+    .btn-print { background: #0f172a; color: #fff; border: none; }
+    .btn-print:hover { background: #1e3a5f; }
+    .btn-close { background: #fff; color: #475569; border: 1px solid #cbd5e1; }
+    .btn-close:hover { background: #f1f5f9; }
+    @media print { .no-print { display: none; } }
+  `;
+
+  /* Shared CSS for all printable report documents */
+  const REPORT_CSS = `
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    body {
+      font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      color: #0f172a;
+      background: #f8fafc;
+      font-size: 13px;
+      line-height: 1.45;
+      padding: 32px;
+    }
+    .page {
+      background: #ffffff;
+      max-width: 794px; /* A4 width at 96dpi */
+      margin: 0 auto;
+      padding: 40px 44px;
+      box-shadow: 0 2px 16px rgba(15,23,42,0.08);
+      border-radius: 2px;
+    }
+    @media print {
+      body { padding: 0; background: #fff; }
+      .page { box-shadow: none; max-width: none; padding: 4mm 14mm 8mm 14mm; }
+      .no-print { display: none; }
+      @page {
+        size: A4;
+        margin: 0;
+      }
+    }
+
+    /* Header */
+    .report-header {
+      text-align: center;
+      padding-bottom: 18px;
+      margin-bottom: 24px;
+      border-bottom: 2px solid #0f172a;
+    }
+    .report-header .org {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #64748b;
+    }
+    .report-header h1 {
+      font-size: 24px;
+      font-weight: 800;
+      color: #0f172a;
+      margin-top: 4px;
+      letter-spacing: -0.01em;
+    }
+    .report-header .desc {
+      font-size: 13px;
+      color: #475569;
+      margin-top: 3px;
+    }
+    .report-header .meta-row {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      margin-top: 10px;
+      font-size: 11px;
+      color: #94a3b8;
+      font-weight: 500;
+    }
+
+    /* KPI strip */
+    .kpi-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .kpi-strip.col-3 { grid-template-columns: repeat(3, 1fr); }
+    .kpi {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px 14px;
+      background: #f8fafc;
+    }
+    .kpi-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #64748b;
+      margin-bottom: 3px;
+    }
+    .kpi-value { font-size: 18px; font-weight: 800; color: #0f172a; }
+    .kpi-value.green { color: #059669; }
+    .kpi-value.red   { color: #dc2626; }
+    .kpi-value.amber { color: #d97706; }
+
+    /* Section */
+    .report-section {
+      margin-bottom: 26px;
+    }
+    .section-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      background: #0f172a;
+      border-radius: 6px 6px 0 0;
+      margin-bottom: 0;
+    }
+    .section-head .dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #38bdf8;
+      flex-shrink: 0;
+    }
+    .section-head .title {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: #fff;
+    }
+    .section-head .count {
+      margin-left: auto;
+      font-size: 10px;
+      font-weight: 600;
+      color: #94a3b8;
+      background: rgba(255,255,255,0.1);
+      border-radius: 20px;
+      padding: 2px 8px;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1px solid #e2e8f0;
+      border-top: none;
+      font-size: 12px;
+    }
+    thead th {
+      background: #f1f5f9;
+      color: #475569;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      text-align: left;
+      padding: 8px 10px;
+      border-bottom: 2px solid #cbd5e1;
+      border-right: 1px solid #e2e8f0;
+    }
+    thead th:last-child { border-right: none; }
+    thead th.num { text-align: right; }
+    tbody td {
+      padding: 7px 10px;
+      border-bottom: 1px solid #f1f5f9;
+      border-right: 1px solid #f1f5f9;
+      vertical-align: top;
+      color: #1e293b;
+    }
+    tbody td:last-child { border-right: none; }
+    tbody tr:nth-child(even) { background: #f8fafc; }
+    tbody tr:hover { background: #eff6ff; }
+    td.num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+    td.green { color: #059669; font-weight: 600; }
+    td.red   { color: #dc2626; font-weight: 600; }
+    td.amber { color: #d97706; font-weight: 600; }
+    td.muted { color: #94a3b8; font-style: italic; }
+
+    .empty-row td {
+      text-align: center;
+      padding: 20px;
+      color: #94a3b8;
+      font-size: 13px;
+      font-style: italic;
+      background: #f8fafc;
+    }
+
+    /* Footer */
+    .report-footer {
+      margin-top: 28px;
+      padding-top: 12px;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 10px;
+      color: #94a3b8;
+    }
+    .report-footer .left { font-weight: 600; }
+    .report-footer .right { }
+
+    /* Running header band — repeats at top of every printed page */
+    .running-header {
+      display: none;
+    }
+    @media print {
+      .running-header {
+        display: flex;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 13mm;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 12mm;
+        background: #0f172a;
+        color: #fff;
+        z-index: 100;
+      }
+      .running-header .rh-org {
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #fff;
+      }
+      .running-header .rh-title {
+        font-size: 11px;
+        font-weight: 600;
+        color: #93c5fd;
+      }
+      .running-header .rh-date {
+        font-size: 10px;
+        color: #cbd5e1;
+      }
+      /* Reserve space under the fixed band so content never overlaps it.
+         The page's top padding is zeroed on print; instead we pad the first
+         section on each page via a spacer that is also position:fixed-aware.
+         Simplest reliable method: give the body top padding matching the
+         band height and let fixed positioning handle the repeat. */
+      body { padding-top: 13mm; }
+      .page { padding-top: 4mm; }
+    }
+
+    /* Toolbar */
+    .no-print {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 10px 16px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(15,23,42,0.06);
+    }
+    .no-print .label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #475569;
+    }
+    .no-print .actions { display: flex; gap: 8px; }
+    .no-print button {
+      padding: 8px 20px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-print { background: #0f172a; color: #fff; border: none; }
+    .btn-print:hover { background: #1e3a5f; }
+    .btn-close { background: #fff; color: #475569; border: 1px solid #cbd5e1; }
+    .btn-close:hover { background: #f1f5f9; }
+  `;
+
+  /* Build a single section block. Returns { title, count, tableHtml, kpiHtml? } */
+  const makeSection = (title, count, tableHtml, kpiHtml) => {
+    const kpis = kpiHtml ? `<div class="kpi-strip col-3" style="margin-bottom:0;margin-top:12px;">${kpiHtml}</div>` : "";
+    return `
+      <div class="report-section">
+        <div class="section-head">
+          <span class="dot"></span>
+          <span class="title">${escapeHtml(title)}</span>
+          <span class="count">${count != null ? `${count} row${count !== 1 ? "s" : ""}` : ""}</span>
+        </div>
+        ${tableHtml}
+        ${kpis}
+      </div>`;
+  };
+
+  const tableFor = (headers, rows) => `
+    <table>
+      <thead>
+        <tr>
+          ${headers.map((h) => `<th class="${h.align === "right" ? "num" : ""}">${escapeHtml(h.label)}</th>`).join("")}
+        </tr>
+      </thead>
+      <tbody>
+        ${rows.length ? rows.join("") : `<tr class="empty-row"><td colspan="${headers.length}">No records available</td></tr>`}
+      </tbody>
+    </table>`;
+
+  const buildReportSections = (reportId) => {
+    const safe = escapeHtml;
+    const sections = [];
+
+    if (reportId === "ledger" || reportId === "all") {
+      let running = 0;
+      const rows = (records || []).map((r) => {
+        const amt = toNumber(r.amount);
+        const isIncome = String(r.type || "").toLowerCase() === "income";
+        if (isIncome) running += amt;
+        else running -= amt;
+        const cls = isIncome ? "green" : "red";
+        return `
+          <tr>
+            <td>${safe(r.date || "—")}</td>
+            <td>${safe(r.description || r.narration || "—")}</td>
+            <td>${safe(r.paymentMode || r.payment_mode || "—")}</td>
+            <td class="num ${cls}">${isIncome ? "+" : "−"}${formatINR(amt)}</td>
+            <td class="num">${formatINR(running)}</td>
+          </tr>`;
+      });
+      sections.push(makeSection(
+        "Accounts Ledger",
+        (records || []).length,
+        tableFor(
+          [{ label: "Date" }, { label: "Description" }, { label: "Payment Mode" }, { label: "Amount", align: "right" }, { label: "Running Balance", align: "right" }],
+          rows
+        )
+      ));
+    }
+
+    if (reportId === "daily" || reportId === "all") {
+      const rows = (dailyBreakdown.rows || []).map((d) => `
+        <tr>
+          <td>${formatDayDate(d.date)}</td>
+          <td class="num green">+${formatINR(d.newIncome)}</td>
+          <td class="num">${formatINR(d.carriedForward)}</td>
+          <td class="num">${formatINR(d.totalIncome)}</td>
+          <td class="num red">−${formatINR(d.expense)}</td>
+          <td class="num" style="font-weight:800">${formatINR(d.remaining)}</td>
+        </tr>`);
+      sections.push(makeSection(
+        "Daily Income Breakdown",
+        (dailyBreakdown.rows || []).length,
+        tableFor(
+          [{ label: "Date" }, { label: "New Income", align: "right" }, { label: "Carried Fwd", align: "right" }, { label: "Total In", align: "right" }, { label: "Expense", align: "right" }, { label: "Remaining", align: "right" }],
+          rows
+        ),
+        `<div class="kpi"><div class="kpi-label">Final Balance</div><div class="kpi-value green">${formatINR(dailyBreakdown.remainingIncome)}</div></div>`
+      ));
+    }
+
+    if (reportId === "billing" || reportId === "all") {
+      const rows = (combinedBillingRecords || []).map((r) => `
+        <tr>
+          <td>${safe(r.source)}</td>
+          <td>${safe(r.reference)}</td>
+          <td>${safe(r.customerName)}</td>
+          <td>${safe(r.locationLabel)}</td>
+          <td>${safe(r.date)}</td>
+          <td class="num">${formatINR(r.total)}</td>
+          <td class="${String(r.paymentStatus).toLowerCase().includes("paid") ? "green" : "amber"}">${safe(r.paymentStatus)}</td>
+        </tr>`);
+      sections.push(makeSection(
+        "Customer Billing",
+        (combinedBillingRecords || []).length,
+        tableFor(
+          [{ label: "Source" }, { label: "Ref" }, { label: "Customer" }, { label: "Location" }, { label: "Date" }, { label: "Total", align: "right" }, { label: "Status" }],
+          rows
+        )
+      ));
+    }
+
+    if (reportId === "petty-cash" || reportId === "all") {
+      const rows = (pettyCashEntries || []).map((r) => {
+        const isIn = String(r.entry_type || "").toLowerCase() === "in";
+        const amountCls = isIn ? "green" : "red";
+        return `
+          <tr>
+            <td>${formatDayDate(r.entry_date)}</td>
+            <td class="${amountCls}">${safe(r.entry_type || "—")}</td>
+            <td>${safe(r.category || "—")}</td>
+            <td>${safe(r.description || "—")}</td>
+            <td class="num ${amountCls}">${isIn ? "+" : "−"}${formatINR(r.amount)}</td>
+            <td>${safe(r.approved_by || "—")}</td>
+            <td>${safe(r.notes || "")}</td>
+          </tr>`;
+      });
+      const totalIn = (pettyCashEntries || [])
+        .filter((r) => String(r.entry_type).toLowerCase() === "in")
+        .reduce((s, r) => s + Number(r.amount || 0), 0);
+      const totalOut = (pettyCashEntries || [])
+        .filter((r) => String(r.entry_type).toLowerCase() === "out")
+        .reduce((s, r) => s + Number(r.amount || 0), 0);
+      sections.push(makeSection(
+        "Petty Cash Register",
+        (pettyCashEntries || []).length,
+        tableFor(
+          [{ label: "Date" }, { label: "Type" }, { label: "Category" }, { label: "Description" }, { label: "Amount", align: "right" }, { label: "Approved By" }, { label: "Notes" }],
+          rows
+        ),
+        `<div class="kpi"><div class="kpi-label">Cash In</div><div class="kpi-value green">${formatINR(totalIn)}</div></div>
+         <div class="kpi"><div class="kpi-label">Cash Out</div><div class="kpi-value red">${formatINR(totalOut)}</div></div>
+         <div class="kpi"><div class="kpi-label">Net Balance</div><div class="kpi-value ${totalIn - totalOut >= 0 ? "green" : "red"}">${formatINR(totalIn - totalOut)}</div></div>`
+      ));
+    }
+
+    if (reportId === "gst" || reportId === "all") {
+      // gstReturns rows are derived from invoices — shape:
+      //   filing_period, taxable_amount, gst_collected, gst_pending, invoice_count, period_key
+      const rows = (gstReturns || []).map((r) => {
+        const taxable = Number(r.taxable_amount) || 0;
+        const collected = Number(r.gst_collected) || 0;
+        const paid = Number(r.gst_paid) || 0;
+        const netPayable = Number(r.net_payable) || (collected - paid);
+        const statusCls = r.status === "Filed" ? "green" : r.status === "Ready" ? "amber" : "muted";
+        return `
+          <tr>
+            <td><strong>${safe(r.filing_period || "—")}</strong></td>
+            <td>${safe(r.return_type || "—")}</td>
+            <td class="num">${formatINR(taxable)}</td>
+            <td class="num green">${formatINR(collected)}</td>
+            <td class="num red">${formatINR(paid)}</td>
+            <td class="num ${netPayable > 0 ? "amber" : "green"}">${formatINR(netPayable)}</td>
+            <td class="${statusCls}">${safe(r.status || "—")}</td>
+            <td>${r.filed_on ? formatDayDate(r.filed_on) : "—"}</td>
+          </tr>`;
+      });
+      const totalCollected = (gstReturns || []).reduce((s, r) => s + (Number(r.gst_collected) || 0), 0);
+      const totalPending = (gstReturns || []).reduce((s, r) => s + (Number(r.net_payable) || 0), 0);
+      sections.push(makeSection(
+        "GST Return Tracker",
+        (gstReturns || []).length,
+        tableFor(
+          [
+            { label: "Period" },
+            { label: "Return" },
+            { label: "Taxable", align: "right" },
+            { label: "Collected", align: "right" },
+            { label: "Paid", align: "right" },
+            { label: "Net Payable", align: "right" },
+            { label: "Status" },
+            { label: "Filed On" },
+          ],
+          rows
+        ),
+        `<div class="kpi"><div class="kpi-label">Total GST Collected</div><div class="kpi-value green">${formatINR(totalCollected)}</div></div>
+         <div class="kpi"><div class="kpi-label">Total Payable</div><div class="kpi-value amber">${formatINR(totalPending)}</div></div>`
+      ));
+    }
+
+    if (reportId === "vendor-payments" || reportId === "all") {
+      const rows = (vendorPayments || []).map((r) => {
+        const statusCls = r.status === "Paid" ? "green" : r.status === "Partially Paid" ? "amber" : "muted";
+        return `
+          <tr>
+            <td>${safe(r.vendor_name || "—")}</td>
+            <td>${safe(r.invoice_ref || "—")}</td>
+            <td>${formatDayDate(r.payment_date)}</td>
+            <td class="num">${formatINR(r.amount)}</td>
+            <td>${safe(r.payment_mode || "—")}</td>
+            <td class="${statusCls}">${safe(r.status || "—")}</td>
+            <td>${safe(r.notes || "")}</td>
+          </tr>`;
+      });
+      const total = (vendorPayments || []).reduce((s, r) => s + Number(r.amount || 0), 0);
+      const paid = (vendorPayments || [])
+        .filter((r) => r.status === "Paid")
+        .reduce((s, r) => s + Number(r.amount || 0), 0);
+      sections.push(makeSection(
+        "Vendor Payments",
+        (vendorPayments || []).length,
+        tableFor(
+          [{ label: "Vendor" }, { label: "Invoice Ref" }, { label: "Date" }, { label: "Amount", align: "right" }, { label: "Mode" }, { label: "Status" }, { label: "Notes" }],
+          rows
+        ),
+        `<div class="kpi"><div class="kpi-label">Total Committed</div><div class="kpi-value">${formatINR(total)}</div></div>
+         <div class="kpi"><div class="kpi-label">Paid</div><div class="kpi-value green">${formatINR(paid)}</div></div>
+         <div class="kpi"><div class="kpi-label">Outstanding</div><div class="kpi-value red">${formatINR(total - paid)}</div></div>`
+      ));
+    }
+
+    if (reportId === "purchase-orders" || reportId === "all") {
+      const rows = (purchaseOrders || []).map((r) => {
+        const statusCls = r.status === "Closed" ? "muted"
+          : r.status === "Approved" || r.status === "Ordered" ? "green"
+          : "amber";
+        return `
+          <tr>
+            <td><strong>${safe(r.po_number || "—")}</strong></td>
+            <td>${safe(r.vendor_name || "—")}</td>
+            <td>${formatDayDate(r.order_date)}</td>
+            <td>${r.expected_date ? formatDayDate(r.expected_date) : "—"}</td>
+            <td class="num">${formatINR(r.total_amount)}</td>
+            <td class="${statusCls}">${safe(r.status || "—")}</td>
+          </tr>`;
+      });
+      const openCount = (purchaseOrders || []).filter((r) => !["Closed", "Cancelled"].includes(r.status)).length;
+      const openTotal = (purchaseOrders || [])
+        .filter((r) => !["Closed", "Cancelled"].includes(r.status))
+        .reduce((s, r) => s + Number(r.total_amount || 0), 0);
+      sections.push(makeSection(
+        "Purchase Orders",
+        (purchaseOrders || []).length,
+        tableFor(
+          [{ label: "PO No" }, { label: "Vendor" }, { label: "Order Date" }, { label: "Expected" }, { label: "Amount", align: "right" }, { label: "Status" }],
+          rows
+        ),
+        `<div class="kpi"><div class="kpi-label">Open POs</div><div class="kpi-value">${openCount}</div></div>
+         <div class="kpi"><div class="kpi-label">Open Value</div><div class="kpi-value amber">${formatINR(openTotal)}</div></div>`
+      ));
+    }
+
+    if (reportId === "payroll" || reportId === "all") {
+      // payrollRecords come from salary_payments — shape:
+      //   month, basic_salary, allowances, deductions, net_salary,
+      //   paid_amount, payment_date, payment_method, status, staff_name, employee_code
+      const rows = (payrollRecords || []).map((r) => {
+        const monthLabel = safe(r.payroll_month || (r.month ? formatDayDate(r.month) : "—"));
+        const statusCls = r.status === "paid" ? "green"
+          : r.status === "approved" ? "amber"
+          : "muted";
+        return `
+          <tr>
+            <td>${safe(r.staff_name || "—")}</td>
+            <td>${safe(r.employee_code || "")}</td>
+            <td>${monthLabel}</td>
+            <td class="num">${formatINR(r.basic_salary)}</td>
+            <td class="num">${formatINR(r.allowances)}</td>
+            <td class="num red">−${formatINR(r.deductions)}</td>
+            <td class="num" style="font-weight:800">${formatINR(r.net_salary)}</td>
+            <td class="${statusCls}">${safe(r.status || "—")}</td>
+          </tr>`;
+      });
+      const totalNet = (payrollRecords || []).reduce((s, r) => s + Number(r.net_salary || 0), 0);
+      const totalPaid = (payrollRecords || []).reduce((s, r) => s + Number(r.paid_amount || 0), 0);
+      sections.push(makeSection(
+        "Payroll Register",
+        (payrollRecords || []).length,
+        tableFor(
+          [
+            { label: "Staff" },
+            { label: "Code" },
+            { label: "Month" },
+            { label: "Basic", align: "right" },
+            { label: "Allowances", align: "right" },
+            { label: "Deductions", align: "right" },
+            { label: "Net Salary", align: "right" },
+            { label: "Status" },
+          ],
+          rows
+        ),
+        `<div class="kpi"><div class="kpi-label">Gross Payroll</div><div class="kpi-value">${formatINR(totalNet)}</div></div>
+         <div class="kpi"><div class="kpi-label">Paid To Date</div><div class="kpi-value green">${formatINR(totalPaid)}</div></div>
+         <div class="kpi"><div class="kpi-label">Outstanding</div><div class="kpi-value red">${formatINR(totalNet - totalPaid)}</div></div>`
+      ));
+    }
+
+    if (reportId === "profit-centers" || reportId === "all") {
+      // profitCenters are aggregated buckets — shape:
+      //   center_name, income_amount, expense_amount  (entry_date is null)
+      const rows = (profitCenters || []).map((r) => {
+        const inc = Number(r.income_amount) || 0;
+        const exp = Number(r.expense_amount) || 0;
+        const net = inc - exp;
+        const margin = inc > 0 ? Math.round((net / inc) * 100) : 0;
+        return `
+        <tr>
+          <td><strong>${safe(r.center_name || "—")}</strong></td>
+          <td class="num green">${formatINR(inc)}</td>
+          <td class="num red">${formatINR(exp)}</td>
+          <td class="num ${net >= 0 ? "green" : "red"}" style="font-weight:800">${formatINR(net)}</td>
+          <td class="num ${margin >= 0 ? "green" : "red"}">${margin}%</td>
+        </tr>`;
+      });
+      const totalInc = (profitCenters || []).reduce((s, r) => s + (Number(r.income_amount) || 0), 0);
+      const totalExp = (profitCenters || []).reduce((s, r) => s + (Number(r.expense_amount) || 0), 0);
+      const totalNet = totalInc - totalExp;
+      const overallMargin = totalInc > 0 ? Math.round((totalNet / totalInc) * 100) : 0;
+      sections.push(makeSection(
+        "Profit Center Split",
+        (profitCenters || []).length,
+        tableFor(
+          [
+            { label: "Center" },
+            { label: "Income", align: "right" },
+            { label: "Expense", align: "right" },
+            { label: "Net P/L", align: "right" },
+            { label: "Margin %", align: "right" },
+          ],
+          rows
+        ),
+        `<div class="kpi"><div class="kpi-label">Total Revenue</div><div class="kpi-value green">${formatINR(totalInc)}</div></div>
+         <div class="kpi"><div class="kpi-label">Total Expense</div><div class="kpi-value red">${formatINR(totalExp)}</div></div>
+         <div class="kpi"><div class="kpi-label">Net Profit</div><div class="kpi-value ${totalNet >= 0 ? "green" : "red"}">${formatINR(totalNet)}</div></div>
+         <div class="kpi"><div class="kpi-label">Overall Margin</div><div class="kpi-value ${overallMargin >= 0 ? "green" : "red"}">${overallMargin}%</div></div>`
+      ));
+    }
+
+    if (reportId === "bank-ledger" || reportId === "all") {
+      // bankLedger rows are the reconciled payments ledger. Field shape:
+      //   entry_date, bank_name, reference_no, description, payment_mode,
+      //   amount, direction (credit|debit), debit, credit, reconciliation_status, match_status
+      const rows = (bankLedger || []).map((r) => {
+        const direction = String(r.direction || "").toLowerCase();
+        const creditVal = Number(r.credit) || 0;
+        const debitVal = Number(r.debit) || 0;
+        // direction is "in" | "out" from the API; fall back to credit/debit
+        const isIncoming = direction === "in" || creditVal > 0;
+        const amount = isIncoming ? creditVal : debitVal;
+        const reconStatus = r.reconciliation_status || "—";
+        const reconLower = reconStatus.toLowerCase();
+        const reconClass = reconLower.includes("reconcil") || reconLower.includes("matched")
+          ? "green"
+          : reconLower.includes("partial")
+          ? "amber"
+          : reconLower === "—" || reconLower === "unreconciled"
+          ? "muted"
+          : "amber";
+        return `
+          <tr>
+            <td>${formatDayDate(r.entry_date)}</td>
+            <td>${safe(r.bank_name || "—")}</td>
+            <td>${safe(r.reference_no || "—")}</td>
+            <td>${safe(r.description || "—")}</td>
+            <td>${safe(r.payment_mode || "—")}</td>
+            <td class="num ${isIncoming ? "green" : "red"}">${isIncoming ? "+" : "−"}${formatINR(amount)}</td>
+            <td class="${reconClass}">${safe(reconStatus)}</td>
+          </tr>`;
+      });
+      sections.push(makeSection(
+        "Bank Ledger",
+        (bankLedger || []).length,
+        tableFor(
+          [
+            { label: "Date" },
+            { label: "Bank" },
+            { label: "Reference" },
+            { label: "Description" },
+            { label: "Mode" },
+            { label: "Amount", align: "right" },
+            { label: "Recon Status" },
+          ],
+          rows
+        )
+      ));
+    }
+
+    if (reportId === "reconciliation" || reportId === "all") {
+      const s = reconciliationSummary || {};
+      const matchStatus = r => {
+        const v = String(r.match_status || "").toLowerCase();
+        if (v.includes("matched") || v === "yes" || v === "completed") return "green";
+        if (v.includes("partial")) return "amber";
+        if (!v || v === "unmatched" || v === "no" || v === "pending") return "red";
+        return "muted";
+      };
+      const rows = (reconciliationItems || []).map((r) => {
+        const cls = matchStatus(r);
+        const ref = r.bank_ref || r.transaction_ref || r.reference_no || r.reference || "—";
+        const dateVal = r.bank_date || r.transaction_date || r.date || "";
+        return `
+          <tr>
+            <td>${safe(ref)}</td>
+            <td>${dateVal ? formatDayDate(dateVal) : "—"}</td>
+            <td class="num">${formatINR(r.amount)}</td>
+            <td class="${cls}">${safe(r.match_status || "Unmatched")}</td>
+            <td>${safe(r.source_type || r.payment_mode || "—")}</td>
+          </tr>`;
+      });
+      sections.push(makeSection(
+        "Bank Reconciliation",
+        (reconciliationItems || []).length,
+        tableFor(
+          [
+            { label: "Reference" },
+            { label: "Date" },
+            { label: "Amount", align: "right" },
+            { label: "Match Status" },
+            { label: "Source" },
+          ],
+          rows
+        ),
+        `<div class="kpi"><div class="kpi-label">Total Items</div><div class="kpi-value">${s.totalItems || 0}</div></div>
+         <div class="kpi"><div class="kpi-label">Matched</div><div class="kpi-value green">${s.matchedItems || 0}</div></div>
+         <div class="kpi"><div class="kpi-label">Unmatched</div><div class="kpi-value red">${s.unmatchedItems || 0}</div></div>
+         <div class="kpi"><div class="kpi-label">Matched Amount</div><div class="kpi-value green">${formatINR(s.matchedAmount)}</div></div>
+         <div class="kpi"><div class="kpi-label">Unmatched Amount</div><div class="kpi-value red">${formatINR(s.unmatchedAmount)}</div></div>`
+      ));
+    }
+
+    return sections;
+  };
+
+  /* Receipt-style report builder — narrow thermal-paper look */
+  const buildReceiptHtml = (reportId) => {
+    const now = new Date().toLocaleString("en-IN");
+    const safe = escapeHtml;
+    const meta = REPORT_TYPES.find((t) => t.id === reportId);
+    const title = meta?.label || "Accounts Report";
+
+    /* Billing receipt — one line per record, grouped by source */
+    if (reportId === "billing") {
+      const sources = {};
+      (combinedBillingRecords || []).forEach((r) => {
+        const key = r.source || "Other";
+        if (!sources[key]) sources[key] = [];
+        sources[key].push(r);
+      });
+
+      const sourceSections = Object.entries(sources).map(([source, items]) => {
+        const totalForSource = items.reduce((s, i) => s + toNumber(i.total), 0);
+        return `
+          <div class="receipt-section">
+            <div class="sec-title">${safe(source)} (${items.length})</div>
+            ${items.map((r) => `
+              <div class="line-item">
+                <span class="li-label">${safe(r.reference)} · ${safe(r.customerName)}</span>
+                <span class="li-amount">${formatINR(r.total)}</span>
+              </div>`).join("")}
+            <div class="divider"></div>
+            <div class="line-item subtotal">
+              <span>${safe(source)} total</span>
+              <span>${formatINR(totalForSource)}</span>
+            </div>
+          </div>`;
+      }).join("");
+
+      const totalAll = (combinedBillingRecords || []).reduce((s, i) => s + toNumber(i.total), 0);
+
+      return `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="utf-8" />
+          <title>${safe(title)} — Maa Baglamkhi Resort</title>
+          <style>${RECEIPT_CSS}</style>
+        </head>
+        <body>
+          <div class="no-print">
+            <button class="btn-print" onclick="window.print()">Print / Save PDF</button>
+            <button class="btn-close" onclick="window.close()">Close</button>
+          </div>
+          <div class="receipt">
+            <div class="receipt-header">
+              <div class="store">Maa Baglamkhi Resort</div>
+              <div class="tagline">Accounts — ${safe(title)}</div>
+              <div class="meta">
+                Generated: ${now}<br>
+                ${(combinedBillingRecords || []).length} record(s)
+              </div>
+            </div>
+            ${sourceSections || '<div class="receipt-section"><div class="sec-title">No records</div><div class="line-item sub">No billing records found</div></div>'}
+            <div class="receipt-section">
+              <div class="line-item total">
+                <span>GRAND TOTAL</span>
+                <span>${formatINR(totalAll)}</span>
+              </div>
+            </div>
+            <div class="receipt-footer">
+              <div class="thank">*** MAA BAGLAMKHI RESORT ***</div>
+              <div>Confidential Financial Document</div>
+              <div>Printed ${now}</div>
+            </div>
+          </div>
+        </body>
+        </html>`;
+    }
+
+    /* Daily breakdown receipt — compact day-wise view */
+    if (reportId === "daily") {
+      const days = (dailyBreakdown.rows || []).map((d) => `
+        <div class="line-item">
+          <span class="li-label">${formatDayDate(d.date)}</span>
+          <span class="li-amount">${formatINR(d.totalIncome)}</span>
+        </div>
+        <div class="line-item sub" style="padding-left:8px;">
+          <span class="li-label">in +${formatINR(d.newIncome)} · exp −${formatINR(d.expense)}</span>
+          <span class="li-amount">bal ${formatINR(d.remaining)}</span>
+        </div>`).join("");
+
+      return `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="utf-8" />
+          <title>Daily Income Breakdown — Maa Baglamkhi Resort</title>
+          <style>${RECEIPT_CSS}</style>
+        </head>
+        <body>
+          <div class="no-print">
+            <button class="btn-print" onclick="window.print()">Print / Save PDF</button>
+            <button class="btn-close" onclick="window.close()">Close</button>
+          </div>
+          <div class="receipt">
+            <div class="receipt-header">
+              <div class="store">Maa Baglamkhi Resort</div>
+              <div class="tagline">Daily Income Breakdown</div>
+              <div class="meta">Generated: ${now}<br>(${(dailyBreakdown.rows || []).length} days)</div>
+            </div>
+            ${days || '<div class="line-item sub">No data</div>'}
+            <div class="receipt-section">
+              <div class="line-item total">
+                <span>REMAINING BALANCE</span>
+                <span>${formatINR(dailyBreakdown.remainingIncome)}</span>
+              </div>
+            </div>
+            <div class="receipt-footer">
+              <div class="thank">*** MAA BAGLAMKHI RESORT ***</div>
+              <div>Daily Breakdown · Printed ${now}</div>
+            </div>
+          </div>
+        </body>
+        </html>`;
+    }
+
+    /* Ledger receipt — compact running-balance view */
+    if (reportId === "ledger") {
+      let running = 0;
+      const lines = (records || []).map((r) => {
+        const amt = toNumber(r.amount);
+        const isIncome = String(r.type || "").toLowerCase() === "income";
+        running += isIncome ? amt : -amt;
+        return `
+          <div class="line-item ${isIncome ? "sub" : ""}">
+            <span class="li-label">${safe(r.date)} · ${safe(r.description || "—").slice(0, 24)}</span>
+            <span class="li-amount" style="color:${isIncome ? "#059669" : "#dc2626"}">${isIncome ? "+" : "−"}${formatINR(amt)}</span>
+          </div>
+          <div class="line-item sub" style="padding-left:8px;">
+            <span class="li-label">bal.</span>
+            <span class="li-amount">${formatINR(running)}</span>
+          </div>`;
+      }).join("");
+
+      return `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="utf-8" />
+          <title>${safe(title)} — Maa Baglamkhi Resort</title>
+          <style>${RECEIPT_CSS}</style>
+        </head>
+        <body>
+          <div class="no-print">
+            <button class="btn-print" onclick="window.print()">Print / Save PDF</button>
+            <button class="btn-close" onclick="window.close()">Close</button>
+          </div>
+          <div class="receipt">
+            <div class="receipt-header">
+              <div class="store">Maa Baglamkhi Resort</div>
+              <div class="tagline">Accounts Ledger</div>
+              <div class="meta">Generated: ${now}<br>(${(records || []).length} transactions)</div>
+            </div>
+            ${lines || '<div class="line-item sub">No records</div>'}
+            <div class="receipt-section">
+              <div class="line-item total">
+                <span>FINAL BALANCE</span>
+                <span>${formatINR(running)}</span>
+              </div>
+            </div>
+            <div class="receipt-footer">
+              <div class="thank">*** MAA BAGLAMKHI RESORT ***</div>
+              <div>Accounts Ledger · Printed ${now}</div>
+            </div>
+          </div>
+        </body>
+        </html>`;
+    }
+
+    /* Fallback: wrap in receipt-style A4 (for any other report type that requested receipt) */
+    const sections = buildReportSections(reportId);
+    return `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="utf-8" />
+        <title>${safe(title)} — Maa Baglamkhi Resort</title>
+        <style>${RECEIPT_CSS}</style>
+      </head>
+      <body>
+        <div class="no-print">
+          <button class="btn-print" onclick="window.print()">Print / Save PDF</button>
+          <button class="btn-close" onclick="window.close()">Close</button>
+        </div>
+        <div class="receipt" style="width:340px;">
+          <div class="receipt-header">
+            <div class="store">Maa Baglamkhi Resort</div>
+            <div class="tagline">${safe(title)}</div>
+            <div class="meta">Generated: ${now}</div>
+          </div>
+          ${sections.join("")}
+          <div class="receipt-footer">
+            <div class="thank">*** MAA BAGLAMKHI RESORT ***</div>
+            <div>${safe(title)} · Printed ${now}</div>
+          </div>
+        </div>
+      </body>
+      </html>`;
+  };
+
+  /* Which report types use the receipt layout vs the wide A4 financial layout */
+  const RECEIPT_REPORTS = new Set(["billing", "ledger", "daily"]);
+
+  const buildReportHtml = (reportId) => {
+    const now = new Date().toLocaleString("en-IN");
+    const safe = escapeHtml;
+    const sections = buildReportSections(reportId);
+
+    const kpiBlock = (reportId === "all") ? `
+      <div class="kpi-strip" style="margin-bottom:24px;">
+        <div class="kpi"><div class="kpi-label">Total Income</div><div class="kpi-value green">${formatINR(computedTotals.income)}</div></div>
+        <div class="kpi"><div class="kpi-label">Total Expense</div><div class="kpi-value red">${formatINR(computedTotals.expense)}</div></div>
+        <div class="kpi"><div class="kpi-label">Net Position</div><div class="kpi-value ${computedTotals.net >= 0 ? "green" : "red"}">${formatINR(computedTotals.net)}</div></div>
+        <div class="kpi"><div class="kpi-label">GST Payable</div><div class="kpi-value amber">${formatINR(totals.gstPayable)}</div></div>
+      </div>` : "";
+
+    const meta = REPORT_TYPES.find((t) => t.id === reportId);
+    const title = meta?.label || "Accounts Report";
+    const desc = reportId === "all" ? "Complete financial snapshot across all accounts sections" : meta?.description || "";
+
+    return `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>${safe(title)} — Maa Baglamkhi Resort</title>
+        <style>${REPORT_CSS}</style>
+      </head>
+      <body>
+        <div class="no-print">
+          <span class="label">${safe(title)} — ready to print</span>
+          <div class="actions">
+            <button class="btn-print" onclick="window.print()">Print / Save PDF</button>
+            <button class="btn-close" onclick="window.close()">Close</button>
+          </div>
+        </div>
+
+        <!-- Repeats at top of every printed page (position:fixed in @media print) -->
+        <div class="running-header">
+          <span class="rh-org">Maa Baglamkhi Resort</span>
+          <span class="rh-title">${safe(title)}</span>
+          <span class="rh-date">${now}</span>
+        </div>
+
+        <div class="page">
+          <div class="report-header">
+            <div class="org">Maa Baglamkhi Resort</div>
+            <h1>${safe(title)}</h1>
+            ${desc ? `<div class="desc">${safe(desc)}</div>` : ""}
+            <div class="meta-row">
+              <span>Generated: ${now}</span>
+              <span>${sections.length} section${sections.length !== 1 ? "s" : ""}</span>
+            </div>
+          </div>
+
+          ${kpiBlock}
+          ${sections.join("")}
+
+          <div class="report-footer">
+            <span class="left">Maa Baglamkhi Resort — Confidential Financial Document</span>
+            <span class="right">${safe(title)} · ${now}</span>
+          </div>
+        </div>
+      </body>
+      </html>`;
+  };
+
+  const handlePrintReport = async (reportId) => {
+    const meta = REPORT_TYPES.find((t) => t.id === reportId);
+    const title = meta?.label || "Accounts Report";
+    const fileName = title.replace(/\s+/g, "_") + "_Maa_Baglamkhi_Resort.pdf";
+
+    setPdfModal({ reportId, title, fileName, generating: true });
+
+    try {
+      const html = RECEIPT_REPORTS.has(reportId)
+        ? buildReceiptHtml(reportId)
+        : buildReportHtml(reportId);
+
+      const container = document.createElement("div");
+      container.innerHTML = html;
+      const body = container.querySelector("body");
+      if (!body) throw new Error("No body element in report HTML");
+
+      const wrapper = document.createElement("div");
+      wrapper.style.cssText = "position:fixed;top:-10000px;left:0;width:800px;";
+      wrapper.appendChild(body);
+      document.body.appendChild(wrapper);
+
+      const canvas = await html2canvas(body, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: false,
+        backgroundColor: "#ffffff",
+        logging: false,
+      });
+
+      document.body.removeChild(wrapper);
+
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+
+      const imgWidth = pageWidth;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
+      let heightLeft = imgHeight - pageHeight;
+      let position = 0;
+
+      while (heightLeft > 0) {
+        pdf.addPage();
+        position -= pageHeight;
+        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      const blob = pdf.output("blob");
+      const blobUrl = URL.createObjectURL(blob);
+      setPdfModal({ reportId, title, fileName, blobUrl, generating: false });
+    } catch (err) {
+      console.error("PDF generation failed", err);
+      showToast("Failed to generate PDF: " + err.message, "error");
+      setPdfModal(null);
+    }
+  };
+
+  const closePdfModal = () => {
+    if (pdfModal?.blobUrl) URL.revokeObjectURL(pdfModal.blobUrl);
+    setPdfModal(null);
   };
 
   const handleGenerateInvoice = async (invoice) => {
@@ -2731,6 +4007,14 @@ const Accounts = () => {
               </button>
               <button
                 type="button"
+                onClick={() => handlePrintReport("all")}
+                className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-blue-800 to-sky-500 hover:from-blue-700 hover:to-sky-400 px-4 sm:px-5 py-2.5 text-xs sm:text-sm font-bold text-white shadow-md shadow-blue-950/20 transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0"
+              >
+                <FaFilePdf className="text-xs" />
+                Full Report (PDF)
+              </button>
+              <button
+                type="button"
                 className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 hover:bg-white/20 px-4 sm:px-5 py-2.5 text-xs sm:text-sm font-bold text-white backdrop-blur-md transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0"
                 onClick={openBankReconciliationModule}
               >
@@ -2906,6 +4190,58 @@ const Accounts = () => {
               </div>
             </div>
           ))}
+        </section>
+
+        {/* ========================================================
+            PRINT REPORTS PANEL — extract any report type to print
+           ======================================================== */}
+        <section className="rounded-2xl border border-slate-200/80 bg-white p-5 sm:p-6 shadow-xs">
+          <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <div className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                Report Extraction
+              </div>
+              <h3 className="mt-0.5 text-lg sm:text-xl font-black text-slate-900">
+                Report PDFs
+              </h3>
+              <div className="text-xs sm:text-sm font-medium text-slate-500">
+                Pick a report to generate a PDF preview in-app
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => handlePrintReport("all")}
+              className="inline-flex items-center gap-2 self-start rounded-full bg-gradient-to-r from-blue-800 to-sky-500 px-4 py-2 text-xs sm:text-sm font-bold text-white shadow-md shadow-blue-950/20 transition-all duration-200 hover:-translate-y-0.5 sm:self-auto"
+            >
+              <FaFilePdf />
+              Full PDF
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6">
+            {REPORT_TYPES.filter((r) => r.id !== "all").map((report) => {
+              const Icon = report.icon;
+              return (
+                <button
+                  key={report.id}
+                  type="button"
+                  onClick={() => handlePrintReport(report.id)}
+                  className="group flex flex-col items-start gap-2 rounded-xl border border-slate-200/80 bg-white p-3.5 text-left shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md"
+                >
+                  <div className="flex w-full items-center justify-between">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-600 transition-colors group-hover:bg-blue-600 group-hover:text-white">
+                      <Icon className="text-sm" />
+                    </span>
+                    <FaPrint className="text-xs text-slate-300 transition-colors group-hover:text-blue-500" />
+                  </div>
+                  <div>
+                    <div className="text-[13px] font-bold text-slate-800">{report.label}</div>
+                    <div className="mt-0.5 text-[11px] leading-tight text-slate-500">{report.description}</div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         </section>
 
         {/* Today's Activity Pulse Bar */}
@@ -4097,6 +5433,84 @@ const Accounts = () => {
                   setEditingRecord(null);
                 }}
               />
+            </div>
+          </div>
+        )}
+
+        {/* ================================================================
+            PDF VIEWER MODAL — in-app preview of generated report PDFs
+           ================================================================ */}
+        {pdfModal && (
+          <div
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-blue-950/60 backdrop-blur-sm p-3 sm:p-6"
+            onClick={(e) => { if (e.target === e.currentTarget) closePdfModal(); }}
+          >
+            <div className="flex h-full w-full max-w-[900px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+              {/* Toolbar */}
+              <div className="flex items-center justify-between gap-3 border-b border-slate-200 bg-slate-50 px-4 py-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-800 to-sky-500 text-white shadow-md">
+                    <FaFilePdf className="text-lg" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-bold text-slate-900">{pdfModal.title}</div>
+                    <div className="text-xs text-slate-500">PDF Preview</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {pdfModal.generating ? (
+                    <div className="flex items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-sm font-bold text-blue-700">
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-300 border-t-blue-700" />
+                      Generating PDF…
+                    </div>
+                  ) : (
+                    <>
+                      <a
+                        href={pdfModal.blobUrl}
+                        download={pdfModal.fileName}
+                        className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-800 to-sky-500 px-4 py-2 text-sm font-bold text-white shadow-md transition hover:from-blue-700 hover:to-sky-400"
+                      >
+                        <FaDownload />
+                        Download PDF
+                      </a>
+                      <button
+                        onClick={() => window.open(pdfModal.blobUrl, "_blank")}
+                        className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+                      >
+                        <FaExternalLinkAlt />
+                        Open
+                      </button>
+                    </>
+                  )}
+                  <button
+                    onClick={closePdfModal}
+                    className="ml-1 flex h-9 w-9 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm transition hover:bg-slate-100 hover:text-slate-800"
+                    title="Close"
+                  >
+                    <FaTimes />
+                  </button>
+                </div>
+              </div>
+
+              {/* PDF iframe / loading state */}
+              <div className="flex-1 bg-slate-100">
+                {pdfModal.generating ? (
+                  <div className="flex h-full flex-col items-center justify-center gap-4 text-slate-500">
+                    <div className="h-12 w-12 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600" />
+                    <div>
+                      <div className="text-base font-bold text-slate-700">Building your PDF report…</div>
+                      <div className="text-sm">This can take a few seconds for large reports.</div>
+                    </div>
+                  </div>
+                ) : (
+                  <iframe
+                    title={pdfModal.title}
+                    src={`${pdfModal.blobUrl}#toolbar=0&navpanes=0&view=FitH`}
+                    className="h-full w-full border-0"
+                  />
+                )}
+              </div>
             </div>
           </div>
         )}

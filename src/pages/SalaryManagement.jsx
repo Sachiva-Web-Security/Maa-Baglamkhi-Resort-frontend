@@ -10,6 +10,9 @@ import {
   FaUsers,
   FaInfoCircle,
   FaUserSlash,
+  FaFingerprint,
+  FaCalendarAlt,
+  FaChartBar,
 } from "react-icons/fa";
 import API from "../api";
 
@@ -35,6 +38,13 @@ const SalaryManagement = () => {
   const [savingId, setSavingId] = useState(null);
   const [msg, setMsg] = useState({ type: "", text: "" });
 
+  // Payroll report state
+  const [payrollMonth, setPayrollMonth] = useState(
+    () => new Date().toISOString().slice(0, 7)
+  );
+  const [payroll, setPayroll] = useState(null);
+  const [payrollLoading, setPayrollLoading] = useState(false);
+
   /* ================= FETCH ================= */
 
   const fetchEmployees = async () => {
@@ -50,9 +60,29 @@ const SalaryManagement = () => {
     }
   };
 
+  const fetchPayroll = async () => {
+    setPayrollLoading(true);
+    try {
+      const res = await API.get("/salary/payroll", {
+        params: { month: payrollMonth },
+      });
+      setPayroll(res.data);
+    } catch (err) {
+      console.error("Failed to fetch payroll", err);
+      setPayroll(null);
+    } finally {
+      setPayrollLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchEmployees();
+    fetchPayroll();
   }, []);
+
+  useEffect(() => {
+    if (payrollMonth) fetchPayroll();
+  }, [payrollMonth]);
 
   /* ================= EDIT ================= */
 
@@ -468,6 +498,179 @@ const SalaryManagement = () => {
             </div>
           )}
         </div>
+
+        {/* ===================== PAYROLL SECTION (eSSL attendance-driven) ===================== */}
+        <section className="w-full space-y-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-fuchsia-500 text-white shadow-md">
+                <FaFingerprint className="text-lg" />
+              </div>
+              <div>
+                <h3 className="text-lg font-extrabold text-slate-900">
+                  Payroll Report
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Calculated from actual attendance (eSSL + manual)
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <FaCalendarAlt className="text-slate-400 text-sm" />
+              <input
+                type="month"
+                value={payrollMonth}
+                onChange={(e) => setPayrollMonth(e.target.value)}
+                className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200"
+              />
+            </div>
+          </div>
+
+          {/* Summary cards */}
+          {payroll && !payrollLoading && (
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="rounded-xl border border-blue-100 bg-blue-50/50 p-4">
+                <p className="text-xs font-bold uppercase tracking-wider text-blue-400">
+                  Total Monthly Salary
+                </p>
+                <p className="mt-1 text-xl font-extrabold text-blue-700">
+                  ₹ {payroll.summary.totalMonthlySalary.toLocaleString("en-IN")}
+                </p>
+              </div>
+              <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 p-4">
+                <p className="text-xs font-bold uppercase tracking-wider text-emerald-500">
+                  Total Earned (Attendance)
+                </p>
+                <p className="mt-1 text-xl font-extrabold text-emerald-700">
+                  ₹ {payroll.summary.totalEarnedPay.toLocaleString("en-IN")}
+                </p>
+              </div>
+              <div className="rounded-xl border border-violet-100 bg-violet-50/50 p-4">
+                <p className="text-xs font-bold uppercase tracking-wider text-violet-500">
+                  Avg Earned %
+                </p>
+                <p className="mt-1 text-xl font-extrabold text-violet-700">
+                  {payroll.summary.avgEarnedPercent}%
+                </p>
+              </div>
+              <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                  Employees
+                </p>
+                <p className="mt-1 text-xl font-extrabold text-slate-700">
+                  {payroll.summary.totalEmployees}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Payroll table */}
+          <div className="overflow-hidden rounded-2xl border border-violet-100 bg-white shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-violet-50/60 text-xs font-bold uppercase tracking-wider text-violet-700">
+                  <tr>
+                    <th className="px-4 py-3">Employee</th>
+                    <th className="px-4 py-3 text-center">Days Present</th>
+                    <th className="px-4 py-3 text-center">Late</th>
+                    <th className="px-4 py-3 text-center">Absent</th>
+                    <th className="px-4 py-3 text-center">Biometric</th>
+                    <th className="px-4 py-3">Monthly Salary</th>
+                    <th className="px-4 py-3">Earned Pay</th>
+                    <th className="px-4 py-3">Earned %</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-violet-50">
+                  {payrollLoading && (
+                    <tr>
+                      <td colSpan={8} className="py-8 text-center text-slate-400">
+                        <FaSpinner className="mx-auto mb-2 animate-spin text-slate-400" />
+                        Loading payroll…
+                      </td>
+                    </tr>
+                  )}
+                  {!payrollLoading &&
+                    payroll?.employees?.map((emp) => {
+                      const pct =
+                        emp.monthlySalary > 0
+                          ? (
+                              (emp.earnedPay / emp.monthlySalary) *
+                              100
+                            ).toFixed(0)
+                          : "0";
+                      return (
+                        <tr
+                          key={emp.employeeId}
+                          className="transition hover:bg-violet-50/30"
+                        >
+                          <td className="px-4 py-3">
+                            <p className="font-semibold text-slate-900">
+                              {emp.employeeName || emp.employeeCode}
+                            </p>
+                            <p className="text-xs text-slate-400">
+                              {emp.designation || ""}
+                            </p>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <span className="inline-flex min-w-[36px] items-center justify-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-bold text-emerald-700">
+                              {emp.presentDays}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <span className="text-xs font-semibold text-amber-600">
+                              {emp.lateDays}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <span className="text-xs font-semibold text-red-500">
+                              {emp.absentDays}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-violet-50 px-2 py-0.5 text-xs font-bold text-violet-600">
+                              <FaFingerprint className="text-[10px]" />
+                              {emp.biometricDays}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="font-semibold text-slate-800">
+                              ₹ {emp.monthlySalary.toLocaleString("en-IN")}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="font-bold text-emerald-700">
+                              ₹ {emp.earnedPay.toLocaleString("en-IN")}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-2">
+                              <div className="h-1.5 w-16 overflow-hidden rounded-full bg-slate-100">
+                                <div
+                                  className="h-full rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500"
+                                  style={{ width: `${Math.min(pct, 100)}%` }}
+                                />
+                              </div>
+                              <span className="text-xs font-bold text-slate-600">
+                                {pct}%
+                              </span>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  {!payrollLoading && payroll?.employees?.length === 0 && (
+                    <tr>
+                      <td colSpan={8} className="py-6 text-center text-sm text-slate-400">
+                        No employees found for this month.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
 
         {/* Note */}
         <div className="flex w-full items-start gap-3 rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-[14px] leading-relaxed text-slate-600 shadow-sm sm:px-5 sm:py-4 sm:text-[16px]">

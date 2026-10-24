@@ -142,7 +142,7 @@ const getStatusBadge = (status) => {
   if (normalized === "completed") {
     return "border border-emerald-200 bg-emerald-50 text-emerald-700";
   }
-  if (normalized === "in progress") {
+  if (normalized === "in_progress" || normalized === "in progress") {
     return "border border-sky-200 bg-sky-50 text-sky-700";
   }
   if (normalized === "cancelled") {
@@ -228,12 +228,29 @@ const Assignment = () => {
     }
   };
 
+  // Map v4 backend field names onto the shape the UI renders.
+  // v4 returns: assigned_to_name, task_type, no due_time, no assigned_by.
+  const normalizeRow = (row) => ({
+    ...row,
+    staff_name: row.assigned_to_name ?? row.staff_name ?? null,
+    task: row.task_type ?? row.task ?? null,
+    due_time: row.due_time ?? row.dueTime ?? "",
+    assigned_by: row.assigned_by ?? row.created_by_name ?? null,
+  });
+
+  // Human-readable label for v4 status values (in_progress -> "In Progress")
+  const displayStatusLabel = (status) => {
+    const map = { pending: "Pending", in_progress: "In Progress", completed: "Completed", verified: "Verified", cancelled: "Cancelled" };
+    return map[String(status || "").trim().toLowerCase()] || status || "Pending";
+  };
+
   const loadAssignments = async () => {
     try {
       const res = await API.get("/assignments", {
         params: { role: currentRole, name: currentName },
       });
-      setAssignments(Array.isArray(res.data) ? res.data : []);
+      const raw = Array.isArray(res.data) ? res.data : [];
+      setAssignments(raw.map(normalizeRow));
     } catch (error) {
       console.log(error);
       setAssignments([]);
@@ -398,16 +415,19 @@ const Assignment = () => {
     }
   };
 
+  // Map v4 backend field names onto the frontend form shape.
+  const rowToForm = (row) => ({
+    staff_name: normalizeText(row.assigned_to_name || row.staff_name),
+    room_number: normalizeText(row.room_number || row.roomNo),
+    task: normalizeText(row.task || row.task_type),
+    priority: normalizeText(row.priority) || "Normal",
+    due_time: normalizeText(row.due_time || row.dueTime || ""),
+    notes: normalizeText(row.notes),
+    status: normalizeText(row.status) || "Pending",
+  });
+
   const editTask = (taskRow) => {
-    setForm({
-      staff_name: normalizeText(taskRow.staff_name),
-      room_number: normalizeText(taskRow.room_number),
-      task: normalizeText(taskRow.task),
-      priority: normalizeText(taskRow.priority) || "Normal",
-      due_time: normalizeText(taskRow.due_time),
-      notes: normalizeText(taskRow.notes),
-      status: normalizeText(taskRow.status) || "Pending",
-    });
+    setForm(rowToForm(taskRow));
     setEditId(taskRow.id);
   };
 
@@ -466,17 +486,17 @@ const Assignment = () => {
   // Shared action buttons used inside both the table row and the mobile card
   const renderActionButtons = (assignment) => (
     <div className="flex flex-wrap gap-2">
-      {normalizeLower(assignment.status) === "pending" && (
+      {["pending"].includes(normalizeLower(assignment.status)) && (
         <button
-          onClick={() => updateTaskStatus(assignment.id, "In Progress")}
+          onClick={() => updateTaskStatus(assignment.id, "in_progress")}
           className="rounded-full bg-gradient-to-r from-sky-600 to-cyan-400 px-4 py-2 text-sm font-bold text-white shadow-sm shadow-sky-200 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
         >
           Start
         </button>
       )}
-      {normalizeLower(assignment.status) === "in progress" && (
+      {["in_progress","in progress"].includes(normalizeLower(assignment.status)) && (
         <button
-          onClick={() => updateTaskStatus(assignment.id, "Completed")}
+          onClick={() => updateTaskStatus(assignment.id, "completed")}
           className="rounded-full bg-gradient-to-r from-emerald-600 to-emerald-400 px-4 py-2 text-sm font-bold text-white shadow-sm shadow-emerald-200 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
         >
           Complete
@@ -944,7 +964,7 @@ const Assignment = () => {
                 <span
                   className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${getStatusBadge(assignment.status)}`}
                 >
-                  {assignment.status || "Pending"}
+                  {displayStatusLabel(assignment.status)}
                 </span>
                 <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500">
                   <FaClock className="text-[10px]" />
@@ -1031,7 +1051,7 @@ const Assignment = () => {
                       <span
                         className={`inline-flex rounded-full px-3.5 py-1.5 text-sm font-bold ${getStatusBadge(assignment.status)}`}
                       >
-                        {assignment.status || "Pending"}
+                        {displayStatusLabel(assignment.status)}
                       </span>
                     </td>
                     <td className="px-5 py-4 hidden text-[16px] text-slate-600 xl:table-cell">

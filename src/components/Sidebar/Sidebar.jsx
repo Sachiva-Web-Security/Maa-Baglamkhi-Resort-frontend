@@ -9,6 +9,7 @@ import {
   FaChevronDown,
   FaClipboardList,
   FaExchangeAlt,
+  FaFingerprint,
   FaFire,
   FaGlassCheers,
   FaHistory,
@@ -138,6 +139,7 @@ const Sidebar = ({ isMobile, sidebarOpen, setSidebarOpen, setIsAuthenticated }) 
       { id: 113, name: "User Management", icon: FaUserCheck, path: "/user", section: "records" },
 
       { id: 114, name: "Salary", icon: FaMoneyBillWave, path: "/salary", section: "records" },
+      { id: 115, name: "Settings", icon: FaFingerprint, path: "/settings", section: "records" },
     ],
     manager: [
       { id: 201, name: "All Bookings", icon: FaHotel, path: "/hotel/all-bookings", section: "operations" },
