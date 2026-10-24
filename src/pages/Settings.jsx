@@ -41,8 +41,8 @@ const Settings = () => {
     baudRate: 9600,
     pollIntervalMs: 30000,
     deviceType: "eSSL01",
-    user: "00000",
-    pass: "00",
+    user: "essl",
+    pass: "essl",
   });
   const [diagnoseResult, setDiagnoseResult] = useState(null);
   const [diagnosing, setDiagnosing] = useState(false);
@@ -82,8 +82,8 @@ const Settings = () => {
           baudRate: cfg.baudRate || 9600,
           pollIntervalMs: cfg.pollIntervalMs || 30000,
           deviceType: cfg.deviceType || "eSSL01",
-          user: cfg.user || "00000",
-          pass: cfg.pass || "00",
+          user: cfg.user || "essl",
+          pass: cfg.pass || "essl",
         });
         setMappings(devRes.data || []);
         setEmployees(Array.isArray(empRes.data) ? empRes.data : []);
@@ -135,8 +135,8 @@ const Settings = () => {
           baudRate: Number(esslForm.baudRate) || 9600,
           pollIntervalMs: Number(esslForm.pollIntervalMs) || 30000,
           deviceType: esslForm.deviceType,
-          user: String(esslForm.user || "00000").padStart(5, "0"),
-          pass: String(esslForm.pass || "00").padStart(2, "0"),
+          user: String(esslForm.user || "00000").trim(),
+          pass: String(esslForm.pass || "00").trim(),
         },
       });
       const res = await API.post("/attendance/essl/restart");
@@ -581,9 +581,9 @@ const Settings = () => {
                 className={inputCls}
                 value={esslForm.user}
                 onChange={(e) => setEsslForm({ ...esslForm, user: e.target.value })}
-                maxLength={5}
+                
               />
-              <p className="mt-1 text-[10px] text-slate-400">5-digit, default 00000.</p>
+              <p className="mt-1 text-[10px] text-slate-400">default essl.</p>
             </div>
             <div>
               <label className={labelCls}>Admin Password</label>
@@ -592,9 +592,9 @@ const Settings = () => {
                 className={inputCls}
                 value={esslForm.pass}
                 onChange={(e) => setEsslForm({ ...esslForm, pass: e.target.value })}
-                maxLength={4}
+                
               />
-              <p className="mt-1 text-[10px] text-slate-400">Default 00.</p>
+              <p className="mt-1 text-[10px] text-slate-400">default essl.</p>
             </div>
           </div>
 
