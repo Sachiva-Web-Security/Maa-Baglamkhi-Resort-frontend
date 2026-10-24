@@ -10,6 +10,7 @@ import {
   FaListUl,
   FaCheckCircle,
   FaSpinner,
+  FaWrench,
 } from "react-icons/fa";
 import API from "../api";
 
@@ -40,7 +41,11 @@ const Settings = () => {
     baudRate: 9600,
     pollIntervalMs: 30000,
     deviceType: "eSSL01",
+    user: "00000",
+    pass: "00",
   });
+  const [diagnoseResult, setDiagnoseResult] = useState(null);
+  const [diagnosing, setDiagnosing] = useState(false);
   const [mappingForm, setMappingForm] = useState({
     deviceName: "Main Office",
     terminalUserId: 1,
@@ -77,6 +82,8 @@ const Settings = () => {
           baudRate: cfg.baudRate || 9600,
           pollIntervalMs: cfg.pollIntervalMs || 30000,
           deviceType: cfg.deviceType || "eSSL01",
+          user: cfg.user || "00000",
+          pass: cfg.pass || "00",
         });
         setMappings(devRes.data || []);
         setEmployees(Array.isArray(empRes.data) ? empRes.data : []);
@@ -132,6 +139,8 @@ const Settings = () => {
           baudRate: Number(esslForm.baudRate) || 9600,
           pollIntervalMs: Number(esslForm.pollIntervalMs) || 30000,
           deviceType: esslForm.deviceType,
+          user: String(esslForm.user || "00000").padStart(5, "0"),
+          pass: String(esslForm.pass || "00").padStart(2, "0"),
         },
       });
       const res = await API.post("/attendance/essl/restart");
@@ -196,6 +205,32 @@ const Settings = () => {
       setTestMsg("✗ " + (err.response?.data?.error || err.message));
     } finally {
       setTestTcpLoading(false);
+    }
+  };
+
+  /* ── run every diagnostic check at once ────────────────────────── */
+  const handleDiagnose = async () => {
+    setDiagnosing(true);
+    setDiagnoseResult(null);
+    try {
+      const res = await API.post("/attendance/essl/diagnose");
+      setDiagnoseResult(res.data);
+    } catch (err) {
+      setDiagnoseResult({
+        allOk: false,
+        passing: 0,
+        total: 1,
+        checks: [
+          {
+            key: "endpoint",
+            label: "Diagnose endpoint",
+            ok: false,
+            detail: err.response?.data?.error || err.message || "request failed",
+          },
+        ],
+      });
+    } finally {
+      setDiagnosing(false);
     }
   };
 
@@ -537,6 +572,84 @@ const Settings = () => {
             </div>
           </div>
           </>
+          )}
+
+          {/* Admin credentials — used for LOGIN before GETLOG on most eSSL models */}
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            <div>
+              <label className={labelCls}>Admin User ID</label>
+              <input
+                type="text"
+                className={inputCls}
+                value={esslForm.user}
+                onChange={(e) => setEsslForm({ ...esslForm, user: e.target.value })}
+                maxLength={5}
+              />
+              <p className="mt-1 text-[10px] text-slate-400">5-digit, default 00000.</p>
+            </div>
+            <div>
+              <label className={labelCls}>Admin Password</label>
+              <input
+                type="text"
+                className={inputCls}
+                value={esslForm.pass}
+                onChange={(e) => setEsslForm({ ...esslForm, pass: e.target.value })}
+                maxLength={4}
+              />
+              <p className="mt-1 text-[10px] text-slate-400">Default 00.</p>
+            </div>
+          </div>
+
+          {/* Full test button */}
+          <div>
+            <button
+              onClick={handleDiagnose}
+              disabled={diagnosing}
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-900 py-2.5 text-sm font-bold text-white shadow-md transition hover:bg-slate-800 disabled:opacity-50"
+            >
+              {diagnosing ? <FaSpinner spin /> : <FaWrench />}
+              {diagnosing ? "Running diagnostics…" : "Run Full Connection Test"}
+            </button>
+            <p className="mt-1 text-center text-[11px] text-slate-400">
+              Checks database, config, ports, network, employee mappings and poller status — one click.
+            </p>
+          </div>
+
+          {/* Diagnose result panel */}
+          {diagnoseResult && (
+            <div
+              className={`rounded-xl border p-4 ${
+                diagnoseResult.allOk
+                  ? "border-green-200 bg-green-50"
+                  : "border-red-200 bg-red-50"
+              }`}
+            >
+              <div className="mb-3 flex items-center justify-between">
+                <h3 className={`text-sm font-bold ${diagnoseResult.allOk ? "text-green-800" : "text-red-800"}`}>
+                  {diagnoseResult.allOk
+                    ? "✓ All checks passed — the eSSL is connected and ready."
+                    : `${diagnoseResult.passing}/${diagnoseResult.total} checks passed — see below.`}
+                </h3>
+              </div>
+              <div className="space-y-1.5">
+                {diagnoseResult.checks.map((c) => (
+                  <div
+                    key={c.key}
+                    className={`flex items-start gap-2 rounded-lg px-3 py-2 text-xs ${
+                      c.ok ? "bg-white" : "bg-red-100 border border-red-200"
+                    }`}
+                  >
+                    <span className={`mt-0.5 flex-shrink-0 ${c.ok ? "text-green-600" : "text-red-500"}`}>
+                      {c.ok ? "✓" : "✗"}
+                    </span>
+                    <div>
+                      <span className="font-semibold text-slate-800">{c.label}</span>
+                      <p className={`mt-0.5 ${c.ok ? "text-slate-500" : "text-red-700"}`}>{c.detail}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
 
           {/* Detected ports strip — only relevant for COM connections */}
