@@ -99,6 +99,10 @@ const Settings = () => {
     }
   };
 
+  /* After a successful save, re-scan ports so the admin can see whether the
+     machine's USB-serial bridge got a new COM number (Windows reassigns them
+     on every plug/unplug — this is the #1 reason a config stops working). */
+
   useEffect(() => {
     refreshPorts();
   }, []);
@@ -119,6 +123,8 @@ const Settings = () => {
       });
       const res = await API.post("/attendance/essl/restart");
       setEssl(res.data);
+      // Re-scan so the detected-ports strip below reflects any new COM number.
+      await refreshPorts();
       setTestMsg(
         "✓ Settings saved and poller restarted — it now runs on " +
           (esslForm.enabled ? `port ${esslForm.portName || "(none)"}.` : "the disabled state.")
@@ -390,8 +396,39 @@ const Settings = () => {
             </div>
           </div>
 
+          {/* Detected ports strip */}
+          {serialPorts.length > 0 && (
+            <div className="rounded-lg bg-violet-50 border border-violet-100 p-3">
+              <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-violet-500">
+                {serialPorts.length} COM port{serialPorts.length > 1 ? "s" : ""} detected on this computer
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {serialPorts.map((p) => (
+                  <button
+                    key={p.path}
+                    onClick={() => setEsslForm({ ...esslForm, portName: p.path })}
+                    className={`rounded-lg border px-3 py-1.5 text-xs font-mono font-semibold transition ${
+                      esslForm.portName === p.path
+                        ? "border-violet-400 bg-violet-600 text-white shadow-sm"
+                        : "border-violet-200 bg-white text-violet-700 hover:bg-violet-50"
+                    }`}
+                    title={p.productName || p.manufacturer || p.path}
+                  >
+                    {p.path}
+                    {p.vendorId ? ` · ${p.vendorId}` : ""}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {portsLoading && (
+            <p className="text-xs text-violet-500">
+              <FaSpinner spin className="mr-1" /> Scanning for serial ports…
+            </p>
+          )}
+
           {/* Action row */}
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={handleSaveConfig}
               disabled={saving}
@@ -411,6 +448,13 @@ const Settings = () => {
               className="flex items-center gap-2 rounded-lg border border-slate-300 bg-slate-50 px-5 py-2 text-sm font-bold text-slate-600 transition hover:bg-slate-100"
             >
               <FaCheckCircle size={14} /> Check Status
+            </button>
+            <button
+              onClick={refreshPorts}
+              disabled={portsLoading}
+              className="flex items-center gap-2 rounded-lg border border-violet-300 bg-violet-50 px-5 py-2 text-sm font-bold text-violet-700 transition hover:bg-violet-100 disabled:opacity-50"
+            >
+              {portsLoading ? <FaSpinner spin /> : <FaListUl />} Detect COM Ports
             </button>
           </div>
 
