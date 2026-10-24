@@ -33,6 +33,7 @@ const Settings = () => {
   const [esslForm, setEsslForm] = useState({
     enabled: true,
     connection: "COM",
+    protocol: "zk",
     portName: "",
     host: "192.168.1.201",
     tcpPort: 4350,
@@ -69,6 +70,7 @@ const Settings = () => {
         setEsslForm({
           enabled: cfg.enabled !== false,
           connection: cfg.connection || "COM",
+          protocol: cfg.protocol || "zk",
           portName: cfg.portName || "",
           host: cfg.host || "192.168.1.201",
           tcpPort: cfg.tcpPort || 4350,
@@ -123,6 +125,7 @@ const Settings = () => {
         esslDevice: {
           enabled: esslForm.enabled,
           connection: esslForm.connection,
+          protocol: isTcp ? esslForm.protocol : undefined,
           portName: isTcp ? "" : esslForm.portName,
           host: isTcp ? esslForm.host : "",
           tcpPort: Number(esslForm.tcpPort) || 4350,
@@ -455,7 +458,30 @@ const Settings = () => {
             </div>
           </div>
           ) : (
-          /* TCP/IP fields — machine is on the network, no COM port needed */
+          <>
+          {/* TCP/IP fields — machine is on the network, no COM port needed */}
+          <div>
+            <label className={labelCls}>Network Protocol</label>
+            <div className="flex gap-2">
+              {[
+                { v: "zk", label: "ZKTeco packet (recommended for NF282)" },
+                { v: "telnet", label: "Legacy Telnet (eSSL01 text)" },
+              ].map((opt) => (
+                <button
+                  key={opt.v}
+                  onClick={() => setEsslForm({ ...esslForm, protocol: opt.v })}
+                  className={`flex-1 rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${
+                    esslForm.protocol === opt.v
+                      ? "border-violet-400 bg-violet-600 text-white"
+                      : "border-violet-200 bg-white text-violet-700 hover:bg-violet-50"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             <div>
               <label className={labelCls}>Host / IP</label>
@@ -467,7 +493,7 @@ const Settings = () => {
                 onChange={(e) => setEsslForm({ ...esslForm, host: e.target.value })}
               />
               <p className="mt-1 text-[10px] text-slate-400">
-                The IP shown in eSSL timeTrackLite under “IP Address”.
+                The IP from timeTrackLite's device list.
               </p>
             </div>
             <div>
@@ -480,7 +506,11 @@ const Settings = () => {
                 value={esslForm.tcpPort}
                 onChange={(e) => setEsslForm({ ...esslForm, tcpPort: e.target.value })}
               />
-              <p className="mt-1 text-[10px] text-slate-400">Default eSSL01 Telnet port is 4350.</p>
+              <p className="mt-1 text-[10px] text-slate-400">
+                {esslForm.protocol === "zk"
+                  ? "ZKTeco devices listen on port 4350 by default."
+                  : "Legacy Telnet port — usually 4350."}
+              </p>
             </div>
             <div>
               <label className={labelCls}>Poll Interval (ms)</label>
@@ -500,11 +530,13 @@ const Settings = () => {
                 value={esslForm.deviceType}
                 onChange={(e) => setEsslForm({ ...esslForm, deviceType: e.target.value })}
               >
+                <option value="ZKTeco NF282">ZKTeco NF282</option>
                 <option value="eSSL01">eSSL01</option>
                 <option value="Securoid">Securoid</option>
               </select>
             </div>
           </div>
+          </>
           )}
 
           {/* Detected ports strip — only relevant for COM connections */}
