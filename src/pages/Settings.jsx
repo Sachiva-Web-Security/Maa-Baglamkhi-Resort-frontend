@@ -37,7 +37,8 @@ const Settings = () => {
     protocol: "zk",
     portName: "",
     host: "192.168.1.201",
-    tcpPort: 4350,
+    tcpPort: 4370,
+    udpPort: 4000,
     baudRate: 9600,
     pollIntervalMs: 30000,
     deviceType: "eSSL01",
@@ -78,12 +79,13 @@ const Settings = () => {
           protocol: cfg.protocol || "zk",
           portName: cfg.portName || "",
           host: cfg.host || "192.168.1.201",
-          tcpPort: cfg.tcpPort || 4350,
+          tcpPort: cfg.tcpPort || 4370,
           baudRate: cfg.baudRate || 9600,
           pollIntervalMs: cfg.pollIntervalMs || 30000,
           deviceType: cfg.deviceType || "eSSL01",
           user: cfg.user || "essl",
           pass: cfg.pass || "essl",
+          udpPort: cfg.udpPort || 4000,
         });
         setMappings(devRes.data || []);
         setEmployees(Array.isArray(empRes.data) ? empRes.data : []);
@@ -131,12 +133,14 @@ const Settings = () => {
           protocol: isTcp ? esslForm.protocol : undefined,
           portName: isTcp ? "" : esslForm.portName,
           host: isTcp ? esslForm.host : "",
-          tcpPort: Number(esslForm.tcpPort) || 4350,
+          tcpPort: Number(esslForm.tcpPort) || 4370,
           baudRate: Number(esslForm.baudRate) || 9600,
           pollIntervalMs: Number(esslForm.pollIntervalMs) || 30000,
           deviceType: esslForm.deviceType,
           user: String(esslForm.user || "00000").trim(),
           pass: String(esslForm.pass || "00").trim(),
+          udpPort: Number(esslForm.udpPort) || 4000,
+          realtimeEnabled: true,
         },
       });
       const res = await API.post("/attendance/essl/restart");
@@ -541,7 +545,7 @@ const Settings = () => {
               />
               <p className="mt-1 text-[10px] text-slate-400">
                 {esslForm.protocol === "zk"
-                  ? "ZKTeco devices listen on port 4350 by default."
+                  ? "K80/eSSL devices use port 4370 for ZK data."
                   : "Legacy Telnet port — usually 4350."}
               </p>
             </div>
@@ -564,9 +568,28 @@ const Settings = () => {
                 onChange={(e) => setEsslForm({ ...esslForm, deviceType: e.target.value })}
               >
                 <option value="ZKTeco NF282">ZKTeco NF282</option>
+                <option value="eSSL K80">eSSL K80</option>
                 <option value="eSSL01">eSSL01</option>
                 <option value="Securoid">Securoid</option>
               </select>
+            </div>
+          </div>
+
+          {/* UDP real-time push port */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className={labelCls}>UDP Real-Time Port</label>
+              <input
+                type="number"
+                min={1024}
+                max={65535}
+                className={inputCls}
+                value={esslForm.udpPort}
+                onChange={(e) => setEsslForm({ ...esslForm, udpPort: e.target.value })}
+              />
+              <p className="mt-1 text-[10px] text-slate-400">
+                Port the K80 pushes punches to in real-time. Set this same port in the K80's communication settings (timeTrackLite → TD device → Communication).
+              </p>
             </div>
           </div>
           </>
